@@ -2171,7 +2171,7 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('resolved');
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 1);
+      ).toHaveBeenCalledWith('app:serve', 1, null);
       expect(
         orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
       ).toEqual([
@@ -2203,7 +2203,7 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledWith('app:serve', `\r\n${message}\r\n`, false);
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 2);
+      ).toHaveBeenCalledWith('app:serve', 2, null);
       expect(runningTask.kill).not.toHaveBeenCalled();
 
       // The runner's exit handler writes the transcript, then the reason goes in
@@ -2277,7 +2277,7 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.complete).not.toHaveBeenCalled();
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 2);
+      ).toHaveBeenCalledWith('app:serve', 2, null);
     });
 
     it('fails the waiter when the producer fails before it starts', async () => {
@@ -2524,6 +2524,53 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('pending');
       emit('ready app');
       await expect(settled(waiting)).resolves.toBe('resolved');
+    });
+
+    it('hands a waiter the url a producer another Nx process runs reported', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      // Another process owns the producer and has recorded it ready
+      orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+      onTestFinished(() => {
+        // Stop watching the other process without running exit handling
+        const shared = orchestrator.runningContinuousTasks.get('app:serve');
+        if (shared) shared.runningTask.detached = true;
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+      });
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    it('hands the url of a producer outside the task graph to the waiter', async () => {
+      const { orchestrator, e2e } = createOrchestrator({
+        flat: true,
+        readyWhen: { signal: true },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+
+      await orchestrator.waitForReadyDependencies(e2e);
+
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
     });
 
     it('hands the url a producer signals to the tasks that waited for it', async () => {
@@ -2814,7 +2861,7 @@ describe('TaskOrchestrator', () => {
         expect(heldDuringCompletion).toBe(true);
         expect(
           orchestrator.runningTasksService.setTaskReadiness
-        ).not.toHaveBeenCalledWith('app:serve', 1);
+        ).not.toHaveBeenCalledWith('app:serve', 1, null);
         await expect(skippedWhenRejected).resolves.toBe(
           'skipped: Task "app:serve" exited before it became ready.'
         );

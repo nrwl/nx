@@ -17,8 +17,31 @@ pub const SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_tasks (
 
 pub const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_readiness (
     task_id TEXT PRIMARY KEY NOT NULL,
-    status INTEGER NOT NULL
+    status INTEGER NOT NULL,
+    url TEXT
 );";
+
+// A db made before `url` keeps its file name, since the column is additive.
+// Older Nx processes sharing it only touch `task_id` and `status`, and their
+// `INSERT OR REPLACE` leaves `url` empty.
+fn add_url_column(db: &NxDbConnection) -> anyhow::Result<()> {
+    let has_url = db
+        .query_row(
+            "SELECT 1 FROM pragma_table_info('running_task_readiness') WHERE name = 'url'",
+            [],
+            |row| row.get::<_, i64>(0),
+        )?
+        .is_some();
+    if has_url {
+        return Ok(());
+    }
+    match db.execute("ALTER TABLE running_task_readiness ADD COLUMN url TEXT", []) {
+        Ok(_) => Ok(()),
+        // Another process added it first
+        Err(e) if e.to_string().contains("duplicate column name") => Ok(()),
+        Err(e) => Err(e),
+    }
+}
 
 #[napi]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,6 +76,7 @@ impl RunningTasksService {
             Arc<Mutex<NxDbConnection>>,
         >,
     ) -> anyhow::Result<Self> {
+        add_url_column(&db.lock().unwrap())?;
         Ok(Self {
             db: Arc::clone(db),
             added_tasks: Default::default(),
@@ -170,14 +194,22 @@ impl RunningTasksService {
     }
 
     /// No-op unless this process holds the task's claim, so a late or displaced
-    /// probe result cannot overwrite the current owner's verdict.
+    /// probe result cannot overwrite the current owner's verdict. `url` is the
+    /// address the task reported, written with its status so a reader never
+    /// sees one without the other.
     #[napi]
-    pub fn set_task_readiness(&self, task_id: String, status: TaskReadiness) -> anyhow::Result<()> {
+    pub fn set_task_readiness(
+        &self,
+        task_id: String,
+        status: TaskReadiness,
+        url: Option<String>,
+    ) -> anyhow::Result<()> {
         self.db.lock().unwrap().execute(
-            "UPDATE running_task_readiness SET status = ? WHERE task_id = ? AND task_id IN \
+            "UPDATE running_task_readiness SET status = ?, url = ? WHERE task_id = ? AND task_id IN \
              (SELECT task_id FROM running_tasks WHERE task_id = ? AND pid = ?)",
             (
                 status as i64,
+                &url,
                 &task_id,
                 &task_id,
                 std::process::id().to_string(),
@@ -199,6 +231,24 @@ impl RunningTasksService {
             |row| row.get::<_, i64>(0),
         )?;
         status.map(TaskReadiness::from_db).transpose()
+    }
+
+    /// The address a running task reported with its readiness, if any.
+    #[napi]
+    pub fn get_task_ready_url(&self, task_id: String) -> anyhow::Result<Option<String>> {
+        if !self.is_task_running(&task_id)? {
+            return Ok(None);
+        }
+        Ok(self
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT url FROM running_task_readiness WHERE task_id = ?",
+                [&task_id],
+                |row| row.get::<_, Option<String>>(0),
+            )?
+            .flatten())
     }
 }
 
@@ -241,14 +291,14 @@ mod tests {
             Some(TaskReadiness::Pending)
         );
         owner
-            .set_task_readiness(id.clone(), TaskReadiness::Ready)
+            .set_task_readiness(id.clone(), TaskReadiness::Ready, None)
             .unwrap();
         assert_eq!(
             reader.get_task_readiness(id.clone()).unwrap(),
             Some(TaskReadiness::Ready)
         );
         owner
-            .set_task_readiness(id.clone(), TaskReadiness::Failed)
+            .set_task_readiness(id.clone(), TaskReadiness::Failed, None)
             .unwrap();
         assert_eq!(
             reader.get_task_readiness(id.clone()).unwrap(),
@@ -262,6 +312,80 @@ mod tests {
         );
         owner.remove_running_task(id.clone()).unwrap();
         assert_eq!(reader.get_task_readiness(id.clone()).unwrap(), None);
+    }
+
+    #[test]
+    fn ready_url_is_visible_through_another_connection_and_cleared_on_restart() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("test.db");
+        let mut owner = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let reader = RunningTasksService::new(&External::new(Arc::new(Mutex::new(
+            initialize_db(&path).unwrap(),
+        ))))
+        .unwrap();
+        let id = "app:serve".to_string();
+
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(reader.get_task_ready_url(id.clone()).unwrap(), None);
+        owner
+            .set_task_readiness(
+                id.clone(),
+                TaskReadiness::Ready,
+                Some("http://localhost:4300/".into()),
+            )
+            .unwrap();
+        assert_eq!(
+            reader.get_task_ready_url(id.clone()).unwrap().as_deref(),
+            Some("http://localhost:4300/")
+        );
+        owner.add_running_task(id.clone()).unwrap();
+        assert_eq!(reader.get_task_ready_url(id.clone()).unwrap(), None);
+        owner.remove_running_task(id.clone()).unwrap();
+        assert_eq!(reader.get_task_ready_url(id).unwrap(), None);
+    }
+
+    #[test]
+    fn adds_the_url_column_to_a_db_made_before_it() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("old.db");
+        // The readiness table as an older Nx created it
+        let conn = initialize_db(&path).unwrap();
+        conn.execute_batch(
+            "DROP TABLE running_task_readiness; \
+             CREATE TABLE running_task_readiness (task_id TEXT PRIMARY KEY NOT NULL, status INTEGER NOT NULL);",
+        )
+        .unwrap();
+        let db = External::new(Arc::new(Mutex::new(conn)));
+
+        let mut service = RunningTasksService::new(&db).unwrap();
+        // A second service on the same db finds the column already there
+        RunningTasksService::new(&db).unwrap();
+
+        let id = "app:serve".to_string();
+        service.add_running_task(id.clone()).unwrap();
+        service
+            .set_task_readiness(
+                id.clone(),
+                TaskReadiness::Ready,
+                Some("http://localhost:4300/".into()),
+            )
+            .unwrap();
+        assert_eq!(
+            service.get_task_ready_url(id.clone()).unwrap().as_deref(),
+            Some("http://localhost:4300/")
+        );
+        // An older Nx writes rows without the column, which reads as no url
+        db.lock()
+            .unwrap()
+            .execute(
+                "INSERT OR REPLACE INTO running_task_readiness (task_id, status) VALUES (?, ?)",
+                (&id, TaskReadiness::Ready as i64),
+            )
+            .unwrap();
+        assert_eq!(service.get_task_ready_url(id).unwrap(), None);
     }
 
     #[test]
@@ -335,7 +459,7 @@ mod tests {
             .unwrap();
 
         service
-            .set_task_readiness("app:serve".into(), TaskReadiness::Ready)
+            .set_task_readiness("app:serve".into(), TaskReadiness::Ready, None)
             .unwrap();
         assert_eq!(readiness_row(&service), Some(TaskReadiness::Pending as i64));
 

@@ -2157,8 +2157,7 @@ export class TaskOrchestrator {
     }
   }
 
-  // A waiter learns the url of the one ready producer that reported it.
-  // Producers run by another Nx process report none here.
+  // A waiter learns the url of the one ready producer that reported it
   private getReadyUrlEnv(task: Task): NodeJS.ProcessEnv {
     const urls = getReadyProducerIds(task, this.fullTaskGraph)
       .map((id) => this.readyUrls.get(id))
@@ -2208,6 +2207,7 @@ export class TaskOrchestrator {
         this.options.lifeCycle.setTaskReadiness?.(producer.id, status);
       }
       if (status === TaskReadiness.Ready) {
+        this.readReadyUrl(producer.id);
         return true;
       }
       if (status === TaskReadiness.Failed) {
@@ -2237,7 +2237,7 @@ export class TaskOrchestrator {
       ({ url }) => {
         if (state.abort.signal.aborted) return;
         if (url) this.readyUrls.set(task.id, url);
-        this.recordReadiness(task, TaskReadiness.Ready);
+        this.recordReadiness(task, TaskReadiness.Ready, url);
         state.resolve();
       },
       (e) => {
@@ -2299,18 +2299,30 @@ export class TaskOrchestrator {
     }
   }
 
-  private recordReadiness(task: Task, status: TaskReadiness) {
+  private recordReadiness(task: Task, status: TaskReadiness, url?: string) {
     this.options.lifeCycle.setTaskReadiness?.(task.id, status);
-    this.publishReadiness(task, status);
+    this.publishReadiness(task, status, url);
   }
 
   // Only other processes read the row, so a failed write must not fail this one
-  private publishReadiness(task: Task, status: TaskReadiness) {
+  private publishReadiness(task: Task, status: TaskReadiness, url?: string) {
     try {
-      this.runningTasksService?.setTaskReadiness(task.id, status);
+      this.runningTasksService?.setTaskReadiness(task.id, status, url ?? null);
     } catch (e) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(`Failed to record readiness of "${task.id}":`, e);
+      }
+    }
+  }
+
+  // The url a producer another process runs reported with its readiness
+  private readReadyUrl(producerId: string) {
+    try {
+      const url = this.runningTasksService?.getTaskReadyUrl(producerId);
+      if (url) this.readyUrls.set(producerId, url);
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(`Failed to read the url of "${producerId}":`, e);
       }
     }
   }
