@@ -89,6 +89,19 @@ describe('getReadyUrl', () => {
     );
   });
 
+  it('takes the reported host when the configured one is a loopback IP of another family', async () => {
+    // A server bound to ::1 alone refuses 127.0.0.1
+    expect(await at('http://[::1]:4200/', 'http://127.0.0.1:4200/app')).toBe(
+      'http://[::1]:4200/app'
+    );
+  });
+
+  it('switches between http and https with the server', async () => {
+    expect(
+      await at('https://localhost:4300/', 'http://localhost:4200/app')
+    ).toBe('https://localhost:4300/app');
+  });
+
   it('falls back to whichever url there is', async () => {
     expect(await at(undefined, 'http://localhost:4200')).toBe(
       'http://localhost:4200'

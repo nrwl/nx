@@ -281,6 +281,10 @@ describe('normalizeReadyWhen signal', () => {
       '"fallback" is only allowed with "signal"',
     ],
     [
+      { port: 4200, fallback: null },
+      '"fallback" is only allowed with "signal"',
+    ],
+    [
       { signal: true, fallback: { port: 1, timeout: 5 } },
       '"fallback" must be a url, port, command or logMatches check without its own timeout',
     ],

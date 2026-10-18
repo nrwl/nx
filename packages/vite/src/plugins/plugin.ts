@@ -489,6 +489,8 @@ function getServerReadyWhen(
   return {
     signal: true,
     fallback: {
+      // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
+      // becomes user-chosen, since the shell expands $, backticks and %.
       command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
       // Each attempt resolves the config
       interval: 1000,

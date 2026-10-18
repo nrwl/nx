@@ -79,7 +79,7 @@ export async function waitForWebserverExecutor(
 export default waitForWebserverExecutor;
 
 // The address the server task reported when it signaled readiness. It names no
-// server, so it only replaces the url of a gate waiting for exactly one.
+// server, so it only moves the url of a gate waiting for exactly one.
 function withReadyUrl(servers: Server[]): Server[] {
   const readyUrl = process.env.NX_READY_URL;
   if (!readyUrl || servers.length !== 1 || servers[0].port != null) {

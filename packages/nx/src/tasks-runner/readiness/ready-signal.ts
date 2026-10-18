@@ -72,9 +72,10 @@ export function signalTaskReady(details: { url?: string } = {}): boolean {
 
 /**
  * `configured` moved to the address the server reported, for a task that
- * waited for a signal. Keeps its path and query, and its host name when both
- * hosts are loopback, so only where the server listens changes. Returns
- * `configured` when no address was reported.
+ * waited for a signal: its protocol and port, and its host unless `configured`
+ * names localhost and the server listens on loopback. Keeps the path and
+ * query. Returns `configured` when no address was reported, and the reported
+ * address when `configured` is missing or not a URL.
  */
 export function getReadyUrl(configured: string): string;
 export function getReadyUrl(configured?: string): string | undefined;
@@ -90,18 +91,18 @@ export function getReadyUrl(configured?: string): string | undefined {
   const reported = new URL(ready);
   url.protocol = reported.protocol;
   url.port = reported.port;
-  if (!isLoopback(url.hostname) || !isLoopback(reported.hostname)) {
+  // A localhost name reaches either loopback address; an IP literal only its own
+  if (!isLocalhostName(url.hostname) || !isLoopback(reported.hostname)) {
     url.hostname = reported.hostname;
   }
   return url.toString();
 }
 
+function isLocalhostName(hostname: string): boolean {
+  return hostname === 'localhost' || hostname.endsWith('.localhost');
+}
+
 function isLoopback(hostname: string): boolean {
   const host = hostname.replace(/^\[|\]$/g, '');
-  return (
-    host === 'localhost' ||
-    host.endsWith('.localhost') ||
-    host === '::1' ||
-    /^127\./.test(host)
-  );
+  return isLocalhostName(host) || host === '::1' || /^127\./.test(host);
 }

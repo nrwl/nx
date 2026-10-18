@@ -25,13 +25,27 @@ vi.mock('os', async () => ({
   networkInterfaces: () => machine.interfaces,
 }));
 
-const native = vi.hoisted(() => ({ wasm: false }));
-vi.mock('../../native', async () => ({
-  ...(await vi.importActual('../../native')),
-  get IS_WASM() {
-    return native.wasm;
-  },
+const native = vi.hoisted(() => ({
+  wasm: false,
+  // Replaces the native probe's wait when set
+  wait: undefined as undefined | (() => Promise<boolean>),
 }));
+vi.mock('../../native', async () => {
+  const actual =
+    await vi.importActual<typeof import('../../native')>('../../native');
+  class ReadinessProbe extends actual.ReadinessProbe {
+    wait() {
+      return native.wait ? native.wait() : super.wait();
+    }
+  }
+  return {
+    ...actual,
+    ReadinessProbe,
+    get IS_WASM() {
+      return native.wasm;
+    },
+  };
+});
 
 const data = {
   workspaceRoot: '/workspace',
@@ -398,6 +412,35 @@ describe('waitForReadiness', () => {
       } finally {
         native.wasm = false;
       }
+    });
+
+    describe('when the fallback fails', () => {
+      afterEach(() => {
+        native.wait = undefined;
+      });
+
+      it('fails the check with an error other than a timeout', async () => {
+        native.wait = () => Promise.reject(new Error('probe broke'));
+
+        await expect(
+          waitForSignal({ signal: true, fallback: { port: 1 } })
+        ).rejects.toThrow('probe broke');
+      });
+
+      it('reports a fallback timeout as the signal check timing out', async () => {
+        // The probe gives up before the signal's own timer
+        native.wait = () => Promise.resolve(false);
+
+        await expect(
+          waitForSignal({
+            signal: true,
+            timeout: 10_000,
+            fallback: { port: 1 },
+          })
+        ).rejects.toThrow(
+          'Task "app:serve" did not become ready within 10000ms (readyWhen: signal, or port 1).'
+        );
+      });
     });
 
     it('rejects when aborted', async () => {
