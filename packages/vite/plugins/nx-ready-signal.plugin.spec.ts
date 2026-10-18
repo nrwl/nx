@@ -24,6 +24,10 @@ describe('nxReadySignal', () => {
     });
   }
 
+  it('applies to builds too, so inference finds it in the build-resolved config', () => {
+    expect(nxReadySignal().apply).toBeUndefined();
+  });
+
   it('signals the dev server address once it listens', () => {
     const server = httpServer(5173);
     (nxReadySignal().configureServer as Function)({

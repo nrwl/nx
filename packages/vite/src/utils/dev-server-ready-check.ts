@@ -62,9 +62,10 @@ export function getViteServerAddress(
 }
 
 /**
- * The fallback readyWhen of the inferred serve and preview targets. Runs in
- * the env and with the options of the task, resolves the config the way
- * `vite` does, and waits for the server's port.
+ * The readyWhen of the inferred serve and preview targets when the config
+ * doesn't load the signal plugin. Runs in the env and with the options of the
+ * task, resolves the config the way `vite` does, and waits for the server's
+ * port.
  */
 export async function waitForViteServer(
   configPath: string,

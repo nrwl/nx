@@ -113,9 +113,10 @@ export function enterTaskCwd(options: { cwd?: string }) {
 }
 
 /**
- * The fallback readyWhen of the inferred serve targets. Runs in the env and
- * with the options of the serve task, reads the config the way
- * `webpack-cli serve` does, and waits for each dev server it starts.
+ * The readyWhen of the inferred serve targets when the config doesn't load the
+ * signal plugin. Runs in the env and with the options of the serve task, reads
+ * the config the way `webpack-cli serve` does, and waits for each dev server it
+ * starts.
  */
 export async function waitForWebpackDevServer(configPath: string) {
   const options = readTaskOptions();

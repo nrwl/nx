@@ -61,9 +61,10 @@ export function getRsbuildServerAddress(
 }
 
 /**
- * The fallback readyWhen of the inferred dev and preview targets. Runs in
- * the env and with the options of the task, loads the config the way the
- * Rsbuild CLI does, and waits for the server's port.
+ * The readyWhen of the inferred dev and preview targets when the config doesn't
+ * load the signal plugin. Runs in the env and with the options of the task,
+ * loads the config the way the Rsbuild CLI does, and waits for the server's
+ * port.
  */
 export async function waitForRsbuildServer(
   configPath: string,

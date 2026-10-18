@@ -127,7 +127,22 @@ To opt in, set it back to `true`:
 ```
 
 The plugin infers the dependency on the dev server from `webServerCommands` in `nxE2EPreset`.
-In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself, and pass `baseUrl` through `getReadyUrl` from `@nx/devkit`.
+In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself:
+
+```json
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": ["myapp"], "target": "serve", "waitFor": "ready" }
+      ]
+    }
+  }
+}
+```
+
+Then pass `baseUrl` through `getReadyUrl` from `@nx/devkit`.
 It returns the address unchanged when Nx reports none, and otherwise moves it to the reported port:
 
 ```ts
