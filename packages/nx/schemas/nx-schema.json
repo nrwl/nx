@@ -685,6 +685,7 @@
         { "required": ["logMatches"] },
         { "required": ["signal"] }
       ],
+      "dependencies": { "fallback": ["signal"] },
       "additionalProperties": false
     },
     "readyWhenFallback": {

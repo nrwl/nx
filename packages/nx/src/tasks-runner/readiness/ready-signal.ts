@@ -69,3 +69,39 @@ export function signalTaskReady(details: { url?: string } = {}): boolean {
   } satisfies ReadySignalMessage);
   return true;
 }
+
+/**
+ * `configured` moved to the address the server reported, for a task that
+ * waited for a signal. Keeps its path and query, and its host name when both
+ * hosts are loopback, so only where the server listens changes. Returns
+ * `configured` when no address was reported.
+ */
+export function getReadyUrl(configured: string): string;
+export function getReadyUrl(configured?: string): string | undefined;
+export function getReadyUrl(configured?: string): string | undefined {
+  const ready = process.env[READY_URL_ENV];
+  if (!ready || !URL.canParse(ready)) {
+    return configured;
+  }
+  if (!configured || !URL.canParse(configured)) {
+    return ready;
+  }
+  const url = new URL(configured);
+  const reported = new URL(ready);
+  url.protocol = reported.protocol;
+  url.port = reported.port;
+  if (!isLoopback(url.hostname) || !isLoopback(reported.hostname)) {
+    url.hostname = reported.hostname;
+  }
+  return url.toString();
+}
+
+function isLoopback(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, '');
+  return (
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host === '::1' ||
+    /^127\./.test(host)
+  );
+}

@@ -4,6 +4,7 @@ import type { ReadySignalServer } from './ready-signal-server';
 import { resolveStartupHost } from './startup-host';
 import {
   notReadyError,
+  ReadinessTimeoutError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
 } from './ready-when';
@@ -128,7 +129,7 @@ function waitForSignal(
     }
     if (readyWhen.fallback === null) {
       settle(null, {});
-    } else if (readyWhen.fallback) {
+    } else if (readyWhen.fallback && !IS_WASM) {
       waitForCheck(readyWhen.fallback, {
         ...context,
         // settle aborts it when the producer exits
@@ -137,8 +138,15 @@ function waitForSignal(
         () => {
           if (!fallbackAbort.signal.aborted) settle(null, {});
         },
-        // The signal's own timer and abort report a failure
-        () => {}
+        // Its timeout is the signal's, reported as one
+        (e) => {
+          if (fallbackAbort.signal.aborted) return;
+          settle(
+            e instanceof ReadinessTimeoutError
+              ? readinessTimeoutError(context.taskId, readyWhen)
+              : e
+          );
+        }
       );
     }
   });

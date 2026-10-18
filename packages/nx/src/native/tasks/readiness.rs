@@ -707,6 +707,22 @@ mod tests {
         assert!(probe(config).wait().await.unwrap());
     }
 
+    // Regular arg quoting would hand cmd.exe `\"a\"`, so the comparison fails
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn command_reaches_cmd_with_its_inner_quotes() {
+        let config = ReadinessProbeConfig {
+            url: None,
+            port: None,
+            host: None,
+            command: Some(r#"if "a"=="a" (exit 0) else (exit 1)"#.into()),
+            timeout: 2000,
+            env: None,
+            interval: Some(50),
+        };
+        assert!(probe(config).wait().await.unwrap());
+    }
+
     #[cfg(not(windows))]
     #[tokio::test]
     async fn command_runs_with_only_the_given_env() {

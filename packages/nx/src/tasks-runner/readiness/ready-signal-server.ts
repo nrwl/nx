@@ -21,8 +21,10 @@ export class ReadySignalServer {
   private readonly server = new PseudoIPCServer(this.path);
   private started: Promise<void> | undefined;
   private listeners = new Map<string, ReadySignalListener>();
-  // A producer can signal before its probe subscribes
+  // A producer can signal before its probe subscribes. Only tasks given the
+  // socket are buffered for.
   private early = new Map<string, ReadySignalMessage[]>();
+  private issued = new Set<string>();
 
   async env(taskId: string): Promise<NodeJS.ProcessEnv> {
     this.started ??= this.server.init().then(() => {
@@ -31,6 +33,7 @@ export class ReadySignalServer {
       });
     });
     await this.started;
+    this.issued.add(taskId);
     return {
       [READY_SIGNAL_SOCKET_ENV]: this.path,
       [READY_SIGNAL_TASK_ENV]: taskId,
@@ -60,7 +63,7 @@ export class ReadySignalServer {
     const listener = this.listeners.get(message.taskId);
     if (listener) {
       listener(message);
-    } else {
+    } else if (this.issued.has(message.taskId)) {
       const early = this.early.get(message.taskId) ?? [];
       early.push(message);
       this.early.set(message.taskId, early);

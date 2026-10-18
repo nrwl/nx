@@ -62,3 +62,42 @@ describe('ready signal client', () => {
     await new Promise((r) => setTimeout(r, 50));
   });
 });
+
+describe('getReadyUrl', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const at = async (ready: string | undefined, configured?: string) => {
+    vi.stubEnv('NX_READY_URL', ready);
+    const { getReadyUrl } = await import('./ready-signal');
+    return getReadyUrl(configured);
+  };
+
+  it('moves the configured url to the reported port, keeping its path and query', async () => {
+    expect(
+      await at('http://[::1]:4300/', 'http://localhost:4200/app/?x=1')
+    ).toBe('http://localhost:4300/app/?x=1');
+  });
+
+  it('takes the reported host and protocol when either host is not loopback', async () => {
+    expect(
+      await at('https://10.0.0.5:4300/', 'http://localhost:4200/app')
+    ).toBe('https://10.0.0.5:4300/app');
+    expect(await at('http://127.0.0.1:4300/', 'http://dev.local:4200/')).toBe(
+      'http://127.0.0.1:4300/'
+    );
+  });
+
+  it('falls back to whichever url there is', async () => {
+    expect(await at(undefined, 'http://localhost:4200')).toBe(
+      'http://localhost:4200'
+    );
+    expect(await at('http://localhost:4300/', undefined)).toBe(
+      'http://localhost:4300/'
+    );
+    expect(await at('http://localhost:4300/', 'not a url')).toBe(
+      'http://localhost:4300/'
+    );
+  });
+});
