@@ -180,8 +180,9 @@ function resolveReadyWhen(
     return value;
   };
   const present = PROBE_KEYS.filter((key) => config[key] != null);
-  // As in the schema, which can't tell a null fallback from a missing one
-  if ('fallback' in config && present[0] !== 'signal') {
+  // Like the schema, any `fallback` key, even null, needs `signal`. An
+  // undefined one counts as absent, as it is once the config is serialized.
+  if (config.fallback !== undefined && present[0] !== 'signal') {
     throw invalid('"fallback" is only allowed with "signal"');
   }
   if (present.length !== 1) {

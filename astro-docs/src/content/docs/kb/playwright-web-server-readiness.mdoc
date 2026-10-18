@@ -109,8 +109,10 @@ Changing one of those doesn't re-infer the address.
 Running `nx reset` also discards the cached address.
 
 When the wait task waits for a single server configured with a `url`, and the serve task reported
-its address in `NX_READY_URL`, the wait task moves the configured `url` to the reported port, and to
-the reported host when they differ, keeping its path and query.
+its address in `NX_READY_URL`, the wait task takes the protocol and port from the reported address
+and keeps the path and query of the configured `url`.
+A `localhost` host stays as it is when the server listens on a loopback address.
+Any other host moves to the one the server reported.
 
 Files the config imports from outside its project, such as a shared helper in `tools/`, are not
 part of the cache either.

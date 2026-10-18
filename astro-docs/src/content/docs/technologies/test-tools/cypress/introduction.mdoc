@@ -106,7 +106,9 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 The `waitForServerReady` option defaults to `true`.
 With it on, the e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#signal-readiness-from-the-task) before Cypress starts.
-`nxE2EPreset` then moves `baseUrl` to the port the server reported in `NX_READY_URL`, and to its host when they differ, keeping the path and query of `baseUrl`.
+`nxE2EPreset` then takes the protocol and port from the address the server reported in `NX_READY_URL`, and keeps the path and query of `baseUrl`.
+A `localhost` host stays as it is when the server listens on a loopback address.
+Any other host moves to the one the server reported.
 A migration sets the option to `false` in existing workspaces.
 To opt in, set it back to `true`:
 

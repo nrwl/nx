@@ -267,6 +267,13 @@ describe('normalizeReadyWhen signal', () => {
     });
   });
 
+  it('treats an undefined fallback as absent, as a serialized config does', () => {
+    expect(normalize({ port: 4200, fallback: undefined })).toMatchObject({
+      kind: 'port',
+      port: 4200,
+    });
+  });
+
   it('counts a fallback whose server picks the port as ready once started', () => {
     expect(
       normalize({ signal: true, fallback: { port: '{options.hmrPort}' } })
