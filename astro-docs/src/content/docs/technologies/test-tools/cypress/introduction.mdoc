@@ -102,6 +102,28 @@ Set `ciComponentTestingTargetName` to atomize component tests as well.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/cypress/plugin`.
 
+### Wait for the dev server to be ready
+
+The `waitForServerReady` option defaults to `true`.
+With it on, the e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#signal-readiness-from-the-task) before Cypress starts.
+`nxE2EPreset` then tests against the address the server reported in `NX_READY_URL` instead of `baseUrl`.
+A migration sets the option to `false` in existing workspaces.
+To opt in, set it back to `true`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "waitForServerReady": true
+      }
+    }
+  ]
+}
+```
+
 ### Splitting E2E tasks by file
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
@@ -131,7 +153,7 @@ To stop an atomized task from rerunning for every library the app bundles, scope
 See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
 
 {% aside type="note" title="Using setupNodeEvents function" %}
-If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
+If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset` and return `config` from yours. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
 {% /aside %}
 
 To have an atomized task hash from the app code its test file imports instead of the whole app,

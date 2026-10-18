@@ -175,6 +175,15 @@ export function nxE2EPreset(
         on('file:preprocessor', vitePreprocessor(options?.viteConfigOverrides));
       }
 
+      // Set by Nx when the web server task already reported it is ready.
+      const readyUrl = process.env.NX_READY_URL;
+      if (readyUrl) {
+        console.log(`Testing against the server Nx started on ${readyUrl}`);
+        config.baseUrl = readyUrl;
+        // Cypress only applies config changes returned from setupNodeEvents.
+        return config;
+      }
+
       if (!options?.webServerCommands) {
         return;
       }
