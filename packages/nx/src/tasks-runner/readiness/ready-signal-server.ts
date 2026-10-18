@@ -74,8 +74,5 @@ export class ReadySignalServer {
 function isReadySignalMessage(message: unknown): message is ReadySignalMessage {
   if (typeof message !== 'object' || message === null) return false;
   const { type, taskId } = message as Record<string, unknown>;
-  return (
-    (type === 'nx-ready-signal:hello' || type === 'nx-ready-signal:ready') &&
-    typeof taskId === 'string'
-  );
+  return type === 'nx-ready-signal:ready' && typeof taskId === 'string';
 }

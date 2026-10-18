@@ -22,7 +22,7 @@ const MAX_DURATION = 2_147_483_647;
 
 // No interval means the probe's own default applies. A command's env is set
 // only by getReadyWhen, which knows the env the producer runs with.
-type CheckProbe<Deferred> = { timeout: number; interval?: number } & (
+type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
   | { kind: 'url'; url: string | Deferred }
   | { kind: 'port'; port: number | Deferred; host?: string | Deferred }
   | {
@@ -31,16 +31,8 @@ type CheckProbe<Deferred> = { timeout: number; interval?: number } & (
       env?: Record<string, string>;
     }
   | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
+  | { kind: 'signal' }
 );
-
-// A null fallback is one whose server picks its port: ready once started
-type ReadyWhenProbe<Deferred> =
-  | CheckProbe<Deferred>
-  | {
-      kind: 'signal';
-      timeout: number;
-      fallback?: CheckProbe<Deferred> | null;
-    };
 
 // With 0 or `auto` the server picks its port at startup, so there is nothing
 // to probe and waiters wait for the producer to start
@@ -180,11 +172,6 @@ function resolveReadyWhen(
     return value;
   };
   const present = PROBE_KEYS.filter((key) => config[key] != null);
-  // Like the schema, any `fallback` key, even null, needs `signal`. An
-  // undefined one counts as absent, as it is once the config is serialized.
-  if (config.fallback !== undefined && present[0] !== 'signal') {
-    throw invalid('"fallback" is only allowed with "signal"');
-  }
   if (present.length !== 1) {
     throw invalid(
       `expected exactly one of ${PROBE_KEYS.map((k) => `"${k}"`).join(', ')}`
@@ -278,32 +265,7 @@ function resolveReadyWhen(
       if (config.interval != null) {
         throw invalid('"interval" is not used by "signal"');
       }
-      if (config.fallback == null) {
-        return { kind: 'signal', timeout };
-      }
-      const fallbackConfig = config.fallback as Record<string, unknown>;
-      if (
-        typeof fallbackConfig !== 'object' ||
-        fallbackConfig.signal != null ||
-        fallbackConfig.timeout != null
-      ) {
-        throw invalid(
-          '"fallback" must be a url, port, command or logMatches check without its own timeout'
-        );
-      }
-      const fallback = resolveReadyWhen(
-        { ...fallbackConfig, timeout } as ReadyWhen,
-        taskId,
-        data
-      );
-      return {
-        kind: 'signal',
-        timeout,
-        fallback:
-          fallback.kind === 'serverPicksPort'
-            ? null
-            : (fallback as CheckProbe<EnvDeferred>),
-      };
+      return { kind: 'signal', timeout };
     }
   }
 }
@@ -330,15 +292,13 @@ export function checkReadyWhen(
   };
 }
 
-export class ReadinessTimeoutError extends Error {}
-
 export function readinessTimeoutError(
   taskId: string,
   readyWhen: NormalizedReadyWhen | ReadyWhenWait
 ): Error {
   const description =
     'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
-  return new ReadinessTimeoutError(
+  return new Error(
     `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}). ` +
       'To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.'
   );
@@ -383,10 +343,7 @@ function describeReadyWhen(
     case 'logMatches':
       return `logMatches ${readyWhen.logMatches.map((m) => `"${m}"`).join(', ')}`;
     case 'signal':
-      if (readyWhen.fallback === undefined) return 'signal';
-      return readyWhen.fallback === null
-        ? 'signal, or once started'
-        : `signal, or ${describeReadyWhen(readyWhen.fallback)}`;
+      return 'signal';
   }
 }
 
@@ -453,10 +410,8 @@ export function getReadyWhen(
     return commandEnv;
   };
   const probe = normalizeReadyWhen(readyWhen, task.id, { ...data, env });
-  const command =
-    probe?.kind === 'signal' ? probe.fallback : (probe as CheckProbe<never>);
-  if (command?.kind === 'command') {
-    command.env = {
+  if (probe?.kind === 'command') {
+    probe.env = {
       ...Object.fromEntries(
         Object.entries(env()).filter(([, value]) => value !== undefined)
       ),

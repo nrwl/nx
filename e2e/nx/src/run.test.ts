@@ -1127,15 +1127,13 @@ describe('Nx Running Tests', () => {
         }, 60000);
 
         it('should release the waiting task on the signal and pass on its url', () => {
-          // The fallback never matches, so only the signal can release the waiter
           updateFile(
             `libs/${mylib1}/signal.js`,
             `
             // The workspace itself does not depend on @nx/devkit: pnpm exposes it only
             // next to the packages that do
             const { createRequire } = require('module');
-            const { announceTaskReadySignal, signalTaskReady } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
-            console.log('ANNOUNCED=' + announceTaskReadySignal());
+            const { signalTaskReady } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
             setTimeout(() => {
               console.log('SIGNALLED=' + signalTaskReady({ url: 'http://localhost:${port}/' }));
             }, 1500);
@@ -1145,7 +1143,6 @@ describe('Nx Running Tests', () => {
           updateJson(`libs/${mylib1}/project.json`, (config) => {
             config.targets.serve = continuousServe('signal.js', {
               signal: true,
-              fallback: { logMatches: 'never printed' },
               timeout: 15000,
             });
             config.targets.check = {
@@ -1157,7 +1154,6 @@ describe('Nx Running Tests', () => {
           });
 
           const output = runCLI(`check ${mylib1} --skip-nx-cache`);
-          expect(output).toContain('ANNOUNCED=true');
           expect(output).toContain('SIGNALLED=true');
           expect(output).toContain(`READY_URL=http://localhost:${port}/`);
           expect(output).toContain(

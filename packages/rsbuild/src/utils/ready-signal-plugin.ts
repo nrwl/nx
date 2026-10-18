@@ -11,11 +11,8 @@ export function pluginNxReadySignal(): RsbuildPlugin {
       if (!process.env.NX_READY_SIGNAL_SOCKET) {
         return;
       }
-      const { announceTaskReadySignal, signalTaskReady } =
+      const { signalTaskReady } =
         require('@nx/devkit') as typeof import('@nx/devkit');
-      if (!announceTaskReadySignal()) {
-        return;
-      }
       const report = ({ port }: { port: number }) => {
         const https = !!api.getNormalizedConfig().server.https;
         signalTaskReady({

@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import { getServerUrl, nxReadySignal } from './nx-ready-signal.plugin';
 
 const devkit = vi.hoisted(() => ({
-  announceTaskReadySignal: vi.fn(() => true),
   signalTaskReady: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
@@ -12,7 +11,6 @@ mockCjsModule(import.meta.url, '@nx/devkit', devkit);
 describe('nxReadySignal', () => {
   beforeEach(() => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.announceTaskReadySignal.mockClear();
     devkit.signalTaskReady.mockClear();
   });
 
@@ -32,7 +30,6 @@ describe('nxReadySignal', () => {
       httpServer: server,
       config: { server: {} },
     });
-    expect(devkit.announceTaskReadySignal).toHaveBeenCalled();
     expect(devkit.signalTaskReady).not.toHaveBeenCalled();
 
     server.emit('listening');
@@ -64,7 +61,7 @@ describe('nxReadySignal', () => {
       httpServer: null,
       config: { server: {} },
     });
-    expect(devkit.announceTaskReadySignal).not.toHaveBeenCalled();
+    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
   });
 });
 

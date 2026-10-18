@@ -257,7 +257,6 @@ export { isDaemonEnabled } from './daemon/client/client';
  * @category Utils
  */
 export {
-  announceTaskReadySignal,
   getReadyUrl,
   signalTaskReady,
 } from './tasks-runner/readiness/ready-signal';

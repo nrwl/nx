@@ -30,11 +30,8 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
   if (!devServer || !process.env.NX_READY_SIGNAL_SOCKET) {
     return;
   }
-  const { announceTaskReadySignal, signalTaskReady } =
+  const { signalTaskReady } =
     require('@nx/devkit') as typeof import('@nx/devkit');
-  if (!announceTaskReadySignal()) {
-    return;
-  }
   const onListening = devServer.onListening;
   devServer.onListening = (server) => {
     onListening?.(server);

@@ -255,23 +255,8 @@ export type ReadyWhen =
        */
       signal: true;
 
-      /**
-       * A check that also counts until the task calls
-       * `announceTaskReadySignal`. It takes the signal's timeout.
-       */
-      fallback?: ReadyWhenFallback;
-
       timeout?: number;
     };
-
-export type ReadyWhenFallback = DistributiveOmit<
-  Exclude<ReadyWhen, { signal: true }>,
-  'timeout'
->;
-
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never;
 
 export interface TargetDependencyConfig {
   /**

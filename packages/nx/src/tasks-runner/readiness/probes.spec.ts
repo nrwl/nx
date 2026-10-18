@@ -25,27 +25,13 @@ vi.mock('os', async () => ({
   networkInterfaces: () => machine.interfaces,
 }));
 
-const native = vi.hoisted(() => ({
-  wasm: false,
-  // Replaces the native probe's wait when set
-  wait: undefined as undefined | (() => Promise<boolean>),
+const native = vi.hoisted(() => ({ wasm: false }));
+vi.mock('../../native', async () => ({
+  ...(await vi.importActual('../../native')),
+  get IS_WASM() {
+    return native.wasm;
+  },
 }));
-vi.mock('../../native', async () => {
-  const actual =
-    await vi.importActual<typeof import('../../native')>('../../native');
-  class ReadinessProbe extends actual.ReadinessProbe {
-    wait() {
-      return native.wait ? native.wait() : super.wait();
-    }
-  }
-  return {
-    ...actual,
-    ReadinessProbe,
-    get IS_WASM() {
-      return native.wasm;
-    },
-  };
-});
 
 const data = {
   workspaceRoot: '/workspace',
@@ -365,82 +351,23 @@ describe('waitForReadiness', () => {
       );
     });
 
-    it('resolves on the fallback when the producer never says hello', async () => {
-      const ready = waitForSignal({
-        signal: true,
-        fallback: { logMatches: 'listening' },
-      });
-      await new Promise((r) => setTimeout(r, 20));
-      emit('listening');
-      await expect(ready).resolves.toEqual({});
-    });
-
-    it('stops the fallback once the producer says hello', async () => {
-      const ready = waitForSignal({
-        signal: true,
-        fallback: { logMatches: 'listening' },
-      });
-      send({ type: 'nx-ready-signal:hello' });
-      await new Promise((r) => setTimeout(r, 50));
-      emit('listening');
-      await expect(settled(ready)).resolves.toBe('pending');
-      send({ type: 'nx-ready-signal:ready' });
-      await expect(ready).resolves.toEqual({});
-    });
-
-    it('rejects on timeout, naming the fallback', async () => {
+    it('rejects on timeout', async () => {
       await expect(
-        waitForSignal({
-          signal: true,
-          timeout: 50,
-          fallback: { command: 'exit 1', interval: 10 },
-        })
+        waitForSignal({ signal: true, timeout: 50 })
       ).rejects.toThrow(
-        'Task "app:serve" did not become ready within 50ms (readyWhen: signal, or command "exit 1").'
+        'Task "app:serve" did not become ready within 50ms (readyWhen: signal).'
       );
     });
 
-    it('works on the WASM build, where only the fallback has no probe', async () => {
+    it('works on the WASM build, which has no native probes', async () => {
       native.wasm = true;
       try {
-        const ready = waitForSignal({
-          signal: true,
-          fallback: { logMatches: 'listening' },
-        });
+        const ready = waitForSignal({ signal: true });
         send({ type: 'nx-ready-signal:ready' });
         await expect(ready).resolves.toEqual({});
       } finally {
         native.wasm = false;
       }
-    });
-
-    describe('when the fallback fails', () => {
-      afterEach(() => {
-        native.wait = undefined;
-      });
-
-      it('fails the check with an error other than a timeout', async () => {
-        native.wait = () => Promise.reject(new Error('probe broke'));
-
-        await expect(
-          waitForSignal({ signal: true, fallback: { port: 1 } })
-        ).rejects.toThrow('probe broke');
-      });
-
-      it('reports a fallback timeout as the signal check timing out', async () => {
-        // The probe gives up before the signal's own timer
-        native.wait = () => Promise.resolve(false);
-
-        await expect(
-          waitForSignal({
-            signal: true,
-            timeout: 10_000,
-            fallback: { port: 1 },
-          })
-        ).rejects.toThrow(
-          'Task "app:serve" did not become ready within 10000ms (readyWhen: signal, or port 1).'
-        );
-      });
     });
 
     it('rejects when aborted', async () => {

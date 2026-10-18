@@ -12,8 +12,9 @@ type HttpServer = {
  */
 export function nxReadySignal(): Plugin {
   return {
+    // No `apply`, so inference finds it in the config Vite resolves for a
+    // build. Its hooks only run for the dev and preview servers.
     name: 'nx-ready-signal',
-    apply: 'serve',
     configureServer(server) {
       report(server.httpServer, !!server.config.server.https);
     },
@@ -27,11 +28,8 @@ function report(httpServer: HttpServer | null, https: boolean) {
   if (!httpServer || !process.env.NX_READY_SIGNAL_SOCKET) {
     return;
   }
-  const { announceTaskReadySignal, signalTaskReady } =
+  const { signalTaskReady } =
     require('@nx/devkit') as typeof import('@nx/devkit');
-  if (!announceTaskReadySignal()) {
-    return;
-  }
   httpServer.once('listening', () => {
     signalTaskReady({ url: getServerUrl(httpServer.address(), https) });
   });

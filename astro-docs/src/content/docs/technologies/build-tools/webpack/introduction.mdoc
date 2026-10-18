@@ -137,7 +137,7 @@ A dependent task starts as soon as the server task has started, unless its `depe
 The waiting task gets the server's address in the `NX_READY_URL` environment variable, when exactly one target it waits for reported one.
 A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
 For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
-For the `fallback` key and for signaling from your own server, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
+For signaling from your own server, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
 
 ## Generate a new project using Webpack
 

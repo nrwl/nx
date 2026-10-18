@@ -247,9 +247,13 @@ async function buildViteTargets(
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
+      const signals = !!viteBuildConfig.plugins?.some(
+        (p) => p.name === 'nx-ready-signal'
+      );
       const devTarget = serveTarget(
         projectRoot,
         configFilePath,
+        signals,
         isUsingTsSolutionSetup,
         pmc,
         namedInputs
@@ -267,6 +271,7 @@ async function buildViteTargets(
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
         configFilePath,
+        signals,
         options.buildTargetName,
         pmc,
         namedInputs
@@ -391,6 +396,7 @@ function buildInputs(namedInputs: {
 function serveTarget(
   projectRoot: string,
   configFilePath: string,
+  signals: boolean,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   namedInputs: { [inputName: string]: any[] }
@@ -402,7 +408,7 @@ function serveTarget(
     options: {
       cwd: joinPathFragments(projectRoot),
     },
-    readyWhen: getServerReadyWhen(configFilePath, 'serve'),
+    readyWhen: getServerReadyWhen(configFilePath, 'serve', signals),
     metadata: {
       technologies: ['vite'],
       description: `Starts Vite dev server`,
@@ -427,6 +433,7 @@ function serveTarget(
 function previewTarget(
   projectRoot: string,
   configFilePath: string,
+  signals: boolean,
   buildTargetName: string,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   namedInputs: { [inputName: string]: any[] }
@@ -439,7 +446,7 @@ function previewTarget(
     options: {
       cwd: joinPathFragments(projectRoot),
     },
-    readyWhen: getServerReadyWhen(configFilePath, 'preview'),
+    readyWhen: getServerReadyWhen(configFilePath, 'preview', signals),
     metadata: {
       technologies: ['vite'],
       description: `Locally preview Vite production build`,
@@ -480,22 +487,23 @@ function serveStaticTarget(
   return targetConfig;
 }
 
-// The nxReadySignal() plugin signals once the server listens. Without it, the
-// fallback resolves the config at task time, with the task's env and options.
+// A config that loads nxReadySignal() reports when the server listens.
+// Otherwise the check resolves the config when the task runs, with the task's
+// env and options, and waits for the server's port.
 function getServerReadyWhen(
   configFilePath: string,
-  command: 'serve' | 'preview'
+  command: 'serve' | 'preview',
+  signals: boolean
 ): TargetConfiguration['readyWhen'] {
-  return {
-    signal: true,
-    fallback: {
-      // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-      // becomes user-chosen, since the shell expands $, backticks and %.
-      command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
-      // Each attempt resolves the config
-      interval: 1000,
-    },
-  };
+  return signals
+    ? { signal: true }
+    : {
+        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
+        // becomes user-chosen, since the shell expands $, backticks and %.
+        command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
+        // Each attempt resolves the config
+        interval: 1000,
+      };
 }
 
 function getOutputs(

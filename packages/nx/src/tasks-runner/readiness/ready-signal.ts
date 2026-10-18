@@ -6,11 +6,12 @@ export const READY_SIGNAL_TASK_ENV = 'NX_READY_SIGNAL_TASK';
 // Set on the env of a task that waited for a producer that signalled its url
 export const READY_URL_ENV = 'NX_READY_URL';
 
-// `hello` says something in the producer will send `ready`, so a fallback
-// check stops; `ready` carries the address the server listens on
-export type ReadySignalMessage =
-  | { type: 'nx-ready-signal:hello'; taskId: string }
-  | { type: 'nx-ready-signal:ready'; taskId: string; url?: string };
+// Carries the address the server listens on
+export type ReadySignalMessage = {
+  type: 'nx-ready-signal:ready';
+  taskId: string;
+  url?: string;
+};
 
 let client: PseudoIPCClient | undefined;
 let readySent = false;
@@ -35,20 +36,6 @@ function connect(): { client: PseudoIPCClient; taskId: string } | null {
     )
     .unref();
   return { client, taskId };
-}
-
-/**
- * Tells Nx that this process will report readiness with `signalTaskReady`.
- * Call it as early as possible. Returns false when no Nx task waits for a
- * signal from this process.
- */
-export function announceTaskReadySignal(): boolean {
-  const connection = connect();
-  connection?.client.sendMessageToParent({
-    type: 'nx-ready-signal:hello',
-    taskId: connection.taskId,
-  } satisfies ReadySignalMessage);
-  return !!connection;
 }
 
 /**

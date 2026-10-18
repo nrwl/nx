@@ -26,17 +26,14 @@ describe('ready signal client', () => {
     }
   };
 
-  it('says hello, then sends ready once with its url', async () => {
-    const { announceTaskReadySignal, signalTaskReady } =
-      await import('./ready-signal');
+  it('sends ready once, with its url', async () => {
+    const { signalTaskReady } = await import('./ready-signal');
 
-    expect(announceTaskReadySignal()).toBe(true);
     expect(signalTaskReady({ url: 'http://localhost:4300/' })).toBe(true);
     expect(signalTaskReady({ url: 'http://localhost:9999/' })).toBe(false);
-    await until(2);
+    await until(1);
 
     expect(received).toEqual([
-      { type: 'nx-ready-signal:hello', taskId: 'app:serve' },
       {
         type: 'nx-ready-signal:ready',
         taskId: 'app:serve',
@@ -47,10 +44,8 @@ describe('ready signal client', () => {
 
   it('does nothing outside a task that waits for a signal', async () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
-    const { announceTaskReadySignal, signalTaskReady } =
-      await import('./ready-signal');
+    const { signalTaskReady } = await import('./ready-signal');
 
-    expect(announceTaskReadySignal()).toBe(false);
     expect(signalTaskReady()).toBe(false);
   });
 

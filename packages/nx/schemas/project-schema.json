@@ -301,10 +301,6 @@
         "signal": {
           "const": true,
           "description": "Ready when the task reports it, through signalTaskReady from @nx/devkit. The webpack, Rspack, Vite and Rsbuild plugins of Nx report it once their dev server listens"
-        },
-        "fallback": {
-          "$ref": "#/definitions/readyWhenFallback",
-          "description": "With signal, a check that also counts until the task says it will signal. It takes the signal's timeout"
         }
       },
       "oneOf": [
@@ -313,27 +309,6 @@
         { "required": ["command"] },
         { "required": ["logMatches"] },
         { "required": ["signal"] }
-      ],
-      "dependencies": { "fallback": ["signal"] },
-      "additionalProperties": false
-    },
-    "readyWhenFallback": {
-      "type": "object",
-      "properties": {
-        "url": { "$ref": "#/definitions/readyWhen/properties/url" },
-        "port": { "$ref": "#/definitions/readyWhen/properties/port" },
-        "host": { "$ref": "#/definitions/readyWhen/properties/host" },
-        "command": { "$ref": "#/definitions/readyWhen/properties/command" },
-        "logMatches": {
-          "$ref": "#/definitions/readyWhen/properties/logMatches"
-        },
-        "interval": { "$ref": "#/definitions/readyWhen/properties/interval" }
-      },
-      "oneOf": [
-        { "required": ["url"] },
-        { "required": ["port"] },
-        { "required": ["command"] },
-        { "required": ["logMatches"] }
       ],
       "additionalProperties": false
     },

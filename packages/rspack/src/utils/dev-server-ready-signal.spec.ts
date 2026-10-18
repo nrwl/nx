@@ -8,7 +8,6 @@ import {
 } from './dev-server-ready-signal';
 
 const devkit = vi.hoisted(() => ({
-  announceTaskReadySignal: vi.fn(() => true),
   signalTaskReady: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
@@ -17,7 +16,6 @@ mockCjsModule(import.meta.url, '@nx/devkit', devkit);
 describe('applyDevServerReadySignal', () => {
   beforeEach(() => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.announceTaskReadySignal.mockClear();
     devkit.signalTaskReady.mockClear();
   });
 
@@ -30,12 +28,11 @@ describe('applyDevServerReadySignal', () => {
     options: { server: { type: 'http' } },
   };
 
-  it('announces the signal and sends it once the dev server listens', () => {
+  it('sends the signal once the dev server listens', () => {
     const onListening = vi.fn();
     const compiler = { options: { devServer: { onListening } } } as any;
 
     applyDevServerReadySignal(compiler);
-    expect(devkit.announceTaskReadySignal).toHaveBeenCalled();
     expect(devkit.signalTaskReady).not.toHaveBeenCalled();
 
     compiler.options.devServer.onListening(server);
@@ -49,7 +46,6 @@ describe('applyDevServerReadySignal', () => {
     const compiler = { options: { devServer: {} } } as any;
 
     new NxReadySignalPlugin().apply(compiler);
-    expect(devkit.announceTaskReadySignal).toHaveBeenCalled();
     expect(compiler.options.devServer.onListening).toEqual(
       expect.any(Function)
     );
@@ -70,7 +66,7 @@ describe('applyDevServerReadySignal', () => {
     const noDevServer = { options: {} } as any;
     applyDevServerReadySignal(noDevServer);
     expect(noDevServer.options.devServer).toBeUndefined();
-    expect(devkit.announceTaskReadySignal).not.toHaveBeenCalled();
+    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
   });
 });
 

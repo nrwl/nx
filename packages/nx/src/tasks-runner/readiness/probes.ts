@@ -4,7 +4,6 @@ import type { ReadySignalServer } from './ready-signal-server';
 import { resolveStartupHost } from './startup-host';
 import {
   notReadyError,
-  ReadinessTimeoutError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
 } from './ready-when';
@@ -80,15 +79,13 @@ async function waitForCheck(
   }
 }
 
-// Ready on the producer's `ready` message, or on the fallback check until the
-// producer says hello: from then on only its signal counts.
+// Ready on the producer's `ready` message, which a message sent before the
+// check started counts as
 function waitForSignal(
   readyWhen: Extract<NormalizedReadyWhen, { kind: 'signal' }>,
   context: ReadinessProbeContext
 ): Promise<Readiness> {
   return new Promise<Readiness>((resolve, reject) => {
-    const fallbackAbort = new AbortController();
-    // A signal sent before the probe started is replayed during subscribe
     let unsubscribe = () => {};
     let settled = false;
     const settle = (error: Error | null, readiness?: Readiness) => {
@@ -96,7 +93,6 @@ function waitForSignal(
       settled = true;
       clearTimeout(timer);
       unsubscribe();
-      fallbackAbort.abort();
       context.signal.removeEventListener('abort', onAbort);
       error ? reject(error) : resolve(readiness);
     };
@@ -111,44 +107,14 @@ function waitForSignal(
       onAbort();
       return;
     }
-    const stop = context.readySignal?.subscribe(context.taskId, (message) => {
-      if (message.type === 'nx-ready-signal:ready') {
-        settle(null, message.url ? { url: message.url } : {});
-      } else {
-        fallbackAbort.abort();
-      }
-    });
+    const stop = context.readySignal?.subscribe(context.taskId, (message) =>
+      settle(null, message.url ? { url: message.url } : {})
+    );
     if (settled) {
       stop?.();
       return;
     }
     unsubscribe = stop ?? unsubscribe;
-    // A replayed hello has already ruled the fallback out
-    if (fallbackAbort.signal.aborted) {
-      return;
-    }
-    if (readyWhen.fallback === null) {
-      settle(null, {});
-    } else if (readyWhen.fallback && !IS_WASM) {
-      waitForCheck(readyWhen.fallback, {
-        ...context,
-        // settle aborts it when the producer exits
-        signal: fallbackAbort.signal,
-      }).then(
-        () => {
-          if (!fallbackAbort.signal.aborted) settle(null, {});
-        },
-        // Its timeout is the signal's, reported as one
-        (e) => {
-          if (fallbackAbort.signal.aborted) return;
-          settle(
-            e instanceof ReadinessTimeoutError
-              ? readinessTimeoutError(context.taskId, readyWhen)
-              : e
-          );
-        }
-      );
-    }
   });
 }
 

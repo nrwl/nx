@@ -249,60 +249,21 @@ describe('normalizeReadyWhen signal', () => {
   const normalize = (readyWhen: any) =>
     normalizeReadyWhen(readyWhen, 'app:serve', data);
 
-  it('takes an optional fallback check with the same timeout', () => {
+  it('fills in the default timeout', () => {
     expect(normalize({ signal: true })).toEqual({
       kind: 'signal',
       timeout: 60_000,
     });
-    expect(
-      normalize({
-        signal: true,
-        timeout: 5000,
-        fallback: { port: '{options.port}', interval: 20 },
-      })
-    ).toEqual({
+    expect(normalize({ signal: true, timeout: 5000 })).toEqual({
       kind: 'signal',
       timeout: 5000,
-      fallback: { kind: 'port', port: 4200, timeout: 5000, interval: 20 },
     });
-  });
-
-  it('treats an undefined fallback as absent, as a serialized config does', () => {
-    expect(normalize({ port: 4200, fallback: undefined })).toMatchObject({
-      kind: 'port',
-      port: 4200,
-    });
-  });
-
-  it('counts a fallback whose server picks the port as ready once started', () => {
-    expect(
-      normalize({ signal: true, fallback: { port: '{options.hmrPort}' } })
-    ).toEqual({ kind: 'signal', timeout: 60_000, fallback: null });
   });
 
   it.each([
     [{ signal: false }, '"signal" must be true'],
     [{ signal: true, interval: 10 }, '"interval" is not used by "signal"'],
-    [
-      { port: 4200, fallback: { port: 1 } },
-      '"fallback" is only allowed with "signal"',
-    ],
-    [
-      { port: 4200, fallback: null },
-      '"fallback" is only allowed with "signal"',
-    ],
-    [
-      { signal: true, fallback: { port: 1, timeout: 5 } },
-      '"fallback" must be a url, port, command or logMatches check without its own timeout',
-    ],
-    [
-      { signal: true, fallback: { signal: true } },
-      '"fallback" must be a url, port, command or logMatches check without its own timeout',
-    ],
-    [
-      { signal: true, fallback: { port: 1, url: 'http://localhost' } },
-      'expected exactly one of',
-    ],
+    [{ signal: true, port: 1 }, 'expected exactly one of'],
   ])('rejects %j', (readyWhen, reason) => {
     expect(() => normalize(readyWhen)).toThrow(reason);
   });
@@ -313,7 +274,7 @@ describe('getReadyWhen', () => {
     const serve = {
       executor: 'nx:run-commands',
       continuous: true,
-      readyWhen: { signal: true, fallback: { command: 'check-ready' } },
+      readyWhen: { command: 'check-ready' },
       options: { command: 'serve', env: { NX_READY_WHEN_PORT: '5001' } },
     };
     const projectGraph = {
@@ -338,10 +299,10 @@ describe('getReadyWhen', () => {
     });
 
     expect(readyWhen).toMatchObject({
-      kind: 'signal',
-      fallback: { kind: 'command', command: 'check-ready' },
+      kind: 'command',
+      command: 'check-ready',
     });
-    const { env } = (readyWhen as any).fallback;
+    const { env } = readyWhen as any;
     expect(env).toMatchObject({
       NX_TASK_ENV: 'yes',
       NX_READY_WHEN_PORT: '5001',
