@@ -21,10 +21,11 @@ pub const READINESS_SCHEMA: &str = "CREATE TABLE IF NOT EXISTS running_task_read
     url TEXT
 );";
 
-// A db made before `url` keeps its file name, since the column is additive.
-// Older Nx processes sharing it only touch `task_id` and `status`, and their
-// `INSERT OR REPLACE` leaves `url` empty.
-fn add_url_column(db: &NxDbConnection) -> anyhow::Result<()> {
+/// Adds `url` to a db made before it, which keeps its file name since the
+/// column is additive. Older Nx processes sharing the db only touch `task_id`
+/// and `status`, and their `INSERT OR REPLACE` leaves `url` empty. Runs under
+/// the db lock file, from `initialize_db`.
+pub(crate) fn add_readiness_url_column(db: &NxDbConnection) -> anyhow::Result<()> {
     let has_url = db
         .query_row(
             "SELECT 1 FROM pragma_table_info('running_task_readiness') WHERE name = 'url'",
@@ -32,15 +33,15 @@ fn add_url_column(db: &NxDbConnection) -> anyhow::Result<()> {
             |row| row.get::<_, i64>(0),
         )?
         .is_some();
-    if has_url {
-        return Ok(());
+    if !has_url {
+        db.execute("ALTER TABLE running_task_readiness ADD COLUMN url TEXT", [])?;
     }
-    match db.execute("ALTER TABLE running_task_readiness ADD COLUMN url TEXT", []) {
-        Ok(_) => Ok(()),
-        // Another process added it first
-        Err(e) if e.to_string().contains("duplicate column name") => Ok(()),
-        Err(e) => Err(e),
-    }
+    Ok(())
+}
+
+// A db whose `url` column couldn't be added still records readiness
+fn is_missing_url_column(e: &anyhow::Error) -> bool {
+    e.to_string().contains("no such column: url")
 }
 
 #[napi]
@@ -76,7 +77,6 @@ impl RunningTasksService {
             Arc<Mutex<NxDbConnection>>,
         >,
     ) -> anyhow::Result<Self> {
-        add_url_column(&db.lock().unwrap())?;
         Ok(Self {
             db: Arc::clone(db),
             added_tasks: Default::default(),
@@ -204,17 +204,25 @@ impl RunningTasksService {
         status: TaskReadiness,
         url: Option<String>,
     ) -> anyhow::Result<()> {
-        self.db.lock().unwrap().execute(
+        let db = self.db.lock().unwrap();
+        let pid = std::process::id().to_string();
+        let updated = db.execute(
             "UPDATE running_task_readiness SET status = ?, url = ? WHERE task_id = ? AND task_id IN \
              (SELECT task_id FROM running_tasks WHERE task_id = ? AND pid = ?)",
-            (
-                status as i64,
-                &url,
-                &task_id,
-                &task_id,
-                std::process::id().to_string(),
-            ),
-        )?;
+            (status as i64, &url, &task_id, &task_id, &pid),
+        );
+        match updated {
+            Err(e) if is_missing_url_column(&e) => {
+                db.execute(
+                    "UPDATE running_task_readiness SET status = ? WHERE task_id = ? AND task_id IN \
+                     (SELECT task_id FROM running_tasks WHERE task_id = ? AND pid = ?)",
+                    (status as i64, &task_id, &task_id, &pid),
+                )?;
+            }
+            other => {
+                other?;
+            }
+        }
         debug!("Set readiness of {} to {:?}", task_id, status);
         Ok(())
     }
@@ -239,16 +247,15 @@ impl RunningTasksService {
         if !self.is_task_running(&task_id)? {
             return Ok(None);
         }
-        Ok(self
-            .db
-            .lock()
-            .unwrap()
-            .query_row(
-                "SELECT url FROM running_task_readiness WHERE task_id = ?",
-                [&task_id],
-                |row| row.get::<_, Option<String>>(0),
-            )?
-            .flatten())
+        match self.db.lock().unwrap().query_row(
+            "SELECT url FROM running_task_readiness WHERE task_id = ?",
+            [&task_id],
+            |row| row.get::<_, Option<String>>(0),
+        ) {
+            Ok(url) => Ok(url.flatten()),
+            Err(e) if is_missing_url_column(&e) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -352,17 +359,17 @@ mod tests {
         let temp_dir = tempfile::tempdir().unwrap();
         let path = temp_dir.path().join("old.db");
         // The readiness table as an older Nx created it
-        let conn = initialize_db(&path).unwrap();
-        conn.execute_batch(
-            "DROP TABLE running_task_readiness; \
-             CREATE TABLE running_task_readiness (task_id TEXT PRIMARY KEY NOT NULL, status INTEGER NOT NULL);",
-        )
-        .unwrap();
-        let db = External::new(Arc::new(Mutex::new(conn)));
-
+        initialize_db(&path)
+            .unwrap()
+            .execute_batch(
+                "DROP TABLE running_task_readiness; \
+                 CREATE TABLE running_task_readiness (task_id TEXT PRIMARY KEY NOT NULL, status INTEGER NOT NULL);",
+            )
+            .unwrap();
+        // Opening the existing db adds the column, and opening it again finds it
+        initialize_db(&path).unwrap();
+        let db = External::new(Arc::new(Mutex::new(initialize_db(&path).unwrap())));
         let mut service = RunningTasksService::new(&db).unwrap();
-        // A second service on the same db finds the column already there
-        RunningTasksService::new(&db).unwrap();
 
         let id = "app:serve".to_string();
         service.add_running_task(id.clone()).unwrap();
@@ -385,6 +392,36 @@ mod tests {
                 (&id, TaskReadiness::Ready as i64),
             )
             .unwrap();
+        assert_eq!(service.get_task_ready_url(id).unwrap(), None);
+    }
+
+    #[test]
+    fn records_readiness_when_the_url_column_is_missing() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("no-url.db");
+        // A db whose url column couldn't be added
+        let conn = initialize_db(&path).unwrap();
+        conn.execute_batch(
+            "DROP TABLE running_task_readiness; \
+             CREATE TABLE running_task_readiness (task_id TEXT PRIMARY KEY NOT NULL, status INTEGER NOT NULL);",
+        )
+        .unwrap();
+        let mut service =
+            RunningTasksService::new(&External::new(Arc::new(Mutex::new(conn)))).unwrap();
+        let id = "app:serve".to_string();
+
+        service.add_running_task(id.clone()).unwrap();
+        service
+            .set_task_readiness(
+                id.clone(),
+                TaskReadiness::Ready,
+                Some("http://localhost:4300/".into()),
+            )
+            .unwrap();
+        assert_eq!(
+            service.get_task_readiness(id.clone()).unwrap(),
+            Some(TaskReadiness::Ready)
+        );
         assert_eq!(service.get_task_ready_url(id).unwrap(), None);
     }
 
