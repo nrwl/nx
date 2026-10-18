@@ -126,6 +126,22 @@ To opt in, set it back to `true`:
 }
 ```
 
+The plugin infers the dependency on the dev server from `webServerCommands` in `nxE2EPreset`.
+In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself, and pass `baseUrl` through `getReadyUrl` from `@nx/devkit`.
+It returns the address unchanged when Nx reports none, and otherwise moves it to the reported port:
+
+```ts
+// apps/myapp-e2e/cypress.config.ts
+import { defineConfig } from 'cypress';
+import { getReadyUrl } from '@nx/devkit';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: getReadyUrl('http://localhost:4200'),
+  },
+});
+```
+
 ### Splitting E2E tasks by file
 
 To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:

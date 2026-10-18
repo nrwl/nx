@@ -110,6 +110,30 @@ A migration turns the option off in existing workspaces.
 Set it to `true` to opt in.
 To make another serve target report readiness, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
 
+In a Playwright config you wrote yourself, pass the address through `getReadyUrl` from `@nx/devkit`
+for both `baseURL` and `webServer.url`.
+It returns the address unchanged when Nx reports none, and otherwise moves it to the reported port:
+
+```ts
+// apps/myapp-e2e/playwright.config.ts
+import { defineConfig } from '@playwright/test';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const baseURL = getReadyUrl('http://localhost:4200');
+
+export default defineConfig({
+  use: { baseURL },
+  webServer: {
+    command: 'npx nx run myapp:serve',
+    url: baseURL,
+    reuseExistingServer: true,
+    cwd: workspaceRoot,
+  },
+});
+```
+
+With `webServer.url` set the same way, Playwright reuses the server Nx started instead of starting another.
+
 ### Splitting E2E tests
 
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter

@@ -732,6 +732,10 @@ From then on, only the report counts, so the fallback covers a configuration tha
 
 A task that waits for a signaling target gets the reported address in the `NX_READY_URL` environment variable, when exactly one of the targets it waits for reported one.
 A target started by another Nx process reports its readiness, but not its address.
+To apply it to an address you'd otherwise hard-code, call `getReadyUrl` from `@nx/devkit`, for example `getReadyUrl('http://localhost:4200/app')`.
+It takes the protocol and port from `NX_READY_URL` and keeps the path and query.
+A `localhost` host stays as it is when the server listens on a loopback address, and any other host moves to the one the server reported.
+Without `NX_READY_URL`, it returns the address unchanged.
 
 To report readiness from your own server, call the functions from `@nx/devkit` in the task's process:
 
