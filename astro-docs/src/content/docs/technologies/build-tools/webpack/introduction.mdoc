@@ -112,6 +112,7 @@ The inferred `serve` and `preview` targets come with a `readyWhen` check, so a t
 When the webpack config sets `devServer` and loads `NxAppWebpackPlugin`, the check waits for the plugin to report the server's address once it listens.
 In a config without `NxAppWebpackPlugin`, add `new NxReadySignalPlugin()` from `@nx/webpack/ready-signal` to `plugins` instead.
 The report carries the port the server actually uses, so the check is right however the port was chosen.
+The signal applies only when exactly one config sets `devServer`. When several configs set it, Nx uses the config-reading check below even if each one loads a signal plugin.
 
 Without either plugin, the check reads the webpack config when the task runs instead, in the task's environment and with its options.
 That covers `.env` files and `--port` or `--host` flags.
