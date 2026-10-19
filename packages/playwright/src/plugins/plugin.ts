@@ -57,6 +57,9 @@ export interface PlaywrightPluginOptions {
    * for a server to be ready before failing. Overrides the `timeout` each
    * Playwright `webServer` configures. Defaults to that configured timeout,
    * or 60000 when neither is set.
+   *
+   * @deprecated Wait for the web server task's `readyWhen` instead, which
+   * `waitForServerReady` turns on. This option will be removed in Nx 25.
    */
   webServerTimeout?: number;
   /**
@@ -64,12 +67,18 @@ export interface PlaywrightPluginOptions {
    * Playwright test tasks run. When false, no readiness task is inferred and the
    * tests fall back to Playwright's own `reuseExistingServer` probe. Defaults to
    * true.
+   *
+   * @deprecated Wait for the web server task's `readyWhen` instead, which
+   * `waitForServerReady` turns on. This option will be removed in Nx 25.
    */
   waitForWebServer?: boolean;
   /**
    * Whether the inferred dependencies on the web server tasks wait for those
    * tasks' `readyWhen` (`waitFor: 'ready'`) rather than for them to start.
    * Defaults to true.
+   *
+   * @deprecated Leave it unset to wait for the web server task's `readyWhen`,
+   * the only behavior in Nx 25. This option will be removed in Nx 25.
    */
   waitForServerReady?: boolean;
 }

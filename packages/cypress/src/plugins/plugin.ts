@@ -37,6 +37,9 @@ export interface CypressPluginOptions {
   /**
    * Wait for the web server task's `readyWhen` and test against the URL it
    * reports. Defaults to `true`.
+   *
+   * @deprecated Leave it unset to wait for the web server task's `readyWhen`,
+   * the only behavior in Nx 25. This option will be removed in Nx 25.
    */
   waitForServerReady?: boolean;
 }
