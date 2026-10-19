@@ -39,11 +39,24 @@ To add distribution and the rest of the pipeline, see [setting up CI](/docs/gett
 
 {% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
+## Building blocks of fast CI
+
+Fast CI comes from three layers:
+
+- **Fast tools.** The tools behind `build`, `test`, `lint`, and `e2e` set how long a cache miss takes. [Plugin](/docs/plugin-registry) migrations can update their configuration when recommended settings change.
+- **Less work.** [`nx affected`](/docs/features/ci-features/affected) runs tasks only for projects a change touches, and [remote caching](/docs/features/ci-features/remote-cache) replays tasks that already ran with the same inputs. For a scenario-by-scenario explanation, see [reduce waste in CI](/docs/kb/reduce-waste).
+- **Enough compute.** Nx runs independent tasks in parallel, up to the `parallel` limit in `nx.json` or `--parallel=<number>`. Once the task graph outgrows one machine, [distribution](/docs/features/ci-features/distribute-task-execution) spreads it across several.
+
 ## Why task-based CI costs less
 
 Most CI setups use static partitioning (binning and sharding), assigning work to machines up front, such as one job for tests and another for builds, and each machine runs until its slowest task ends.
+
+![CI tasks divided into fixed bins](../../../../assets/concepts/ci-concepts/binning.svg)
+
 Nx Cloud assigns individual tasks as agents free up, using the task graph and each task's past duration, CPU, and memory use.
 Agents stay busy, an agent that fails during setup has its work picked up by the others, and adding agents needs no change to how work is split.
+
+![CI tasks distributed across three agents](../../../../assets/concepts/ci-concepts/3agents.svg)
 
 [Learn how teams use Nx Cloud](https://nx.dev/blog?filterBy=customer+story) to scale their workspaces.
 

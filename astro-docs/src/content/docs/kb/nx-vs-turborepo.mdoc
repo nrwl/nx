@@ -25,7 +25,7 @@ Both tools are easy to set up and get started, and both cover the same basics: t
 - Ultracache, code generation, polyglot support, and release management.
 - A CI platform with distribution, flaky-task handling, and self-healing.
 
-Nx also asks for less task configuration to get there, because it runs your `package.json` scripts with sensible default inputs and [plugins](/docs/concepts/nx-plugins) can infer the rest from your tool configs. Turborepo has you declare inputs and outputs in `turbo.json` and repeat them on every cacheable task.
+Nx also asks for less task configuration to get there, because it runs your `package.json` scripts with sensible default inputs and [plugins](/docs/plugin-registry) can infer the rest from your tool configs. Turborepo has you declare inputs and outputs in `turbo.json` and repeat them on every cacheable task.
 
 Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite.
 

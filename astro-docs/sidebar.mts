@@ -77,26 +77,6 @@ const learnGroups: SidebarItems = [
   },
 
   {
-    label: 'How Nx works',
-    collapsed: true,
-    items: [
-      { label: 'How caching works', link: 'concepts/how-caching-works' },
-      {
-        label: 'Task pipeline configuration',
-        link: 'concepts/task-pipeline-configuration',
-      },
-      {
-        label: 'Types of configuration',
-        link: 'concepts/types-of-configuration',
-      },
-      { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      {
-        label: 'Building blocks of fast CI',
-        link: 'concepts/ci-concepts/building-blocks-fast-ci',
-      },
-    ],
-  },
-  {
     label: 'Core features',
     collapsed: true,
     items: [

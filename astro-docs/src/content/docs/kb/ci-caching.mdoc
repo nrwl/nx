@@ -25,7 +25,7 @@ If not, the task runs and the result is stored.
 Correctness depends entirely on the inputs being complete, so cache tooling that understands your
 project structure matters more than raw storage speed.
 Nx [caches task results](/docs/features/cache-task-results) with inputs inferred from your
-tooling configuration, and [how caching works](/docs/concepts/how-caching-works) covers the
+tooling configuration, and [how caching works](/docs/features/cache-task-results#how-caching-works) covers the
 hashing model in detail.
 
 ## Local cache vs remote cache
@@ -56,7 +56,7 @@ A cache only removes repeat work, and two other sources of CI time need differen
 
 Together these form a pipeline where the worst case is bounded by the largest single task, not
 the size of the repository.
-The [building blocks of fast CI](/docs/concepts/ci-concepts/building-blocks-fast-ci) covers the
+The [building blocks of fast CI](/docs/features/ci-features#building-blocks-of-fast-ci) covers the
 full picture.
 
 ## Frequently asked questions

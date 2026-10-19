@@ -6,7 +6,7 @@ topics:
   - 'Tasks & caching'
 ---
 
-When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
+When Nx [computes the hash for a given operation](/docs/features/cache-task-results#how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of file sets, runtime inputs, and environment variables that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 In CI, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes a task from the files it read on a recorded run instead of its declared file sets, so a change to a declared file that run didn't read doesn't re-run it.

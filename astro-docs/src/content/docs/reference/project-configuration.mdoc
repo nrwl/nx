@@ -64,6 +64,20 @@ nx show project myproject --web
 {% /project_details %}
 
 The project details view also shows where each setting is defined so that you know where to change it.
+From the terminal, `nx show target` prints one resolved target, and `--verbose` adds the file or plugin behind each value:
+
+```shell
+nx show target myproject:build --verbose
+```
+
+Nx configuration sits next to the configuration of the tools each project uses, at both the workspace and the project level:
+
+| Scope     | Nx configuration                   | Tool configuration (TypeScript example) |
+| --------- | ---------------------------------- | --------------------------------------- |
+| Workspace | `/nx.json`                         | `/tsconfig.base.json`                   |
+| Project   | `/packages/myproject/package.json` | `/packages/myproject/tsconfig.json`     |
+
+Tool configuration stays the source of truth for the tool itself, and plugins read it to create the inferred tasks.
 
 ## Project level configuration files
 
