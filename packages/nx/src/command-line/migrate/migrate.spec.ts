@@ -88,6 +88,7 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { gt } from 'semver';
 import { logger } from '../../utils/logger';
 
 const createPackageJson = (
@@ -1288,6 +1289,188 @@ describe('Migration', () => {
         expect(result.packageUpdates.mypackage).toBeUndefined();
         expect(result.packageUpdates.requiredChild).toBeUndefined();
       });
+
+      it('should skip optional update migrations when include is required', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({ dependencies: { dep: '1.0.0' } }),
+          getInstalledPackageVersion: () => '1.0.0',
+          fetch: (p) => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '2.0.0',
+                generators: {
+                  migration: { version: '2.0.0' },
+                  'update-dep': {
+                    version: '2.0.0',
+                    requires: { dep: '>=1.0.0 <2.0.0' },
+                    optionalUpdate: true,
+                  },
+                },
+              });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+          include: 'required',
+          requiredPackages: new Set(['mypackage']),
+        });
+
+        const result = await migrator.migrate('mypackage', '2.0.0');
+
+        expect(result.migrations.map((m) => m.name)).toEqual(['migration']);
+      });
+
+      it("should collect required packages' optional update migrations and the migrations the optional updates enable when include is optional", async () => {
+        const installed: Record<string, string> = {
+          nx: '24.0.0',
+          '@nx/angular': '24.0.0',
+          '@angular/core': '21.2.0',
+          cypress: '15.5.0',
+          rxjs: '7.8.0',
+        };
+        const migrator = new Migrator({
+          packageJson: createPackageJson({ dependencies: installed }),
+          getInstalledPackageVersion: (p, overrides) =>
+            overrides?.[p] ?? installed[p] ?? null,
+          fetch: (p, v) => {
+            if (p === 'nx') {
+              return Promise.resolve({
+                version: '24.0.0',
+                packageGroup: [{ package: '@nx/angular', version: '*' }],
+              });
+            }
+            if (p === '@nx/angular') {
+              return Promise.resolve({
+                version: '24.0.0',
+                packageJsonUpdates: {
+                  '20.0.0': {
+                    version: '20.0.0',
+                    packages: { rxjs: { version: '6.6.0' } },
+                  },
+                  '23.1.0': {
+                    version: '23.1.0',
+                    requires: { '@angular/core': '>=21.2.0 <22.0.0' },
+                    packages: { '@angular/core': { version: '22.0.0' } },
+                  },
+                },
+                generators: {
+                  // met only by the stale rxjs pin, which is never written
+                  'update-for-rxjs-6': {
+                    version: '20.0.0',
+                    requires: { rxjs: '>=6.0.0 <7.0.0' },
+                  },
+                  // already applied
+                  'update-for-angular-21': {
+                    version: '22.0.0',
+                    requires: { '@angular/core': '>=21.0.0' },
+                  },
+                  'update-for-angular-22': {
+                    version: '23.1.0',
+                    requires: { '@angular/core': '>=22.0.0' },
+                  },
+                  'upgrade-to-cypress-16': {
+                    version: '23.1.0',
+                    requires: { cypress: '>=15.0.0 <16.0.0' },
+                    optionalUpdate: true,
+                  },
+                },
+              });
+            }
+            return Promise.resolve({ version: v });
+          },
+          from: { nx: '0.0.0' },
+          to: {},
+          excludeAppliedMigrations: true,
+          include: 'optional',
+          requiredPackages: new Set(['nx', '@nx/angular']),
+        });
+
+        const result = await migrator.migrate('nx', '24.0.0');
+
+        expect(result.migrations.map((m) => m.name)).toEqual([
+          'update-for-angular-22',
+          'upgrade-to-cypress-16',
+        ]);
+      });
+
+      it.each([
+        {
+          scenario: 'stop at the installed plugin version',
+          pluginVersion: '23.2.0',
+          groupVersion: '*',
+          targetVersion: '24.0.0',
+          expected: ['optional-update-22'],
+        },
+        {
+          scenario: 'include fixed-version package group members',
+          pluginVersion: '24.0.0',
+          groupVersion: '24.0.0',
+          targetVersion: '24.0.0',
+          expected: ['optional-update-22', 'optional-update-23-3'],
+        },
+        {
+          scenario: 'stop at a target older than the installed version',
+          pluginVersion: '24.0.0',
+          groupVersion: '*',
+          targetVersion: '23.0.0',
+          expected: ['optional-update-22'],
+        },
+      ])(
+        "should $scenario when collecting required packages' migrations with include optional",
+        async ({ pluginVersion, groupVersion, targetVersion, expected }) => {
+          const installed: Record<string, string> = {
+            nx: '24.0.0',
+            '@nx/cypress': pluginVersion,
+            cypress: '14.5.0',
+          };
+          const migrator = new Migrator({
+            packageJson: createPackageJson({ dependencies: installed }),
+            getInstalledPackageVersion: (p, overrides) =>
+              overrides?.[p] ?? installed[p] ?? null,
+            fetch: (p, v) => {
+              if (p === 'nx') {
+                return Promise.resolve({
+                  version: v,
+                  packageGroup: [
+                    { package: '@nx/cypress', version: groupVersion },
+                  ],
+                });
+              }
+              if (p === '@nx/cypress') {
+                return Promise.resolve({
+                  version: v,
+                  generators: {
+                    // Metadata above the installed version pruned this entry.
+                    ...(!gt(v, pluginVersion) && {
+                      'optional-update-22': {
+                        version: '22.0.0',
+                        requires: { cypress: '^14.0.0' },
+                        optionalUpdate: true,
+                      },
+                    }),
+                    'optional-update-23-3': {
+                      version: '23.3.0',
+                      requires: { cypress: '^14.0.0' },
+                      optionalUpdate: true,
+                    },
+                  },
+                });
+              }
+              return Promise.resolve({ version: v });
+            },
+            from: { nx: '0.0.0' },
+            to: {},
+            excludeAppliedMigrations: true,
+            include: 'optional',
+            requiredPackages: new Set(['nx', '@nx/cypress']),
+          });
+
+          const result = await migrator.migrate('nx', targetVersion);
+
+          expect(result.migrations.map((m) => m.name)).toEqual(expected);
+        }
+      );
 
       it.each(['required', 'optional'] as const)(
         'should throw when constructed with include=%s but no requiredPackages',
