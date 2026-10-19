@@ -46,10 +46,6 @@ Nx caches task results at the process level, whatever tool the task runs.
 A cache entry holds the terminal output, the files and directories matched by the target's [`outputs`](/docs/kb/configure-outputs), and the task hash.
 Source files and other inputs aren't stored, only their hashes.
 
-When `outputs` isn't configured, Nx falls back to an executor's `outputPath` option.
-For `build` and `prepare` targets without an `outputPath`, Nx checks common `dist`, `build`, and `public` directories.
-Once `outputs` is configured, `outputPath` no longer counts unless you reference it with `"outputs": ["{options.outputPath}"]`.
-
 ## Define cacheable tasks
 
 To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include entries for the `build` and `test` tasks:
