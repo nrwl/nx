@@ -360,9 +360,10 @@ function normalizeOutputPath(
   }
 }
 
-// A dev server whose config loads NxAppRspackPlugin or NxReadySignalPlugin reports
-// when it listens. Otherwise the check reads the config when the task runs,
-// with the task's env and options, and waits for the dev server's port.
+// A dev server whose config loads NxAppRspackPlugin, NxReadySignalPlugin or
+// @nx/angular-rspack's NgRspackPlugin reports when it listens. Otherwise the
+// check reads the config when the task runs, with the task's env and options,
+// and waits for the dev server's port.
 function getDevServerReadyWhen(
   configFilePath: string,
   configs: { devServer?: unknown; plugins?: unknown[] }[]
