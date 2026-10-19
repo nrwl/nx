@@ -512,13 +512,13 @@ describe('React:CypressComponentTestConfiguration', () => {
       buildTarget: 'my-app:build',
       keepViteConfig: true,
       error:
-        '"my-app:build" is not one. It uses the "@nx/webpack:webpack" executor.',
+        '"my-app:build" is not one. It uses the "@nx/webpack:webpack" executor. Convert it to an inferred target first, for example with "nx g @nx/workspace:infer-targets --project=my-app".',
     },
     {
       buildTarget: undefined,
       keepViteConfig: true,
       error:
-        '"my-app:build" is not one. It uses the "@nx/webpack:webpack" executor.',
+        '"my-app:build" is not one. It uses the "@nx/webpack:webpack" executor. Convert it to an inferred target first, for example with "nx g @nx/workspace:infer-targets --project=my-app".',
     },
     {
       buildTarget: undefined,

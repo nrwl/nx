@@ -203,7 +203,9 @@ describe('@nx/vite:configuration', () => {
         uiFramework: 'react',
         project: 'my-test-react-app',
       })
-    ).rejects.toThrow('removed executors: build (@nx/webpack:webpack)');
+    ).rejects.toThrow(
+      'removed executors: build (@nx/webpack:webpack). Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=my-test-react-app".'
+    );
     expect(tree.exists('apps/my-test-react-app/webpack.config.ts')).toBe(true);
   });
 

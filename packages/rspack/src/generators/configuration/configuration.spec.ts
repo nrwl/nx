@@ -158,7 +158,7 @@ describe('rspack configuration generator', () => {
   it.each([
     [
       { build: { executor: '@nx/webpack:webpack' } },
-      'removed executors: build (@nx/webpack:webpack)',
+      'removed executors: build (@nx/webpack:webpack). Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=app".',
     ],
     [
       { serve: { executor: '@nx/rspack:dev-server' } },
