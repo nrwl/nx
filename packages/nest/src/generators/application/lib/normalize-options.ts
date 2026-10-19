@@ -49,7 +49,7 @@ export function toNodeApplicationGeneratorOptions(
     e2eTestRunner: options.e2eTestRunner,
     enableTypedLinting: options.enableTypedLinting,
     rootProject: options.rootProject,
-    bundler: 'webpack', // Some features require webpack plugins such as TS transformers
+    bundler: options.bundler ?? 'webpack',
     isNest: true,
     useProjectJson: options.useProjectJson,
   };
