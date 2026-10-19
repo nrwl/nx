@@ -16,6 +16,5 @@ export async function addLintingToApplication(
     unitTestRunner: options.unitTestRunner,
     enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
-    addPlugin: options.addPlugin,
   });
 }

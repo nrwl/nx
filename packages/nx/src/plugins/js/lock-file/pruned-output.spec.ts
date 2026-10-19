@@ -14,6 +14,7 @@ import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
 import * as pacakgeManager from '../../../utils/package-manager';
 import {
+  assertNoWorkspaceModulePathCollision,
   containLocalPath,
   containShippedLocalFilePaths,
   getPrunedPnpmInstallArtifacts,
@@ -2107,6 +2108,42 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
 
   it('returns [] when there is no pruned lockfile content', () => {
     expect(getPrunedPnpmLocalPathArtifacts(tempDir)).toEqual([]);
+  });
+});
+
+describe('assertNoWorkspaceModulePathCollision', () => {
+  const synthesized = new Set(['workspace_modules/mylib']);
+
+  it('throws when a local-path dependency sits at a copied module path', () => {
+    expect(() =>
+      assertNoWorkspaceModulePathCollision(
+        {
+          'vendored@file:workspace_modules/mylib': {
+            resolution: {
+              directory: 'workspace_modules/mylib',
+              type: 'directory',
+            },
+          },
+        },
+        synthesized
+      )
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Cannot prune pnpm lockfile: local-path dependency "file:workspace_modules/mylib" sits where the standalone output copies a workspace module of the same name. Move it out of workspace_modules/ so they do not collide.]`
+    );
+  });
+
+  it('allows local-path dependencies elsewhere', () => {
+    expect(() =>
+      assertNoWorkspaceModulePathCollision(
+        {
+          'vendored@file:vendor/mylib': {
+            resolution: { directory: 'vendor/mylib', type: 'directory' },
+          },
+          'is-even@1.0.0': { resolution: { integrity: 'sha512-x' } },
+        },
+        synthesized
+      )
+    ).not.toThrow();
   });
 });
 

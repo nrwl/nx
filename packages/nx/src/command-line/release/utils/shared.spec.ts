@@ -352,6 +352,30 @@ describe('shared', () => {
       expect(tags).toEqual(['my-group-1.1.0']);
     });
 
+    it('should reject a fallback whose placeholder a fixed group has no value for', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.pattern =
+        '{projectName ?? releaseGroupName}-v{version}';
+
+      expect(() =>
+        createGitTagValues([releaseGroup], releaseGroupToFilteredProjects, {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        })
+      ).toThrow(
+        "Release configuration '{projectName ?? releaseGroupName}-v{version}' is invalid. It can't use ?? fallbacks"
+      );
+    });
+
     it('should not tag if fixed group is not bumping', () => {
       const { releaseGroup, releaseGroupToFilteredProjects } =
         setUpReleaseGroup();

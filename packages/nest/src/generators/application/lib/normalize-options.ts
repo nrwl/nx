@@ -1,4 +1,4 @@
-import { Tree, readNxJson } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -22,13 +22,7 @@ export async function normalizeOptions(
     });
   options.rootProject = appProjectRoot === '.';
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   return {
-    addPlugin,
     ...options,
     strict: options.strict ?? false,
     appProjectName,
@@ -58,7 +52,6 @@ export function toNodeApplicationGeneratorOptions(
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
     isNest: true,
-    addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,
   };
 }

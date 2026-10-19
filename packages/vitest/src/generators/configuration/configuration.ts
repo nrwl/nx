@@ -99,11 +99,7 @@ export function configurationGenerator(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
-  return configurationGeneratorInternal(
-    tree,
-    { addPlugin: false, ...schema },
-    hasPlugin
-  );
+  return configurationGeneratorInternal(tree, schema, hasPlugin);
 }
 
 export async function configurationGeneratorInternal(
@@ -153,7 +149,6 @@ export async function configurationGeneratorInternal(
 
   const initTask = await initGenerator(tree, {
     skipFormat: true,
-    addPlugin: schema.addPlugin,
     projectRoot: root,
     viteVersion: schema.viteVersion,
     skipPackageJson: schema.skipPackageJson,
@@ -305,13 +300,13 @@ getTestBed().initTestEnvironment(
     updateNxJson(tree, nxJson);
   }
 
-  const devDependencies = await getCoverageProviderDependency(
-    tree,
-    schema.coverageProvider
-  );
-  devDependencies['@types/node'] = typesNodeVersion;
-
   if (!schema.skipPackageJson) {
+    const devDependencies = await getCoverageProviderDependency(
+      tree,
+      schema.coverageProvider
+    );
+    devDependencies['@types/node'] = typesNodeVersion;
+
     const installDependenciesTask = addDependenciesToPackageJson(
       tree,
       {},

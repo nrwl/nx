@@ -2,7 +2,7 @@ import { GeneratorCallback, logger } from '@nx/devkit';
 import { chmodSync, existsSync } from 'fs';
 import { join } from 'path';
 
-export function chmodAndroidGradlewFiles(androidFolder: string) {
+function chmodAndroidGradlewFiles(androidFolder: string) {
   if (existsSync(join(androidFolder, 'gradlew'))) {
     chmodSync(join(androidFolder, 'gradlew'), 0o775);
   }

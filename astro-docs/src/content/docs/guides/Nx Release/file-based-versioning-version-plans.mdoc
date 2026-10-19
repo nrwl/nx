@@ -119,6 +119,15 @@ The only difference is that Nx release will know to reference your version plan 
 
 When you run `nx release` or use the programmatic API, Nx will look for version plan files in the `.nx/version-plans/` directory and apply the desired version bumps to the projects and release groups specified in the Front Matter YAML section of each file. If a project or release group is not found, an error will be thrown and the release will not proceed. Once a particular version plan has been applied it will be deleted from the `.nx/version-plans/` directory so that it does not inadvertently get applied again in the future. The deleted file will be staged and committed alongside your other changed files that were modified directly as part of the release command (depending on your Nx release configuration).
 
+### Release a subset of projects or release groups
+
+When you filter a release with `--groups` or `--projects`, Nx applies only the version plans for the projects being released.
+Version plans for other projects stay in `.nx/version-plans/` until a later release picks them up.
+Nx still validates those plans, so an invalid plan for another project blocks a filtered release too.
+
+If a version plan file bumps projects both inside and outside the filter, the release fails and the file is left in place.
+Release all of the projects in that file together, or move them into separate version plan files.
+
 ## Ensure that version plans exist for relevant changes
 
 When making changes to your codebase and using version plans as your versioning strategy it is likely that you will want to ensure that a version plan file exists for the changes you are making.

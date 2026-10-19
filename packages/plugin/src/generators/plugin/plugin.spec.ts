@@ -239,18 +239,22 @@ describe('NxPlugin Plugin Generator', () => {
             },
             moduleFileExtensions: ['ts', 'js', 'html'],
             coverageDirectory: '../coverage/my-plugin',
+            passWithNoTests: true,
           };
           "
         `);
         expect(tree.exists('my-plugin/.spec.swcrc')).toBeFalsy();
 
+        // The test target comes from the inferred `@nx/jest/plugin`.
         const projectTargets = readProjectConfiguration(
           tree,
           'my-plugin'
         ).targets;
 
-        expect(projectTargets.test).toBeDefined();
-        expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
+        expect(projectTargets.test).toBeUndefined();
+        expect(
+          readJson(tree, 'nx.json').plugins.map((p) => p.plugin ?? p)
+        ).toContain('@nx/jest/plugin');
       });
     });
 
@@ -269,13 +273,16 @@ describe('NxPlugin Plugin Generator', () => {
           expect(tree.exists(path)).toBeTruthy()
         );
 
+        // The test target comes from the inferred `@nx/vitest` plugin.
         const projectTargets = readProjectConfiguration(
           tree,
           'my-plugin'
         ).targets;
 
-        expect(projectTargets.test).toBeDefined();
-        expect(projectTargets.test?.executor).toEqual('@nx/vitest:test');
+        expect(projectTargets.test).toBeUndefined();
+        expect(
+          readJson(tree, 'nx.json').plugins.map((p) => p.plugin ?? p)
+        ).toContain('@nx/vitest');
       });
     });
   });
@@ -366,7 +373,7 @@ describe('NxPlugin Plugin Generator', () => {
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(true);
       const e2eProject = projects.get('my-plugin-e2e');
-      expect(e2eProject.targets.e2e.executor).toBe('@nx/jest:jest');
+      expect(e2eProject.targets.e2e).toMatchObject({ dependsOn: ['^build'] });
     });
 
     it('should generate e2e project with vitest', async () => {
@@ -374,7 +381,7 @@ describe('NxPlugin Plugin Generator', () => {
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(true);
       const e2eProject = projects.get('my-plugin-e2e');
-      expect(e2eProject.targets.e2e.executor).toBe('@nx/vitest:test');
+      expect(e2eProject.targets.e2e).toMatchObject({ dependsOn: ['^build'] });
     });
   });
 
@@ -431,6 +438,7 @@ describe('NxPlugin Plugin Generator', () => {
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: 'test-output/jest/coverage',
+          passWithNoTests: true,
         };
         "
       `);
@@ -462,13 +470,16 @@ describe('NxPlugin Plugin Generator', () => {
         "
       `);
 
+      // The test target comes from the inferred `@nx/jest/plugin`.
       const projectTargets = readProjectConfiguration(
         tree,
         '@proj/my-plugin'
       ).targets;
 
-      expect(projectTargets.test).toBeDefined();
-      expect(projectTargets.test?.executor).toEqual('@nx/jest:jest');
+      expect(projectTargets.test).toBeUndefined();
+      expect(
+        readJson(tree, 'nx.json').plugins.map((p) => p.plugin ?? p)
+      ).toContain('@nx/jest/plugin');
     });
 
     it('should add project references when using TS solution', async () => {

@@ -49,6 +49,7 @@ describe('@nx/react/react-router-plugin', () => {
         'acme/react-router.config.js': 'module.exports = {}',
         'acme/vite.config.js': '',
         'acme/project.json': JSON.stringify({ name: 'acme' }),
+        'acme/tsconfig.json': '{}',
       });
     });
 
@@ -89,6 +90,20 @@ describe('@nx/react/react-router-plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should not create a typecheck target', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets.build).toBeDefined();
     });
   });
 

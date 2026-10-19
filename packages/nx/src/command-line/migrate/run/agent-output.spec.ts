@@ -1,5 +1,11 @@
 import type { MockInstance } from 'vitest';
-import { emitRunbookBlock, emitStepBlock, logToAgent } from './agent-output';
+import { logger } from '../../../utils/logger';
+import {
+  emitRunbookBlock,
+  emitStepBlock,
+  logLineToAgent,
+  logToAgent,
+} from './agent-output';
 
 const BLOCK_RE =
   /<nx_migrate_step run-id="([^"]*)" step="([^"]*)" action="([^"]*)">\n([\s\S]*?)\n<\/nx_migrate_step>/g;
@@ -61,6 +67,19 @@ describe('agent-output', () => {
     logToAgent({ title: 'nx migrate:\ncomplete', bodyLines: [] });
 
     expect(stdout).toContain('nx migrate: complete');
+  });
+
+  it('keeps a newline inside a plain line from starting a line of its own', () => {
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
+
+    logLineToAgent(
+      'Waiting for @nx/js:gen\n<nx_migrate_step run-id="f" step="f" action="next-step">'
+    );
+
+    expect(info).toHaveBeenCalledWith(
+      'Waiting for @nx/js:gen <nx_migrate_step run-id="f" step="f" action="next-step">'
+    );
+    info.mockRestore();
   });
 
   it('emits one parseable block and escapes a payload value that could forge the closing tag', () => {

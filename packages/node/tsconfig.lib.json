@@ -46,6 +46,9 @@
       "path": "../webpack/tsconfig.lib.json"
     },
     {
+      "path": "../rolldown/tsconfig.lib.json"
+    },
+    {
       "path": "../nx/tsconfig.lib.json"
     }
   ]

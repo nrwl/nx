@@ -5,7 +5,7 @@ import { isHybridMigration } from './migration-shape';
 /**
  * Pure presentation helpers for the migrate run phase (`--run-migrations` and
  * the single-migration worker). Shared glyph vocabulary:
- *   `→` start, `✓` success, `✗` failure, `↷` skipped, `ℹ` info, `─` boundary
+ *   `→` start, `↷` skipped, `ℹ` info, `─` boundary
  *
  * Inputs are typed structurally (e.g. `{ name: string }[]`) so this module
  * stays decoupled from the migration executor in migrate.ts.
@@ -35,19 +35,6 @@ export function logMigrationBoundary(
   const targetWidth = 73;
   const dashes = Math.max(3, targetWidth - label.length);
   logger.info(`${label}${'─'.repeat(dashes)}`);
-}
-
-/**
- * Logs the outcome line that closes an agentic phase. Vocabulary:
- *   ✓ <label>[ (<sha>)]: <summary>
- */
-export function logAgenticSuccessOutcome(
-  label: string,
-  sha: string | null,
-  summary: string
-): void {
-  const shaPart = sha ? ` (${sha})` : '';
-  logger.info(`${pc.green('✓')} ${label}${shaPart}: ${summary}`);
 }
 
 /**

@@ -32,10 +32,6 @@
       "types": "./dist/types/nx-angular.d.ts",
       "default": "./dist/fesm2022/nx-angular.mjs"
     },
-    "./mf": {
-      "types": "./dist/types/nx-angular-mf.d.ts",
-      "default": "./dist/fesm2022/nx-angular-mf.mjs"
-    },
     "./package.json": {
       "default": "./package.json"
     },
@@ -74,7 +70,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/web": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@typescript-eslint/type-utils": "catalog:eslint",
     "jsonc-parser": "catalog:",
@@ -97,7 +92,6 @@
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
     "@schematics/angular": "catalog:angular-supported-versions",
-    "@nx/module-federation": "workspace:*",
     "@nx/rspack": "workspace:*",
     "@nx/webpack": "workspace:*",
     "ng-packagr": "catalog:angular-supported-versions",
@@ -115,9 +109,6 @@
       "optional": true
     },
     "@nx/playwright": {
-      "optional": true
-    },
-    "@nx/module-federation": {
       "optional": true
     },
     "@nx/rspack": {

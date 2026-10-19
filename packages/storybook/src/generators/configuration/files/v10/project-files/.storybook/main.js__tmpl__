@@ -2,9 +2,9 @@ import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
 <% if (usesVite && !viteConfigFilePath) { %>
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { mergeConfig } from 'vite';
-<% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
+<% if (!useNativeTsconfigPaths) { %>import tsconfigPaths from 'vite-tsconfig-paths';
+<% } %><% } %><% if (uiFramework === '@storybook/vue3-vite' && !viteConfigFilePath) { %>import vue from '@vitejs/plugin-vue'<% } %>
 
 const config = {
   stories: [
@@ -16,14 +16,9 @@ const config = {
   framework: {
     name: <% if(uiFramework !== '@storybook/angular') { %>getAbsolutePath(<% } %>'<%= uiFramework %>'<% if(uiFramework !== '@storybook/angular') { %>)<% } %>,
     options: {
-     <% if (usesVite && viteConfigFilePath && hasPlugin) { %>
+     <% if (usesVite && viteConfigFilePath) { %>
       builder: {
         viteConfigPath: '<%= viteConfigFileName %>',
-      },
-      <% } %>
-      <% if (usesVite && viteConfigFilePath && !hasPlugin) { %>
-      builder: {
-        viteConfigPath: '<%= viteConfigFilePath %>',
       },
       <% } %>
     },
@@ -48,8 +43,9 @@ const config = {
     mergeConfig(config, {
       <% if (usesReactNative) { %>define: {
         global: 'window',
-      },
+      },<% } %>
       resolve: {
+<% if (useNativeTsconfigPaths) { %>        tsconfigPaths: true,<% } %><% if (usesReactNative) { %>
         extensions: [
           '.mjs',
           '.web.tsx',
@@ -66,9 +62,9 @@ const config = {
         ],
         alias: {
           'react-native': 'react-native-web',
-        },
-      },<% } %>
-      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %>nxViteTsPaths()],
+        },<% } %>
+      },
+      plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %><% if (!useNativeTsconfigPaths) { %>tsconfigPaths({ loose: true })<% } %>],
     }),
   <% } %>
 };

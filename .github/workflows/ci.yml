@@ -169,14 +169,6 @@ jobs:
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
 
-      - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-
-      - name: Enable corepack and install pnpm
-        run: |
-          corepack enable
-          corepack prepare --activate
-
       - name: Set SHAs
         uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
@@ -193,6 +185,16 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No React Native projects affected, skipping macOS tests"
           fi
+
+      - name: Setup dev tools with mise
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Configure Detox Environment, Install applesimutils
         if: steps.check-changes.outputs.has_changes == 'true'

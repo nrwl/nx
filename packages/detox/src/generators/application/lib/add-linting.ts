@@ -27,7 +27,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
       ],
       enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
       // Detox e2e specs are Jest; this is what enables the linter's Jest rules.
       unitTestRunner: 'jest',
     })

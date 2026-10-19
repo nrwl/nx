@@ -48,6 +48,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { resolve } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -180,6 +181,31 @@ ${headersAndRedirects}`;
 }
 
 /**
+ * The versioned branch installs without this repo's pnpm-workspace.yaml, so a
+ * `catalog:` specifier has to be replaced with the version it points to.
+ */
+function resolveCatalogSpecifier(name: string, specifier: string): string {
+  if (!specifier.startsWith('catalog:')) {
+    return specifier;
+  }
+  const workspace = parseYaml(
+    readFileSync(resolve(ROOT, 'pnpm-workspace.yaml'), 'utf-8')
+  );
+  const catalogName = specifier.slice('catalog:'.length) || 'default';
+  const catalog =
+    catalogName === 'default'
+      ? (workspace.catalog ?? workspace.catalogs?.default)
+      : workspace.catalogs?.[catalogName];
+  const version = catalog?.[name];
+  if (!version) {
+    throw new Error(
+      `Could not resolve ${name}@${specifier} from pnpm-workspace.yaml`
+    );
+  }
+  return version;
+}
+
+/**
  * Write the shared scaffolding every versioned branch needs.
  * Writes headers/redirects netlify.toml content to the publish dir.
  */
@@ -190,8 +216,10 @@ function writeSharedScaffolding(
   const rootPkg = JSON.parse(
     readFileSync(resolve(ROOT, 'package.json'), 'utf-8')
   );
-  const nxVersion =
-    rootPkg.devDependencies?.nx ?? rootPkg.dependencies?.nx ?? 'latest';
+  const nxVersion = resolveCatalogSpecifier(
+    'nx',
+    rootPkg.devDependencies?.nx ?? rootPkg.dependencies?.nx ?? 'latest'
+  );
 
   // Root package.json with nx so Netlify install succeeds
   writeFileSync(

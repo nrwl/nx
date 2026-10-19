@@ -189,13 +189,29 @@ function setOptionsInRspackConfig(
 
   const optionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=options]))';
-  const optionsVariable = query<ts.VariableStatement>(
+  let optionsVariable = query<ts.VariableStatement>(
     sourceFile,
     optionsSelector
   )[0];
 
-  // This is assuming the `options` variable will be available since it's what the
-  // `convert-config-to-rspack-plugin` generates
+  if (!optionsVariable) {
+    const plugin = query<ts.NewExpression>(
+      sourceFile,
+      'NewExpression:has(Identifier[name=NxAppRspackPlugin])'
+    )[0];
+    const argument = plugin.arguments?.[0];
+    if (argument && !ts.isObjectLiteralExpression(argument)) {
+      throw new Error(
+        'Move NxAppRspackPlugin options into an object literal before converting this config.'
+      );
+    }
+    text = `const options = ${argument?.getText(sourceFile) ?? '{}'};\n${text}`;
+    sourceFile = ast(text);
+    optionsVariable = query<ts.VariableStatement>(
+      sourceFile,
+      optionsSelector
+    )[0];
+  }
 
   let defaultOptionsObject: ts.ObjectLiteralExpression;
   const optionsObject = query<ts.ObjectLiteralExpression>(
@@ -350,8 +366,8 @@ function setOptionsInLegacyNxPlugin(
     legacyNxPluginSelector
   )[0];
 
-  // we're assuming the `useLegacyNxPlugin` function is being called since it's what the `convert-config-to-rspack-plugin` generates
-  // we've already "ensured" that the `convert-config-to-rspack-plugin` was run by checking for the `NxAppRspackPlugin` in the project validation
+  if (!legacyNxPlugin) return;
+
   const updatedLegacyNxPlugin = ts.factory.updateCallExpression(
     legacyNxPlugin,
     legacyNxPlugin.expression,

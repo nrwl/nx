@@ -16,7 +16,6 @@ import { libraryGenerator } from './library';
 const baseLibraryConfig = {
   directory: 'my-lib',
   compiler: 'tsc' as const,
-  addPlugin: true,
   // Stated rather than inferred: these specs assert ESLint output, and
   // `detectLinters` comes back empty for a workspace with no linter installed.
   linter: 'eslint' as const,
@@ -565,7 +564,6 @@ describe('lib', () => {
         linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       } as Schema);
 
@@ -681,7 +679,6 @@ describe('lib', () => {
         linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -721,7 +718,6 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
         buildable: true,
         skipFormat: true,
@@ -738,7 +734,6 @@ describe('lib', () => {
         buildable: true,
         compiler: 'swc',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       } as Schema);
 
@@ -790,7 +785,6 @@ describe('lib', () => {
         name: 'my-lib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -806,7 +800,6 @@ describe('lib', () => {
         name: '@proj/my-lib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -819,7 +812,6 @@ describe('lib', () => {
         directory: 'mylib',
         linter: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       } as Schema);
@@ -832,7 +824,6 @@ describe('lib', () => {
         linter: 'eslint',
         directory: 'mylib',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       } as Schema);

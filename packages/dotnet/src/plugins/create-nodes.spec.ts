@@ -4,85 +4,8 @@ import { minimatch } from 'minimatch';
 import {
   createNodes,
   DotNetPluginOptions,
-  TargetConfigurationWithName,
+  mergeUserTargetConfigurations,
 } from './create-nodes';
-
-// Import the internal function for testing
-// We'll need to export it or test it indirectly through createNodesV2
-// For now, let's create a mock version to test the logic
-
-/**
- * Merge user-specified target configurations with the generated targets from the analyzer
- * This is a copy of the function from create-nodes.ts for testing purposes
- */
-function mergeUserTargetConfigurations(
-  node: ProjectConfiguration,
-  options: DotNetPluginOptions
-): ProjectConfiguration {
-  if (!node.targets || !options) {
-    return node;
-  }
-
-  const targetMappings: Array<{
-    targetOption: TargetConfigurationWithName | false | undefined;
-    defaultTargetName: string;
-  }> = [
-    { targetOption: options.build, defaultTargetName: 'build' },
-    { targetOption: options.test, defaultTargetName: 'test' },
-    { targetOption: options.clean, defaultTargetName: 'clean' },
-    { targetOption: options.restore, defaultTargetName: 'restore' },
-    { targetOption: options.publish, defaultTargetName: 'publish' },
-    { targetOption: options.pack, defaultTargetName: 'pack' },
-    { targetOption: options.watch, defaultTargetName: 'watch' },
-    { targetOption: options.run, defaultTargetName: 'run' },
-  ];
-
-  const mergedTargets = { ...node.targets };
-
-  for (const { targetOption, defaultTargetName } of targetMappings) {
-    // Disabled target from user configuration
-    if (targetOption === false) {
-      delete mergedTargets[defaultTargetName];
-      continue;
-    }
-
-    // Use empty object as default when option is not provided
-    const { targetName, ...userSpecifiedConfig } = targetOption ?? {};
-    const actualTargetName = targetName ?? defaultTargetName;
-
-    // Find the generated target - it might be under the default name or the user-specified name
-    const generatedTarget =
-      mergedTargets[actualTargetName] ?? mergedTargets[defaultTargetName];
-
-    if (!generatedTarget) {
-      continue;
-    }
-
-    const hasUserConfig = Object.keys(userSpecifiedConfig).length > 0;
-    const isRenamed = actualTargetName !== defaultTargetName;
-
-    // Merge user config with generated target if user config is provided
-    if (hasUserConfig) {
-      mergedTargets[actualTargetName] = mergeTargetConfigurations(
-        userSpecifiedConfig as TargetConfiguration,
-        generatedTarget
-      );
-    } else if (isRenamed) {
-      // If only renaming (no config to merge), just copy the target to the new name
-      mergedTargets[actualTargetName] = { ...generatedTarget };
-    }
-
-    // If target was renamed, remove the old target name
-    if (isRenamed && mergedTargets[defaultTargetName]) {
-      delete mergedTargets[defaultTargetName];
-    }
-  }
-
-  return {
-    ...node,
-    targets: mergedTargets,
-  };
-}
 
 describe('@nx/dotnet - createNodes', () => {
   describe('mergeUserTargetConfigurations', () => {
@@ -563,6 +486,87 @@ describe('@nx/dotnet - createNodes', () => {
       expect(result.targets?.build).toBeDefined();
       expect(result.targets?.test).toBeUndefined();
       expect(result.targets?.clean).toBeUndefined();
+    });
+  });
+
+  describe('restore target', () => {
+    // restore isn't cached and isn't part of the task chain, so running it
+    // through Nx buys nothing over `dotnet restore`. It is opt-in.
+    const nodeWithRestore = (): ProjectConfiguration => ({
+      root: 'apps/my-app',
+      name: 'my-app',
+      targets: {
+        build: {
+          executor: 'nx:run-commands',
+          options: { command: 'dotnet build' },
+        },
+        restore: {
+          executor: 'nx:run-commands',
+          options: { command: 'dotnet restore' },
+        },
+        watch: {
+          executor: 'nx:run-commands',
+          dependsOn: ['restore'],
+          options: { command: 'dotnet watch' },
+        },
+      },
+    });
+
+    it('should remove the restore target when it is not configured', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {});
+
+      expect(result.targets?.restore).toBeUndefined();
+      expect(result.targets?.build).toBeDefined();
+    });
+
+    it('should remove the restore target when the plugin has no options at all', () => {
+      const result = mergeUserTargetConfigurations(
+        nodeWithRestore(),
+        undefined
+      );
+
+      expect(result.targets?.restore).toBeUndefined();
+    });
+
+    it('should drop the removed restore target from other targets dependsOn', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {});
+
+      expect(result.targets?.watch?.dependsOn).toEqual([]);
+    });
+
+    it('should keep the restore target when opted in with true', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {
+        restore: true,
+      });
+
+      expect(result.targets?.restore).toBeDefined();
+      expect(result.targets?.watch?.dependsOn).toEqual(['restore']);
+    });
+
+    it('should keep the restore target when opted in with a configuration object', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {
+        restore: { options: { args: ['--interactive'] } },
+      });
+
+      expect(result.targets?.restore?.options).toEqual({
+        command: 'dotnet restore',
+        args: ['--interactive'],
+      });
+    });
+
+    it('should still remove the restore target when explicitly disabled', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {
+        restore: false,
+      });
+
+      expect(result.targets?.restore).toBeUndefined();
+    });
+
+    it('should keep every other target enabled by default', () => {
+      const result = mergeUserTargetConfigurations(nodeWithRestore(), {});
+
+      expect(result.targets?.build).toBeDefined();
+      expect(result.targets?.watch).toBeDefined();
     });
   });
 

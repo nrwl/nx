@@ -253,26 +253,26 @@ Contact your Nx representative to turn on sandboxing for your deployment.
 
 ### Excluding paths
 
-Create a `.nx/workflows/sandboxing-config.yaml` file to exclude paths from sandboxing checks.
+Create a `.nx/workflows/ultracache-config.yaml` file to exclude paths from sandboxing checks.
 
 ```yaml
-# .nx/workflows/sandboxing-config.yaml
-exclude-reads:
+# .nx/workflows/ultracache-config.yaml
+ignore-reads:
   - '**/vite.config.*.timestamp-*'
 
 task-exclusions:
   - project: myapp
     target: build
-    exclude-reads:
+    ignore-reads:
       - .next/cache/**
-    exclude-writes:
+    ignore-writes:
       - logs/**
   - target: lint
-    exclude-reads:
+    ignore-reads:
       - .eslintcache/**
 ```
 
-Global `exclude-reads` and `exclude-writes` apply to all tasks.
+Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 
 Patterns use glob syntax relative to the workspace root.

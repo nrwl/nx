@@ -39,7 +39,6 @@ export async function addE2e(
         options.appProjectRoot,
         `vite.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'rsbuild') {
@@ -56,7 +55,6 @@ export async function addE2e(
         options.appProjectRoot,
         `rsbuild.config.${options.js ? 'js' : 'ts'}`
       ),
-      options.addPlugin,
       options.devServerPort ?? 4200
     );
   }

@@ -275,8 +275,8 @@ nx docker:run my-app -p 3000:3000
 
 ## Legacy build targets that emit deploy output
 
-In a pnpm workspace, an explicit build target that enables `generatePackageJson` (webpack, rspack,
-vite, and esbuild) or `generateLockfile` (next, remix, tsc, and swc) emits the pruned deploy output
+In a pnpm workspace, an explicit build target that enables `generatePackageJson` (esbuild) or
+`generateLockfile` (remix, tsc, and swc) emits the pruned deploy output
 next to the deployable `package.json`.
 The Nx 23.2 migration adds the pnpm settings inputs to the targets that enable one of those options
 at the time it runs.
@@ -294,7 +294,7 @@ A target that inherits nothing needs the Nx defaults spelled out first:
 {
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/esbuild:esbuild",
       "options": {
         "generatePackageJson": true
       },

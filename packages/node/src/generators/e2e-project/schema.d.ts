@@ -8,6 +8,8 @@ export interface Schema {
   rootProject?: boolean;
   isNest?: boolean;
   skipFormat?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
+  /** Name of the app's build target. Defaults to `build`. */
+  buildTarget?: string;
+  testRunner?: 'jest' | 'vitest';
 }

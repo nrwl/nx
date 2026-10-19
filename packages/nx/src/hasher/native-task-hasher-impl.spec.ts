@@ -10,7 +10,7 @@ import {
   UltracacheConfigurationStore,
 } from '../native';
 import { join } from 'path';
-import { TaskGraph } from '../config/task-graph';
+import type { TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import {
   createTaskPlanningContext,
   TaskPlanningContext,
@@ -1960,6 +1960,120 @@ describe('native task hasher', () => {
     };
     await impl.hashTask(overridden.tasks['app:serve'], overridden, {});
     expect(planning.calls).toBe(2);
+  });
+
+  it('hashes from the edges it is given, not the ones the up-front batch planned', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+    const served = await impl.hashTask(
+      taskGraph.tasks['e2e:e2e'],
+      taskGraph,
+      {}
+    );
+    const unserved: TaskGraph = {
+      ...taskGraph,
+      continuousDependencies: {
+        ...taskGraph.continuousDependencies,
+        'e2e:e2e': [],
+      },
+    };
+
+    const reused = await impl.hashTask(unserved.tasks['e2e:e2e'], unserved, {});
+
+    expect(reused.value).not.toEqual(served.value);
+    const { impl: fresh } = await upfrontFixture();
+    const planned = await fresh.hashTask(
+      unserved.tasks['e2e:e2e'],
+      unserved,
+      {}
+    );
+    expect(reused.value).toEqual(planned.value);
+  });
+
+  it('tells an edge without inputs apart from an edge to a task whose id says so', async () => {
+    await tempFs.createFiles({
+      'apps/app/project.json': JSON.stringify({ name: 'app' }),
+      'apps/app/main.ts': 'app',
+      'apps/bang/project.json': JSON.stringify({ name: '!app' }),
+      'apps/bang/main.ts': 'bang',
+      'apps/e2e/project.json': JSON.stringify({ name: 'e2e' }),
+      'apps/e2e/app.spec.ts': 'e2e',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'apps/app': 'app',
+      'apps/bang': '!app',
+      'apps/e2e': 'e2e',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    for (const [name, root] of [
+      ['app', 'apps/app'],
+      ['!app', 'apps/bang'],
+    ]) {
+      builder.addNode({
+        name,
+        type: 'app',
+        data: {
+          root,
+          targets: {
+            serve: {
+              executor: 'nx:run-commands',
+              continuous: true,
+              inputs: ['default'],
+            },
+          },
+        },
+      });
+    }
+    builder.addNode({
+      name: 'e2e',
+      type: 'app',
+      data: {
+        root: 'apps/e2e',
+        targets: { e2e: { executor: 'nx:run-commands', inputs: ['default'] } },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app', '!app', 'e2e'],
+      ['serve', 'e2e'],
+      undefined,
+      {}
+    );
+    const servedBy = (edges: TaskGraphEdge[]): TaskGraph => ({
+      ...taskGraph,
+      continuousDependencies: {
+        ...taskGraph.continuousDependencies,
+        'e2e:e2e': edges,
+      },
+    });
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const task = taskGraph.tasks['e2e:e2e'];
+
+    const withoutInputs = servedBy([{ id: 'app:serve', inputs: false }]);
+    const optedOut = (
+      await impl.hashTasksUpfront([task], withoutInputs, { [task.id]: {} })
+    )[task.id];
+    const byBang = servedBy([{ id: '!app:serve' }]);
+    const served = await impl.hashTask(task, byBang, {});
+
+    expect(optedOut.inputs.files).not.toContain('apps/app/main.ts');
+    expect(served.inputs.files).toContain('apps/bang/main.ts');
   });
 
   it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {

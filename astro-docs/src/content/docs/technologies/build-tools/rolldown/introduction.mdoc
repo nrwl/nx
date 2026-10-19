@@ -1,0 +1,101 @@
+---
+title: Nx with Rolldown
+description: Use Rolldown with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+sidebar:
+  label: Introduction
+weight: 2
+filter: 'type:References'
+---
+
+[Rolldown](https://rolldown.rs/) is a JavaScript bundler with a Rollup-compatible API. In a Rolldown monorepo, Nx builds and caches projects across your workspace and rebuilds only what a change affects.
+
+The Nx Plugin for Rolldown infers build tasks from Rolldown configuration files and contains generators to set up Rolldown in a project.
+
+## Requirements
+
+The `@nx/rolldown` plugin supports the following package versions.
+
+| Package    | Supported Versions |
+| ---------- | ------------------ |
+| `rolldown` | ^1.0.0             |
+
+[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+## Setting up @nx/rolldown
+
+### Installation
+
+{% aside type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/rolldown` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/kb/keep-nx-versions-in-sync).
+{% /aside %}
+
+In any Nx workspace, you can install `@nx/rolldown` by running the following command:
+
+```shell
+nx add @nx/rolldown
+```
+
+## Configure task inference
+
+The `@nx/rolldown/plugin` plugin looks for these Rolldown configuration files:
+
+- `rolldown.config.js`
+- `rolldown.config.cjs`
+- `rolldown.config.mjs`
+- `rolldown.config.ts`
+- `rolldown.config.cts`
+- `rolldown.config.mts`
+
+A configuration file is associated with a project when its directory also contains a `package.json` or `project.json`. Nx creates a cached build task that runs `rolldown -c` and depends on the same task in dependency projects. The task outputs come from the configuration: each entry's `output.dir`, or `output.file` and its sourcemap. A configuration that exports an array contributes the outputs of every entry.
+
+[`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead of this plugin, and the `@nx/rolldown:init` generator registers that plugin when it's missing.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rolldown/plugin",
+      "options": {
+        "buildTargetName": "build"
+      }
+    }
+  ]
+}
+```
+
+| Option            | Type   | Default | Description                             |
+| ----------------- | ------ | ------- | --------------------------------------- |
+| `buildTargetName` | string | `build` | Name of the cached Rolldown build task. |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference.
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact
+identifier `@nx/rolldown/plugin`.
+
+## Using @nx/rolldown
+
+### Add Rolldown to a project
+
+Add a `rolldown.config.ts` to an existing project with the following command:
+
+```shell
+nx g @nx/rolldown:configuration my-project
+```
+
+The generated configuration bundles `src/main.ts` (or `src/index.ts`) for Node.js. Packages listed in `dependencies` stay out of the bundle and load from `node_modules` at runtime, so native addons and packages that use dynamic `require` keep working. Pass `--externalDependencies=false` to bundle them, `--format=cjs` for CommonJS output, or `--platform=browser` to bundle everything for the browser.
+
+### Generate a Node application using Rolldown
+
+Node applications, other than Fastify ones, build with Rolldown by default in workspaces that use TypeScript path aliases. In other workspaces, pass `--bundler=rolldown`:
+
+```shell
+nx g @nx/node:app apps/my-api --bundler=rolldown
+```
+
+## Set up CI for your Rolldown monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

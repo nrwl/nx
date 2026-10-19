@@ -5,7 +5,10 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { dirname } from 'path';
-import { isProjectConfigurationsError } from '../error-types';
+import {
+  AggregateCreateNodesError,
+  isProjectConfigurationsError,
+} from '../error-types';
 import { createNodesFromFiles, NxPlugin } from '../plugins';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
@@ -189,11 +192,10 @@ describe('project-configuration-utils', () => {
       expect(sm['targets.processResources.executor']).toEqual(GRADLE);
     });
 
-    // The target-name cache fallback's whole premise is that an executor key
-    // beats the target name key during the real merge. Its own suite hands
-    // `validateAndNormalizeProjectRootMap` an already-merged target, so this is
-    // the only place that premise is exercised end to end.
-    it('should restore cache from a target name default the executor default shadowed', () => {
+    // `cache` resolves from the key that wins, like every other field. The
+    // normalization suite is handed an already-merged target, so this is the
+    // only place the real merge decides which key wins.
+    it('should not restore cache from a target name default the executor default shadowed', () => {
       const projectJsonResults: CreateNodesResultEntry[] = [
         [
           'nx/core/project-json',
@@ -230,8 +232,8 @@ describe('project-configuration-utils', () => {
       // name key's `dependsOn` did not.
       expect(build.inputs).toEqual(['production']);
       expect(build.dependsOn).toBeUndefined();
-      // ...and `cache` was still read back from the shadowed name key.
-      expect(build.cache).toBe(true);
+      // ...and neither did its `cache`.
+      expect(build.cache).toBeUndefined();
     });
 
     // Regression: when targetDefaults are present, the default layer is
@@ -3035,6 +3037,65 @@ describe('project-configuration-utils', () => {
       expect(error.message).toContain('libs/my-lib:test');
     });
 
+    it.each(['results', 'partial results'])(
+      'should drop undefined values from plugin %s without writing to them',
+      async (kind) => {
+        const nested = JSON.parse('{"__proto__": "kept"}');
+        nested.omitted = undefined;
+        const options = { nested, list: [1, undefined] };
+        const results = deepFreeze([
+          [
+            'libs/a/project.json',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  targets: { build: { executor: 'nx:noop', options } },
+                },
+              },
+            },
+          ] as const,
+        ]);
+        const plugin = new LoadedNxPlugin(
+          {
+            name: 'frozen-results-plugin',
+            createNodes: [
+              'libs/*/project.json',
+              async () => {
+                if (kind === 'results') {
+                  return results;
+                }
+                const error = new AggregateCreateNodesError(
+                  [['libs/b/project.json', new Error('Invalid project.json')]],
+                  results
+                );
+                error.errors.forEach((tuple) => Object.freeze(tuple));
+                throw error;
+              },
+            ],
+          },
+          'frozen-results-plugin'
+        );
+
+        const { projects } = await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          {
+            specifiedPluginFiles: [['libs/a/project.json']],
+            defaultPluginFiles: [],
+          },
+          { specifiedPlugins: [plugin], defaultPlugins: [] }
+        ).catch((e) => e.partialProjectConfigurationsResult);
+
+        const merged = projects['libs/a'].targets.build.options;
+        expect(Object.keys(merged.nested)).toEqual(['__proto__']);
+        expect(merged.list).toEqual([1, null]);
+        expect(options.list).toEqual([1, undefined]);
+        expect('omitted' in nested).toBe(true);
+      }
+    );
+
     describe('negation pattern support', () => {
       it('should support negation patterns in exclude to re-include specific files', async () => {
         const projectConfigurations =
@@ -4149,4 +4210,14 @@ function assertCorrectKeysInSourceMap(
       );
     }
   });
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === 'object') {
+    for (const key of Object.keys(value)) {
+      deepFreeze(value[key]);
+    }
+    Object.freeze(value);
+  }
+  return value;
 }

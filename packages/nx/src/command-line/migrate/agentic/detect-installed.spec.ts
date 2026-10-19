@@ -21,7 +21,6 @@ function makeDefinition(
     displayName: `${overrides.id} display`,
     binaryNames: ['bin'],
     wellKnownPaths: () => [],
-    buildInteractive: () => ({ args: [] }),
     ...overrides,
   };
 }

@@ -13,6 +13,7 @@ export const minSupportedStorybookVersion = '8.0.0';
 export const storybookVersion = '^10.5.0';
 export const reactVersion = '^18.2.0';
 export const viteVersion = '^6.0.0';
+export const viteTsconfigPathsVersion = '~4.3.2';
 
 export const coreJsVersion = '^3.36.1';
 

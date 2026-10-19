@@ -836,6 +836,45 @@ describe('ReleaseGraph', () => {
         expect(graph.sortedReleaseGroups).toContain('group1');
       });
 
+      it('should retain every configured group in allReleaseGroups, sharing instances with the filtered groups', async () => {
+        const { nxReleaseConfig, projectGraph, filters } =
+          await createNxReleaseConfigAndPopulateWorkspace(
+            tree,
+            `
+            group1 ({ "projectsRelationship": "independent" }):
+              - pkg-a@1.0.0 [js]
+            group2 ({ "projectsRelationship": "independent" }):
+              - pkg-b@2.0.0 [js]
+          `,
+            {
+              version: {
+                conventionalCommits: true,
+              },
+            },
+            mockResolveCurrentVersion,
+            {
+              groups: ['group1'],
+            }
+          );
+
+        const graph = await createReleaseGraph({
+          tree,
+          projectGraph,
+          nxReleaseConfig,
+          filters,
+          firstRelease: false,
+          preid: undefined,
+          verbose: false,
+        });
+
+        expect(graph.releaseGroups.map((g) => g.name)).toEqual(['group1']);
+        expect(graph.allReleaseGroups.map((g) => g.name)).toEqual([
+          'group1',
+          'group2',
+        ]);
+        expect(graph.allReleaseGroups[0]).toBe(graph.releaseGroups[0]);
+      });
+
       it('should NOT include dependent groups when filtering by group with updateDependents=auto (group1 -> group2, filter group2)', async () => {
         const { nxReleaseConfig, projectGraph, filters } =
           await createNxReleaseConfigAndPopulateWorkspace(

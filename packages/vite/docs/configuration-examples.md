@@ -30,42 +30,50 @@ If you only need to add Vitest to a project (without Vite build configuration), 
 
 ## How to use
 
-If you have an existing project that does not use Vite, you may want to convert it to use Vite. This can be a `webpack` project, a buildable JS library that uses the `@nx/js:babel`, the `@nx/js:swc` or the `@nx/rollup:rollup` executor, or even a non-buildable library.
+If you have an existing project that doesn't use Vite, you may want to convert it to use Vite.
+This can be a project with a webpack config file, a buildable JS library that uses the
+`@nx/js:swc` executor, or even a non-buildable library.
 By default, the `@nx/vite:configuration` generator will search your project to find the relevant configuration (either a `webpack.config.ts` file for example, or the `@nx/js` executors). If it determines that your project can be converted, then Nx will generate the configuration for you. If it cannot determine that your project can be converted, it will ask you if you want to convert it anyway or throw an error if it determines that it cannot be converted.
 
 You can then test on your own if the result works or not, and modify the configuration as needed. It's suggested that you commit your changes before running the generator, so you can revert the changes if needed.
 
-## Projects that can be converted to use the `@nx/vite` executors
+If the project still has targets on the `@nx/webpack`, `@nx/rollup`, or `@nx/vite` executors that
+Nx 24 removed, the generator stops without changing anything.
+Convert those targets to inferred targets first, for example with
+`nx g @nx/workspace:infer-targets --project=<project-name>`.
 
-Usually, React and Web projects generated with the `@nx/react` and the `@nx/web` generators can be converted to use the `@nx/vite` executors without any issues.
+## Projects that can be converted to use Vite
 
-The list of executors for building, testing and serving that can be converted to use the `@nx/vite` executors is:
+You can usually convert React and web projects generated with the `@nx/react` and the `@nx/web`
+generators to Vite without issues.
+
+The generator checks the executor of each target against the following lists.
 
 ### Supported `build` executors
 
-- `@nxext/vite:build`
-- `@nx/js:babel`
 - `@nx/js:swc`
-- `@nx/rollup:rollup`
-- `@nx/webpack:webpack`
-- `@nx/web:rollup`
 
 ### Unsupported executors
+
+The generator stops if a target uses one of these executors and the project has no webpack config
+file or supported `build` target:
 
 - `@nx/angular:ng-packagr-lite`
 - `@nx/angular:package`
 - `@nx/angular:webpack-browser`
+- `@angular-devkit/build-angular:application`
 - `@angular-devkit/build-angular:browser`
-- `@angular-devkit/build-angular:dev-server`
+- `@angular-devkit/build-angular:browser-esbuild`
 - `@nx/esbuild:esbuild`
-- `@nx/react-native:start`
-- `@nx/next:build`
-- `@nx/next:server`
 - `@nx/js:tsc`
-- any executor _not_ listed in the lists of "supported executors"
-- any project that does _not_ have a target for building, serving or testing
 
-We **cannot** guarantee that projects using unsupported executors - _or any executor that is NOT listed in the list of "supported executors"_ - for either building, testing or serving will work correctly when converted to use Vite.
+### Other projects
+
+The generator converts a library that has no Vite or webpack config file and no target on a listed
+executor.
+For an application in the same situation, it asks whether to convert the project anyway, because it
+can't tell whether the conversion will work.
+In a non-interactive run, it converts the application without asking.
 
 You can read more in the [Vite package overview page](/nx-api/vite).
 

@@ -65,6 +65,7 @@ module.exports = function (modulePath, options) {
   // Only use custom resolution for workspace packages
   // Let default resolver handle published packages and everything else
   const workspacePackages = [
+    '@nx/rolldown',
     '@nx/rollup',
     '@nx/eslint',
     '@nx/vite',

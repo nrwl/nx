@@ -118,7 +118,7 @@ describe('Nx Affected and Graph Tests', () => {
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'show projects --affected --files="tsconfig.json"'
+        'show projects --affected --files="does-not-exist.txt"'
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
