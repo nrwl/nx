@@ -189,6 +189,24 @@ describe('@nx/vite:configuration', () => {
     });
   });
 
+  it('should refuse to convert a project with targets on removed executors', async () => {
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    mockReactAppGenerator(tree);
+    writeJson(tree, 'apps/my-test-react-app/project.json', {
+      root: 'apps/my-test-react-app',
+      projectType: 'application',
+      targets: { build: { executor: '@nx/webpack:webpack' } },
+    });
+
+    await expect(
+      viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'my-test-react-app',
+      })
+    ).rejects.toThrow('removed executors: build (@nx/webpack:webpack)');
+    expect(tree.exists('apps/my-test-react-app/webpack.config.ts')).toBe(true);
+  });
+
   describe('vitest', () => {
     beforeAll(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

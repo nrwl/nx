@@ -39,36 +39,6 @@ describe('generator utils', () => {
       );
     });
 
-    it('should return correct path for vite.config file if custom configFile is set', () => {
-      const projectConfig = readProjectConfiguration(
-        tree,
-        'my-test-react-vite-app'
-      );
-      updateProjectConfiguration(tree, 'my-test-react-vite-app', {
-        ...projectConfig,
-        targets: {
-          ...projectConfig.targets,
-          build: {
-            ...projectConfig.targets.build,
-            options: {
-              ...projectConfig.targets.build.options,
-              configFile: 'apps/my-test-react-vite-app/vite.config.custom.ts',
-            },
-          },
-        },
-      });
-
-      tree.write(`apps/my-test-react-vite-app/vite.config.custom.ts`, '');
-
-      const viteConfigPath = getViteConfigPathForProject(
-        tree,
-        'my-test-react-vite-app'
-      );
-      expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.config.custom.ts'
-      );
-    });
-
     it('should return correct path for vite.config file given a target name', () => {
       const projectConfig = readProjectConfiguration(
         tree,
