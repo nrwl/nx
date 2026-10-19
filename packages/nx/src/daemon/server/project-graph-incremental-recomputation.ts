@@ -1,12 +1,7 @@
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/nx-json';
-import {
-  FileData,
-  FileMap,
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
+import { FileData, FileMap, ProjectGraph } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
@@ -105,7 +100,6 @@ const projectGraphRecomputationListeners = new Set<
   ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
-let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
@@ -498,11 +492,10 @@ function computeWorkspaceConfigHash(
 type FileMapUpdate = {
   fileMap: NonNullable<typeof fileMapWithFiles>;
   configHash: string;
-  knownExternalNodes?: Record<string, ProjectGraphExternalNode>;
 };
 
 async function processCollectedUpdatedAndDeletedFiles(
-  { projects, externalNodes, projectRootMap }: ConfigurationResult,
+  { projects, projectRootMap }: ConfigurationResult,
   updatedFileHashes: Record<string, string>,
   deletedFiles: string[]
 ): Promise<FileMapUpdate> {
@@ -515,7 +508,7 @@ async function processCollectedUpdatedAndDeletedFiles(
     // can't clobber a faster newer one's already-committed state.
     if (configHash !== storedWorkspaceConfigHash) {
       const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-      return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
+      return { fileMap: fresh, configHash };
     }
 
     // Config unchanged → patch the existing file map in place.
@@ -667,9 +660,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
-    if (fileMapUpdate.knownExternalNodes) {
-      knownExternalNodes = fileMapUpdate.knownExternalNodes;
-    }
 
     // Drain only after committing — a stale compute that returns at the
     // staleness check above must leave its snapshot in `collected*` so the
@@ -827,6 +817,7 @@ function copyFileMap(m: FileMap) {
 
 async function createAndSerializeProjectGraph({
   projects,
+  externalNodes,
   sourceMaps,
 }: ConfigurationResult): Promise<SerializedProjectGraph> {
   try {
@@ -836,7 +827,7 @@ async function createAndSerializeProjectGraph({
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingFileMap(
         projects,
-        knownExternalNodes,
+        externalNodes,
         fileMap,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
