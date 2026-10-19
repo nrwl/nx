@@ -59,16 +59,15 @@ When a change doesn't touch that code, Nx skips the test and replays its cached 
 ## The two directives
 
 `// @nx-depends-on: <projects>` scopes the test to the projects you list and the projects they depend on.
+The test reruns when one of those projects changes.
+It works in Playwright, Cypress, and Jest test files.
 
 `// @nx-ignore-server-inputs` drops the app server from the test's hash.
-With [Ultracache](/docs/reference/project-configuration#ultracache), Nx then hashes the test from the files its last run read: the test file and the app code it imports.
+With [Ultracache](/docs/reference/project-configuration#ultracache) turned on in Nx Cloud, Nx then hashes the test from the files its last CI run read: the test file and the app code it imports.
+The test reruns when one of those files changes.
+It works in Playwright and Cypress test files.
 
-|                              | `@nx-depends-on`                                      | `@nx-ignore-server-inputs`                                               |
-| ---------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| The test reruns when         | A listed project, or a project it depends on, changes | A file the test file imports, directly or through other imports, changes |
-| An edit to another test file | Reruns the test, unless Ultracache is on              | Doesn't rerun the test                                                   |
-| Requires                     | Nothing                                               | Ultracache in CI, with Nx Cloud                                          |
-| Runners                      | Playwright, Cypress, Jest                             | Playwright, Cypress                                                      |
+Without Ultracache, each test also hashes every file in the e2e project, so an edit to any test file still reruns it.
 
 Use `@nx-depends-on` when the feature lives in its own library.
 Use `@nx-ignore-server-inputs` when the feature lives in the app project and your workspace uses Ultracache.
