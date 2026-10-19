@@ -124,10 +124,15 @@ impl TuiCore {
     }
 
     /// End tasks - records end times and updates status based on result
-    pub fn end_tasks(&self, task_results: &[TaskResult]) {
+    pub fn end_tasks(&self, task_results: &mut [TaskResult]) {
         let mut state = self.state.lock();
+        let now = current_timestamp_millis();
         for result in task_results {
-            state.record_task_end(&result.task.id);
+            let (start_time, end_time) = state.get_task_timing(&result.task.id);
+            result.task.start_time = result.task.start_time.or(start_time);
+            let end_time = result.task.end_time.or(end_time).unwrap_or(now);
+            result.task.end_time = Some(end_time);
+            state.set_task_timing(&result.task.id, result.task.start_time, end_time);
             let status = if result.code == 0 {
                 TaskStatus::Success
             } else {
