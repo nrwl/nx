@@ -554,6 +554,28 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn.mock.calls[0][0]).toContain('install');
   });
 
+  it('spawns the install command when only a catalog entry changed', async () => {
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    writePackageJson({ dependencies: { foo: 'catalog:' } });
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 1.0.0\n'
+    );
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 2.0.0\n'
+    );
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+  });
+
   it('does not spawn a second install when nothing changes after a prior install', async () => {
     writePackageJson();
     const installer = new ChangedDepInstaller(tmpRoot, false);
