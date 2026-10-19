@@ -691,7 +691,7 @@ describe('@nx/vite/plugin', () => {
                         "spa": true,
                       },
                       "readyWhen": {
-                        "host": "{options.host}",
+                        "host": "{options.host ?? localhost}",
                         "port": "{options.port}",
                       },
                     },

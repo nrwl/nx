@@ -244,7 +244,7 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
                 "spa": true,
               },
               "readyWhen": {
-                "host": "{options.host}",
+                "host": "{options.host ?? localhost}",
                 "port": "{options.port}",
               },
             },
@@ -434,7 +434,7 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
                 "spa": true,
               },
               "readyWhen": {
-                "host": "{options.host}",
+                "host": "{options.host ?? localhost}",
                 "port": "{options.port}",
               },
             },

@@ -477,7 +477,7 @@ function serveStaticTarget(
       buildTarget: `${options.buildTargetName}`,
       spa: true,
     },
-    readyWhen: { port: '{options.port}', host: '{options.host}' },
+    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
   };
 
   if (isUsingTsSolutionSetup) {
