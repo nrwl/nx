@@ -13,6 +13,7 @@ import type {
 } from '../models';
 import {
   applyDevServerReadySignal,
+  ssrServerEmitsReadySignal,
   READY_SIGNAL_PLUGIN,
 } from '../utils/dev-server-ready-signal';
 import { loadEsmModule } from '../utils/misc-helpers';
@@ -80,7 +81,12 @@ export class NgRspackPlugin implements RspackPluginInstance {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
 
-    applyDevServerReadySignal(compiler);
+    if (
+      !isDevServer ||
+      !ssrServerEmitsReadySignal(root, this.pluginOptions.ssr)
+    ) {
+      applyDevServerReadySignal(compiler);
+    }
 
     if (this.isPlatformServer && isDevServer) {
       if (

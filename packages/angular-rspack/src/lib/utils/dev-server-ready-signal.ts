@@ -1,6 +1,8 @@
 import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
 import type { Compiler } from '@rspack/core';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // @nx/rspack/plugin infers a signal readyWhen for a dev server config with a
 // plugin that carries this
@@ -27,4 +29,24 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
       )
     );
   };
+}
+
+/**
+ * Whether the SSR server entry reports readiness itself. The forked SSR
+ * server, not the dev server, is then the address the waiting tasks need.
+ */
+export function ssrServerEmitsReadySignal(
+  root: string,
+  ssr: boolean | { entry?: string } | undefined
+): boolean {
+  if (typeof ssr !== 'object' || !ssr.entry) {
+    return false;
+  }
+  try {
+    return readFileSync(resolve(root, ssr.entry), 'utf-8').includes(
+      'emitReadySignal'
+    );
+  } catch {
+    return false;
+  }
 }
