@@ -394,11 +394,12 @@ export async function waitForRspackDevServer(configPath: string) {
       flags.configNames.length === 0 || flags.configNames.includes(config.name)
   );
 
-  // `rspack serve` starts one dev server, for the first config with devServer
+  // `rspack serve` starts one dev server, for the first config with devServer,
+  // and serves a `devServer: false` config with the defaults
   const config = configs.find((c) => c.devServer) ?? configs[0];
-  if (!config || config.devServer === false) return;
+  if (!config) return;
   const address = getDevServerAddress(
-    config.devServer as any,
+    (config.devServer || undefined) as any,
     flags,
     process.env[`${devServerEnv}_DEV_SERVER_BASE_PORT`]
   );

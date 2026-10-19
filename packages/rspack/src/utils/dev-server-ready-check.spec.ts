@@ -188,6 +188,14 @@ describe('waitForRspackDevServer', () => {
     await expectToWaitForPort(waitForRspackDevServer('rspack.config.js'));
   });
 
+  it('serves a devServer: false config on the default port, as rspack serve does', async () => {
+    write('rspack.config.js', `module.exports = { devServer: false };`);
+    vi.stubEnv('RSPACK_DEV_SERVER_BASE_PORT', String(port));
+    stubTaskOptions({});
+
+    await expectToWaitForPort(waitForRspackDevServer('rspack.config.js'));
+  });
+
   it('follows --port in the args of the target', async () => {
     write(
       'rspack.config.js',
