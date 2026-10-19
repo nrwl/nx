@@ -50,11 +50,17 @@ The [Atomizer](/docs/kb/split-e2e-tasks) splits an end-to-end (e2e) suite into o
 Nx caches each of those tasks, but by default each task's hash covers the whole app and the whole e2e project.
 A change to any feature, or to any test file, reruns every test file.
 
+Before, without a directive, both test files hash every folder of the app, so an edit to `search/` reruns both:
+
+![Without a directive, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both tests.](../../../assets/guides/running-tasks/e2e-hash-before.svg)
+
 To fix that, add a one-line directive comment at the top of a test file.
 The directive tells Nx which code the test depends on.
-When a change doesn't touch that code, Nx skips the test and replays its cached result:
+When a change doesn't touch that code, Nx skips the test and replays its cached result.
 
-![With no directive, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both. With a directive, checkout.spec.ts hashes only checkout/ and shared/, so the same edit reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-before-after.svg)
+After, with a directive in each test file, `checkout.spec.ts` hashes only `checkout/` and `shared/`, so the same edit reruns only `search.spec.ts`:
+
+![With a directive, checkout.spec.ts hashes checkout/ and shared/, and search.spec.ts hashes search/ and shared/, so an edit in search/ reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-after.svg)
 
 ## The two directives
 
