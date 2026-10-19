@@ -1,3 +1,4 @@
+import { readJsonFile } from '@nx/devkit';
 import {
   getForwardedArgs,
   getInstalledPackageVersion,
@@ -6,7 +7,8 @@ import {
   runReadyCheck,
   type ServerAddress,
 } from '@nx/devkit/internal';
-import { dirname, resolve } from 'path';
+import { existsSync, lstatSync, realpathSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 import { gte, valid } from 'semver';
 import { parseArgs } from 'util';
 import { loadNuxtKitDynamicImport } from './executor-utils';
@@ -168,22 +170,45 @@ export async function waitForNuxtDevServer() {
   });
 }
 
-// The CLI `nuxt dev` runs, which is the one the project's nuxt depends on:
-// nuxi before Nuxt 3.15.2, and @nuxt/cli from it
+// The CLI `nuxt dev` runs: the one the nearest node_modules/.bin/nuxt links
+// to, else nuxt's own: nuxi before Nuxt 3.15.2, and @nuxt/cli from it
 function getCliRange(root: string): CliRange {
-  let nuxt: ReturnType<typeof readModulePackageJson>;
-  try {
-    nuxt = readModulePackageJson('nuxt', [root]);
-  } catch {
-    // Nothing to match, so match the CLI a new project gets
-    return '4.0.0';
+  let cliVersion = getLinkedCliVersion(root);
+  if (cliVersion === undefined) {
+    let nuxt: ReturnType<typeof readModulePackageJson>;
+    try {
+      nuxt = readModulePackageJson('nuxt', [root]);
+    } catch {
+      // Nothing to match, so match the CLI a new project gets
+      return '4.0.0';
+    }
+    const cli = nuxt.packageJson.dependencies?.nuxi ? 'nuxi' : '@nuxt/cli';
+    cliVersion = getInstalledPackageVersion(cli, [dirname(nuxt.path)]);
   }
-  const cli = nuxt.packageJson.dependencies?.nuxi ? 'nuxi' : '@nuxt/cli';
-  const version = valid(getInstalledPackageVersion(cli, [dirname(nuxt.path)]));
+  const version = valid(cliVersion);
   // Without a 3.x or later version to match, resolve as the latest 3.x CLIs do
   return (
     (version && CLI_RANGES.find((start) => gte(version, start))) || '3.31.0'
   );
+}
+
+// The version of the nuxi or @nuxt/cli that the first node_modules/.bin/nuxt
+// from `root` up links to, as run-commands puts those dirs first on the PATH
+function getLinkedCliVersion(root: string): string | undefined {
+  for (let dir = root; ; dir = dirname(dir)) {
+    const bin = join(dir, 'node_modules', '.bin', 'nuxt');
+    if (existsSync(bin)) {
+      if (!lstatSync(bin).isSymbolicLink()) return undefined;
+      let packageRoot = dirname(realpathSync(bin));
+      while (!existsSync(join(packageRoot, 'package.json'))) {
+        if (dirname(packageRoot) === packageRoot) return undefined;
+        packageRoot = dirname(packageRoot);
+      }
+      const { name, version } = readJsonFile(join(packageRoot, 'package.json'));
+      return name === 'nuxi' || name === '@nuxt/cli' ? version : undefined;
+    }
+    if (dirname(dir) === dir) return undefined;
+  }
 }
 
 // The CLIs before 3.30 read the env once they have loaded .env, which loading

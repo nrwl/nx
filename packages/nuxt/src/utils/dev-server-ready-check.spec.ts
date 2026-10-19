@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { createServer as createHttpServer } from 'http';
 import { createServer, Server, type AddressInfo } from 'net';
 import { tmpdir } from 'os';
@@ -333,6 +333,45 @@ describe('waitForNuxtDevServer', () => {
     ],
   ])('with CLI %s, %s', async (cli, _, setup) => {
     installCli(cli);
+    prepare(setup);
+
+    await expectToWaitForServer(waitForNuxtDevServer());
+  });
+
+  // @nuxt/cli 3.20 reads PORT from .env, and 3.37 reads it before loading .env
+  it.each<[string, boolean, (p: string, o: string) => Setup]>([
+    [
+      'the CLI node_modules/.bin/nuxt links to',
+      true,
+      (p, o) => ({ configPort: o, files: { '.env': `PORT=${p}` } }),
+    ],
+    [
+      "nuxt's CLI when node_modules/.bin/nuxt is a shim",
+      false,
+      (p, o) => ({ configPort: p, files: { '.env': `PORT=${o}` } }),
+    ],
+  ])('resolves the address as %s does', async (_, link, setup) => {
+    const writePackage = (path: string, json: object) =>
+      write(`node_modules/${path}/package.json`, JSON.stringify(json));
+    writePackage('nuxt', {
+      name: 'nuxt',
+      dependencies: { '@nuxt/cli': '^3.32.0' },
+    });
+    writePackage('nuxt/node_modules/@nuxt/cli', {
+      name: '@nuxt/cli',
+      version: '3.37.0',
+    });
+    writePackage('@nuxt/cli', { name: '@nuxt/cli', version: '3.20.0' });
+    write('node_modules/@nuxt/cli/bin/nuxi.mjs', '');
+    if (link) {
+      mkdirSync(join(dir, 'node_modules/.bin'));
+      symlinkSync(
+        '../@nuxt/cli/bin/nuxi.mjs',
+        join(dir, 'node_modules/.bin/nuxt')
+      );
+    } else {
+      write('node_modules/.bin/nuxt', '#!/bin/sh\n');
+    }
     prepare(setup);
 
     await expectToWaitForServer(waitForNuxtDevServer());
