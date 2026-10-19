@@ -130,6 +130,21 @@ Jest tasks have no server task, so only the inputs change.
 Leave the directive off a test that exercises the whole app, such as a login-and-checkout smoke test.
 It reruns on any change to the app.
 
+## Directive syntax
+
+- Put the directive in a line comment or a block comment before the first line of code.
+  Blank lines, a `#!` line, and other comments can come before it.
+- Start the line with the directive, after `//` or a block comment's leading `*`.
+  Nx ignores a directive in any other position, or with a misspelled name, without a warning.
+- Put the colon right after `@nx-depends-on`.
+  It takes project names or patterns separated by commas, and you can repeat it on more lines.
+  Nx ignores it with no value and logs a warning that names the test file.
+  A name or pattern that matches no project is an error when Nx hashes the task.
+- `@nx-ignore-server-inputs` takes no value.
+  Nx ignores it with one, such as `// @nx-ignore-server-inputs: false`, and logs a warning.
+- A test file can have both directives.
+  Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
+
 ## Check the result
 
 Run `nx show project` for the e2e project:
@@ -300,18 +315,3 @@ Disable it for the e2e project's test files instead of removing the imports.
 
 When a test file imports `.tsx` files, set `jsx` in the `compilerOptions` of the e2e project's TypeScript configuration, such as `"jsx": "react-jsx"`.
 Without it, TypeScript reports error TS6305 (`Output file '<path>' has not been built from source file '<path>'`) with project references, or TS6142 with path aliases.
-
-### Directive syntax
-
-- Put the directive in a line comment or a block comment before the first line of code.
-  Blank lines, a `#!` line, and other comments can come before it.
-- Start the line with the directive, after `//` or a block comment's leading `*`.
-  Nx ignores a directive in any other position, or with a misspelled name, without a warning.
-- Put the colon right after `@nx-depends-on`.
-  It takes project names or patterns separated by commas, and you can repeat it on more lines.
-  Nx ignores it with no value and logs a warning that names the test file.
-  A name or pattern that matches no project is an error when Nx hashes the task.
-- `@nx-ignore-server-inputs` takes no value.
-  Nx ignores it with one, such as `// @nx-ignore-server-inputs: false`, and logs a warning.
-- A test file can have both directives.
-  Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
