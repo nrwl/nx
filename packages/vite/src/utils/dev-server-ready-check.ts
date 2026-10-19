@@ -202,10 +202,10 @@ export function getViteServerAddress(
 }
 
 /**
- * The readyWhen of the inferred serve and preview targets, and of the React
- * Router dev target, when the config doesn't load the signal plugin. Runs in
- * the env and with the options of the task, resolves the config the way `vite`
- * does, and waits for the server's port.
+ * The readyWhen of the inferred serve and preview targets whose config doesn't
+ * load the signal plugin, and of the React Router dev target. Runs in the env
+ * and with the options of the task, resolves the config the way `vite` does,
+ * and waits for the server's port.
  */
 export async function waitForViteServer(
   configPath: string,
