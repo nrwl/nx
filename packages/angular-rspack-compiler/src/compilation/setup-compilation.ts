@@ -4,6 +4,9 @@ import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
 import { applyEs2022TargetDefaults } from '../utils/typescript-compiler-options';
 import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
+import { initializeAngularBuildHash } from '../utils/angular-build-hash';
+import { shutdownAngularBuildSass } from '../utils/angular-build-sass';
+import { isAngularBuildVersionAtLeast } from '../utils/angular-build-version';
 import {
   ComponentStylesheetBundler,
   findTailwindConfiguration,
@@ -55,6 +58,8 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   sourceRoot: undefined,
   supportTestBed: false,
   supportJitMode: false,
+  // TypeScript would also strip annotations such as `/* @__PURE__ */`.
+  removeComments: false,
 };
 
 let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
@@ -76,15 +81,21 @@ export async function setupCompilation(
   options: SetupCompilationOptions
 ) {
   assertSupportedAngularRspackCompilerVersions();
+  await initializeAngularBuildHash();
+
+  // From @angular/build 22.2 the compilation reads the tsconfig itself and
+  // takes no `isolatedModules` override, so the option can't apply.
+  const ignoreTsProjectReferences =
+    !!options.useTsProjectReferences && isAngularBuildVersionAtLeast('22.2.0');
 
   const { readConfiguration } = await loadCompilerCli();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
-      // Sourcemaps must be inline to survive the loader chain, and emitting
-      // them forgoes Angular's fast raw-TS emit path, so only emit them when
-      // script sourcemaps are requested.
+      // Sourcemaps must be inline to survive the loader chain. Before
+      // @angular/build 22.1, emitting them forgoes the raw-TS emit path, so
+      // only emit them when script sourcemaps are requested.
       inlineSources: !!options.sourceMap,
       inlineSourceMap: !!options.sourceMap,
       sourceMap: undefined,
@@ -94,7 +105,7 @@ export async function setupCompilation(
       // The bundler resolves symlinks based on this option alone; the
       // program must resolve the same way, so the tsconfig value is ignored.
       preserveSymlinks: options.preserveSymlinks,
-      ...(options.useTsProjectReferences
+      ...(options.useTsProjectReferences && !ignoreTsProjectReferences
         ? {
             sourceMap: false,
             inlineSourceMap: false,
@@ -108,6 +119,12 @@ export async function setupCompilation(
   const compilerOptions = tsCompilerOptions;
 
   const setupWarnings: string[] = [];
+  if (ignoreTsProjectReferences) {
+    setupWarnings.push(
+      "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later. " +
+        "If the TypeScript configuration sets 'noEmit', set 'isolatedModules' to 'true' or remove 'noEmit'."
+    );
+  }
   const hasExplicitUseDefineForClassFields =
     compilerOptions.useDefineForClassFields !== undefined;
   if (applyEs2022TargetDefaults(compilerOptions)) {
@@ -218,13 +235,18 @@ export async function setupCompilation(
  * esbuild service - a child process and its sockets - alive until disposed,
  * which prevents a one-shot `rspack build` from exiting once the bundle is
  * written. Angular's own application builder disposes it in a `finally` block;
- * we must do the same since we drive the bundler directly.
+ * we must do the same since we drive the bundler directly. The Sass compiler
+ * the bundler uses is stopped with it (see `shutdownAngularBuildSass`).
  */
 export async function disposeComponentStylesheetBundler(): Promise<void> {
   if (COMPONENT_STYLESHEET_BUNDLER) {
     const bundler = COMPONENT_STYLESHEET_BUNDLER;
     COMPONENT_STYLESHEET_BUNDLER = undefined;
-    await bundler.dispose();
+    try {
+      await bundler.dispose();
+    } finally {
+      shutdownAngularBuildSass();
+    }
   }
 }
 

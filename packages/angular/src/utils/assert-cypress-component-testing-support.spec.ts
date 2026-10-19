@@ -24,12 +24,43 @@ describe('assertCypressComponentTestingSupport', () => {
     );
   });
 
-  it('throws when Angular is above 22.1 and Cypress is below 15.20.1', () => {
-    setVersions({ '@angular/core': '~23.0.0', cypress: '15.20.0' });
+  it.each(['~22.2.0', '~23.0.0'])(
+    'throws when Angular is `%s` whatever the Cypress version',
+    (angular) => {
+      setVersions({ '@angular/core': angular, cypress: '^16.0.0' });
 
-    expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
-      /requires Cypress 15\.20\.1 or higher/
-    );
+      expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
+        /doesn't support Angular 22\.2 and higher/
+      );
+    }
+  );
+
+  it.each([
+    ['~22.0.0', '~22.2.0'],
+    ['~22.1.0', '~22.2.0'],
+  ])(
+    'throws when Angular is `%s` and build-angular is `%s`',
+    (angular, buildAngular) => {
+      setVersions({
+        '@angular/core': angular,
+        '@angular-devkit/build-angular': buildAngular,
+        cypress: '^16.0.0',
+      });
+
+      expect(() => assertCypressComponentTestingSupport(tree)).toThrow(
+        /doesn't support Angular 22\.2 and higher/
+      );
+    }
+  );
+
+  it('does not throw when Angular is 22.2 and build-angular is 22.1', () => {
+    setVersions({
+      '@angular/core': '~22.2.0',
+      '@angular-devkit/build-angular': '~22.1.0',
+      cypress: '^16.0.0',
+    });
+
+    expect(() => assertCypressComponentTestingSupport(tree)).not.toThrow();
   });
 
   it.each(['~15.17.0', '^14.0.0'])(
