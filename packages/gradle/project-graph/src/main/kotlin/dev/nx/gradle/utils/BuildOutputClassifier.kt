@@ -17,6 +17,11 @@ class BuildOutputClassifier(buildDirs: Collection<File>) {
   fun isBuildOutput(file: File): Boolean =
       generateSequence(file.absoluteFile.normalize()) { it.parentFile }.any { it in buildDirs }
 
+  fun buildDirsUnder(root: File): List<File> {
+    val prefix = root.absoluteFile.normalize().path + File.separator
+    return buildDirs.filter { it.path.startsWith(prefix) }.sortedBy { it.path }
+  }
+
   companion object {
     private val byBuild: MutableMap<Gradle, BuildOutputClassifier> =
         Collections.synchronizedMap(WeakHashMap())

@@ -414,40 +414,48 @@ private fun fileFromDeclaredSource(source: Any?): File? =
       else -> null
     }
 
+private class CopySources(
+    val dirs: MutableSet<File> = mutableSetOf(),
+    val missingFiles: MutableSet<File> = mutableSetOf()
+)
+
 /**
- * Declared `from(...)` sources of a copy task that are source directories; these become globs so
- * files added later are picked up without recomputing the graph. Build output dirs are excluded:
- * their existence depends on build state.
+ * Declared `from(...)` sources of a copy task that aren't build output. Directories become globs so
+ * files added later are picked up without recomputing the graph. A source that doesn't exist yet
+ * (e.g. a `dist/` another tool writes) is declared anyway, so a clean and a built tree agree: as a
+ * glob when it has no extension, else as the file itself.
  */
-private fun declaredCopySourceDirs(
+private fun declaredCopySources(
     task: Task,
     buildOutputClassifier: BuildOutputClassifier
-): Set<File> {
-  if (task !is AbstractCopyTask) return emptySet()
-  val dirs = mutableSetOf<File>()
+): CopySources {
+  val sources = CopySources()
+  if (task !is AbstractCopyTask) return sources
   try {
     val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
     if (rootSpec != null) {
-      collectCopySourceDirs(rootSpec, task, dirs, buildOutputClassifier)
+      collectCopySourceDirs(rootSpec, task, sources, buildOutputClassifier)
     }
   } catch (t: Throwable) {
     task.logger.debug("Could not read copy source dirs for ${task.path}: ${t.message}")
   }
-  return dirs
+  return sources
 }
 
 private fun collectCopySourceDirs(
     spec: Any,
     task: Task,
-    into: MutableSet<File>,
+    into: CopySources,
     buildOutputClassifier: BuildOutputClassifier
 ) {
   fun addSourceDir(dir: File) {
     val resolved = if (dir.isAbsolute) dir else File(task.project.projectDir, dir.path)
-    // A source dir exists identically on a clean and a built tree, so this stat is
-    // deterministic.
-    if (!buildOutputClassifier.isBuildOutput(resolved) && resolved.isDirectory) {
-      into.add(resolved)
+    if (buildOutputClassifier.isBuildOutput(resolved)) return
+    when {
+      resolved.isDirectory -> into.dirs.add(resolved)
+      resolved.exists() -> {} // an existing file is already in task.inputs.files
+      resolved.extension.isEmpty() -> into.dirs.add(resolved)
+      else -> into.missingFiles.add(resolved)
     }
   }
   val sourcePaths =
@@ -536,10 +544,10 @@ private fun getInputsForTaskImpl(
     // Files under a known source root collapse into a `root/**/*` glob so files added later
     // invalidate the cache without recomputing the graph (a per-file listing is frozen at
     // graph-computation time).
-    val copySourceDirs = declaredCopySourceDirs(task, buildOutputClassifier)
-    val sourceRoots = candidateSourceRoots(task) + copySourceDirs
+    val copySources = declaredCopySources(task, buildOutputClassifier)
+    val sourceRoots = candidateSourceRoots(task) + copySources.dirs
     // A declared copy source dir globs even when it contributed no file yet.
-    val usedRoots = copySourceDirs.toMutableSet()
+    val usedRoots = copySources.dirs.toMutableSet()
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
@@ -569,14 +577,26 @@ private fun getInputsForTaskImpl(
         }
       }
     }
+    copySources.missingFiles.forEach { file ->
+      replaceRootInPath(file.path, projectRoot, workspaceRoot)?.let {
+        inputs.add(ignoredFileset(it))
+      }
+    }
     usedRoots.forEach { root ->
       replaceRootInPath(root.path, projectRoot, workspaceRoot)?.let {
         inputs.add(ignoredFileset("$it/**/*"))
       }
+      // includeIgnored reads build dirs from disk, e.g. under a `from(".")` root; they're
+      // covered by dependentTasksOutputFiles instead.
+      buildOutputClassifier.buildDirsUnder(root).forEach { buildDir ->
+        replaceRootInPath(buildDir.path, projectRoot, workspaceRoot)?.let {
+          inputs.add(ignoredFileset("!$it/**"))
+        }
+      }
     }
 
-    // The task's own patterns: its type plus, for a Copy/Sync, its declared generated sources
-    // (e.g. processResources bundling a generated dist/*.tar.gz gains **/*.gz on itself). Not
+    // The task's own patterns: its type plus, for a Copy/Sync, its declared build-output sources
+    // (e.g. processResources bundling a generated build/dist/*.tar.gz gains **/*.gz on itself). Not
     // routed through dependencyOutputExtensions so a task gains no self-input from its own outputs.
     val taskOwnPatterns =
         (extensionsForTaskType(task) + declaredCopySourceExtensions(task, buildOutputClassifier))

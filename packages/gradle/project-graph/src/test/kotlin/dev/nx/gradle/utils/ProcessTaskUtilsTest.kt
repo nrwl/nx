@@ -867,7 +867,9 @@ class ProcessTaskUtilsTest {
           "Expected directory glob $dirGlob, got $result")
       assertFalse(
           result.contains(
-              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+              includeIgnoredInput(
+                  Path("{projectRoot}", "src", "main", "resources", "application.conf")
+                      .toString())),
           "Files under a globbed source dir must not be enumerated, got $result")
     }
 
@@ -897,7 +899,9 @@ class ProcessTaskUtilsTest {
           "Expected directory glob $dirGlob, got $result")
       assertFalse(
           result.contains(
-              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+              includeIgnoredInput(
+                  Path("{projectRoot}", "src", "main", "resources", "application.conf")
+                      .toString())),
           "Resource files under a globbed source dir must not be enumerated, got $result")
     }
 
@@ -921,6 +925,54 @@ class ProcessTaskUtilsTest {
       assertFalse(
           result.any { it.toString().contains("generated") },
           "Build output copy source dirs must not become globs or direct inputs, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask declares a non-build copy source the same on clean and built trees`() {
+      // dist/ is written by another tool, so it isn't a Gradle build dir.
+      val copyTask =
+          project.tasks.register("bundleWeb", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(java.io.File("$workspaceRoot/dist/app.tar.gz"))
+      copyTask.from(java.io.File("$workspaceRoot/web-dist"))
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+      val classifier = BuildOutputClassifier(listOf(java.io.File(workspaceRoot, "build")))
+      fun inputs() =
+          getInputsForTask(null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), classifier)
+              ?.toSet()
+
+      val clean = inputs()
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/app.tar.gz").writeText("x")
+      java.io.File("$workspaceRoot/web-dist").mkdirs()
+      java.io.File("$workspaceRoot/web-dist/index.html").writeText("x")
+      val built = inputs()
+
+      assertEquals(clean, built)
+      assertTrue(
+          built!!.contains(
+              includeIgnoredInput(Path("{projectRoot}", "dist", "app.tar.gz").toString())),
+          "Expected the copied file as an input, got $built")
+      assertTrue(
+          built.contains(
+              includeIgnoredInput(Path("{projectRoot}", "web-dist").toString() + "/**/*")),
+          "Expected a glob for the copied dir, got $built")
+    }
+
+    @Test
+    fun `test getInputsForTask excludes build dirs under a copy source glob`() {
+      java.io.File("$workspaceRoot/README.md").writeText("readme")
+      val copyTask =
+          project.tasks.register("docs", org.gradle.api.tasks.bundling.Zip::class.java).get()
+      copyTask.from(project.projectDir)
+      val classifier = BuildOutputClassifier(listOf(java.io.File(workspaceRoot, "build")))
+      val result =
+          getInputsForTask(null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), classifier)!!
+
+      assertTrue(result.contains(includeIgnoredInput("{projectRoot}/**/*")), "got $result")
+      assertTrue(
+          result.contains(
+              includeIgnoredInput("!" + Path("{projectRoot}", "build").toString() + "/**")),
+          "A task must not hash its own build dir, got $result")
     }
 
     @Test
