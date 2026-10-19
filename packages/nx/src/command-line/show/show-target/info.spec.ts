@@ -9,6 +9,12 @@ import {
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
 
+const ultracache = vi.hoisted(() => ({ on: false }));
+vi.mock('../../../ultracache/ci-status', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../ultracache/ci-status')>()),
+  isUltracacheOnInCI: async () => ultracache.on,
+}));
+
 describe('show target info', () => {
   beforeEach(setupBeforeEach);
   afterEach(setupAfterEach);
@@ -522,6 +528,90 @@ describe('show target info', () => {
     ]);
   });
 
+  describe('ultracache', () => {
+    afterEach(() => (ultracache.on = false));
+
+    const buildTarget = (target: Record<string, unknown>) =>
+      setGraph(
+        new GraphBuilder()
+          .addProjectConfiguration(
+            {
+              root: 'apps/my-app',
+              name: 'my-app',
+              targets: { build: { executor: '@nx/web:build', ...target } },
+            },
+            'app'
+          )
+          .build()
+      );
+
+    const text = () => (console.log as Mock).mock.calls.flat().join('\n');
+
+    it('says a cacheable target is hashed from Ultracache when the workspace is On', async () => {
+      ultracache.on = true;
+      buildTarget({
+        cache: true,
+        inputs: ['{projectRoot}/**/*', { fileset: 'a', always: true }],
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).toContain(
+        'Ultracache: In CI, file inputs are replaced by the files this task read during previous runs. `always` inputs still count.'
+      );
+      expect(text().indexOf('Ultracache:')).toBeLessThan(
+        text().indexOf('Inputs:')
+      );
+    });
+
+    it('leaves the JSON output alone', async () => {
+      ultracache.on = true;
+      buildTarget({ cache: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed).not.toHaveProperty('ultracacheInCI');
+      expect(parsed).not.toHaveProperty('ultracacheMode');
+    });
+
+    it('says nothing when the workspace is not On', async () => {
+      buildTarget({ cache: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).not.toContain('Ultracache');
+    });
+
+    it.each([
+      [
+        'warn',
+        'Ultracache: In CI, Nx Cloud warns if this task reads files outside its hash or writes files outside its outputs.',
+      ],
+      [
+        'error',
+        'Ultracache: In CI, Nx Cloud fails the run if this task reads files outside its hash or writes files outside its outputs.',
+      ],
+      ['off', 'Ultracache: In CI, this task is not recorded.'],
+    ])('explains %s mode', async (mode, expected) => {
+      ultracache.on = true;
+      buildTarget({ cache: true, ultracache: { mode } });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).toContain(expected);
+    });
+
+    it('says nothing for a target Ultracache does not apply to', async () => {
+      ultracache.on = true;
+      buildTarget({ cache: true, continuous: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).not.toContain('Ultracache');
+    });
+  });
+
   it('should indicate custom hasher in JSON output', async () => {
     setGraph(
       new GraphBuilder()
@@ -881,5 +971,59 @@ describe('show target info', () => {
     expect(parsed.dependsOn).toEqual(['my-app:serve']);
     expect(parsed.transitiveTasks).toEqual(['my-app:build']);
     expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');
+    expect(parsed).not.toHaveProperty('_continuousDeps');
+  });
+
+  it('says whether a continuous dependency adds its inputs', async () => {
+    const e2e = (inputs?: false) =>
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app-e2e',
+            name: 'my-app-e2e',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                options: { command: 'playwright test' },
+                dependsOn: [
+                  { projects: ['my-app'], target: 'serve', inputs },
+                  { projects: ['my-app'], target: 'build' },
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              serve: { executor: '@nx/web:dev-server', continuous: true },
+              build: { executor: '@nx/web:build' },
+            },
+          },
+          'app'
+        )
+        .build();
+    const line = (task: string) =>
+      (console.log as Mock).mock.calls
+        .map(([l]) => l as string)
+        .find((l) => l.includes(task));
+
+    setGraph(e2e());
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e' });
+    expect(line('  my-app:serve')).toContain('(continuous)');
+    expect(line('  my-app:build')).not.toContain('continuous');
+    const text = (console.log as Mock).mock.calls.flat().join('\n');
+    expect(text.indexOf('Inputs:')).toBeLessThan(
+      text.indexOf('inputs of my-app:serve (continuous dependency)')
+    );
+
+    (console.log as Mock).mockClear();
+    setGraph(e2e(false));
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e' });
+    expect(line('  my-app:serve')).toContain('(continuous)');
+    expect(line('inputs of my-app:serve')).toBeUndefined();
   });
 });

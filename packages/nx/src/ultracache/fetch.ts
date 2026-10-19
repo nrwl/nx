@@ -67,7 +67,7 @@ export async function fetchUltracacheConfigurations(
   return result;
 }
 
-async function loadCloudClient(
+export async function loadCloudClient(
   runnerOptions: UltracacheCloudOptions
 ): Promise<NxCloudClient | undefined> {
   const client = (await verifyOrUpdateNxCloudClient(runnerOptions))
