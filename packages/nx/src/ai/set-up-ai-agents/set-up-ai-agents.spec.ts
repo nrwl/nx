@@ -135,7 +135,9 @@ describe('setup-ai-agents generator', () => {
           source: {
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
+            ref: 'dist/next',
           },
+          autoUpdate: true,
         });
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
@@ -162,7 +164,9 @@ describe('setup-ai-agents generator', () => {
           source: {
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
+            ref: 'dist/next',
           },
+          autoUpdate: true,
         });
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
@@ -457,6 +461,37 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it.each([undefined, 'dist/latest'])(
+        'should move a marketplace on ref %s to the channel branch',
+        async (ref) => {
+          tree.write(
+            '.claude/settings.json',
+            JSON.stringify({
+              extraKnownMarketplaces: {
+                'nx-claude-plugins': {
+                  source: {
+                    source: 'github',
+                    repo: 'nrwl/nx-ai-agents-config',
+                    ref,
+                  },
+                },
+              },
+            })
+          );
+
+          await setupAiAgentsGenerator(tree, {
+            directory: '.',
+            agents: ['claude'],
+          });
+
+          expect(
+            readJson(tree, '.claude/settings.json').extraKnownMarketplaces[
+              'nx-claude-plugins'
+            ].source.ref
+          ).toEqual('dist/next');
+        }
+      );
+
       it('should preserve existing ref in nx-claude-plugins source', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -493,7 +528,32 @@ describe('setup-ai-agents generator', () => {
             repo: 'nrwl/nx-ai-agents-config',
             ref: 'experimental',
           },
+          autoUpdate: true,
         });
+      });
+
+      it('should keep auto-update off when the workspace turned it off', async () => {
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            extraKnownMarketplaces: {
+              'nx-claude-plugins': {
+                source: { source: 'github', repo: 'nrwl/nx-ai-agents-config' },
+                autoUpdate: false,
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['claude'],
+        });
+
+        const config = JSON.parse(tree.read('.claude/settings.json', 'utf-8'));
+        expect(
+          config.extraKnownMarketplaces['nx-claude-plugins'].autoUpdate
+        ).toBe(false);
       });
 
       it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
@@ -754,7 +814,7 @@ describe('setup-ai-agents generator', () => {
   });
 
   describe('cursor plugin', () => {
-    it('should register the Nx plugin at the latest release tag', async () => {
+    it('should register the Nx plugin on the branch of the release channel', async () => {
       tree.write(
         '.cursor/settings.json',
         JSON.stringify({ other: true, plugins: { mine: { enabled: true } } })
@@ -772,10 +832,11 @@ describe('setup-ai-agents generator', () => {
           'nx-agent-plugins/nx': {
             enabled: true,
             gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
-            gitRef: 'v1.2.3',
+            gitRef: 'dist/next',
           },
         },
       });
+      expect(latestPluginVersionSpy).not.toHaveBeenCalled();
     });
 
     it('should keep keys users added to the Nx plugin entry', async () => {
@@ -783,7 +844,7 @@ describe('setup-ai-agents generator', () => {
         '.cursor/settings.json',
         JSON.stringify({
           plugins: {
-            'nx-agent-plugins/nx': { gitRef: 'v1.0.0', custom: 'kept' },
+            'nx-agent-plugins/nx': { custom: 'kept' },
           },
         })
       );
@@ -799,16 +860,16 @@ describe('setup-ai-agents generator', () => {
         custom: 'kept',
         enabled: true,
         gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
-        gitRef: 'v1.2.3',
+        gitRef: 'dist/next',
       });
     });
 
-    it('should not downgrade a newer pinned version', async () => {
+    it('should move a channel branch to the channel nx follows', async () => {
       tree.write(
         '.cursor/settings.json',
         JSON.stringify({
           plugins: {
-            'nx-agent-plugins/nx': { enabled: true, gitRef: 'v2.0.0' },
+            'nx-agent-plugins/nx': { enabled: true, gitRef: 'dist/latest' },
           },
         })
       );
@@ -821,16 +882,15 @@ describe('setup-ai-agents generator', () => {
       expect(
         readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
           .gitRef
-      ).toEqual('v2.0.0');
+      ).toEqual('dist/next');
     });
 
-    it('should keep the pinned version when the registry is unreachable', async () => {
-      latestPluginVersionSpy.mockResolvedValue(null);
+    it('should keep a ref the workspace pinned', async () => {
       tree.write(
         '.cursor/settings.json',
         JSON.stringify({
           plugins: {
-            'nx-agent-plugins/nx': { enabled: true, gitRef: 'v1.0.0' },
+            'nx-agent-plugins/nx': { enabled: true, gitRef: 'v2.0.0-beta.1' },
           },
         })
       );
@@ -843,25 +903,7 @@ describe('setup-ai-agents generator', () => {
       expect(
         readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
           .gitRef
-      ).toEqual('v1.0.0');
-    });
-
-    it('should report an error and leave copied files when no version is known', async () => {
-      latestPluginVersionSpy.mockResolvedValue(null);
-      const copied = '.cursor/agents/ci-monitor-subagent.md';
-      tree.write(copied, shippedContent(copied));
-
-      const callback = await setupAiAgentsGenerator(tree, {
-        directory: '.',
-        agents: ['cursor'],
-      });
-      const { errors } = await callback(true);
-
-      expect(tree.exists('.cursor/settings.json')).toBe(false);
-      expect(tree.exists(copied)).toBe(true);
-      expect(errors.map((e) => e.title)).toContain(
-        'Could not configure the Nx plugin for Cursor'
-      );
+      ).toEqual('v2.0.0-beta.1');
     });
 
     it('should remove copied files that were not edited and keep edited ones', async () => {
@@ -1128,12 +1170,12 @@ enabled = true
   });
 
   describe('opencode plugin', () => {
-    it('should pin the Nx plugin and remove the nx-mcp server', async () => {
+    it('should add the Nx plugin on the channel dist-tag and remove the nx-mcp server', async () => {
       tree.write(
         'opencode.json',
         JSON.stringify({
           $schema: 'https://opencode.ai/config.json',
-          plugin: ['other-plugin', '@nx/opencode-plugin@0.9.0'],
+          plugin: ['other-plugin'],
           mcp: {
             'nx-mcp': { type: 'local', command: ['npx', 'nx', 'mcp'] },
           },
@@ -1147,16 +1189,39 @@ enabled = true
 
       expect(readJson(tree, 'opencode.json')).toEqual({
         $schema: 'https://opencode.ai/config.json',
-        plugin: ['other-plugin', '@nx/opencode-plugin@1.2.3'],
+        plugin: ['other-plugin', '@nx/opencode-plugin@next'],
       });
+      expect(latestPluginVersionSpy).not.toHaveBeenCalled();
     });
 
-    it('should update an existing entry in place and keep its options', async () => {
+    it('should move an entry on a dist-tag to the channel and keep its options', async () => {
       tree.write(
         'opencode.json',
         JSON.stringify({
           plugin: [
-            ['@nx/opencode-plugin@0.9.0', { verbose: true }],
+            'other-plugin',
+            ['@nx/opencode-plugin@latest', { verbose: true }],
+          ],
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json').plugin).toEqual([
+        'other-plugin',
+        ['@nx/opencode-plugin@next', { verbose: true }],
+      ]);
+    });
+
+    it('should keep an entry pinned to a version and drop duplicates', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          plugin: [
+            ['@nx/opencode-plugin@0.9.0-beta.1', { verbose: true }],
             'other-plugin',
             '@nx/opencode-plugin',
           ],
@@ -1169,26 +1234,7 @@ enabled = true
       });
 
       expect(readJson(tree, 'opencode.json').plugin).toEqual([
-        ['@nx/opencode-plugin@1.2.3', { verbose: true }],
-        'other-plugin',
-      ]);
-    });
-
-    it('should keep the position of an existing entry', async () => {
-      tree.write(
-        'opencode.json',
-        JSON.stringify({
-          plugin: ['@nx/opencode-plugin@0.9.0', 'other-plugin'],
-        })
-      );
-
-      await setupAiAgentsGenerator(tree, {
-        directory: '.',
-        agents: ['opencode'],
-      });
-
-      expect(readJson(tree, 'opencode.json').plugin).toEqual([
-        '@nx/opencode-plugin@1.2.3',
+        ['@nx/opencode-plugin@0.9.0-beta.1', { verbose: true }],
         'other-plugin',
       ]);
     });
@@ -1211,7 +1257,7 @@ enabled = true
 
       expect(readJson(tree, 'opencode.json')).toEqual({
         mcp: { mine: { type: 'local', command: ['mine'] } },
-        plugin: ['@nx/opencode-plugin@1.2.3'],
+        plugin: ['@nx/opencode-plugin@next'],
       });
     });
 

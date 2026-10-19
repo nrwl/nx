@@ -42,16 +42,24 @@ export const rulesRegex = new RegExp(
   'm'
 );
 
-// The Nx agent plugins are released from this repository: the npm packages
-// below share one version, and each release is tagged `v<version>`.
-export const agentPluginsRepoUrl =
-  'https://github.com/nrwl/nx-ai-agents-config.git';
-/** The package whose `latest` version determines which plugin version to pin. */
+// The Nx agent plugins are released from this repository in two channels,
+// `latest` and `next`. Each release publishes the npm packages below (they
+// share one version) under the channel's dist-tag, is tagged `v<version>`,
+// and moves the channel's `dist/<dist-tag>` branch.
+export const agentPluginsRepo = 'nrwl/nx-ai-agents-config';
+export const agentPluginsRepoUrl = `https://github.com/${agentPluginsRepo}.git`;
+export const agentPluginsDistTags = ['latest', 'next'] as const;
+/** The channel workspaces are set up to follow. */
+export const agentPluginsDistTag: (typeof agentPluginsDistTags)[number] =
+  'next';
+/** Branch Claude Code reads the marketplace from and Cursor the plugin. */
+export const agentPluginsGitRef = `dist/${agentPluginsDistTag}`;
+/** The package whose version on the channel the Codex install is compared against. */
 export const claudePluginPackage = '@nx/claude-plugin';
 export const codexPluginPackage = '@nx/codex-plugin';
 export const opencodePluginPackage = '@nx/opencode-plugin';
 
-/** Claude Code plugin id, served by the marketplace in agentPluginsRepoUrl. */
+/** Claude Code plugin id, served by the marketplace in agentPluginsRepo. */
 export const claudePluginId = 'nx@nx-claude-plugins';
 /** Codex plugin id, from the marketplace the @nx/codex-plugin installer registers. */
 export const codexPluginId = 'nx@nx-agent-plugins';

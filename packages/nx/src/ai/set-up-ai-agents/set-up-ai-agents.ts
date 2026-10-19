@@ -19,22 +19,19 @@ import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import {
+  agentPluginsDistTag,
+  agentPluginsRepo,
   analyticsDomain,
   NX_ALLOWLIST_ROOTS,
   claudeMcpJsonPath,
   claudePluginId,
-  claudePluginPackage,
   codexConfigTomlPath,
 } from '../constants';
 import { Agent, agentDisplayMap, supportedAgents } from '../utils';
+import { getLatestAgentPluginVersion } from './agent-plugin-version';
 import {
-  getLatestAgentPluginVersion,
-  pickAgentPluginVersion,
-} from './agent-plugin-version';
-import {
+  agentPluginsGitRefFor,
   readCodexConfig,
-  readCursorPluginVersion,
-  readOpencodePluginVersion,
   writeCodexPlugin,
   writeCursorPlugin,
   writeOpencodePlugin,
@@ -134,17 +131,12 @@ export async function setupAiAgentsGeneratorImpl(
   ];
   let codexConfigured = false;
 
-  const latestPluginVersion =
-    hasAgent('cursor') || hasAgent('opencode') || hasAgent('codex')
-      ? await getLatestAgentPluginVersion()
-      : null;
-  const pluginVersionUnavailable = (agent: Agent): CLIErrorMessageConfig => ({
-    title: `Could not configure the Nx plugin for ${agentDisplayMap[agent]}`,
-    bodyLines: [
-      `The latest ${claudePluginPackage} version could not be resolved from the npm registry.`,
-      'Check your network or registry configuration and run "nx configure-ai-agents" again.',
-    ],
-  });
+  // Claude Code, Cursor and OpenCode follow the channel's releases on their
+  // own. Codex installs a fixed version per user, so it is compared against
+  // the channel's latest release.
+  const latestPluginVersion = hasAgent('codex')
+    ? await getLatestAgentPluginVersion()
+    : null;
   const removeLegacyFiles = (folders: readonly string[]) => {
     const { kept } = removeLegacyAgentFiles(tree, options.directory, folders);
     keptLegacyFiles.push(...kept);
@@ -171,11 +163,20 @@ export async function setupAiAgentsGeneratorImpl(
       extraKnownMarketplaces: {
         ...json.extraKnownMarketplaces,
         'nx-claude-plugins': {
+          ...json.extraKnownMarketplaces?.['nx-claude-plugins'],
           source: {
             ...json.extraKnownMarketplaces?.['nx-claude-plugins']?.source,
             source: 'github',
-            repo: 'nrwl/nx-ai-agents-config',
+            repo: agentPluginsRepo,
+            ref: agentPluginsGitRefFor(
+              json.extraKnownMarketplaces?.['nx-claude-plugins']?.source?.ref
+            ),
           },
+          // Claude Code only refreshes third-party marketplaces that opt in,
+          // so without this users would stay on the version they installed.
+          autoUpdate:
+            json.extraKnownMarketplaces?.['nx-claude-plugins']?.autoUpdate ??
+            true,
         },
       },
       enabledPlugins: {
@@ -256,16 +257,8 @@ export async function setupAiAgentsGeneratorImpl(
   }
 
   if (hasAgent('cursor')) {
-    const version = pickAgentPluginVersion(
-      latestPluginVersion,
-      readCursorPluginVersion(tree, options.directory)
-    );
-    if (version) {
-      writeCursorPlugin(tree, options.directory, version);
-      removeLegacyFiles(legacyAgentFolders.cursor);
-    } else {
-      setupErrors.push(pluginVersionUnavailable('cursor'));
-    }
+    writeCursorPlugin(tree, options.directory);
+    removeLegacyFiles(legacyAgentFolders.cursor);
   }
 
   if (hasAgent('codex')) {
@@ -285,16 +278,8 @@ export async function setupAiAgentsGeneratorImpl(
   }
 
   if (hasAgent('opencode')) {
-    const version = pickAgentPluginVersion(
-      latestPluginVersion,
-      readOpencodePluginVersion(tree, options.directory)
-    );
-    if (version) {
-      writeOpencodePlugin(tree, options.directory, version);
-      removeLegacyFiles(legacyAgentFolders.opencode);
-    } else {
-      setupErrors.push(pluginVersionUnavailable('opencode'));
-    }
+    writeOpencodePlugin(tree, options.directory);
+    removeLegacyFiles(legacyAgentFolders.opencode);
   }
 
   addEntryToGitIgnore(
@@ -358,7 +343,7 @@ export async function setupAiAgentsGeneratorImpl(
         !latestPluginVersion ||
         !isCodexPluginInstalled(latestPluginVersion)
       ) {
-        const version = latestPluginVersion ?? 'latest';
+        const version = latestPluginVersion ?? agentPluginsDistTag;
         const result = installCodexPlugin(version, tree.root);
         if (result.ok) {
           messages.push({
@@ -382,7 +367,7 @@ export async function setupAiAgentsGeneratorImpl(
         title: `Install the Nx plugin for ${agentDisplayMap.codex} once per machine`,
         bodyLines: [
           `The codex command was not found. After installing Codex, run: ${codexPluginInstallCommand(
-            latestPluginVersion ?? 'latest'
+            latestPluginVersion ?? agentPluginsDistTag
           )}`,
         ],
       });

@@ -55,6 +55,8 @@ Nx does not write to `AGENTS.md`, `CLAUDE.md` or other rules files, and removes 
 
 Codex installs plugins per user, so each developer using Codex runs `nx configure-ai-agents` once on their machine. The plugin is only enabled in workspaces whose `.codex/config.toml` turns it on.
 
+Claude Code, Cursor and OpenCode pick up new releases of the Nx plugin on their own. Codex keeps the version it installed, so after a release `nx configure-ai-agents --check` reports it as outdated and running `nx configure-ai-agents` installs the new version. To hold a workspace on a specific plugin version, set it in that agent's entry: `"@nx/opencode-plugin@1.2.0"` in `opencode.json`, or the release tag `v1.2.0` as the `ref` of the `nx-claude-plugins` marketplace in `.claude/settings.json` or as `gitRef` in `.cursor/settings.json`. Nx keeps versions you set.
+
 Alternatively, you can install just the skills via:
 
 ```shell

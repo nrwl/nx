@@ -3,6 +3,9 @@ import TOML from 'smol-toml';
 import { Tree } from '../../generators/tree';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import {
+  agentPluginsDistTag,
+  agentPluginsDistTags,
+  agentPluginsGitRef,
   agentPluginsRepoUrl,
   claudePluginId,
   codexConfigTomlPath,
@@ -34,6 +37,17 @@ function readJsonOrUndefined(tree: Tree, path: string): any {
   }
 }
 
+/**
+ * The git ref Claude Code and Cursor read the plugin from. Unset or a channel
+ * branch (`dist/<dist-tag>`) becomes the channel workspaces follow; any other
+ * ref, such as a release tag, was set by the workspace and is kept.
+ */
+export function agentPluginsGitRefFor(existing: unknown): string {
+  return typeof existing === 'string' && !existing.startsWith('dist/')
+    ? existing
+    : agentPluginsGitRef;
+}
+
 export function isClaudePluginEnabled(tree: Tree, directory: string): boolean {
   const settings = readJsonOrUndefined(
     tree,
@@ -54,26 +68,11 @@ export function hasCursorPlugin(tree: Tree, directory: string): boolean {
   return cursorPluginEntry(tree, directory)?.enabled === true;
 }
 
-export function readCursorPluginVersion(
-  tree: Tree,
-  directory: string
-): string | null {
-  const gitRef = cursorPluginEntry(tree, directory)?.gitRef;
-  return typeof gitRef === 'string' && gitRef.startsWith('v')
-    ? gitRef.slice(1)
-    : null;
-}
-
 /**
  * Cursor installs project-scoped plugins listed in `.cursor/settings.json`
- * from a git URL at a pinned ref. Nx agent plugin releases are tagged
- * `v<version>`.
+ * from a git URL and ref, see agentPluginsGitRefFor.
  */
-export function writeCursorPlugin(
-  tree: Tree,
-  directory: string,
-  version: string
-): void {
+export function writeCursorPlugin(tree: Tree, directory: string): void {
   const path = cursorSettingsPath(directory);
   if (!tree.exists(path)) {
     writeJson(tree, path, {});
@@ -86,7 +85,7 @@ export function writeCursorPlugin(
         ...json.plugins?.[cursorPluginKey],
         enabled: true,
         gitUrl: agentPluginsRepoUrl,
-        gitRef: `v${version}`,
+        gitRef: agentPluginsGitRefFor(json.plugins?.[cursorPluginKey]?.gitRef),
       },
     },
   }));
@@ -109,28 +108,22 @@ function opencodePluginSpecifier(entry: unknown): string | undefined {
   return undefined;
 }
 
+const opencodePluginSpecifierForChannel =
+  agentPluginsDistTag === 'latest'
+    ? opencodePluginPackage
+    : `${opencodePluginPackage}@${agentPluginsDistTag}`;
+
+function followsChannel(specifier: string): boolean {
+  const version = specifier.slice(opencodePluginPackage.length + 1);
+  return (
+    version === '' ||
+    (agentPluginsDistTags as readonly string[]).includes(version)
+  );
+}
+
 function isNxOpencodePluginEntry(entry: unknown): boolean {
   const specifier = opencodePluginSpecifier(entry);
   return !!specifier && opencodePluginEntryPattern.test(specifier);
-}
-
-export function readOpencodePluginVersion(
-  tree: Tree,
-  directory: string
-): string | null {
-  const plugins = readJsonOrUndefined(tree, opencodeMcpPath(directory))?.plugin;
-  if (!Array.isArray(plugins)) {
-    return null;
-  }
-  for (const entry of plugins) {
-    if (isNxOpencodePluginEntry(entry)) {
-      const match = opencodePluginSpecifier(entry).match(
-        opencodePluginEntryPattern
-      );
-      return match?.[1] ? match[1].slice(1) : null;
-    }
-  }
-  return null;
 }
 
 export function hasOpencodePlugin(tree: Tree, directory: string): boolean {
@@ -145,37 +138,35 @@ export function hasOpencodeNxMcp(tree: Tree, directory: string): boolean {
 }
 
 /**
- * Pins the Nx plugin in `opencode.json` (OpenCode installs npm plugins itself),
- * keeping an existing entry's position and options, and drops `nx-mcp`.
+ * Adds the Nx plugin to `opencode.json` at the channel's dist-tag, which
+ * OpenCode resolves itself, and drops `nx-mcp`. An entry on a dist-tag is
+ * moved to the channel workspaces follow; one pinned to a version the
+ * workspace set itself is kept.
  */
-export function writeOpencodePlugin(
-  tree: Tree,
-  directory: string,
-  version: string
-): void {
+export function writeOpencodePlugin(tree: Tree, directory: string): void {
   const path = opencodeMcpPath(directory);
   if (!tree.exists(path)) {
     writeJson(tree, path, {});
   }
   updateJson(tree, path, (json) => {
-    const specifier = `${opencodePluginPackage}@${version}`;
     const plugins: unknown[] = Array.isArray(json.plugin) ? json.plugin : [];
     const existing = plugins.findIndex(isNxOpencodePluginEntry);
-    json.plugin =
-      existing === -1
-        ? [...plugins, specifier]
-        : plugins.flatMap((entry, i) => {
-            if (!isNxOpencodePluginEntry(entry)) {
-              return [entry];
-            }
-            // Duplicate entries for the Nx plugin are dropped
-            if (i !== existing) {
-              return [];
-            }
-            return [
-              Array.isArray(entry) ? [specifier, ...entry.slice(1)] : specifier,
-            ];
-          });
+    const entry = plugins[existing];
+    if (existing === -1) {
+      json.plugin = [...plugins, opencodePluginSpecifierForChannel];
+    } else {
+      const updated = !followsChannel(opencodePluginSpecifier(entry))
+        ? entry
+        : Array.isArray(entry)
+          ? [opencodePluginSpecifierForChannel, ...entry.slice(1)]
+          : opencodePluginSpecifierForChannel;
+      // Duplicate entries for the Nx plugin are dropped
+      json.plugin = plugins
+        .map((plugin, i) => (i === existing ? updated : plugin))
+        .filter(
+          (plugin, i) => !isNxOpencodePluginEntry(plugin) || i === existing
+        );
+    }
     if (json.mcp?.['nx-mcp']) {
       delete json.mcp['nx-mcp'];
       if (Object.keys(json.mcp).length === 0) {

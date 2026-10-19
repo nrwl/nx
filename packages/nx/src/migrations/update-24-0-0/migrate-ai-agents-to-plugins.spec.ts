@@ -104,14 +104,14 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     ).toEqual({
       enabled: true,
       gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
-      gitRef: 'v1.2.3',
+      gitRef: 'dist/next',
     });
     expect(tree.exists('.cursor/agents')).toBe(false);
     expect(TOML.parse(tree.read('.codex/config.toml', 'utf-8'))).toEqual({
       plugins: { 'nx@nx-agent-plugins': { enabled: true } },
     });
     expect(readJson(tree, 'opencode.json')).toEqual({
-      plugin: ['@nx/opencode-plugin@1.2.3'],
+      plugin: ['@nx/opencode-plugin@next'],
     });
     expect(tree.exists('.opencode')).toBe(false);
   });
@@ -189,7 +189,7 @@ describe('migrate-ai-agents-to-plugins migration', () => {
     ]);
   });
 
-  it('should keep copied files and report it when the plugin version is unknown', async () => {
+  it('should configure Cursor without reaching the registry', async () => {
     latestPluginVersionSpy.mockResolvedValue(null);
     tree.write(
       '.cursor/agents/ci-monitor-subagent.md',
@@ -198,11 +198,11 @@ describe('migrate-ai-agents-to-plugins migration', () => {
 
     const nextSteps = await migrateAiAgentsToPlugins(tree);
 
-    expect(tree.exists('.cursor/agents/ci-monitor-subagent.md')).toBe(true);
-    expect(tree.exists('.cursor/settings.json')).toBe(false);
-    expect(nextSteps).toHaveLength(1);
-    expect(nextSteps[0]).toContain(
-      'Could not configure the Nx plugin for Cursor'
-    );
+    expect(tree.exists('.cursor/agents')).toBe(false);
+    expect(
+      readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
+        .gitRef
+    ).toEqual('dist/next');
+    expect(nextSteps).toEqual([]);
   });
 });

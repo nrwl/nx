@@ -1,6 +1,6 @@
-import { gt, valid } from 'semver';
+import { valid } from 'semver';
 import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
-import { claudePluginPackage } from '../constants';
+import { agentPluginsDistTag, claudePluginPackage } from '../constants';
 
 // The daemon checks agent configuration in the background on every run, so the
 // registry lookup is cached. Failures are retried sooner than successes.
@@ -10,9 +10,9 @@ const failureTtlMs = 5 * 60 * 1000;
 let cachedLatest: { version: string | null; expiresAt: number } | undefined;
 
 /**
- * The latest released version of the Nx agent plugins, or `null` when the
- * registry can't be reached. All plugin packages are released together, so
- * one lookup covers every agent.
+ * The latest version of the Nx agent plugins on the channel workspaces
+ * follow, or `null` when the registry can't be reached. All plugin packages are released together, so
+ * the Claude Code package's version stands for the Codex one too.
  */
 export async function getLatestAgentPluginVersion(): Promise<string | null> {
   if (cachedLatest && cachedLatest.expiresAt > Date.now()) {
@@ -22,7 +22,7 @@ export async function getLatestAgentPluginVersion(): Promise<string | null> {
   try {
     const resolved = await resolvePackageVersionUsingRegistry(
       claudePluginPackage,
-      'latest'
+      agentPluginsDistTag
     );
     version = valid(resolved) ? resolved : null;
   } catch {
@@ -37,19 +37,4 @@ export async function getLatestAgentPluginVersion(): Promise<string | null> {
 
 export function resetLatestAgentPluginVersionCache(): void {
   cachedLatest = undefined;
-}
-
-/**
- * The version to pin: the latest release, unless the workspace pins a newer
- * one. Falls back to the existing pin, or null when neither is known.
- */
-export function pickAgentPluginVersion(
-  latest: string | null,
-  pinned: string | null | undefined
-): string | null {
-  const validPinned = pinned && valid(pinned) ? pinned : null;
-  if (latest && validPinned) {
-    return gt(validPinned, latest) ? validPinned : latest;
-  }
-  return latest ?? validPinned;
 }
