@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { relative } from 'path';
 import {
+  assertNoRemovedExecutorTargets,
   deleteWebpackConfig,
   determineFrameworkAndTarget,
   findExistingTargetsInProject,
@@ -19,7 +20,7 @@ import {
 } from '../../utils/generator-utils';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
-import { getProjectType, getTsConfigBaseOptions } from '@nx/js/internal';
+import { getTsConfigBaseOptions } from '@nx/js/internal';
 import { Framework } from '../init/schema';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
@@ -75,10 +76,7 @@ export async function configurationGenerator(
   const task = await rspackInitGenerator(tree, {
     ...options,
   });
-  const { targets, root, projectType } = readProjectConfiguration(
-    tree,
-    options.project
-  );
+  const { targets, root } = readProjectConfiguration(tree, options.project);
 
   const { target, framework } = determineFrameworkAndTarget(
     tree,
@@ -107,12 +105,7 @@ export async function configurationGenerator(
       alreadyHasNxRspackTargets,
     } = findExistingTargetsInProject(targets, userProvidedTargetName);
 
-    if (
-      alreadyHasNxRspackTargets.build &&
-      (alreadyHasNxRspackTargets.serve ||
-        getProjectType(tree, options.project, projectType) === 'library' ||
-        options.framework === 'nest')
-    ) {
+    if (alreadyHasNxRspackTargets.build || alreadyHasNxRspackTargets.serve) {
       throw new Error(
         `The project ${options.project} has targets using the removed @nx/rspack executors.
         Please try a different project, or remove the existing targets
@@ -120,6 +113,8 @@ export async function configurationGenerator(
         `
       );
     }
+
+    assertNoRemovedExecutorTargets(options.project, targets);
 
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
