@@ -1329,6 +1329,12 @@ from = "/docs/technologies/react/remix/executors"
 to = "/docs/technologies/react/remix/introduction"
 status = 301
 
+# NXC-5093: e2e import-hashing guide merged into the skip unaffected e2e tests guide
+[[redirects]]
+from = "/docs/kb/hash-e2e-tests-from-imports"
+to = "/docs/kb/skip-unaffected-e2e-tests"
+status = 301
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
