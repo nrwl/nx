@@ -679,6 +679,27 @@ describe('@nx/docker', () => {
       expect(targets['docker:build'].options.args[0]).toBe('--tag my-proj');
       expect(targets['docker:run'].command).toBe('docker run {args} my-proj');
     });
+
+    it('should replace shell metacharacters in project path', async () => {
+      await tempFs.createFiles({
+        'a;touch pwned;$(id)/Dockerfile': 'FROM node:18',
+        'a;touch pwned;$(id)/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['a;touch pwned;$(id)/Dockerfile'],
+        {},
+        context
+      );
+
+      const targets = results[0][1].projects['a;touch pwned;$(id)'].targets;
+      expect(targets['docker:build'].options.args[0]).toBe(
+        '--tag a-touch-pwned-id-'
+      );
+      expect(targets['docker:run'].command).toBe(
+        'docker run {args} a-touch-pwned-id-'
+      );
+    });
   });
 
   describe('normalizePluginOptions', () => {
