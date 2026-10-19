@@ -56,6 +56,8 @@ import { TaskMetadata, TaskResult } from './life-cycle';
 import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
+import { READY_URL_ENV } from './readiness/ready-signal';
+import { ReadySignalServer } from './readiness/ready-signal-server';
 import {
   DEFAULT_READY_TIMEOUT,
   getReadyProducerIds,
@@ -269,6 +271,9 @@ export class TaskOrchestrator {
   private readinessFailures = new Map<string, Promise<void>>();
   private readinessFailureReasons = new Map<string, string>();
   private readinessSettled = false;
+  private readySignal: ReadySignalServer | undefined;
+  // The url each producer reported with its readiness signal
+  private readyUrls = new Map<string, string>();
   private waitingLogged = new Set<string>();
   private cleanupPromise: Promise<void> | null = null;
   private signalHandlers: Array<[NodeJS.Signals, () => void]> = [];
@@ -1595,6 +1600,7 @@ export class TaskOrchestrator {
           temporaryOutputPath,
           streamOutput
         );
+    Object.assign(env, this.getReadyUrlEnv(task));
 
     let resolveDiscreteExit: () => void;
     const discreteExitHandled = new Promise<void>(
@@ -1962,7 +1968,12 @@ export class TaskOrchestrator {
         task,
         () => this.getReadyWhen(task, env)
       ));
+      if (readyWhen?.kind === 'signal') {
+        this.readySignal ??= new ReadySignalServer();
+        Object.assign(env, await this.readySignal.env(task.id));
+      }
       await this.waitForReadyDependencies(task);
+      Object.assign(env, this.getReadyUrlEnv(task));
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
       if (e instanceof ProducerFailedError) {
@@ -2146,6 +2157,14 @@ export class TaskOrchestrator {
     }
   }
 
+  // A waiter learns the url of the one ready producer that reported it
+  private getReadyUrlEnv(task: Task): NodeJS.ProcessEnv {
+    const urls = getReadyProducerIds(task, this.fullTaskGraph)
+      .map((id) => this.readyUrls.get(id))
+      .filter(Boolean);
+    return urls.length === 1 ? { [READY_URL_ENV]: urls[0] } : {};
+  }
+
   private onReadinessHold(producerId: string) {
     if (
       !this.waitingLogged.has(producerId) &&
@@ -2188,6 +2207,7 @@ export class TaskOrchestrator {
         this.options.lifeCycle.setTaskReadiness?.(producer.id, status);
       }
       if (status === TaskReadiness.Ready) {
+        this.readReadyUrl(producer.id);
         return true;
       }
       if (status === TaskReadiness.Failed) {
@@ -2212,10 +2232,12 @@ export class TaskOrchestrator {
       runningTask,
       cwd: workspaceRoot,
       signal: state.abort.signal,
+      readySignal: this.readySignal,
     }).then(
-      () => {
+      ({ url }) => {
         if (state.abort.signal.aborted) return;
-        this.recordReadiness(task, TaskReadiness.Ready);
+        if (url) this.readyUrls.set(task.id, url);
+        this.recordReadiness(task, TaskReadiness.Ready, url);
         state.resolve();
       },
       (e) => {
@@ -2277,18 +2299,30 @@ export class TaskOrchestrator {
     }
   }
 
-  private recordReadiness(task: Task, status: TaskReadiness) {
+  private recordReadiness(task: Task, status: TaskReadiness, url?: string) {
     this.options.lifeCycle.setTaskReadiness?.(task.id, status);
-    this.publishReadiness(task, status);
+    this.publishReadiness(task, status, url);
   }
 
   // Only other processes read the row, so a failed write must not fail this one
-  private publishReadiness(task: Task, status: TaskReadiness) {
+  private publishReadiness(task: Task, status: TaskReadiness, url?: string) {
     try {
-      this.runningTasksService?.setTaskReadiness(task.id, status);
+      this.runningTasksService?.setTaskReadiness(task.id, status, url ?? null);
     } catch (e) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(`Failed to record readiness of "${task.id}":`, e);
+      }
+    }
+  }
+
+  // The url a producer another process runs reported with its readiness
+  private readReadyUrl(producerId: string) {
+    try {
+      const url = this.runningTasksService?.getTaskReadyUrl(producerId);
+      if (url) this.readyUrls.set(producerId, url);
+    } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(`Failed to read the url of "${producerId}":`, e);
       }
     }
   }
@@ -2875,6 +2909,7 @@ export class TaskOrchestrator {
   private async performCleanup() {
     // Waiters must not sit out a probe once the run is stopping
     this.abortAllReadiness();
+    this.readySignal?.close();
 
     // Mark all running tasks for intentional stop
     const reason = this.stopRequested ? 'interrupted' : 'fulfilled';

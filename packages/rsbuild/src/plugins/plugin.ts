@@ -21,7 +21,7 @@ import {
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { join, dirname, isAbsolute, relative } from 'path';
+import { basename, dirname, isAbsolute, join, relative } from 'path';
 import type { RsbuildConfig } from '@rsbuild/core';
 export interface RsbuildPluginOptions {
   buildTargetName?: string;
@@ -206,6 +206,8 @@ async function createRsbuildTargets(
     },
   };
 
+  const signals = await loadsReadySignalPlugin(rsbuildConfig.content.plugins);
+
   targets[options.devTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -214,6 +216,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=development'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'dev', signals),
   };
 
   targets[options.previewTargetName] = {
@@ -225,6 +228,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=production'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'preview', signals),
   };
 
   targets[options.inspectTargetName] = {
@@ -338,4 +342,35 @@ function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
   options.previewTargetName ??= 'preview';
   options.inspectTargetName ??= 'inspect';
   return options;
+}
+
+// A config that loads pluginNxReadySignal() reports when the server listens.
+// Otherwise the check loads the config when the task runs, with the task's
+// env and options, and waits for the server's port.
+function getServerReadyWhen(
+  configFilePath: string,
+  command: 'dev' | 'preview',
+  signals: boolean
+): TargetConfiguration['readyWhen'] {
+  return signals
+    ? { signal: true }
+    : {
+        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
+        // becomes user-chosen, since the shell expands $, backticks and %.
+        command: `node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
+        // Each attempt loads the config
+        interval: 1000,
+      };
+}
+
+// Rsbuild's plugins option nests arrays and promises, and allows falsy entries
+async function loadsReadySignalPlugin(plugins: unknown): Promise<boolean> {
+  const plugin = await plugins;
+  if (Array.isArray(plugin)) {
+    for (const entry of plugin) {
+      if (await loadsReadySignalPlugin(entry)) return true;
+    }
+    return false;
+  }
+  return (plugin as { name?: unknown } | null)?.name === 'nx:ready-signal';
 }

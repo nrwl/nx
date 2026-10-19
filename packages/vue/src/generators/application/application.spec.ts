@@ -110,13 +110,12 @@ describe('application generator', () => {
     expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { pluginVue } from '@rsbuild/plugin-vue';
       import { defineConfig } from '@rsbuild/core';
+      import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
       export default defineConfig({
         html: {
           template: './index.html',
         },
-        plugins: [pluginVue()],
-
         source: {
           entry: {
             index: './src/main.ts',
@@ -132,6 +131,7 @@ describe('application generator', () => {
             root: 'dist',
           },
         },
+        plugins: [pluginNxReadySignal(), pluginVue()],
       });
       "
     `);

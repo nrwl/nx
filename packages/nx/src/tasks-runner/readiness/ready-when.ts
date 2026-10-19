@@ -20,12 +20,18 @@ export const DEFAULT_READY_TIMEOUT = 60_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
-// No interval means the probe's own default applies
+// No interval means the probe's own default applies. A command's env is set
+// only by getReadyWhen, which knows the env the producer runs with.
 type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
   | { kind: 'url'; url: string | Deferred }
   | { kind: 'port'; port: number | Deferred; host?: string | Deferred }
-  | { kind: 'command'; command: string | Deferred }
+  | {
+      kind: 'command';
+      command: string | Deferred;
+      env?: Record<string, string>;
+    }
   | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
+  | { kind: 'signal' }
 );
 
 // With 0 or `auto` the server picks its port at startup, so there is nothing
@@ -45,7 +51,7 @@ export interface ReadyWhenWait {
   description: string;
 }
 
-const PROBE_KEYS = ['url', 'port', 'command', 'logMatches'] as const;
+const PROBE_KEYS = ['url', 'port', 'command', 'logMatches', 'signal'] as const;
 
 class EnvUnknownHere extends Error {}
 
@@ -252,6 +258,15 @@ function resolveReadyWhen(
       }
       return { kind: 'logMatches', logMatches, ...shared };
     }
+    case 'signal': {
+      if (config.signal !== true) {
+        throw invalid('"signal" must be true');
+      }
+      if (config.interval != null) {
+        throw invalid('"interval" is not used by "signal"');
+      }
+      return { kind: 'signal', timeout };
+    }
   }
 }
 
@@ -327,6 +342,8 @@ function describeReadyWhen(
       return `command "${readyWhen.command}"`;
     case 'logMatches':
       return `logMatches ${readyWhen.logMatches.map((m) => `"${m}"`).join(', ')}`;
+    case 'signal':
+      return 'signal';
   }
 }
 
@@ -367,35 +384,45 @@ export function getReadyWhen(
   const { readyWhen, executor, data } = inputs;
   const { options } = data;
   let commandEnv: NodeJS.ProcessEnv | undefined;
-  return normalizeReadyWhen(readyWhen, task.id, {
-    ...data,
-    env: () => {
-      if (executor !== 'nx:run-commands') {
-        return taskEnv;
-      }
-      if (commandEnv) {
-        return commandEnv;
-      }
-      // Required lazily, so loading run-command.ts doesn't also load the
-      // run-commands executor
-      const { calculateCwd, processEnv } =
-        require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
-      commandEnv = processEnv(
-        options.color as boolean,
-        calculateCwd(
-          options.cwd as string,
-          {
-            root: workspaceRoot,
-          } as ExecutorContext
-        ),
-        (options.env ?? {}) as Record<string, string>,
-        options.envFile as string,
-        taskEnv
-      );
+  const env = () => {
+    if (executor !== 'nx:run-commands') {
+      return taskEnv;
+    }
+    if (commandEnv) {
       return commandEnv;
-    },
-  });
+    }
+    // Required lazily, so loading run-command.ts doesn't also load the
+    // run-commands executor
+    const { calculateCwd, processEnv } =
+      require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
+    commandEnv = processEnv(
+      options.color as boolean,
+      calculateCwd(
+        options.cwd as string,
+        {
+          root: workspaceRoot,
+        } as ExecutorContext
+      ),
+      (options.env ?? {}) as Record<string, string>,
+      options.envFile as string,
+      taskEnv
+    );
+    return commandEnv;
+  };
+  const probe = normalizeReadyWhen(readyWhen, task.id, { ...data, env });
+  if (probe?.kind === 'command') {
+    probe.env = {
+      ...Object.fromEntries(
+        Object.entries(env()).filter(([, value]) => value !== undefined)
+      ),
+      [TASK_OPTIONS_ENV]: JSON.stringify(options),
+    };
+  }
+  return probe;
 }
+
+// A command check reads the options its producer runs with from this variable
+export const TASK_OPTIONS_ENV = 'NX_TASK_OPTIONS';
 
 // The probe of a producer another process may run
 export function getReadyWhenWait(

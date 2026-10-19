@@ -265,11 +265,15 @@ export declare class RunningTasksService {
   removeRunningTask(taskId: string): void
   /**
    * No-op unless this process holds the task's claim, so a late or displaced
-   * probe result cannot overwrite the current owner's verdict.
+   * probe result cannot overwrite the current owner's verdict. `url` is the
+   * address the task reported, written with its status so a reader never
+   * sees one without the other.
    */
-  setTaskReadiness(taskId: string, status: TaskReadiness): void
+  setTaskReadiness(taskId: string, status: TaskReadiness, url?: string | undefined | null): void
   /** `None` when the task is not running. */
   getTaskReadiness(taskId: string): TaskReadiness | null
+  /** The address a running task reported with its readiness, if any. */
+  getTaskReadyUrl(taskId: string): string | null
 }
 
 export declare class RustPseudoTerminal {
@@ -1174,6 +1178,8 @@ export interface ReadinessProbeConfig {
   port?: number
   host?: string
   command?: string
+  /** The whole environment of `command`. Without it the command inherits this process's. */
+  env?: Record<string, string>
   timeout: number
   interval?: number
 }

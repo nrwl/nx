@@ -199,14 +199,14 @@ export interface ReadyWhenOptions {
 
   /**
    * Milliseconds between probe attempts. Default is 250. Unused by
-   * `logMatches`.
+   * `logMatches` and `signal`.
    */
   interval?: number;
 }
 
 /**
  * Readiness probe of a continuous target. Exactly one of `url`, `port`,
- * `command` or `logMatches` must be set. Strings may use the `{workspaceRoot}`,
+ * `command`, `logMatches` or `signal` must be set. Strings may use the `{workspaceRoot}`,
  * `{projectRoot}`, `{projectName}`, `{options.*}` and `{env.*}` placeholders,
  * resolved against the options and environment the task runs with. A
  * placeholder can list fallbacks, as in `{options.port ?? env.PORT ?? 4200}`.
@@ -236,7 +236,8 @@ export type ReadyWhen =
   | ({
       /**
        * Ready when the command, run through the shell at the workspace root,
-       * exits with code 0.
+       * exits with code 0. It runs with the env the task runs with, and the
+       * task's options as JSON in `NX_TASK_OPTIONS`.
        */
       command: string;
     } & ReadyWhenOptions)
@@ -246,7 +247,16 @@ export type ReadyWhen =
        * output.
        */
       logMatches: string | string[];
-    } & ReadyWhenOptions);
+    } & ReadyWhenOptions)
+  | {
+      /**
+       * Ready when the task reports it with `signalTaskReady` from
+       * `@nx/devkit`.
+       */
+      signal: true;
+
+      timeout?: number;
+    };
 
 export interface TargetDependencyConfig {
   /**

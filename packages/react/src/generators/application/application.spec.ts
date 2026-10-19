@@ -216,10 +216,11 @@ describe('app', () => {
       expect(playwrightConfig).toMatchInlineSnapshot(`
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
-        import { workspaceRoot } from '@nx/devkit';
+        import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
         // For CI, you may want to set BASE_URL to the deployed application.
-        const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+        // getReadyUrl moves the address to the port the dev server task reported.
+        const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
 
         /**
          * Read environment variables from file.
@@ -248,7 +249,7 @@ describe('app', () => {
           /* Run your local dev server before starting the tests */
           webServer: {
             command: 'npx nx run my-app:preview',
-            url: 'http://localhost:4300',
+            url: getReadyUrl('http://localhost:4300'),
             reuseExistingServer: true,
             cwd: workspaceRoot
           },
@@ -1018,52 +1019,53 @@ describe('app', () => {
 
       expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import { reactRouter } from '@react-router/dev/vite';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { reactRouter } from '@react-router/dev/vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/my-app',
-          server: {
-            port: 4200,
-            host: 'localhost',
-          },
-          preview: {
-            port: 4300,
-            host: 'localhost',
-          },
-          resolve: {
-            tsconfigPaths: true,
-          },
-          plugins: [!process.env.VITEST && reactRouter()],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [],
-          // },
-          build: {
-            outDir: '../dist/my-app',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/my-app',
+            server: {
+              port: 4200,
+              host: 'localhost',
             },
-          },
-          test: {
-            name: 'my-app',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: '../coverage/my-app',
-              provider: 'v8' as const,
+            preview: {
+              port: 4300,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [!process.env.VITEST && reactRouter(), nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/my-app',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+            test: {
+              name: 'my-app',
+              watch: false,
+              globals: true,
+              environment: 'jsdom',
+              include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+              reporters: ['default'],
+              coverage: {
+                reportsDirectory: '../coverage/my-app',
+                provider: 'v8' as const,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should add types to tsconfig', async () => {
@@ -1802,6 +1804,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1817,7 +1820,7 @@ describe('app', () => {
           resolve: {
             tsconfigPaths: true,
           },
-          plugins: [react()],
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],
@@ -1937,6 +1940,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1952,7 +1956,7 @@ describe('app', () => {
           resolve: {
             tsconfigPaths: true,
           },
-          plugins: [react()],
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
           //  plugins: [],
@@ -1999,8 +2003,12 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
     });
 
     it('should generate webpack app with cypress using custom port', async () => {
@@ -2032,8 +2040,12 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
     });
 
     it('should generate rspack app with cypress using custom port', async () => {
@@ -2065,8 +2077,12 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
     });
   });
 

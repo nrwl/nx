@@ -85,10 +85,10 @@ describe('Cypress E2E Test runner', () => {
 
       const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
       expect(targets['e2e-ci--src/e2e/app.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview' },
+        { projects: [app], target: 'preview', waitFor: 'ready' },
       ]);
       expect(targets['e2e-ci--src/e2e/feature.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview', inputs: false },
+        { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
       ]);
 
       expect(runCLI(`lint ${app}-e2e`)).toContain(

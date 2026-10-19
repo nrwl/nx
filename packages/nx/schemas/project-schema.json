@@ -273,7 +273,7 @@
         },
         "command": {
           "type": "string",
-          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0"
+          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0. It runs with the environment the task runs with, and the task's options as JSON in NX_TASK_OPTIONS"
         },
         "logMatches": {
           "description": "Ready when every one of these substrings has appeared in the task's output",
@@ -296,14 +296,19 @@
           "type": "integer",
           "minimum": 1,
           "default": 250,
-          "description": "Milliseconds between probe attempts. Unused by logMatches"
+          "description": "Milliseconds between probe attempts. Unused by logMatches and signal"
+        },
+        "signal": {
+          "const": true,
+          "description": "Ready when the task reports it, through signalTaskReady from @nx/devkit. The webpack, Rspack, Vite and Rsbuild plugins of Nx report it once their dev server listens"
         }
       },
       "oneOf": [
         { "required": ["url"] },
         { "required": ["port"] },
         { "required": ["command"] },
-        { "required": ["logMatches"] }
+        { "required": ["logMatches"] },
+        { "required": ["signal"] }
       ],
       "additionalProperties": false
     },
