@@ -1,4 +1,6 @@
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { createServer } from 'https';
+import type { AddressInfo } from 'net';
 
 const devkit = vi.hoisted(() => ({
   signalTaskReady: vi.fn(() => true),
@@ -56,6 +58,22 @@ describe('NxMetroReporter', () => {
       expect(devkit.signalTaskReady).toHaveBeenCalledExactlyOnceWith({ url });
     }
   );
+
+  it('signals an https URL for a TLS server started without --https', async () => {
+    process.argv = [...argv, 'start'];
+    const server = createServer({});
+    await new Promise<void>((resolve) =>
+      server.listen(0, '127.0.0.1', resolve)
+    );
+    const address = server.address() as AddressInfo;
+
+    reporter.update({ type: 'server_listening', ...address });
+    server.close();
+
+    expect(devkit.signalTaskReady).toHaveBeenCalledExactlyOnceWith({
+      url: `https://127.0.0.1:${address.port}/`,
+    });
+  });
 
   it('does nothing outside a signalling task', () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
