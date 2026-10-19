@@ -999,14 +999,9 @@ function getBuildExecutor(bundler: Bundler) {
   switch (bundler) {
     case 'esbuild':
       return `@nx/esbuild:esbuild`;
-    case 'rollup':
-      return `@nx/rollup:rollup`;
     case 'swc':
     case 'tsc':
       return `@nx/js:${bundler}`;
-    case 'vite':
-      return `@nx/vite:build`;
-    case 'none':
     default:
       return undefined;
   }
