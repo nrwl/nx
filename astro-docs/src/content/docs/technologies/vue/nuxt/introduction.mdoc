@@ -116,8 +116,12 @@ It waits until the server answers with any status other than 503, at the address
 - The port comes from the `--port` or `-p` flag, then the first set of `NUXT_PORT`, `NITRO_PORT`, and `PORT`, then `devServer.port` in the Nuxt config, 3000 by default.
 - The host comes from the `--host` flag, then the first set of `NUXT_HOST`, `NITRO_HOST`, and `HOST`, then `devServer.host`.
 
+If another process holds that port and `nuxt dev` moves to a free one, this check can pass before the server is up.
+The module reports the address the server listens on, so it doesn't have this gap.
+
 The `serve-static` task's file server reports its address once it listens.
 A task waits for either one only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
 For the details, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ## Using Nuxt

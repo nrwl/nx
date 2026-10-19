@@ -104,6 +104,7 @@ A dependent task waits for it only when its `dependsOn` entry sets `waitFor` to 
   Generated Angular targets have the same check, and a migration adds it to existing ones.
 - The `static-storybook` target's file server reports its address once it listens.
 
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
 For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ## Using Storybook
