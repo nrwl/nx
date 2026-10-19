@@ -5,6 +5,7 @@ import {
   stringifyNpmLockfile,
 } from './npm-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
+import { NormalizedPackageJson } from './utils/package-json';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
@@ -473,7 +474,6 @@ describe('NPM lock file utility', () => {
         },
       };
       // (meeroslav)this test is ignoring types since they are not vital (dev, peer, etc..)
-      cleanupTypes(prunedV2LockFile.packages);
       cleanupTypes(prunedV2LockFile.dependencies, true);
 
       const hash = uniq('mock-hash');
@@ -1147,6 +1147,60 @@ describe('NPM lock file utility', () => {
       );
       expect(Object.keys(externalNodes).length).toEqual(5);
     });
+
+    it('should resolve a nested workspace through the outer workspace node_modules', () => {
+      const lockFileContent = JSON.stringify({
+        name: 'root',
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'root', workspaces: ['apps/outer', 'apps/outer/inner'] },
+          'apps/outer': { name: 'outer', version: '0.0.1' },
+          'apps/outer/inner': {
+            name: 'inner',
+            version: '0.0.1',
+            dependencies: { a: '2.0.0' },
+          },
+          'apps/outer/inner/node_modules/a': {
+            version: '2.0.0',
+            dependencies: { b: '^2.0.0' },
+          },
+          'apps/outer/node_modules/b': { version: '2.0.0' },
+          'node_modules/a': { version: '1.0.0', dependencies: { b: '^1.0.0' } },
+          'node_modules/b': { version: '1.0.0' },
+        },
+      });
+      const hash = uniq('mock-hash');
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        lockFileContent,
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+
+      const dependencies = getNpmLockfileDependencies(
+        lockFileContent,
+        hash,
+        ctx,
+        keyMap
+      );
+
+      // Node resolves b from apps/outer/node_modules before the root's b@1
+      expect(dependencies).toContainEqual(
+        expect.objectContaining({
+          source: 'npm:a@2.0.0',
+          target: 'npm:b@2.0.0',
+        })
+      );
+      expect(dependencies).toContainEqual(
+        expect.objectContaining({ source: 'npm:a', target: 'npm:b' })
+      );
+    });
   });
 
   describe('mixed keys', () => {
@@ -1808,6 +1862,415 @@ describe('NPM lock file utility', () => {
 
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
       expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+
+    it('should include workspace modules the app declares outside dependencies', () => {
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': { name: 'test-app', version: '1.0.0' },
+          'libs/lib-a': { name: '@myorg/lib-a', version: '0.0.1' },
+          'node_modules/@myorg/lib-a': { resolved: 'libs/lib-a', link: true },
+          'libs/lib-b': { name: '@myorg/lib-b', version: '0.0.1' },
+          'node_modules/@myorg/lib-b': { resolved: 'libs/lib-b', link: true },
+        },
+      };
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        devDependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+        optionalDependencies: { '@myorg/lib-b': 'file:libs/lib-b' },
+      };
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-a');
+      expect(result.packages).toHaveProperty('node_modules/@myorg/lib-b');
+      expect(result.packages).toHaveProperty('workspace_modules/@myorg/lib-b');
+    });
+
+    it('should keep what a workspace module optionally depends on', () => {
+      const lodash = {
+        version: '4.17.21',
+        resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+        integrity:
+          'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+      };
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            optionalDependencies: { lodash: '^4.17.21' },
+          },
+          'node_modules/@myorg/lib-a': { resolved: 'libs/lib-a', link: true },
+          'node_modules/lodash': { ...lodash, optional: true },
+        },
+      };
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: lodash.integrity,
+            },
+          },
+        },
+        { '@myorg/lib-a': ['npm:lodash'] }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(
+        result.packages['workspace_modules/@myorg/lib-a'].optionalDependencies
+      ).toEqual({ lodash: '^4.17.21' });
+      expect(result.packages['node_modules/lodash'].optional).toBe(true);
+    });
+
+    it('should flag a workspace module the app only develops with as dev, and what it reaches', () => {
+      const lodash = {
+        version: '4.17.21',
+        resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+        integrity:
+          'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+      };
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            devDependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            name: '@myorg/lib-a',
+            version: '0.0.1',
+            dependencies: { lodash: '^4.17.21' },
+          },
+          'node_modules/@myorg/lib-a': { resolved: 'libs/lib-a', link: true },
+          'node_modules/lodash': lodash,
+        },
+      };
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        devDependencies: { '@myorg/lib-a': 'file:libs/lib-a' },
+      };
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: lodash.integrity,
+            },
+          },
+        },
+        { '@myorg/lib-a': ['npm:lodash'] }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages['node_modules/@myorg/lib-a']).not.toHaveProperty(
+        'dev'
+      );
+      expect(result.packages['workspace_modules/@myorg/lib-a'].dev).toBe(true);
+      expect(result.packages['node_modules/lodash'].dev).toBe(true);
+    });
+  });
+
+  describe('resolution in the pruned lock file', () => {
+    const pkg = (name: string, version: string, dependencies?: object) => ({
+      version,
+      resolved: `https://registry.npmjs.org/${name}/-/${name}-${version}.tgz`,
+      integrity: `sha512-${name}-${version}`,
+      ...(dependencies && { dependencies }),
+    });
+
+    function graphFromLockFile(lockFile: object): ProjectGraph {
+      const hash = uniq('mock-hash');
+      const content = JSON.stringify(lockFile);
+      const { nodes: externalNodes, keyMap } = getNpmLockfileNodes(
+        content,
+        hash
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const builder = new ProjectGraphBuilder({
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      });
+      for (const dep of getNpmLockfileDependencies(
+        content,
+        hash,
+        ctx,
+        keyMap
+      )) {
+        builder.addDependency(dep.source, dep.target, dep.type);
+      }
+      return builder.getUpdatedProjectGraph();
+    }
+
+    // Node's lookup: <dir>/node_modules/<name> for the package's own path and
+    // every package path above it, then the root.
+    function resolvedVersion(
+      packages: Record<string, { version?: string }>,
+      from: string,
+      name: string
+    ) {
+      for (let dir = from; ;) {
+        const path = dir
+          ? `${dir}/node_modules/${name}`
+          : `node_modules/${name}`;
+        if (packages[path]) return packages[path].version;
+        if (!dir) return undefined;
+        const parent = dir.lastIndexOf('/node_modules/');
+        dir = parent === -1 ? '' : dir.slice(0, parent);
+      }
+    }
+
+    function prune(lockFile: object, packageJson: NormalizedPackageJson) {
+      const graph = graphFromLockFile(lockFile);
+      return JSON.parse(
+        stringifyNpmLockfile(
+          pruneProjectGraph(graph, packageJson),
+          JSON.stringify(lockFile),
+          packageJson
+        )
+      ).packages;
+    }
+
+    it("should give a workspace's own nested version the root slot and nest the one it displaces", () => {
+      // npm nests nested's debug@2.6.9 under its workspace because other's
+      // debug@4 holds the root slot, which agent-base in nested also needs.
+      const lockFile = {
+        name: 'repo',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': { name: 'repo', workspaces: ['apps/*'] },
+          'apps/nested': {
+            name: 'nested',
+            version: '0.0.1',
+            dependencies: { debug: '2.6.9', 'agent-base': '6.0.2' },
+          },
+          'apps/nested/node_modules/debug': pkg('debug', '2.6.9', {
+            ms: '2.0.0',
+          }),
+          'apps/nested/node_modules/ms': pkg('ms', '2.0.0'),
+          'apps/other': {
+            name: 'other',
+            version: '0.0.1',
+            dependencies: { debug: '4.3.4' },
+          },
+          'node_modules/agent-base': pkg('agent-base', '6.0.2', {
+            debug: '4',
+          }),
+          'node_modules/debug': pkg('debug', '4.3.4', { ms: '2.1.2' }),
+          'node_modules/ms': pkg('ms', '2.1.2'),
+          'node_modules/nested': { resolved: 'apps/nested', link: true },
+          'node_modules/other': { resolved: 'apps/other', link: true },
+        },
+      };
+
+      const packages = prune(lockFile, {
+        name: 'nested',
+        version: '0.0.1',
+        dependencies: { debug: '2.6.9', 'agent-base': '6.0.2' },
+      });
+
+      expect(packages['node_modules/debug'].version).toEqual('2.6.9');
+      expect(resolvedVersion(packages, 'node_modules/debug', 'ms')).toEqual(
+        '2.0.0'
+      );
+      expect(
+        resolvedVersion(packages, 'node_modules/agent-base', 'debug')
+      ).toEqual('4.3.4');
+      expect(
+        resolvedVersion(
+          packages,
+          'node_modules/agent-base/node_modules/debug',
+          'ms'
+        )
+      ).toEqual('2.1.2');
+    });
+
+    it('should nest a copy where a nearer version would shadow the one a package resolves', () => {
+      // z@1 sits under x next to x's own m@1, so npm gave z its own m@2.
+      const lockFile = {
+        name: 'app',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': {
+            name: 'app',
+            dependencies: { m: '2.0.0', x: '1.0.0', z: '2.0.0' },
+          },
+          'node_modules/m': pkg('m', '2.0.0'),
+          'node_modules/x': pkg('x', '1.0.0', { m: '1.0.0', z: '1.0.0' }),
+          'node_modules/x/node_modules/m': pkg('m', '1.0.0'),
+          'node_modules/x/node_modules/z': pkg('z', '1.0.0', { m: '^2.0.0' }),
+          'node_modules/x/node_modules/z/node_modules/m': pkg('m', '2.0.0'),
+          'node_modules/z': pkg('z', '2.0.0'),
+        },
+      };
+
+      const packages = prune(lockFile, {
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { m: '2.0.0', x: '1.0.0', z: '2.0.0' },
+      });
+
+      expect(
+        resolvedVersion(packages, 'node_modules/x/node_modules/z', 'm')
+      ).toEqual('2.0.0');
+      expect(resolvedVersion(packages, 'node_modules/x', 'm')).toEqual('1.0.0');
+    });
+
+    it('should flag what only the dev and optional dependencies reach, as npm does', () => {
+      // other needs b and g at runtime, so the root lock file flags neither as
+      // dev; app reaches g only as an optional peer.
+      const lockFile = {
+        name: 'repo',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': { name: 'repo', workspaces: ['apps/*'] },
+          'apps/app': {
+            name: 'app',
+            version: '0.0.1',
+            dependencies: { a: '1.0.0' },
+            devDependencies: { b: '1.0.0' },
+            optionalDependencies: { e: '1.0.0' },
+          },
+          'apps/other': {
+            name: 'other',
+            version: '0.0.1',
+            dependencies: { b: '1.0.0', g: '1.0.0' },
+          },
+          'node_modules/a': {
+            ...pkg('a', '1.0.0', { c: '1.0.0' }),
+            peerDependencies: { g: '1.0.0' },
+            peerDependenciesMeta: { g: { optional: true } },
+          },
+          'node_modules/app': { resolved: 'apps/app', link: true },
+          'node_modules/b': pkg('b', '1.0.0', {
+            c: '1.0.0',
+            d: '1.0.0',
+            f: '1.0.0',
+            h: '1.0.0',
+          }),
+          'node_modules/c': pkg('c', '1.0.0'),
+          'node_modules/d': pkg('d', '1.0.0'),
+          'node_modules/e': {
+            ...pkg('e', '1.0.0', { f: '1.0.0' }),
+            optional: true,
+          },
+          'node_modules/f': pkg('f', '1.0.0'),
+          'node_modules/g': pkg('g', '1.0.0', { h: '1.0.0' }),
+          'node_modules/h': pkg('h', '1.0.0'),
+          'node_modules/other': { resolved: 'apps/other', link: true },
+        },
+      };
+
+      const packages = prune(lockFile, {
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { a: '1.0.0' },
+        devDependencies: { b: '1.0.0' },
+        optionalDependencies: { e: '1.0.0' },
+      });
+
+      const flags = Object.fromEntries(
+        Object.entries(packages)
+          .filter(([path]) => path)
+          .map(
+            ([path, { dev, optional, devOptional, peer }]: [string, any]) => [
+              path,
+              { dev, optional, devOptional, peer },
+            ]
+          )
+      );
+      expect(flags).toEqual({
+        'node_modules/a': {},
+        'node_modules/b': { dev: true },
+        'node_modules/c': {},
+        'node_modules/d': { dev: true },
+        'node_modules/e': { optional: true },
+        'node_modules/f': { devOptional: true },
+        'node_modules/h': { dev: true },
+      });
     });
   });
 });
