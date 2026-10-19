@@ -12,11 +12,8 @@ describe('parseRsbuildFlags', () => {
   it.each([
     [
       { args: ['--port', '3000', '--host', '--env-mode=staging'] },
-      { port: '3000', host: true, envMode: 'staging' },
+      { port: 3000, host: true, envMode: 'staging' },
     ],
-    [{ port: 3001, args: '--port 3000' }, { port: '3000' }],
-    // run-commands hands args to the shell, which removes the quotes
-    [{ args: '--config "a b.config.ts"' }, { config: 'a b.config.ts' }],
     [
       { args: ['-c', 'a.config.ts', '-r=apps/a', '--env-dir', 'env'] },
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env' },
@@ -28,6 +25,11 @@ describe('parseRsbuildFlags', () => {
     [
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
+    ],
+    // mri gives `-c` the value of `--config`, the alias given first
+    [
+      { config: 'a.config.ts', args: ['-c', 'b.config.ts'] },
+      { config: 'a.config.ts' },
     ],
   ])('reads the flags of %j', (options, flags) => {
     expect(parseRsbuildFlags(options)).toEqual(flags);
@@ -128,6 +130,14 @@ describe('waitForRsbuildServer', () => {
         'other.config.mjs': 'export default { server: { port: <port> } };',
       },
       options: { args: ['-c', 'other.config.mjs'] },
+    },
+    {
+      name: 'the config an override names',
+      files: {
+        'rsbuild.config.mjs': portOne,
+        'other.config.mjs': 'export default { server: { port: <port> } };',
+      },
+      options: { __unparsed__: ['-c', 'other.config.mjs'] },
     },
     {
       name: 'the config in --root',

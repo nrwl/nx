@@ -52,20 +52,11 @@ export function getDevServerUrl(server: {
   server?: { address(): AddressInfo | string | null };
   options?: { server?: string | { type?: string } };
 }): string | undefined {
-  const address = server.server?.address();
-  if (!address || typeof address === 'string') {
-    return undefined;
-  }
+  const { getListeningUrl } =
+    require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
   const type =
     typeof server.options?.server === 'string'
       ? server.options.server
       : server.options?.server?.type;
-  const protocol = type && type !== 'http' ? 'https' : 'http';
-  const host =
-    address.address === '::' || address.address === '0.0.0.0'
-      ? 'localhost'
-      : address.family === 'IPv6'
-        ? `[${address.address}]`
-        : address.address;
-  return `${protocol}://${host}:${address.port}/`;
+  return getListeningUrl(server.server?.address(), !!type && type !== 'http');
 }

@@ -39,6 +39,11 @@ describe('getForwardedArgs', () => {
       ['--host'],
     ],
     [
+      'without an --env override, which run-commands keeps for itself',
+      { __unparsed__: ['--config', 'a.js', '--env', 'b=2'] },
+      ['--config', 'a.js'],
+    ],
+    [
       'the values of a repeated run-commands option',
       { __unparsed__: ['--cwd', '.', '--cwd', '..'] },
       ['.', '..'],

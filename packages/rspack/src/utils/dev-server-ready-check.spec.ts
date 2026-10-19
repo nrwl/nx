@@ -19,39 +19,102 @@ vi.mock('os', async () => ({
 describe('parseServeFlags', () => {
   it('reads the port, host and config names from options and args', () => {
     expect(
-      parseServeFlags({
-        args: ['--port', '4300', '--host=0.0.0.0', '--config-name', 'client'],
-      })
-    ).toEqual({
-      port: '4300',
-      host: '0.0.0.0',
-      configNames: ['client'],
-      env: [],
-    });
-    expect(parseServeFlags({ args: '--port=4301 --hot' })).toEqual({
-      port: '4301',
-      configNames: [],
-      env: [],
-    });
+      parseServeFlags(
+        {
+          args: ['--port', '4300', '--host=0.0.0.0', '--config-name', 'client'],
+        },
+        null
+      )
+    ).toMatchObject({ port: 4300, host: '0.0.0.0', configNames: ['client'] });
     expect(
-      parseServeFlags({ args: `--config "a b.js" --port='4302'` })
-    ).toEqual({ port: '4302', config: 'a b.js', configNames: [], env: [] });
+      parseServeFlags({ args: `--config "a b.js" --port='4302'` }, null)
+    ).toMatchObject({ port: 4302, config: 'a b.js' });
   });
 
-  it('leaves a flag without a value unset', () => {
-    expect(parseServeFlags({ args: ['--host', '--hot'] })).toEqual({
-      configNames: [],
-      env: [],
-    });
+  const env = { RSPACK_SERVE: true };
+  const yargsDefaults = { _: ['serve'], $0: 'rspack', env };
+  // The argv parseServeFlags builds for each @rspack/cli version. The 1.0 to
+  // 1.5 rows parse with this repo's yargs and that version's option table
+  it.each([
+    [
+      '2.2.7',
+      ['--config-name', 'a', '--configName', 'b'],
+      { '--': [], configLoader: 'auto', configName: ['b'], env },
+    ],
+    [
+      '2.2.7',
+      ['-c', 'a.js', '--config', 'b.js'],
+      { '--': [], configLoader: 'auto', c: 'a.js', config: 'a.js', env },
+    ],
+    [
+      '2.2.7',
+      ['--devtool', 'false', '--hot', 'false', '--watch', 'false'],
+      {
+        '--': [],
+        configLoader: 'auto',
+        d: 'false',
+        devtool: false,
+        hot: false,
+        w: false,
+        watch: false,
+        env,
+      },
+    ],
+    [
+      '1.7.12',
+      ['--port', '4200'],
+      { '--': [], configLoader: 'register', port: 4200, env },
+    ],
+    [
+      '1.5.8',
+      ['-m', 'production', '--mode', 'development', '--port', 'abc'],
+      {
+        ...yargsDefaults,
+        configLoader: 'register',
+        'config-loader': 'register',
+        m: ['production', 'development'],
+        mode: ['production', 'development'],
+        w: false,
+        watch: false,
+      },
+    ],
+    [
+      '1.5.8',
+      ['--devtool', 'true', '--hot', 'only', '-w'],
+      {
+        ...yargsDefaults,
+        configLoader: 'register',
+        'config-loader': 'register',
+        d: 'source-map',
+        devtool: 'source-map',
+        hot: 'only',
+        w: true,
+        watch: true,
+      },
+    ],
+    [
+      '1.0.14',
+      ['--devtool', 'true', '--hot', 'only', '-w'],
+      {
+        ...yargsDefaults,
+        d: true,
+        devtool: true,
+        hot: 'only',
+        w: true,
+        watch: true,
+      },
+    ],
+  ])('passes the argv @rspack/cli %s does for %j', (version, args, argv) => {
+    const { argv: parsed } = parseServeFlags(
+      { args },
+      // Resolves the yargs this repo installs
+      { version, dir: __dirname }
+    );
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(argv);
   });
 
   it.each([
-    [{ port: 4400, args: ['--port', '4300'] }, { port: '4300' }],
-    [
-      { port: 4400, args: ['--port', '4300'], __unparsed__: ['--port=4500'] },
-      { port: '4500' },
-    ],
-    [{ config: 'a.js', args: ['-c', 'b.js'] }, { config: 'b.js' }],
+    [{ config: 'a.js', args: ['-c', 'b.js'] }, { config: 'a.js' }],
     [{ nodeEnv: 'production' }, { nodeEnv: 'production' }],
     [
       {
@@ -62,23 +125,16 @@ describe('parseServeFlags', () => {
       { configNames: ['b', 'c'] },
     ],
     [
-      {
-        args: '--config-name "client app"',
-        __unparsed__: ['--config-name', 'server app'],
-      },
-      { configNames: ['client app', 'server app'] },
+      { configName: 'a', __unparsed__: ['--config-name', 'c'] },
+      { configNames: ['c'] },
     ],
-    [{ args: ['--env', 'a'], __unparsed__: ['--env', 'b'] }, { env: ['a'] }],
-  ])(
-    'combines named options, args and overrides as run-commands forwards them (%j)',
-    (options, flags) => {
-      expect(parseServeFlags(options)).toMatchObject(flags);
-    }
-  );
+  ])('reads the flags of %j as @rspack/cli does', (options, flags) => {
+    expect(parseServeFlags(options, null)).toMatchObject(flags);
+  });
 });
 
 describe('getDevServerAddress', () => {
-  const flags = { configNames: [] };
+  const flags = { configNames: [], env: {}, argv: {} };
 
   it('takes the flag, then devServer.port, then the base port, then 8080', () => {
     expect(
@@ -212,7 +268,7 @@ describe('waitForRspackDevServer', () => {
   ])(
     'follows the env of the dev server @rspack/cli loads (%s)',
     async (_, prefix, otherPrefix) => {
-      writePackage('node_modules/@rspack/cli', '@rspack/cli', '0.0.0');
+      writePackage('node_modules/@rspack/cli', '@rspack/cli', '1.7.12');
       writePackage(
         'node_modules/@rspack/dev-server',
         '@rspack/dev-server',

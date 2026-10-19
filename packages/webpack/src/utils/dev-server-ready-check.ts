@@ -1,10 +1,12 @@
 import {
+  getForwardedArgs,
+  getServerAddress,
   loadConfigFile,
   resolveStartupHost,
-  splitShellArgs,
+  runReadyCheck,
+  type ServerAddress,
 } from '@nx/devkit/internal';
 import { createRequire } from 'module';
-import { createConnection } from 'net';
 import { resolve } from 'path';
 import type { Configuration } from 'webpack';
 
@@ -24,13 +26,10 @@ const SHORT_FLAGS: Record<string, string> = {
   e: 'extends',
 };
 const VARIADIC_FLAGS = new Set(['config', 'config-name', 'env', 'extends']);
-// The flags read here that webpack-cli accepts as `--name=value`, the form
-// run-commands gives named options
-const NAMED_FLAGS = ['port', 'host', 'config', 'config-name', 'extends'];
 
 /**
- * The flags `webpack-cli serve` gets from the target's options, in the order
- * run-commands passes them: named options, `args`, then overrides.
+ * The flags `webpack-cli serve` gets from the task's options, as run-commands
+ * forwards them.
  */
 export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
   const flags: ServeFlags = {
@@ -48,7 +47,7 @@ export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
     else if (name === 'extends') flags.extends.push(value);
     else if (name === 'env') parseEnv(value, flags.env);
   };
-  const argv = getServeArgv(options);
+  const argv = getForwardedArgs(options);
   const isValue = (arg: string | undefined) => arg && !arg.startsWith('-');
   for (let i = 0; i < argv.length; i++) {
     const [, long, inline] = argv[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
@@ -87,7 +86,7 @@ export function parseServeArgv(
   env: Record<string, unknown>
 ): Record<string, unknown> {
   const argv: Record<string, unknown> = {};
-  const tokens = getServeArgv(options);
+  const tokens = getForwardedArgs(options);
   const isValue = (arg: string | undefined) => arg && !arg.startsWith('-');
   for (let i = 0; i < tokens.length; i++) {
     const [, long, inline] = tokens[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
@@ -133,56 +132,6 @@ export function parseServeArgv(
   return { ...argv, env };
 }
 
-function getServeArgv(options: Record<string, unknown>): string[] {
-  const args = splitShellArgs(
-    Array.isArray(options.args)
-      ? options.args.join(' ')
-      : typeof options.args === 'string'
-        ? options.args
-        : ''
-  );
-  const unparsed = Array.isArray(options.__unparsed__)
-    ? options.__unparsed__.map(String)
-    : [];
-  // run-commands drops a named option that overrides set, or that args set to
-  // another value
-  const named = NAMED_FLAGS.filter((name) => {
-    const value = options[name];
-    const fromArgs = flagValues(args, name);
-    return (
-      ['string', 'number', 'boolean'].includes(typeof value) &&
-      flagValues(unparsed, name).length === 0 &&
-      (fromArgs.length === 0 ||
-        (fromArgs.length === 1 && fromArgs[0] === String(value)))
-    );
-  }).map((name) => `--${name}=${options[name]}`);
-  // run-commands keeps `--env` for itself and drops it from the overrides,
-  // with the value it parsed for it
-  const env = flagValues(unparsed, 'env');
-  const envValue = String(env.length === 1 ? env[0] : env);
-  const overrides = unparsed.filter(
-    (arg, i) =>
-      !/^--env(=|$|\.[^=]*=)/.test(arg) &&
-      !(unparsed[i - 1] === '--env' && arg === envValue)
-  );
-  return [...named, ...args, ...overrides];
-}
-
-// The values yargs-parser reads for `--name`, as strings
-function flagValues(argv: string[], name: string): Array<string | boolean> {
-  const values: Array<string | boolean> = [];
-  argv.forEach((arg, i) => {
-    if (arg === `--no-${name}`) values.push(false);
-    else if (arg.startsWith(`--${name}=`)) {
-      values.push(arg.slice(name.length + 3));
-    } else if (arg === `--${name}`) {
-      const next = argv[i + 1];
-      values.push(next && !next.startsWith('-') ? next : true);
-    }
-  });
-  return values;
-}
-
 // webpack-cli's `--env` parser, edge cases included
 function parseEnv(value: string, env: Record<string, any>) {
   const [allKeys, val] = value.split(/[=](.+)/, 2);
@@ -204,8 +153,6 @@ function parseEnv(value: string, env: Record<string, any>) {
   }
 }
 
-export type DevServerAddress = { port: number; host?: string };
-
 /**
  * Where a dev server listens, or null when it picks its port or listens on a
  * socket. Returns null for those, since nothing can be probed ahead of them.
@@ -214,65 +161,15 @@ export function getDevServerAddress(
   devServer: { port?: unknown; host?: unknown; ipc?: unknown } | undefined,
   flags: ServeFlags,
   basePort: string | undefined
-): DevServerAddress | null {
+): ServerAddress | null {
   if (devServer?.ipc) return null;
-  const port = flags.port ?? devServer?.port ?? basePort ?? 8080;
-  if (port === 'auto' || String(port) === '0') return null;
-  const number = Number(port);
-  if (!Number.isInteger(number) || number <= 0) return null;
-  const configured = flags.host ?? devServer?.host;
-  const host =
-    typeof configured === 'string' ? resolveStartupHost(configured) : undefined;
-  return host && !LOOPBACK_HOSTS.has(host)
-    ? { port: number, host }
-    : { port: number };
-}
-
-// The probe reaches these on loopback. `local-ip` and friends resolve to an
-// interface address first, the way the dev server resolves them.
-const LOOPBACK_HOSTS = new Set(['localhost', '0.0.0.0', '::']);
-
-/** Resolves once every address accepts a TCP connection. */
-export async function waitForAddresses(
-  addresses: DevServerAddress[]
-): Promise<void> {
-  await Promise.all(addresses.map(waitForAddress));
-}
-
-async function waitForAddress({ port, host }: DevServerAddress) {
-  const hosts = host ? [host] : ['127.0.0.1', '::1'];
-  while (
-    !(await Promise.any(hosts.map((h) => connects(port, h))).catch(() => false))
-  ) {
-    await new Promise((r) => setTimeout(r, 250));
-  }
-}
-
-function connects(port: number, host: string): Promise<true> {
-  return new Promise((resolve, reject) => {
-    const socket = createConnection({ port, host });
-    socket.once('connect', () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.once('error', (e) => {
-      socket.destroy();
-      reject(e);
-    });
-  });
-}
-
-export function readTaskOptions(): Record<string, unknown> & { cwd?: string } {
-  try {
-    return JSON.parse(process.env.NX_TASK_OPTIONS ?? '{}');
-  } catch {
-    return {};
-  }
-}
-
-// The serve command runs from the target's cwd, so its config does too
-export function enterTaskCwd(options: { cwd?: string }) {
-  if (options.cwd) process.chdir(resolve(options.cwd));
+  const host = flags.host ?? devServer?.host;
+  return getServerAddress(
+    flags.port ?? devServer?.port ?? basePort ?? 8080,
+    // `local-ip` and friends resolve to an interface address first, the way
+    // the dev server resolves them
+    typeof host === 'string' ? resolveStartupHost(host) : undefined
+  );
 }
 
 async function loadConfigExport(path: string): Promise<unknown> {
@@ -307,83 +204,82 @@ function loadWebpackMerge(): Merge {
  * starts.
  */
 export async function waitForWebpackDevServer(configPath: string) {
-  const options = readTaskOptions();
-  const flags = parseServeFlags(options);
-  // The config's file name, in the cwd of the serve task
-  const absoluteConfigPath = resolve(options.cwd ?? '.', configPath);
-  enterTaskCwd(options);
-  // Skips NxAppWebpackPlugin's option normalization, which nothing here uses
-  global.NX_GRAPH_CREATION = true;
+  await runReadyCheck(async ({ options, root }) => {
+    const flags = parseServeFlags(options);
+    // Skips NxAppWebpackPlugin's option normalization, which nothing here uses
+    global.NX_GRAPH_CREATION = true;
 
-  const { readWebpackOptions } =
-    require('./webpack/read-webpack-options') as typeof import('./webpack/read-webpack-options');
-  const env = { WEBPACK_SERVE: true, ...flags.env };
-  const argv = parseServeArgv(options, env);
-  const load = async (path: string) =>
-    readWebpackOptions(await loadConfigExport(resolve(path)), env, argv);
-  let configs = (
-    await Promise.all(
-      (flags.configs.length > 0 ? flags.configs : [absoluteConfigPath]).map(
-        load
+    const { readWebpackOptions } =
+      require('./webpack/read-webpack-options') as typeof import('./webpack/read-webpack-options');
+    const env = { WEBPACK_SERVE: true, ...flags.env };
+    const argv = parseServeArgv(options, env);
+    const load = async (path: string) =>
+      readWebpackOptions(await loadConfigExport(resolve(path)), env, argv);
+    let configs = (
+      await Promise.all(
+        // The config's file name, in the cwd of the serve task
+        (flags.configs.length > 0
+          ? flags.configs
+          : [resolve(root, configPath)]
+        ).map(load)
       )
     )
-  )
-    .flat()
-    .filter(
-      (config) =>
-        flags.configNames.length === 0 ||
-        flags.configNames.includes(config.name)
-    );
+      .flat()
+      .filter(
+        (config) =>
+          flags.configNames.length === 0 ||
+          flags.configNames.includes(config.name)
+      );
 
-  let webpackMerge: Merge | undefined;
-  const merge: Merge = (...configs) =>
-    (webpackMerge ??= loadWebpackMerge())(...configs);
-  const resolveExtends = async (
-    config: Configuration,
-    extendsPaths: string[],
-    seen: string[]
-  ): Promise<Configuration> => {
-    delete config.extends;
-    const paths = extendsPaths.map((path) => resolve(path));
-    if (paths.some((path) => seen.includes(path))) {
-      throw new Error('Recursive configuration detected.');
-    }
-    const extended = (await Promise.all(paths.map(load))).flat();
-    if (extended.length > 0) config = merge(...extended, config);
-    return config.extends
-      ? resolveExtends(config, [config.extends].flat(), [...seen, ...paths])
-      : config;
-  };
-  configs = await Promise.all(
-    configs.map((config) =>
-      flags.extends.length > 0
-        ? resolveExtends(config, flags.extends, [])
-        : config.extends
-          ? resolveExtends(config, [config.extends].flat(), [])
-          : config
-    )
-  );
-  if (flags.merge) {
-    if (configs.length < 2) {
-      throw new Error('At least two configurations are required for merge.');
-    }
-    configs = [configs.reduce((merged, config) => merge(merged, config), {})];
-  }
-
-  // webpack-cli starts a dev server for every config with devServer, or for
-  // the first config when none has one
-  const withDevServer = configs.filter((config) => config.devServer);
-  const servers =
-    withDevServer.length > 0 ? withDevServer : configs.slice(0, 1);
-  const addresses = servers
-    .filter((config) => (config.devServer as unknown) !== false)
-    .map((config) =>
-      getDevServerAddress(
-        config.devServer as any,
-        flags,
-        process.env.WEBPACK_DEV_SERVER_BASE_PORT
+    let webpackMerge: Merge | undefined;
+    const merge: Merge = (...configs) =>
+      (webpackMerge ??= loadWebpackMerge())(...configs);
+    const resolveExtends = async (
+      config: Configuration,
+      extendsPaths: string[],
+      seen: string[]
+    ): Promise<Configuration> => {
+      delete config.extends;
+      const paths = extendsPaths.map((path) => resolve(path));
+      if (paths.some((path) => seen.includes(path))) {
+        throw new Error('Recursive configuration detected.');
+      }
+      const extended = (await Promise.all(paths.map(load))).flat();
+      if (extended.length > 0) config = merge(...extended, config);
+      return config.extends
+        ? resolveExtends(config, [config.extends].flat(), [...seen, ...paths])
+        : config;
+    };
+    configs = await Promise.all(
+      configs.map((config) =>
+        flags.extends.length > 0
+          ? resolveExtends(config, flags.extends, [])
+          : config.extends
+            ? resolveExtends(config, [config.extends].flat(), [])
+            : config
       )
     );
-  if (addresses.some((address) => address === null)) return;
-  await waitForAddresses(addresses);
+    if (flags.merge) {
+      if (configs.length < 2) {
+        throw new Error('At least two configurations are required for merge.');
+      }
+      configs = [configs.reduce((merged, config) => merge(merged, config), {})];
+    }
+
+    // webpack-cli starts a dev server for every config with devServer, or for
+    // the first config when none has one
+    const withDevServer = configs.filter((config) => config.devServer);
+    const servers =
+      withDevServer.length > 0 ? withDevServer : configs.slice(0, 1);
+    const addresses = servers
+      .filter((config) => (config.devServer as unknown) !== false)
+      .map((config) =>
+        getDevServerAddress(
+          config.devServer as any,
+          flags,
+          process.env.WEBPACK_DEV_SERVER_BASE_PORT
+        )
+      );
+    return addresses.some((address) => address === null) ? null : addresses;
+  });
 }

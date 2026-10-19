@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashFile,
   hashObject,
@@ -374,11 +375,8 @@ function getDevServerReadyWhen(
   );
   return signals
     ? { signal: true }
-    : {
-        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-        // becomes user-chosen, since the shell expands $, backticks and %.
-        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
-        // Each attempt loads the config
-        interval: 1000,
-      };
+    : getReadyCheckReadyWhen(
+        '@nx/rspack/ready-check',
+        basename(configFilePath)
+      );
 }

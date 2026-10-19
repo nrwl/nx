@@ -26,19 +26,6 @@ describe('parseViteFlags', () => {
       { mode: 'prod', config: 'other.config.ts' },
     ],
     [{ config: 'other.config.ts' }, 'serve', { config: 'other.config.ts' }],
-    // run-commands hands args to the shell, which removes the quotes
-    [
-      { args: '--config "other config.ts"' },
-      'serve',
-      { config: 'other config.ts' },
-    ],
-    // run-commands forwards named options first, then args, then overrides
-    [{ port: 3001, args: '--port 3000' }, 'serve', { port: '3000' }],
-    [
-      { port: 4000, args: '--port 3000', __unparsed__: ['--port=4000'] },
-      'serve',
-      { port: '4000' },
-    ],
     // Vite keeps the values of the spelling that comes first
     [{ mode: 'dev', args: ['-m', 'prod'] }, 'serve', { mode: 'dev' }],
     [{ m: 'a', mode: 'b' }, 'serve', { mode: 'a' }],

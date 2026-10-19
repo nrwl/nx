@@ -1,6 +1,6 @@
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { EventEmitter } from 'events';
-import { getServerUrl, nxReadySignal } from './nx-ready-signal.plugin';
+import { nxReadySignal } from './nx-ready-signal.plugin';
 
 const devkit = vi.hoisted(() => ({
   signalTaskReady: vi.fn(() => true),
@@ -66,17 +66,5 @@ describe('nxReadySignal', () => {
       config: { server: {} },
     });
     expect(devkit.signalTaskReady).not.toHaveBeenCalled();
-  });
-});
-
-describe('getServerUrl', () => {
-  it('maps a wildcard to localhost and brackets IPv6', () => {
-    expect(
-      getServerUrl({ address: '::', family: 'IPv6', port: 1 }, false)
-    ).toBe('http://localhost:1/');
-    expect(
-      getServerUrl({ address: '::1', family: 'IPv6', port: 1 }, false)
-    ).toBe('http://[::1]:1/');
-    expect(getServerUrl('/tmp/socket', false)).toBeUndefined();
   });
 });

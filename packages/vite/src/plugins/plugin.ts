@@ -1,6 +1,7 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashObject,
   workspaceDataDirectory,
@@ -498,13 +499,11 @@ function getServerReadyWhen(
 ): TargetConfiguration['readyWhen'] {
   return signals
     ? { signal: true }
-    : {
-        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-        // becomes user-chosen, since the shell expands $, backticks and %.
-        command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
-        // Each attempt resolves the config
-        interval: 1000,
-      };
+    : getReadyCheckReadyWhen(
+        '@nx/vite/ready-check',
+        basename(configFilePath),
+        command
+      );
 }
 
 function getOutputs(

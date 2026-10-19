@@ -49,31 +49,6 @@ describe('parseServeFlags', () => {
     expect(parseServeFlags({ args: ['--host', '--hot'] })).toEqual(noFlags);
   });
 
-  it.each([
-    [
-      'args over a named option',
-      { port: 4400, args: ['--port', '4300'] },
-      { port: '4300' },
-    ],
-    [
-      'overrides over args',
-      { port: 4500, args: ['--port', '4300'], __unparsed__: ['--port=4500'] },
-      { port: '4500' },
-    ],
-    [
-      'a named option only when args leave it unset',
-      { config: 'a.js', extends: 'base.js', args: ['--config', 'b.js'] },
-      { configs: ['b.js'], extends: ['base.js'] },
-    ],
-    [
-      'an override over the named option it also sets',
-      { 'config-name': 'x', __unparsed__: ['--config-name', 'x', '--merge'] },
-      { configNames: ['x'], merge: true },
-    ],
-  ])('takes %s, the way run-commands forwards them', (_, options, flags) => {
-    expect(parseServeFlags(options)).toMatchObject(flags);
-  });
-
   it('reads --config, --merge and --extends in their long and short forms', () => {
     expect(
       parseServeFlags({
@@ -100,12 +75,6 @@ describe('parseServeFlags', () => {
       unset: undefined,
       n: '1',
     });
-  });
-
-  it('leaves out an --env override, which run-commands keeps for itself', () => {
-    expect(
-      parseServeFlags({ __unparsed__: ['--config', 'a.js', '--env', 'b=2'] })
-    ).toEqual({ ...noFlags, configs: ['a.js'] });
   });
 });
 
@@ -315,16 +284,17 @@ describe('waitForWebpackDevServer', () => {
     );
   });
 
-  it('passes the parsed CLI options to a function config as argv', async () => {
-    const port = await getFreePort();
-    write({
-      'webpack.config.js': `module.exports = (env, argv) => ({ devServer: { port: argv.mode === 'production' ? ${port} : 1 } });`,
-    });
+  it.each([[{ args: ['--mode', 'production'] }], [{ mode: 'production' }]])(
+    'passes the CLI options of %j to a function config as argv',
+    async (options) => {
+      const port = await getFreePort();
+      write({
+        'webpack.config.js': `module.exports = (env, argv) => ({ devServer: { port: argv.mode === 'production' ? ${port} : 1 } });`,
+      });
 
-    await expectToWaitFor(waitWithOptions({ args: ['--mode', 'production'] }), [
-      port,
-    ]);
-  });
+      await expectToWaitFor(waitWithOptions(options), [port]);
+    }
+  );
 
   // The extended config's ipc: true would skip the wait unless the extending
   // config's ipc: false wins
