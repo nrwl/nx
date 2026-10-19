@@ -60,7 +60,9 @@ export default defineConfig({
 
 ## The `bundler` option
 
-Component testing supports two different bundlers: `webpack` and `vite`. The Nx generator will pick up the bundler used in the specified project's build target. If the build target is using `@nx/webpack:webpack`, then the generator will use `webpack` as the bundler. If the build target is using `@nx/vite:build`, then the generator will use `vite` as the bundler.
+Component testing supports two bundlers: `webpack` and `vite`.
+The generator picks `webpack` when `@nx/webpack/plugin` infers the build target, and `vite` when
+`@nx/vite/plugin` infers it.
 
 You can manually set the bundler by passing `--bundler=webpack` or `--bundler=vite` to the generator, but that is not needed since the generator will pick up the correct bundler for you. However, if you want to use a different bundler than the one that is used in the build target, then you can manually set it using that flag.
 
@@ -68,7 +70,8 @@ You can manually set the bundler by passing `--bundler=webpack` or `--bundler=vi
 
 Component testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/concepts/mental-model#the-project-graph) if one isn't provided.
 
-For React projects, the build target needs to be using the `@nx/webpack:webpack` executor.
+For React projects, `@nx/vite/plugin` or `@nx/webpack/plugin` must infer the build target from a
+Vite or webpack config file at the project root.
 The generator will throw an error if a build target can't be found and suggest passing one in manually.
 
 Letting Nx infer the build target by default

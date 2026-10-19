@@ -1,4 +1,3 @@
-import type { FoundTarget } from '@nx/cypress/internal';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
@@ -8,7 +7,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { getActualBundler, isComponent } from '../../../utils/ct-utils';
+import { isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';
 import { nxVersion } from '@nx/devkit/internal';
@@ -17,7 +16,7 @@ export async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigurationSchema,
-  found: FoundTarget
+  buildBundler: 'vite' | 'webpack'
 ) {
   // must dynamicaly import to prevent packages not using cypress from erroring out
   // when importing react
@@ -27,7 +26,10 @@ export async function addFiles(
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
-  const actualBundler = await getActualBundler(tree, options, found);
+  const actualBundler =
+    options.buildTarget !== undefined && options.bundler
+      ? options.bundler
+      : buildBundler;
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(
