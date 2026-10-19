@@ -483,9 +483,9 @@ jobs:
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
 
-## Scope atomized tasks to the code they exercise
+## Skip unaffected test files
 
-An atomized e2e task depends on the app it tests, so a change to the app, or to any project the app
-depends on, reruns every test file.
-To scope each test file's task to the code it exercises, see
-[scope atomized e2e tests](/docs/kb/scope-e2e-tests).
+An atomized e2e task depends on the app it tests, so a change to the app, to any project the app
+depends on, or to any test file reruns every test file.
+To skip the test files a change doesn't affect, see
+[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
