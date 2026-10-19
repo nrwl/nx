@@ -13,7 +13,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { isTypedLintingEnabled } from '@nx/eslint/internal';
-import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
@@ -21,19 +20,6 @@ export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const hasPlugin = hasExpoPlugin(tree);
-  if (!hasPlugin) {
-    const { webStaticServeGenerator } = ensurePackage<typeof import('@nx/web')>(
-      '@nx/web',
-      nxVersion
-    );
-
-    await webStaticServeGenerator(tree, {
-      buildTarget: `${options.projectName}:export`,
-      targetName: 'serve-static',
-    });
-  }
-
   const e2eWebServerInfo = await getExpoE2EWebServerInfo(
     tree,
     options.projectName,
@@ -199,8 +185,10 @@ async function getExpoE2EWebServerInfo(
     }
   );
 
-  // When CI runs the dev server target, its URL carries that target's port
-  return info.e2eCiWebServerCommand === info.e2eWebServerCommand
-    ? { ...info, e2eCiBaseUrl: info.e2eWebServerAddress }
-    : info;
+  // The plugin infers no serve-static target, so CI runs the dev server
+  return {
+    ...info,
+    e2eCiWebServerCommand: info.e2eWebServerCommand,
+    e2eCiBaseUrl: info.e2eWebServerAddress,
+  };
 }

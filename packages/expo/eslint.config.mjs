@@ -29,7 +29,6 @@ export default [
             'nx',
             '@nx/jest',
             '@nx/rollup',
-            '@nx/web',
             '@nx/webpack',
             '@nx/cypress',
             '@nx/playwright',
