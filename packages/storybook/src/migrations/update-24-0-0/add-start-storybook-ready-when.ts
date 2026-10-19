@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import {
   addReadyWhenSignalToTargets,
+  mergeTargetConfigurations,
   readApplicableTargetDefaults,
 } from '@nx/devkit/internal';
 import { getStartStorybookReadyWhen } from '../../utils/dev-server-ready-check';
@@ -45,15 +46,20 @@ function setContinuous(tree: Tree): boolean {
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
       if (
         target.executor !== startStorybookExecutor ||
-        target.continuous !== undefined ||
-        isSmokeTest(target) ||
-        readApplicableTargetDefaults(
-          targetName,
-          target.executor,
-          targetDefaults,
-          projectName,
-          projectNode
-        )?.continuous !== undefined
+        target.continuous !== undefined
+      ) {
+        continue;
+      }
+      const defaults = readApplicableTargetDefaults(
+        targetName,
+        target.executor,
+        targetDefaults,
+        projectName,
+        projectNode
+      );
+      if (
+        defaults?.continuous !== undefined ||
+        isSmokeTest(mergeTargetConfigurations(target, defaults))
       ) {
         continue;
       }

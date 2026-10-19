@@ -32,7 +32,7 @@ describe('add-start-storybook-ready-when migration', () => {
     expect(targets['build-storybook'].readyWhen).toBeUndefined();
   });
 
-  it('makes @storybook/angular:start-storybook targets continuous unless they or the targetDefaults that apply to them set it, or they run a smoke test', async () => {
+  it('makes @storybook/angular:start-storybook targets continuous unless they or the targetDefaults that apply to them set it, or they run a smoke test, own or inherited', async () => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app', {
       root: 'apps/app',
@@ -43,6 +43,12 @@ describe('add-start-storybook-ready-when migration', () => {
           executor,
           configurations: { ci: { smokeTest: true } },
         },
+        'storybook-smoke-default': { executor },
+        'storybook-smoke-default-ci': { executor },
+        'storybook-smoke-overridden': {
+          executor,
+          options: { smokeTest: false },
+        },
         'storybook-defaulted': { executor },
         'storybook-other-default': { executor },
       },
@@ -50,6 +56,11 @@ describe('add-start-storybook-ready-when migration', () => {
     updateNxJson(tree, {
       ...readNxJson(tree),
       targetDefaults: {
+        'storybook-smoke-default': { options: { smokeTest: true } },
+        'storybook-smoke-default-ci': {
+          configurations: { ci: { smokeTest: true } },
+        },
+        'storybook-smoke-overridden': { options: { smokeTest: true } },
         'storybook-defaulted': { continuous: false },
         'storybook-other-default': {
           executor: '@nx/web:file-server',
@@ -64,6 +75,9 @@ describe('add-start-storybook-ready-when migration', () => {
     expect(targets.storybook.continuous).toBe(true);
     expect(targets['storybook-smoke'].continuous).toBeUndefined();
     expect(targets['storybook-smoke-ci'].continuous).toBeUndefined();
+    expect(targets['storybook-smoke-default'].continuous).toBeUndefined();
+    expect(targets['storybook-smoke-default-ci'].continuous).toBeUndefined();
+    expect(targets['storybook-smoke-overridden'].continuous).toBe(true);
     expect(targets['storybook-defaulted'].continuous).toBeUndefined();
     expect(targets['storybook-other-default'].continuous).toBe(true);
   });

@@ -21,6 +21,7 @@ Nx checks readiness only for continuous targets.
 So the migration also sets `continuous: true` on the targets with their own `@storybook/angular:start-storybook` executor, unless the target or the `targetDefaults` entry that applies to it sets `continuous`.
 It skips a target whose options, or any of whose configurations, set `smokeTest: true`.
 Storybook exits once it starts in that mode, so the target doesn't run a server.
+The setting can come from the target or from the `targetDefaults` entry that applies to it, and the target's own value wins.
 
 #### Sample code changes
 
