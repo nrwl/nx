@@ -43,7 +43,7 @@ export function getSwcCmd(
 
 export function getTypeCheckOptions(
   normalizedOptions: NormalizedSwcExecutorOptions
-) {
+): TypeCheckOptions {
   const { sourceRoot, projectRoot, watch, tsConfig, root, outputPath } =
     normalizedOptions;
   const inputDir =
