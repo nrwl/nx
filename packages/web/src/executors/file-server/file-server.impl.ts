@@ -132,14 +132,20 @@ async function waitUntilListening(
 ): Promise<boolean> {
   let alive = true;
   exited.then(() => (alive = false));
-  // A wildcard address accepts connections on the loopback of its family
-  const probeHost =
-    host === '0.0.0.0' ? '127.0.0.1' : host === '::' ? '::1' : host;
+  // A wildcard address accepts connections on the loopback of its family. `::`
+  // also accepts IPv4 ones, and a host may have no ::1, so it gets both probes.
+  const probeHosts =
+    host === '0.0.0.0'
+      ? ['127.0.0.1']
+      : host === '::'
+        ? ['::1', '127.0.0.1']
+        : [host];
   while (alive) {
-    const connected = await waitForPortOpen(port, {
-      host: probeHost,
-      retries: 0,
-    }).then(
+    const connected = await Promise.any(
+      probeHosts.map((probeHost) =>
+        waitForPortOpen(port, { host: probeHost, retries: 0 })
+      )
+    ).then(
       () => true,
       () => false
     );

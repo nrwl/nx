@@ -43,17 +43,23 @@ function listen(port: number, host: string): Promise<Server> {
 const close = (server: Server) =>
   new Promise<void>((resolve) => server.close(() => resolve()));
 
-// The cases probe 127.0.0.1 or ::1, so the port must be free on both
+// The cases probe 127.0.0.1 and ::1, so the port must be free on each loopback
+// the host has
 async function getFreePort(): Promise<number> {
   for (;;) {
     const ipv4 = await listen(0, '127.0.0.1');
     const { port } = ipv4.address() as AddressInfo;
+    let free = true;
     const ipv6 = await listen(port, '::1').catch((e) => {
-      if (e.code === 'EADDRINUSE') return null;
-      throw e;
+      if (e.code === 'EADDRINUSE') {
+        free = false;
+      } else if (e.code !== 'EADDRNOTAVAIL') {
+        throw e;
+      }
+      return null;
     });
     await Promise.all([ipv4, ipv6].filter(Boolean).map(close));
-    if (ipv6) return port;
+    if (free) return port;
   }
 }
 
