@@ -8,7 +8,6 @@ import {
   GeneratorCallback,
   joinPathFragments,
   logger,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -37,14 +36,10 @@ export async function lintWorkspaceRuleGenerator(
   // package, whose flat-style API works for both flat and eslintrc workspaces.
   const { typescriptESLintVersion } = versions(tree);
 
-  const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
   tasks.push(
     await lintWorkspaceRulesProjectGenerator(tree, {
       skipFormat: true,
-      addPlugin:
-        process.env.NX_ADD_PLUGINS !== 'false' &&
-        nxJson.useInferencePlugins !== false,
     })
   );
 

@@ -5,7 +5,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - Lib', () => {
+// TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+xdescribe('Angular Cypress Component Tests - Lib', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {

@@ -26,6 +26,7 @@ type ViteDevServer = {
  * })
  *
  * @param pathToConfig will be used for loading project options and to construct the output paths for videos and screenshots
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
  */
 export function nxComponentTestingPreset(pathToConfig: string): {
   specPattern: string;

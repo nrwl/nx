@@ -22,7 +22,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: true, // Use legacy mode for this test
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -54,7 +53,6 @@ describe('setupDockerGenerator', () => {
         framework: 'fastify',
         docker: true,
         skipDockerPlugin: true, // Use legacy mode for this test
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -86,7 +84,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: true,
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -119,7 +116,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: false,
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -158,7 +154,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: false,
-        addPlugin: true,
       });
 
       const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
@@ -176,7 +171,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: true,
-        addPlugin: true,
       });
 
       const dockerFile = tree.read(`apps/${projectName}/Dockerfile`, 'utf8');
@@ -194,7 +188,6 @@ describe('setupDockerGenerator', () => {
         directory: '.',
         framework: 'express',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       await setupDockerGenerator(tree, {
@@ -248,7 +241,6 @@ describe('setupDockerGenerator', () => {
         directory: '.',
         framework: 'express',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       await setupDockerGenerator(tree, {
@@ -304,7 +296,6 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         skipDockerPlugin: true, // Use legacy mode for this test
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, projectName);
@@ -352,7 +343,6 @@ describe('setupDockerGenerator', () => {
         directory: '.',
         framework: 'express',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       await setupDockerGenerator(tree, {

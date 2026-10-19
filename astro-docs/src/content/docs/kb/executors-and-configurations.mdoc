@@ -21,14 +21,14 @@ Nx normalizes this shorthand to the `nx:run-commands` executor.
   "generators": {},
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
+      "executor": "@nx/esbuild:esbuild",
       "options": {
         "outputPath": "dist/apps/cart",
         ...
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
+    "serve": {
+      "executor": "@nx/js:node",
       "options": {
         ...
       }
@@ -37,11 +37,11 @@ Nx normalizes this shorthand to the `nx:run-commands` executor.
 }
 ```
 
-Each project has targets configured to run an executor with a specific set of options. In this snippet, `cart` has two targets defined - `build` and `test`.
+Each project has targets configured to run an executor with a specific set of options. In this snippet, `cart` has two targets defined - `build` and `serve`.
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
-- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/vite` and the executor name is `build`.
+- `executor` is a string of the form `[package name]:[executor name]`. For the `build` executor, the package name is `@nx/esbuild` and the executor name is `esbuild`.
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. See [Use task configurations](#use-task-configurations) below for an example.
 
@@ -161,20 +161,24 @@ For example, running e2e tests for multiple environments. By default it would ma
 ```json title="project.json"
 {
   "e2e": {
-    "executor": "@nx/cypress:cypress",
+    "command": "cypress run",
+    "defaultConfiguration": "dev",
     "options": {
-      "cypressConfig": "apps/my-app-e2e/cypress.config.ts"
+      "cwd": "apps/my-app-e2e"
     },
     "configurations": {
       "dev": {
-        "devServerTarget": "my-app:serve"
+        "env": { "CYPRESS_BASE_URL": "http://localhost:4200" }
+      },
+      "qa": {
+        "env": { "CYPRESS_BASE_URL": "https://qa.example.com" }
       }
     }
   }
 }
 ```
 
-When you run `nx e2e my-app-e2e`, Nx uses the _dev_ configuration and starts the local dev server for `my-app`.
+When you run `nx e2e my-app-e2e`, Nx uses the _dev_ configuration and tests against the local dev server.
 To run another configuration, pass it explicitly: `nx e2e my-app-e2e --configuration=qa` or `nx run my-app-e2e:e2e:qa`.
 
 ## Next steps

@@ -17,9 +17,9 @@ export interface UltracacheEnv {
 }
 
 /**
- * Off unless a CI run opts in with `NX_CLOUD_USE_ULTRACACHE=true` in a
- * workspace that uses Nx Cloud, since there is nothing to fetch from otherwise.
- * `env` defaults to this process's.
+ * On for CI runs in a workspace that uses Nx Cloud, since there is nothing to
+ * fetch from otherwise. Nx Cloud's workspace setting decides whether the fetch
+ * returns any; `NX_CLOUD_USE_ULTRACACHE=false` skips it. `env` defaults to this process's.
  */
 export function isUltracacheConfigurationFetchEnabled(
   nxJson: NxJsonConfiguration,
@@ -30,7 +30,7 @@ export function isUltracacheConfigurationFetchEnabled(
     env.NX_NO_CLOUD === 'true' ||
     nxJson.neverConnectToCloud ||
     runnerOptions.cloud === false ||
-    env.NX_CLOUD_USE_ULTRACACHE !== 'true' ||
+    env.NX_CLOUD_USE_ULTRACACHE === 'false' ||
     !isCI()
   ) {
     return false;

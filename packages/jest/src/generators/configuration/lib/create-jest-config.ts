@@ -15,9 +15,8 @@ import type { NormalizedJestProjectSchema } from '../schema';
 import { getProjectType } from '@nx/js/internal';
 import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 
-export async function createJestConfig(
+export function writeRootJestPreset(
   tree: Tree,
-  options: Partial<NormalizedJestProjectSchema>,
   presetExt: JestPresetExtension
 ) {
   if (!tree.exists(`jest.preset.${presetExt}`)) {
@@ -38,6 +37,14 @@ module.exports = { ...nxPreset };`
       );
     }
   }
+}
+
+export async function createJestConfig(
+  tree: Tree,
+  options: Partial<NormalizedJestProjectSchema>,
+  presetExt: JestPresetExtension
+) {
+  writeRootJestPreset(tree, presetExt);
   if (options.rootProject) {
     // we don't want any config to be made because the `configurationGenerator` will do it.
     // will copy the template config file

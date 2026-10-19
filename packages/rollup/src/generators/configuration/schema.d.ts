@@ -11,5 +11,4 @@ export interface RollupProjectSchema {
   rollupConfig?: string;
   buildTarget?: string;
   format?: ('cjs' | 'esm')[];
-  addPlugin?: boolean;
 }

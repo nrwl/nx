@@ -32,7 +32,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: 'oxlint',
       project: 'my-lib',
-      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -50,7 +49,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: 'oxlint',
       project: 'my-lib',
-      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -71,7 +69,6 @@ describe('addLintingToProject', () => {
       addLintingToProject(tree, {
         linter: undefined,
         project: 'my-lib',
-        addPlugin: true,
       })
     ).resolves.toBeDefined();
 
@@ -87,7 +84,6 @@ describe('addLintingToProject', () => {
       addLintingToProject(tree, {
         linter: undefined,
         project: 'my-lib',
-        addPlugin: true,
       })
     ).resolves.toBeDefined();
 
@@ -107,7 +103,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: undefined,
       project: 'my-lib',
-      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -126,7 +121,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: 'oxlint',
       project: 'my-lib',
-      addPlugin: true,
       unitTestRunner,
     });
 
@@ -139,7 +133,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: 'oxlint',
       project: 'my-lib',
-      addPlugin: true,
       unitTestRunner: 'none',
     });
 
@@ -148,12 +141,11 @@ describe('addLintingToProject', () => {
   });
 
   // How every framework generator hands Oxlint its presets — react, next, vue,
-  // nuxt, remix, react-native and expo all pass one.
+  // nuxt, react-native and expo all pass one.
   it('enables the framework plugins the caller asks for', async () => {
     await addLintingToProject(tree, {
       linter: 'oxlint',
       project: 'my-lib',
-      addPlugin: true,
       oxlintPlugins: ['react', 'jsx-a11y'],
       unitTestRunner: 'jest',
     });
@@ -167,7 +159,6 @@ describe('addLintingToProject', () => {
     await addLintingToProject(tree, {
       linter: 'none',
       project: 'my-lib',
-      addPlugin: true,
     });
 
     const { devDependencies = {} } = readJson(tree, 'package.json');

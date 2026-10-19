@@ -678,16 +678,17 @@ exports[`app > angular compat support > vitest-analog & angular < 21 > should ge
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [angular()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     name: 'my-app',
@@ -825,9 +826,6 @@ exports[`app > nested > should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -850,16 +848,6 @@ exports[`app > nested > should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-dir/my-app/jest.config.cts",
-        "tsConfig": "my-dir/my-app/tsconfig.spec.json",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -933,9 +921,6 @@ exports[`app > not nested > should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -958,16 +943,6 @@ exports[`app > not nested > should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-app/jest.config.cts",
-        "tsConfig": "my-app/tsconfig.spec.json",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }

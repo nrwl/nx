@@ -13,9 +13,7 @@ describe('init', () => {
   });
 
   it('should record the build script decisions detox pulls in', async () => {
-    await withPnpm(tree, '11.2.2', () =>
-      detoxInitGenerator(tree, { addPlugin: true })
-    );
+    await withPnpm(tree, '11.2.2', () => detoxInitGenerator(tree, {}));
 
     const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
     expect(pnpmWorkspace).toMatch(/['"]?detox['"]?: true/);
@@ -25,9 +23,7 @@ describe('init', () => {
   });
 
   it('should add detox dependencies', async () => {
-    await detoxInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await detoxInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['@nx/detox']).toBeDefined();
     expect(packageJson.devDependencies['detox']).toBeDefined();

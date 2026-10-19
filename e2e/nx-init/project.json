@@ -1,9 +1,0 @@
-{
-  "name": "e2e-nx-init",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/nx-init",
-  "projectType": "application",
-  "implicitDependencies": ["nx", "angular", "react", "js", "nest"],
-  "// targets": "to see all targets run: nx show project e2e-nx-init --web",
-  "targets": {}
-}

@@ -76,7 +76,6 @@ export async function addE2e(
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       jsx: true,
-      addPlugin: true,
     });
 
     return e2eTask;
@@ -123,7 +122,6 @@ export async function addE2e(
       enableTypedLinting: isTypedLintingEnabled(options),
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-      addPlugin: true,
     });
 
     return e2eTask;
@@ -162,7 +160,6 @@ async function getNuxtE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4200',
       defaultE2EPort: e2ePort,
-    },
-    true
+    }
   );
 }

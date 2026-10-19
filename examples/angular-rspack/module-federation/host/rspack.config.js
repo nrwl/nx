@@ -1,8 +1,7 @@
 module.exports = () => {
   const {
-    NxModuleFederationPlugin,
-    NxModuleFederationDevServerPlugin,
-  } = require('@nx/module-federation/angular');
+    ModuleFederationPlugin,
+  } = require('@module-federation/enhanced/rspack');
   const { createConfig } = require('@nx/angular-rspack');
   const mfConfig = require('./module-federation.config');
   const config = createConfig(
@@ -22,15 +21,13 @@ module.exports = () => {
         styles: ['./src/styles.scss'],
       },
       rspackConfigOverrides: {
-        plugins: [
-          new NxModuleFederationPlugin(
-            { config: mfConfig },
-            {
-              dts: false,
-            }
-          ),
-          new NxModuleFederationDevServerPlugin({ config: mfConfig }),
-        ],
+        output: { uniqueName: mfConfig.name, publicPath: 'auto', module: true },
+        optimization: {
+          // the host keeps its runtime chunk under the dev server
+          ...(process.env['RSPACK_SERVE'] ? {} : { runtimeChunk: false }),
+          splitChunks: { cacheGroups: { default: false, common: false } },
+        },
+        plugins: [new ModuleFederationPlugin(mfConfig)],
       },
     },
     {

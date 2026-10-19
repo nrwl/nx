@@ -244,7 +244,6 @@ describe('Remix - Convert To Inferred', () => {
           buildTargetName: 'build',
           devTargetName: 'custom-dev',
           startTargetName: 'start',
-          typecheckTargetName: 'typecheck',
           serveStaticTargetName: 'serve-static',
         },
       });

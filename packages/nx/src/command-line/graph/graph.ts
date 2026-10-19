@@ -1512,8 +1512,9 @@ function expandInputs(
     workspaceRootInputs,
     allWorkspaceFiles
   );
+  const projectRoots = depGraphClientResponse.projects.map((p) => p.data.root);
   const filesExpanded = filesInputs.flatMap((globs) =>
-    expandFilesInput(workspaceRoot, globs)
+    expandFilesInput(workspaceRoot, globs, projectRoots)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {

@@ -1,10 +1,11 @@
 import {
   createProjectGraphAsync,
   parseTargetString,
+  joinPathFragments,
   readProjectConfiguration,
   Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
+import { findPluginForConfigFile } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/internal';
@@ -21,46 +22,77 @@ export async function resolveCypressCTTarget(
   options: {
     project: string;
     buildTarget: string;
-    bundler: 'vite' | 'webpack';
-    validExecutorNames: Set<string>;
   }
 ): Promise<{ found: FoundTarget; bundler: 'vite' | 'webpack' }> {
-  let found: FoundTarget = { target: options.buildTarget, config: undefined };
-
-  // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
-  if (options.buildTarget === undefined) {
-    const {
-      findBuildConfig,
-    }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
-
-    found = await findBuildConfig(tree, {
-      project: options.project,
-      buildTarget: options.buildTarget,
-      validExecutorNames: options.validExecutorNames,
-    });
-
-    assertValidConfig(found?.config);
-  } else if (options.buildTarget) {
-    const projectGraph = await createProjectGraphAsync();
-    const { project, target } = parseTargetString(
-      options.buildTarget,
-      projectGraph
-    );
-    const buildTargetProject = readProjectConfiguration(tree, project);
-    const executor = buildTargetProject.targets?.[target]?.executor;
-    if (!executor || !options.validExecutorNames.has(executor)) {
-      throw new Error(
-        `Cypress Component Testing is not currently supported for this project. Either 'executer' is not defined in '${target} target' of '${project} project.json' or executer present is not valid one. Valid ones are ${JSON.stringify(
-          [...options.validExecutorNames]
-        )}. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
-      );
+  const graph = await createProjectGraphAsync();
+  const parsed = options.buildTarget
+    ? parseTargetString(options.buildTarget, graph)
+    : undefined;
+  const candidates = parsed
+    ? [parsed.project]
+    : [
+        options.project,
+        ...Object.keys(graph.dependencies).filter((name) =>
+          graph.dependencies[name].some((dep) => dep.target === options.project)
+        ),
+      ];
+  let overridden:
+    | { project: string; target: string; executor: string }
+    | undefined;
+  for (const project of candidates) {
+    const native = await findNativeBuild(tree, project, parsed?.target);
+    if (!native) continue;
+    if (native.overridingExecutor) {
+      overridden ??= {
+        project,
+        target: native.target,
+        executor: native.overridingExecutor,
+      };
+      continue;
     }
+    return {
+      found: {
+        target: options.buildTarget ?? native.target,
+        config: { command: `${native.bundler} build` },
+      },
+      bundler: native.bundler,
+    };
   }
 
-  return {
-    found,
-    bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
-  };
+  if (parsed) {
+    const executor = readProjectConfiguration(tree, parsed.project).targets?.[
+      parsed.target
+    ]?.executor;
+    throw notInferredBuildTargetError(
+      options.buildTarget,
+      parsed.project,
+      executor
+    );
+  }
+  if (overridden) {
+    throw notInferredBuildTargetError(
+      overridden.target,
+      overridden.project,
+      overridden.executor
+    );
+  }
+  throw new Error(
+    `Unable to find a build target inferred by @nx/vite/plugin or @nx/webpack/plugin for project "${options.project}" or the projects that depend on it. Pass one with --build-target=<project>:<target>[:<configuration>].`
+  );
+}
+
+function notInferredBuildTargetError(
+  buildTarget: string,
+  project: string,
+  executor: string | undefined
+) {
+  return new Error(
+    `Cypress Component Testing needs a build target inferred by @nx/vite/plugin or @nx/webpack/plugin, and "${buildTarget}" is not one.${
+      executor && executor !== 'nx:run-commands'
+        ? ` It uses the "${executor}" executor. Convert it to an inferred target first, for example with "nx g @nx/workspace:infer-targets --project=${project}".`
+        : ''
+    }`
+  );
 }
 
 export async function configureCypressCT(
@@ -81,20 +113,8 @@ export async function configureCypressCT(
 
   const ctConfigOptions: NxComponentTestingOptions = {
     bundler: options.bundler,
+    buildTarget: found.target,
   };
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      devServerTarget: found.target,
-      skipServe: true,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  } else {
-    ctConfigOptions.buildTarget = found.target;
-  }
 
   const cypressConfigFilePath = getProjectCypressConfigPath(
     tree,
@@ -109,43 +129,35 @@ export async function configureCypressCT(
   tree.write(cypressConfigFilePath, updatedCyConfig);
 }
 
-function assertValidConfig(config: unknown) {
-  if (!config) {
-    throw new Error(
-      'Unable to find a valid build configuration. Try passing in a target for an app. --build-target=<project>:<target>[:<configuration>]'
-    );
+async function findNativeBuild(tree: Tree, project: string, target?: string) {
+  const config = readProjectConfiguration(tree, project);
+  for (const bundler of ['vite', 'webpack'] as const) {
+    for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
+      const path = joinPathFragments(config.root, `${bundler}.config.${ext}`);
+      if (!tree.exists(path)) continue;
+      const plugin = await findPluginForConfigFile(
+        tree,
+        `@nx/${bundler}/plugin`,
+        path
+      );
+      if (!plugin) continue;
+      const buildTarget =
+        typeof plugin === 'string'
+          ? 'build'
+          : ((plugin.options as { buildTargetName?: string })
+              ?.buildTargetName ?? 'build');
+      if (target && target !== buildTarget) continue;
+      // A project.json or package.json target on another executor replaces the
+      // inferred one (nx.json targetDefaults can't change its executor).
+      const executor = config.targets?.[buildTarget]?.executor;
+      return {
+        target: `${project}:${buildTarget}`,
+        bundler,
+        overridingExecutor:
+          executor && executor !== 'nx:run-commands' ? executor : undefined,
+      };
+    }
   }
-}
-
-export async function getBundlerFromTarget(
-  found: FoundTarget,
-  tree: Tree
-): Promise<'vite' | 'webpack'> {
-  if (found.target && found.config?.executor) {
-    return found.config.executor === '@nx/vite:build' ? 'vite' : 'webpack';
-  }
-
-  const { target, project } = parseTargetString(
-    found.target,
-    await createProjectGraphAsync()
-  );
-  const projectConfig = readProjectConfiguration(tree, project);
-  const executor = projectConfig?.targets?.[target]?.executor;
-  return executor === '@nx/vite:build' ? 'vite' : 'webpack';
-}
-
-export async function getActualBundler(
-  tree: Tree,
-  options: { buildTarget?: string; bundler?: 'vite' | 'webpack' },
-  found: FoundTarget
-) {
-  // Specifically undefined to allow Remix workaround of passing an empty string
-  const actualBundler =
-    options.buildTarget !== undefined && options.bundler
-      ? options.bundler
-      : await getBundlerFromTarget(found, tree);
-
-  return actualBundler;
 }
 
 export function isComponent(tree: Tree, filePath: string): boolean {

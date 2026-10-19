@@ -13,6 +13,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { addPropertyToJestConfig, findJestConfig } from '@nx/jest';
 import {
   libraryGenerator as jsLibraryGenerator,
   addTsLibDependencies,
@@ -83,7 +84,6 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 export async function pluginGenerator(tree: Tree, schema: Schema) {
   return await pluginGeneratorInternal(tree, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }
@@ -104,7 +104,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       useProjectJson: options.useProjectJson,
-      addPlugin: options.addPlugin,
       skipFormat: true,
       useTscExecutor: true,
     })
@@ -168,6 +167,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   await addFiles(host, options);
   updatePluginConfig(host, options);
 
+  if (options.unitTestRunner === 'jest') {
+    // addFiles removes src/lib and its spec, so a fresh plugin has no tests yet.
+    const jestConfig = findJestConfig(host, options.projectRoot);
+    if (jestConfig) {
+      addPropertyToJestConfig(host, jestConfig, 'passWithNoTests', true);
+    }
+  }
+
   if (options.e2eTestRunner !== 'none') {
     tasks.push(
       await e2eProjectGenerator(host, {
@@ -182,7 +189,6 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         rootProject: options.rootProject,
         linter: options.linter,
         useProjectJson: options.useProjectJson,
-        addPlugin: options.addPlugin,
         testRunner: options.e2eTestRunner as 'jest' | 'vitest',
       })
     );

@@ -27,11 +27,9 @@ export interface ConfigurationGeneratorSchema {
    **/
   webServerAddress?: string;
   rootProject?: boolean;
-  addPlugin?: boolean;
 }
 
 export interface NormalizedGeneratorOptions extends ConfigurationGeneratorSchema {
-  addPlugin: boolean;
   directory: string;
   linter: LinterType;
 }

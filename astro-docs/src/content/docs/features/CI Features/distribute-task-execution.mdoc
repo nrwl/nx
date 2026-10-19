@@ -14,7 +14,7 @@ You pay for machine-minutes, not for how busy a machine is, so the same work pac
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
 {% youtube
-src="https://youtu.be/9JkEbqgS8cY"
+src="https://youtu.be/A1JQDGG1YG8"
 title="How Nx Agents Distribute Tasks Across Machines in CI"
 /%}
 
@@ -272,18 +272,11 @@ Add a `.nx/ci-config.yaml` file that sets how many agents to use:
 # .nx/ci-config.yaml
 dte:
   distribute-on: 3 linux-large-js
-  scheduling-constraints:
-    # e2e tasks share a resource, so never run two of them on one agent at once
-    - targets: ['e2e*']
-      cannot-run-with:
-        - targets: ['e2e*']
-lifecycle:
-  stop-after:
-    - build
 ```
 
 `linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
-Leave out `scheduling-constraints` unless your tasks share a resource such as a port or a database.
+If tasks share a resource such as a port or a database, keep them apart with [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
+For every other option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 Then start the agents early in your CI job, before installing dependencies:
 
@@ -312,7 +305,6 @@ jobs:
 Every Nx command in the job then runs its tasks across the three agents.
 For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
 For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).
-For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 {% /tabitem %}
 {% /tabs %}

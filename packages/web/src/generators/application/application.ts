@@ -161,10 +161,6 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     options.appProjectRoot,
     'tsconfig.app.json'
   );
-  const assets = [
-    joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
-    joinPathFragments(options.appProjectRoot, 'src/assets'),
-  ];
 
   if (options.bundler === 'webpack') {
     const { configurationGenerator } = ensurePackage<
@@ -182,55 +178,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         'webpack.config.js'
       ),
       skipFormat: true,
-      addPlugin: options.addPlugin,
     });
-    const project = readProjectConfiguration(tree, options.projectName);
-    // Only when asked: @nx/webpack:dev-server already defaults to 4200.
-    if (options.port != null && project.targets?.serve) {
-      project.targets.serve.options ??= {};
-      project.targets.serve.options.port = options.port;
-      updateProjectConfiguration(tree, options.projectName, project);
-    }
-    if (project.targets?.build) {
-      const prodConfig = project.targets.build.configurations.production;
-      const buildOptions = project.targets.build.options;
-      buildOptions.assets = assets;
-      buildOptions.index = joinPathFragments(
-        options.appProjectRoot,
-        'src/index.html'
-      );
-      buildOptions.baseHref = '/';
-      buildOptions.styles = [
-        joinPathFragments(
-          options.appProjectRoot,
-          `src/styles.${options.style}`
-        ),
-      ];
-      // We can delete that, because this projest is an application
-      // and applications have a .babelrc file in their root dir.
-      // So Nx will find it and use it
-      delete buildOptions.babelUpwardRootMode;
-      buildOptions.scripts = [];
-      prodConfig.fileReplacements = [
-        {
-          replace: joinPathFragments(
-            options.appProjectRoot,
-            `src/environments/environment.ts`
-          ),
-          with: joinPathFragments(
-            options.appProjectRoot,
-            `src/environments/environment.prod.ts`
-          ),
-        },
-      ];
-      prodConfig.optimization = true;
-      prodConfig.outputHashing = 'all';
-      prodConfig.sourceMap = false;
-      prodConfig.namedChunks = false;
-      prodConfig.extractLicenses = true;
-      prodConfig.vendorChunk = false;
-      updateProjectConfiguration(tree, options.projectName, project);
-    }
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
   } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
@@ -299,10 +247,7 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  return await applicationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return await applicationGeneratorInternal(host, schema);
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
@@ -342,7 +287,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         project: options.projectName,
         unitTestRunner: options.unitTestRunner,
-        addPlugin: options.addPlugin,
       })
     );
   }
@@ -367,7 +311,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       enableTypedLinting,
-      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -397,7 +340,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
-      addPlugin: options.addPlugin,
       port: options.port,
     });
     tasks.push(viteTask);
@@ -433,7 +375,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
-      addPlugin: options.addPlugin,
       compiler: options.compiler,
     });
     tasks.push(vitestTask);
@@ -502,7 +443,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       host,
       options.projectName,
       joinPathFragments(options.appProjectRoot, `webpack.config.js`),
-      options.addPlugin,
       // Undefined unless --port was passed, so targetDefaults still apply.
       options.port
     );
@@ -514,7 +454,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       host,
       options.projectName,
       joinPathFragments(options.appProjectRoot, `vite.config.ts`),
-      options.addPlugin,
       options.port ?? 4200,
       // An explicit port serves both dev and preview, as in @nx/react:app.
       options.port
@@ -616,7 +555,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      addPlugin: options.addPlugin,
     });
 
     tasks.push(playwrightTask);
@@ -634,7 +572,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setupFile: 'none',
       compiler: options.compiler,
       skipFormat: true,
-      addPlugin: options.addPlugin,
     });
     tasks.push(jestTask);
   }
@@ -713,12 +650,6 @@ async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
   });
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPluginDefault;
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const appProjectName =
     !isUsingTsSolutionConfig || options.name ? projectName : importPath;

@@ -448,6 +448,29 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
       expect(result).toContain('hello1');
       expect(result).toContain('hello2');
     });
+
+    it('should resolve envFile references against the task env when run directly or forked', () => {
+      updateFile('.env', (content) => `${content}\nNX_E2E_PORT=3000`);
+      updateFile(`libs/${libName}/.env`, 'NX_E2E_PORT=5000');
+      updateFile(
+        `libs/${libName}/.serve.env`,
+        'NX_E2E_URL=http://localhost:${NX_E2E_PORT}'
+      );
+      updateJson(join('libs', libName, 'project.json'), (config) => {
+        config.targets['print-url'] = {
+          command: 'echo "[$NX_E2E_PORT][$NX_E2E_URL]"',
+          options: { envFile: `libs/${libName}/.serve.env` },
+        };
+        return config;
+      });
+
+      for (const env of [{}, { NX_RUN_COMMANDS_DIRECTLY: 'false' }]) {
+        const result = runCLI(`run ${libName}:print-url --skip-nx-cache`, {
+          env,
+        });
+        expect(result).toContain('[5000][http://localhost:5000]');
+      }
+    });
   });
 
   describe('task graph inputs', () => {

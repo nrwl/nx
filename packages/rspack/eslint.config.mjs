@@ -28,7 +28,7 @@ export default [
             '@nx/workspace',
             '@nx/react',
             '@nx/nest',
-            '@module-federation/sdk',
+            '@nx/web',
             'css-loader',
             'webpack',
             'sass-embedded',

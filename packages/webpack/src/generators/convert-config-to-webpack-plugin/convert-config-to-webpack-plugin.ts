@@ -56,80 +56,43 @@ export async function convertConfigToWebpackPluginGenerator(
 
         const webpackConfigPath = currentTargetOptions?.webpackConfig || '';
 
-        if (webpackConfigPath && tree.exists(webpackConfigPath)) {
-          let { withNxConfig: webpackOptions, withReactConfig } =
-            extractWebpackOptions(tree, webpackConfigPath);
-
-          // if webpackOptions === undefined
-          // withNx was not found in the webpack.config.js file so we should skip this project
-          if (webpackOptions !== undefined) {
-            let parsedOptions = {};
-            if (webpackOptions) {
-              parsedOptions = JSON.parse(
-                preprocessText(webpackOptions.getText())
-              );
-              parsedOptions = normalizePathOptions(project.root, parsedOptions);
-            }
-
-            target.options.standardWebpackConfigFunction = true;
-
-            updateProjectConfiguration(tree, projectName, project);
-
-            const { dir, name, ext } = parse(webpackConfigPath);
-
-            tree.rename(
-              webpackConfigPath,
-              `${joinPathFragments(dir, `${name}.old${ext}`)}`
-            );
-
-            tree.write(
-              webpackConfigPath,
-              stripIndents`
-            const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-            const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-            const { useLegacyNxPlugin } = require('@nx/webpack');
-            
-            // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
-            // Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
-            const options = ${
-              webpackOptions ? JSON.stringify(parsedOptions, null, 2) : '{}'
-            };
-
-            /**
-              * @type{import('webpack').WebpackOptionsNormalized}
-            */
-            module.exports = async () => ({
-              plugins: [
-                ${
-                  webpackOptions
-                    ? 'new NxAppWebpackPlugin(options)'
-                    : 'new NxAppWebpackPlugin()'
-                },
-                ${
-                  withReactConfig
-                    ? `new NxReactWebpackPlugin(${withReactConfig.getText()})`
-                    : `new NxReactWebpackPlugin({
-                  // Uncomment this line if you don't want to use SVGR
-                  // See: https://react-svgr.com/
-                  // svgr: false
-                  })`
-                },
-                // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
-                // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
-                // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
-                // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
-                // eslint-disable-next-line react-hooks/rules-of-hooks
-                await useLegacyNxPlugin(require('./webpack.config.old${ext}'), options),
-              ],
-              });
-          `
-            );
-            migrated++;
-          }
+        if (
+          webpackConfigPath &&
+          tree.exists(webpackConfigPath) &&
+          convertConfigFile(tree, project.root, webpackConfigPath)
+        ) {
+          target.options.standardWebpackConfigFunction = true;
+          updateProjectConfiguration(tree, projectName, project);
+          migrated++;
         }
       }
     }
   );
+
+  // Projects already on the inference plugin keep their options in the config,
+  // so only the config needs converting.
+  for (const [projectName, project] of projects) {
+    if (options.project && projectName !== options.project) {
+      continue;
+    }
+    if (
+      Object.values(project.targets ?? {}).some(
+        (target) => target.executor === '@nx/webpack:webpack'
+      )
+    ) {
+      continue;
+    }
+    const webpackConfigPath = joinPathFragments(
+      project.root,
+      'webpack.config.js'
+    );
+    if (
+      tree.exists(webpackConfigPath) &&
+      convertConfigFile(tree, project.root, webpackConfigPath)
+    ) {
+      migrated++;
+    }
+  }
   if (migrated === 0) {
     throw new Error('Could not find any projects to migrate.');
   }
@@ -137,6 +100,93 @@ export async function convertConfigToWebpackPluginGenerator(
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+}
+
+/** Returns whether the config used `withNx` and was converted. */
+function convertConfigFile(
+  tree: Tree,
+  projectRoot: string,
+  webpackConfigPath: string
+): boolean {
+  let {
+    withNxConfig: webpackOptions,
+    withReactConfig,
+    strippedSource,
+  } = extractWebpackOptions(tree, webpackConfigPath);
+
+  // if webpackOptions === undefined
+  // withNx was not found in the webpack.config.js file so we should skip this project
+  if (webpackOptions !== undefined) {
+    let parsedOptions = {};
+    if (webpackOptions) {
+      // Parse before writing anything: a non-literal option value leaves the
+      // project untouched for the migration prompt instead of a config whose
+      // helper calls are gone and whose options never made it across.
+      try {
+        parsedOptions = JSON.parse(preprocessText(webpackOptions.getText()));
+      } catch {
+        throw new Error(
+          `Could not read the \`withNx\` options in ${webpackConfigPath}. They must be a plain object literal; spreads, variables and function calls are not supported.`
+        );
+      }
+      parsedOptions = normalizePathOptions(projectRoot, parsedOptions);
+    }
+
+    if (strippedSource !== undefined) {
+      tree.write(webpackConfigPath, strippedSource);
+    }
+
+    const { dir, name, ext } = parse(webpackConfigPath);
+
+    tree.rename(
+      webpackConfigPath,
+      `${joinPathFragments(dir, `${name}.old${ext}`)}`
+    );
+
+    // `@nx/webpack` does not depend on `@nx/react`, so only React configs may require it.
+    const usesReact = withReactConfig !== undefined;
+    const reactRequire = usesReact
+      ? `\nconst { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');`
+      : '';
+    const reactPlugin = usesReact
+      ? `\nnew NxReactWebpackPlugin(${withReactConfig ? withReactConfig.getText() : ''}),`
+      : '';
+
+    tree.write(
+      webpackConfigPath,
+      stripIndents`
+    const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');${reactRequire}
+    const { useLegacyNxPlugin } = require('@nx/webpack');
+    
+    // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
+    // Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
+    const options = ${
+      webpackOptions ? JSON.stringify(parsedOptions, null, 2) : '{}'
+    };
+
+    /**
+      * @type{import('webpack').WebpackOptionsNormalized}
+    */
+    module.exports = async () => ({
+      plugins: [
+        ${
+          webpackOptions
+            ? 'new NxAppWebpackPlugin(options)'
+            : 'new NxAppWebpackPlugin()'
+        },${reactPlugin}
+        // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+        // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+        // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
+        // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        await useLegacyNxPlugin(require('./webpack.config.old${ext}'), options),
+      ],
+      });
+  `
+    );
+    return true;
+  }
+  return false;
 }
 
 export default convertConfigToWebpackPluginGenerator;

@@ -21,7 +21,6 @@
             "cypress",
             "docker",
             "eslint",
-            "module-federation",
             "node",
             "playwright",
             "rollup",

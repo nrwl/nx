@@ -46,6 +46,7 @@ export const reactTestRendererVersion = '^19.2.0';
 export const reactNativeSvgTransformerVersion = '~1.5.1';
 export const reactNativeSvgVersion = '~15.15.0';
 export const reactNativeSvgWebVersion = '~1.0.9';
+export const viteTsconfigPathsVersion = '~4.3.2';
 export const babelRuntimeVersion = '~7.27.6';
 
 export type ReactNativeVersions = {

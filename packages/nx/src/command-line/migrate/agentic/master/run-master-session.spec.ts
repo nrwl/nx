@@ -30,11 +30,13 @@ vi.mock('./spawn-master', () => ({
 const mockRunComplete = vi.fn();
 const mockRunError = vi.fn();
 const mockAbandoned = vi.fn();
+const mockRunStopped = vi.fn();
 vi.mock('../../migrate-analytics', () => ({
   reportMigrateRunComplete: (...args: unknown[]) => mockRunComplete(...args),
   reportMigrateRunError: (...args: unknown[]) => mockRunError(...args),
   reportMigrateOrchestratorAbandoned: (...args: unknown[]) =>
     mockAbandoned(...args),
+  reportMigrateRunStopped: (...args: unknown[]) => mockRunStopped(...args),
 }));
 
 import { join } from 'path';
@@ -42,6 +44,7 @@ import { output } from '../../../../utils/output';
 import type { ExistingRunFacts } from '../../run/existing-run-report';
 import type { MigrateRunState } from '../../run/run-state';
 import {
+  driveMasterSession,
   runMasterSession,
   type RunMasterSessionInput,
 } from './run-master-session';
@@ -136,6 +139,7 @@ describe('runMasterSession', () => {
     mockRunComplete.mockReset();
     mockRunError.mockReset();
     mockAbandoned.mockReset();
+    mockRunStopped.mockReset();
     logSpy = vi.spyOn(output, 'log').mockImplementation(() => {}) as Mock;
     warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {}) as Mock;
     errorSpy = vi.spyOn(output, 'error').mockImplementation(() => {}) as Mock;
@@ -178,6 +182,7 @@ describe('runMasterSession', () => {
       runbookPath: ready.runbookPath,
       reconcileCommand: ready.reconcileCommand,
       policy: { createCommits: false, skipInstall: false },
+      singleMigration: false,
     });
     expect(mockReadRunState).toHaveBeenCalledWith(
       join(root, '.nx', 'migrate-runs', runId)
@@ -238,6 +243,7 @@ describe('runMasterSession', () => {
       expect(mockChoice).not.toHaveBeenCalled();
       expect(mockSpawnMaster).not.toHaveBeenCalled();
       expect(mockRunError).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith('existing_run');
     });
 
     it("renders the recorded policy on the continue command, not this invocation's", async () => {
@@ -372,7 +378,7 @@ describe('runMasterSession', () => {
         })
       );
       expect(warnSpy).toHaveBeenCalledWith({
-        title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+        title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install to continue it.`,
       });
     });
 
@@ -402,11 +408,12 @@ describe('runMasterSession', () => {
       expect(await runMasterSession(input())).toBeUndefined();
 
       expect(logSpy).toHaveBeenCalledWith({
-        title: `Leaving migrate run ${runId} as it is. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+        title: `Leaving migrate run ${runId} as it is. Run ${continueCommand} to continue it.`,
       });
       expect(mockResume).not.toHaveBeenCalled();
       expect(mockSpawnMaster).not.toHaveBeenCalled();
       expect(mockReadRunState).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith('aborted');
     });
 
     it('exits 1 with the report when another run appeared after the decision', async () => {
@@ -429,14 +436,24 @@ describe('runMasterSession', () => {
     });
   });
 
-  it('spawns nothing when init refuses', async () => {
-    mockInit.mockResolvedValue({ kind: 'refused' });
+  it.each<[string, Partial<RunMasterSessionInput>, string]>([
+    ['init refuses a new run', {}, 'declined_commits'],
+    ['resume refuses the run --run-id names', { runId }, 'runbook_missing'],
+  ])(
+    'spawns nothing and reports the stop when %s',
+    async (_label, overrides, reason) => {
+      mockInit.mockResolvedValue({ kind: 'refused' });
+      mockResume.mockReturnValue({ kind: 'refused' });
 
-    expect(await runMasterSession(input())).toBeUndefined();
+      expect(
+        await runMasterSession({ ...input(), ...overrides })
+      ).toBeUndefined();
 
-    expect(mockSpawnMaster).not.toHaveBeenCalled();
-    expect(mockRunComplete).not.toHaveBeenCalled();
-  });
+      expect(mockSpawnMaster).not.toHaveBeenCalled();
+      expect(mockRunComplete).not.toHaveBeenCalled();
+      expect(mockRunStopped).toHaveBeenCalledWith(reason);
+    }
+  );
 
   it('exits 0 with the tally and the completion event when the run completed', async () => {
     const completed = state('completed', ['succeeded', 'skipped', 'succeeded']);
@@ -467,6 +484,7 @@ describe('runMasterSession', () => {
       appliedCount: 2,
     });
     expect(mockAbandoned).not.toHaveBeenCalled();
+    expect(mockRunStopped).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
@@ -571,7 +589,7 @@ describe('runMasterSession', () => {
     expect(await runMasterSession(input())).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+      title: `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
     });
     expect(mockAbandoned).toHaveBeenCalledWith({
       completed: 1,
@@ -596,7 +614,7 @@ describe('runMasterSession', () => {
     ).toBe(1);
 
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+      title: `Migrate run ${runId} is still active. Run npx nx migrate --run-migrations --agentic=claude-code --run-id=${runId} --create-commits --skip-install to continue it.`,
     });
   });
 
@@ -624,12 +642,57 @@ describe('runMasterSession', () => {
     expect(errorSpy).toHaveBeenCalledWith({
       title: 'Could not start Claude Code: spawn claude ENOENT',
       bodyLines: [
-        `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+        `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
       ],
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockReadRunState).not.toHaveBeenCalled();
     expect(mockRunComplete).not.toHaveBeenCalled();
+  });
+
+  describe('a --run-migration session', () => {
+    const drive = () =>
+      driveMasterSession({
+        agent: input().agent,
+        ready,
+        policy: { createCommits: false, skipInstall: false },
+        migration: { package: '@nx/js', name: 'p' },
+        notStartedHint: 'Re-run the same command.',
+      });
+
+    it('reports a session that could not start with the migration and the given hint', async () => {
+      const error = new Error('spawn claude ENOENT');
+      mockSpawnMaster.mockResolvedValue({ kind: 'spawn-failed', error });
+
+      expect(await drive()).toBeNull();
+
+      expect(mockSpawnMaster).toHaveBeenCalledWith(
+        expect.objectContaining({ singleMigration: true })
+      );
+      expect(errorSpy).toHaveBeenCalledWith({
+        title: 'Could not start Claude Code: spawn claude ENOENT',
+        bodyLines: ['Re-run the same command.'],
+      });
+      expect(mockRunError).toHaveBeenCalledWith({
+        code: 'agentic',
+        migrationPackage: '@nx/js',
+        migrationName: 'p',
+        error,
+      });
+    });
+
+    it('names the migration when its state cannot be read', async () => {
+      mockReadRunState.mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory, open run.json');
+      });
+
+      expect(await drive()).toBeNull();
+
+      expect(errorSpy).toHaveBeenCalledWith({
+        title: 'Nx could not determine whether migration @nx/js:p completed.',
+        bodyLines: ['ENOENT: no such file or directory, open run.json'],
+      });
+    });
   });
   it('exits 1 with the error, the error and abandonment events and the resume hint when the session had to be closed on an unanswered request and the run is still active', async () => {
     const error = new Error('EACCES: permission denied, rename');
@@ -643,7 +706,7 @@ describe('runMasterSession', () => {
         "Closed the Claude Code session: a step's request could not be answered (EACCES: permission denied, rename).",
     });
     expect(warnSpy).toHaveBeenCalledWith({
-      title: `Migrate run ${runId} is still active. Run ${continueCommand}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`,
+      title: `Migrate run ${runId} is still active. Run ${continueCommand} to continue it.`,
     });
     expect(mockRunError).toHaveBeenCalledWith({ code: 'agentic', error });
     expect(mockAbandoned).toHaveBeenCalledTimes(1);
