@@ -159,32 +159,14 @@ Note that you only need to define output locations if they differ from the usual
 
 Learn more [about configuring inputs including `namedInputs`](/docs/kb/configure-inputs).
 
-On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task
-actually reads and hashes later runs from those files instead of the declared file inputs.
+## Configure caching automatically with Ultracache
 
-## Configure caching automatically
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) traces the files a task reads when it runs on Workers.
+Later CI runs hash the task from those files in place of its declared file inputs, so a change to a file the task never reads no longer causes a cache miss.
 
-When using [Nx plugins](/docs/plugin-registry), many tasks have caching configured automatically, saving you the effort of manual setup. **Nx plugins can [automatically infer tasks](/docs/features/run-tasks#inferred-tasks) and configure caching** based on your underlying tooling configuration files.
-
-For example, if you add the `@nx/vite` plugin using the following command...
-
-```shell
-npx nx add @nx/vite
-```
-
-...it automatically detects your `vite.config.ts` file, infers the tasks you'd be able to run, such as `build`, and **automatically configures the cache settings** for these tasks as well as the [task pipeline](/docs/features/run-tasks#defining-a-task-pipeline) (e.g., triggering dependent builds).
-
-This means **you don't need to manually specify cacheable operations for Vite tasks** and the cache setting such as inputs and outputs are always in sync with the `vite.config.ts` file.
-
-To view the task settings that have been automatically configured by a plugin, use the following command:
-
-```shell
-nx show project <project-name> --web
-```
-
-Alternatively, you can view these directly in your editor by installing [Nx Console](/docs/getting-started/editor-setup).
-
-Learn more details about [Nx plugins](/docs/plugin-registry) and [inferred tasks](/docs/features/run-tasks#inferred-tasks).
+Ultracache is on for every task that runs on Workers, with nothing to configure, and needs Nx 22.6 or later.
+Declared `outputs` still decide which files Nx stores and restores, and runs outside CI hash from declared `inputs`.
+To set it up, [connect your workspace to Nx Cloud](#enable-remote-caching) and [distribute tasks on Workers](/docs/features/ci-features/distribute-task-execution).
 
 ## Troubleshoot cache settings
 
