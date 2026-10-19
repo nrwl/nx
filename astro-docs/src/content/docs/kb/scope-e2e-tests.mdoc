@@ -16,6 +16,7 @@ An atomized task can hash the whole app in two ways:
 
 - Its `^production` input covers the projects the e2e project depends on.
   When the e2e project depends on the app, that includes the app and the libraries it bundles.
+  Without a `production` named input, the input is `^default`.
 - When Nx starts the app's server for the tests, each task depends on the server task.
   The server task keeps running during the tests, which makes it a continuous dependency.
   Nx adds the [inputs of continuous dependencies](/docs/reference/inputs#inputs-of-continuous-dependencies)
@@ -135,8 +136,12 @@ entry sets:
 }
 ```
 
-- The dependency inputs, such as `^production`, become two inputs with the same
-  [named input](/docs/kb/configure-inputs).
+- The plugin replaces all the dependency inputs, the ones that start with `^`, with two inputs.
+  In this example, that's `^production`.
+  For Playwright, it also replaces the `^{projectRoot}/tsconfig*.json` input it infers next to
+  `^production`.
+- Both new inputs use the `production` [named input](/docs/kb/configure-inputs), or `default` when
+  there's no `production` named input.
   The first selects the listed projects.
   The second, with `"dependencies": true`, selects the projects they depend on.
 - With `"always": true`, Ultracache keeps the files of these projects in the hash.
