@@ -1,5 +1,5 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { createServer, type AddressInfo, type Server } from 'net';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { createServer, Server, type AddressInfo } from 'net';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
@@ -14,13 +14,41 @@ vi.mock('./executor-utils', () => ({
 }));
 
 describe('parseViteFlags', () => {
-  it('reads the port, host and mode from options and args', () => {
-    expect(
-      parseViteFlags({ args: ['--port', '3000', '--host', '--mode=staging'] })
-    ).toEqual({ port: '3000', host: true, mode: 'staging' });
-    expect(parseViteFlags({ port: 3001, args: '--port 3000' })).toEqual({
-      port: '3001',
-    });
+  it.each([
+    [
+      { args: ['--port', '3000', '--host', '--mode=staging'] },
+      'serve',
+      { port: '3000', host: true, mode: 'staging' },
+    ],
+    [
+      { args: ['-m', 'prod', '-c', 'other.config.ts'] },
+      'serve',
+      { mode: 'prod', config: 'other.config.ts' },
+    ],
+    [{ config: 'other.config.ts' }, 'serve', { config: 'other.config.ts' }],
+    // run-commands hands args to the shell, which removes the quotes
+    [
+      { args: '--config "other config.ts"' },
+      'serve',
+      { config: 'other config.ts' },
+    ],
+    // run-commands forwards named options first, then args, then overrides
+    [{ port: 3001, args: '--port 3000' }, 'serve', { port: '3000' }],
+    [
+      { port: 4000, args: '--port 3000', __unparsed__: ['--port=4000'] },
+      'serve',
+      { port: '4000' },
+    ],
+    // Vite keeps the values of the spelling that comes first
+    [{ mode: 'dev', args: ['-m', 'prod'] }, 'serve', { mode: 'dev' }],
+    [{ m: 'a', mode: 'b' }, 'serve', { mode: 'a' }],
+    // run-commands drops a named option that args set to another value
+    [{ mode: 'x', args: ['-m', 'y', '--mode', 'z'] }, 'serve', { mode: 'y' }],
+    [{ args: ['--cors', 'apps/foo'] }, 'serve', { root: 'apps/foo' }],
+    [{ args: ['--cors', 'apps/foo'] }, 'preview', {}],
+    [{ args: ['--open', 'apps/foo', '--', 'apps/bar'] }, 'serve', {}],
+  ] as const)('parses %j for %s', (options, command, flags) => {
+    expect(parseViteFlags(options, command)).toEqual(flags);
   });
 });
 
@@ -48,23 +76,33 @@ describe('getViteServerAddress', () => {
 
 describe('waitForViteServer', () => {
   let dir: string;
-  let server: Server;
   let port: number;
+  let server: Server;
   const cwd = process.cwd();
 
   beforeEach(async () => {
     dir = mkdtempSync(join(tmpdir(), 'nx-vite-ready-'));
     server = createServer();
-    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
-    port = (server.address() as AddressInfo).port;
+    port = await getFreePort();
   });
 
   afterEach(async () => {
     process.chdir(cwd);
     vi.unstubAllEnvs();
     rmSync(dir, { recursive: true, force: true });
-    await new Promise((r) => server.close(r));
+    if (server.listening) await new Promise((r) => server.close(r));
   });
+
+  async function expectReadyOnListen(wait: Promise<void>) {
+    const settle = (ms: number) =>
+      Promise.race([
+        wait.then(() => 'resolved'),
+        new Promise((r) => setTimeout(r, ms, 'pending')),
+      ]);
+    expect(await settle(500)).toBe('pending');
+    await new Promise<void>((r) => server.listen(port, '127.0.0.1', r));
+    expect(await settle(3000)).toBe('resolved');
+  }
 
   it('reads the port the config computes from the task env', async () => {
     const config = join(dir, 'vite.config.mjs');
@@ -75,7 +113,7 @@ describe('waitForViteServer', () => {
     vi.stubEnv('APP_PORT', String(port));
     vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir }));
 
-    await expect(waitForViteServer(config, 'serve')).resolves.toBeUndefined();
+    await expectReadyOnListen(waitForViteServer(config, 'serve'));
   });
 
   it('reads the preview port in preview', async () => {
@@ -86,6 +124,66 @@ describe('waitForViteServer', () => {
     );
     vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir }));
 
-    await expect(waitForViteServer(config, 'preview')).resolves.toBeUndefined();
+    await expectReadyOnListen(waitForViteServer(config, 'preview'));
   });
+
+  it.each([
+    ['serve', 'production'],
+    ['preview', 'staging'],
+  ] as const)(
+    "defaults NODE_ENV the way `vite %s` does in mode '%s'",
+    async (command, mode) => {
+      writeFileSync(
+        join(dir, 'vite.config.mjs'),
+        `const port = (env) => (process.env.NODE_ENV === env ? ${port} : 1);
+        export default { server: { port: port('development') }, preview: { port: port('production') } };`
+      );
+      vi.stubEnv('NODE_ENV', undefined);
+      vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir, mode }));
+
+      await expectReadyOnListen(waitForViteServer('vite.config.mjs', command));
+    }
+  );
+
+  it.each([[['-c', 'other.config.mjs']], [['sub']]])(
+    'loads the config Vite loads with args %j',
+    async (args) => {
+      writeFileSync(
+        join(dir, 'vite.config.mjs'),
+        `export default { server: { port: 1 } };`
+      );
+      const ready = `export default { server: { port: ${port} } };`;
+      writeFileSync(join(dir, 'other.config.mjs'), ready);
+      mkdirSync(join(dir, 'sub'));
+      writeFileSync(join(dir, 'sub', 'vite.config.mjs'), ready);
+      vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir, args }));
+
+      await expectReadyOnListen(waitForViteServer('vite.config.mjs', 'serve'));
+    }
+  );
 });
+
+function listen(port: number, host: string): Promise<Server> {
+  const server = createServer();
+  return new Promise((resolve, reject) => {
+    server.once('error', reject).listen(port, host, () => resolve(server));
+  });
+}
+
+function close(server: Server) {
+  return new Promise((r) => server.close(r));
+}
+
+async function getFreePort(): Promise<number> {
+  const v4 = await listen(0, '127.0.0.1');
+  const { port } = v4.address() as AddressInfo;
+  // The wait also probes ::1, where a port free on 127.0.0.1 can be taken
+  const v6 = await listen(port, '::1').catch((e: NodeJS.ErrnoException) => e);
+  await close(v4);
+  if (v6 instanceof Server) {
+    await close(v6);
+  } else if (v6.code === 'EADDRINUSE') {
+    return getFreePort();
+  }
+  return port;
+}

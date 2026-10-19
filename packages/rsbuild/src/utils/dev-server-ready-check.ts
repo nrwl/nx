@@ -1,3 +1,4 @@
+import { splitShellArgs } from '@nx/devkit/internal';
 import { createConnection } from 'net';
 import { resolve } from 'path';
 
@@ -5,33 +6,35 @@ export interface RsbuildFlags {
   port?: string;
   host?: string | true;
   envMode?: string;
+  envDir?: string;
+  config?: string;
+  configLoader?: string;
+  root?: string;
+  noEnv?: true;
 }
+
+type Flag = Exclude<keyof RsbuildFlags, 'noEnv'>;
+const FLAGS: Flag[] = [
+  'port',
+  'host',
+  'envMode',
+  'envDir',
+  'config',
+  'configLoader',
+  'root',
+];
+const SHORT_FLAGS: Record<string, Flag> = { c: 'config', r: 'root' };
 
 /**
  * The flags `rsbuild dev` and `rsbuild preview` take from the target's
- * options: named options are forwarded as flags, and `args` holds the rest.
+ * options: named options are forwarded as flags, unless `args`, which holds
+ * the rest, sets the same flag.
  */
 export function parseRsbuildFlags(
   options: Record<string, unknown>
 ): RsbuildFlags {
   const flags: RsbuildFlags = {};
-  const args = Array.isArray(options.args)
-    ? options.args.map(String)
-    : typeof options.args === 'string'
-      ? options.args.split(/\s+/).filter(Boolean)
-      : [];
-  for (let i = 0; i < args.length; i++) {
-    const [, name, inline] = args[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
-    if (!name) continue;
-    let value = inline;
-    if (value === undefined && args[i + 1] && !args[i + 1].startsWith('-')) {
-      value = args[++i];
-    }
-    if (name === 'port') flags.port = value;
-    else if (name === 'host') flags.host = value ?? true;
-    else if (name === 'env-mode') flags.envMode = value;
-  }
-  for (const key of ['port', 'host', 'envMode'] as const) {
+  for (const key of FLAGS) {
     const value = options[key];
     if (typeof value === 'string' || typeof value === 'number') {
       flags[key] = String(value);
@@ -39,32 +42,55 @@ export function parseRsbuildFlags(
       flags.host = true;
     }
   }
+  const args = splitShellArgs(
+    Array.isArray(options.args)
+      ? options.args.join(' ')
+      : typeof options.args === 'string'
+        ? options.args
+        : ''
+  );
+  for (let i = 0; i < args.length; i++) {
+    const [, long, short, inline] =
+      args[i].match(/^(?:--([^=]+)|-([a-z]))(?:=(.*))?$/) ?? [];
+    const key = (
+      long
+        ? long.replace(/([a-z])-([a-z])/g, (_, a, b) => a + b.toUpperCase())
+        : SHORT_FLAGS[short]
+    ) as Flag | 'noEnv';
+    if (!key) continue;
+    if (key === 'noEnv') {
+      flags.noEnv = true;
+      continue;
+    }
+    let value = inline;
+    if (value === undefined && args[i + 1] && !args[i + 1].startsWith('-')) {
+      value = args[++i];
+    }
+    if (key === 'host') flags.host = value ?? true;
+    else if (FLAGS.includes(key) && value !== undefined) flags[key] = value;
+  }
   return flags;
 }
 
 export type ServerAddress = { port: number; host?: string };
 
-// https://rsbuild.rs/config/server/port
-const DEFAULT_PORT = 3000;
-
-export function getRsbuildServerAddress(
-  server: { port?: unknown; host?: unknown } | undefined,
-  flags: RsbuildFlags
-): ServerAddress | null {
-  const port = Number(flags.port ?? server?.port ?? DEFAULT_PORT);
+export function getRsbuildServerAddress(server: {
+  port?: unknown;
+  host?: unknown;
+}): ServerAddress | null {
+  const port = Number(server.port);
   if (!Number.isInteger(port) || port <= 0) return null;
-  const host = flags.host ?? server?.host;
-  return typeof host === 'string' &&
-    !['localhost', '0.0.0.0', '::'].includes(host)
-    ? { port, host }
+  return typeof server.host === 'string' &&
+    !['localhost', '0.0.0.0', '::'].includes(server.host)
+    ? { port, host: server.host }
     : { port };
 }
 
 /**
  * The readyWhen of the inferred dev and preview targets when the config doesn't
  * load the signal plugin. Runs in the env and with the options of the task,
- * loads the config the way the Rsbuild CLI does, and waits for the server's
- * port.
+ * resolves the config the way the Rsbuild CLI does, plugins included, and
+ * waits for the server's port.
  */
 export async function waitForRsbuildServer(
   configPath: string,
@@ -75,25 +101,49 @@ export async function waitForRsbuildServer(
     options = JSON.parse(process.env.NX_TASK_OPTIONS ?? '{}');
   } catch {}
   const flags = parseRsbuildFlags(options);
-  const root = resolve(options.cwd ?? '.');
-  // The config's file name, in the cwd of the task
-  const path = resolve(root, configPath);
-  process.chdir(root);
+  const cwd = resolve(options.cwd ?? '.');
+  const root = resolve(cwd, flags.root ?? '.');
+  process.chdir(cwd);
 
-  const { loadConfig, loadEnv } =
+  const { createRsbuild, loadConfig, loadEnv } =
     require('@rsbuild/core') as typeof import('@rsbuild/core');
   // The CLI sets NODE_ENV first, then loads the env files for that mode and
   // the config, whose function form reads the command from argv
   process.env.NODE_ENV ||= command === 'dev' ? 'development' : 'production';
-  loadEnv({ cwd: root, mode: flags.envMode });
+  const envs = flags.noEnv
+    ? null
+    : loadEnv({
+        cwd: flags.envDir ? resolve(root, flags.envDir) : root,
+        mode: flags.envMode,
+      });
   process.argv[2] = command;
-  const { content } = await loadConfig({
+  const { content: config } = await loadConfig({
     cwd: root,
-    path,
+    // configPath is the config the CLI finds in the task's cwd, not in --root
+    path: flags.config ?? (flags.root ? undefined : configPath),
     envMode: flags.envMode,
+    loader: flags.configLoader as 'auto' | 'jiti' | 'native' | undefined,
   });
+  if (envs) {
+    config.source ??= {};
+    config.source.define = { ...envs.publicVars, ...config.source.define };
+  }
+  config.server ??= {};
+  if (flags.host !== undefined) config.server.host = flags.host;
+  if (flags.port) config.server.port = Number(flags.port);
 
-  const address = getRsbuildServerAddress(content.server, flags);
+  // Rsbuild 1.0 takes the config only as rsbuildConfig
+  const rsbuild = await createRsbuild({ cwd: root, rsbuildConfig: config });
+  let server: { port?: unknown; host?: unknown } = config.server;
+  try {
+    await rsbuild.initConfigs({ action: command });
+    server = rsbuild.getNormalizedConfig().server;
+  } catch (e) {
+    // The preview CLI normalizes the config without generating bundler configs,
+    // so a plugin hook that throws there doesn't fail `rsbuild preview`
+    if (command === 'dev') throw e;
+  }
+  const address = getRsbuildServerAddress(server);
   if (address) await waitForAddress(address);
 }
 

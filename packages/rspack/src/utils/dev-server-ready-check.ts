@@ -1,27 +1,75 @@
-import { resolveStartupHost } from '@nx/devkit/internal';
+import {
+  getInstalledPackageVersion,
+  readModulePackageJson,
+  resolveStartupHost,
+  splitShellArgs,
+} from '@nx/devkit/internal';
+import type { Configuration } from '@rspack/core';
+import { existsSync } from 'fs';
 import { createConnection } from 'net';
-import { resolve } from 'path';
+import { dirname, extname, resolve } from 'path';
+import { major } from 'semver';
+import { fileURLToPath } from 'url';
 
 export interface ServeFlags {
   port?: string;
   host?: string;
   nodeEnv?: string;
+  config?: string;
   configNames: string[];
+  env: string[];
 }
 
 /**
- * The flags `rspack serve` takes from the target's options: named options
- * are forwarded as flags, and `args` holds the rest.
+ * The flags `rspack serve` takes from the target's options. run-commands
+ * forwards named options, then `args`, then overrides, and a later source wins.
  */
 export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
-  const flags: ServeFlags = { configNames: [] };
-  const args = Array.isArray(options.args)
-    ? options.args.map(String)
-    : typeof options.args === 'string'
-      ? options.args.split(/\s+/).filter(Boolean)
-      : [];
+  const args = parseArgs(splitArgs(options.args));
+  // run-commands doesn't forward `--env` overrides, since `env` is its own option
+  const overrides = parseArgs(overrideArgs(options.__unparsed__));
+  const option = (...keys: string[]) =>
+    keys
+      .map((key) => options[key])
+      .find((value) => typeof value === 'string' || typeof value === 'number')
+      ?.toString();
+  // Repeated `--config-name` flags add up, and replace a named configName
+  const configNames = [...args.configNames, ...overrides.configNames];
+  const configName = option('configName', 'config-name');
+  return {
+    port: overrides.port ?? args.port ?? option('port'),
+    host: overrides.host ?? args.host ?? option('host'),
+    nodeEnv: overrides.nodeEnv ?? args.nodeEnv ?? option('nodeEnv', 'node-env'),
+    config: overrides.config ?? args.config ?? option('config', 'c'),
+    configNames:
+      configNames.length > 0 ? configNames : configName ? [configName] : [],
+    env: args.env,
+  };
+}
+
+// run-commands leaves `args` for the shell to split, and quotes each override
+// so it stays one argument
+function splitArgs(value: unknown): string[] {
+  return splitShellArgs(
+    Array.isArray(value)
+      ? value.join(' ')
+      : typeof value === 'string'
+        ? value
+        : ''
+  );
+}
+
+function overrideArgs(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
+function parseArgs(args: string[]): ServeFlags {
+  const flags: ServeFlags = { configNames: [], env: [] };
   for (let i = 0; i < args.length; i++) {
-    const [, name, inline] = args[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
+    const [, name, inline] =
+      args[i].match(/^--([^=]+)(?:=(.*))?$/) ??
+      args[i].match(/^-(c)(?:=(.*))?$/) ??
+      [];
     if (!name) continue;
     let value = inline;
     if (value === undefined && args[i + 1] && !args[i + 1].startsWith('-')) {
@@ -30,17 +78,196 @@ export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
     if (name === 'port') flags.port = value;
     else if (name === 'host') flags.host = value;
     else if (name === 'node-env') flags.nodeEnv = value;
+    else if (name === 'config' || name === 'c') flags.config = value;
     else if (name === 'config-name' && value) flags.configNames.push(value);
+    else if (name === 'env' && value) flags.env.push(value);
   }
-  const option = (key: string) =>
-    typeof options[key] === 'string' || typeof options[key] === 'number'
-      ? String(options[key])
-      : undefined;
-  flags.port = option('port') ?? flags.port;
-  flags.host = option('host') ?? flags.host;
-  const configName = option('configName') ?? option('config-name');
-  if (configName) flags.configNames.push(configName);
   return flags;
+}
+
+const SHORT_FLAGS: Record<string, string> = {
+  c: 'config',
+  d: 'devtool',
+  m: 'mode',
+  o: 'output-path',
+  w: 'watch',
+};
+const ARRAY_FLAGS = new Set(['config-name', 'entry']);
+// Named options run-commands forwards that the check reads
+const NAMED_FLAGS: Array<[flag: string, ...keys: string[]]> = [
+  ['port', 'port'],
+  ['host', 'host'],
+  ['mode', 'mode'],
+  ['node-env', 'nodeEnv', 'node-env'],
+  ['config', 'config', 'c'],
+  ['config-name', 'configName', 'config-name'],
+];
+
+/**
+ * The `argv` @rspack/cli passes to a function config: its parsed options,
+ * with `env` set by the caller. Values follow its mri parser: a numeric value
+ * is a number, a bare flag is true, `--no-x` is false, a repeated flag is an
+ * array.
+ */
+export function parseServeArgv(
+  options: Record<string, unknown>,
+  env: Record<string, unknown>
+): Record<string, unknown> {
+  const tokens = [
+    ...splitArgs(options.args),
+    ...overrideArgs(options.__unparsed__),
+  ];
+  const given = new Set(tokens.map((token) => token.match(/^--([^=]+)/)?.[1]));
+  const named = NAMED_FLAGS.flatMap(([flag, ...keys]) => {
+    const value = keys
+      .map((key) => options[key])
+      .find((v) => typeof v === 'string' || typeof v === 'number');
+    return value === undefined || given.has(flag) ? [] : [`--${flag}=${value}`];
+  });
+  const argv: Record<string, unknown> = {};
+  const all = [...named, ...tokens];
+  for (let i = 0; i < all.length; i++) {
+    const [, dashes, rawName, inline] =
+      all[i].match(/^(--?)([^=]+)(?:=(.*))?$/) ?? [];
+    if (!rawName) continue;
+    const flag = dashes === '-' ? SHORT_FLAGS[rawName] : rawName;
+    if (!flag) continue;
+    const negated = flag.startsWith('no-');
+    const base = negated ? flag.slice(3) : flag;
+    const name = base.replace(
+      /([a-z])-([a-z])/g,
+      (_, a, b) => a + b.toUpperCase()
+    );
+    if (negated) {
+      argv[name] = false;
+      continue;
+    }
+    const next =
+      inline ?? (all[i + 1] && !all[i + 1].startsWith('-') ? all[++i] : '');
+    if (flag === 'env') continue;
+    const value =
+      next === '' ? true : Number.isFinite(Number(next)) ? Number(next) : next;
+    const previous = argv[name];
+    argv[name] =
+      previous === undefined
+        ? ARRAY_FLAGS.has(flag)
+          ? [value]
+          : value
+        : [previous, value].flat();
+  }
+  return { ...argv, env };
+}
+
+const UNSAFE_ENV_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** The env object `rspack serve` builds from its `--env` values. */
+function parseEnv(values: string[]): Record<string, any> {
+  const env: Record<string, any> = {};
+  for (const value of values) {
+    const [allKeys, val] = value.split(/=(.+)/, 2);
+    const keys = allKeys.split(/\.(?!$)/);
+    if (keys.some((key) => UNSAFE_ENV_KEYS.has(key.replace(/=$/, '')))) {
+      continue;
+    }
+    let ref = env;
+    for (const [index, key] of keys.entries()) {
+      if (key.endsWith('=')) {
+        ref[key.slice(0, -1)] = undefined;
+        continue;
+      }
+      if (!ref[key] || typeof ref[key] === 'string') ref[key] = {};
+      if (index === keys.length - 1) {
+        ref[key] = typeof val === 'string' ? val : true;
+      }
+      ref = ref[key];
+    }
+  }
+  return env;
+}
+
+// `rspack serve` loads the @rspack/dev-server its own @rspack/cli resolves
+function getDevServerMajorVersion(): number | null {
+  let cliPackageJsonPath: string;
+  try {
+    cliPackageJsonPath = readModulePackageJson('@rspack/cli', [
+      process.cwd(),
+    ]).path;
+  } catch {
+    return null;
+  }
+  const version = getInstalledPackageVersion('@rspack/dev-server', [
+    dirname(cliPackageJsonPath),
+  ]);
+  return version ? major(version) : null;
+}
+
+const CONFIG_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'];
+
+function resolveExtendedConfig(request: string, baseDir: string): string {
+  if (request.startsWith('file://')) return fileURLToPath(request);
+  if (
+    request.startsWith('.') ||
+    request.startsWith('/') ||
+    request.includes(':\\')
+  ) {
+    const path = resolve(baseDir, request);
+    const found = extname(path)
+      ? path
+      : CONFIG_EXTENSIONS.map((ext) => path + ext).find(existsSync);
+    if (!found) {
+      throw new Error(`Extended configuration file "${path}" not found.`);
+    }
+    return found;
+  }
+  return require.resolve(request, { paths: [baseDir, process.cwd()] });
+}
+
+/** Applies `extends` the way `rspack serve` does. */
+async function applyExtends(
+  config: Configuration,
+  configPath: string,
+  load: (path: string) => Promise<unknown>,
+  extending: string[] = []
+): Promise<Configuration> {
+  if (extending.includes(configPath)) {
+    throw new Error(
+      `Recursive configuration detected. Config file "${configPath}" extends itself.`
+    );
+  }
+  let merged = config;
+  for (const request of config.extends ? [config.extends].flat() : []) {
+    const path = resolveExtendedConfig(request, dirname(configPath));
+    const base = await load(path);
+    merged = mergeExtendedConfig(
+      isPlainObject(base)
+        ? await applyExtends(base, path, load, [...extending, configPath])
+        : {},
+      merged
+    );
+  }
+  return merged;
+}
+
+// Merges the fields read here as both @rspack/cli majors do: the extending
+// config wins unless undefined, and devServer objects merge by key
+function mergeExtendedConfig(base: Configuration, config: Configuration) {
+  const merged = mergeDefined(base, config);
+  if (isPlainObject(base.devServer) && isPlainObject(config.devServer)) {
+    merged.devServer = mergeDefined(base.devServer, config.devServer);
+  }
+  return merged;
+}
+
+function mergeDefined<T extends object>(base: T, value: T): T {
+  const merged = { ...base };
+  for (const [key, entry] of Object.entries(value)) {
+    if (entry !== undefined) merged[key] = entry;
+  }
+  return merged;
+}
+
+function isPlainObject(value: unknown): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export type DevServerAddress = { port: number; host?: string };
@@ -124,10 +351,18 @@ export async function waitForRspackDevServer(configPath: string) {
   const options = readTaskOptions();
   const flags = parseServeFlags(options);
   // The config's file name, in the cwd of the serve task
-  const absoluteConfigPath = resolve(options.cwd ?? '.', configPath);
+  const absoluteConfigPath = resolve(
+    options.cwd ?? '.',
+    flags.config ?? configPath
+  );
   enterTaskCwd(options);
   // `rspack serve` sets it before it loads the config
-  if (flags.nodeEnv) process.env.NODE_ENV ??= flags.nodeEnv;
+  process.env.NODE_ENV ??= flags.nodeEnv ?? 'development';
+  // Dev server 1.x reads the webpack-dev-server names
+  const devServerEnv = getDevServerMajorVersion() === 1 ? 'WEBPACK' : 'RSPACK';
+  // The dev server sets it on import, which `rspack serve` does before it
+  // loads the config
+  process.env[`${devServerEnv}_SERVE`] ||= 'true';
   // Skips NxAppRspackPlugin's option normalization, which nothing here uses
   global.NX_GRAPH_CREATION = true;
 
@@ -136,15 +371,23 @@ export async function waitForRspackDevServer(configPath: string) {
     require('./resolve-user-defined-rspack-config') as typeof import('./resolve-user-defined-rspack-config');
   const { readRspackOptions } =
     require('./read-rspack-options') as typeof import('./read-rspack-options');
-  const env = { RSPACK_SERVE: true };
+  const env = parseEnv(flags.env);
+  if (!('RSPACK_SERVE' in env)) env.RSPACK_SERVE = true;
+  const argv = parseServeArgv(options, env);
+  const tsConfig = getRootTsConfigPath();
+  const load = async (path: string) => {
+    const config = await resolveUserDefinedRspackConfig(path, tsConfig);
+    return typeof config === 'function' ? await config(env, argv) : config;
+  };
   const configs = (
-    await readRspackOptions(
-      await resolveUserDefinedRspackConfig(
-        absoluteConfigPath,
-        getRootTsConfigPath()
-      ),
-      env,
-      { env }
+    await Promise.all(
+      (
+        await readRspackOptions(
+          await resolveUserDefinedRspackConfig(absoluteConfigPath, tsConfig),
+          env,
+          argv
+        )
+      ).map((config) => applyExtends(config, absoluteConfigPath, load))
     )
   ).filter(
     (config) =>
@@ -157,8 +400,7 @@ export async function waitForRspackDevServer(configPath: string) {
   const address = getDevServerAddress(
     config.devServer as any,
     flags,
-    process.env.RSPACK_DEV_SERVER_BASE_PORT ??
-      process.env.WEBPACK_DEV_SERVER_BASE_PORT
+    process.env[`${devServerEnv}_DEV_SERVER_BASE_PORT`]
   );
   if (address) await waitForAddresses([address]);
 }

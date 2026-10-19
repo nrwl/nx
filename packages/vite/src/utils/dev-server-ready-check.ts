@@ -1,44 +1,133 @@
+import { splitShellArgs } from '@nx/devkit/internal';
 import { createConnection } from 'net';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { loadViteDynamicImport } from './executor-utils';
 
 export interface ViteFlags {
   port?: string;
-  host?: string | true;
+  host?: string | boolean;
   mode?: string;
+  config?: string;
+  root?: string;
 }
 
+// Vite's boolean options: the arg after one is positional, not its value
+const GLOBAL_BOOLEAN_OPTIONS = ['clearScreen', 'h', 'help', 'v', 'version'];
+const BOOLEAN_OPTIONS = {
+  serve: [
+    ...GLOBAL_BOOLEAN_OPTIONS,
+    'cors',
+    'strictPort',
+    'force',
+    'experimentalBundle',
+  ],
+  preview: [...GLOBAL_BOOLEAN_OPTIONS, 'strictPort'],
+};
+
 /**
- * The flags `vite` and `vite preview` take from the target's options: named
- * options are forwarded as flags, and `args` holds the rest.
+ * The flags `vite` and `vite preview` get from the target's options, in the
+ * order run-commands passes them: named options, `args`, then overrides.
  */
-export function parseViteFlags(options: Record<string, unknown>): ViteFlags {
-  const flags: ViteFlags = {};
+export function parseViteFlags(
+  options: Record<string, unknown>,
+  command: 'serve' | 'preview'
+): ViteFlags {
   const args = Array.isArray(options.args)
-    ? options.args.map(String)
+    ? options.args.join(' ')
     : typeof options.args === 'string'
-      ? options.args.split(/\s+/).filter(Boolean)
-      : [];
-  for (let i = 0; i < args.length; i++) {
-    const [, name, inline] = args[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
-    if (!name) continue;
-    let value = inline;
-    if (value === undefined && args[i + 1] && !args[i + 1].startsWith('-')) {
-      value = args[++i];
+      ? options.args
+      : '';
+  const unparsed = Array.isArray(options.__unparsed__)
+    ? options.__unparsed__.map(String)
+    : [];
+  // run-commands skips a named option the overrides set, or that args set to
+  // another value, parsing both with nx's yargs-parser
+  const yargsParser: (
+    args: string | string[],
+    opts: { configuration: Record<string, boolean> }
+  ) => Record<string, unknown> = require(
+    require.resolve('yargs-parser', {
+      paths: [dirname(require.resolve('nx/package.json'))],
+    })
+  );
+  const overrides = yargsParser(unparsed, {
+    configuration: {
+      'parse-numbers': false,
+      'parse-positional-numbers': false,
+      'dot-notation': false,
+      'camel-case-expansion': false,
+    },
+  });
+  const fromArgs = args
+    ? yargsParser(args.replace(/(^"|"$)/g, ''), {
+        configuration: { 'camel-case-expansion': true },
+      })
+    : {};
+  const named = Object.keys(options)
+    .filter(
+      (k) =>
+        ['port', 'host', 'mode', 'm', 'config', 'c'].includes(k) &&
+        typeof options[k] !== 'object' &&
+        overrides[k] === undefined &&
+        (!Object.hasOwn(fromArgs, k) || fromArgs[k] === options[k])
+    )
+    .map((k) => `--${k}=${options[k]}`);
+  const { values, positionals } = parseArgv(
+    [...named, ...splitShellArgs(args), ...unparsed],
+    BOOLEAN_OPTIONS[command]
+  );
+  // Vite keeps the values of whichever spelling of an option comes first
+  const last = (...names: string[]) =>
+    values.get([...values.keys()].find((k) => names.includes(k)))?.at(-1);
+  const asString = (value: string | boolean) =>
+    typeof value === 'string' ? value : undefined;
+  return {
+    port: asString(last('port')),
+    host: last('host'),
+    mode: asString(last('m', 'mode')),
+    config: asString(last('c', 'config')),
+    root: positionals[0],
+  };
+}
+
+// A port of the mri parser Vite's CLI uses, keeping each option's values
+function parseArgv(argv: string[], booleans: string[]) {
+  const values = new Map<string, Array<string | boolean>>();
+  const positionals: string[] = [];
+  const add = (name: string, value: string | boolean) =>
+    values.set(name, [...(values.get(name) ?? []), value]);
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--') break;
+    const dashes = arg.match(/^-*/)[0].length;
+    if (dashes === 0) {
+      positionals.push(arg);
+      continue;
     }
-    if (name === 'port') flags.port = value;
-    else if (name === 'host') flags.host = value ?? true;
-    else if (name === 'mode' || name === 'm') flags.mode = value;
-  }
-  for (const key of ['port', 'host', 'mode'] as const) {
-    const value = options[key];
-    if (typeof value === 'string' || typeof value === 'number') {
-      flags[key] = String(value);
-    } else if (key === 'host' && value === true) {
-      flags.host = true;
+    if (arg.startsWith('no-', dashes)) {
+      add(arg.slice(dashes + 3), false);
+      continue;
     }
+    const eq = arg.indexOf('=', dashes + 1);
+    const name = arg.slice(dashes, eq === -1 ? undefined : eq);
+    const value =
+      (eq === -1 ? '' : arg.slice(eq + 1)) ||
+      i + 1 === argv.length ||
+      argv[i + 1].startsWith('-') ||
+      argv[++i];
+    // `-abc` sets a, b and c, and the value goes to c
+    const names = dashes === 2 ? [name] : [...name];
+    names.forEach((n, j) => {
+      const v = j === names.length - 1 ? value : true;
+      if (typeof v === 'string' && booleans.includes(n)) {
+        if (v !== 'true' && v !== 'false') positionals.push(v);
+        add(n, v !== 'false');
+      } else {
+        add(n, v);
+      }
+    });
   }
-  return flags;
+  return { values, positionals };
 }
 
 export type ServerAddress = { port: number; host?: string };
@@ -75,22 +164,28 @@ export async function waitForViteServer(
   try {
     options = JSON.parse(process.env.NX_TASK_OPTIONS ?? '{}');
   } catch {}
-  const flags = parseViteFlags(options);
-  const root = resolve(options.cwd ?? '.');
-  // The config's file name, in the cwd of the task
-  const configFile = resolve(root, configPath);
-  process.chdir(root);
+  const flags = parseViteFlags(options, command);
+  process.chdir(resolve(options.cwd ?? '.'));
 
   const { resolveConfig } = await loadViteDynamicImport();
-  const mode =
-    flags.mode ?? (command === 'preview' ? 'production' : 'development');
-  const config = await resolveConfig(
-    { configFile, root, mode },
-    'serve',
-    mode,
-    mode === 'production' ? 'production' : 'development',
+  const inlineConfig = {
+    root: flags.root,
+    // With --root and no --config, Vite finds the config in the root, not in
+    // the task's cwd
+    configFile: flags.config ?? (flags.root ? undefined : configPath),
+    mode: flags.mode,
+  };
+  // The mode and NODE_ENV defaults of `vite` and `vite preview`
+  const config =
     command === 'preview'
-  );
+      ? await resolveConfig(
+          inlineConfig,
+          'serve',
+          'production',
+          'production',
+          true
+        )
+      : await resolveConfig(inlineConfig, 'serve');
   const address = getViteServerAddress(
     command === 'preview'
       ? { ...config.preview, host: config.preview.host ?? config.server.host }

@@ -1,7 +1,7 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
-import { createServer, type AddressInfo, type Server } from 'net';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { createServer, Server, type AddressInfo } from 'net';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import {
   getRsbuildServerAddress,
   parseRsbuildFlags,
@@ -9,85 +9,228 @@ import {
 } from './dev-server-ready-check';
 
 describe('parseRsbuildFlags', () => {
-  it('reads the port, host and env mode from options and args', () => {
-    expect(
-      parseRsbuildFlags({
-        args: ['--port', '3000', '--host', '--env-mode=staging'],
-      })
-    ).toEqual({ port: '3000', host: true, envMode: 'staging' });
-    expect(parseRsbuildFlags({ port: 3001, args: '--port 3000' })).toEqual({
-      port: '3001',
-    });
+  it.each([
+    [
+      { args: ['--port', '3000', '--host', '--env-mode=staging'] },
+      { port: '3000', host: true, envMode: 'staging' },
+    ],
+    [{ port: 3001, args: '--port 3000' }, { port: '3000' }],
+    // run-commands hands args to the shell, which removes the quotes
+    [{ args: '--config "a b.config.ts"' }, { config: 'a b.config.ts' }],
+    [
+      { args: ['-c', 'a.config.ts', '-r=apps/a', '--env-dir', 'env'] },
+      { config: 'a.config.ts', root: 'apps/a', envDir: 'env' },
+    ],
+    [
+      { args: ['--config=a.config.ts', '--root', 'apps/a', '--envDir=env'] },
+      { config: 'a.config.ts', root: 'apps/a', envDir: 'env' },
+    ],
+    [
+      { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
+      { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
+    ],
+  ])('reads the flags of %j', (options, flags) => {
+    expect(parseRsbuildFlags(options)).toEqual(flags);
   });
 });
 
 describe('getRsbuildServerAddress', () => {
-  it("takes the flag, then the config, then Rsbuild's default port", () => {
-    expect(getRsbuildServerAddress({ port: 5000 }, { port: '3100' })).toEqual({
-      port: 3100,
-    });
-    expect(getRsbuildServerAddress({ port: 5000 }, {})).toEqual({ port: 5000 });
-    expect(getRsbuildServerAddress({}, {})).toEqual({ port: 3000 });
-  });
-
   it('probes loopback unless a specific host is named', () => {
-    expect(getRsbuildServerAddress({ port: 1, host: '0.0.0.0' }, {})).toEqual({
+    expect(getRsbuildServerAddress({ port: 1, host: '0.0.0.0' })).toEqual({
       port: 1,
     });
-    expect(getRsbuildServerAddress({ port: 1, host: 'dev.local' }, {})).toEqual(
-      { port: 1, host: 'dev.local' }
-    );
+    expect(getRsbuildServerAddress({ port: 1, host: 'dev.local' })).toEqual({
+      port: 1,
+      host: 'dev.local',
+    });
   });
 });
 
 describe('waitForRsbuildServer', () => {
   let dir: string;
-  let server: Server;
-  let port: number;
+  let server: Server | undefined;
   const cwd = process.cwd();
   const argv = [...process.argv];
 
-  beforeEach(async () => {
+  beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'nx-rsbuild-ready-'));
-    server = createServer();
-    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
-    port = (server.address() as AddressInfo).port;
   });
 
   afterEach(async () => {
     process.chdir(cwd);
     process.argv = [...argv];
     delete process.env.APP_PORT;
+    delete process.env.PUBLIC_PORT;
     vi.unstubAllEnvs();
     rmSync(dir, { recursive: true, force: true });
-    await new Promise((r) => server.close(r));
+    if (server) await close(server);
+    server = undefined;
   });
 
-  it('loads the env files of the mode the command implies, as the CLI does', async () => {
-    const config = join(dir, 'rsbuild.config.mjs');
+  const portOne = 'export default { server: { port: 1 } };';
+  const portFromEnvWhen = (condition: string) =>
+    `export default ({ env, envMode, command }) => ({ server: { port: ${condition} ? Number(process.env.APP_PORT) : 1 } });`;
+
+  it.each<{
+    name: string;
+    files: Record<string, string>;
+    options?: Record<string, unknown>;
+    unsetNodeEnv?: boolean;
+  }>([
+    {
+      name: 'the env files of the mode the command implies',
+      files: {
+        'rsbuild.config.mjs': portFromEnvWhen(
+          "env === 'development' && envMode === 'development'"
+        ),
+        '.env.development': 'APP_PORT=<port>',
+      },
+      unsetNodeEnv: true,
+    },
+    {
+      name: 'the env files of --env-mode',
+      files: {
+        'rsbuild.config.mjs': portFromEnvWhen(
+          "envMode === 'staging' && command === 'dev'"
+        ),
+        '.env.staging': 'APP_PORT=<port>',
+      },
+      options: { args: ['--env-mode=staging'] },
+    },
+    {
+      name: 'the env files in --env-dir',
+      files: {
+        'rsbuild.config.mjs': portFromEnvWhen('process.env.APP_PORT'),
+        'env/.env': 'APP_PORT=<port>',
+      },
+      options: { args: ['--env-dir', 'env'] },
+    },
+    {
+      name: 'the public env vars a plugin reads from source.define',
+      files: {
+        'rsbuild.config.mjs': `export default { server: { port: 1 }, plugins: [{ name: 'port', setup(api) { api.modifyRsbuildConfig((config) => { config.server.port = Number(JSON.parse(config.source.define['process.env.PUBLIC_PORT'])); }); } }] };`,
+        '.env': 'PUBLIC_PORT=<port>',
+      },
+    },
+    {
+      name: 'no env files with --no-env',
+      files: {
+        'rsbuild.config.mjs':
+          'export default { server: { port: process.env.APP_PORT ? 1 : <port> } };',
+        '.env': 'APP_PORT=1',
+      },
+      options: { args: ['--no-env'] },
+    },
+    {
+      name: 'the config --config names',
+      files: {
+        'rsbuild.config.mjs': portOne,
+        'other.config.mjs': 'export default { server: { port: <port> } };',
+      },
+      options: { args: ['-c', 'other.config.mjs'] },
+    },
+    {
+      name: 'the config in --root',
+      files: {
+        'rsbuild.config.mjs': portOne,
+        'app/rsbuild.config.mjs':
+          'export default { server: { port: <port> } };',
+      },
+      options: { args: ['--root=app'] },
+    },
+    {
+      name: '--port over the config',
+      files: { 'rsbuild.config.mjs': portOne },
+      options: { port: '<port>' },
+    },
+    {
+      name: 'a plugin',
+      files: {
+        'rsbuild.config.mjs': `export default { server: { port: 1 }, plugins: [{ name: 'port', setup(api) { api.modifyRsbuildConfig((config) => { config.server.port = <port>; }); } }] };`,
+      },
+    },
+  ])(
+    'waits for the port from $name',
+    async ({ files, options, unsetNodeEnv }) => {
+      const port = await getFreePort();
+      const withPort = (text: string) => text.replaceAll('<port>', `${port}`);
+      for (const [file, content] of Object.entries(files)) {
+        mkdirSync(dirname(join(dir, file)), { recursive: true });
+        writeFileSync(join(dir, file), withPort(content));
+      }
+      if (unsetNodeEnv) vi.stubEnv('NODE_ENV', undefined);
+      vi.stubEnv(
+        'NX_TASK_OPTIONS',
+        withPort(JSON.stringify({ cwd: dir, ...options }))
+      );
+
+      const wait = waitForRsbuildServer('rsbuild.config.mjs', 'dev');
+      expect(await settle(wait, 500)).toBe('pending');
+      server = await listen(port, '127.0.0.1');
+      expect(await settle(wait, 2000)).toBe('resolved');
+    }
+  );
+
+  it('waits for the config port in preview when a plugin throws while generating the bundler config', async () => {
+    const port = await getFreePort();
     writeFileSync(
-      config,
-      `export default ({ env, envMode }) => ({ server: { port: env === 'development' && envMode === 'development' ? Number(process.env.APP_PORT) : 1 } });`
+      join(dir, 'rsbuild.config.mjs'),
+      `export default { server: { port: ${port} }, plugins: [{ name: 'throws', setup(api) { api.modifyRspackConfig(() => { throw new Error('boom'); }); } }] };`
     );
-    writeFileSync(join(dir, '.env.development'), `APP_PORT=${port}`);
-    vi.stubEnv('NODE_ENV', undefined);
     vi.stubEnv('NX_TASK_OPTIONS', JSON.stringify({ cwd: dir }));
 
-    await expect(waitForRsbuildServer(config, 'dev')).resolves.toBeUndefined();
+    const wait = waitForRsbuildServer('rsbuild.config.mjs', 'preview');
+    expect(await settle(wait, 500)).toBe('pending');
+    server = await listen(port, '127.0.0.1');
+    expect(await settle(wait, 2000)).toBe('resolved');
   });
 
-  it('reads the port the config computes from the env files of the env mode', async () => {
-    const config = join(dir, 'rsbuild.config.mjs');
+  it('rejects when --config-loader native cannot load the config', async () => {
     writeFileSync(
-      config,
-      `export default ({ envMode, command }) => ({ server: { port: envMode === 'staging' && command === 'dev' ? Number(process.env.APP_PORT) : 1 } });`
+      join(dir, 'rsbuild.config.ts'),
+      'enum Port { A = 1 }\nexport default { server: { port: Port.A } };'
     );
-    writeFileSync(join(dir, '.env.staging'), `APP_PORT=${port}`);
     vi.stubEnv(
       'NX_TASK_OPTIONS',
-      JSON.stringify({ cwd: dir, args: ['--env-mode=staging'] })
+      JSON.stringify({ cwd: dir, args: ['--config-loader=native'] })
     );
 
-    await expect(waitForRsbuildServer(config, 'dev')).resolves.toBeUndefined();
+    const wait = waitForRsbuildServer('rsbuild.config.ts', 'dev');
+    expect(await settle(wait, 2000)).toMatch(/^rejected/);
   });
 });
+
+function listen(port: number, host: string): Promise<Server> {
+  const server = createServer();
+  return new Promise((resolve, reject) => {
+    server.once('error', reject).listen(port, host, () => resolve(server));
+  });
+}
+
+function close(server: Server) {
+  return new Promise((r) => server.close(r));
+}
+
+async function getFreePort(): Promise<number> {
+  const v4 = await listen(0, '127.0.0.1');
+  const { port } = v4.address() as AddressInfo;
+  // The wait also probes ::1, where a port free on 127.0.0.1 can be taken
+  const v6 = await listen(port, '::1').catch((e: NodeJS.ErrnoException) => e);
+  await close(v4);
+  if (v6 instanceof Server) {
+    await close(v6);
+  } else if (v6.code === 'EADDRINUSE') {
+    return getFreePort();
+  }
+  return port;
+}
+
+function settle(promise: Promise<unknown>, ms: number) {
+  return Promise.race([
+    promise.then(
+      () => 'resolved',
+      (e) => `rejected: ${e}`
+    ),
+    new Promise((r) => setTimeout(r, ms, 'pending')),
+  ]);
+}
