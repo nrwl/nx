@@ -1782,21 +1782,27 @@ function lastBlock(output) {
 }
 let block = lastBlock(run(reconcile));
 if (process.env.FAKE_AGENT_KILL_PARENT) {
-  const out = fs.openSync(path.join(process.cwd(), 'killed-step-output'), 'w');
-  const worker = spawn(block.payload.command, {
-    env, shell: true, detached: true, stdio: ['ignore', out, out],
-  });
-  worker.unref();
-  const brokerDir = path.join(process.cwd(), '.nx', 'migrate-runs', block.runId, 'broker');
-  const deadline = Date.now() + 60000;
-  while (!(fs.existsSync(brokerDir) && fs.readdirSync(brokerDir).some((f) => f.endsWith('.request.json')))) {
-    if (Date.now() > deadline) {
-      throw new Error('No request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
+  const parentPid = process.ppid;
+  // The step must publish an unanswered request before the parent dies.
+  process.kill(parentPid, 'SIGSTOP');
+  try {
+    const out = fs.openSync(path.join(process.cwd(), 'killed-step-output'), 'w');
+    const worker = spawn(block.payload.command, {
+      env, shell: true, detached: true, stdio: ['ignore', out, out],
+    });
+    worker.unref();
+    const brokerDir = path.join(process.cwd(), '.nx', 'migrate-runs', block.runId, 'broker');
+    const deadline = Date.now() + 60000;
+    while (!(fs.existsSync(brokerDir) && fs.readdirSync(brokerDir).some((f) => f.endsWith('.request.json')))) {
+      if (Date.now() > deadline) {
+        throw new Error('No request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
+      }
+      execSync('sleep 0.2');
     }
-    execSync('sleep 0.2');
+    record({ killedParent: parentPid, workerPid: worker.pid });
+  } finally {
+    process.kill(parentPid, 'SIGKILL');
   }
-  record({ killedParent: process.ppid, workerPid: worker.pid });
-  process.kill(process.ppid, 'SIGKILL');
   process.exit(0);
 }
 let dispenses = 0;
