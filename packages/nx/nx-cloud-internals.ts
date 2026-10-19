@@ -7,6 +7,10 @@ export {
   openUltracacheConfigurations,
 } from './src/ultracache/store';
 
+// The client uses Ultracache by default in CI only for an nx exporting this;
+// older nx needs `NX_CLOUD_USE_ULTRACACHE=true`.
+export const ULTRACACHE_ON_BY_DEFAULT = true;
+
 // Nx Cloud reads it to pick the task-graph shape it hands this nx. Bump it when
 // the shape changes in a way Cloud must handle.
 //   1: `dependencies` and `continuousDependencies` edges are task ids (implied
