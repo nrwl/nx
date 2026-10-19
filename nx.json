@@ -293,7 +293,8 @@
       "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
-        "ciTargetName": "e2e-ci"
+        "ciTargetName": "e2e-ci",
+        "waitForServerReady": false
       }
     },
     {
