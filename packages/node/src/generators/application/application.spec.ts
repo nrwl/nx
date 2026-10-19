@@ -64,6 +64,43 @@ describe('app', () => {
     }
   });
 
+  describe('ready signal', () => {
+    it.each(['express', 'fastify', 'koa'] as const)(
+      'should report readiness from a %s server',
+      async (framework) => {
+        await applicationGenerator(tree, {
+          directory: 'my-node-app',
+          framework,
+          bundler: 'webpack',
+          skipFormat: true,
+        });
+
+        expect(
+          readProjectConfiguration(tree, 'my-node-app').targets.serve.readyWhen
+        ).toEqual({ signal: true });
+        expect(tree.read('my-node-app/src/main.ts', 'utf-8')).toContain(
+          "load('@nx/js/ready-signal')"
+        );
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/js']
+        ).toBeDefined();
+      }
+    );
+
+    it('should not wait for an app without a server', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        framework: 'none',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'my-node-app').targets.serve.readyWhen
+      ).toBeUndefined();
+    });
+  });
+
   describe('pnpm 11 build scripts', () => {
     beforeEach(() => {
       (detectPackageManager as Mock).mockReturnValue('pnpm');
@@ -803,6 +840,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'myapp').targets.serve).toEqual({
         continuous: true,
         dependsOn: ['^build'],
+        readyWhen: { signal: true },
       });
       expect(tree.read('myapp/src/main.ts', 'utf-8').split('\n').slice(0, 3))
         .toMatchInlineSnapshot(`

@@ -105,6 +105,9 @@ describe('application generator', () => {
               "buildTarget": "my-node-app:build",
               "runBuildTargetDependencies": false,
             },
+            "readyWhen": {
+              "signal": true,
+            },
           },
           "test": {
             "options": {
@@ -443,6 +446,9 @@ describe('application generator', () => {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
+                "readyWhen": {
+                  "signal": true,
+                },
               },
               "test": {
                 "options": {
@@ -629,6 +635,9 @@ describe('application generator', () => {
               "options": {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "test": {

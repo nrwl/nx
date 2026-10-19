@@ -67,6 +67,10 @@ export function addProject(
     // libraries whose exports point at their output.
     project.targets.serve = { continuous: true, dependsOn: ['^build'] };
   }
+  // The framework templates call emitReadySignal once the server listens
+  if (options.isNest || (options.framework && options.framework !== 'none')) {
+    project.targets.serve.readyWhen = { signal: true };
+  }
 
   const packageJson: PackageJson = {
     name: options.importPath,

@@ -297,6 +297,9 @@ describe('app', () => {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
+                "readyWhen": {
+                  "signal": true,
+                },
               },
               "test": {
                 "options": {
@@ -478,6 +481,9 @@ describe('app', () => {
               "options": {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "test": {

@@ -19,6 +19,17 @@ server.listen({ port, host }, (err) => {
     process.exit(1);
   } else {
     console.log(`[ ready ] http://${host}:${port}`);
+    // Set when Nx waits for this server to be ready
+    if (process.env.NX_READY_SIGNAL_SOCKET) {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import.
+      // Not awaited: Fastify warns when a listen callback is async.
+      const load = new Function('s', 'return import(s)') as (s: string) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      load('@nx/js/ready-signal')
+        .then((readySignal) => readySignal.emitReadySignal(server.server))
+        .catch(() => {
+          // @nx/js isn't installed
+        });
+    }
   }
 });
 

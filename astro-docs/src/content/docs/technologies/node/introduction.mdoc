@@ -129,6 +129,45 @@ nx g @nx/node:application apps/my-new-app \
 --frontendProject my-react-app
 ```
 
+### Waiting for the server to be ready
+
+Tasks that depend on `serve` with `waitFor: "ready"`, such as Playwright and Cypress e2e tasks, start once the server reports that it's listening.
+Applications generated with the Express, Fastify, Koa, or NestJS framework report it.
+Their `src/main.ts` calls `emitReadySignal` from `@nx/js/ready-signal` once the server listens, and their `serve` entry sets `"readyWhen": { "signal": true }`.
+
+To add this to an existing server, call `emitReadySignal` with the server once it listens:
+
+```ts
+const server = app.listen(port, host, async () => {
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (
+        s: string
+      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
+});
+```
+
+Then set `readyWhen` on the `serve` entry in the project configuration:
+
+```json
+"serve": {
+  "readyWhen": { "signal": true }
+}
+```
+
+`emitReadySignal` reads the address from the server and passes it to the waiting tasks as `NX_READY_URL`.
+The server imports `@nx/js/ready-signal` only when Nx waits for it, so it loads nothing from Nx otherwise, and the `try` keeps it running where `@nx/js` isn't installed.
+The import goes through `new Function` so TypeScript and bundlers leave it as a runtime import.
+Without `readyWhen`, a task that waits for `serve` starts as soon as `serve` starts.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+
 ### Debugging
 
 #### VSCode integration

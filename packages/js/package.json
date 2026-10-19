@@ -42,6 +42,9 @@
       "node": [
         "dist/node.d.ts"
       ],
+      "ready-signal": [
+        "dist/ready-signal.d.ts"
+      ],
       "tsx": [
         "dist/tsx.d.ts"
       ],
@@ -106,6 +109,11 @@
       "@nx/nx-source": "./node.ts",
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
+    },
+    "./ready-signal": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
     },
     "./tsx": {
       "@nx/nx-source": "./tsx.ts",
