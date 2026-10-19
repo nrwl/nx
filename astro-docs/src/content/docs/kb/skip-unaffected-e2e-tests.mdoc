@@ -48,18 +48,17 @@ Report which test files you scoped, the directive and imports you added to each,
 
 The [Atomizer](/docs/kb/split-e2e-tasks) splits an end-to-end (e2e) suite into one task per test file, such as `e2e-ci--src/checkout.spec.ts`.
 Nx caches each of those tasks, but by default each task's hash covers the whole app and the whole e2e project.
-A change to any feature, or to any test file, reruns every test file:
-
-![Without scoping, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both tests.](../../../assets/guides/running-tasks/e2e-hash-whole-app.svg)
+A change to any feature, or to any test file, reruns every test file.
 
 To fix that, add a one-line directive comment at the top of a test file.
 The directive tells Nx which code the test depends on.
-When a change doesn't touch that code, Nx skips the test and replays its cached result.
+When a change doesn't touch that code, Nx skips the test and replays its cached result:
+
+![With no directive, checkout.spec.ts and search.spec.ts both hash checkout/, search/, cart/, and shared/, so an edit in search/ reruns both. With a directive, checkout.spec.ts hashes only checkout/ and shared/, so the same edit reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-before-after.svg)
 
 ## The two directives
 
 `// @nx-depends-on: <projects>` scopes the test to the projects you list and the projects they depend on.
-It doesn't need Nx Cloud.
 
 `// @nx-ignore-server-inputs` drops the app server from the test's hash.
 With [Ultracache](/docs/reference/project-configuration#ultracache), Nx then hashes the test from the files its last run read: the test file and the app code it imports.
@@ -111,9 +110,7 @@ test('shows the order summary', async ({ page }) => {
 ```
 
 The bare import makes the test runner load the checkout page when it loads the test file.
-Ultracache records those reads, so the test reruns when the checkout page, or a module it imports, changes:
-
-![With @nx-ignore-server-inputs and imports of the app code, checkout.spec.ts hashes checkout/ and shared/, and search.spec.ts hashes search/ and shared/, so an edit in search/ reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-imports.svg)
+Ultracache records those reads, so the test reruns when the checkout page, or a module it imports, changes.
 
 Import the feature's own page or component, not the route table, the app entry point, or a barrel file.
 Those pull every feature into the hash.
