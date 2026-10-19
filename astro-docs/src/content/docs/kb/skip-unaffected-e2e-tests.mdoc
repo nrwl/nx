@@ -19,7 +19,7 @@ You are scoping split (atomized) e2e test files in an Nx workspace so that each 
    - `// @nx-depends-on: <project>, <project>` otherwise. List every project the test exercises. The projects they depend on are included automatically. Don't list the app project, because that puts the whole app back in the hash.
    - Use `@nx-depends-on` when the test depends on stylesheets (screenshots, visibility checks) outside Cypress with the Vite preprocessor, on files loaded by path (`templateUrl`, `styleUrl`, static assets, fetched data), on the app shell, layouts or shared providers, on an API server, or on the server task's environment variables, runtime inputs or external dependencies.
    - Leave smoke tests that exercise the whole app unscoped.
-3. Put the directive at the top of the file, before the first line of code, at the start of a comment line. Nx ignores a misplaced or misspelled directive without a warning. `@nx-depends-on` needs the colon right after its name. A project name or pattern that matches no project fails when Nx hashes the task.
+3. Put the directive at the top of the file, before the first line of code, at the start of a comment line. `@nx-depends-on` needs the colon right after its name.
 4. With `@nx-ignore-server-inputs`, add bare imports (`import '<path>'`) of the feature's own page or component module:
    - Not route tables, the app entry point, or barrel files. They pull every feature into the hash.
    - For lazy-loaded features, import the feature module directly. Playwright doesn't read modules that a dynamic `import()` loads.
@@ -29,7 +29,7 @@ You are scoping split (atomized) e2e test files in an Nx workspace so that each 
    - `@nx/enforce-module-boundaries` skips most checks for bare imports in files with `@nx-ignore-server-inputs`, but still checks imports that name values or types.
    - Disable `import/no-unassigned-import` (eslint-plugin-import or the Oxlint import plugin) for the e2e test files instead of removing the imports.
    - If a test file imports `.tsx` files, set `jsx` (for example `"react-jsx"`) in the e2e project's TypeScript configuration. A missing `jsx` shows up as TS6305 with project references or TS6142 with path aliases.
-6. Verify with `nx show project <e2e-project> --json`. The scoped target's server `dependsOn` entry has `"inputs": false`, and with `@nx-depends-on` its `inputs` select the listed projects with `"always": true`. If not:
+6. Verify with `nx show target inputs <e2e-project>:<split target> --check <file the test exercises> <file it doesn't>`. With `@nx-depends-on`, the first file is an input and the second isn't. If not:
    - Playwright: Nx runs the `webServer` as a task only when `reuseExistingServer` is `true`, the entry sets no `wait` or `env`, and `command` is `nx run <project>:<target>` or `nx <target> <project>` with no other arguments. Nx evaluates the config with its own environment, so `reuseExistingServer: !process.env.CI` is `false` in CI. Without a server task, `@nx-ignore-server-inputs` has no effect.
    - An `nx.json` target default that matches the split target, such as one keyed `e2e-ci--*`, replaces the inferred `inputs` and `dependsOn`. Add `"..."` to each array it sets, and set `"inputs": false` on any server dependency it adds.
    - If the test needs some of the server task's environment variables, runtime inputs or external dependencies, add them to the test file's target in `project.json`, with `"..."` in `inputs`.
@@ -158,42 +158,32 @@ import { test } from '@playwright/test';
 import '../../shop/src/app/checkout/checkout-page';
 ```
 
-Nx ignores these directives without a warning:
+`@nx-depends-on` takes a colon and a comma-separated list of project names or patterns, such as `tag:scope:shared`.
+Repeat the line to list more.
+`@nx-ignore-server-inputs` takes no value.
 
-```ts
-// The line doesn't start with the directive:
-// TODO @nx-depends-on: checkout
-// No colon after the name:
-// @nx-depends-on checkout
-// Misspelled name:
-// @nx-depend-on: checkout
-import { test } from '@playwright/test';
-// After the first line of code:
-// @nx-depends-on: checkout
-```
-
-Nx ignores these and logs a warning that names the test file:
-
-```ts
-// No projects listed:
-// @nx-depends-on:
-// A value, which this directive doesn't take:
-// @nx-ignore-server-inputs: false
-```
-
-A project name or pattern that matches no project is an error when Nx hashes the task.
 A test file can have both directives, and Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
 
 ## Check the result
 
-Run `nx show project` for the e2e project:
+Run `nx show target inputs` for the test file's split task, and pass `--check` with a file the test exercises and a file it doesn't:
 
 ```shell
-nx show project shop-e2e --json
+nx show target inputs shop-e2e:e2e-ci--src/checkout.spec.ts --check libs/checkout/src/index.ts libs/search/src/index.ts
 ```
 
-In the target of a scoped test file, the `dependsOn` entry for the server task has `"inputs": false`.
-With `@nx-depends-on`, the target's `inputs` also select the listed projects with `"always": true`.
+For a test file with `// @nx-depends-on: checkout`, Nx lists the `checkout` file as an input and the `search` file as not an input:
+
+```text
+✓ These arguments were inputs for shop-e2e:e2e-ci--src/checkout.spec.ts:
+  libs/checkout/src/index.ts
+
+✗ These arguments were not inputs for shop-e2e:e2e-ci--src/checkout.spec.ts:
+  libs/search/src/index.ts
+```
+
+With `@nx-ignore-server-inputs`, the command lists the inputs Nx hashes [without a recorded run](#without-a-recorded-run).
+In CI with a recorded run, Nx hashes the files that run read instead.
 
 `nx affected -t e2e-ci` still selects the `e2e-ci` task, because that task depends on every test file's task and keeps its unscoped inputs.
 Nx then replays the cached result of each test file whose hash didn't change.
