@@ -75,7 +75,11 @@ export async function addReadyWhenSignalToTargets(
   await formatFiles(tree);
 }
 
-function readApplicableTargetDefaults(
+/**
+ * The `targetDefaults` Nx applies to a target, which leaves out the entries
+ * that run another executor or a command.
+ */
+export function readApplicableTargetDefaults(
   targetName: string,
   executor: string | undefined,
   targetDefaults: TargetDefaults | undefined,

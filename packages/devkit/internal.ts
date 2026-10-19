@@ -43,7 +43,10 @@ export {
 export type { FormatterType } from 'nx/src/devkit-internals';
 
 // Generators
-export { addReadyWhenSignalToTargets } from './src/generators/add-ready-when-signal';
+export {
+  addReadyWhenSignalToTargets,
+  readApplicableTargetDefaults,
+} from './src/generators/add-ready-when-signal';
 export {
   determineArtifactNameAndDirectoryOptions,
   getRelativeCwd,
