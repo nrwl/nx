@@ -329,7 +329,7 @@ The migration above keeps every task defined by a `package.json` script. That is
 
 Nx can also derive tasks from the tools you already configured. Add [`@nx/vite`](/docs/technologies/build-tools/vite) and a package with a `vite.config.ts` gets a `build` target whose inputs and outputs are read from that config, with no script and no `targetDefaults` entry to maintain. The same applies to Jest, Playwright, ESLint, Cypress, Gradle, and others. That removes the class of cache bug where a tool's output directory changes and the config that lists it does not.
 
-Adopt this per tool, after the migration is done. See [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
+Adopt this per tool, after the migration is done. See [inferred tasks](/docs/features/run-tasks#inferred-tasks).
 
 ### Configuration mapping
 
@@ -379,7 +379,7 @@ Task configuration:
 | `--env-mode`                 | See [Loading Environment Variables](/docs/reference/environment-variables#loading-environment-variables)                                                         |
 | `--filter`                   | Use lots of advanced project matcher syntax like [`-p admin-*` or `-p tag:api-*`](/docs/reference/nx-commands#nx-run-many)                                       |
 | `--force`                    | [`nx reset`](/docs/reference/nx-commands#nx-reset) and then run the command again                                                                                |
-| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/concepts/mental-model#inferred-tasks)                                                 |
+| `--framework-inference`      | N/A. [Nx plugins infer tasks automatically as a first class feature](/docs/features/run-tasks#inferred-tasks)                                                    |
 | `--global-deps`              | Use the [`sharedGlobals` `namedInput`](/docs/kb/configure-inputs). Nx is far more flexible with composable [`namedInputs`](/docs/reference/inputs)               |
 | `--graph`                    | [Similar syntax](/docs/reference/nx-commands#graph) or [`nx graph`](/docs/reference/nx-commands#nx-graph) for full interactive experience                        |
 | `--heap`                     | N/A. Use [`--verbose`](/docs/reference/nx-commands#verbose)                                                                                                      |

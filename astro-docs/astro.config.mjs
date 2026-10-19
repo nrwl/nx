@@ -113,7 +113,8 @@ export default defineConfig({
       '/docs/technologies/build-tools/rollup/introduction',
     '/technologies/build-tools/vite/executors':
       '/docs/technologies/build-tools/vite/introduction',
-    '/concepts/inferred-tasks': '/docs/concepts/mental-model',
+    '/concepts/inferred-tasks': '/docs/features/run-tasks#inferred-tasks',
+    '/concepts/mental-model': '/docs/getting-started/intro#how-nx-works',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',
     '/concepts/nx-daemon': '/docs/reference/nx-daemon',

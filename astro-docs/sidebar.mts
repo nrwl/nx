@@ -80,7 +80,6 @@ const learnGroups: SidebarItems = [
     label: 'How Nx works',
     collapsed: true,
     items: [
-      { label: 'Mental model', link: 'concepts/mental-model' },
       { label: 'How caching works', link: 'concepts/how-caching-works' },
       {
         label: 'Task pipeline configuration',

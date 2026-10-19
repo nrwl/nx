@@ -30,7 +30,7 @@
 /using-nx/nx-cli /docs/getting-started/intro 301
 /using-nx/console /docs/getting-started/editor-setup 301
 /features/integrate-with-editors /docs/getting-started/editor-setup 301
-/using-nx/mental-model /docs/concepts/mental-model 301
+/using-nx/mental-model /docs/getting-started/intro#how-nx-works 301
 /using-nx/caching /docs/concepts/how-caching-works 301
 /using-nx/dte /docs/features/ci-features/distribute-task-execution 301
 /using-nx/affected /docs/features/ci-features/affected 301
@@ -104,7 +104,7 @@
 
 # --- guideUrls ---
 /core-concepts/configuration /docs/reference/project-configuration 301
-/core-concepts/mental-model /docs/concepts/mental-model 301
+/core-concepts/mental-model /docs/getting-started/intro#how-nx-works 301
 /core-concepts/updating-nx /docs/features/automate-updating-dependencies 301
 /core-concepts/ci-overview /docs/getting-started/setup-ci 301
 /getting-started/nx-cli /docs/getting-started/intro 301

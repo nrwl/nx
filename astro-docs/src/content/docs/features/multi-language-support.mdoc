@@ -96,7 +96,7 @@ Any directory with a [`project.json`](/docs/reference/project-configuration) fil
 Plugins remove the need to write that configuration by hand.
 A language plugin declares which files mark a project, usually the toolchain's manifest: `pyproject.toml` for Python, `go.mod` for Go, `Cargo.toml` for Rust, `build.gradle` for Gradle.
 For every match, the plugin creates a project and its tasks, with caching, inputs, and outputs configured once in the plugin instead of per project.
-This is the same [inferred tasks](/docs/concepts/mental-model#inferred-tasks) mechanism the JavaScript plugins use to read `vite.config.ts` or `jest.config.ts`.
+This is the same [inferred tasks](/docs/features/run-tasks#inferred-tasks) mechanism the JavaScript plugins use to read `vite.config.ts` or `jest.config.ts`.
 
 Enabling a language plugin is one entry in `nx.json`:
 

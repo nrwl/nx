@@ -29,7 +29,7 @@ Each machine still runs only the tasks assigned to it, so a shard that gets two 
 
 Nx Cloud uses what it knows about your projects and tasks to decide which task runs where, and when:
 
-- Task order and the critical path come from the [task graph](/docs/concepts/mental-model#the-task-graph), so long chains start first.
+- Task order and the critical path come from the [task graph](/docs/features/run-tasks#the-task-graph), so long chains start first.
 - Each task's duration and its CPU and memory profile come from previous runs.
 - Each agent gets new work whenever it has room for it, instead of a batch fixed at the start of the run.
 
