@@ -142,6 +142,19 @@ describe('addReadyWhenSignalToTargets', () => {
     expect(readServe().readyWhen).toEqual({ signal: true });
   });
 
+  it('leaves a target unchanged and reports no change when onAdded returns false', async () => {
+    setup({ executor });
+
+    const result = await addReadyWhenSignalToTargets(
+      tree,
+      [executor],
+      () => false
+    );
+
+    expect(result).toEqual({ skipAgentic: true });
+    expect(readServe().readyWhen).toBeUndefined();
+  });
+
   it('uses the executor that targetDefaults give a target without its own', async () => {
     addProjectConfiguration(tree, 'app', {
       root: 'apps/app',

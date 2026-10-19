@@ -16,12 +16,12 @@ import { readTargetDefaultsForTarget } from './target-defaults-utils';
  * one of `executors`. A target is skipped when it, or the `targetDefaults` that
  * apply to it, already set `readyWhen`, or when its own `continuous`, else the
  * one from `targetDefaults`, is `false`. `onAdded` gets each target it sets it
- * on.
+ * on. Returning `false` from it leaves that target unchanged.
  */
 export async function addReadyWhenSignalToTargets(
   tree: Tree,
   executors: readonly string[],
-  onAdded?: (target: TargetConfiguration, projectName: string) => void
+  onAdded?: (target: TargetConfiguration, projectName: string) => boolean | void
 ): Promise<{ skipAgentic: true } | void> {
   const targetDefaults = readNxJson(tree)?.targetDefaults;
   let changed = false;
@@ -56,7 +56,10 @@ export async function addReadyWhenSignalToTargets(
         continue;
       }
       target.readyWhen = { signal: true };
-      onAdded?.(target, projectName);
+      if (onAdded?.(target, projectName) === false) {
+        delete target.readyWhen;
+        continue;
+      }
       projectChanged = true;
     }
 

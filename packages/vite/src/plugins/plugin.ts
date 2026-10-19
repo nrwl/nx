@@ -471,13 +471,14 @@ function serveStaticTarget(
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    dependsOn: [options.buildTargetName],
     inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
       spa: true,
     },
-    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
+    readyWhen: { signal: true },
   };
 
   if (isUsingTsSolutionSetup) {

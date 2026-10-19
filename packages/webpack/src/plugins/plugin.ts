@@ -299,7 +299,7 @@ async function createWebpackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
-    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
