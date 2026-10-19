@@ -122,6 +122,7 @@ export {
   getReadyCheckReadyWhen,
   getServerAddress,
   parseCacArgs,
+  parseCommanderArgs,
   runReadyCheck,
   type ServerAddress,
 } from './src/utils/readiness';

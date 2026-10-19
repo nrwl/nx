@@ -1,4 +1,8 @@
-import { getForwardedArgs, getListeningUrl } from './readiness';
+import {
+  getForwardedArgs,
+  getListeningUrl,
+  parseCommanderArgs,
+} from './readiness';
 
 describe('getForwardedArgs', () => {
   it.each([
@@ -108,5 +112,54 @@ describe('getListeningUrl', () => {
       getListeningUrl({ address: '::1', family: 'IPv6', port: 1 }, false)
     ).toBe('http://[::1]:1/');
     expect(getListeningUrl('/tmp/socket', false)).toBeUndefined();
+  });
+});
+
+describe('parseCommanderArgs', () => {
+  const declarations = [
+    '-c --config <config>',
+    '-o --open [url]',
+    '-w --watch',
+    '--env-mode <mode>',
+  ];
+
+  it.each([
+    [
+      'a required value from the next argument, an option included',
+      ['--config', '--watch'],
+      { config: '--watch' },
+    ],
+    ['an optional value from the next argument', ['-o', 'x'], { open: 'x' }],
+    [
+      'no optional value from an option',
+      ['--open', '--watch'],
+      { open: true, watch: true },
+    ],
+    [
+      'a value after an equals sign',
+      ['--config=a.ts', '--open='],
+      { config: 'a.ts', open: '' },
+    ],
+    [
+      'short flags with the rest of the argument',
+      ['-c=a.ts', '-wox'],
+      { config: '=a.ts', watch: true, open: 'x' },
+    ],
+    ['the last value', ['--config', 'a.ts', '-c', 'b.ts'], { config: 'b.ts' }],
+    [
+      'options up to --, around operands',
+      ['serve', '-', '--env-mode', 'x', '--', '--config', 'a.ts'],
+      { envMode: 'x' },
+    ],
+  ])('parses %s', (_, args, expected) => {
+    expect(parseCommanderArgs(args, declarations)).toEqual(expected);
+  });
+
+  it.each([
+    [['--help'], "unknown option '--help'"],
+    [['--watch=true'], "unknown option '--watch=true'"],
+    [['--env-mode'], "option '--env-mode <mode>' argument missing"],
+  ])('throws on %j, where commander exits', (args, message) => {
+    expect(() => parseCommanderArgs(args, declarations)).toThrow(message);
   });
 });

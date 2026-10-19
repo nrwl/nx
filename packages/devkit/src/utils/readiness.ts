@@ -169,6 +169,75 @@ export function parseCacArgs(
   return options;
 }
 
+/**
+ * The options a commander 12 command, such as the Rsbuild 1.0 and 1.1 CLI's,
+ * parses from `args`, by attribute name, given its option flags such as
+ * `'-o --open [url]'`. The last value of an option wins, and no defaults or
+ * custom argument parsers apply. Throws where the command exits instead: on an
+ * unknown option, `--help` included, or a missing value.
+ */
+export function parseCommanderArgs(
+  args: string[],
+  declarations: string[]
+): Record<string, string | true> {
+  const options = declarations.map((flags) => {
+    const names = flags.split(/[ |,]+/).filter((part) => part.startsWith('-'));
+    return {
+      flags,
+      names,
+      key: names
+        .at(-1)
+        .replace(/^-+/, '')
+        .split('-')
+        .reduce((key, word) => key + word[0].toUpperCase() + word.slice(1)),
+      required: flags.includes('<'),
+      optional: flags.includes('['),
+    };
+  });
+  const find = (flag: string) => options.find((o) => o.names.includes(flag));
+  const isOption = (arg: string) => arg.length > 1 && arg[0] === '-';
+  const parsed: Record<string, string | true> = {};
+
+  const rest = [...args];
+  while (rest.length > 0 && rest[0] !== '--') {
+    const arg = rest.shift();
+    let option = find(arg);
+    if (option?.required) {
+      if (rest.length === 0) {
+        throw new Error(`option '${option.flags}' argument missing`);
+      }
+      parsed[option.key] = rest.shift();
+    } else if (option) {
+      parsed[option.key] =
+        option.optional && rest.length > 0 && !isOption(rest[0])
+          ? rest.shift()
+          : true;
+    } else if (
+      arg.length > 2 &&
+      arg[0] === '-' &&
+      arg[1] !== '-' &&
+      (option = find(arg.slice(0, 2)))
+    ) {
+      // `-abc` gives `a` the value `bc`, or sets it and goes on with `-bc`
+      if (option.required || option.optional) {
+        parsed[option.key] = arg.slice(2);
+      } else {
+        parsed[option.key] = true;
+        rest.unshift(`-${arg.slice(2)}`);
+      }
+    } else if (
+      /^--[^=]+=/.test(arg) &&
+      (option = find(arg.slice(0, arg.indexOf('=')))) &&
+      (option.required || option.optional)
+    ) {
+      parsed[option.key] = arg.slice(arg.indexOf('=') + 1);
+    } else if (isOption(arg)) {
+      throw new Error(`unknown option '${arg}'`);
+    }
+  }
+  return parsed;
+}
+
 export interface ServerAddress {
   port: number;
   host?: string;

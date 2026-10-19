@@ -1,3 +1,7 @@
+import {
+  mockCjsModule,
+  unmockCjsModule,
+} from '@nx/devkit/internal-testing-utils';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { createServer, Server, type AddressInfo } from 'net';
 import { tmpdir } from 'os';
@@ -32,7 +36,20 @@ describe('parseRsbuildFlags', () => {
       { config: 'a.config.ts' },
     ],
   ])('reads the flags of %j', (options, flags) => {
-    expect(parseRsbuildFlags(options)).toEqual(flags);
+    expect(parseRsbuildFlags(options, '2.0.15')).toEqual(flags);
+  });
+
+  it.each([
+    // commander gives `--host` the next argument and keeps the port a string
+    [
+      '1.1.14',
+      { args: ['--port', '3000', '--host', '--env-mode=staging'] },
+      { port: '3000', host: '--env-mode=staging' },
+    ],
+    ['1.2.0-alpha.0', { args: ['--no-env', '--host', '0'] }, {}],
+    ['1.3.3', { args: ['--no-env', '--host', '0'] }, { env: false }],
+  ])('reads the flags Rsbuild %s reads from %j', (version, options, flags) => {
+    expect(parseRsbuildFlags(options, version)).toEqual(flags);
   });
 });
 
@@ -207,6 +224,21 @@ describe('waitForRsbuildServer', () => {
 
     const wait = waitForRsbuildServer('rsbuild.config.ts', 'dev');
     expect(await settle(wait, 2000)).toMatch(/^rejected/);
+  });
+
+  it('parses the options the way the loaded @rsbuild/core does', async () => {
+    mockCjsModule(import.meta.url, '@rsbuild/core', { version: '1.1.14' });
+    vi.stubEnv(
+      'NX_TASK_OPTIONS',
+      JSON.stringify({ cwd: dir, args: ['--no-env'] })
+    );
+    try {
+      await expect(
+        waitForRsbuildServer('rsbuild.config.mjs', 'dev')
+      ).rejects.toThrow("unknown option '--no-env'");
+    } finally {
+      unmockCjsModule(import.meta.url, '@rsbuild/core');
+    }
   });
 });
 
