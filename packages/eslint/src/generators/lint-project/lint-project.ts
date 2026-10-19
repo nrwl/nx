@@ -398,12 +398,9 @@ function rootHasEslintLintTarget(
   }
   for (const targetConfig of Object.values(targets)) {
     if (
-      ['@nx/eslint:lint', '@nx/linter:eslint'].includes(
-        targetConfig.executor
-      ) ||
-      (targetConfig.executor === 'nx:run-commands' &&
-        targetConfig.options?.command &&
-        targetConfig.options?.command.startsWith('eslint '))
+      targetConfig.executor === 'nx:run-commands' &&
+      targetConfig.options?.command &&
+      targetConfig.options?.command.startsWith('eslint ')
     ) {
       return true;
     }
