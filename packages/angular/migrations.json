@@ -378,6 +378,7 @@
       "requires": {
         "@angular/core": ">=22.1.0 <22.2.0"
       },
+      "optionalUpdate": true,
       "description": "Update the Angular packages to 22.2 unless the workspace uses Cypress component testing or webpack Module Federation in an Angular project, which break with the webpack-dev-server and webpack versions Angular 22.2 installs.",
       "factory": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2",
       "documentation": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2.md"
