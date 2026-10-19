@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   workspaceDir: '<%= offsetFromRoot %>',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
