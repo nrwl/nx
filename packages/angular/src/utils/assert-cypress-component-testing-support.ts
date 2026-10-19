@@ -3,7 +3,7 @@ import {
   getResolvedPackageVersion,
   getSatisfyingInstalledPackageVersion,
 } from '@nx/devkit/internal';
-import { coerce, lt, subset, validRange } from 'semver';
+import { coerce, gte, lt, subset, validRange } from 'semver';
 
 const minCypressVersion = '15.20.1';
 
@@ -13,6 +13,22 @@ const minCypressVersion = '15.20.1';
  */
 export function assertCypressComponentTestingSupport(tree: Tree): void {
   const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  // Cypress loads webpack-dev-server from build-angular, so its version decides
+  // this check. Angular core stands in when build-angular isn't declared.
+  const buildAngularVersion =
+    getResolvedPackageVersion(tree, '@angular-devkit/build-angular') ??
+    angularVersion;
+  if (
+    buildAngularVersion &&
+    gte(coerce(buildAngularVersion)?.version ?? buildAngularVersion, '22.2.0')
+  ) {
+    throw new Error(
+      `Cypress Component Testing doesn't support Angular 22.2 and higher yet. ` +
+        `Cypress rejects the webpack-dev-server 6 that @angular-devkit/build-angular 22.2 and higher installs. ` +
+        `See https://github.com/cypress-io/cypress/issues/34259.`
+    );
+  }
+
   if (!angularVersion) {
     return;
   }
