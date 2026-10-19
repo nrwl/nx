@@ -144,7 +144,7 @@ With `@nx-depends-on`, the target's `inputs` also select the listed projects wit
 `nx affected -t e2e-ci` still selects the `e2e-ci` task, because that task depends on every test file's task and keeps its unscoped inputs.
 Nx then replays the cached result of each test file whose hash didn't change.
 
-## Edge cases
+## Additional considerations
 
 Read these sections when a directive doesn't skip the tests you expect, or when you're unsure which directive fits.
 
