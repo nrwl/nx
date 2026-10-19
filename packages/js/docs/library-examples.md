@@ -41,27 +41,31 @@ npx nx g @nx/js:lib libs/mylib --bundler=tsc
 
 ##### Buildable, with Rollup as a bundler
 
-Generate a buildable library using [Rollup](https://rollupjs.org) as the bundler. This will use the `@nx/rollup:rollup` executor. It will also use [SWC](https://swc.rs) as the compiler.
+Generate a buildable library using [Rollup](https://rollupjs.org) as the bundler.
+The generator creates a `rollup.config.cjs` file, and the `@nx/rollup/plugin` plugin infers the
+`build` target from it.
+The generated config uses [SWC](https://swc.rs) as the compiler.
 
 ```bash
 npx nx g @nx/js:lib libs/mylib --bundler=rollup
 ```
 
-If you do not want to use `swc` as the compiler, and want to use the default `babel` compiler, you can do so in your `project.json` under the `build` target options, using the [`compiler` property](/nx-api/rollup/executors/rollup#compiler):
+To use the default `babel` compiler instead of `swc`, set the `compiler` option of `withNx` in
+`rollup.config.cjs`:
 
-```jsonc title="libs/mylib/project.json"
-"build": {
-  "executor": "@nx/rollup:rollup",
-  "options": {
-    //...
-    "compiler": "babel"
-  }
-}
+```js title="libs/mylib/rollup.config.cjs"
+const { withNx } = require('@nx/rollup/with-nx');
+
+module.exports = withNx({
+  //...
+  compiler: 'babel',
+});
 ```
 
 ##### Buildable, with Vite as a bundler
 
-Generate a buildable library using [Vite](https://vite.dev/) as the bundler. This will use the `@nx/vite:build` executor.
+Generate a buildable library using [Vite](https://vite.dev/) as the bundler.
+The `@nx/vite/plugin` plugin infers the `build` target from the project's Vite config file.
 
 ```bash
 npx nx g @nx/js:lib libs/mylib --bundler=vite
