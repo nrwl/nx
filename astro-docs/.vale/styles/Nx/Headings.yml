@@ -10,6 +10,7 @@ exceptions:
   - Nx Cloud
   - Nx Console
   - Nx Agents
+  - Workers
   - Enterprise
   - Nx Replay
   - Ultracache

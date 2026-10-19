@@ -234,7 +234,7 @@ Caching is configured by specifying `"cache": true` in a target's configuration.
 
 {% aside type="caution" title="Per Project Caching + Distribution" %}
 
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Workers enabled.
 
 {% /aside %}
 
@@ -255,7 +255,7 @@ In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default
 
 {% aside type="caution" title="Note: Parallelism is only per machine" %}
 
-If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Nx Agents is key to running tasks which do not support parallelism quickly and efficiently.
+If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Workers is key to running tasks which do not support parallelism quickly and efficiently.
 
 {% /aside %}
 
@@ -778,7 +778,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
-Applying a recording needs a CI run and a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Nx Agents.
+Applying a recording needs a CI run and a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers.
 Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
 {% /aside %}
 

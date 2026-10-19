@@ -70,7 +70,7 @@ Once feedback and context switching are handled, compress the compute side.
 **What to do:**
 
 - Reuse work with [remote caching](/docs/features/ci-features/remote-cache).
-- Run more in parallel with **[Distributed task execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution)**.
+- Run more in parallel with **[Distributed task execution (Workers)](/docs/features/ci-features/distribute-task-execution)**.
 - Scale long suites with **[E2E test splitting](/docs/kb/split-e2e-tasks)** so they finish quickly.
 
 ## Measure TTG and diagnose bottlenecks
@@ -89,7 +89,7 @@ Once feedback and context switching are handled, compress the compute side.
 
 **Agents are idle, or queue time is high**
 
-- Increase or right-size distributed capacity and parallelism with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+- Increase or right-size distributed capacity and parallelism with [Workers](/docs/features/ci-features/distribute-task-execution).
 - Use [Dynamic Agents](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size) to scale based on PR size.
 - Remove unnecessary serialization (global locks, [overly strict `dependsOn`](/docs/kb/defining-task-pipeline)).
 

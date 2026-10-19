@@ -357,7 +357,7 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 
 ### `nx-cloud start-nx-agents`
 
-Invoke `npx nx-cloud start-nx-agents` at the beginning of your main job to provision the [Nx Agents](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+Invoke `npx nx-cloud start-nx-agents` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
 
 Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-nx-agents` takes no configuration flags.
 
@@ -425,7 +425,7 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
 | `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands) | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                     | `true`  |
-| `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                     |         |
+| `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Workers                                                                                                       |         |
 | `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                     |         |
 | `--auto-apply-fixes`            | string  | Comma-separated glob patterns for [self-healing](/docs/features/ci-features/self-healing-ci) tasks to auto-apply to PRs without manual review                          |         |
 | `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                  |         |
@@ -454,7 +454,7 @@ Pass either `--distribute-on` or `--no-distribution`. With neither, the command 
 
 ##### `--distribute-on`
 
-By default, `start-ci-run` is intended for use with [Nx Agents](/docs/features/ci-features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Nx Agents, you can pass `--distribute-on=manual` to disable this warning.
+By default, `start-ci-run` is intended for use with [Workers](/docs/features/ci-features/distribute-task-execution) and expects `--distribute-on` to be configured. It will output a warning if this flag is not set. If you are running a distributed execution with a legacy setup without Workers, you can pass `--distribute-on=manual` to disable this warning.
 
 This command tells Nx Cloud how many agents to use (and what launch templates to use) to distribute tasks. E.g.,
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
@@ -557,16 +557,16 @@ To address this, you can pass an optional `configuration` to make your `target`s
 - run: nx affected -t build --configuration=locale-es
 ```
 
-##### --with-env-vars (Nx Agents only)
+##### --with-env-vars (Workers only)
 
-By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Nx Agents.
+By default, invoking `npx nx-cloud start-ci-run` will take all environment variables prefixed with `NX_` and send them over to Workers.
 This means that your access token, verbose logging configuration and other Nx-related environment variables will be the same on your
-main CI jobs and the Nx Agent machines.
+main CI jobs and the Worker machines.
 
-If you want to pass other environment variables from the main job to Nx Agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
-This will set `VAR1` and `VAR2` on Nx Agents to the same values set on the main job before any steps run.
+If you want to pass other environment variables from the main job to Workers, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
+This will set `VAR1` and `VAR2` on Workers to the same values set on the main job before any steps run.
 
-> Note: none of the values passed to Nx Agents are stored by Nx Cloud.
+> Note: none of the values passed to Workers are stored by Nx Cloud.
 
 ##### --fix-tasks
 
@@ -642,7 +642,7 @@ nx affected -t build --no-dte
 
 ### `nx-cloud start-agent`
 
-Starts an agent process when you [bring your own compute](/docs/kb/bring-your-own-compute). The agent waits for Nx Cloud to assign tasks that the main CI job distributed, either through `start-nx-agents` with `dte.distribute-on: manual` in `.nx/ci-config.yaml`, or through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the agents for you, see [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+Starts an agent process when you [bring your own compute](/docs/kb/bring-your-own-compute). The agent waits for Nx Cloud to assign tasks that the main CI job distributed, either through `start-nx-agents` with `dte.distribute-on: manual` in `.nx/ci-config.yaml`, or through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the agents for you, see [Workers](/docs/features/ci-features/distribute-task-execution).
 
 This command is the same as running `nx start-agent`.
 

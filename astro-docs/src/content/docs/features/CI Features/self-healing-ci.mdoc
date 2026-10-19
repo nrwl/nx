@@ -45,7 +45,7 @@ Add a step to your CI configuration's "main" job that runs the `fix-ci` command.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
 
-These examples distribute tasks across Nx Agents, so they also need a `.nx/ci-config.yaml` file at the workspace root.
+These examples distribute tasks across Workers, so they also need a `.nx/ci-config.yaml` file at the workspace root.
 See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) for every key you can set.
 
 ```yaml

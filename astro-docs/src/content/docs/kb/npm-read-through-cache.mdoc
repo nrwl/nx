@@ -1,6 +1,6 @@
 ---
 title: 'npm Read-Through Cache'
-description: 'Serve repeated npm installs from a cache close to your Nx Agents instead of the public npm registry.'
+description: 'Serve repeated npm installs from a cache close to your Workers instead of the public npm registry.'
 keywords:
   [npm, read-through cache, registry proxy, nx agents, nx cloud, add-on, npmrc]
 filter: 'type:Guides'
@@ -10,7 +10,7 @@ topics:
 ---
 
 The npm read-through cache puts a package registry proxy close to your
-[Nx Agents](/docs/features/ci-features/distribute-task-execution). The first time a package is
+[Workers](/docs/features/ci-features/distribute-task-execution). The first time a package is
 requested, it is fetched from the public npm registry and stored in the cache. Repeated installs of
 the same package are then served from the cache instead of the upstream registry, cutting install
 time and external network usage. Once the cache is warm, packages often install faster than restoring
@@ -57,7 +57,7 @@ registry=http://npm:4873/
 
 The cache is always reachable from within your cluster at the address above.
 For package-manager-specific setup, private registry routing, and publishing configuration, see
-[Configure the npm proxy cache for Nx Agents](/docs/kb/npm-proxy-cache-setup-for-nx-agents).
+[Configure the npm proxy cache for Workers](/docs/kb/npm-proxy-cache-setup-for-nx-agents).
 
 {% aside type="note" title="If you publish packages" %}
 If your CI publishes npm packages, set a publish registry so `npm publish` targets your real

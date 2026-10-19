@@ -218,7 +218,7 @@ CI needs the Rust toolchain before it can run a Cargo task, and the same mise pi
 to `packages/domain` schedules the crates that depend on it and skips the rest of the repository.
 
 To spread those tasks across machines with
-[Nx Agents](/docs/features/ci-features/distribute-task-execution), install the toolchain on the
+[Workers](/docs/features/ci-features/distribute-task-execution), install the toolchain on the
 agents as well. A [launch template](/docs/kb/launch-templates) caches the Cargo registry and warms
 the dependency download:
 

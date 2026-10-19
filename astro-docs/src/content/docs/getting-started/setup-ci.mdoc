@@ -110,9 +110,9 @@ For read-only and read-write CI tokens, see [CI access tokens](/docs/kb/access-t
 
 On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) configures each task's inputs and outputs automatically from the files it reads and writes, so cache hits are always correct.
 
-## Distribute tasks with Nx Agents
+## Distribute tasks with Workers
 
-With Nx Agents, your tasks run across several machines instead of one.
+With Workers, your tasks run across several machines instead of one.
 With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep agents close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 

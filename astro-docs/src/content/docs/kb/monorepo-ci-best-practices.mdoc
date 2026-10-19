@@ -305,7 +305,7 @@ bins can't be configured optimally for every case.
 
 Dynamic distribution assigns ready tasks to whichever agent is free, respecting the task graph, and
 moves artifacts between agents through the shared cache.
-Nx Cloud does this with [Nx Agents](/docs/features/ci-features/distribute-task-execution), from the
+Nx Cloud does this with [Workers](/docs/features/ci-features/distribute-task-execution), from the
 same commands you already run.
 Declare the shape of the run once:
 
@@ -445,7 +445,7 @@ it, and caches task results locally.
 That much is free and needs no account.
 
 Nx Cloud adds the parts that need a service behind them, including the remote cache, distribution
-across Nx Agents, file-level task splitting, and flaky task detection.
+across Workers, file-level task splitting, and flaky task detection.
 Both layer onto the CI provider you already use rather than replacing it.
 
 Connect an existing workspace:

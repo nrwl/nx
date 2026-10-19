@@ -51,13 +51,13 @@ Remote caching can reduce work in several places:
 
 - Repeated CI runs can reuse tasks that already ran with the same inputs.
 - Developers can reuse results created in CI when their cache permissions grant access.
-- CI jobs and Nx Agents can transfer task artifacts through the shared cache.
+- CI jobs and Workers can transfer task artifacts through the shared cache.
 
 Remote caching complements [affected tasks](/docs/features/ci-features/affected).
 Affected calculations remove projects that don't need a task, while caching avoids rerunning matching
 tasks in the remaining graph.
 
-Nx Agents use remote caching to share artifacts
+Workers use remote caching to share artifacts
 between machines.
 When a task depends on output produced by another agent, Nx restores that output before running the
 dependent task.
@@ -92,18 +92,18 @@ You can configure them in three ways:
   tool's own configuration, such as the `include` and `files` a `tsconfig.json` lists, so they
   follow the tool without hand-written configuration. Making those settings precise is still up to
   you.
-- **With Ultracache.** When a task runs on Nx Agents, Nx Cloud traces the files it reads and records
+- **With Ultracache.** When a task runs on Workers, Nx Cloud traces the files it reads and records
   them as its inputs. Later runs use that record in place of the declared file inputs, so a change to
   a file the task never reads no longer invalidates it.
 
-Ultracache is part of every Nx Cloud plan, including Hobby, and every task that runs on Nx Agents uses
+Ultracache is part of every Nx Cloud plan, including Hobby, and every task that runs on Workers uses
 it, with nothing to turn on.
 It needs Nx 22.6 or later.
 It uses 1 credit per traced task, as listed in [credit pricing](/docs/reference/nx-cloud/credits-pricing).
 
 ### How Ultracache works
 
-1. A task runs on Nx Agents with no recording yet. Nx hashes it from its declared `inputs`, runs it,
+1. A task runs on Workers with no recording yet. Nx hashes it from its declared `inputs`, runs it,
    and traces every file it reads and writes.
 1. When the task succeeds, Nx Cloud records the files it read as its inputs at that commit.
 1. Later runs of that task are hashed from the recorded inputs.
@@ -116,7 +116,7 @@ Declared `outputs` still decide which files Nx stores in the cache and restores 
 
 Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't
 traced.
-Only tasks on Nx Agents are recorded. Once a task has a recording, any CI run hashes it from that
+Only tasks on Workers are recorded. Once a task has a recording, any CI run hashes it from that
 recording, including on CI machines you manage yourself. Runs outside CI hash from declared `inputs`.
 
 ### Turn off Ultracache for a target

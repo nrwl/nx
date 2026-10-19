@@ -6,7 +6,7 @@ filter: 'type:References'
 
 Nx Cloud reads CI configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
 The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
-Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Nx Agents, run [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
+Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Workers, run [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
 
 ```yaml
 # .nx/ci-config.yaml
@@ -41,13 +41,13 @@ Nx Cloud reads the file from `.nx/ci-config.yaml`. A `.nx/ci-config.yml` extensi
 
 The file has five top-level sections. All are optional, and each falls back to its defaults when omitted.
 
-| Section     | Purpose                                                             |
-| ----------- | ------------------------------------------------------------------- |
-| `lifecycle` | Stop conditions and stall detection for the run.                    |
-| `ai`        | Self-healing CI configuration.                                      |
-| `dte`       | Distributed task execution: how tasks are distributed to Nx Agents. |
-| `nx-agents` | Configuration for the Nx Agents themselves.                         |
-| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.           |
+| Section     | Purpose                                                           |
+| ----------- | ----------------------------------------------------------------- |
+| `lifecycle` | Stop conditions and stall detection for the run.                  |
+| `ai`        | Self-healing CI configuration.                                    |
+| `dte`       | Distributed task execution: how tasks are distributed to Workers. |
+| `nx-agents` | Configuration for the Workers themselves.                         |
+| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.         |
 
 For complete pipelines that pair this file with a provider workflow, see [setting up CI](/docs/getting-started/setup-ci) and [CI workflow examples](/docs/kb/ci-workflow-examples).
 
@@ -124,7 +124,7 @@ Type: array of strings.
 
 ## `dte`
 
-Distributed task execution: how tasks are distributed to Nx Agents.
+Distributed task execution: how tasks are distributed to Workers.
 
 ```yaml
 # .nx/ci-config.yaml
@@ -171,7 +171,7 @@ dte:
   distribute-on: .nx/workflows/distribution-config.yaml
 ```
 
-To bring your own compute instead of using Nx Agents, set `distribute-on: manual`.
+To bring your own compute instead of using Workers, set `distribute-on: manual`.
 See [bring your own compute](/docs/kb/bring-your-own-compute).
 
 ### `dte.scheduling-constraints`
@@ -223,7 +223,7 @@ Each inline rule matches tasks by `projects`, `targets`, and `configurations` gl
 
 ## `nx-agents`
 
-Configuration for the Nx Agents.
+Configuration for the Workers.
 
 ```yaml
 # .nx/ci-config.yaml
@@ -235,7 +235,7 @@ nx-agents:
 
 ### `nx-agents.with-env-vars`
 
-Environment variables forwarded from the main job to every Nx Agent.
+Environment variables forwarded from the main job to every Worker.
 Variables prefixed with `NX_` are forwarded automatically, so list only the additional ones you need.
 
 Type: array of strings.

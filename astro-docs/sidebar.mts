@@ -319,7 +319,7 @@ const learnGroups: SidebarItems = [
         link: 'features/ci-features/remote-cache',
       },
       {
-        label: 'Distribute task execution (Nx Agents)',
+        label: 'Distribute task execution (Workers)',
         link: 'features/ci-features/distribute-task-execution',
       },
       {

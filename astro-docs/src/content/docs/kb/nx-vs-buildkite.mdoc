@@ -32,7 +32,7 @@ They overlap only on monorepo awareness, test splitting, and how work spreads ac
 | [Model](#model)                                                   | Task-graph layer on your existing CI                | CI platform with hybrid control plane + your agents           |
 | [Remote caching](#remote-caching)                                 | Nx Cloud, content-addressed, shared with developers | No task-result cache, dependency caches via plugins           |
 | [Affected detection](#affected-detection)                         | Transitive, from the project graph                  | `monorepo-diff` plugin, folder-path matching                  |
-| [Distribution](#distribution)                                     | Task-level Nx Agents, dynamically balanced          | Job-level `parallelism`, declared manually                    |
+| [Distribution](#distribution)                                     | Task-level Workers, dynamically balanced            | Job-level `parallelism`, declared manually                    |
 | [Test splitting and flaky tests](#test-splitting-and-flaky-tests) | Atomizer per-file tasks, task-level flaky re-runs   | Test Engine: per-test splitting and quarantine via collectors |
 | [AI integration](#ai-integration)                                 | Self-healing CI proposes verified fixes             | MCP server and agentic workflow building blocks               |
 
@@ -40,7 +40,7 @@ They overlap only on monorepo awareness, test splitting, and how work spreads ac
 
 Buildkite's hybrid architecture is its defining strength: the SaaS control plane schedules work, while source code, secrets, and deploy credentials stay on the self-hosted agents you run (Buildkite also offers hosted agents). It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
 
-Nx requires no platform switch. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/kb/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
+Nx requires no platform switch. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Workers can run on your own compute](/docs/kb/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
 
 ## Remote caching
 
@@ -56,7 +56,7 @@ Buildkite's monorepo answer is the `monorepo-diff` plugin: watch folder paths, t
 
 ## Distribution
 
-Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand. The control plane schedules jobs, not tasks. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
+Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand. The control plane schedules jobs, not tasks. [Workers](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
 
 ## Test splitting and flaky tests
 

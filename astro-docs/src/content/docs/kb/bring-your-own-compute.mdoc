@@ -1,15 +1,15 @@
 ---
 title: 'Bring Your Own Compute'
-description: 'Learn how to run Nx Agents on your own CI compute across various CI providers'
+description: 'Learn how to run Workers on your own CI compute across various CI providers'
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
 ---
 
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) distributes your tasks across multiple machines on every Nx Cloud plan. On the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute) you can also bring your own compute, running the agents on your own CI provider instead of Nx Cloud-hosted machines. The recipes below show how to set that up.
+[Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks across multiple machines on every Nx Cloud plan. On the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute) you can also bring your own compute, running the agents on your own CI provider instead of Nx Cloud-hosted machines. The recipes below show how to set that up.
 
 Every recipe on this page uses the same [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
-Setting `dte.distribute-on` to `manual` tells Nx Cloud to distribute tasks to the agents your own pipeline starts instead of provisioning Nx Agents.
+Setting `dte.distribute-on` to `manual` tells Nx Cloud to distribute tasks to the agents your own pipeline starts instead of provisioning Workers.
 `lifecycle.stop-after` lists the targets that mark the run complete.
 
 ```yaml

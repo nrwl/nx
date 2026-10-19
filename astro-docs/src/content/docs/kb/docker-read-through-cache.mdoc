@@ -1,6 +1,6 @@
 ---
 title: 'Docker Read-Through Cache'
-description: 'Serve repeated Docker image pulls from a cache close to your Nx Agents instead of the upstream registry.'
+description: 'Serve repeated Docker image pulls from a cache close to your Workers instead of the upstream registry.'
 keywords:
   [
     docker,
@@ -17,7 +17,7 @@ topics:
   - 'Nx Cloud'
 ---
 
-The Docker read-through cache puts a registry mirror close to your [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+The Docker read-through cache puts a registry mirror close to your [Workers](/docs/features/ci-features/distribute-task-execution).
 The first time an image is pulled, it is fetched from the upstream registry (for example Docker Hub)
 and stored in the cache. Repeated pulls of the same image are then served from the cache instead of
 the upstream registry, cutting image download time and reducing dependence on external registries.

@@ -11,7 +11,7 @@ filter: 'type:Features'
 Nx Cloud makes CI faster and cheaper in two ways:
 
 - [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine. On Nx Cloud, Ultracache records the files each task actually reads, so cache hits follow what tasks read and more of them hit.
-- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Nx Agents, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Workers, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
 In most workspaces, distribution uses about 50% fewer machine-minutes than remote caching alone.
 Teams using Nx Cloud report 30% to 70% faster CI.

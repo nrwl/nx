@@ -29,7 +29,7 @@ Bazel is strong at hermetic caching, remote execution, and reproducibility, and 
 | --------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------- |
 | [Adoption](#adoption)                         | Incremental on existing tooling via `nx init`           | `BUILD` files per package, weeks to migrate                   |
 | [Caching](#caching)                           | Task-level, with Ultracache for cache integrity         | Action-level, sandbox-enforced by construction                |
-| [Distribution](#distribution)                 | Task-level Nx Agents plus Atomizer, no rewrite required | Action-level remote execution via third-party REAPI providers |
+| [Distribution](#distribution)                 | Task-level Workers plus Atomizer, no rewrite required   | Action-level remote execution via third-party REAPI providers |
 | [JavaScript ecosystem](#javascript-ecosystem) | First-party plugins for Vite, Jest, Next.js, Playwright | `rules_js`/`rules_ts` maintained by a single small vendor     |
 | [Polyglot support](#polyglot-support)         | JS/TS native, plugins for Gradle, Maven, .NET           | First-class C++, Java, Go, Rust, Python                       |
 | [Module boundaries](#module-boundaries)       | Tag-based lint rule plus conformance rules              | Native per-target visibility, enforced at build time          |
@@ -52,7 +52,7 @@ Nx caches per task, with inputs derived from tool configuration by plugins and c
 
 Bazel's remote execution ships individual actions to worker fleets over the open REAPI protocol, the finest-grained distribution model there is, served by providers like BuildBuddy and EngFlow or self-hosted clusters. It requires full Bazel adoption to use.
 
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute at task granularity with dynamic balancing from timing history, and [Atomizer](/docs/kb/split-e2e-tasks) narrows the granularity gap by splitting slow e2e suites into per-file tasks. Enablement is a single flag on top of unchanged tooling, and [flaky task detection](/docs/kb/flaky-tasks) plus [self-healing CI](/docs/features/ci-features/self-healing-ci) handle the failure side.
+[Workers](/docs/features/ci-features/distribute-task-execution) distribute at task granularity with dynamic balancing from timing history, and [Atomizer](/docs/kb/split-e2e-tasks) narrows the granularity gap by splitting slow e2e suites into per-file tasks. Enablement is a single flag on top of unchanged tooling, and [flaky task detection](/docs/kb/flaky-tasks) plus [self-healing CI](/docs/features/ci-features/self-healing-ci) handle the failure side.
 
 ## JavaScript ecosystem
 

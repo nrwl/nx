@@ -337,11 +337,11 @@ Turborepo supports CI through remote caching (Vercel Remote Cache) plus flags li
 When a single machine is no longer enough, the tools diverge significantly.
 
 {% tabs %}
-{% tabitem label="Nx Agents" %}
+{% tabitem label="Workers" %}
 
-**Nx Agents** splits work across multiple CI machines at the individual task level, dynamically balancing load based on historical timing data. The scheduler keeps all agents busy with minimal idle time.
+**Workers** split work across multiple CI machines at the individual task level, dynamically balancing load based on historical timing data. The scheduler keeps all agents busy with minimal idle time.
 
-![Nx Agents distributing work evenly across 4 machines](../../../assets/guides/adopting-nx/nx-dte.avif)
+![Workers distributing work evenly across 4 machines](../../../assets/guides/adopting-nx/nx-dte.avif)
 
 {% /tabitem %}
 {% tabitem label="Turborepo (binning)" %}
@@ -357,10 +357,10 @@ With static binning, one agent finishes early and sits idle while another carrie
 
 **The core difference is declarative vs imperative**:
 
-- With Nx you declare _what_ should run on CI, and Nx Cloud figures out the optimal distribution automatically. Nx Agents adapts automatically and gets smarter over time.
+- With Nx you declare _what_ should run on CI, and Nx Cloud figures out the optimal distribution automatically. Workers adapt automatically and get smarter over time.
 - With Turborepo, you imperatively assign tasks to machines and maintain that mapping as the codebase evolves.
 
-To learn more about distribution on CI, read [Distribute Task Execution (Nx Agents)](/docs/features/ci-features/distribute-task-execution).
+To learn more about distribution on CI, read [Distribute Task Execution (Workers)](/docs/features/ci-features/distribute-task-execution).
 
 Nx also provides **Atomizer**, which automatically splits slow e2e and integration test suites into per-file tasks that can run in parallel across machines.
 For more information, see [split e2e tasks](/docs/kb/split-e2e-tasks).
@@ -385,9 +385,9 @@ Both tools offer visibility into your pipelines, but through different models.
 
 **Nx Cloud** provides integrated dashboards out of the box. You get detailed run reports, timing data, cache hit/miss trends, and historical performance analysis without any external setup. These insights are also queryable via the MCP server, letting AI assistants analyze CI performance conversationally.
 
-![Nx DTE across 12 Nx Agents - all agents have minimum 97% utilization](../../../assets/guides/adopting-nx/dte-chart.avif)
+![Nx DTE across 12 Workers - all agents have minimum 97% utilization](../../../assets/guides/adopting-nx/dte-chart.avif)
 
-_Nx Agent utilization chart, showing even distribution across CI runners._
+_Worker utilization chart, showing even distribution across CI runners._
 
 For deep dives into resource utilization, see [Resource Usage](/docs/kb/resource-usage).
 
