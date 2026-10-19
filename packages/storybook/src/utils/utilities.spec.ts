@@ -266,20 +266,6 @@ describe('testing utilities', () => {
     });
 
     describe('findStorybookAndBuildTargetsAndCompiler', () => {
-      it('should find correct targets and compiler for the provided next app config', () => {
-        const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.nextapp
-        );
-        expect(result).toEqual({
-          storybookBuildTarget: undefined,
-          storybookTarget: undefined,
-          ngBuildTarget: undefined,
-          nextBuildTarget: 'build',
-          otherBuildTarget: undefined,
-          compiler: undefined,
-        });
-      });
-
       it('should treat the modern angular application builder as the ng build target', () => {
         const result = findStorybookAndBuildTargetsAndCompiler({
           build: { executor: '@angular/build:application' },
@@ -287,29 +273,14 @@ describe('testing utilities', () => {
         expect(result.ngBuildTarget).toEqual('build');
       });
 
-      it('should find correct targets and compiler for the provided web app config', () => {
-        const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations.web
-        );
-        expect(result).toEqual({
-          storybookBuildTarget: 'build-storybook',
-          storybookTarget: 'storybook',
-          ngBuildTarget: undefined,
-          nextBuildTarget: 'build',
-          otherBuildTarget: undefined,
-          compiler: undefined,
-        });
-      });
-
       it('should find correct targets and compiler for the provided react app config', () => {
         const result = findStorybookAndBuildTargetsAndCompiler(
           targetVariations.react
         );
         expect(result).toEqual({
-          storybookBuildTarget: 'build-storybook',
-          storybookTarget: 'storybook',
+          storybookBuildTarget: undefined,
+          storybookTarget: undefined,
           ngBuildTarget: undefined,
-          nextBuildTarget: undefined,
           otherBuildTarget: 'build',
           compiler: 'babel',
         });
@@ -323,7 +294,6 @@ describe('testing utilities', () => {
           storybookBuildTarget: 'build-storybook',
           storybookTarget: 'storybook',
           ngBuildTarget: 'build',
-          nextBuildTarget: undefined,
           otherBuildTarget: undefined,
           compiler: undefined,
         });
@@ -337,7 +307,6 @@ describe('testing utilities', () => {
           storybookBuildTarget: undefined,
           storybookTarget: undefined,
           ngBuildTarget: undefined,
-          nextBuildTarget: undefined,
           otherBuildTarget: 'build',
           compiler: undefined,
         });
@@ -351,7 +320,6 @@ describe('testing utilities', () => {
           storybookBuildTarget: undefined,
           storybookTarget: undefined,
           ngBuildTarget: undefined,
-          nextBuildTarget: undefined,
           otherBuildTarget: 'build',
           compiler: 'babel',
         });
@@ -362,25 +330,10 @@ describe('testing utilities', () => {
           targetVariations['react-swc']
         );
         expect(result).toEqual({
-          storybookBuildTarget: 'build-storybook',
-          storybookTarget: 'storybook',
-          ngBuildTarget: undefined,
-          nextBuildTarget: undefined,
-          otherBuildTarget: 'build',
-          compiler: 'swc',
-        });
-      });
-
-      it('should find correct targets and compiler for the provided Next.js app config with swc', () => {
-        const result = findStorybookAndBuildTargetsAndCompiler(
-          targetVariations['nextapp-swc']
-        );
-        expect(result).toEqual({
           storybookBuildTarget: undefined,
           storybookTarget: undefined,
           ngBuildTarget: undefined,
-          nextBuildTarget: 'build',
-          otherBuildTarget: undefined,
+          otherBuildTarget: 'build',
           compiler: 'swc',
         });
       });
@@ -393,7 +346,6 @@ describe('testing utilities', () => {
           storybookBuildTarget: undefined,
           storybookTarget: undefined,
           ngBuildTarget: undefined,
-          nextBuildTarget: undefined,
           otherBuildTarget: 'build',
           compiler: 'swc',
         });
