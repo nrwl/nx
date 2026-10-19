@@ -128,6 +128,12 @@ describe('add-ready-when-signal migration', () => {
       { build: { defaultConfiguration: 'production' } },
       ['build'],
     ],
+    [
+      'set a configuration the build target does not have',
+      { options: { buildTarget: 'app:build' } },
+      { '@nx/web:file-server': { configurations: { ci: { port: 4300 } } } },
+      ['build'],
+    ],
   ])(
     'makes the file server depend on its build target with targetDefaults that %s',
     async (_, serve, targetDefaults, dependsOn) => {
@@ -200,6 +206,51 @@ describe('add-ready-when-signal migration', () => {
           options: { command: 'webpack build' },
           configurations: { production: {}, development: {} },
         },
+      ],
+      [
+        'a configuration the build target also has',
+        {
+          options: { buildTarget: 'app:build:production' },
+          configurations: { development: { port: 4300 } },
+        },
+      ],
+      [
+        'a configuration the build target has from targetDefaults',
+        {
+          options: { buildTarget: 'app:build:production' },
+          configurations: { development: { port: 4300 } },
+        },
+        { build: { configurations: { development: {} } } },
+        {
+          executor: '@nx/web:webpack',
+          defaultConfiguration: 'production',
+          configurations: { production: {} },
+        },
+      ],
+      [
+        'a configuration from targetDefaults that the build target also has',
+        { options: { buildTarget: 'app:build' } },
+        {
+          '@nx/web:file-server': {
+            configurations: { development: { port: 4300 } },
+          },
+        },
+      ],
+      [
+        'a configuration when the build target is not in project.json',
+        {
+          options: { buildTarget: 'app:compile' },
+          configurations: { ci: { port: 4300 } },
+        },
+      ],
+      [
+        'a configuration when project.json only overrides an inferred build target',
+        {
+          options: { buildTarget: 'app:build' },
+          configurations: { ci: { port: 4300 } },
+        },
+        undefined,
+        { options: { outputPath: 'dist/apps/app' } },
       ],
     ]
   )(

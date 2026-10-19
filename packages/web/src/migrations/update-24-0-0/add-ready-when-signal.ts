@@ -78,11 +78,10 @@ function addBuildDependency(
   // `dependsOn` can't name a configuration, so only the build target's default
   // one is covered
   const buildTargetConfig = projects.get(project)?.targets?.[name];
-  const defaultConfiguration =
-    buildTargetConfig?.defaultConfiguration ??
-    // Nx merges defaults into a run-commands or run-script target based on its
-    // command or script, so only targets with other executors read them
-    (buildTargetConfig?.executor &&
+  // Nx merges defaults into a run-commands or run-script target based on its
+  // command or script, so only targets with other executors read them
+  const buildTargetDefaults =
+    buildTargetConfig?.executor &&
     buildTargetConfig.executor !== 'nx:run-commands' &&
     buildTargetConfig.executor !== 'nx:run-script'
       ? readApplicableTargetDefaults(
@@ -91,9 +90,29 @@ function addBuildDependency(
           readNxJson(tree)?.targetDefaults,
           project,
           nodes[project]
-        )?.defaultConfiguration
-      : undefined);
+        )
+      : null;
+  const defaultConfiguration =
+    buildTargetConfig?.defaultConfiguration ??
+    buildTargetDefaults?.defaultConfiguration;
   if (configuration !== undefined && configuration !== defaultConfiguration) {
+    return false;
+  }
+  // Nx runs the `dependsOn` build in the requested configuration when the build
+  // target has it. An inferred build target's configurations are unknown.
+  const buildConfigurations = {
+    ...buildTargetDefaults?.configurations,
+    ...buildTargetConfig?.configurations,
+  };
+  const inferredBuildTarget =
+    !buildTargetConfig?.executor && !buildTargetConfig?.command;
+  if (
+    Object.keys(effective.configurations ?? {}).some(
+      (config) =>
+        config !== defaultConfiguration &&
+        (inferredBuildTarget || config in buildConfigurations)
+    )
+  ) {
     return false;
   }
 

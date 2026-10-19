@@ -24,6 +24,8 @@ The migration also leaves a target unchanged when `dependsOn` can't run its buil
 - A configuration of the target sets `buildTarget`. `dependsOn` applies to every configuration.
 - The `buildTarget` names a configuration of the build target other than its `defaultConfiguration`. `dependsOn` can't name a configuration.
   The migration reads `defaultConfiguration` from the build target in `project.json`, and from `targetDefaults` when that build target runs an executor other than `nx:run-commands` or `nx:run-script`.
+- The target has a configuration that the build target also has, other than the build target's `defaultConfiguration`. When you run the target in that configuration, `dependsOn` builds that configuration, but the file server still builds the `defaultConfiguration`.
+  The migration reads the build target's configurations the same way as its `defaultConfiguration`. When the build target isn't in `project.json`, or `project.json` sets neither its `executor` nor its `command`, any configuration of the target leaves it unchanged.
 - Nx can't parse the `buildTarget`, such as an empty string.
 
 Set `readyWhen: { signal: true }` on those targets yourself, and add a `dependsOn` entry that builds the app first.
