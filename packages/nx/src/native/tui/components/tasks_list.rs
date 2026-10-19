@@ -1389,18 +1389,18 @@ impl TasksList {
     /// Updates their status to InProgress and marks for deferred sort.
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
         let mut has_standalone_change = false;
+        let now = current_timestamp_millis();
 
         for task in &tasks {
             let task_id = &task.id;
+            let start_time = task.start_time.unwrap_or(now);
             let is_in_batch = self.is_task_in_any_batch(task_id);
 
             // Update in task_lookup
             if let Some(task_item) = self.task_lookup.get_mut(task_id) {
                 task_item.update_status(TaskStatus::InProgress);
-                if task_item.start_time.is_none() {
-                    let current_time = current_timestamp_millis();
-                    task_item.start_time = Some(current_time);
-                }
+                task_item.start_time = Some(start_time);
+                task_item.end_time = None;
                 if !task_item.continuous {
                     task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
                 }
@@ -1411,10 +1411,8 @@ impl TasksList {
                 if let DisplayItem::Task(task_item) = display_item {
                     if task_item.name == *task_id {
                         task_item.update_status(TaskStatus::InProgress);
-                        if task_item.start_time.is_none() {
-                            let current_time = current_timestamp_millis();
-                            task_item.start_time = Some(current_time);
-                        }
+                        task_item.start_time = Some(start_time);
+                        task_item.end_time = None;
                         if !task_item.continuous {
                             task_item.duration = DURATION_NOT_YET_KNOWN.to_string();
                         }
@@ -1424,14 +1422,15 @@ impl TasksList {
             }
 
             // Add to in-progress list if standalone task
-            if !is_in_batch
-                && !self
+            if !is_in_batch {
+                if !self
                     .in_progress_entries
                     .iter()
                     .any(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
-            {
-                self.in_progress_entries
-                    .push(SelectionEntry::Task(task_id.to_string()));
+                {
+                    self.in_progress_entries
+                        .push(SelectionEntry::Task(task_id.to_string()));
+                }
                 has_standalone_change = true;
             }
         }
