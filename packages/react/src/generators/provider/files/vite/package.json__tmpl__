@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@module-federation/vite": "<%= versions.moduleFederationVitePluginVersion %>",
+    "@nx/vite": "<%= versions.nxVersion %>",
     "@types/react": "<%= versions.typesReactVersion %>",
     "@types/react-dom": "<%= versions.typesReactDomVersion %>",
     "@vitejs/plugin-react": "<%= versions.vitejsPluginReactVersion %>",

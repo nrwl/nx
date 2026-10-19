@@ -1,4 +1,4 @@
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import consumerGenerator from './consumer';
@@ -57,6 +57,10 @@ describe('@nx/react:consumer', () => {
 
       const project = readProjectConfiguration(tree, 'my-consumer');
       expect(project).toMatchSnapshot('project.json');
+      // The generated config imports the bundler's ready-signal plugin
+      expect(
+        readJson(tree, 'package.json').devDependencies[`@nx/${bundler}`]
+      ).toBeDefined();
       expect(snapshotTree(tree, 'apps/my-consumer')).toMatchSnapshot(
         `${bundler} tree`
       );
