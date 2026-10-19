@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import {
   getDependencyConfigs,
@@ -36,6 +37,29 @@ export class ProcessTasks {
   readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
+  private readonly dependencyConfigs = new Map<
+    string,
+    ReturnType<typeof getDependencyConfigs>
+  >();
+  private readonly reachableProjects = new Map<string, Set<string>>();
+  private reverseDependencies: Map<string, string[]>;
+  private readonly dummySignatures = new Map<
+    string,
+    Array<{ value: unknown; id: number }>
+  >();
+  private readonly taskSignatures = new WeakMap<
+    Task['target'],
+    {
+      configuration: string;
+      overrides: Record<string, unknown>;
+      sourceOverrides: Task['overrides'];
+      id: number;
+    }
+  >();
+  private nextSignature = 0;
+  private projectsReachingCycles: Set<string>;
+  private changedDummyGraph = false;
+  private optimizeDummyTasks = true;
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
@@ -91,6 +115,39 @@ export class ProcessTasks {
       this.processTask(task, task.target.project, configuration, overrides);
     }
 
+    // findCycles is traversal-order sensitive. Sharing or pruning nodes in a
+    // cyclic graph can change which dummies it excludes. Rebuild those graphs
+    // with their original dummy identities and traversal before filtering.
+    if (
+      this.changedDummyGraph &&
+      (findCycles({ dependencies: this.dependencies }) ||
+        findCycles({ dependencies: this.continuousDependencies }))
+    ) {
+      const original = new ProcessTasks(
+        this.extraTargetDependencies,
+        this.projectGraph,
+        this.recordDependencyOverrides
+      );
+      original.optimizeDummyTasks = false;
+      const roots = original.processTasks(
+        projectNames,
+        targets,
+        configuration,
+        overrides,
+        excludeTaskDependencies
+      );
+      for (const field of [
+        'tasks',
+        'dependencies',
+        'continuousDependencies',
+        'dependencyOverrides',
+      ] as const) {
+        for (const key of Object.keys(this[field])) delete this[field][key];
+        Object.assign(this[field], original[field]);
+      }
+      return roots;
+    }
+
     if (excludeTaskDependencies) {
       for (let t of Object.keys(this.tasks)) {
         if (!initialTasks[t]) {
@@ -133,12 +190,7 @@ export class ProcessTasks {
     }
     this.seen.add(seenKey);
 
-    const dependencyConfigs = getDependencyConfigs(
-      { project: task.target.project, target: task.target.target },
-      this.extraTargetDependencies,
-      this.projectGraph,
-      this.allTargetNames
-    );
+    const dependencyConfigs = this.getDependencyConfigs(task);
     for (const dependencyConfig of dependencyConfigs) {
       const taskOverrides = createTaskOverrides(
         dependencyConfig,
@@ -174,6 +226,143 @@ export class ProcessTasks {
         );
       }
     }
+  }
+
+  private getDependencyConfigs(task: Task) {
+    const key = JSON.stringify([task.target.project, task.target.target]);
+    let configs = this.dependencyConfigs.get(key);
+    if (!configs) {
+      configs = getDependencyConfigs(
+        { project: task.target.project, target: task.target.target },
+        this.extraTargetDependencies,
+        this.projectGraph,
+        this.allTargetNames
+      );
+      this.dependencyConfigs.set(key, configs);
+    }
+    return configs;
+  }
+
+  /** Projects with a nonempty dependency path to this target, including cycles. */
+  private projectsReachingTarget(target: string): Set<string> {
+    let reachable = this.reachableProjects.get(target);
+    if (reachable) return reachable;
+    if (!this.reverseDependencies) {
+      this.reverseDependencies = new Map();
+      for (const [source, deps] of Object.entries(
+        this.projectGraph.dependencies
+      )) {
+        if (!this.projectGraph.nodes[source]) continue;
+        for (const dep of deps) {
+          if (!this.projectGraph.nodes[dep.target]) continue;
+          const parents = this.reverseDependencies.get(dep.target) ?? [];
+          parents.push(source);
+          this.reverseDependencies.set(dep.target, parents);
+        }
+      }
+    }
+    reachable = new Set<string>();
+    const queue: string[] = [];
+    for (const project of Object.values(this.projectGraph.nodes)) {
+      if (projectHasTarget(project, target)) queue.push(project.name);
+    }
+    for (let i = 0; i < queue.length; i++) {
+      for (const parent of this.reverseDependencies.get(queue[i]) ?? []) {
+        if (!reachable.has(parent)) {
+          reachable.add(parent);
+          queue.push(parent);
+        }
+      }
+    }
+    this.reachableProjects.set(target, reachable);
+    return reachable;
+  }
+
+  private canReachProjectCycle(project: string): boolean {
+    if (!this.projectsReachingCycles) {
+      // Remove sinks repeatedly. The remaining projects have a path to a
+      // cycle, whose legacy dummy filtering must be preserved even when no
+      // real dependency target is reachable.
+      const remaining = new Set(Object.keys(this.projectGraph.nodes));
+      const degree = new Map<string, number>();
+      const queue: string[] = [];
+      for (const name of remaining) {
+        const count = (this.projectGraph.dependencies[name] ?? []).filter(
+          (dep) => this.projectGraph.nodes[dep.target]
+        ).length;
+        degree.set(name, count);
+        if (count === 0) queue.push(name);
+      }
+      for (let i = 0; i < queue.length; i++) {
+        remaining.delete(queue[i]);
+        for (const parent of this.reverseDependencies.get(queue[i]) ?? []) {
+          const count = degree.get(parent) - 1;
+          degree.set(parent, count);
+          if (count === 0) queue.push(parent);
+        }
+      }
+      this.projectsReachingCycles = remaining;
+    }
+    return this.projectsReachingCycles.has(project);
+  }
+
+  private dummySignature(
+    task: Task,
+    configuration: string,
+    overrides: Record<string, unknown>
+  ): number {
+    // Dummies copy their origin's target and overrides by reference.
+    const cached = this.taskSignatures.get(task.target);
+    if (
+      cached &&
+      cached.configuration === configuration &&
+      cached.overrides === overrides &&
+      cached.sourceOverrides === task.overrides
+    )
+      return cached.id;
+    // A normalized self glob names the origin project even when that project
+    // has none of its targets. Such entries never add an edge or create a task;
+    // omitting them from the signature lets those origins share the same walk.
+    const configs = this.getDependencyConfigs(task).filter(
+      (config) =>
+        !config.projects ||
+        config.projects.some((project) =>
+          projectHasTarget(this.projectGraph.nodes[project], config.target)
+        )
+    );
+    const value = [
+      configs,
+      configuration,
+      task.target.configuration,
+      task.overrides,
+      configs.map((config) =>
+        createTaskOverrides(config, overrides, task, this.projectGraph)
+      ),
+    ];
+    let key: string;
+    try {
+      key = JSON.stringify(value);
+    } catch {
+      // Programmatic overrides need not be JSON serializable. Strict equality
+      // within the bucket also handles undefined and other JSON collisions.
+      key = '__non_json__';
+    }
+    const bucket = this.dummySignatures.get(key) ?? [];
+    let signature = bucket.find((entry) =>
+      isDeepStrictEqual(entry.value, value)
+    );
+    if (!signature) {
+      signature = { value, id: this.nextSignature++ };
+      bucket.push(signature);
+      this.dummySignatures.set(key, bucket);
+    }
+    this.taskSignatures.set(task.target, {
+      configuration,
+      overrides,
+      sourceOverrides: task.overrides,
+      id: signature.id,
+    });
+    return signature.id;
   }
 
   private processTasksForMultipleProjects(
@@ -332,22 +521,57 @@ export class ProcessTasks {
           );
         }
       } else {
-        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
-        const dummyId = createTaskId(
-          depProject.name,
-          task.target.project +
-            task.target.target +
-            '__' +
-            dependencyConfig.target +
-            DUMMY_TASK_TARGET,
-          undefined
+        const configs = this.getDependencyConfigs(task);
+        // Inert self/project entries add no edges. Active ones can contribute
+        // edges at the dummy's position, so retain those walks and their order.
+        const dependencyTargets = configs.filter(
+          (c) => c.dependencies && !c.projects
         );
+        const cannotReachTarget =
+          this.optimizeDummyTasks &&
+          !dependencyTargets.some((c) =>
+            this.projectsReachingTarget(c.target).has(depProject.name)
+          );
+        if (
+          cannotReachTarget &&
+          !configs.some((c) =>
+            c.projects?.some((project) =>
+              projectHasTarget(this.projectGraph.nodes[project], c.target)
+            )
+          ) &&
+          !this.canReachProjectCycle(depProject.name)
+        ) {
+          this.changedDummyGraph = true;
+          continue;
+        }
+        const shared =
+          this.optimizeDummyTasks && !this.recordDependencyOverrides;
+        // Every dummy evaluates all of its origin's configs, regardless of
+        // which missing dependency target caused the walk.
+        const dummyId = shared
+          ? createTaskId(
+              depProject.name,
+              `__nx_shared_${this.dummySignature(task, configuration, overrides)}${DUMMY_TASK_TARGET}`,
+              undefined
+            )
+          : createTaskId(
+              depProject.name,
+              task.target.project +
+                task.target.target +
+                '__' +
+                dependencyConfig.target +
+                DUMMY_TASK_TARGET,
+              undefined
+            );
         this.dependencies[task.id].push({ id: dummyId });
         this.continuousDependencies[task.id].push({ id: dummyId });
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
-        const noopTask = this.createDummyTask(dummyId, task);
-        this.processTask(noopTask, depProject.name, configuration, overrides);
+        if (shared) this.changedDummyGraph = true;
+        if (!this.seen.has(`${dummyId}-${depProject.name}`)) {
+          const noopTask = this.createDummyTask(dummyId, task);
+          this.processTask(noopTask, depProject.name, configuration, overrides);
+        }
       }
     }
   }
@@ -628,12 +852,23 @@ export function filterDummyTasks(dependencies: {
   [k: string]: TaskGraphEdge[];
 }) {
   const cycles = findCycles({ dependencies });
+  const memo = new Map<string, TaskGraphEdge[]>();
+  const resolve = (edge: TaskGraphEdge): TaskGraphEdge[] => {
+    const id = edge.id;
+    if (!id.endsWith(DUMMY_TASK_TARGET)) return [edge];
+    if (memo.has(id)) return memo.get(id);
+    const result = mergeEdges((dependencies[id] ?? []).flatMap(resolve));
+    memo.set(id, result);
+    return result;
+  };
   for (const [key, deps] of Object.entries(dependencies)) {
     if (!key.endsWith(DUMMY_TASK_TARGET)) {
       const normalizedDeps = [];
       for (const dep of deps) {
         normalizedDeps.push(
-          ...getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
+          ...(cycles
+            ? getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
+            : resolve(dep).filter((edge) => edge.id !== key))
         );
       }
 
