@@ -372,6 +372,15 @@
       "description": "Add optional webpack, Module Federation, and Rspack packages when existing targets require them.",
       "factory": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages",
       "documentation": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages.md"
+    },
+    "update-24-0-0-upgrade-to-angular-22-2": {
+      "version": "24.0.0-beta.4",
+      "requires": {
+        "@angular/core": ">=22.1.0 <22.2.0"
+      },
+      "description": "Update the Angular packages to 22.2 unless the workspace uses Cypress component testing or webpack Module Federation in an Angular project, which break with the webpack-dev-server and webpack versions Angular 22.2 installs.",
+      "factory": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2",
+      "documentation": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2.md"
     }
   },
   "packageJsonUpdates": {
@@ -2320,80 +2329,6 @@
       "packages": {
         "@ngrx/store": {
           "version": "^22.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "24.0.0": {
-      "version": "24.0.0-beta.4",
-      "requires": {
-        "@angular/core": ">=22.1.0 <22.2.0"
-      },
-      "packages": {
-        "@angular/cli": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false,
-          "ignorePackageGroup": true,
-          "ignoreMigrations": true
-        },
-        "@angular-devkit/build-angular": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular-devkit/core": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular-devkit/schematics": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/build": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/pwa": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/ssr": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@schematics/angular": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular-devkit/architect": {
-          "version": "~0.2202.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular-devkit/build-webpack": {
-          "version": "~0.2202.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/core": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": true
-        },
-        "@angular/material": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/cdk": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "@angular/google-maps": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "ng-packagr": {
-          "version": "~22.2.0",
-          "alwaysAddToPackageJson": false
-        },
-        "zone.js": {
-          "version": "~0.16.2",
           "alwaysAddToPackageJson": false
         }
       }
