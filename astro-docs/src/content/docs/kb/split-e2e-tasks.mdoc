@@ -485,7 +485,7 @@ Learn more about configuring your [CI provider with these workflow examples](/do
 
 ## Scope atomized tasks to the code they exercise
 
-An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns
-every test file.
+An atomized e2e task depends on the app it tests, so a change to the app, or to any project the app
+depends on, reruns every test file.
 To scope each test file's task to the code it exercises, see
 [scope atomized e2e tests](/docs/kb/scope-e2e-tests).

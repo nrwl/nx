@@ -382,8 +382,8 @@ The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": 
 A task hashed from its declared inputs hashes the same with or without it.
 With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
 
-For the atomized task of an e2e test file, the `@nx-depends-on` directive sets these inputs for the
-projects it lists.
+For the atomized task of an e2e test file, the `@nx-depends-on` directive sets `always` inputs for
+the projects it lists.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 

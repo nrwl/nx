@@ -109,7 +109,7 @@ The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
 
-An atomized task reruns when any library the app bundles changes.
+An atomized task reruns when the app, or any project the app depends on, changes.
 To scope it to the code its test file exercises, see
 [scope atomized e2e tests](/docs/kb/scope-e2e-tests).
 
