@@ -88,6 +88,7 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { gt } from 'semver';
 import { logger } from '../../utils/logger';
 
 const createPackageJson = (
@@ -1440,11 +1441,14 @@ describe('Migration', () => {
                 return Promise.resolve({
                   version: v,
                   generators: {
-                    'optional-update-22': {
-                      version: '22.0.0',
-                      requires: { cypress: '^14.0.0' },
-                      optionalUpdate: true,
-                    },
+                    // Metadata above the installed version pruned this entry.
+                    ...(!gt(v, pluginVersion) && {
+                      'optional-update-22': {
+                        version: '22.0.0',
+                        requires: { cypress: '^14.0.0' },
+                        optionalUpdate: true,
+                      },
+                    }),
                     'optional-update-23-3': {
                       version: '23.3.0',
                       requires: { cypress: '^14.0.0' },
