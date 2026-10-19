@@ -7,7 +7,6 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
@@ -72,9 +71,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     true
   );
 
-  return runTasksInSerial(installTask, () => {
-    migrationLogs.flushLogs();
-  });
+  // Flushed now rather than in the callback so remove-deprecated-executors, which
+  // skips the install callback, still prints these.
+  migrationLogs.flushLogs();
+
+  return installTask;
 }
 
 export default convertToInferred;

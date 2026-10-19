@@ -1,14 +1,17 @@
 import { output } from '../../../../utils/output';
 import {
+  type MigrateRunStopReason,
   reportMigrateOrchestratorAbandoned,
   reportMigrateRunComplete,
   reportMigrateRunError,
+  reportMigrateRunStopped,
 } from '../../migrate-analytics';
 import {
   completionSummaryLines,
   completionWarnings,
   hasUnresolvedIssues,
   holdRunToContinue,
+  isHeld,
   type MigrateRunPolicy,
   type MigrateRunState,
   type OrchestratorInitResult,
@@ -66,22 +69,29 @@ export async function runMasterSession(
     createCommits: init.createCommits,
     skipInstall: init.skipInstall,
   };
-  const resume = (runId: string) =>
-    runOrchestratorResume({
+  // A resume refuses when it cannot restore the run's missing runbook; a
+  // start refuses when the default-branch commit confirmation is declined.
+  let refusal: MigrateRunStopReason = 'declined_commits';
+  const resume = (runId: string) => {
+    refusal = 'runbook_missing';
+    return runOrchestratorResume({
       root: init.root,
       runId,
       policy,
       emitAgentInstructions: false,
     });
+  };
   // With `replaceRunId`, starts fresh over that run only; the consent covers
   // the run the user saw, and any other active run is reported instead.
-  const start = (replaceRunId?: string) =>
-    runOrchestratorInit({
+  const start = (replaceRunId?: string) => {
+    refusal = 'declined_commits';
+    return runOrchestratorInit({
       ...init,
       emitAgentInstructions: false,
       onExistingRun: replaceRunId === undefined ? 'report' : 'start-fresh',
       replaceRunId,
     });
+  };
   let ready =
     requestedRunId !== undefined && !startFresh
       ? resume(requestedRunId)
@@ -92,6 +102,7 @@ export async function runMasterSession(
       output.log({
         title: `Leaving migrate run ${ready.runId} as it is. ${continueHint(init.root, agent.id, ready.runId, ready.facts.policy)}`,
       });
+      reportMigrateRunStopped('aborted');
       return;
     }
     if (decision === 'continue') {
@@ -113,54 +124,26 @@ export async function runMasterSession(
         )
       )
     );
+    reportMigrateRunStopped('existing_run');
     return 1;
   }
   if (ready.kind === 'refused') {
+    reportMigrateRunStopped(refusal);
     return;
   }
-  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
+  const { runId, runRoot } = ready;
   const resumeHint = continueHint(init.root, agent.id, runId, policy);
 
   output.log({
     title: `Starting ${agent.displayName} to drive migrate run ${runId}.`,
   });
-  const session = await spawnMasterSession({
+  const state = await driveMasterSession({
     agent,
-    runRoot,
-    runId,
-    runbookPath,
-    reconcileCommand,
+    ready,
     policy,
+    notStartedHint: `Migrate run ${runId} is still active. ${resumeHint}`,
   });
-  if (session.kind === 'spawn-failed') {
-    output.error({
-      title: `Could not start ${agent.displayName}: ${session.error.message}`,
-      bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-    return 1;
-  }
-  if (session.kind === 'broker-failed') {
-    // The broker itself reads run.json, so its failure can mean the state is
-    // unreadable; the read below decides whether a resume is safe to offer.
-    output.error({
-      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-  }
-
-  let state: MigrateRunState;
-  try {
-    state = readRunState(runDir(runRoot, runId));
-  } catch (error) {
-    // No resume hint: run discovery skips a directory whose run.json is
-    // missing, so a rerun could start a second run over the same plan.
-    output.error({
-      title: `Nx could not determine whether migrate run ${runId} completed.`,
-      bodyLines: [error instanceof Error ? error.message : String(error)],
-    });
-    return 1;
-  }
+  if (!state) return 1;
   switch (state.status) {
     case 'active':
       reportMigrateOrchestratorAbandoned({
@@ -203,13 +186,78 @@ export async function runMasterSession(
   }
 }
 
+/**
+ * Hands a ready run to one agent session and reads the run's state once the
+ * session ends. `migration` is set for a `--run-migration` run. Returns null
+ * once it has printed why the session could not start or why its outcome is
+ * unknown; `notStartedHint` tells the user what to do when it could not start.
+ */
+export async function driveMasterSession(input: {
+  agent: DetectedInstalledAgent;
+  ready: Extract<OrchestratorInitResult, { kind: 'ready' }>;
+  policy: MigrateRunPolicy;
+  migration?: { package: string; name: string };
+  notStartedHint: string;
+}): Promise<MigrateRunState | null> {
+  const { agent, ready, policy, migration, notStartedHint } = input;
+  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
+  const reportAgentError = (error: Error) =>
+    reportMigrateRunError({
+      code: 'agentic',
+      migrationPackage: migration?.package,
+      migrationName: migration?.name,
+      error,
+    });
+  const session = await spawnMasterSession({
+    agent,
+    runRoot,
+    runId,
+    runbookPath,
+    reconcileCommand,
+    policy,
+    singleMigration: migration !== undefined,
+  });
+  if (session.kind === 'spawn-failed') {
+    output.error({
+      title: `Could not start ${agent.displayName}: ${session.error.message}`,
+      bodyLines: [notStartedHint],
+    });
+    reportAgentError(session.error);
+    return null;
+  }
+  if (session.kind === 'broker-failed') {
+    // The broker itself reads run.json, so its failure can mean the state is
+    // unreadable; the read below decides what the caller can offer.
+    output.error({
+      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
+    });
+    reportAgentError(session.error);
+  }
+  try {
+    return readRunState(runDir(runRoot, runId));
+  } catch (error) {
+    // No resume hint for a `--run-migrations` run: run discovery skips a
+    // directory whose run.json is missing, so a rerun could start a second run
+    // over the same plan.
+    output.error({
+      title: `Nx could not determine whether ${
+        migration
+          ? `migration ${migration.package}:${migration.name}`
+          : `migrate run ${runId}`
+      } completed.`,
+      bodyLines: [error instanceof Error ? error.message : String(error)],
+    });
+    return null;
+  }
+}
+
 function continueHint(
   root: string,
   agentId: string,
   runId: string,
   policy: MigrateRunPolicy
 ): string {
-  return `Run ${renderContinueCommand(root, runId, policy, agentId)}, with NX_MIGRATE_ORCHESTRATOR=true set in the environment, to continue it.`;
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)} to continue it.`;
 }
 
 async function decideExistingRun(
@@ -220,10 +268,7 @@ async function decideExistingRun(
   // A held run leaves nothing to ask: continue would open a second session
   // over the live one, and start fresh refuses. The continue's own gate
   // throws the refusal; a holder gone since the report lets the prompt run.
-  if (
-    found.facts.otherHolders === 'unknown' ||
-    found.facts.otherHolders.length > 0
-  ) {
+  if (isHeld(found.facts.otherHolders)) {
     holdRunToContinue(root, found.runId);
   }
   return migrateChoice({

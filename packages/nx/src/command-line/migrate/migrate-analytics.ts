@@ -37,7 +37,6 @@ export type MigratePromptChoices = {
   agentic: 'yes-once' | 'yes-flex' | 'yes-pin' | 'no-once' | 'no-never';
   // The chosen agent id (open-ended).
   agent_select: string;
-  ambiguous_agent_outcome: 'abort' | 'continue';
 };
 export type MigratePromptName = keyof MigratePromptChoices;
 // Underscore-shaped because the code is appended verbatim to the error event
@@ -55,6 +54,13 @@ export type MigrateRunErrorCode =
   | 'migration_exec'
   | 'agentic'
   | 'other';
+// Why a run-phase invocation stopped before running anything; appended to the
+// event name like the error codes, so it costs no GA custom dimension.
+export type MigrateRunStopReason =
+  | 'existing_run'
+  | 'declined_commits'
+  | 'aborted'
+  | 'runbook_missing';
 
 // Identifier-shaped tokens only (Node codes like ENOENT, class names like
 // TypeError). Rejects anything with a slash, space, or punctuation so a
@@ -243,6 +249,17 @@ export function reportMigrateRunComplete(opts: {
   });
 }
 
+/**
+ * Closes a `migrate_run_start` whose invocation stopped before running any
+ * migration.
+ */
+export function reportMigrateRunStopped(reason: MigrateRunStopReason): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(`migrate_run_stopped_${reason}`);
+  });
+}
+
 export function reportMigrateRunError(opts: {
   code: MigrateRunErrorCode;
   migrationPackage?: string;
@@ -425,6 +442,34 @@ export function reportMigrateSingleMigrationInvocation(opts: {
         [customDimensions.promptChoice]: opts.migrationType,
       }
     );
+  });
+}
+
+/**
+ * Closes a `--run-migration` run that had an agent selected. `agentUsed` is
+ * set only when the agent started: a migration that left it no work
+ * completes without one.
+ */
+export function reportMigrateSingleMigrationComplete(opts: {
+  agentUsed?: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_complete', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
+  });
+}
+
+/** The agent session of a `--run-migration` run ended with the migration unfinished. */
+export function reportMigrateSingleMigrationAbandoned(opts: {
+  agentUsed: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_abandoned', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
   });
 }
 

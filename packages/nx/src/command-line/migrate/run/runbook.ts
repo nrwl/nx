@@ -30,6 +30,8 @@ export interface RunbookContext {
   createCommits: boolean;
   validate: boolean;
   finalValidation: boolean;
+  // A `--run-migration` run: one step and no issue ledger.
+  singleMigration: boolean;
 }
 
 /**
@@ -41,8 +43,9 @@ export interface RunbookContext {
 export function renderRunbook(ctx: RunbookContext): string {
   const runId = singleLine(ctx.runId);
   const reconcile = singleLine(ctx.reconcileCommand);
-  // Run-scoped like the Claude runner grant: a wildcard run segment would let
-  // a configured child write handoffs that settle steps in another run.
+  // Run-scoped like the Claude Code handoff grant: a wildcard run segment
+  // would let a configured child write handoffs that settle steps in another
+  // run.
   const handoffsGlob = `${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/${HANDOFFS_DIR_NAME}/**`;
   const lines: string[] = [
     `# Nx migrate run ${runId}`,
@@ -79,9 +82,17 @@ export function renderRunbook(ctx: RunbookContext): string {
     `2. Do what the block says. For a \`next-step\` action, run the given`,
     `   worker command; it applies one migration.`,
     `3. When a step hands work back to you (see "Agent work" below), run the`,
-    `   \`next\` command first: its response restates the work, names the`,
-    `   handoff file to write, and lists any recorded issues assigned to the`,
-    `   step. Do the work, write the handoff file, then run \`next\` again.`,
+    ...(ctx.singleMigration
+      ? [
+          `   \`next\` command first: its response restates the work and names`,
+          `   the handoff file to write. Do the work, write the handoff file,`,
+          `   then run \`next\` again.`,
+        ]
+      : [
+          `   \`next\` command first: its response restates the work, names the`,
+          `   handoff file to write, and lists any recorded issues assigned to the`,
+          `   step. Do the work, write the handoff file, then run \`next\` again.`,
+        ]),
     `4. Repeat until the orchestrator reports the run \`complete\`.`,
     ``,
     `Execute only what the current block asks. Do not run migrations the`,
@@ -94,9 +105,39 @@ export function renderRunbook(ctx: RunbookContext): string {
     `repeated instructions or report the blocker to the user; re-running the`,
     `reconcile command alone changes nothing.`,
     ``,
-    `An \`existing-run\` action means no run was started because one is`,
-    `already active. Show its report to the user and let them choose between`,
-    `the two commands it lists; do not choose for them.`,
+    ...(ctx.singleMigration
+      ? []
+      : [
+          `An \`existing-run\` action means no run was started because one is`,
+          `already active. Show its report to the user and let them choose between`,
+          `the two commands it lists; do not choose for them.`,
+          ``,
+        ]),
+    `## Long-running commands`,
+    ``,
+    `A worker or \`next\` command can wait for minutes on a dependency install`,
+    `or a commit. When Nx started this session, the nx process that started it`,
+    `runs them, and the waiting command prints an \`[nx]\` line after 15`,
+    `seconds and then once a minute: what nx is running and for how long.`,
+    ``,
+    `- If your shell tool can run a command in the background, start worker and`,
+    `  \`next\` commands that way and check their output about once a minute.`,
+    `  Each time, tell the user in one sentence what the latest \`[nx]\` line`,
+    `  says.`,
+    `- Claude Code: start each worker and \`next\` command with`,
+    `  \`run_in_background\`, then start a Monitor on its output that passes`,
+    `  \`[nx]\` lines through. A \`next\` command can wait as long as a worker.`,
+    `- Stopping a worker or \`next\` command does not stop the install or the`,
+    `  commit it waits on. If one seems stuck, tell the user they can quit this`,
+    ...(ctx.singleMigration
+      ? [
+          `  session, then press Ctrl+C in the terminal to end it, and run the`,
+          `  same \`nx migrate --run-migration\` command again afterwards.`,
+        ]
+      : [
+          `  session, then press Ctrl+C in the terminal to end it, and resume the run`,
+          `  afterwards.`,
+        ]),
     ``,
     `## Agent work`,
     ``,
@@ -105,9 +146,9 @@ export function renderRunbook(ctx: RunbookContext): string {
     `- A migration with an AI-driven part makes its worker emit a`,
     `  \`nx_migrate_prompt\` block pointing at an instructions file. Apply`,
     `  those instructions to the workspace. Scope rules for that work:`,
-    ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec), {
-      source: 'dispensed-step',
-    }).map((line) => `  ${line}`),
+    ...renderAuthorScopeRuleLines(singleLine(ctx.pmExec)).map(
+      (line) => `  ${line}`
+    ),
     NX_JSON_MIGRATE_RULE,
     `  The \`nx migrate\` commands this runbook and the step blocks hand you`,
     `  (the reconcile, worker and \`next\` commands) are the exception to the`,
@@ -193,57 +234,64 @@ export function renderRunbook(ctx: RunbookContext): string {
     `migration's instructions ask you to write it elsewhere, in a different`,
     `shape, or at a different point in the flow, follow this contract instead.`,
     ``,
-    `### Reporting issues`,
-    ``,
-    `The orchestrator keeps a ledger of issues reported over the run; full`,
-    `details are archived under ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/issues/.`,
-    `Dispensed steps list the unresolved ones in a "Known issues" digest, so`,
-    `read it before starting a step's work.`,
-    ``,
-    `Report through the handoff file: problems you observed go in an`,
-    `\`issues\` array, whether you fixed them in this same piece of work`,
-    `(mark those \`"resolved"\`) or left them for later; progress on an issue`,
-    `the digest marks assigned or deferred to the current step goes in an`,
-    `\`issueUpdates\` array. Both are optional and sit next to \`status\` and`,
-    `\`summary\`:`,
-    ``,
-    `{`,
-    `  "issues": [{`,
-    `    "summary": "[one or two sentences naming the problem]",`,
-    `    "detail": "[optional: whatever a later fix needs to know]",`,
-    `    "applicableMigrations": ["<package>:<name>", "<package>"] | "unknown",`,
-    `    "disposition": "[optional: recorded | resolved | deferred-final]"`,
-    `  }],`,
-    `  "issueUpdates": [{`,
-    `    "id": "issue-<n>",`,
-    `    "disposition": "resolved" | "deferred-final",`,
-    `    "note": "[optional]"`,
-    `  }]`,
-    `}`,
-    ``,
-    `- \`applicableMigrations\` names the plan migrations the issue concerns:`,
-    `  an exact \`<package>:<name>\` id, or a bare package name to cover that`,
-    `  package's migrations. Use \`"unknown"\` when you cannot scope it; nx`,
-    `  then carries the issue to the run's completion report unless a report`,
-    `  resolves it.`,
-    `- Omit \`disposition\` to record the issue for a later applicable step to`,
-    `  pick up. Use \`"resolved"\` only for a problem you discovered and fixed`,
-    `  in this same piece of work, and \`"deferred-final"\` when no later`,
-    ...(ctx.finalValidation
+    ...(ctx.singleMigration
       ? [
-          `  migration step should pick it up; it is carried to the final`,
-          `  validation pass, and the completion report lists what that pass`,
-          `  leaves unresolved.`,
+          `Nx prints the handoff's \`summary\` when the run ends, so put anything`,
+          `the user should know in it, including problems you left open.`,
         ]
       : [
-          `  migration step should pick it up; it is carried to the completion`,
-          `  report instead.`,
+          `### Reporting issues`,
+          ``,
+          `The orchestrator keeps a ledger of issues reported over the run; full`,
+          `details are archived under ${MIGRATE_RUNS_RELATIVE_DIR}/${runId}/issues/.`,
+          `Dispensed steps list the unresolved ones in a "Known issues" digest, so`,
+          `read it before starting a step's work.`,
+          ``,
+          `Report through the handoff file: problems you observed go in an`,
+          `\`issues\` array, whether you fixed them in this same piece of work`,
+          `(mark those \`"resolved"\`) or left them for later; progress on an issue`,
+          `the digest marks assigned or deferred to the current step goes in an`,
+          `\`issueUpdates\` array. Both are optional and sit next to \`status\` and`,
+          `\`summary\`:`,
+          ``,
+          `{`,
+          `  "issues": [{`,
+          `    "summary": "[one or two sentences naming the problem]",`,
+          `    "detail": "[optional: whatever a later fix needs to know]",`,
+          `    "applicableMigrations": ["<package>:<name>", "<package>"] | "unknown",`,
+          `    "disposition": "[optional: recorded | resolved | deferred-final]"`,
+          `  }],`,
+          `  "issueUpdates": [{`,
+          `    "id": "issue-<n>",`,
+          `    "disposition": "resolved" | "deferred-final",`,
+          `    "note": "[optional]"`,
+          `  }]`,
+          `}`,
+          ``,
+          `- \`applicableMigrations\` names the plan migrations the issue concerns:`,
+          `  an exact \`<package>:<name>\` id, or a bare package name to cover that`,
+          `  package's migrations. Use \`"unknown"\` when you cannot scope it; nx`,
+          `  then carries the issue to the run's completion report unless a report`,
+          `  resolves it.`,
+          `- Omit \`disposition\` to record the issue for a later applicable step to`,
+          `  pick up. Use \`"resolved"\` only for a problem you discovered and fixed`,
+          `  in this same piece of work, and \`"deferred-final"\` when no later`,
+          ...(ctx.finalValidation
+            ? [
+                `  migration step should pick it up; it is carried to the final`,
+                `  validation pass, and the completion report lists what that pass`,
+                `  leaves unresolved.`,
+              ]
+            : [
+                `  migration step should pick it up; it is carried to the completion`,
+                `  report instead.`,
+              ]),
+          `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
+          `  deferred to the current step.`,
+          `- Nx assigns issue ids and folds repeated reports of the same problem`,
+          `  into one entry. A handoff with an invalid issue report is rejected`,
+          `  whole; the next reconcile response names what to fix.`,
         ]),
-    `- \`issueUpdates\` may only reference issues the digest marks assigned or`,
-    `  deferred to the current step.`,
-    `- Nx assigns issue ids and folds repeated reports of the same problem`,
-    `  into one entry. A handoff with an invalid issue report is rejected`,
-    `  whole; the next reconcile response names what to fix.`,
     ``,
     `## Failed and died steps`,
     ``,
@@ -259,11 +307,19 @@ export function renderRunbook(ctx: RunbookContext): string {
     `  or the user applied it by hand, or a died worker's changes landed);`,
     `  record it as applied.`,
     `- \`skip\`: the migration does not apply to this workspace.`,
-    `- \`unresolved\`: give the migration up. Nx records the failure as a run`,
-    `  issue, settles the tree as the option describes, and moves on. The`,
-    `  completion report lists it, and a session Nx started for this run`,
-    `  exits non-zero; when you drive the loop yourself, the completion`,
-    `  block's unresolved tally and warnings are what say work remains.`,
+    ...(ctx.singleMigration
+      ? [
+          `- \`unresolved\`: give the migration up. Nx settles the tree as the`,
+          `  option describes and ends the run, which exits non-zero and prints`,
+          `  the failure.`,
+        ]
+      : [
+          `- \`unresolved\`: give the migration up. Nx records the failure as a run`,
+          `  issue, settles the tree as the option describes, and moves on. The`,
+          `  completion report lists it, and a session Nx started for this run`,
+          `  exits non-zero; when you drive the loop yourself, the completion`,
+          `  block's unresolved tally and warnings are what say work remains.`,
+        ]),
     `  Withheld, with \`skip\`, when a commit of this migration's changes`,
     `  landed, or was started and never recorded; the dispense then offers`,
     `  \`adopt\` in their place.`,

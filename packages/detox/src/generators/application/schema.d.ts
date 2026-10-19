@@ -15,6 +15,5 @@ export interface Schema {
    */
   setParserOptionsProject?: boolean;
   framework: 'react-native' | 'expo';
-  addPlugin?: boolean;
   useProjectJson?: boolean;
 }

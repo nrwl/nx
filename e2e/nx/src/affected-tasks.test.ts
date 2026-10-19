@@ -6,11 +6,21 @@ import {
   runCLIAsync,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 
-// NX_LEGACY_AFFECTED=false opts into selecting tasks rather than whole
-// projects. affected-graph.test.ts covers the default.
-const byTask = { env: { NX_LEGACY_AFFECTED: 'false' } };
+const byProject = { env: { NX_LEGACY_AFFECTED: 'true' } };
+
+// runCLIAsync replaces the environment rather than merging into it.
+const graphOf = async (command: string, env: Record<string, string> = {}) =>
+  JSON.parse(
+    (
+      await runCLIAsync(`${command} --graph stdout`, {
+        silent: true,
+        env: { ...getStrippedEnvironmentVariables(), ...env },
+      })
+    ).stdout.trim()
+  ).tasks.tasks;
 
 describe('Nx Affected with task selection', () => {
   let proj: string;
@@ -91,8 +101,7 @@ describe('Nx Affected with task selection', () => {
 
     it('selects every dependent test for a source change, as project selection does', () => {
       const affected = runCLI(
-        `show projects --affected -t test --files="libs/${mylib}/src/index.ts"`,
-        byTask
+        `show projects --affected -t test --files="libs/${mylib}/src/index.ts"`
       );
       expect(affected).toContain(mylib);
       expect(affected).toContain(myapp);
@@ -105,23 +114,23 @@ describe('Nx Affected with task selection', () => {
       const spec = `libs/${mylib}/src/lib/${mylib}.spec.ts`;
 
       // Project selection runs every dependent's test...
-      const byProject = runCLI(
-        `show projects --affected -t test --files="${spec}"`
+      const projects = runCLI(
+        `show projects --affected -t test --files="${spec}"`,
+        byProject
       );
-      expect(byProject).toContain(myapp);
-      expect(byProject).toContain(mypublishablelib);
+      expect(projects).toContain(myapp);
+      expect(projects).toContain(mypublishablelib);
 
       // ...but a spec file is not in their `^production` inputs.
       const selected = runCLI(
-        `show projects --affected -t test --files="${spec}"`,
-        byTask
+        `show projects --affected -t test --files="${spec}"`
       );
       expect(selected).toContain(mylib);
       expect(selected).not.toContain(myapp);
       expect(selected).not.toContain(mypublishablelib);
 
       // The run agrees with the listing.
-      const run = runCLI(`affected -t test --files="${spec}"`, byTask);
+      const run = runCLI(`affected -t test --files="${spec}"`);
       expect(run).toContain(`Running target test for project ${mylib}`);
       expect(run).toContain(
         `Successfully ran target test for project ${mylib}`
@@ -129,7 +138,7 @@ describe('Nx Affected with task selection', () => {
 
       // With a second target the run still executes only what was selected:
       // the spec is not in the build's `production` inputs.
-      const both = runCLI(`affected -t build,test --files="${spec}"`, byTask);
+      const both = runCLI(`affected -t build,test --files="${spec}"`);
       expect(both).toContain(`nx run ${mylib}:test`);
       expect(both).not.toContain(`nx run ${mylib}:build`);
     }, 1000000);
@@ -138,28 +147,46 @@ describe('Nx Affected with task selection', () => {
     // the graph and the run could not differ. A spec change selects the
     // project's test and not its build, whose inputs are `production`.
     it('--graph shows the tasks the run executes, not every task of the selected projects', async () => {
-      const spec = `libs/${mypublishablelib}/src/lib/${mypublishablelib}.spec.ts`;
-      // runCLIAsync replaces the environment rather than merging into it.
-      const graphOf = async (env: Record<string, string> = {}) =>
-        JSON.parse(
-          (
-            await runCLIAsync(
-              `affected -t build,test --files="${spec}" --graph stdout`,
-              {
-                silent: true,
-                env: { ...getStrippedEnvironmentVariables(), ...env },
-              }
-            )
-          ).stdout.trim()
-        ).tasks.tasks;
+      const command = `affected -t build,test --files="libs/${mypublishablelib}/src/lib/${mypublishablelib}.spec.ts"`;
 
-      const byProject = await graphOf();
-      expect(byProject[`${mypublishablelib}:build`]).toBeDefined();
-      expect(byProject[`${mypublishablelib}:test`]).toBeDefined();
+      const projects = await graphOf(command, byProject.env);
+      expect(projects[`${mypublishablelib}:build`]).toBeDefined();
+      expect(projects[`${mypublishablelib}:test`]).toBeDefined();
 
-      const selected = await graphOf(byTask.env);
+      const selected = await graphOf(command);
       expect(selected[`${mypublishablelib}:test`]).toBeDefined();
       expect(selected[`${mypublishablelib}:build`]).toBeUndefined();
+    });
+
+    describe('affected.legacy in nx.json', () => {
+      let command: string;
+
+      beforeAll(() => {
+        command = `affected -t build,test --files="libs/${mypublishablelib}/src/lib/${mypublishablelib}.spec.ts"`;
+        updateJson('nx.json', (json) => ({
+          ...json,
+          affected: { ...json.affected, legacy: true },
+        }));
+      });
+      afterAll(() =>
+        updateJson('nx.json', (json) => {
+          delete json.affected.legacy;
+          if (Object.keys(json.affected).length === 0) delete json.affected;
+          return json;
+        })
+      );
+
+      it('selects every target of an affected project', async () => {
+        const tasks = await graphOf(command);
+        expect(tasks[`${mypublishablelib}:build`]).toBeDefined();
+        expect(tasks[`${mypublishablelib}:test`]).toBeDefined();
+      });
+
+      it('NX_LEGACY_AFFECTED=false overrides it', async () => {
+        const tasks = await graphOf(command, { NX_LEGACY_AFFECTED: 'false' });
+        expect(tasks[`${mypublishablelib}:test`]).toBeDefined();
+        expect(tasks[`${mypublishablelib}:build`]).toBeUndefined();
+      });
     });
   });
 
@@ -189,14 +216,9 @@ describe('Nx Affected with task selection', () => {
     });
 
     it('--graph keeps the configuration the run uses', async () => {
-      const { stdout } = await runCLIAsync(
-        `affected -t build -c production --files="libs/${lib}/src/index.ts" --graph stdout`,
-        {
-          silent: true,
-          env: { ...getStrippedEnvironmentVariables(), ...byTask.env },
-        }
+      const tasks = await graphOf(
+        `affected -t build -c production --files="libs/${lib}/src/index.ts"`
       );
-      const tasks = JSON.parse(stdout.trim()).tasks.tasks;
       expect(tasks[`${lib}:build:production`]).toBeDefined();
     });
   });
@@ -272,8 +294,7 @@ describe('Nx Affected with task selection', () => {
       const changed = `libs/${lib}/src/index.ts`;
 
       const selected = runCLI(
-        `show projects --affected -t e2e --files="${changed}"`,
-        byTask
+        `show projects --affected -t e2e --files="${changed}"`
       );
       expect(selected).toContain(webE2e);
       // The library's build carries the change but is not an e2e task.
@@ -281,7 +302,10 @@ describe('Nx Affected with task selection', () => {
 
       // Project selection has no edge to follow from the library to the suite.
       expect(
-        runCLI(`show projects --affected -t e2e --files="${changed}"`)
+        runCLI(
+          `show projects --affected -t e2e --files="${changed}"`,
+          byProject
+        )
       ).not.toContain(webE2e);
     });
   });

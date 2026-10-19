@@ -16,15 +16,43 @@ import assert from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { workerData } from 'node:worker_threads';
+import {
+  type BeastiesRuntime,
+  type CriticalCssPlan,
+  loadAngularBuildBeasties,
+} from '../../utils/beasties';
 
 export interface RenderOptions {
+  /** The server index html the route renders into. */
+  document: string;
+  /** The `ngCspNonce` attribute value of the document. */
+  nonce: string | undefined;
+  /** The browser index file name, which prerendering "/" replaces. */
   indexFile: string;
+  /**
+   * Whether the build emits `index.original.html`, which prerendering "/"
+   * must then not replace with the browser index.
+   */
+  emitsOriginalIndex: boolean;
   deployUrl: string;
   inlineCriticalCss: boolean;
   minifyCss: boolean;
   outputPath: string;
   serverBundlePath: string;
   route: string;
+}
+
+export interface RenderWorkerData {
+  /**
+   * The zone.js package loaded during worker initialization, or `false` for
+   * zoneless applications.
+   */
+  zonePackage: string | false;
+  /**
+   * Set when critical CSS is inlined from compiled plans, which
+   * `@angular/build` >= 22.2 does.
+   */
+  criticalCssPlans: CriticalCssPlan[] | undefined;
 }
 
 export interface RenderResult {
@@ -59,19 +87,98 @@ interface ServerBundleExports {
     | Type<unknown>;
 }
 
+interface InlineCriticalCssResult {
+  content: string;
+  warnings: string[];
+  errors: string[];
+}
+
+interface LegacyInlineCriticalCssProcessorConstructor {
+  new (options: { deployUrl: string; minify: boolean }): {
+    process(
+      html: string,
+      options: { outputPath: string }
+    ): Promise<InlineCriticalCssResult>;
+  };
+}
+
+// The declarations are those of the installed @angular/build, which no
+// longer export the processor, so its presence is checked at runtime.
+function hasInlineCriticalCssProcessor(
+  angularBuildPrivate: object
+): angularBuildPrivate is {
+  InlineCriticalCssProcessor: LegacyInlineCriticalCssProcessorConstructor;
+} {
+  return 'InlineCriticalCssProcessor' in angularBuildPrivate;
+}
+
+async function processCriticalCss(
+  html: string,
+  outputPath: string,
+  deployUrl: string,
+  minify: boolean
+): Promise<InlineCriticalCssResult> {
+  const angularBuildPrivate = await import('@angular/build/private');
+  assert(
+    hasInlineCriticalCssProcessor(angularBuildPrivate),
+    'The installed "@angular/build" requires compiled critical CSS plans.'
+  );
+  const { InlineCriticalCssProcessor } = angularBuildPrivate;
+  return new InlineCriticalCssProcessor({ deployUrl, minify }).process(html, {
+    outputPath,
+  });
+}
+
+const { zonePackage, criticalCssPlans } = workerData as RenderWorkerData;
+
+let criticalCssProcessor:
+  | ReturnType<BeastiesRuntime['createProcessor']>
+  | undefined;
+/** The warnings of the processor's current run. */
+let criticalCssWarnings: string[] = [];
+
 /**
- * The fully resolved path to the zone.js package that will be loaded during worker initialization.
- * This is passed as workerData when setting up the worker via the `piscina` package.
+ * Inlines critical CSS the way `@angular/ssr` >= 22.2 does when rendering,
+ * from the plans `@angular/build` compiled.
  */
-const { zonePackage } = workerData as {
-  zonePackage: string | false;
-};
+async function inlineCriticalCssFromPlans(
+  html: string,
+  plans: CriticalCssPlan[],
+  nonce: string | undefined
+): Promise<{ content: string; warnings: string[] }> {
+  criticalCssProcessor ??= (
+    await loadAngularBuildBeasties('runtime')
+  ).createProcessor(plans, {
+    preload: 'media-script',
+    preloadFonts: true,
+    inlineFonts: true,
+    noscriptFallback: true,
+    cache: true,
+    logger: { warn: (message) => criticalCssWarnings.push(message) },
+  });
+
+  const warnings: string[] = (criticalCssWarnings = []);
+  try {
+    return { content: criticalCssProcessor.process(html, { nonce }), warnings };
+  } catch (error) {
+    // Like @angular/ssr, a failure leaves the page without critical CSS.
+    warnings.push(
+      `An error occurred while inlining critical CSS: ${
+        error instanceof Error ? error.message : error
+      }`
+    );
+    return { content: html, warnings };
+  }
+}
 
 /**
  * Renders each route in routes and writes them to <outputPath>/<route>/index.html.
  */
 async function render({
+  document,
+  nonce,
   indexFile,
+  emitsOriginalIndex,
   deployUrl,
   minifyCss,
   outputPath,
@@ -100,14 +207,6 @@ async function render({
     ɵSERVER_CONTEXT,
     `ɵSERVER_CONTEXT was not exported from: ${serverBundlePath}.`
   );
-
-  const indexBaseName = fs.existsSync(
-    path.join(outputPath, 'index.original.html')
-  )
-    ? 'index.original.html'
-    : indexFile;
-  const browserIndexInputPath = path.join(outputPath, indexBaseName);
-  const document = await fs.promises.readFile(browserIndexInputPath, 'utf8');
 
   const platformProviders: StaticProvider[] = [
     {
@@ -149,26 +248,28 @@ async function render({
     });
   }
 
-  if (inlineCriticalCss) {
-    const { InlineCriticalCssProcessor } =
-      await import('@angular/build/private');
-
-    const inlineCriticalCssProcessor = new InlineCriticalCssProcessor({
-      deployUrl: deployUrl,
-      minify: minifyCss,
-    });
-
-    const { content, warnings, errors } =
-      await inlineCriticalCssProcessor.process(html, {
-        outputPath,
-      });
+  if (inlineCriticalCss && criticalCssPlans) {
+    const { content, warnings } = await inlineCriticalCssFromPlans(
+      html,
+      criticalCssPlans,
+      nonce
+    );
+    result.warnings = warnings;
+    html = content;
+  } else if (inlineCriticalCss) {
+    const { content, warnings, errors } = await processCriticalCss(
+      html,
+      outputPath,
+      deployUrl,
+      minifyCss
+    );
     result.errors = errors;
     result.warnings = warnings;
     html = content;
   }
 
   // This case happens when we are prerendering "/".
-  if (browserIndexOutputPath === outputIndexPath) {
+  if (browserIndexOutputPath === outputIndexPath && !emitsOriginalIndex) {
     const browserIndexOutputPathOriginal = path.join(
       outputPath,
       'index.original.html'

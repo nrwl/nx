@@ -22,6 +22,9 @@ export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
   // If the config is empty set to empty string to avoid undefined. Undefined is used to check if the withNx exists inside of the config file.
   let withNxConfig: ts.Node | '' | undefined,
     withReactConfig: ts.Node | '' | undefined;
+  // Returned rather than written here so the caller can reject configs whose
+  // options are not a plain literal before touching the file.
+  let strippedSource: string | undefined;
 
   withWebCall.forEach((node) => {
     const argument = node.arguments[0] || '';
@@ -61,10 +64,46 @@ export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
       '@nx/rspack'
     );
 
-    tree.write(rspackConfigPath, updatedSource);
+    updatedSource = inlineComposePlugins(updatedSource);
+    updatedSource = removeImportDeclarations(
+      updatedSource,
+      'composePlugins',
+      '@nx/rspack'
+    );
+
+    strippedSource = updatedSource;
   }
 
-  return { withNxConfig, withReactConfig };
+  return { withNxConfig, withReactConfig, strippedSource };
+}
+
+// `composePlugins` is an inert stub since Nx v24, so the old config composes its
+// remaining callbacks with a local copy.
+function inlineComposePlugins(source: string): string {
+  let found = false;
+  const updatedSource = replace(
+    source,
+    'CallExpression > Identifier[name="composePlugins"]',
+    (node) => {
+      if ((node.parent as ts.CallExpression).expression !== node) {
+        return node.getText();
+      }
+      found = true;
+      return 'composeLegacyPlugins';
+    }
+  );
+  if (!found) return source;
+
+  return `${updatedSource}
+function composeLegacyPlugins(...plugins) {
+  return async (config, ctx) => {
+    for (const plugin of plugins) {
+      config = await (await plugin)(config, ctx);
+    }
+    return config;
+  };
+}
+`;
 }
 
 function removeCallExpressions(

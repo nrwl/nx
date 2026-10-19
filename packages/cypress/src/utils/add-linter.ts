@@ -46,7 +46,6 @@ export interface CyLinterOptions {
    * This is useful when adding linting to a brand new project vs an existing one
    **/
   overwriteExisting?: boolean;
-  addPlugin?: boolean;
 }
 
 export async function addLinterToCyProject(
@@ -75,7 +74,6 @@ export async function addLinterToCyProject(
         enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       })
     );
   }

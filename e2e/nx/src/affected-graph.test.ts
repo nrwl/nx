@@ -118,7 +118,7 @@ describe('Nx Affected and Graph Tests', () => {
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'show projects --affected --files="tsconfig.json"'
+        'show projects --affected --files="does-not-exist.txt"'
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
@@ -625,7 +625,8 @@ describe('show projects --affected', () => {
     );
 
     const { stdout: resWithoutTarget } = await runCLIAsync(
-      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`
+      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
+      { silent: true }
     );
     compareTwoArrays(resWithoutTarget.split('\n').filter(Boolean), [
       `${myapp}-e2e`,

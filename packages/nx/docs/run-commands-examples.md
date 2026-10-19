@@ -90,6 +90,19 @@ or simply with:
 nx run frontend:create-script --name=example
 ```
 
+An argument that isn't passed resolves to an empty string. To use another value, list fallbacks after `??`. Nx uses the first one that is set and not empty. A fallback can read an environment variable of the command through `env.NAME`, including variables from the `env` and `envFile` options. `NAME` can contain only the letters `a` to `z` in either case, digits, `_`, `.`, `-`, and parentheses. The last fallback can be plain text:
+
+```json
+"serve-static": {
+    "executor": "nx:run-commands",
+    "options": {
+        "command": "http-server dist --port={args.port ?? env.PORT ?? 8080}"
+    }
+}
+```
+
+The resolved command is part of the task's terminal output, which Nx caches when the target is cacheable. To keep a secret out of that output, read it as a shell variable instead, such as `$TOKEN`.
+
 Keep in mind that any command in the list that does not include interpolation will still have all passed arguments forwarded to it by default. For example, given:
 
 ```json

@@ -579,7 +579,6 @@ module.exports = [
           "module",
           "types",
           "exports",
-          "nx",
         ]
       `);
       expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -595,22 +594,6 @@ module.exports = [
               "default": "./src/index.ts"
             },
             "./package.json": "./package.json"
-          },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "test": {
-                "executor": "@nx/vitest:test",
-                "outputs": [
-                  "{options.reportsDirectory}"
-                ],
-                "options": {
-                  "reportsDirectory": "coverage/my-lib"
-                }
-              }
-            }
           }
         }
         "
@@ -725,7 +708,6 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -763,7 +745,6 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
         bundler: 'vite',
         skipFormat: true,
@@ -779,7 +760,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -794,7 +774,6 @@ module.exports = [
         ...defaultSchema,
         directory: 'my-lib',
         name: '@proj/my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -806,7 +785,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema, // defaultSchema has no name
         directory: 'my-lib',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -818,7 +796,6 @@ module.exports = [
       await libraryGenerator(tree, {
         ...defaultSchema,
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

@@ -6,7 +6,6 @@ import {
 import {
   addDependenciesToPackageJson,
   formatFiles,
-  readNxJson,
   runTasksInSerial,
   toJS,
   updateJson,
@@ -73,7 +72,6 @@ server.on('error', console.error);
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -121,12 +119,6 @@ async function normalizeOptions(
       projectType: 'application',
       directory: options.directory,
     });
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  options.addPlugin ??= addPlugin;
-
   const useProjectJson =
     options.useProjectJson ?? !isUsingTsSolutionSetup(host);
 

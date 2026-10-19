@@ -8,6 +8,8 @@ export {
   writeRunState,
   findActiveRun,
   createRun,
+  TERMINAL_STEP_STATUSES,
+  migrationIdProblems,
 } from './run-state';
 export type {
   MigrateRunStatus,
@@ -26,6 +28,7 @@ export type {
   MigrateRunNoProgress,
   MigrateRunPolicy,
   MigrateRunState,
+  MigrationIdProblem,
 } from './run-state';
 
 export {
@@ -34,6 +37,7 @@ export {
   hasPendingCommitDebt,
   latestRound,
   runTallies,
+  stepLabel,
   tallySteps,
 } from './state-machine';
 export { hasUnresolvedIssues } from './issues';
@@ -45,13 +49,22 @@ export type {
 
 export { createRunId } from './run-id';
 
+export { isHeld } from './state-lock';
+
+export { pmInstallCommand } from './util';
+
 export { runSingleMigrationWorker } from './worker';
 export type { RunSingleMigrationWorkerInput } from './worker';
 
 export {
+  activeRunForClassic,
   activeRunToReplace,
+  checkRunForStartFresh,
+  checkRunsForSingleMigration,
   completionWarnings,
+  deleteRunForStartFresh,
   holdRunToContinue,
+  refuseNewRunAlongsideLiveRun,
   releaseRunToHandOff,
   runOrchestratorInit,
   runOrchestratorReconcile,
@@ -71,6 +84,9 @@ export {
 
 export {
   BROKER_ENV_VAR,
+  COMMIT_INSTALLS_FIRST,
+  formatElapsed,
   MigrateCommitBroker,
+  commitsStep,
   treeOperationLabel,
 } from './broker';

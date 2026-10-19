@@ -89,6 +89,7 @@ export function getExecutorInformation(
         )
       : null;
 
+    // TODO(v25): remove custom hasher support.
     const hasherFactory = executorConfig.hasher
       ? getImplementationFactory<CustomHasher>(
           executorConfig.hasher,

@@ -1,4 +1,3 @@
-<%_ if (rspackPluginOptions) { _%>
 const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
 const { join } = require('path');
@@ -26,28 +25,6 @@ module.exports = {
       outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
       optimization: process.env['NODE_ENV'] === 'production',
     }),
-    new NxReactRspackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
+    new NxReactRspackPlugin(),
   ],
 };
-<%_ } else { _%>
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
-
-// Nx plugins for rspack.
-module.exports = composePlugins(
-  withNx(),
-  withReact({
-    // Uncomment this line if you don't want to use SVGR
-    // See: https://react-svgr.com/
-    // svgr: false
-  }),
-  (config) => {
-    // Update the rspack config as needed here.
-    // e.g. `config.plugins.push(new MyPlugin())`
-    return config;
-  }
-);
-<%_ } _%>

@@ -13,7 +13,8 @@ describe('Maven 4 Batch Mode', () => {
 
   const runBatchCLI = (cmd: string) => {
     return runCLI(cmd, {
-      env: { NX_BATCH_MODE: 'true' },
+      // An inherited MAVEN_HOME (e.g. from mise) would override the wrapper's Maven.
+      env: { NX_BATCH_MODE: 'true', MAVEN_HOME: '' },
     });
   };
 
@@ -24,10 +25,10 @@ describe('Maven 4 Batch Mode', () => {
     });
     await createMavenProject(projectName);
 
-    // Update Maven wrapper to use Maven 4.0.0-rc-5
+    // Update Maven wrapper to use Maven 4.0.0-rc-7
     updateFile(
       '.mvn/wrapper/maven-wrapper.properties',
-      `distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/4.0.0-rc-5/apache-maven-4.0.0-rc-5-bin.zip
+      `distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/4.0.0-rc-7/apache-maven-4.0.0-rc-7-bin.zip
 wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.3.2/maven-wrapper-3.3.2.jar
 `
     );
@@ -37,7 +38,7 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
 
   afterAll(() => cleanupProject());
 
-  it('should build multiple projects with run-many in batch mode using Maven 4.0.0-rc-5', () => {
+  it('should build multiple projects with run-many in batch mode using Maven 4.0.0-rc-7', () => {
     // runCLI throws on non-zero exit, so successful execution + file checks is sufficient
     runBatchCLI('run-many -t verify');
     checkFilesExist(
@@ -51,7 +52,11 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
     const output = runCLI(
       'run-many -t resources,after:resources --parallel=3 --skip-nx-cache',
       {
-        env: { NX_BATCH_MODE: 'true', NX_VERBOSE_LOGGING: 'true' },
+        env: {
+          NX_BATCH_MODE: 'true',
+          NX_VERBOSE_LOGGING: 'true',
+          MAVEN_HOME: '',
+        },
       }
     );
 
@@ -77,6 +82,87 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
     // Step 3: Run install in batch mode — this requires build state from the package phase
     // to know about the main artifact.
     runBatchCLI('run-many -t install');
+  });
+
+  it('should install modules whose parent POM is flattened', () => {
+    // oss flattening drops properties and dependencyManagement, so install fails
+    // if a module's consumer POM is built from its raw pom.xml.
+    updateFile('pom.xml', (pom) =>
+      pom
+        .replace(
+          '<spring-boot.version>',
+          '<gson.version>2.11.0</gson.version>\n    <spring-boot.version>'
+        )
+        .replace(
+          '<module>utils</module>',
+          '<module>platform</module>\n    <module>utils</module>'
+        )
+        .replace(
+          '</pluginManagement>',
+          `</pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.5.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>oss</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>`
+        )
+    );
+    updateFile(
+      'platform/pom.xml',
+      `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.example</groupId>
+    <artifactId>${projectName}</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>platform</artifactId>
+  <packaging>pom</packaging>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>\${gson.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>`
+    );
+    updateFile('utils/pom.xml', (pom) =>
+      pom
+        .replace(
+          `<artifactId>${projectName}</artifactId>`,
+          `<artifactId>platform</artifactId>\n        <relativePath>../platform/pom.xml</relativePath>`
+        )
+        .replace(
+          '<dependencies>',
+          `<dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>`
+        )
+    );
+    runCLI('reset');
+
+    runBatchCLI('run-many -t install --skip-nx-cache');
   });
 
   it('should fail when unit test fails', () => {

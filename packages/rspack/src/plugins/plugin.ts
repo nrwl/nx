@@ -5,8 +5,8 @@ import {
   hashObject,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -29,7 +29,15 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
-import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
 export interface RspackPluginOptions {
@@ -42,10 +50,6 @@ export interface RspackPluginOptions {
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 
@@ -244,6 +248,11 @@ async function createRspackTargets(
     outputs,
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    rspackOptions
+  );
+
   targets[options.serveTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -253,6 +262,7 @@ async function createRspackTargets(
       args: ['--node-env=development'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.previewTargetName] = {
@@ -264,6 +274,7 @@ async function createRspackTargets(
       args: ['--node-env=production'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.serveStaticTargetName] = {
@@ -275,6 +286,7 @@ async function createRspackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -346,4 +358,26 @@ function normalizeOutputPath(
       }
     }
   }
+}
+
+// A dev server whose config loads NxAppRspackPlugin or NxReadySignalPlugin reports
+// when it listens. Otherwise the check reads the config when the task runs,
+// with the task's env and options, and waits for the dev server's port.
+function getDevServerReadyWhen(
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
+): TargetConfiguration['readyWhen'] {
+  // `rspack serve` starts one dev server, for the first config with devServer
+  const signals = sendsReadySignal(
+    configs.find((config) => config.devServer) ?? configs[0] ?? {}
+  );
+  return signals
+    ? { signal: true }
+    : {
+        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
+        // becomes user-chosen, since the shell expands $, backticks and %.
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
+        // Each attempt loads the config
+        interval: 1000,
+      };
 }

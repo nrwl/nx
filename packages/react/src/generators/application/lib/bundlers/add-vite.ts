@@ -45,7 +45,6 @@ export async function setupViteConfiguration(
     inSourceTests: options.inSourceTests,
     compiler: options.compiler,
     skipFormat: true,
-    addPlugin: options.addPlugin,
     projectType: 'application',
     port: options.port,
     ...(forceViteV7 ? { useViteV7: true } : {}),
@@ -94,7 +93,6 @@ export async function setupVitestConfiguration(
     project: options.projectName,
     inSourceTests: options.inSourceTests,
     skipFormat: true,
-    addPlugin: options.addPlugin,
   });
   tasks.push(vitestTask);
   createOrEditViteConfig(

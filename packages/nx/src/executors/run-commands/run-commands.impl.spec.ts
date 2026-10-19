@@ -6,7 +6,11 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
-import runCommands, { interpolateArgsIntoCommand } from './run-commands.impl';
+import runCommands, {
+  interpolateArgsIntoCommand,
+  runCommands as startRunCommands,
+  type RunCommandsOptions,
+} from './run-commands.impl';
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;
@@ -53,6 +57,21 @@ describe('Run Commands', () => {
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     expect(readFile(f)).toEqual('123');
+  });
+
+  it('should resolve ?? fallbacks in --args from the command env', async () => {
+    const f = fileSync().name;
+    const result = await runCommands(
+      {
+        command: `echo {args.port ?? env.RUN_COMMANDS_PORT ?? 3000}-{args.host ?? localhost}-{args.path ?? env.RUN_COMMANDS_UNSET ?? none} >> ${f}`,
+        args: '--host=h1',
+        env: { RUN_COMMANDS_PORT: '5000' },
+        __unparsed__: [],
+      },
+      context
+    );
+    expect(result).toEqual(expect.objectContaining({ success: true }));
+    expect(readFile(f)).toEqual('5000-h1-none');
   });
 
   it.each([
@@ -509,6 +528,16 @@ describe('Run Commands', () => {
           false
         )
       ).not.toContain('undefined');
+    });
+
+    it('should not read inherited properties as arguments', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.toString ?? default}',
+          { parsedArgs: {}, __unparsed__: [] },
+          false
+        )
+      ).toEqual('echo default');
     });
 
     it('should interpolate provided values', () => {
@@ -998,9 +1027,7 @@ describe('Run Commands', () => {
               command: `echo "$MY_ENV_VAR" >> ${f}`,
             },
           ],
-          env: {
-            envFile: devEnv,
-          },
+          envFile: devEnv,
           parallel: true,
           __unparsed__: [],
         },
@@ -1025,8 +1052,8 @@ describe('Run Commands', () => {
           ],
           env: {
             MY_ENV_VAR: 'from-options',
-            envFile: devEnv,
           },
+          envFile: devEnv,
           parallel: true,
           __unparsed__: [],
         },
@@ -1035,6 +1062,110 @@ describe('Run Commands', () => {
 
       expect(result.success).toEqual(true);
       expect(readFile(f)).toContain('from-options');
+    });
+
+    // A direct run passes the task env as the base; a forked one runs with it
+    // as process.env
+    async function runOnBase(
+      shape: 'direct' | 'forked',
+      base: Record<string, string>,
+      options: Partial<RunCommandsOptions>
+    ) {
+      const f = fileSync().name;
+      if (shape === 'forked') {
+        Object.assign(process.env, base);
+      }
+      try {
+        const task = await startRunCommands(
+          {
+            commands: [
+              {
+                command: `echo "[$RUN_COMMANDS_VAR][$RUN_COMMANDS_PORT][$RUN_COMMANDS_URL]" >> ${f}`,
+              },
+            ],
+            parallel: true,
+            __unparsed__: [],
+            ...options,
+          },
+          context,
+          undefined,
+          shape === 'direct' ? { PATH: process.env.PATH, ...base } : undefined
+        );
+        await task.getResults();
+      } finally {
+        for (const key of Object.keys(base)) {
+          delete process.env[key];
+        }
+      }
+      return readFile(f);
+    }
+
+    describe.each(['direct', 'forked'] as const)('on a %s base', (shape) => {
+      it.each([
+        [
+          'an explicit empty env value over the envFile',
+          {},
+          { RUN_COMMANDS_VAR: '' },
+          'RUN_COMMANDS_VAR=from-file',
+          '[][][]',
+        ],
+        [
+          'the envFile over an empty base value',
+          { RUN_COMMANDS_VAR: '' },
+          undefined,
+          'RUN_COMMANDS_VAR=from-file',
+          '[from-file][][]',
+        ],
+        [
+          'envFile references against the base',
+          { RUN_COMMANDS_PORT: '5000' },
+          undefined,
+          'RUN_COMMANDS_URL=http://localhost:${RUN_COMMANDS_PORT}',
+          '[][5000][http://localhost:5000]',
+        ],
+        [
+          'envFile references against the base, not the env option',
+          { RUN_COMMANDS_PORT: '5000' },
+          { RUN_COMMANDS_PORT: '6000' },
+          'RUN_COMMANDS_URL=http://localhost:${RUN_COMMANDS_PORT}',
+          '[][6000][http://localhost:5000]',
+        ],
+      ])('should resolve %s', async (_, base, env, envFileContents, output) => {
+        const envFile = fileSync().name;
+        writeFileSync(envFile, envFileContents);
+        expect(await runOnBase(shape, base, { env, envFile })).toEqual(output);
+      });
+
+      it('should skip the envFile when the base disables .env files', async () => {
+        const envFile = fileSync().name;
+        writeFileSync(envFile, 'RUN_COMMANDS_VAR=from-file');
+        const previous = process.env.NX_LOAD_DOT_ENV_FILES;
+        process.env.NX_LOAD_DOT_ENV_FILES = 'true';
+        try {
+          expect(
+            await runOnBase(
+              shape,
+              { NX_LOAD_DOT_ENV_FILES: 'false' },
+              { envFile }
+            )
+          ).toEqual('[][][]');
+        } finally {
+          if (previous === undefined) {
+            delete process.env.NX_LOAD_DOT_ENV_FILES;
+          } else {
+            process.env.NX_LOAD_DOT_ENV_FILES = previous;
+          }
+        }
+      });
+    });
+
+    it('should not read process.env when given a base', async () => {
+      process.env.RUN_COMMANDS_VAR = 'from-process';
+      try {
+        expect(await runOnBase('direct', {}, {})).toEqual('[][][]');
+      } finally {
+        delete process.env.RUN_COMMANDS_VAR;
+      }
     });
 
     it('should error if the specified .env file does not exist', async () => {

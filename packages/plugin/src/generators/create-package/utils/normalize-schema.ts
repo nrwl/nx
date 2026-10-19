@@ -1,4 +1,4 @@
-import { readNxJson, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
 import type { LinterType } from '@nx/js';
 import {
@@ -16,7 +16,6 @@ export interface NormalizedSchema extends CreatePackageSchema {
   unitTestRunner: 'jest' | 'vitest' | 'none';
   linter: LinterType;
   useProjectJson: boolean;
-  addPlugin: boolean;
   isTsSolutionSetup: boolean;
 }
 
@@ -51,14 +50,7 @@ export async function normalizeSchema(
   // additionally check if the TS solution setup will be configured by the
   // jsLibraryGenerator
   const isTsSolutionSetup =
-    isUsingTsSolutionSetup(host) ||
-    shouldConfigureTsSolutionSetup(host, schema.addPlugin);
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    schema.addPlugin ??
-    (isTsSolutionSetup &&
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
+    isUsingTsSolutionSetup(host) || shouldConfigureTsSolutionSetup(host);
 
   return {
     ...schema,
@@ -70,7 +62,6 @@ export async function normalizeSchema(
     unitTestRunner,
     // We default to generate a project.json file if the new setup is not being used
     useProjectJson: schema.useProjectJson ?? !isTsSolutionSetup,
-    addPlugin,
     isTsSolutionSetup,
   };
 }
