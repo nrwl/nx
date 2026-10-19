@@ -758,12 +758,17 @@ Set `mode` to choose how a target participates:
 | ------- | ---------- | ------------------------- | --------------------- |
 | `on`    | yes        | no                        | yes                   |
 | `warn`  | yes        | warns                     | no                    |
-| `error` | yes        | reports, see below        | no                    |
+| `error` | yes        | fails the CI run          | no                    |
 | `off`   | no         | no                        | no                    |
 
-`error` is reserved for failing the task on an undeclared read or write. Nothing enforces that per target yet, so it behaves as `warn` today.
+The modes apply when your workspace has Ultracache turned on in Nx Cloud.
 
-`on` is the default. Use `warn` or `error` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared. Use `off` to stop recording it at all.
+`on` is the default.
+Use `warn` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared.
+`error` also hashes from what the target declared, and fails the CI run when the target reads a file outside its `inputs` or writes one outside its `outputs`.
+Use `off` to stop recording it at all.
+
+In a workspace with Ultracache turned on, `nx show target` and the project details in `nx graph` say which mode applies to a target.
 
 ```json
 {
