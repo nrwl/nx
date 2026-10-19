@@ -217,12 +217,10 @@ export class LoadedNxPlugin {
 }
 
 /**
- * Drops `undefined` object values and turns `undefined` array entries into
- * `null`, as the default JSON transport does for isolated plugins. Without this,
- * results that skip JSON (in-process plugins, the v8 serializer) let an
- * `undefined` override an earlier plugin's value.
- * Never writes to the plugin-owned `value`: changed containers and their
- * ancestors are copied.
+ * Drops `undefined` values (`null` in arrays) like the default JSON transport,
+ * so results from in-process plugins or the v8 serializer can't override an
+ * earlier plugin's value with `undefined`. Copies what it changes instead of
+ * writing to plugin-owned objects.
  */
 function withoutUndefinedValues<T>(value: T): T {
   if (value === null || typeof value !== 'object') {
