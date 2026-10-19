@@ -96,9 +96,7 @@ You can configure them in three ways:
   them as its inputs. Later runs use that record in place of the declared file inputs, so a change to
   a file the task never reads no longer invalidates it.
 
-Ultracache is part of every Nx Cloud plan, including Hobby, and every task that runs on Workers uses
-it, with nothing to turn on.
-It needs Nx 22.6 or later.
+Ultracache is part of every Nx Cloud plan, including Hobby.
 It uses 1 credit per traced task, as listed in [credit pricing](/docs/reference/nx-cloud/credits-pricing).
 
 ### How Ultracache works
@@ -118,6 +116,22 @@ Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batc
 traced.
 Only tasks on Workers are recorded. Once a task has a recording, any CI run hashes it from that
 recording, including on CI machines you manage yourself. Runs outside CI hash from declared `inputs`.
+
+### Turn on Ultracache
+
+New Nx Cloud workspaces start with Ultracache on.
+For an existing workspace, open the workspace's **Settings** page in Nx Cloud and set **Ultracache** to **On**.
+
+Nx 24 and later hash CI runs from Ultracache configurations by default.
+On Nx 23.3, set `NX_CLOUD_USE_ULTRACACHE` to `true` in your CI environment:
+
+```yaml
+# .github/workflows/ci.yml
+env:
+  NX_CLOUD_USE_ULTRACACHE: 'true'
+```
+
+To skip Ultracache for a single run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
 
 ### Turn off Ultracache for a target
 
@@ -140,7 +154,7 @@ This also turns off tracing for the target, so its reads and writes no longer ap
 ```
 
 To keep Ultracache on but leave paths such as a tool's scratch directory out of a target's recording,
-list them in `ultracache.ignoredReads` and `ultracache.ignoredWrites`.
+list them in `ultracache.ignoreReads` and `ultracache.ignoreWrites`.
 For every mode and option, see the [`ultracache` target property](/docs/reference/project-configuration#ultracache).
 
 ## Remote cache security
