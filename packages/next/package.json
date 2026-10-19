@@ -36,6 +36,9 @@
       "plugin": [
         "dist/plugin.d.ts"
       ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
       "tailwind": [
         "dist/tailwind.d.ts"
       ],
@@ -119,6 +122,11 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./tailwind": {
       "@nx/nx-source": "./tailwind.ts",

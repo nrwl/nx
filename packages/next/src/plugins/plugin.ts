@@ -5,6 +5,7 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  getReadyCheckReadyWhen,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -39,6 +40,10 @@ export interface NextPluginOptions {
 }
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
+
+// Next.js takes its port and hostname from the CLI and env, not from its
+// config, so the check gets no config file
+const readyWhen = getReadyCheckReadyWhen('@nx/next/ready-check');
 
 type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
@@ -229,6 +234,7 @@ function getDevTargetConfig(
       cwd: projectRoot,
     },
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   if (isTsSolutionSetup) {
@@ -251,6 +257,7 @@ function getStartTargetConfig(
     },
     dependsOn: [options.buildTargetName],
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   return targetConfig;
