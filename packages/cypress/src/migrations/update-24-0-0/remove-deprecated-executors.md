@@ -1,6 +1,6 @@
 #### Convert `@nx/cypress:cypress` targets to inferred tasks
 
-Nx 24 removes the `@nx/cypress:cypress` executor and its `@nrwl/cypress:cypress` alias. The migration registers `@nx/cypress/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It moves the dev server and `baseUrl` settings into `cypress.config.*`. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
+Nx 24 removes the `@nx/cypress:cypress` executor and its `@nrwl/cypress:cypress` alias. The migration registers `@nx/cypress/plugin` in `nx.json` and converts the targets that use those executors to inferred tasks. It moves the dev server and `baseUrl` settings into `cypress.config.*`. A component testing target's `devServerTarget` becomes the `buildTarget` option of `nxComponentTestingPreset`. A target with nothing left to override is removed from project configuration. When several projects share the same remaining options, those options move to a `targetDefaults` entry scoped to the plugin. `targetDefaults` entries keyed by a removed executor are removed once no target uses that executor.
 
 The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
 
