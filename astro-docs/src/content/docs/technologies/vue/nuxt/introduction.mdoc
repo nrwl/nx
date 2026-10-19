@@ -96,6 +96,30 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/nuxt/plugin`.
 
+### Wait for the dev server to be ready
+
+The `serve` task reports to Nx that it's ready, with the address it listens on, when the Nuxt config loads the `@nx/nuxt/ready-signal` module.
+`nuxt dev` answers 503 until it has built the app and serves it, and the module reports once that stops.
+Generated apps include the module.
+In an existing app, add it to `modules`:
+
+```ts
+// apps/my-app/nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@nx/nuxt/ready-signal'],
+});
+```
+
+Without the module, the `serve` task gets a check that runs when the task runs, with the task's environment and options.
+It waits until the server answers with any status other than 503, at the address `nuxt dev` uses:
+
+- The port comes from the `--port` or `-p` flag, then the first set of `NUXT_PORT`, `NITRO_PORT`, and `PORT`, then `devServer.port` in the Nuxt config, 3000 by default.
+- The host comes from the `--host` flag, then the first set of `NUXT_HOST`, `NITRO_HOST`, and `HOST`, then `devServer.host`.
+
+The `serve-static` task's file server reports its address once it listens.
+A task waits for either one only when its `dependsOn` entry sets `waitFor` to `ready`.
+For the details, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+
 ## Using Nuxt
 
 ### Generate a new Nuxt app

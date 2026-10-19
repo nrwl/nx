@@ -79,6 +79,10 @@ back to Playwright's own `reuseExistingServer` probe.
 
 ## Configuring the wait task
 
+The wait task, the `webServerTimeout` and `waitForWebServer` plugin options, and the `@nx/playwright:wait-for-webserver` executor are deprecated and will be removed in Nx 25.
+In Nx 25 the Playwright tasks wait for the serve task's `readyWhen` instead.
+Leave `waitForServerReady` unset to get that behavior now.
+
 The `webServerTimeout` plugin option sets how long, in milliseconds, the wait task waits before
 failing.
 It defaults to each web server's configured `timeout`, or 60000 when neither is set.
