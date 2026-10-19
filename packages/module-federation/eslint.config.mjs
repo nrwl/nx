@@ -20,16 +20,7 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: [
-            'nx',
-            'eslint',
-            'typescript',
-            '@nx/cypress',
-            '@nx/playwright',
-            '@nx/vite',
-            '@module-federation/node',
-            '@nx/module-federation',
-          ],
+          ignoredDependencies: ['nx', 'typescript'],
         },
       ],
     },

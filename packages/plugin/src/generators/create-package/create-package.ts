@@ -21,6 +21,7 @@ import {
   isUsingTsSolutionSetup,
   tsLibVersion,
 } from '@nx/js/internal';
+import { addPropertyToJestConfig, findJestConfig } from '@nx/jest';
 import { join } from 'path';
 import { hasGenerator } from '../../utils/has-generator';
 import { generatorGenerator } from '../generator/generator';
@@ -34,7 +35,6 @@ export async function createPackageGenerator(
 ) {
   return await createPackageGeneratorInternal(host, {
     useProjectJson: true,
-    addPlugin: false,
     ...schema,
   });
 }
@@ -124,6 +124,14 @@ async function createCliPackage(
   });
 
   host.delete(joinPathFragments(options.projectRoot, 'src'));
+
+  if (options.unitTestRunner === 'jest') {
+    // src and its spec are removed above, so the package has no tests yet.
+    const jestConfig = findJestConfig(host, options.projectRoot);
+    if (jestConfig) {
+      addPropertyToJestConfig(host, jestConfig, 'passWithNoTests', true);
+    }
+  }
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
 

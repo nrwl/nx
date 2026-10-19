@@ -175,62 +175,30 @@ function createProjectJson(
       },
     };
 
-    if (nestCLIOptions.webpackOptions) {
-      json.targets['build'] = {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        options: {
-          target: 'node',
-          compiler: 'tsc',
-          outputPath: `dist/${packageName}`,
-          main: join(nestCLIOptions.sourceRoot, nestCLIOptions.entryFile),
-          tsConfig: 'tsconfig.build.json',
+    json.targets['build'] = {
+      executor: '@nx/js:tsc',
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: `dist/${packageName}`,
+        main: join(nestCLIOptions.sourceRoot, nestCLIOptions.entryFile),
+        tsConfig: 'tsconfig.build.json',
+      },
+    };
+    json.targets['serve'] = {
+      ...json.targets['serve'],
+      configurations: {
+        debug: {
+          inspect: 'inspect',
         },
-        configurations: {
-          production: {
-            optimization: true,
-            extractLicenses: true,
-            inspect: false,
-          },
-        },
-      };
-      json.targets['serve'] = {
-        ...json.targets['serve'],
-        configurations: {
-          production: {
-            buildTarget: `${packageName}:build:production`,
-          },
-        },
-      };
-    } else {
-      json.targets['build'] = {
-        executor: '@nx/js:tsc',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: `dist/${packageName}`,
-          main: join(nestCLIOptions.sourceRoot, nestCLIOptions.entryFile),
-          tsConfig: 'tsconfig.build.json',
-        },
-      };
-      json.targets['serve'] = {
-        ...json.targets['serve'],
-        configurations: {
-          debug: {
-            inspect: 'inspect',
-          },
-        },
-      };
+      },
+    };
 
-      // if we're using nrwl/js, then we add nrwl/js analyzeSourceFiles to nx.json
-      addNrwlJsPluginsConfig(repoRoot);
-    }
+    // if we're using nrwl/js, then we add nrwl/js analyzeSourceFiles to nx.json
+    addNrwlJsPluginsConfig(repoRoot);
 
     // lint
     json.targets['lint'] = {
-      executor: '@nx/eslint:lint',
-      options: {
-        lintFilePatterns: ['./src', './test'],
-      },
+      command: 'eslint ./src ./test',
     };
 
     // test and e2e
@@ -334,20 +302,12 @@ function addJestTargets(
   recordInitWrite(e2eTestConfigPath);
 
   projectJson.targets['test'] = {
-    executor: '@nx/jest:jest',
+    command: `jest --config ${unitTestConfigPath} --passWithNoTests`,
     outputs: [`{workspaceRoot}/coverage/${packageName}`],
-    options: {
-      passWithNoTests: true,
-      jestConfig: unitTestConfigPath,
-    },
   };
 
   projectJson.targets['e2e'] = {
-    executor: '@nx/jest:jest',
-    options: {
-      passWithNoTests: true,
-      jestConfig: e2eTestConfigPath,
-    },
+    command: `jest --config ${e2eTestConfigPath} --passWithNoTests`,
   };
 
   // remove jest options from package.json

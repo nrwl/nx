@@ -36,9 +36,7 @@ describe('init', () => {
   let options: Schema;
 
   beforeEach(() => {
-    options = {
-      addPlugin: true,
-    };
+    options = {};
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
@@ -60,26 +58,6 @@ describe('init', () => {
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nx/cypress']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
-  });
-
-  it('should setup e2e target defaults', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.namedInputs ??= {};
-      json.namedInputs.production = ['default'];
-      return json;
-    });
-
-    await cypressInitGenerator(tree, { ...options, addPlugin: false });
-
-    expect(
-      getDefault(
-        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
-        'e2e'
-      )
-    ).toEqual({
-      cache: true,
-      inputs: ['default', '^production'],
-    });
   });
 
   it('should setup @nx/cypress/plugin', async () => {

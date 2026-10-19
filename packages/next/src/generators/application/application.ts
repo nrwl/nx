@@ -34,6 +34,7 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
+  typesNodeVersion,
 } from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
@@ -41,7 +42,6 @@ import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -54,7 +54,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {
@@ -122,6 +121,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   if (!options.skipPackageJson) {
     const reactVersions = await getReactDependenciesVersionsToInstall(host);
     const devDependencies: Record<string, string> = {
+      '@types/node': typesNodeVersion,
       '@types/react': reactVersions['@types/react'],
       '@types/react-dom': reactVersions['@types/react-dom'],
     };

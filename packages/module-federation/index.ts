@@ -1,1 +1,1 @@
-export * from './src/utils/public-api';
+export type * from './src/stubs/models';

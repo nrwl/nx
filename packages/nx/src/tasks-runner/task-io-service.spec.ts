@@ -46,7 +46,7 @@ describe('registerTaskProcessStart', () => {
 
   it('notifies PID subscribers for an ultracache configuration with no mode', () => {
     registerTaskProcessStart(
-      { id: 'proj:ignores-only', ultracache: { ignoredReads: ['tmp/**'] } },
+      { id: 'proj:ignores-only', ultracache: { ignoreReads: ['tmp/**'] } },
       300
     );
 

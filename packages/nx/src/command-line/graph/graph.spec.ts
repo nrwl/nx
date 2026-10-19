@@ -211,7 +211,8 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json']
+      ['libs/myproj/generated/a.json', '!libs/myproj/generated/b.json'],
+      ['libs/myproj']
     );
     expect(result).toEqual({
       general: ['libs/myproj/generated/a.json'],
@@ -235,7 +236,8 @@ describe('getExpandedTaskInputs', () => {
         '{nx,tsconfig.base}.json',
         'libs/myproj/gen/{a,b}/*.ts',
         '!libs/myproj/gen/b/x.ts',
-      ]
+      ],
+      ['libs/myproj']
     );
   });
 
@@ -267,7 +269,8 @@ describe('getExpandedTaskInputs', () => {
 
     expect(expandFilesInput as unknown as Mock).toHaveBeenCalledWith(
       expect.any(String),
-      ['libs/myproj/{a.json', 'libs/myproj/b.json']
+      ['libs/myproj/{a.json', 'libs/myproj/b.json'],
+      ['libs/myproj']
     );
   });
 

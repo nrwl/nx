@@ -21,7 +21,6 @@ export interface Schema {
    * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
    */
   setParserOptionsProject?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
   keepExistingVersions?: boolean;
 }

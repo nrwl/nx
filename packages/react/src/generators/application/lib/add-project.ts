@@ -2,16 +2,11 @@ import { NormalizedSchema } from '../schema';
 import {
   addProjectConfiguration,
   joinPathFragments,
-  logger,
   ProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
-import { maybeJs } from '../../../utils/maybe-js';
-import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { type PackageJson } from '@nx/devkit/internal';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -22,37 +17,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     targets: {},
     tags: options.parsedTags,
   };
-
-  if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(host) || !options.addPlugin) {
-      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
-      // Inlined to avoid a cross-package deep import; @nx/webpack's package
-      // exports field doesn't expose internal `src/...` paths, so the import
-      // works at compile time (via tsconfig project refs) but fails at runtime
-      // in published packages.
-      logger.warn(
-        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
-      );
-      project.targets = {
-        build: createBuildTarget(options),
-        serve: createServeTarget(options),
-      };
-    }
-  } else if (
-    options.bundler === 'rspack' &&
-    (!hasRspackPlugin(host) || !options.addPlugin)
-  ) {
-    // Mirrors warnRspackExecutorGenerating from @nx/rspack/src/utils/deprecation.
-    // Inlined to avoid a cross-package import where react does not declare a
-    // TypeScript project reference to rspack.
-    logger.warn(
-      'Generating targets that use the deprecated `@nx/rspack:rspack` and `@nx/rspack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/rspack:convert-to-inferred` next to migrate these targets to the `@nx/rspack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
-    );
-    project.targets = {
-      build: createRspackBuildTarget(options),
-      serve: createRspackServeTarget(options),
-    };
-  }
 
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -103,181 +67,4 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       );
     }
   }
-}
-
-function createRspackBuildTarget(
-  options: NormalizedSchema
-): TargetConfiguration {
-  return {
-    executor: '@nx/rspack:rspack',
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: {
-      outputPath: options.isUsingTsSolutionConfig
-        ? joinPathFragments(options.appProjectRoot, 'dist')
-        : joinPathFragments(
-            'dist',
-            options.appProjectRoot !== '.'
-              ? options.appProjectRoot
-              : options.projectName
-          ),
-      index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
-      baseHref: '/',
-      main: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`)
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [
-        joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
-        joinPathFragments(options.appProjectRoot, 'src/assets'),
-      ],
-      rspackConfig: joinPathFragments(
-        options.appProjectRoot,
-        'rspack.config.js'
-      ),
-      styles: !options.hasStyles
-        ? []
-        : [
-            joinPathFragments(
-              options.appProjectRoot,
-              `src/styles.${options.style}`
-            ),
-          ],
-      scripts: [],
-      configurations: {
-        development: {
-          mode: 'development',
-        },
-        production: {
-          mode: 'production',
-          optimization: true,
-          sourceMap: false,
-          outputHashing: 'all',
-          namedChunks: false,
-          extractLicenses: true,
-          vendorChunk: false,
-        },
-      },
-    },
-  };
-}
-
-function createRspackServeTarget(
-  options: NormalizedSchema
-): TargetConfiguration {
-  return {
-    executor: '@nx/rspack:dev-server',
-    defaultConfiguration: 'development',
-    options: {
-      buildTarget: `${options.projectName}:build`,
-      // @nx/rspack:dev-server defaults to 4200 at runtime, not in its schema, so
-      // omitting this is safe but the generated executor docs show no default.
-      ...(options.port != null ? { port: options.port } : {}),
-      hmr: true,
-    },
-    configurations: {
-      development: {
-        buildTarget: `${options.projectName}:build:development`,
-      },
-      production: {
-        buildTarget: `${options.projectName}:build:production`,
-        hmr: false,
-      },
-    },
-  };
-}
-
-function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
-  return {
-    executor: '@nx/webpack:webpack',
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: {
-      compiler: options.compiler ?? 'babel',
-      outputPath: options.isUsingTsSolutionConfig
-        ? joinPathFragments(options.appProjectRoot, 'dist')
-        : joinPathFragments(
-            'dist',
-            options.appProjectRoot !== '.'
-              ? options.appProjectRoot
-              : options.projectName
-          ),
-      index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
-      baseHref: '/',
-      main: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(options, `src/main.tsx`)
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [
-        joinPathFragments(options.appProjectRoot, 'src/favicon.ico'),
-        joinPathFragments(options.appProjectRoot, 'src/assets'),
-      ],
-      styles: !options.hasStyles
-        ? []
-        : [
-            joinPathFragments(
-              options.appProjectRoot,
-              `src/styles.${options.style}`
-            ),
-          ],
-      scripts: [],
-      webpackConfig: joinPathFragments(
-        options.appProjectRoot,
-        'webpack.config.js'
-      ),
-    },
-    configurations: {
-      development: {
-        extractLicenses: false,
-        optimization: false,
-        sourceMap: true,
-        vendorChunk: true,
-      },
-      production: {
-        fileReplacements: [
-          {
-            replace: joinPathFragments(
-              options.appProjectRoot,
-              maybeJs(options, `src/environments/environment.ts`)
-            ),
-            with: joinPathFragments(
-              options.appProjectRoot,
-              maybeJs(options, `src/environments/environment.prod.ts`)
-            ),
-          },
-        ],
-        optimization: true,
-        outputHashing: 'all',
-        sourceMap: false,
-        namedChunks: false,
-        extractLicenses: true,
-        vendorChunk: false,
-      },
-    },
-  };
-}
-
-function createServeTarget(options: NormalizedSchema): TargetConfiguration {
-  return {
-    executor: '@nx/webpack:dev-server',
-    defaultConfiguration: 'development',
-    options: {
-      buildTarget: `${options.projectName}:build`,
-      // Only when asked: @nx/webpack:dev-server already defaults to 4200, so writing
-      // it unrequested would just restate the executor's own default.
-      ...(options.port != null ? { port: options.port } : {}),
-      hmr: true,
-    },
-    configurations: {
-      development: {
-        buildTarget: `${options.projectName}:build:development`,
-      },
-      production: {
-        buildTarget: `${options.projectName}:build:production`,
-        hmr: false,
-      },
-    },
-  };
 }

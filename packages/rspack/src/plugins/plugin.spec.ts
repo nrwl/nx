@@ -136,6 +136,10 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "serve": {
                     "command": "rspack serve",
@@ -158,6 +162,10 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -179,6 +187,10 @@ describe('@nx/rspack', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "host": "{options.host ?? localhost}",
+                      "port": "{options.port}",
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -194,6 +206,37 @@ describe('@nx/rspack', () => {
         ],
       ]
     `);
+  });
+
+  describe('readyWhen', () => {
+    const readyWhen = async () => {
+      const [[, { projects }]] = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+      const { targets } = projects['my-app'];
+      return [targets.serve.readyWhen, targets.preview.readyWhen];
+    };
+
+    it('waits for the signal when the config loads a plugin that sends it', async () => {
+      // NxAppRspackPlugin and NxReadySignalPlugin carry this marker
+      tempFs.createFileSync(
+        'my-app/rspack.config.ts',
+        `export default { devServer: { port: 9000 }, plugins: [{ [Symbol.for('@nx/ready-signal-plugin')]: true, apply() {} }] };`
+      );
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
+    });
+
+    it('checks the port at task time when nothing in the config signals', async () => {
+      const check = {
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts`,
+        interval: 1000,
+      };
+
+      expect(await readyWhen()).toEqual([check, check]);
+    });
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

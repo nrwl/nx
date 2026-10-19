@@ -2,9 +2,10 @@
 Bootstrap the nx-maven-plugin into the local Maven repo (~/.m2) so @nx/maven's
 graph inference can resolve it.
 
-Only does real work when the pinned plugin version is NOT resolvable any other
-way (i.e. an unpublished version under local development). For a published
-version, Nx downloads it from Central on first use, so this skips.
+Only does real work when the version pinned in the root pom.xml is NOT
+resolvable any other way (i.e. an unpublished version under local development).
+For a published version, Nx downloads it from Central on first use, so this
+skips. A -SNAPSHOT is rebuilt every time so ~/.m2 never holds a stale one.
 
 Best-effort: never fails the install. Skips cleanly when Maven/Java is absent
 or when maven is disabled.
@@ -26,11 +27,10 @@ function disabled() {
 }
 
 function readVersion() {
-  const src = readFileSync(
-    join(__dirname, '../packages/maven/src/utils/versions.ts'),
-    'utf8'
-  );
-  return src.match(/mavenPluginVersion\s*=\s*'([^']+)'/)?.[1];
+  const pom = readFileSync(join(__dirname, '../pom.xml'), 'utf8');
+  return pom.match(
+    /<artifactId>nx-maven-plugin<\/artifactId>\s*<version>([^<]+)<\/version>/
+  )?.[1];
 }
 
 function inLocalRepo(version) {
@@ -65,8 +65,10 @@ async function main() {
   if (!version) return;
 
   // Already resolvable — nothing to bootstrap.
-  if (inLocalRepo(version)) return;
-  if (await onCentral(version)) return;
+  if (!version.endsWith('-SNAPSHOT')) {
+    if (inLocalRepo(version)) return;
+    if (await onCentral(version)) return;
+  }
 
   if (!hasToolchain()) {
     console.warn(

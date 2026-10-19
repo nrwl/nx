@@ -1,6 +1,5 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
-import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
 import { versions } from './versions';
@@ -43,23 +42,6 @@ export type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export function storybookConfigExistsCheck(
-  config: string,
-  projectName: string
-): void {
-  const exists = !!(config && statSync(config).isDirectory());
-
-  if (!exists) {
-    throw new Error(
-      `Could not find Storybook configuration for project ${projectName}.
-      Please generate Storybook configuration using the following command:
-
-      nx g @nx/storybook:configuration --name=${projectName}
-      `
-    );
-  }
-}
-
 export function dedupe(arr: string[]) {
   return Array.from(new Set(arr));
 }
@@ -70,7 +52,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   storybookBuildTarget?: string;
   storybookTarget?: string;
   ngBuildTarget?: string;
-  nextBuildTarget?: string;
   viteBuildTarget?: string;
   otherBuildTarget?: string;
   compiler?: string;
@@ -79,24 +60,18 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     storybookBuildTarget?: string;
     storybookTarget?: string;
     ngBuildTarget?: string;
-    nextBuildTarget?: string;
     viteBuildTarget?: string;
     otherBuildTarget?: string;
     compiler?: string;
   } = {};
 
   const arrayOfBuilders = [
-    '@nx/js:babel',
     '@nx/js:swc',
     '@nx/js:tsc',
-    '@nx/webpack:webpack',
-    '@nx/rollup:rollup',
-    '@nx/vite:build',
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',
     '@nx/angular:webpack-browser',
     '@nx/esbuild:esbuild',
-    '@nx/next:build',
     '@nxext/vite:build',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser',
@@ -123,20 +98,16 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         returnObject.ngBuildTarget = target;
       } else if (targets[target].executor.includes('vite')) {
         returnObject.viteBuildTarget = target;
-      } else if (targets[target].executor.includes('next')) {
-        returnObject.nextBuildTarget = target;
       } else {
         returnObject.otherBuildTarget = target;
       }
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
-      targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nx/storybook:storybook'
+      targets[target].executor === '@storybook/angular:start-storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
-      targets[target].executor === '@storybook/angular:build-storybook' ||
-      targets[target].executor === '@nx/storybook:build'
+      targets[target].executor === '@storybook/angular:build-storybook'
     ) {
       returnObject.storybookBuildTarget = target;
     } else if (targets[target].options?.compiler) {

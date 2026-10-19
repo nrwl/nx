@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   detectPackageManager,
   formatFiles,
   generateFiles,
@@ -14,16 +15,10 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
-import {
-  acknowledgeBuildScripts,
-  findTargetDefault,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
-import { warnCypressExecutorGenerating } from '../../utils/deprecation';
 import {
   assertViteSupportsInstalledCypress,
   componentTestingVersions,
@@ -31,7 +26,7 @@ import {
   getInstalledCypressVersion,
 } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
-import init from '../init/init';
+import init, { addPlugin } from '../init/init';
 import { CypressComponentConfigurationSchema } from './schema';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
@@ -40,10 +35,7 @@ export function componentConfigurationGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  return componentConfigurationGeneratorInternal(tree, {
-    addPlugin: false,
-    ...options,
-  });
+  return componentConfigurationGeneratorInternal(tree, options);
 }
 
 export async function componentConfigurationGeneratorInternal(
@@ -55,7 +47,7 @@ export async function componentConfigurationGeneratorInternal(
   assertNotUsingTsSolutionSetup(tree, 'cypress', 'component-configuration');
 
   const tasks: GeneratorCallback[] = [];
-  const opts = normalizeOptions(tree, options);
+  const opts = normalizeOptions(options);
   if (opts.bundler === 'vite') {
     assertViteSupportsInstalledCypress(tree);
   }
@@ -76,21 +68,11 @@ export async function componentConfigurationGeneratorInternal(
     );
   }
 
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin'
-  );
-
+  await addPlugin(tree, await createProjectGraphAsync(), false);
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
   addProjectFiles(tree, projectConfig, opts);
-  if (!hasPlugin || opts.addExplicitTargets) {
-    warnCypressExecutorGenerating();
-    addTargetToProject(tree, projectConfig, opts);
-  }
-  updateNxJsonConfiguration(tree, hasPlugin);
+  updateNxJsonConfiguration(tree);
 
   updateTsConfigForComponentTesting(tree, projectConfig);
 
@@ -101,17 +83,8 @@ export async function componentConfigurationGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(
-  tree: Tree,
-  options: CypressComponentConfigurationSchema
-) {
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
+function normalizeOptions(options: CypressComponentConfigurationSchema) {
   return {
-    addPlugin,
     ...options,
     framework: options.framework ?? null,
     directory: options.directory ?? 'cypress',
@@ -173,23 +146,7 @@ function addProjectFiles(
   );
 }
 
-function addTargetToProject(
-  tree: Tree,
-  projectConfig: ProjectConfiguration,
-  opts: NormalizeCTOptions
-) {
-  projectConfig.targets['component-test'] = {
-    executor: '@nx/cypress:cypress',
-    options: {
-      cypressConfig: joinPathFragments(projectConfig.root, 'cypress.config.ts'),
-      testingType: 'component',
-    },
-  };
-
-  updateProjectConfiguration(tree, opts.project, projectConfig);
-}
-
-function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
+function updateNxJsonConfiguration(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -202,34 +159,6 @@ function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
         '!{projectRoot}/cypress.config.[jt]s',
       ])
     );
-  }
-  if (!hasPlugin) {
-    const cacheableOperations: string[] | null =
-      nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
-    if (
-      cacheableOperations &&
-      !cacheableOperations.includes('component-test')
-    ) {
-      cacheableOperations.push('component-test');
-    }
-    // Either a `target: 'component-test'` default or a default keyed on
-    // the executor we're scaffolding will apply to the new target — pick
-    // the more specific (target-keyed) when both are present.
-    const existingForTarget = findTargetDefault(nxJson.targetDefaults, {
-      target: 'component-test',
-    });
-    const existingForExecutor = findTargetDefault(nxJson.targetDefaults, {
-      executor: '@nx/cypress:cypress',
-    });
-    const existing = existingForTarget ?? existingForExecutor;
-    upsertTargetDefault(tree, nxJson, {
-      target: 'component-test',
-      cache: existing?.cache ?? true,
-      inputs: existing?.inputs ?? [
-        'default',
-        productionFileSet ? '^production' : '^default',
-      ],
-    });
   }
   updateNxJson(tree, nxJson);
 }

@@ -954,12 +954,12 @@ function containFileToken(
 }
 
 /**
- * Warns when a workspace directory occupies the output path of a copied
+ * Throws when a workspace directory occupies the output path of a copied
  * workspace module. Both spell `workspace_modules/<name>`, so no later pass can
  * tell them apart: the vendored source is read as the copied module and never
  * ships, leaving the lockfile pointing at a path the output does not carry.
  */
-export function warnOnWorkspaceModulePathCollision(
+export function assertNoWorkspaceModulePathCollision(
   sourcePackages: Record<string, unknown> | undefined,
   synthesizedModulePaths: ReadonlySet<string>
 ): void {
@@ -970,8 +970,8 @@ export function warnOnWorkspaceModulePathCollision(
       typeof directory === 'string' &&
       synthesizedModulePaths.has(normalizePath(directory))
     ) {
-      logger.warn(
-        `Local-path dependency "file:${directory}" sits where the pruned output copies a workspace module of the same name, so it cannot ship separately. Move it out of ${WORKSPACE_MODULES_DIR}/ to deploy it.`
+      throw new Error(
+        `Cannot prune pnpm lockfile: local-path dependency "file:${directory}" sits where the standalone output copies a workspace module of the same name. Move it out of ${WORKSPACE_MODULES_DIR}/ so they do not collide.`
       );
     }
   }

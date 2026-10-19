@@ -229,21 +229,34 @@ You can also visualize the affected projects using the [Nx graph](/docs/features
 nx graph --affected
 ```
 
-## Selecting affected tasks instead of projects
+## Selecting tasks or projects
 
-By default Nx selects whole projects, so every task of every affected project runs. Set `NX_LEGACY_AFFECTED=false` to select individual tasks instead, based on whether your change reaches what each task reads:
+Nx selects individual tasks, based on whether your change reaches what each task reads. Changing one spec file runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
 
-```shell
-NX_LEGACY_AFFECTED=false nx affected -t test
-```
-
-Changing one spec file then runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
+{% youtube src="https://youtu.be/0R55-uFQyX4" title="Task-based affected in Nx" /%}
 
 Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
 
-Set the variable for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
+The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
 
-{% aside type="caution" title="What changes when you opt in" %}
+To select whole projects instead, so every task of every affected project runs, set `affected.legacy` to `true` in `nx.json`:
+
+```json
+// nx.json
+{
+  "affected": {
+    "legacy": true
+  }
+}
+```
+
+Running `nx migrate` to Nx 24 writes this setting into existing workspaces, so upgrading doesn't change what runs. Remove it, or set it to `false`, to select tasks.
+
+`NX_LEGACY_AFFECTED` overrides the setting for one invocation. `true` selects projects and `false` selects tasks. Set it for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set.
+
+The setting applies to `nx affected -t` and `nx show projects --affected -t`. `nx graph --affected` always shows projects.
+
+{% aside type="caution" title="What task selection changes" %}
 Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
 
 **`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
@@ -260,10 +273,10 @@ Nx selects a task when your change reaches one of its inputs, rather than by whe
 Use the `--explain` flag to show why tasks are affected. Nx prints the explanation, then exits without running anything:
 
 ```shell
-NX_LEGACY_AFFECTED=false nx affected -t build --explain
+nx affected -t build --explain
 ```
 
-`--explain` explains task selection, so it needs `NX_LEGACY_AFFECTED=false` and targets passed with `-t`. Without task selection, it stops with an error.
+`--explain` explains task selection, so it needs targets passed with `-t`. Without them, or with `affected.legacy` set, it stops with an error.
 
 ```text
  NX   3 out of 12 build tasks are affected

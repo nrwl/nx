@@ -83,6 +83,9 @@
       "path": "./packages/rollup"
     },
     {
+      "path": "./packages/rolldown"
+    },
+    {
       "path": "./packages/rsbuild"
     },
     {
@@ -227,9 +230,6 @@
       "path": "./e2e/esbuild"
     },
     {
-      "path": "./e2e/nx-init"
-    },
-    {
       "path": "./e2e/release"
     },
     {
@@ -255,9 +255,6 @@
     },
     {
       "path": "./e2e/react"
-    },
-    {
-      "path": "./e2e/remix"
     },
     {
       "path": "./e2e/utils"

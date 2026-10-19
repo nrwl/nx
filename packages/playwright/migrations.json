@@ -5,6 +5,19 @@
       "description": "Rename imports of `createNodesV2` from `@nx/playwright/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/playwright` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-disable-wait-for-server-ready": {
+      "version": "24.0.0-beta.4",
+      "description": "Sets `waitForServerReady: false` on `@nx/playwright/plugin` entries in `nx.json` so existing Playwright e2e tasks keep starting without waiting for the dev server to report it is ready.",
+      "implementation": "./dist/src/migrations/update-24-0-0/disable-wait-for-server-ready",
+      "documentation": "./dist/src/migrations/update-24-0-0/disable-wait-for-server-ready.md"
     }
   }
 }

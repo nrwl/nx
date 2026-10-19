@@ -152,6 +152,11 @@ A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored f
 A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
+Like a `{projectRoot}` fileset, a glob doesn't reach into projects nested inside the project it reads from.
+`{projectRoot}/**/*` on `packages/app` matches the gitignored files of `packages/app`, but no file of a project at `packages/app/plugin`.
+A glob that starts inside the nested project, such as `{projectRoot}/plugin/dist/**`, matches that project's files.
+A glob that starts outside every project, such as `{workspaceRoot}/dist/**`, matches every file it names.
+
 A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob resolved with it.
 For a fileset on the project itself, that's the project's other `includeIgnored` globs.
 For one with `dependencies: true`, it's the globs carrying that flag, applied together to each dependency:
@@ -181,8 +186,10 @@ A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
 
-In CI with [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set, Nx can hash a task from the files it read on a recorded run.
+In CI, when your workspace has Ultracache turned on in Nx Cloud, Nx can hash a task from the files it read on a recorded run.
+To turn this off for a run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
 Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
+An input with `"always": true` keeps its files in the hash, as [inputs kept under ultracache](#inputs-kept-under-ultracache) describes.
 To keep a target's declared inputs authoritative, set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on it.
 
 ### JSON files
@@ -322,6 +329,60 @@ There's nothing to declare, and only continuous dependencies count.
 A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
 
+Set `"inputs": false` on a `dependsOn` entry when the task needs the server running but doesn't depend on what it serves.
+For example, an `e2e` task that tests one feature of an app shouldn't rerun whenever another library bundled into the app changes:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": "myapp", "target": "serve", "inputs": false },
+      ],
+    },
+  },
+}
+```
+
+The task still depends on the server, but this entry doesn't include the server's inputs in the hash.
+Nx also leaves out the servers that entry reaches, unless another entry with inputs reaches them.
+The option has no effect on dependencies that aren't continuous.
+The Playwright and Cypress plugins set it for the atomized tasks of test files that
+[hash from the app code they import](/docs/kb/hash-e2e-tests-from-imports).
+
+`nx affected` selects tasks by their inputs.
+With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects, regardless of `"inputs": false`.
+
+### Inputs kept under ultracache
+
+When a task hashes from a recorded run, its declared filesets give way to the files it read.
+An `e2e` task usually doesn't read the libraries its app serves, so a library listed in its inputs drops out of the hash.
+Add `"always": true` to an input to keep the files it resolves to:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "inputs": [
+        "default",
+        { "input": "production", "projects": ["checkout"], "always": true },
+      ],
+    },
+  },
+}
+```
+
+The task's hash covers the files it read plus the files of every `always` input.
+To hash a target from its declared inputs alone, set its [`ultracache` mode](/docs/reference/project-configuration#ultracache) to `warn` or `off` instead.
+
+The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": "production", "dependencies": true, "always": true }`, which keeps every dependency in the chain.
+A task hashed from its declared inputs hashes the same with or without it.
+With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
+
+To narrow an atomized test file to the projects it exercises, see [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
+
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
 When a root `tsconfig.json` or `tsconfig.base.json` is present, Nx will always consider parts of the file which apply to the project of a task being run.
@@ -351,6 +412,19 @@ You can reference named inputs from specific projects or from project dependenci
 ```
 
 The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
+
+Add `"dependencies": true` to a `projects` input to reference the named input from the dependencies of those projects.
+For each listed project, these are the files its own `^production` covers.
+The listed projects themselves don't count, so pair it with the plain form to cover a project and everything it depends on:
+
+```jsonc
+{
+  "inputs": [
+    { "input": "production", "projects": "myapp" },
+    { "input": "production", "projects": "myapp", "dependencies": true },
+  ],
+}
+```
 
 {% aside type="note" title="^ with filesets vs named inputs" %}
 The `^` prefix behaves differently depending on what follows it:

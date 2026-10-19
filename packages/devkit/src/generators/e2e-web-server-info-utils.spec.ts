@@ -30,44 +30,6 @@ describe('getE2EWebServerInfo', () => {
     vi.resetModules();
   });
 
-  it('should use the default values when no plugin is registered and plugins are not being used', async () => {
-    // ARRANGE
-    const nxJson = readNxJson(tree);
-    nxJson.plugins ??= [];
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    const e2eWebServerInfo = await getE2EWebServerInfo(
-      tree,
-      'app',
-      {
-        plugin: '@nx/vite/plugin',
-        configFilePath: 'app/vite.config.ts',
-        serveTargetName: 'serveTargetName',
-        serveStaticTargetName: 'previewTargetName',
-      },
-      {
-        defaultServeTargetName: 'serve',
-        defaultServeStaticTargetName: 'preview',
-        defaultE2EWebServerAddress: 'http://localhost:4200',
-        defaultE2ECiBaseUrl: 'http://localhost:4300',
-        defaultE2EPort: 4200,
-      },
-      false
-    );
-
-    // ASSERT
-    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
-      {
-        "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
-        "e2eDevServerTarget": "app:serve",
-        "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
-      }
-    `);
-  });
-
   it('should use the default values of the plugin when the plugin is just a string', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
@@ -90,8 +52,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2EWebServerAddress: 'http://localhost:4200',
         defaultE2ECiBaseUrl: 'http://localhost:4300',
         defaultE2EPort: 4200,
-      },
-      true
+      }
     );
 
     // ASSERT
@@ -135,8 +96,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2EWebServerAddress: 'http://localhost:4200',
         defaultE2ECiBaseUrl: 'http://localhost:4300',
         defaultE2EPort: 4200,
-      },
-      true
+      }
     );
 
     // ASSERT
@@ -186,8 +146,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2EWebServerAddress: 'http://localhost:4200',
         defaultE2ECiBaseUrl: 'http://localhost:4300',
         defaultE2EPort: 4200,
-      },
-      true
+      }
     );
 
     // ASSERT
@@ -240,8 +199,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2EWebServerAddress: 'http://localhost:4200',
         defaultE2ECiBaseUrl: 'http://localhost:4300',
         defaultE2EPort: 4200,
-      },
-      true
+      }
     );
 
     // ASSERT
@@ -294,8 +252,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2EWebServerAddress: 'http://localhost:4200',
         defaultE2ECiBaseUrl: 'http://localhost:4300',
         defaultE2EPort: 4400,
-      },
-      true
+      }
     );
 
     // ASSERT
@@ -344,8 +301,7 @@ describe('getE2EWebServerInfo', () => {
         defaultE2ECiBaseUrl: 'http://localhost:4321',
         defaultE2EPort: 4321,
         e2EPortIsExplicit: true,
-      },
-      true
+      }
     );
 
     // ASSERT — both URLs keep the explicitly requested port, and agree

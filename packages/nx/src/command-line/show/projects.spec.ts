@@ -44,7 +44,7 @@ vi.mock('../../project-graph/affected/affected-tasks', () => ({
         'ui:build': { id: 'ui:build', target: { project: 'ui' } },
         'core:build': { id: 'core:build', target: { project: 'core' } },
       },
-      dependencies: { 'ui:build': ['core:build'], 'core:build': [] },
+      dependencies: { 'ui:build': [{ id: 'core:build' }], 'core:build': [] },
       continuousDependencies: { 'ui:build': [], 'core:build': [] },
       roots: ['core:build'],
     },

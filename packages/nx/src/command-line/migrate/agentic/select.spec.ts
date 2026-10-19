@@ -518,7 +518,7 @@ describe('resolveAgentic', () => {
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(mockOutputWarn).toHaveBeenCalled();
       expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
-        /interactive-only/i
+        /needs an interactive terminal/i
       );
     }
   );
@@ -549,7 +549,7 @@ describe('resolveAgentic', () => {
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(mockOutputWarn).toHaveBeenCalled();
       expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
-        /interactive-only/i
+        /needs an interactive terminal/i
       );
     }
   );

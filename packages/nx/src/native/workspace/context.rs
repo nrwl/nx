@@ -2822,7 +2822,10 @@ mod tests {
         // so the write shows up within the kernel's hop, not the idle flush.
         temp.child("dist/out.js").write_str("x").unwrap();
         wait_until("a listing never saw the write", || {
-            reader.files_under(&root, "dist", true, &|_| true).unwrap() == vec!["dist/out.js"]
+            reader
+                .files_under(&root, "dist", true, &|_| true, &[])
+                .unwrap()
+                == vec!["dist/out.js"]
         });
     }
 
@@ -2852,8 +2855,12 @@ mod tests {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let listing = std::thread::spawn(move || {
-            tx.send(reader.files_under(&root, "dist", true, &|_| true).unwrap())
-                .unwrap();
+            tx.send(
+                reader
+                    .files_under(&root, "dist", true, &|_| true, &[])
+                    .unwrap(),
+            )
+            .unwrap();
         });
         assert!(
             rx.recv_timeout(Duration::from_millis(300)).is_err(),
@@ -2885,7 +2892,9 @@ mod tests {
         let reader = ctx.reader();
         assert!(reader.track(&root, "dist"));
         assert_eq!(
-            reader.files_under(&root, "dist", true, &|_| true).unwrap(),
+            reader
+                .files_under(&root, "dist", true, &|_| true, &[])
+                .unwrap(),
             vec!["dist/gen/x.js"]
         );
         // The file map still applies the rule: it is an input, not a source.

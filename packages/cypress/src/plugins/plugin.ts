@@ -6,6 +6,7 @@ import {
   workspaceDataDirectory,
   PluginCache,
   globWithWorkspaceContext,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -33,6 +34,11 @@ export interface CypressPluginOptions {
   openTargetName?: string;
   componentTestingTargetName?: string;
   ciComponentTestingTargetName?: string;
+  /**
+   * Wait for the web server task's `readyWhen` and test against the URL it
+   * reports. Defaults to `true`.
+   */
+  waitForServerReady?: boolean;
 }
 
 const cypressConfigGlob = '**/cypress.config.{js,ts,mjs,cjs}';
@@ -337,6 +343,8 @@ async function buildCypressTargets(
     pluginPresetOptions?.webServerCommands;
   const shouldReuseExistingServer =
     pluginPresetOptions?.reuseExistingServer ?? true;
+  const waitForServer: { waitFor?: 'ready' } =
+    options.waitForServerReady === false ? {} : { waitFor: 'ready' };
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -380,6 +388,7 @@ async function buildCypressTargets(
           {
             projects: [webServerCommandTask.project],
             target: webServerCommandTask.target,
+            ...waitForServer,
           },
         ];
       } else {
@@ -494,11 +503,19 @@ async function buildCypressTargets(
             {
               target: ciWebServerCommandTask.target,
               projects: [ciWebServerCommandTask.project],
+              ...waitForServer,
             },
           ];
         } else {
           targets[targetName].parallelism = false;
         }
+
+        targets[targetName] = applyTestFileDirectives(
+          targets[targetName],
+          context.workspaceRoot,
+          file,
+          { ignoreServerInputs: true }
+        );
       }
 
       targets[options.ciTargetName] = {

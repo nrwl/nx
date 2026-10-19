@@ -40,7 +40,6 @@ export async function addLinting(
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
-    addPlugin?: boolean;
     projectName: string;
   },
   projectType: 'lib' | 'app'
@@ -57,7 +56,6 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
       skipPackageJson: options.skipPackageJson,
     })
   );

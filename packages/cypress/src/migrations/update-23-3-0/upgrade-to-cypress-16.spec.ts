@@ -9,7 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 import migration from './upgrade-to-cypress-16';
 
-const REPLAN_COMMAND = `npx nx migrate @nx/cypress@${nxVersion} --from=@nx/cypress@23.3.0-beta.0`;
+const REPLAN_COMMAND = `npx nx migrate @nx/cypress@${nxVersion} --from=@nx/cypress@23.3.0-beta.0 --include=all`;
 const RERUN_COMMAND = `${REPLAN_COMMAND} && npx nx migrate --run-migration=@nx/cypress:upgrade-to-cypress-16`;
 
 const ANGULAR_CT_CONFIG = `import { defineConfig } from 'cypress';

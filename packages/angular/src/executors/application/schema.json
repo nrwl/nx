@@ -522,8 +522,7 @@
             },
             "preloadInitial": {
               "type": "boolean",
-              "default": true,
-              "description": "Generates 'preload', 'modulepreload', and 'preconnect' link elements for initial application files and resources."
+              "description": "Generates 'preload', 'modulepreload', and 'preconnect' link elements for initial application files and resources. Defaults to false when a service worker is enabled; otherwise true. _Note: defaulting to false when a service worker is enabled only applies in Angular versions >= 22.2.0. Earlier versions default to true._"
             }
           },
           "required": ["input"]

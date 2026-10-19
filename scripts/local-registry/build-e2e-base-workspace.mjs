@@ -116,9 +116,7 @@ if (failures.length > 0) {
  * create-nx-workspace. NODE_PATH and NX_* point back at this repo, so a child nx
  * resolves @nx/devkit and nx to packages/*\/dist instead of the versions it just
  * installed from verdaccio. The template would then be built against unpublished
- * code. Mirrors getStrippedEnvironmentVariables() in e2e/utils/get-env-info.ts,
- * except that NX_ADD_PLUGINS is removed because shared templates always represent
- * the default plugin-inference mode. Legacy callers use the lazy fallback.
+ * code. Mirrors getStrippedEnvironmentVariables() in e2e/utils/get-env-info.ts.
  */
 function strippedEnv() {
   const allowed = new Set([

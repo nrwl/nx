@@ -13,10 +13,13 @@ export interface EngineWiringOptions {
   baseHref: string;
   locale: string | undefined;
   inlineCriticalCss: boolean;
+  /**
+   * Whether the installed `@angular/ssr` (>= 22.2) inlines critical CSS from
+   * plans compiled at build time instead of from the browser stylesheets.
+   */
+  usesCriticalCssPlans: boolean;
   /** Path from the server output directory to the browser output. */
   browserOutputRelativePath: string;
-  /** File name of the emitted index html within the browser output. */
-  indexOutputName: string | undefined;
   supportedLocales: Record<string, string>;
   allowedHosts: string[];
   /**
@@ -69,21 +72,30 @@ export function generateEngineManifestSource(
     ɵgetOrCreateAngularServerApp as __ngRspackGetOrCreateAngularServerApp,
     ɵdestroyAngularServerApp as __ngRspackDestroyAngularServerApp,
   } from '@angular/ssr';
-  import { createBrowserOutputServerAssets as __ngRspackCreateServerAssets } from ${serverAssetsRequest};
+  import {
+    createServerAssets as __ngRspackCreateServerAssets,
+    readCriticalCss as __ngRspackReadCriticalCss,
+  } from ${serverAssetsRequest};
   import { join as __ngRspackJoinPath } from 'node:path';
   // MANIFESTS added by @nx/angular-rspack: an application engine cannot
   // construct without them.
   __ngRspackSetAngularAppManifest({
     bootstrap: () => Promise.resolve(__ngRspackMainServerDefault),
-    inlineCriticalCss: ${JSON.stringify(engineWiring.inlineCriticalCss)},
+    ${
+      engineWiring.usesCriticalCssPlans
+        ? '...__ngRspackReadCriticalCss(__dirname),'
+        : `inlineCriticalCss: ${JSON.stringify(engineWiring.inlineCriticalCss)},`
+    }
     baseHref: ${JSON.stringify(engineWiring.baseHref)},
     locale: ${JSON.stringify(engineWiring.locale)},
     assets: __ngRspackCreateServerAssets(
+      __dirname,
       __ngRspackJoinPath(__dirname, ${JSON.stringify(
         engineWiring.browserOutputRelativePath
       )}),
-      ${JSON.stringify(engineWiring.indexOutputName)},
-      ${JSON.stringify(engineWiring.inlineCriticalCss)}
+      ${JSON.stringify(
+        !engineWiring.usesCriticalCssPlans && engineWiring.inlineCriticalCss
+      )}
     ),
   });
   __ngRspackSetAngularAppEngineManifest({

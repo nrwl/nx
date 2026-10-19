@@ -6,14 +6,10 @@ import {
   ProjectConfiguration,
   readJson,
   readProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateJson,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-
-import type { Schema as EsLintExecutorOptions } from '@nx/eslint/internal';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
 import {
@@ -44,7 +40,6 @@ export default async function pluginLintCheckGenerator(
   if (projectIsEsLintEnabled(host, project)) {
     updateRootEslintConfig(host);
     updateProjectEslintConfig(host, project, packageJson);
-    updateProjectTarget(host, options, packageJson);
 
     // Project is setup for vscode
     if (host.exists('.vscode')) {
@@ -75,34 +70,11 @@ export function addMigrationJsonChecks(
     return;
   }
 
-  const [eslintTarget, eslintTargetConfiguration] =
-    getEsLintOptions(projectConfiguration) ?? [];
-
   const relativeMigrationsJsonPath =
     readNxMigrateConfig(packageJson).migrations;
 
   if (!relativeMigrationsJsonPath) {
     return;
-  }
-
-  const migrationsJsonPath = joinPathFragments(
-    projectConfiguration.root,
-    relativeMigrationsJsonPath
-  );
-
-  if (!eslintTarget) {
-    return;
-  }
-
-  // Add path to lintFilePatterns if different than default "{projectRoot}"
-  if (
-    eslintTargetConfiguration.options?.lintFilePatterns &&
-    !eslintTargetConfiguration.options.lintFilePatterns.includes(
-      migrationsJsonPath
-    )
-  ) {
-    eslintTargetConfiguration.options.lintFilePatterns.push(migrationsJsonPath);
-    updateProjectConfiguration(host, options.projectName, projectConfiguration);
   }
 
   // Update project level eslintrc
@@ -132,83 +104,6 @@ function formatFilesEntries(tree: Tree, files: string[]): string[] {
     return after;
   });
   return filesAfter;
-}
-
-function updateProjectTarget(
-  host: Tree,
-  options: PluginLintChecksGeneratorSchema,
-  packageJson: PackageJson
-) {
-  const project = readProjectConfiguration(host, options.projectName);
-  if (!project.targets) {
-    return;
-  }
-
-  for (const [target, configuration] of Object.entries(project.targets)) {
-    if (
-      configuration.executor === '@nx/eslint:lint' &&
-      // only add patterns if there are already hardcoded ones
-      configuration.options?.lintFilePatterns
-    ) {
-      const opts: EsLintExecutorOptions = configuration.options ?? {};
-      opts.lintFilePatterns ??= [];
-
-      if (packageJson.generators) {
-        opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.generators)
-        );
-      }
-      if (
-        packageJson.schematics &&
-        packageJson.schematics !== packageJson.generators
-      ) {
-        opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.schematics)
-        );
-      }
-      if (packageJson.executors) {
-        opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.executors)
-        );
-      }
-      if (
-        packageJson.builders &&
-        packageJson.builders !== packageJson.executors
-      ) {
-        opts.lintFilePatterns.push(
-          joinPathFragments(project.root, packageJson.builders)
-        );
-      }
-      opts.lintFilePatterns.push(`${project.root}/package.json`);
-      opts.lintFilePatterns = [...new Set(opts.lintFilePatterns)];
-      project.targets[target].options = opts;
-
-      // Plugin checks read schema/implementation files which may live in the
-      // project's build outputs (and migration prompt files copied as assets).
-      // Ensure lint runs after build and includes the relevant build outputs
-      // as inputs so the sandbox allows the reads and the cache invalidates
-      // when those outputs change.
-      const targetConfig = project.targets[target];
-      const dependsOn = new Set(targetConfig.dependsOn ?? []);
-      dependsOn.add('build');
-      targetConfig.dependsOn = Array.from(dependsOn);
-
-      const inputs = targetConfig.inputs ?? ['...'];
-      const hasDependentOutputs = inputs.some(
-        (input) =>
-          typeof input === 'object' &&
-          input !== null &&
-          'dependentTasksOutputFiles' in input
-      );
-      if (!hasDependentOutputs) {
-        inputs.push({
-          dependentTasksOutputFiles: '**/*.{json,d.ts,js,md}',
-        });
-      }
-      targetConfig.inputs = inputs;
-    }
-  }
-  updateProjectConfiguration(host, options.projectName, project);
 }
 
 function updateProjectEslintConfig(
@@ -322,15 +217,4 @@ function setupVsCodeLintingForJsonFiles(host: Tree) {
 
 function projectIsEsLintEnabled(tree: Tree, project: ProjectConfiguration) {
   return !!findEslintFile(tree, project.root);
-}
-
-export function getEsLintOptions(
-  project: ProjectConfiguration
-): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
-  return Object.entries(project.targets || {}).find(
-    ([, x]) =>
-      x.executor === '@nx/eslint:lint' ||
-      x.executor === '@nx/linter:eslint' ||
-      x.executor === '@nrwl/linter:eslint'
-  );
 }
