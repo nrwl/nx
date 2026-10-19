@@ -181,7 +181,7 @@ async function getExpoE2EWebServerInfo(
     e2ePort = serveTargetOptions.port;
   }
 
-  return getE2EWebServerInfo(
+  const info = await getE2EWebServerInfo(
     tree,
     projectName,
     {
@@ -198,4 +198,9 @@ async function getExpoE2EWebServerInfo(
       defaultE2EPort: e2ePort,
     }
   );
+
+  // When CI runs the dev server target, its URL carries that target's port
+  return info.e2eCiWebServerCommand === info.e2eWebServerCommand
+    ? { ...info, e2eCiBaseUrl: info.e2eWebServerAddress }
+    : info;
 }

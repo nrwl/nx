@@ -194,6 +194,84 @@ describe('app', () => {
     expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
+  describe('playwright web server', () => {
+    const plugin = '@nx/expo/plugin';
+
+    it.each([
+      {
+        name: 'the default serve target',
+        plugins: [{ plugin, options: { serveTargetName: 'serve' } }],
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8081',
+      },
+      {
+        name: 'a port in the serve target defaults',
+        plugins: [{ plugin, options: { serveTargetName: 'serve' } }],
+        targetDefaults: { serve: { options: { port: 8082 } } },
+        command: 'npx nx run my-app:serve',
+        url: 'http://localhost:8082',
+      },
+      {
+        name: 'a custom serve target name',
+        plugins: [{ plugin, options: { serveTargetName: 'web' } }],
+        command: 'npx nx run my-app:web',
+        url: 'http://localhost:8081',
+      },
+      {
+        name: 'a port in the custom serve target defaults',
+        plugins: [{ plugin, options: { serveTargetName: 'web' } }],
+        targetDefaults: { web: { options: { port: 9000 } } },
+        command: 'npx nx run my-app:web',
+        url: 'http://localhost:9000',
+      },
+    ])(
+      'matches the port of the CI target with $name',
+      async ({ plugins, targetDefaults, command, url }) => {
+        updateJson(appTree, 'nx.json', (json) => {
+          json.plugins = plugins;
+          if (targetDefaults) json.targetDefaults = targetDefaults;
+          return json;
+        });
+
+        await expoApplicationGenerator(appTree, {
+          directory: 'my-app',
+          linter: 'none',
+          e2eTestRunner: 'playwright',
+          js: false,
+          unitTestRunner: 'none',
+          skipFormat: true,
+        });
+
+        const config = appTree.read(
+          'my-app-e2e/playwright.config.mts',
+          'utf-8'
+        );
+        expect(config).toContain(`command: '${command}'`);
+        expect(config).toContain(`'${url}'`);
+      }
+    );
+
+    it('uses the file server port when the plugin is registered as a string', async () => {
+      updateJson(appTree, 'nx.json', (json) => {
+        json.plugins = [plugin];
+        return json;
+      });
+
+      await expoApplicationGenerator(appTree, {
+        directory: 'my-app',
+        linter: 'none',
+        e2eTestRunner: 'playwright',
+        js: false,
+        unitTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      const config = appTree.read('my-app-e2e/playwright.config.mts', 'utf-8');
+      expect(config).toContain(`command: 'npx nx run my-app:serve-static'`);
+      expect(config).toContain(`'http://localhost:4200'`);
+    });
+  });
+
   describe('detox', () => {
     beforeEach(() => {
       // Expo 54+ does not support detox, so we test with Expo 53
