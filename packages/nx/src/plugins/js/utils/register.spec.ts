@@ -15,6 +15,7 @@ import {
   NODENEXT_ESM_RESOLVER_SOURCE,
   nodeNextEsmResolveHook,
   registerTsConfigPaths,
+  registerTsProject,
   resolveTsNodeEsmCompilerOptions,
 } from './register';
 
@@ -741,6 +742,39 @@ describe('registerTsConfigPaths', () => {
     expect(registerPaths).toHaveBeenCalledWith(
       expect.objectContaining({ baseUrl: tempFs.tempDir })
     );
+  });
+});
+
+describe('registerTsProject', () => {
+  it('should read the compiler options without listing the included files', () => {
+    const tempFs = new TempFs('register-ts-project', false);
+    const req = createRequire(import.meta.url);
+    const readDirectory = vi.spyOn(req('typescript').sys, 'readDirectory');
+    const swcRegister = vi.spyOn(
+      req('@swc-node/register/register'),
+      'register'
+    );
+    try {
+      tempFs.createFilesSync({
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: { experimentalDecorators: true },
+          include: ['src/**/*.ts'],
+        }),
+        'src/a.ts': 'export const a = 1;\n',
+      });
+
+      const cleanup = registerTsProject(join(tempFs.tempDir, 'tsconfig.json'));
+      cleanup();
+
+      const [compilerOptions] = swcRegister.mock.calls[0] as [CompilerOptions];
+      expect(compilerOptions.experimentalDecorators).toBe(true);
+      expect(compilerOptions).not.toHaveProperty('files');
+      expect(readDirectory).not.toHaveBeenCalled();
+    } finally {
+      readDirectory.mockRestore();
+      swcRegister.mockRestore();
+      tempFs.cleanup();
+    }
   });
 });
 
