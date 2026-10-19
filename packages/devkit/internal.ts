@@ -311,6 +311,7 @@ export {
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
   runNxSync,
   safeExecFileSync,
   safeSpawn,

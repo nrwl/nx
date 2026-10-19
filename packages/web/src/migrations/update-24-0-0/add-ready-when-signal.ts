@@ -1,17 +1,24 @@
 import {
   getProjects,
   parseTargetString,
+  readNxJson,
   type ExecutorContext,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { addReadyWhenSignalToTargets } from '@nx/devkit/internal';
+import {
+  addReadyWhenSignalToTargets,
+  mergeTargetConfigurations,
+  readApplicableTargetDefaults,
+  resolveNxTokensInOptions,
+} from '@nx/devkit/internal';
 
 export default async function update(tree: Tree) {
   return addReadyWhenSignalToTargets(
     tree,
     ['@nx/web:file-server'],
-    (target, projectName) => addBuildDependency(tree, target, projectName)
+    (target, projectName, defaults) =>
+      addBuildDependency(tree, target, projectName, defaults)
   );
 }
 
@@ -21,19 +28,27 @@ export default async function update(tree: Tree) {
 function addBuildDependency(
   tree: Tree,
   target: TargetConfiguration,
-  projectName: string
+  projectName: string,
+  defaults: Partial<TargetConfiguration> | null
 ): boolean {
+  const effective = mergeTargetConfigurations(
+    target,
+    defaults ?? undefined,
+    undefined,
+    undefined,
+    undefined,
+    false
+  );
   // `dependsOn` is per target, so a configuration that swaps the build target
   // cannot be covered
   if (
-    Object.values(target.configurations ?? {}).some(
+    Object.values(effective.configurations ?? {}).some(
       (config) => config?.buildTarget !== undefined
     )
   ) {
     return false;
   }
-  const buildTarget = target.options?.buildTarget;
-  if (typeof buildTarget !== 'string') {
+  if (typeof effective.options?.buildTarget !== 'string') {
     return true;
   }
 
@@ -46,6 +61,11 @@ function addBuildDependency(
   );
   let parsed: ReturnType<typeof parseTargetString>;
   try {
+    const { buildTarget } = resolveNxTokensInOptions(
+      { buildTarget: effective.options.buildTarget },
+      { ...projects.get(projectName), name: projectName },
+      'buildTarget'
+    );
     parsed = parseTargetString(buildTarget, {
       projectName,
       projectGraph: { nodes, dependencies: {} },
@@ -57,15 +77,28 @@ function addBuildDependency(
 
   // `dependsOn` can't name a configuration, so only the build target's default
   // one is covered
+  const buildTargetConfig = projects.get(project)?.targets?.[name];
   const defaultConfiguration =
-    projects.get(project)?.targets?.[name]?.defaultConfiguration;
+    buildTargetConfig?.defaultConfiguration ??
+    // Nx merges defaults into a run-commands or run-script target based on its
+    // command or script, so only targets with other executors read them
+    (buildTargetConfig?.executor &&
+    buildTargetConfig.executor !== 'nx:run-commands' &&
+    buildTargetConfig.executor !== 'nx:run-script'
+      ? readApplicableTargetDefaults(
+          name,
+          buildTargetConfig.executor,
+          readNxJson(tree)?.targetDefaults,
+          project,
+          nodes[project]
+        )?.defaultConfiguration
+      : undefined);
   if (configuration !== undefined && configuration !== defaultConfiguration) {
     return false;
   }
 
-  const dependsOn = target.dependsOn ?? [];
   if (
-    dependsOn.some((entry) =>
+    (effective.dependsOn ?? []).some((entry) =>
       project === projectName
         ? typeof entry === 'string'
           ? entry === name
@@ -77,9 +110,13 @@ function addBuildDependency(
   ) {
     return true;
   }
-  target.dependsOn = [
-    ...dependsOn,
-    project === projectName ? name : { projects: [project], target: name },
-  ];
+  const buildDependency =
+    project === projectName ? name : { projects: [project], target: name };
+  // A `dependsOn` in the project replaces the inherited one unless it spreads it
+  target.dependsOn = target.dependsOn
+    ? [...target.dependsOn, buildDependency]
+    : effective.dependsOn
+      ? ['...', buildDependency]
+      : [buildDependency];
   return true;
 }

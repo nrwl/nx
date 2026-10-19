@@ -31,6 +31,7 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export {
   mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
 } from './project-graph/utils/project-configuration/target-merging';
 export {
   findMatchingTargetNames,
