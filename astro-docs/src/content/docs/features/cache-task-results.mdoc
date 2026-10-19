@@ -76,36 +76,14 @@ the same output. As an example, e2e test runs that hit the backend API cannot be
 the result of the test run.
 {% /aside %}
 
-## Enable remote caching
-
-By default, Nx caches task results locally. The biggest benefit of caching comes from using remote caching in CI, where you can **share the cache between different runs**. Nx comes with a managed remote caching solution built on top of Nx Cloud.
-
-To enable remote caching, connect your workspace to [Nx Cloud](https://nx.dev/nx-cloud?utm_source=nx-docs&utm_medium=website&utm_campaign=cache-task-results) by running the following command:
-
-```shell
-npx nx@latest connect
-```
-
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=cache-task-results" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
-
-Learn more about [remote caching with Nx Cloud](/docs/features/ci-features/remote-cache).
-
 ## Configure inputs and outputs
 
-Inputs decide what goes into a task's hash, such as files, environment variables, and external dependency versions.
-Outputs are the files Nx stores with the terminal output and restores on a cache hit.
-How much you configure depends on where the task comes from.
+Inputs are what Nx hashes, such as files and environment variables.
+Outputs are the files Nx caches and restores.
 
-[Inferred tasks](/docs/features/run-tasks#inferred-tasks) get their inputs and outputs from the plugin, which reads them from tool configuration such as `vite.config.ts`.
-Change them only when the plugin's settings don't match what the task does.
+Define `inputs` and `outputs` per project in `project.json` or `package.json`, and share them across projects with `targetDefaults` in `nx.json`.
+Nx plugins [infer inputs and outputs](/docs/features/run-tasks#inferred-tasks) from your existing configuration, such as `vite.config.ts`, so you don't have to redefine them.
 
-Explicit tasks, such as `package.json` scripts and `project.json` targets, start from the Nx defaults.
-Every file in the project and in the projects it depends on is an input.
-Only `build` and `prepare` targets get default outputs (`{workspaceRoot}/dist/{projectRoot}`, `{projectRoot}/dist`, `{projectRoot}/build`, and `{projectRoot}/public`).
-A `test` script that writes a coverage report caches only its terminal output until you list the report directory in `outputs`.
-Narrow the inputs too, so edits to unrelated files don't cause cache misses.
-
-Set inputs and outputs for every matching target in `nx.json`, or for one project in `project.json` or `package.json`.
 This example keeps Markdown edits from invalidating `build` and stores the build output in `dist/<project-name>` at the workspace root:
 
 {% tabs %}
@@ -175,7 +153,7 @@ Later CI runs hash the task from those files in place of its declared file input
 
 Ultracache is on for every task that runs on Workers, with nothing to configure, and needs Nx 22.6 or later.
 Declared `outputs` still decide which files Nx stores and restores, and runs outside CI hash from declared `inputs`.
-To set it up, [connect your workspace to Nx Cloud](#enable-remote-caching) and [distribute tasks on Workers](/docs/features/ci-features/distribute-task-execution).
+To set it up, [connect your workspace to Nx Cloud](/docs/features/ci-features/remote-cache) and [distribute tasks on Workers](/docs/features/ci-features/distribute-task-execution).
 
 ## Troubleshoot cache settings
 
