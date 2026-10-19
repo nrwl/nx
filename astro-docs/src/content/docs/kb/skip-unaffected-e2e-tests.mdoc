@@ -132,18 +132,49 @@ It reruns on any change to the app.
 
 ## Directive syntax
 
-- Put the directive in a line comment or a block comment before the first line of code.
-  Blank lines, a `#!` line, and other comments can come before it.
-- Start the line with the directive, after `//` or a block comment's leading `*`.
-  Nx ignores a directive in any other position, or with a misspelled name, without a warning.
-- Put the colon right after `@nx-depends-on`.
-  It takes project names or patterns separated by commas, and you can repeat it on more lines.
-  Nx ignores it with no value and logs a warning that names the test file.
-  A name or pattern that matches no project is an error when Nx hashes the task.
-- `@nx-ignore-server-inputs` takes no value.
-  Nx ignores it with one, such as `// @nx-ignore-server-inputs: false`, and logs a warning.
-- A test file can have both directives.
-  Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
+Put each directive on its own comment line at the top of the test file, before the first line of code.
+Line comments and block comments both work, and blank lines, a `#!` line, or other comments can come first:
+
+```ts
+// apps/shop-e2e/src/checkout.spec.ts
+// @nx-depends-on: checkout, payments
+// @nx-depends-on: tag:scope:shared
+import { test } from '@playwright/test';
+```
+
+```ts
+/**
+ * Checkout flow tests.
+ * @nx-ignore-server-inputs
+ */
+import '../../shop/src/app/checkout/checkout-page';
+```
+
+Nx ignores these directives without a warning:
+
+```ts
+// The line doesn't start with the directive:
+// TODO @nx-depends-on: checkout
+// No colon after the name:
+// @nx-depends-on checkout
+// Misspelled name:
+// @nx-depend-on: checkout
+import { test } from '@playwright/test';
+// After the first line of code:
+// @nx-depends-on: checkout
+```
+
+Nx ignores these and logs a warning that names the test file:
+
+```ts
+// No projects listed:
+// @nx-depends-on:
+// A value, which this directive doesn't take:
+// @nx-ignore-server-inputs: false
+```
+
+A project name or pattern that matches no project is an error when Nx hashes the task.
+A test file can have both directives, and Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
 
 ## Check the result
 
