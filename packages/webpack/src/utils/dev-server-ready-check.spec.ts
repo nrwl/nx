@@ -4,6 +4,7 @@ import { tmpdir, type NetworkInterfaceInfo } from 'os';
 import { dirname, join } from 'path';
 import {
   getDevServerAddress,
+  parseServeArgv,
   parseServeFlags,
   waitForWebpackDevServer,
 } from './dev-server-ready-check';
@@ -25,33 +26,49 @@ const noFlags = {
 };
 
 describe('parseServeFlags', () => {
+  const parse = (options: Record<string, unknown>) =>
+    parseServeFlags(parseServeArgv(options));
+
   it('reads the port, host and config names from options and args', () => {
     expect(
-      parseServeFlags({
+      parse({
         args: ['--port', '4300', '--host=0.0.0.0', '--config-name', 'client'],
       })
     ).toEqual({
       ...noFlags,
-      port: '4300',
+      port: 4300,
       host: '0.0.0.0',
       configNames: ['client'],
     });
-    expect(parseServeFlags({ args: '--port=4301 --hot' })).toEqual({
+    expect(parse({ args: '--port=4301 --hot' })).toEqual({
       ...noFlags,
-      port: '4301',
+      port: 4301,
     });
-    expect(
-      parseServeFlags({ args: `--config "a b.js" --port='4302'` })
-    ).toEqual({ ...noFlags, configs: ['a b.js'], port: '4302' });
+    expect(parse({ args: `--config "a b.js" --port='4302'` })).toEqual({
+      ...noFlags,
+      configs: ['a b.js'],
+      port: 4302,
+    });
   });
 
-  it('leaves a flag without a value unset', () => {
-    expect(parseServeFlags({ args: ['--host', '--hot'] })).toEqual(noFlags);
+  it('takes the next arg as the value of a flag that needs one, as webpack-cli does', () => {
+    expect(parse({ args: ['--host', '--hot'] })).toEqual({
+      ...noFlags,
+      host: '--hot',
+    });
+  });
+
+  it('stops at a `--` after an option, and drops one before any, as webpack-cli does', () => {
+    expect(parse({ args: ['--hot', '--', '--port', '4300'] })).toEqual(noFlags);
+    expect(parse({ args: ['--', '--port', '4300'] })).toEqual({
+      ...noFlags,
+      port: 4300,
+    });
   });
 
   it('reads --config, --merge and --extends in their long and short forms', () => {
     expect(
-      parseServeFlags({
+      parse({
         args: [
           ...['--config', 'a.js', 'b.js', '-c', 'c.js', '--config=d.js'],
           ...['-m', 'entry.js', '--extends', 'base.js', '-e', 'other.js'],
@@ -66,7 +83,7 @@ describe('parseServeFlags', () => {
 
   it('parses --env the way webpack-cli does', () => {
     expect(
-      parseServeFlags({
+      parse({
         args: ['--env', 'flag', 'app.url=a=b', '--env=unset=', '--env', 'n=1'],
       }).env
     ).toStrictEqual({
@@ -131,7 +148,7 @@ describe('waitForWebpackDevServer', () => {
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'nx-webpack-ready-'));
     servers = [];
-    // The check merges with the webpack-merge of the workspace's webpack-cli
+    // The check parses args and merges configs with the workspace's webpack-cli
     mkdirSync(join(dir, 'node_modules'));
     symlinkSync(
       dirname(require.resolve('webpack-cli/package.json')),
@@ -284,12 +301,19 @@ describe('waitForWebpackDevServer', () => {
     );
   });
 
-  it.each([[{ args: ['--mode', 'production'] }], [{ mode: 'production' }]])(
-    'passes the CLI options of %j to a function config as argv',
-    async (options) => {
+  it.each([
+    [{ args: ['--mode', 'production'] }, 'mode', 'production'],
+    [{ mode: 'production' }, 'mode', 'production'],
+    [{ args: ['--entry', 'a', 'b', '--entry', 'c'] }, 'entry', ['a', 'b', 'c']],
+    [{ args: ['--client-reconnect', '3'] }, 'clientReconnect', 3],
+    [{ args: ['--compress', 'src/main.js'] }, 'compress', true],
+    [{ args: ['-d', 'eval'] }, 'devtool', 'eval'],
+  ])(
+    'passes the CLI options of %j to a function config as argv.%s',
+    async (options, name, value) => {
       const port = await getFreePort();
       write({
-        'webpack.config.js': `module.exports = (env, argv) => ({ devServer: { port: argv.mode === 'production' ? ${port} : 1 } });`,
+        'webpack.config.js': `module.exports = (env, argv) => ({ devServer: { port: require('util').isDeepStrictEqual(argv.${name}, ${JSON.stringify(value)}) ? ${port} : 1 } });`,
       });
 
       await expectToWaitFor(waitWithOptions(options), [port]);

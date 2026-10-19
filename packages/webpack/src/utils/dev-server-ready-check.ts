@@ -11,7 +11,7 @@ import { resolve } from 'path';
 import type { Configuration } from 'webpack';
 
 export interface ServeFlags {
-  port?: string;
+  port?: number | string;
   host?: string;
   configNames: string[];
   configs: string[];
@@ -20,116 +20,150 @@ export interface ServeFlags {
   extends: string[];
 }
 
-const SHORT_FLAGS: Record<string, string> = {
-  c: 'config',
-  m: 'merge',
-  e: 'extends',
-};
-const VARIADIC_FLAGS = new Set(['config', 'config-name', 'env', 'extends']);
-
-/**
- * The flags `webpack-cli serve` gets from the task's options, as run-commands
- * forwards them.
- */
-export function parseServeFlags(options: Record<string, unknown>): ServeFlags {
-  const flags: ServeFlags = {
-    configNames: [],
-    configs: [],
-    merge: false,
-    env: {},
-    extends: [],
+/** The flags of `webpack-cli serve` the check reads, from its parsed argv. */
+export function parseServeFlags(argv: Record<string, any>): ServeFlags {
+  const env = {};
+  for (const value of argv.env ?? []) parseEnv(value, env);
+  return {
+    port: argv.port,
+    host: argv.host,
+    configNames: argv.configName ?? [],
+    configs: argv.config ?? [],
+    merge: !!argv.merge,
+    env,
+    extends: argv.extends ?? [],
   };
-  const set = (name: string, value: string) => {
-    if (name === 'port') flags.port = value;
-    else if (name === 'host') flags.host = value;
-    else if (name === 'config-name') flags.configNames.push(value);
-    else if (name === 'config') flags.configs.push(value);
-    else if (name === 'extends') flags.extends.push(value);
-    else if (name === 'env') parseEnv(value, flags.env);
-  };
-  const argv = getForwardedArgs(options);
-  const isValue = (arg: string | undefined) => arg && !arg.startsWith('-');
-  for (let i = 0; i < argv.length; i++) {
-    const [, long, inline] = argv[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
-    const [, short, attached] = long
-      ? []
-      : (argv[i].match(/^-(.)(.+)?$/) ?? []);
-    const name = long ?? SHORT_FLAGS[short];
-    if (!name) continue;
-    if (name === 'merge') {
-      flags.merge = true;
-      continue;
-    }
-    const value =
-      inline ?? attached ?? (isValue(argv[i + 1]) ? argv[++i] : undefined);
-    if (value === undefined) continue;
-    set(name, value);
-    // Commander continues a variadic list only after a value in its own arg
-    if (
-      inline === undefined &&
-      attached === undefined &&
-      VARIADIC_FLAGS.has(name)
-    ) {
-      while (isValue(argv[i + 1])) set(name, argv[++i]);
-    }
-  }
-  return flags;
 }
 
+interface CliArgument {
+  configs?: { type: string; values?: unknown[] }[];
+  multiple?: boolean;
+  alias?: string;
+}
+
+const stringConfig = [{ type: 'string' }];
+const flagConfig = [{ type: 'enum', values: [true] }];
+// webpack-cli's own options in any of its majors
+const CLI_OPTIONS: Record<string, CliArgument> = {
+  config: { alias: 'c', configs: stringConfig, multiple: true },
+  'config-name': { configs: stringConfig, multiple: true },
+  merge: { alias: 'm', configs: flagConfig },
+  'disable-interpret': { configs: flagConfig },
+  env: { configs: stringConfig, multiple: true },
+  'node-env': { configs: stringConfig },
+  'define-process-env-node-env': { configs: stringConfig },
+  'config-node-env': { configs: stringConfig },
+  analyze: { configs: flagConfig },
+  progress: { configs: [...stringConfig, ...flagConfig] },
+  json: { alias: 'j', configs: [...stringConfig, ...flagConfig] },
+  'fail-on-warnings': { configs: flagConfig },
+  extends: { alias: 'e', configs: stringConfig, multiple: true },
+};
+const CORE_ALIASES: Record<string, string> = {
+  devtool: 'd',
+  'output-path': 'o',
+  target: 't',
+  watch: 'w',
+};
+const VALUE_TYPES: Record<string, 'boolean' | 'number' | 'string'> = {
+  boolean: 'boolean',
+  reset: 'boolean',
+  number: 'number',
+  string: 'string',
+  path: 'string',
+  RegExp: 'string',
+};
+
 /**
- * The `argv` webpack-cli passes to a function config: its commander options,
- * with `env` set by the caller. Values stay strings except `--port`, which
- * webpack-cli converts to a number when it is numeric.
+ * The options `webpack-cli serve` parses from the task's options, as
+ * run-commands forwards them. webpack-cli passes them to a function config as
+ * `argv`, with `env` parsed from the `--env` values. Parses the args with
+ * webpack-cli's commander and types each value by its argument in webpack-cli,
+ * webpack or webpack-dev-server.
  */
 export function parseServeArgv(
-  options: Record<string, unknown>,
-  env: Record<string, unknown>
-): Record<string, unknown> {
-  const argv: Record<string, unknown> = {};
+  options: Record<string, unknown>
+): Record<string, any> {
   const tokens = getForwardedArgs(options);
-  const isValue = (arg: string | undefined) => arg && !arg.startsWith('-');
-  for (let i = 0; i < tokens.length; i++) {
-    const [, long, inline] = tokens[i].match(/^--([^=]+)(?:=(.*))?$/) ?? [];
-    const [, short, attached] = long
-      ? []
-      : (tokens[i].match(/^-(.)(.+)?$/) ?? []);
-    const flag = long ?? SHORT_FLAGS[short];
-    if (!flag) continue;
-    const negated = flag.startsWith('no-');
-    const name = (negated ? flag.slice(3) : flag).replace(/-([a-z])/g, (_, c) =>
-      c.toUpperCase()
-    );
-    if (negated) {
-      argv[name] = false;
-      continue;
-    }
-    const values: string[] = [];
-    const first =
-      inline ?? attached ?? (isValue(tokens[i + 1]) ? tokens[++i] : undefined);
-    if (first !== undefined) {
-      values.push(first);
-      if (
-        inline === undefined &&
-        attached === undefined &&
-        VARIADIC_FLAGS.has(flag)
-      ) {
-        while (isValue(tokens[i + 1])) values.push(tokens[++i]);
-      }
-    }
-    if (flag === 'env') continue;
-    if (VARIADIC_FLAGS.has(flag)) {
-      argv[name] = [...((argv[name] as string[]) ?? []), ...values];
-    } else if (values.length === 0) {
-      argv[name] = true;
-    } else {
-      const value = values[0];
-      argv[name] =
-        flag === 'port' && value.trim() !== '' && !isNaN(Number(value))
-          ? Number(value)
-          : value;
+  // Registers only the options the args can name, since only those set a value
+  const named = new Set(
+    tokens.flatMap((token) => {
+      if (!token.startsWith('-')) return [];
+      if (!token.startsWith('--')) return [...token.slice(1)];
+      const name = token.slice(2).split('=')[0];
+      return [name, name.replace(/^no-/, '')];
+    })
+  );
+  if (named.size === 0) return {};
+
+  const cliRequire = createWebpackCliRequire();
+  const { Command, Option } = cliRequire('commander');
+  const webpack = cliRequire('webpack') as typeof import('webpack');
+  const args: Record<string, CliArgument> = {
+    ...webpack.cli.getArguments(),
+    ...webpack.cli.getArguments(cliRequire('webpack-dev-server').schema),
+    ...CLI_OPTIONS,
+  };
+  const command = new Command().exitOverride();
+  for (const [name, arg] of Object.entries(args)) {
+    const alias = arg.alias ?? CORE_ALIASES[name];
+    if (named.has(name) || named.has(alias)) {
+      addCliOption(command, Option, name, { ...arg, alias });
     }
   }
-  return { ...argv, env };
+  // webpack-cli's program parses the args at least twice before `serve` does,
+  // and each pass drops a `--` that comes before any option it doesn't know
+  const program = new Command().option('--color').option('--no-color');
+  let serveArgs = ['serve', ...tokens];
+  for (let pass = 0; pass < 2; pass++) {
+    const { operands, unknown } = program.parseOptions(serveArgs);
+    serveArgs = [...operands, ...unknown];
+  }
+  command.parseOptions(serveArgs.slice(1));
+  return command.opts();
+}
+
+// Ports webpack-cli's makeOption
+function addCliOption(
+  command: any,
+  Option: any,
+  name: string,
+  { configs = [], multiple, alias }: CliArgument
+) {
+  const types = new Set<string>();
+  let negatable = false;
+  for (const { type, values = [] } of configs) {
+    if (type === 'enum') {
+      for (const value of values) {
+        const valueType = VALUE_TYPES[typeof value];
+        if (value === false) negatable = true;
+        else if (valueType) types.add(valueType);
+      }
+    } else if (VALUE_TYPES[type]) {
+      types.add(VALUE_TYPES[type]);
+      negatable ||= type === 'boolean';
+    }
+  }
+  if (types.size === 0 && !negatable) return;
+  const takesValue = types.size > (types.has('boolean') ? 1 : 0);
+  const variadic = multiple ? '...' : '';
+  const placeholder = types.has('boolean')
+    ? ` [value${variadic}]`
+    : ` <value${variadic}>`;
+  const option = new Option(
+    `${alias ? `-${alias}, ` : ''}--${name}${takesValue ? placeholder : ''}`
+  );
+  if (takesValue) {
+    option.argParser((value: string, prev: unknown = []) => {
+      const number = Number(value);
+      if (types.has('number') && (types.size === 1 || !isNaN(number))) {
+        return multiple ? [prev, number].flat() : number;
+      }
+      return multiple && types.has('string') ? [prev, value].flat() : value;
+    });
+  }
+  command.addOption(option);
+  if (negatable) command.addOption(new Option(`--no-${name}`));
 }
 
 // webpack-cli's `--env` parser, edge cases included
@@ -189,12 +223,16 @@ async function loadConfigExport(path: string): Promise<unknown> {
 
 type Merge = (...configs: Configuration[]) => Configuration;
 
-// webpack-cli merges with its own webpack-merge, and runs from the task's cwd
-function loadWebpackMerge(): Merge {
-  const cliRequire = createRequire(
+// webpack-cli runs from the task's cwd and loads its dependencies from its own
+// location
+function createWebpackCliRequire(): NodeJS.Require {
+  return createRequire(
     require.resolve('webpack-cli', { paths: [process.cwd()] })
   );
-  return cliRequire('webpack-merge').merge;
+}
+
+function loadWebpackMerge(): Merge {
+  return createWebpackCliRequire()('webpack-merge').merge;
 }
 
 /**
@@ -205,14 +243,15 @@ function loadWebpackMerge(): Merge {
  */
 export async function waitForWebpackDevServer(configPath: string) {
   await runReadyCheck(async ({ options, root }) => {
-    const flags = parseServeFlags(options);
+    const parsed = parseServeArgv(options);
+    const flags = parseServeFlags(parsed);
     // Skips NxAppWebpackPlugin's option normalization, which nothing here uses
     global.NX_GRAPH_CREATION = true;
 
     const { readWebpackOptions } =
       require('./webpack/read-webpack-options') as typeof import('./webpack/read-webpack-options');
     const env = { WEBPACK_SERVE: true, ...flags.env };
-    const argv = parseServeArgv(options, env);
+    const argv = { ...parsed, env };
     const load = async (path: string) =>
       readWebpackOptions(await loadConfigExport(resolve(path)), env, argv);
     let configs = (
