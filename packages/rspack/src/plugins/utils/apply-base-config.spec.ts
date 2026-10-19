@@ -526,3 +526,57 @@ describe('apply-base-config watch option', () => {
     expect(config.watch).toBe(expected);
   });
 });
+
+describe('apply-base-config unsupported transformers warning', () => {
+  let options: NormalizedNxAppRspackPluginOptions;
+
+  beforeEach(() => {
+    options = {
+      root: '/test',
+      projectRoot: 'apps/test',
+      target: 'node',
+      transformers: [{ name: 'some-transformer' }],
+    } as NormalizedNxAppRspackPluginOptions;
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.restoreAllMocks();
+  });
+
+  // Re-import so the set of already-warned projects starts empty.
+  async function loadFresh() {
+    vi.resetModules();
+    const { logger } = await import('@nx/devkit');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const { applyBaseConfig: applyBaseConfigFresh } =
+      await import('./apply-base-config');
+    return { warn, applyBaseConfigFresh };
+  }
+
+  function warnedAboutTransformers(warn: {
+    mock: { calls: unknown[][] };
+  }): boolean {
+    return warn.mock.calls.some((call) =>
+      String(call[0]).includes('`transformers` option is not supported')
+    );
+  }
+
+  it('warns when the option is set', async () => {
+    const { warn, applyBaseConfigFresh } = await loadFresh();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(warnedAboutTransformers(warn)).toBe(true);
+  });
+
+  it('stays silent during graph creation', async () => {
+    global.NX_GRAPH_CREATION = true;
+    const { warn, applyBaseConfigFresh } = await loadFresh();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(warnedAboutTransformers(warn)).toBe(false);
+  });
+});
