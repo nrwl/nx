@@ -25,25 +25,16 @@ Separate learning (narrative/guides) from looking up (reference/API).
 
 **The test:** Is the user here to learn a workflow (guide) or look up a flag syntax (reference)?
 
-### 4. The pen and paper test (the "theory" rule)
+### 4. Universal vs. specific (the "placement" rule)
 
-Distinguish architecture from features to keep "core concepts" pure.
-
-**The test:** Can I explain this using only a pen and paper?
-
-- Yes: It goes in **How Nx Works** (architecture).
-- No (I need a terminal): It goes in **Platform Features** (feature).
-
-### 5. Universal vs. specific (the "placement" rule)
-
-Distinguish platform features from ecosystem tools to prevent "Features" from becoming a junk drawer.
+Distinguish core features from ecosystem tools to prevent "Features" from becoming a junk drawer.
 
 **The test:** Does this feature apply to every user (e.g., caching, Nx Agents)?
 
-- Yes: **Platform Features**.
+- Yes: **Core features**, or **CI features** when it only applies in CI.
 - No (only React users): **Technologies**.
 
-### 6. The golden path (the "one way" rule)
+### 5. The golden path (the "one way" rule)
 
 Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs
 to make a decision.
@@ -59,7 +50,7 @@ belongs in the corresponding Knowledge Base guide.
   applies to workflows a new flag has superseded.
 - When two sections converge on the same flag or topic after a rewrite, merge them into one.
 
-### 7. One page per feature (the "don't make me hunt" rule)
+### 6. One page per feature (the "don't make me hunt" rule)
 
 A feature page answers most of what a new reader arrives with, on the page. Specifics fan out
 to Knowledge Base guides. The questions themselves stay.
@@ -72,7 +63,7 @@ connect, and when Enterprise or self-hosted applies. Spread across three or five
 has to find and visit each one before they can form a view, and a model answering the question
 cites none of them.
 
-Rule 6 trims variants and edge cases off the page. This one keeps every question a reader has to
+Rule 5 trims variants and edge cases off the page. This one keeps every question a reader has to
 answer before they can choose or start. Both push detail to the Knowledge Base. Neither pushes
 the decision there.
 
@@ -80,7 +71,7 @@ the decision there.
 
 The sidebar has four top-level sections that follow the user journey:
 
-1. **Getting Started** - Essential setup, tutorials, and core concepts (How Nx Works, Platform Features)
+1. **Getting Started** - Essential setup, tutorials, Core features, and CI features
 2. **Technologies** - Framework and tool-specific guides (React, Angular, Node, build tools, test tools)
 3. **Knowledge Base** - Recipes, troubleshooting, and topic-specific guides
 4. **Reference** - Exhaustive facts, no narrative (CLI commands, configuration, API docs)

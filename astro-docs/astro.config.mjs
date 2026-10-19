@@ -76,8 +76,22 @@ export default defineConfig({
     '/getting-started/nx-cloud': '/docs/features/ci-features',
     '/concepts/ci-concepts/parallelization-distribution':
       '/docs/concepts/ci-concepts/building-blocks-fast-ci',
-    '/platform-features/orchestration-ci':
-      '/docs/platform-features/continuous-integration-ci',
+    '/platform-features/orchestration-ci': '/docs/features/ci-features',
+    // Hidden sidebar hub pages removed with the Core features / CI features split.
+    '/platform-features': '/docs/features/run-tasks',
+    '/platform-features/code-organization': '/docs/features/explore-graph',
+    '/platform-features/code-organization/enforce-module-boundaries':
+      '/docs/features/enforce-module-boundaries',
+    '/platform-features/continuous-integration-ci':
+      '/docs/features/ci-features',
+    '/platform-features/release-publishing': '/docs/features/manage-releases',
+    '/platform-features/maintenance':
+      '/docs/features/automate-updating-dependencies',
+    '/platform-features/enterprise': '/docs/enterprise',
+    '/platform-features/enterprise/single-tenant':
+      '/docs/enterprise/single-tenant/overview',
+    '/platform-features/enterprise/conformance-reference':
+      '/docs/reference/conformance/overview',
     '/kb/setup-ci': '/docs/getting-started/setup-ci',
     // Executor reference pages removed in Nx 24 with their executors.
     '/technologies/test-tools/cypress/executors':

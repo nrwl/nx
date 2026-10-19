@@ -24,7 +24,7 @@ This documentation site leverages Astro's static site generation capabilities wi
 
 ## Information Architecture Principles
 
-When creating or reorganizing documentation, follow these 7 principles to determine where content belongs.
+When creating or reorganizing documentation, follow these 6 principles to determine where content belongs.
 
 ### 1. Progressive Disclosure (The "Journey" Rule)
 
@@ -41,36 +41,29 @@ When creating or reorganizing documentation, follow these 7 principles to determ
 - **Concept:** Separate **Learning** (Narrative/Guides) from **Looking Up** (Reference/API).
 - **The Test:** _Is the user here to learn a workflow (Guide) or look up a flag syntax (Reference)?_
 
-### 4. The Pen & Paper Test (The "Theory" Rule)
+### 4. Universal vs. Specific (The "Placement" Rule)
 
-- **Concept:** Distinguish Architecture from Features to keep "Core Concepts" pure.
-- **The Test:** _Can I explain this using only a pen and paper?_
-- **Yes:** It goes in **How Nx Works** (Architecture).
-- **No (I need a terminal):** It goes in **Platform Features** (Feature).
-
-### 5. Universal vs. Specific (The "Placement" Rule)
-
-- **Concept:** Distinguish Platform features from Ecosystem tools to prevent "Features" from becoming a junk drawer.
+- **Concept:** Distinguish Core features from Ecosystem tools to prevent "Features" from becoming a junk drawer.
 - **The Test:** _Does this feature apply to EVERY user (e.g., Caching, Agents)?_
-- **Yes:** **Platform Features**.
+- **Yes:** **Core features**, or **CI features** when it only applies in CI.
 - **No (Only React users):** **Technologies**.
 
-### 6. The Golden Path (The "One Way" Rule)
+### 5. The Golden Path (The "One Way" Rule)
 
 - **Concept:** Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs to make a decision.
 - **The Test:** _Would a first-time user need this sentence to succeed or to choose? If not, it belongs in the corresponding Knowledge Base guide._
 
-### 7. One Page Per Feature (The "Don't Make Me Hunt" Rule)
+### 6. One Page Per Feature (The "Don't Make Me Hunt" Rule)
 
 - **Concept:** A feature page answers most of what a new reader arrives with. Specifics fan out to Knowledge Base guides, the questions stay on the page.
 - **The Test:** _List the questions a new reader, or an AI answering for one, would ask about this feature. Does any answer live only on another page?_
-- **Counterweight to rule 6:** Trim variants and edge cases, keep every question a reader has to answer before they can choose or start.
+- **Counterweight to rule 5:** Trim variants and edge cases, keep every question a reader has to answer before they can choose or start.
 
 ### Sidebar Structure
 
 The sidebar has 4 top-level sections that follow the user journey:
 
-1. **Getting Started** - Essential setup, tutorials, and core concepts (How Nx Works, Platform Features)
+1. **Getting Started** - Essential setup, tutorials, Core features, and CI features
 2. **Technologies** - Framework and tool-specific guides (React, Angular, Node, build tools, test tools)
 3. **Knowledge Base** - Recipes, troubleshooting, and topic-specific guides
 4. **Reference** - Exhaustive facts, no narrative (CLI commands, configuration, API docs)

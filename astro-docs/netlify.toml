@@ -1321,7 +1321,44 @@ to = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
 
 [[redirects]]
 from = "/docs/platform-features/orchestration-ci"
-to = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+# DOC-715: hidden sidebar hub pages removed with the Core features / CI features split.
+[[redirects]]
+from = "/docs/platform-features"
+to = "/docs/features/run-tasks"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization"
+to = "/docs/features/explore-graph"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization/enforce-module-boundaries"
+to = "/docs/features/enforce-module-boundaries"
+
+[[redirects]]
+from = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/platform-features/release-publishing"
+to = "/docs/features/manage-releases"
+
+[[redirects]]
+from = "/docs/platform-features/maintenance"
+to = "/docs/features/automate-updating-dependencies"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise"
+to = "/docs/enterprise"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/single-tenant"
+to = "/docs/enterprise/single-tenant/overview"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/conformance-reference"
+to = "/docs/reference/conformance/overview"
 
 [[redirects]]
 from = "/docs/kb/setup-ci"

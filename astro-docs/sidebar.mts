@@ -98,7 +98,7 @@ const learnGroups: SidebarItems = [
     ],
   },
   {
-    label: 'Platform features',
+    label: 'Core features',
     collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
@@ -143,32 +143,6 @@ const learnGroups: SidebarItems = [
                 link: 'guides/enforce-module-boundaries/tags-allow-list',
               },
             ],
-          },
-        ],
-      },
-      {
-        label: 'Continuous integration (CI)',
-        collapsed: true,
-        items: [
-          {
-            label: 'Overview',
-            link: 'features/ci-features',
-          },
-          {
-            label: 'Run affected tasks',
-            link: 'features/ci-features/affected',
-          },
-          {
-            label: 'Remote caching',
-            link: 'features/ci-features/remote-cache',
-          },
-          {
-            label: 'Distribute task execution (Nx Agents)',
-            link: 'features/ci-features/distribute-task-execution',
-          },
-          {
-            label: 'Self-healing CI',
-            link: 'features/ci-features/self-healing-ci',
           },
         ],
       },
@@ -346,6 +320,32 @@ const learnGroups: SidebarItems = [
             link: 'reference/nx-cloud/release-notes',
           },
         ],
+      },
+    ],
+  },
+  {
+    label: 'CI features',
+    collapsed: true,
+    items: [
+      {
+        label: 'Overview',
+        link: 'features/ci-features',
+      },
+      {
+        label: 'Run affected tasks',
+        link: 'features/ci-features/affected',
+      },
+      {
+        label: 'Remote caching',
+        link: 'features/ci-features/remote-cache',
+      },
+      {
+        label: 'Distribute task execution (Nx Agents)',
+        link: 'features/ci-features/distribute-task-execution',
+      },
+      {
+        label: 'Self-healing CI',
+        link: 'features/ci-features/self-healing-ci',
       },
     ],
   },
