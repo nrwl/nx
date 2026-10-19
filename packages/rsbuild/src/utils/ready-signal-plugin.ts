@@ -1,4 +1,5 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
+import { isIPv6 } from 'net';
 
 /**
  * Reports the dev or preview server's address to an Nx task whose readyWhen
@@ -14,13 +15,28 @@ export function pluginNxReadySignal(): RsbuildPlugin {
       const { signalTaskReady } =
         require('@nx/devkit') as typeof import('@nx/devkit');
       const report = ({ port }: { port: number }) => {
-        const https = !!api.getNormalizedConfig().server.https;
+        const { https, host } = api.getNormalizedConfig().server;
         signalTaskReady({
-          url: `${https ? 'https' : 'http'}://localhost:${port}/`,
+          url: `${https ? 'https' : 'http'}://${getUrlHost(host)}:${port}/`,
         });
       };
       api.onAfterStartDevServer(report);
-      api.onAfterStartPreviewServer(report);
+      // Rsbuild 1 names the preview hook onAfterStartProdServer
+      const onAfterStartPreviewServer =
+        api.onAfterStartPreviewServer ??
+        (
+          api as typeof api & {
+            onAfterStartProdServer: typeof api.onAfterStartPreviewServer;
+          }
+        ).onAfterStartProdServer;
+      onAfterStartPreviewServer(report);
     },
   };
+}
+
+function getUrlHost(host: string | undefined): string {
+  if (!host || host === '0.0.0.0' || host === '::') {
+    return 'localhost';
+  }
+  return isIPv6(host) ? `[${host}]` : host;
 }

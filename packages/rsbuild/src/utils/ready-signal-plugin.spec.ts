@@ -39,6 +39,34 @@ describe('pluginNxReadySignal', () => {
     });
   });
 
+  it.each([
+    ['0.0.0.0', 'localhost'],
+    ['::', 'localhost'],
+    ['192.168.1.5', '192.168.1.5'],
+    ['::1', '[::1]'],
+  ])('reports the host the server listens on (%s)', (host, urlHost) => {
+    pluginNxReadySignal().setup({
+      ...api,
+      getNormalizedConfig: () => ({ server: { host } }),
+    });
+    hooks.dev({ port: 3000 });
+    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
+      url: `http://${urlHost}:3000/`,
+    });
+  });
+
+  it('signals the preview server through the Rsbuild 1 hook', () => {
+    const { onAfterStartPreviewServer, ...v1Api } = api;
+    pluginNxReadySignal().setup({
+      ...v1Api,
+      onAfterStartProdServer: (fn) => (hooks.preview = fn),
+    });
+    hooks.preview({ port: 3001 });
+    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
+      url: 'http://localhost:3001/',
+    });
+  });
+
   it('uses https when the server is configured for it', () => {
     pluginNxReadySignal().setup({
       ...api,
