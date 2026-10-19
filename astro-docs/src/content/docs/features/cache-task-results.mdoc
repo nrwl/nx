@@ -43,8 +43,14 @@ Commands that create the same task with the same arguments produce the same hash
 ### What Nx caches
 
 Nx caches task results at the process level, whatever tool the task runs.
-A cache entry holds the terminal output, the files and directories matched by the target's [`outputs`](/docs/kb/configure-outputs), and the task hash.
+A cache entry contains:
+
+- Terminal output written to standard output and standard error.
+- Files and directories matched by the target's [`outputs`](/docs/kb/configure-outputs).
+- The task hash that identifies the entry.
+
 Source files and other inputs aren't stored, only their hashes.
+To change what a task hashes or stores, see [configure inputs and outputs](#configure-inputs-and-outputs).
 
 ## Define cacheable tasks
 
@@ -84,18 +90,23 @@ npx nx@latest connect
 
 Learn more about [remote caching with Nx Cloud](/docs/features/ci-features/remote-cache).
 
-## Fine-tune caching with inputs and outputs
+## Configure inputs and outputs
 
-Nx caching feature starts with sensible defaults, but you can also **fine-tune the defaults** to control exactly what gets cached and when. There are two main options that control caching:
+Inputs decide what goes into a task's hash, such as files, environment variables, and external dependency versions.
+Outputs are the files Nx stores with the terminal output and restores on a cache hit.
+How much you configure depends on where the task comes from.
 
-- **Inputs -** define what gets included as part of the calculated hash (e.g. files, environment variables, etc.)
-- **Outputs -** define folders where files might be placed as part of the task execution.
+[Inferred tasks](/docs/features/run-tasks#inferred-tasks) get their inputs and outputs from the plugin, which reads them from tool configuration such as `vite.config.ts`.
+Change them only when the plugin's settings don't match what the task does.
 
-You can define these inputs and outputs at the project level (`project.json`) or globally for all projects (in `nx.json`).
+Explicit tasks, such as `package.json` scripts and `project.json` targets, start from the Nx defaults.
+Every file in the project and in the projects it depends on is an input.
+Only `build` and `prepare` targets get default outputs (`{workspaceRoot}/dist/{projectRoot}`, `{projectRoot}/dist`, `{projectRoot}/build`, and `{projectRoot}/public`).
+A `test` script that writes a coverage report caches only its terminal output until you list the report directory in `outputs`.
+Narrow the inputs too, so edits to unrelated files don't cause cache misses.
 
-Take the following example: we want to exclude all `*.md` files from the cache so that whenever we change the README.md (or any other markdown file), it does _not_ invalidate the build cache. We also know that the build output will be stored in a folder named after the project name in the `dist` folder at the root of the workspace.
-
-To achieve this, we can add `inputs` and `outputs` definitions globally for all projects or at a per-project level:
+Set inputs and outputs for every matching target in `nx.json`, or for one project in `project.json` or `package.json`.
+This example keeps Markdown edits from invalidating `build` and stores the build output in `dist/<project-name>` at the workspace root:
 
 {% tabs %}
 {% tabitem label="Globally" %}
@@ -154,8 +165,6 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 
 {% /tabitem %}
 {% /tabs %}
-
-Note that you only need to define output locations if they differ from the usual `dist` or `build` directory, which Nx automatically recognizes.
 
 Learn more [about configuring inputs including `namedInputs`](/docs/kb/configure-inputs).
 
