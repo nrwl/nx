@@ -123,7 +123,12 @@ entry sets:
         { "externalDependencies": ["cypress"] },
       ],
       "dependsOn": [
-        { "projects": ["shop"], "target": "serve-static", "inputs": false },
+        {
+          "projects": ["shop"],
+          "target": "serve-static",
+          "waitFor": "ready",
+          "inputs": false,
+        },
       ],
     },
   },
@@ -138,6 +143,8 @@ entry sets:
   The test runner doesn't read the code the server serves, so Ultracache would otherwise drop it.
 - The dependency on the server task sets `"inputs": false`, so the server task's inputs leave the
   hash.
+  It keeps `"waitFor": "ready"`, which the plugin infers unless its `waitForServerReady` option is
+  `false`.
   Without a server task, such as for Jest, only the inputs change.
 
 After scoping, the task's hash covers these inputs:
@@ -170,10 +177,11 @@ The hash then covers the app code that the test file's imports reach:
 ![With @nx-ignore-server-inputs and imports of the app code, checkout.spec.ts hashes checkout/ and shared/, and search.spec.ts hashes search/ and shared/, so an edit in search/ reruns only search.spec.ts.](../../../assets/guides/running-tasks/e2e-hash-imports.svg)
 
 {% aside type="note" title="Ultracache runs in CI with Nx Cloud" %}
-Nx applies a recorded run only in CI, with `NX_CLOUD_USE_ULTRACACHE` set to `true`.
+Nx applies a recorded run only in CI, when your workspace has Ultracache turned on in Nx Cloud.
 Nx Cloud must also have a recorded run for the task.
-Without a recorded run, such as on your machine, the task hashes its declared inputs without the
-server task's inputs.
+To stop Nx from applying a recorded run, set `NX_CLOUD_USE_ULTRACACHE` to `false`.
+When Nx applies no recorded run, such as on your machine, the task hashes its declared inputs
+without the server task's inputs.
 An app change then reruns the test only when those inputs cover it.
 For example, `^production` covers the app when the e2e project depends on the app.
 {% /aside %}
@@ -209,7 +217,12 @@ sets:
   "targets": {
     "e2e-ci--src/checkout.spec.ts": {
       "dependsOn": [
-        { "projects": ["shop"], "target": "serve", "inputs": false },
+        {
+          "projects": ["shop"],
+          "target": "serve",
+          "waitFor": "ready",
+          "inputs": false,
+        },
         { "target": "e2e--wait-for-webserver" },
       ],
     },
@@ -331,7 +344,12 @@ In the target of a scoped test file, the `dependsOn` entries for server tasks ha
   "targets": {
     "e2e-ci--src/checkout.spec.ts": {
       "dependsOn": [
-        { "projects": ["shop"], "target": "serve", "inputs": false },
+        {
+          "projects": ["shop"],
+          "target": "serve",
+          "waitFor": "ready",
+          "inputs": false
+        },
         { "target": "e2e--wait-for-webserver" }
       ]
     }
