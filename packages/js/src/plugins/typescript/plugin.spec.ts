@@ -450,6 +450,34 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
+    it.each([
+      [{ compiler: 'tsc; touch pwned #' }, '"compiler"'],
+      [
+        { typecheck: { configName: 'tsconfig;touch pwned;.json' } },
+        '"typecheck.configName"',
+      ],
+      [
+        { build: { configName: 'tsconfig.lib.json $(touch pwned)' } },
+        '"build.configName"',
+      ],
+    ])(
+      'should reject %j, which would go into a shell command',
+      async (options, option) => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        await expect(
+          invokeCreateNodesOnMatchingFiles(
+            configFiles,
+            context,
+            options as TscPluginOptions
+          )
+        ).rejects.toThrow(option);
+      }
+    );
+
     it('should create a typecheck target with custom compiler option (tsgo)', async () => {
       configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
