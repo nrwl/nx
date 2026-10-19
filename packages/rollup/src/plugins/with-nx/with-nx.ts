@@ -111,16 +111,23 @@ export function withNx(
           dependencies
         );
 
-  ensureTypeScript();
-  const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-  const tsConfig = ts.parseJsonConfigFileContent(
-    tsConfigFile.config,
-    ts.sys,
-    dirname(tsConfigPath)
-  );
+  // Graph creation only reads output dirs. Its unnormalized tsConfig path
+  // usually doesn't exist, and parsing that scans the whole workspace.
+  let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent>;
+  if (!global.NX_GRAPH_CREATION) {
+    ensureTypeScript();
+    const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+    tsConfig = ts.parseJsonConfigFileContent(
+      tsConfigFile.config,
+      ts.sys,
+      dirname(tsConfigPath)
+    );
+  }
 
   if (!options.format || !options.format.length) {
-    options.format = readCompatibleFormats(tsConfig);
+    options.format = global.NX_GRAPH_CREATION
+      ? ['esm']
+      : readCompatibleFormats(tsConfig);
   }
 
   if (
