@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
+import { canResolve, loadProjectVite } from './router-plugin-utils';
 import {
   mockCjsModule,
   resetCjsMocks,
@@ -12,6 +13,15 @@ import { join } from 'path';
 vi.mock('nx/src/utils/cache-directory', async () => ({
   ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
+
+// In the vm, require.resolve ignores `paths` and import() has no dynamic import
+// callback. By default @nx/vite resolves and Vite fails to load.
+vi.mock('./router-plugin-utils', () => ({
+  canResolve: vi.fn().mockReturnValue(true),
+  loadProjectVite: vi
+    .fn()
+    .mockRejectedValue(new Error("Cannot find module 'vite'")),
 }));
 
 vi.mock('@nx/js/internal', async () => ({
@@ -91,6 +101,87 @@ describe('@nx/react/react-router-plugin', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should make dev wait for the signal when the Vite config loads nxReadySignal()', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      const loadConfigFromFile = vi.fn().mockResolvedValue({
+        config: {
+          plugins: [[{ name: 'react-router' }], { name: 'nx-ready-signal' }],
+        },
+      });
+      (loadProjectVite as Mock).mockResolvedValueOnce({ loadConfigFromFile });
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      expect(loadConfigFromFile).toHaveBeenCalledWith(
+        expect.objectContaining({ command: 'serve', mode: 'development' }),
+        join(context.workspaceRoot, 'acme/vite.config.js'),
+        join(context.workspaceRoot, 'acme')
+      );
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.dev.readyWhen).toEqual({ signal: true });
+    });
+
+    const viteCheck = {
+      command: `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'react-router-dev')" vite.config.js`,
+      interval: 1000,
+    };
+    const configWithoutSignal = {
+      config: { plugins: [{ name: 'react-router' }] },
+    };
+    it.each([
+      [
+        'wait for the Vite check when the Vite config does not load nxReadySignal()',
+        configWithoutSignal,
+        true,
+        viteCheck,
+      ],
+      [
+        'wait for the Vite check when the project cannot load Vite',
+        undefined,
+        true,
+        viteCheck,
+      ],
+      [
+        'wait for the Vite check when the Vite config fails to load',
+        new Error('Cannot load the config'),
+        true,
+        viteCheck,
+      ],
+      [
+        'not wait when the workspace cannot resolve @nx/vite/ready-check',
+        configWithoutSignal,
+        false,
+        undefined,
+      ],
+    ])(
+      'should make dev %s',
+      async (_, configResult, resolvesNxVite, readyWhen) => {
+        mockConfig('acme/react-router.config.js', {}, context);
+        if (configResult) {
+          (loadProjectVite as Mock).mockResolvedValueOnce({
+            loadConfigFromFile: async () => {
+              if (configResult instanceof Error) throw configResult;
+              return configResult;
+            },
+          });
+        }
+        (canResolve as Mock).mockReturnValueOnce(resolvesNxVite);
+
+        const nodes = await createNodesFunction(
+          ['acme/react-router.config.js'],
+          {},
+          context
+        );
+
+        const targets = nodes[0][1].projects['acme'].targets;
+        expect(targets.dev.readyWhen).toEqual(readyWhen);
+      }
+    );
 
     it('should not create a typecheck target', async () => {
       mockConfig('acme/react-router.config.js', {}, context);
