@@ -130,9 +130,9 @@ export class TasksSchedule {
         ...(this.taskGraph.dependencies[taskId] ?? []),
         ...(this.taskGraph.continuousDependencies[taskId] ?? []),
       ]) {
-        const dependents = this.reverseTaskDeps[dep];
+        const dependents = this.reverseTaskDeps[dep.id];
         if (dependents?.length) {
-          this.reverseTaskDeps[dep] = dependents.filter(
+          this.reverseTaskDeps[dep.id] = dependents.filter(
             (d) => !removedSet.has(d)
           );
         }
