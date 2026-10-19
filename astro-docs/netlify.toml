@@ -1323,10 +1323,10 @@ to = "/docs/features/ci-features#building-blocks-of-fast-ci"
 from = "/docs/platform-features/orchestration-ci"
 to = "/docs/features/ci-features"
 
-# DOC-715: How Nx works pages folded into the intro and feature pages.
+# DOC-715: How Nx works pages folded into getting-started/how-nx-works and feature pages.
 [[redirects]]
 from = "/docs/concepts/mental-model"
-to = "/docs/getting-started/intro#how-nx-works"
+to = "/docs/getting-started/how-nx-works"
 
 [[redirects]]
 from = "/docs/concepts/how-caching-works"
@@ -1354,11 +1354,11 @@ to = "/docs/features/ci-features"
 
 [[redirects]]
 from = "/docs/concepts"
-to = "/docs/getting-started/intro#how-nx-works"
+to = "/docs/getting-started/how-nx-works"
 
 [[redirects]]
 from = "/docs/how-nx-works"
-to = "/docs/getting-started/intro#how-nx-works"
+to = "/docs/getting-started/how-nx-works"
 
 # DOC-715: hidden sidebar hub pages removed with the Core features / CI features split.
 [[redirects]]

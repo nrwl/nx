@@ -114,7 +114,7 @@ export default defineConfig({
     '/technologies/build-tools/vite/executors':
       '/docs/technologies/build-tools/vite/introduction',
     '/concepts/inferred-tasks': '/docs/features/run-tasks#inferred-tasks',
-    '/concepts/mental-model': '/docs/getting-started/intro#how-nx-works',
+    '/concepts/mental-model': '/docs/getting-started/how-nx-works',
     '/concepts/how-caching-works':
       '/docs/features/cache-task-results#how-caching-works',
     '/concepts/task-pipeline-configuration':
@@ -124,8 +124,8 @@ export default defineConfig({
     '/concepts/ci-concepts/building-blocks-fast-ci':
       '/docs/features/ci-features#building-blocks-of-fast-ci',
     '/concepts/ci-concepts': '/docs/features/ci-features',
-    '/concepts': '/docs/getting-started/intro#how-nx-works',
-    '/how-nx-works': '/docs/getting-started/intro#how-nx-works',
+    '/concepts': '/docs/getting-started/how-nx-works',
+    '/how-nx-works': '/docs/getting-started/how-nx-works',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',
     '/concepts/nx-daemon': '/docs/reference/nx-daemon',

@@ -27,6 +27,7 @@ const learnGroups: SidebarItems = [
     collapsed: false,
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
+      { label: 'How Nx works', link: 'getting-started/how-nx-works' },
       { label: 'Installation', link: 'getting-started/installation' },
       {
         label: 'Start a new project',

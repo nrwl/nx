@@ -20,28 +20,32 @@ Monorepos have many advantages and are especially useful for AI agents to have m
 - **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
 - **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
 
-## How Nx works
+## What Nx does
 
-1. **Nx maps your workspace.** It reads your source code, installed dependencies, and TypeScript configuration to build a [project graph](/docs/features/explore-graph) of how your projects connect. [Plugins](/docs/plugin-registry) read the configuration files your tools already have, such as `vite.config.ts`, and [create tasks from them](/docs/features/run-tasks#inferred-tasks), so most projects need no Nx configuration. The same graph lets [module boundary rules](/docs/features/enforce-module-boundaries) block dependencies you don't want.
-2. **Each command becomes a task graph.** For `nx build myapp`, Nx uses the project graph and your [task pipeline](/docs/features/run-tasks#defining-a-task-pipeline) to work out which tasks to run and in what order. Tasks that don't depend on each other run in parallel.
-3. **Work that's already done is skipped.** Before running a task, Nx hashes its inputs, such as source files, configuration, and dependencies. When the hash matches an earlier run, Nx [replays the cached result](/docs/features/cache-task-results), terminal output and files included.
+**Nx reduces friction across your entire development cycle** with intelligent caching, task orchestration, and deep understanding of your codebase structure.
 
-When `myapp` depends on `ui` and `utils`, `nx build myapp` builds both libraries in parallel, then the app, and replays any build whose inputs haven't changed.
+Nx:
 
-![The project graph becomes a task graph, and each task is a cache hit or a run](../../../assets/getting-started/intro-how-nx-works.svg)
+1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice.
+2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects.
+3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/features/run-tasks#defining-a-task-pipeline), parallelizing when possible.
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects.
+5. **Makes CI fast** - [Remote caching](/docs/features/ci-features/remote-cache), [distributed task execution](/docs/features/ci-features/distribute-task-execution), and [task splitting](/docs/kb/split-e2e-tasks) across machines.
+6. **Handles flakiness** - [Automatically detects and re-runs flaky tests](/docs/kb/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci).
 
 ## Start small, grow as needed
 
 Nx is modular. Start with the CLI and add capabilities as your needs grow.
 
-| Component                                  | What It Does                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Nx Core**                                | Task runner with [local caching](/docs/features/cache-task-results) and [affected commands](/docs/features/ci-features/affected). Works with any tech stack.                                                                                                                                                                                                                                                                                           |
-| [**Nx Plugins**](/docs/plugin-registry)    | Technology-specific automation (generators, auto-configured projects and tasks, dependency detection).                                                                                                                                                                                                                                                                                                                                                 |
-| [**Nx Cloud**](/docs/features/ci-features) | [Remote caching](/docs/features/ci-features/remote-cache), [task distribution](/docs/features/ci-features/distribute-task-execution), [task splitting](/docs/kb/split-e2e-tasks), [flaky task retries](/docs/kb/flaky-tasks), and [self-healing CI](/docs/features/ci-features/self-healing-ci). [Try it for free](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=intro-cloud-table). |
+| Component                                  | What It Does                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Core**                                | Task runner with [local caching](/docs/features/cache-task-results) and [affected commands](/docs/features/ci-features/affected). Works with any tech stack.                                                                                                                                                                                                                                               |
+| [**Nx Plugins**](/docs/plugin-registry)    | Technology-specific automation (generators, auto-configured projects and tasks, dependency detection).                                                                                                                                                                                                                                                                                                     |
+| [**Nx Cloud**](/docs/features/ci-features) | [Remote caching](/docs/features/ci-features/remote-cache), [task distribution](/docs/features/ci-features/distribute-task-execution), [task splitting](/docs/kb/split-e2e-tasks), and [self-healing CI](/docs/features/ci-features/self-healing-ci). [Try it for free](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=intro-cloud-table). |
 
 ## Where to go from here
 
+- **New to Nx?** → [Learn the core concepts and mental model of Nx](/docs/getting-started/how-nx-works)
 - **Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
 - **Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
 - **Already using Nx?** → [Keep your CI fast with Nx Cloud](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=intro-next-steps)
