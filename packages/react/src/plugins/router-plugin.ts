@@ -6,7 +6,6 @@ import {
   loadConfigFile,
   PluginCache,
   hashObject,
-  retryOnRequireEsmRace,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
@@ -27,7 +26,7 @@ import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import { canResolve, loadProjectVite } from './router-plugin-utils';
+import { canResolve } from './router-plugin-utils';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -173,7 +172,7 @@ async function buildReactRouterTargets(
     projectRoot,
     namedInputs,
     isUsingTsSolutionSetup,
-    await getDevReadyWhen(
+    getDevReadyWhen(
       context.workspaceRoot,
       join(context.workspaceRoot, projectRoot)
     )
@@ -296,26 +295,18 @@ const viteConfigFiles = [
   'vite.config.cts',
 ];
 
-// A config that loads nxReadySignal() reports when the server listens.
-// Otherwise the Vite check resolves the config when the task runs, with the
-// task's env and options, and waits for the server's port.
-async function getDevReadyWhen(
+// The Vite check resolves the config when the task runs, with the task's env
+// and options, and waits for the server's port.
+function getDevReadyWhen(
   workspaceRoot: string,
   absoluteProjectRoot: string
-): Promise<TargetConfiguration['readyWhen']> {
+): TargetConfiguration['readyWhen'] {
   // `react-router dev` serves with the default Vite config of its cwd.
   const configFile = viteConfigFiles.find((file) =>
     existsSync(join(absoluteProjectRoot, file))
   );
   if (!configFile) {
     return undefined;
-  }
-  try {
-    if (await loadsReadySignalPlugin(absoluteProjectRoot, configFile)) {
-      return { signal: true };
-    }
-  } catch {
-    // The check loads Vite and the config itself, when the task runs
   }
   // Nx runs the check from the workspace root, where @nx/vite may be missing
   if (!canResolve('@nx/vite/ready-check', workspaceRoot)) {
@@ -326,38 +317,6 @@ async function getDevReadyWhen(
     configFile,
     'react-router-dev'
   );
-}
-
-async function loadsReadySignalPlugin(
-  absoluteProjectRoot: string,
-  configFile: string
-): Promise<boolean> {
-  // Same esbuild preload as @nx/vite/plugin, against the `build$3 is not a
-  // function` error seen in agents when loading Vite configs.
-  try {
-    await new Function('return import("esbuild")')();
-  } catch {
-    // do nothing
-  }
-  const { loadConfigFromFile } = await loadProjectVite(absoluteProjectRoot);
-  const result = await retryOnRequireEsmRace<any>(() =>
-    loadConfigFromFile(
-      {
-        command: 'serve',
-        mode: 'development',
-        isSsrBuild: false,
-        isPreview: false,
-      },
-      join(absoluteProjectRoot, configFile),
-      absoluteProjectRoot
-    )
-  );
-  // Vite accepts nested arrays and promises of plugins.
-  let plugins: any[] = [result?.config.plugins];
-  do {
-    plugins = (await Promise.all(plugins)).flat(Infinity);
-  } while (plugins.some((p) => p?.then));
-  return plugins.some((p) => p?.name === 'nx-ready-signal');
 }
 
 async function startTarget(

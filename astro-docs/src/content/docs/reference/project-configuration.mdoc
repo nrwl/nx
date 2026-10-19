@@ -740,7 +740,7 @@ The `@nx/web` migration therefore also adds that target to the file server targe
 
 A `signal` check only passes on the report, so use it for a target whose server runs one of those plugins or calls `signalTaskReady` itself.
 The webpack, Rspack, Vite, and Rsbuild plugins infer it only when the config loads one of those plugins, and a check that reads the config at task time otherwise.
-The Nuxt and React Router plugins infer it on the dev server task only when the config loads the Nuxt module or the Vite plugin.
+The Nuxt plugin infers it on the dev server task only when the config loads the Nuxt module.
 The `@nx/web:file-server` targets that the webpack, Rspack, Vite, Nuxt, and Storybook plugins infer, such as `serve-static`, always use it.
 
 The plugins below infer a `command` check on their server targets instead.
@@ -754,7 +754,7 @@ It runs when the task runs, with the task's environment and options, and waits f
   The check finds the port and host the way `nuxt dev` does.
   It then waits until the server answers with any status other than 503, which `nuxt dev` answers until it serves the app.
 - `@nx/react/router-plugin`: the `react-router-serve` target.
-  When the Vite config doesn't load `nxReadySignal()`, the dev server target gets the Vite check, if `@nx/vite` is installed at the workspace root.
+  The `react-router dev` target gets the Vite check, if `@nx/vite` is installed at the workspace root.
 - `@nx/storybook/plugin`: the `storybook dev` target.
   It waits only when a port is set, through `--port`, `SBCONFIG_PORT`, or `PORT`.
   Without one, Storybook picks a free port, and the target counts as ready once it has started.
