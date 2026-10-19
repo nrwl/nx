@@ -21,5 +21,4 @@ export interface Schema {
   rootProject?: boolean;
   publishable?: boolean;
   useProjectJson?: boolean;
-  addPlugin?: boolean;
 }

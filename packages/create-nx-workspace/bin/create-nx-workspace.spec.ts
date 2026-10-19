@@ -579,7 +579,7 @@ describe('determineUnitTestRunner', () => {
         e2eTestRunner: 'jest',
         workspaceType: 'integrated',
       },
-      expected: 'jest',
+      expected: 'vitest',
       excluded: '',
     },
   };
@@ -622,4 +622,103 @@ describe('determineUnitTestRunner', () => {
       ).not.toContain(excluded);
     }
   );
+});
+
+describe('node bundler prompt', () => {
+  const base = {
+    interactive: true,
+    workspaces: true,
+    name: 'myorg',
+    linter: 'eslint',
+    stack: 'node',
+    preset: Preset.NodeMonorepo,
+    appName: 'api',
+    docker: false,
+    unitTestRunner: 'vitest',
+  } as any;
+
+  const bundlerQuestions = () =>
+    (clack.autocomplete as Mock).mock.calls.filter(([q]) =>
+      String(q?.message ?? '').includes('build your app')
+    );
+
+  beforeEach(() => {
+    (clack.autocomplete as Mock).mockReset();
+    (clack.autocomplete as Mock).mockImplementation(async ({ message }) =>
+      String(message).includes('build your app') ? 'rolldown' : 'none'
+    );
+  });
+
+  it.each(['express', 'koa', 'none'])(
+    'should ask for %s apps in a workspaces monorepo',
+    async (framework) => {
+      const result = await determinePresetOptions({ ...base, framework });
+
+      expect(result.bundler).toBe('rolldown');
+      expect(
+        bundlerQuestions()[0][0].options.map((o: { value: string }) => o.value)
+      ).toEqual(['tsc', 'rolldown']);
+    }
+  );
+
+  it('should ask right after the framework when no preset is given', async () => {
+    (clack.autocomplete as Mock).mockImplementation(async ({ message }) =>
+      String(message).includes('framework')
+        ? 'express'
+        : String(message).includes('build your app')
+          ? 'rolldown'
+          : 'none'
+    );
+    (clack.text as Mock).mockResolvedValue('api');
+
+    const result = await determinePresetOptions({
+      ...base,
+      preset: undefined,
+      appName: undefined,
+    });
+
+    const messages = (clack.autocomplete as Mock).mock.calls.map(([q]) =>
+      String(q.message)
+    );
+    expect(result.bundler).toBe('rolldown');
+    expect(messages.indexOf('How would you like to build your app?')).toBe(
+      messages.findIndex((m) => m.includes('framework')) + 1
+    );
+  });
+
+  it.each([
+    [
+      '--bundler is passed',
+      { framework: 'express', bundler: 'esbuild' },
+      'esbuild',
+    ],
+    [
+      '--no-workspaces is passed',
+      { framework: 'express', workspaces: false },
+      undefined,
+    ],
+    ['the framework is fastify', { framework: 'fastify' }, undefined],
+    ['the framework is nest', { framework: 'nest' }, undefined],
+    [
+      'the preset is node-standalone',
+      { framework: 'express', preset: Preset.NodeStandalone },
+      undefined,
+    ],
+  ])('should not ask when %s', async (_, args, expected) => {
+    const result = await determinePresetOptions({ ...base, ...args });
+
+    expect(result.bundler).toBe(expected);
+    expect(bundlerQuestions()).toHaveLength(0);
+  });
+
+  it('should default to tsc when not interactive', async () => {
+    const result = await determinePresetOptions({
+      ...base,
+      framework: 'express',
+      interactive: false,
+    });
+
+    expect(result.bundler).toBe('tsc');
+    expect(bundlerQuestions()).toHaveLength(0);
+  });
 });

@@ -155,6 +155,7 @@ packages/cypress/README.md
 packages/playwright/README.md
 packages/vite/README.md
 packages/webpack/README.md
+packages/rolldown/README.md
 packages/rollup/README.md
 packages/docker/README.md
 packages/gradle/README.md

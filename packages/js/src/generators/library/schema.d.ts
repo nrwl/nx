@@ -34,7 +34,6 @@ export interface LibraryGeneratorSchema {
   skipTypeCheck?: boolean;
   minimal?: boolean;
   rootProject?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
   useTscExecutor?: boolean;
   /** @internal Only honored by the vitest setup. */

@@ -4,6 +4,7 @@ import {
   retrieveProjectConfigurations,
 } from './retrieve-workspace-files';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
+import { ProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
 import {
@@ -51,6 +52,53 @@ describe('retrieve-workspace-files', () => {
 
       expect(configPaths).not.toContain('not-projects/project.json');
       expect(configPaths).toContain('projects/project.json');
+    });
+
+    it('should glob only the include patterns of a scoped plugin', async () => {
+      // Own workspace: the shared one's file context predates these files.
+      const scopedFs = new TempFs('retrieveProjectConfigurationPaths-scoped');
+      await scopedFs.createFiles({
+        'apps/api/package.json': '{}',
+        'apps/api/src/main.ts': '',
+        'apps/api/src/other.ts': '',
+        'apps/web/src/main.ts': '',
+        'libs/a/src/index.ts': '',
+      });
+
+      const configPaths = await retrieveProjectConfigurationPaths(
+        scopedFs.tempDir,
+        [
+          {
+            name: 'scoped',
+            include: [
+              'apps/api/{package.json,src/main.{ts,js}}',
+              'libs/*/README.md',
+            ],
+            createNodes: ['{**/*.ts,**/package.json}', async () => []],
+          },
+          {
+            name: 'negated',
+            include: ['apps/*/src/main.ts', '!apps/api/**'],
+            createNodes: ['**/main.ts', async () => []],
+          },
+          {
+            name: 'broad',
+            include: ['libs/**/*'],
+            createNodes: ['**/index.ts', async () => []],
+          },
+        ]
+      );
+
+      expect(configPaths.sort()).toEqual([
+        // scoped: include results that also match the plugin pattern
+        'apps/api/package.json',
+        'apps/api/src/main.ts',
+        // negated and broad: plugin pattern only; include is applied later
+        'apps/api/src/main.ts',
+        'apps/web/src/main.ts',
+        'libs/a/src/index.ts',
+      ]);
+      scopedFs.cleanup();
     });
   });
 
@@ -132,6 +180,41 @@ describe('retrieve-workspace-files', () => {
       expect(Object.keys(result.projects)).toHaveLength(2);
       expect(result.projects['project1']).toBeDefined();
       expect(result.projects['project2']).toBeDefined();
+    });
+  });
+
+  describe('retrieveProjectConfigurations with an unnamed project.json', () => {
+    let fs: TempFs;
+    beforeAll(() => {
+      fs = new TempFs('retrieveProjectConfigurationsUnnamedProjectJson');
+    });
+    afterAll(() => {
+      fs.cleanup();
+    });
+
+    it('should keep the name inferred by an earlier plugin', async () => {
+      await fs.createFile(
+        'libs/a/package.json',
+        JSON.stringify({ name: '@scope/a' })
+      );
+      await fs.createFile('libs/a/project.json', JSON.stringify({}));
+
+      const result = await retrieveProjectConfigurations(
+        {
+          specifiedPlugins: [],
+          defaultPlugins: [
+            createTestPlugin('test-package-json-plugin', '**/package.json'),
+            new LoadedNxPlugin(
+              ProjectJsonProjectsPlugin,
+              'nx/core/project-json'
+            ),
+          ],
+        },
+        fs.tempDir,
+        {}
+      );
+
+      expect(result.projects['libs/a'].name).toEqual('@scope/a');
     });
   });
 });

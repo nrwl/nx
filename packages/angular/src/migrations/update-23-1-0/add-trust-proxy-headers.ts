@@ -44,7 +44,14 @@ export default async function (tree: Tree) {
           (node.expression.text === 'AngularNodeAppEngine' ||
             node.expression.text === 'AngularAppEngine')
         ) {
-          if (!node.arguments || node.arguments.length === 0) {
+          if (!node.arguments) {
+            // `new AngularAppEngine` without parentheses has no argument list.
+            recorder ??= new FileChangeRecorder(tree, path);
+            recorder.insertRight(
+              node.end,
+              `({\n  ${TODO_COMMENT}\n  ${TRUST_PROXY_HEADERS}\n})`
+            );
+          } else if (node.arguments.length === 0) {
             // No options object: insert one before the closing parenthesis.
             recorder ??= new FileChangeRecorder(tree, path);
             recorder.insertRight(
@@ -53,9 +60,11 @@ export default async function (tree: Tree) {
             );
           } else if (ts.isObjectLiteralExpression(node.arguments[0])) {
             const optionsArg = node.arguments[0];
+            // Any member kind counts (shorthand, method, accessor): adding the
+            // property next to one would duplicate the key.
             const hasTrustProxyHeaders = optionsArg.properties.some(
               (prop) =>
-                ts.isPropertyAssignment(prop) &&
+                prop.name &&
                 (ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name)) &&
                 prop.name.text === 'trustProxyHeaders'
             );

@@ -1,31 +1,26 @@
 import {
   addDependenciesToPackageJson,
-  updateProjectConfiguration,
   ensurePackage,
   formatFiles,
   generateFiles,
+  getDependencyVersionFromPackageJson,
   GeneratorCallback,
   joinPathFragments,
-  logger,
-  readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '@nx/react/internal';
+import { coerce, major } from 'semver';
 
 import {
   nxVersion,
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
+  viteTsconfigPathsVersion,
   assertSupportedReactNativeVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
-import {
-  createBuildTarget,
-  createNxWebpackPluginOptions,
-  createServeTarget,
-} from './lib/webpack-targets';
+import { createNxWebpackPluginOptions } from './lib/webpack-targets';
 
 import { WebConfigurationGeneratorSchema } from './schema';
 
@@ -68,12 +63,28 @@ export async function webConfigurationGenerator(
 
   // create files for webpack and vite config, index.html
   if (normalizedSchema.bundler === 'vite') {
+    // resolve.tsconfigPaths is native only from Vite 8; older majors ignore it.
+    const installedVite = coerce(
+      getDependencyVersionFromPackageJson(tree, 'vite') ?? ''
+    );
+    const useNativeTsconfigPaths = !installedVite || major(installedVite) >= 8;
     generateFiles(
       tree,
       joinPathFragments(__dirname, './files/base-vite'),
       normalizedSchema.projectRoot,
-      { ...normalizedSchema, tmpl: '' }
+      { ...normalizedSchema, useNativeTsconfigPaths, tmpl: '' }
     );
+    if (!useNativeTsconfigPaths && !options.skipPackageJson) {
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {},
+          { 'vite-tsconfig-paths': viteTsconfigPathsVersion },
+          undefined,
+          true
+        )
+      );
+    }
   } else {
     generateFiles(
       tree,
@@ -82,9 +93,10 @@ export async function webConfigurationGenerator(
       {
         ...normalizedSchema,
         tmpl: '',
-        webpackPluginOptions: hasWebpackPlugin(tree)
-          ? createNxWebpackPluginOptions(tree, normalizedSchema)
-          : null,
+        webpackPluginOptions: createNxWebpackPluginOptions(
+          tree,
+          normalizedSchema
+        ),
       }
     );
   }
@@ -150,29 +162,6 @@ async function addBundlerConfiguration(
         ensureDependencies,
       }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
-    }
-
-    if (!hasWebpackPlugin(tree)) {
-      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
-      // Inlined to avoid a cross-package import where react-native does not
-      // declare a TypeScript project reference to webpack.
-      logger.warn(
-        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
-      );
-      const projectConfiguration = readProjectConfiguration(
-        tree,
-        normalizedSchema.project
-      );
-      projectConfiguration.targets = {
-        ...projectConfiguration.targets,
-        build: createBuildTarget(tree, normalizedSchema),
-        serve: createServeTarget(normalizedSchema),
-      };
-      updateProjectConfiguration(
-        tree,
-        normalizedSchema.project,
-        projectConfiguration
-      );
     }
 
     return tasks;

@@ -81,6 +81,7 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
+    "@nx/rolldown": "workspace:*",
     "@nx/webpack": "workspace:*",
     "@nx/vitest": "workspace:*"
   },

@@ -21,7 +21,6 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
 
   const defaultOptions = {
     skipFormat: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {

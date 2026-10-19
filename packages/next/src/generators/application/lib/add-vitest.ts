@@ -40,7 +40,6 @@ export async function addVitest(
     // Next.js builds with its own toolchain, so the project has no vite config
     // to extend. Write a standalone vitest config below instead.
     skipViteConfig: true,
-    addPlugin: options.addPlugin,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
   });

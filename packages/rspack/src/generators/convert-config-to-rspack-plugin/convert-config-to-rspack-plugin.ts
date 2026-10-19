@@ -56,76 +56,43 @@ export async function convertConfigToRspackPluginGenerator(
 
         const rspackConfigPath = currentTargetOptions?.rspackConfig || '';
 
-        if (rspackConfigPath && tree.exists(rspackConfigPath)) {
-          let { withNxConfig: rspackOptions, withReactConfig } =
-            extractRspackOptions(tree, rspackConfigPath);
-
-          // if rspackOptions === undefined
-          // withNx was not found in the rspack.config.js file so we should skip this project
-          if (rspackOptions !== undefined) {
-            let parsedOptions = {};
-            if (rspackOptions) {
-              parsedOptions = JSON.parse(
-                preprocessText(rspackOptions.getText())
-              );
-              parsedOptions = normalizePathOptions(project.root, parsedOptions);
-            }
-
-            target.options.standardRspackConfigFunction = true;
-
-            updateProjectConfiguration(tree, projectName, project);
-
-            const { dir, name, ext } = parse(rspackConfigPath);
-
-            tree.rename(
-              rspackConfigPath,
-              `${joinPathFragments(dir, `${name}.old${ext}`)}`
-            );
-
-            tree.write(
-              rspackConfigPath,
-              stripIndents`
-            const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
-            const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
-            const { useLegacyNxPlugin } = require('@nx/rspack');
-            
-            // This file was migrated using @nx/rspack:convert-config-to-rspack-plugin from your './rspack.config.old.js'
-            // Please check that the options here are correct as they were moved from the old rspack.config.js to this file.
-            const options = ${
-              rspackOptions ? JSON.stringify(parsedOptions, null, 2) : '{}'
-            };
-
-            /**
-              * @type{import('@rspack/core').RspackOptionsNormalized}
-            */
-            module.exports = async () => ({
-              plugins: [
-                ${
-                  rspackOptions
-                    ? 'new NxAppRspackPlugin(options)'
-                    : 'new NxAppRspackPlugin()'
-                },
-                ${
-                  withReactConfig
-                    ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
-                    : `new NxReactRspackPlugin()`
-                },
-                // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
-                // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
-                // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
-                // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
-                // eslint-disable-next-line react-hooks/rules-of-hooks
-                await useLegacyNxPlugin(require('./rspack.config.old'), options),
-              ],
-              });
-          `
-            );
-            migrated++;
-          }
+        if (
+          rspackConfigPath &&
+          tree.exists(rspackConfigPath) &&
+          convertConfigFile(tree, project.root, rspackConfigPath)
+        ) {
+          target.options.standardRspackConfigFunction = true;
+          updateProjectConfiguration(tree, projectName, project);
+          migrated++;
         }
       }
     }
   );
+
+  // Projects already on the inference plugin keep their options in the config,
+  // so only the config needs converting.
+  for (const [projectName, project] of projects) {
+    if (options.project && projectName !== options.project) {
+      continue;
+    }
+    if (
+      Object.values(project.targets ?? {}).some(
+        (target) => target.executor === '@nx/rspack:rspack'
+      )
+    ) {
+      continue;
+    }
+    const rspackConfigPath = joinPathFragments(
+      project.root,
+      'rspack.config.js'
+    );
+    if (
+      tree.exists(rspackConfigPath) &&
+      convertConfigFile(tree, project.root, rspackConfigPath)
+    ) {
+      migrated++;
+    }
+  }
   if (migrated === 0) {
     throw new Error('Could not find any projects to migrate.');
   }
@@ -133,6 +100,90 @@ export async function convertConfigToRspackPluginGenerator(
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+}
+
+/** Returns whether the config used `withNx` and was converted. */
+function convertConfigFile(
+  tree: Tree,
+  projectRoot: string,
+  rspackConfigPath: string
+): boolean {
+  let {
+    withNxConfig: rspackOptions,
+    withReactConfig,
+    strippedSource,
+  } = extractRspackOptions(tree, rspackConfigPath);
+
+  // if rspackOptions === undefined
+  // withNx was not found in the rspack.config.js file so we should skip this project
+  if (rspackOptions !== undefined) {
+    let parsedOptions = {};
+    if (rspackOptions) {
+      // Parse before writing anything: a non-literal option value leaves the
+      // project untouched for the migration prompt instead of a config whose
+      // helper calls are gone and whose options never made it across.
+      try {
+        parsedOptions = JSON.parse(preprocessText(rspackOptions.getText()));
+      } catch {
+        throw new Error(
+          `Could not read the \`withNx\` options in ${rspackConfigPath}. They must be a plain object literal; spreads, variables and function calls are not supported.`
+        );
+      }
+      parsedOptions = normalizePathOptions(projectRoot, parsedOptions);
+    }
+
+    if (strippedSource !== undefined) {
+      tree.write(rspackConfigPath, strippedSource);
+    }
+
+    const { dir, name, ext } = parse(rspackConfigPath);
+
+    tree.rename(
+      rspackConfigPath,
+      `${joinPathFragments(dir, `${name}.old${ext}`)}`
+    );
+
+    tree.write(
+      rspackConfigPath,
+      stripIndents`
+    const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+    const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+    const { useLegacyNxPlugin } = require('@nx/rspack');
+    
+    // This file was migrated using @nx/rspack:convert-config-to-rspack-plugin from your './rspack.config.old.js'
+    // Please check that the options here are correct as they were moved from the old rspack.config.js to this file.
+    const options = ${
+      rspackOptions ? JSON.stringify(parsedOptions, null, 2) : '{}'
+    };
+
+    /**
+      * @type{import('@rspack/core').RspackOptionsNormalized}
+    */
+    module.exports = async () => ({
+      plugins: [
+        ${
+          rspackOptions
+            ? 'new NxAppRspackPlugin(options)'
+            : 'new NxAppRspackPlugin()'
+        },
+        ${
+          withReactConfig
+            ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
+            : `new NxReactRspackPlugin()`
+        },
+        // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
+        // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
+        // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
+        // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        await useLegacyNxPlugin(require('./rspack.config.old'), options),
+      ],
+      });
+  `
+    );
+    return true;
+  }
+  return false;
 }
 
 export default convertConfigToRspackPluginGenerator;

@@ -140,7 +140,10 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+export {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './utils/acknowledge-build-scripts';
 
 // Exposed for first-party plugins in this repo (imported via @nx/devkit/internal).
 export { default as runCommandsExecutor } from './executors/run-commands/run-commands.impl';
@@ -250,6 +253,7 @@ export {
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getCliPath,
+  // TODO(v25): remove custom hasher support.
   getCustomHasher,
   getDependencyConfigs,
   getExecutorForTask,
@@ -327,3 +331,4 @@ export {
 } from './utils/workspace-context';
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
+export { resolveStartupHost } from './tasks-runner/readiness/startup-host';

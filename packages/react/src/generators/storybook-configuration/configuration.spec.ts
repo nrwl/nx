@@ -30,7 +30,6 @@ describe('react:storybook-configuration', () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-lib',
-      addPlugin: true,
     });
 
     expect(
@@ -47,7 +46,6 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-lib',
       generateStories: true,
-      addPlugin: true,
     });
 
     expect(
@@ -79,7 +77,6 @@ describe('react:storybook-configuration', () => {
       project: 'test-ui-lib',
       generateStories: true,
       js: true,
-      addPlugin: true,
     });
 
     expect(
@@ -91,7 +88,6 @@ describe('react:storybook-configuration', () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-app',
-      addPlugin: true,
     });
 
     expect(appTree.exists('test-ui-app/.storybook/main.ts')).toBeTruthy();
@@ -103,7 +99,6 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       project: 'test-ui-app',
       generateStories: true,
-      addPlugin: true,
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
@@ -132,7 +127,6 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     directory: libName,
-    addPlugin: true,
   });
   return appTree;
 }
@@ -151,7 +145,6 @@ export async function createTestAppLib(
     unitTestRunner: 'none',
     directory: libName,
     js: plainJS,
-    addPlugin: true,
   });
 
   await componentGenerator(appTree, {

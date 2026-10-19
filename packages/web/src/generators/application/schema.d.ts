@@ -20,7 +20,6 @@ export interface Schema {
    */
   setParserOptionsProject?: boolean;
   strict?: boolean;
-  addPlugin?: boolean;
   useProjectJson?: boolean;
   port?: number;
 }

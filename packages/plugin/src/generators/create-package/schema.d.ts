@@ -16,5 +16,4 @@ export interface CreatePackageSchema {
   e2eProject?: string;
 
   useProjectJson?: boolean;
-  addPlugin?: boolean;
 }

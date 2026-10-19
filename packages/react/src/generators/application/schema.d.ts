@@ -33,7 +33,6 @@ export interface Schema {
   bundler?: 'webpack' | 'vite' | 'rspack' | 'rsbuild';
   minimal?: boolean;
   // Internal options
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'oxfmt' | 'none';
@@ -53,7 +52,6 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   fileName: string;
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
-  addPlugin?: boolean;
   names: ReturnType<typeof names>;
   isUsingTsSolutionConfig?: boolean;
 }

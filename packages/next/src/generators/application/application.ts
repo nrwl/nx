@@ -42,7 +42,6 @@ import { isNext14, isNext15 } from '../../utils/version-utils';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -55,7 +54,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {

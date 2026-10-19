@@ -18,7 +18,6 @@ export interface ApplicationGeneratorOptions {
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
   strict?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
 }

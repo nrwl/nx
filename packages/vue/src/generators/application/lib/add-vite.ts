@@ -23,7 +23,6 @@ export async function addVite(
     includeVitest: options.unitTestRunner === 'vitest',
     skipFormat: true,
     testEnvironment: 'jsdom',
-    addPlugin: options.addPlugin,
   });
 
   createOrEditViteConfig(
@@ -67,7 +66,6 @@ export async function addVitest(tree: Tree, options: NormalizedSchema) {
     inSourceTests: options.inSourceTests,
     skipFormat: true,
     testEnvironment: 'jsdom',
-    addPlugin: options.addPlugin,
     runtimeTsconfigFileName: 'tsconfig.app.json',
     skipViteConfig: true,
   });

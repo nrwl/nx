@@ -8,8 +8,11 @@ import {
   rmDist,
   runCLI,
   runCommandUntil,
+  tmpProjPath,
   uniq,
+  updateFile,
 } from '@nx/e2e-utils';
+import { spawn } from 'node:child_process';
 import {
   setupProjectsTest,
   resetProjectsTest,
@@ -86,6 +89,12 @@ describe('Angular Projects - SSR', () => {
     runCLI(
       `generate @nx/angular:app ${app} --bundler=rspack --ssr --port=${devServerPort} --no-interactive`
     );
+    // only rendering the page reveals this rule as critical CSS
+    updateFile(`${app}/src/styles.css`, `.page-only{color:red}`);
+    updateFile(
+      `${app}/src/app/app.html`,
+      (content) => `<p class="page-only">page</p>\n${content}`
+    );
 
     runCLI(`build ${app}`);
     checkFilesExist(
@@ -94,12 +103,47 @@ describe('Angular Projects - SSR', () => {
     );
     // the "prerender" build option still renders at build time, unlike
     // "RenderMode.Prerender", which the generated server routes use
-    expect(readFile(`dist/${app}/browser/index.html`)).toContain(
-      'ng-server-context'
-    );
+    const prerenderedPage = readFile(`dist/${app}/browser/index.html`);
+    expect(prerenderedPage).toContain('ng-server-context');
+    expect(prerenderedPage).toMatch(/<style[^>]*>[^<]*\.page-only\{/);
+    // critical CSS inlined twice defers the stylesheet to a print media query
+    // that never switches back
+    expect(prerenderedPage).not.toContain('data-beasties-media="print"');
     expect(
       readJson(`dist/${app}/prerendered-routes.json`).routes
     ).toHaveProperty('/');
+
+    const productionServer = spawn(
+      process.execPath,
+      [`dist/${app}/server/server.js`],
+      {
+        cwd: tmpProjPath(),
+        env: {
+          ...process.env,
+          PORT: `${serverPort}`,
+          NG_ALLOWED_HOSTS: 'localhost',
+        },
+      }
+    );
+    try {
+      await new Promise<void>((resolve, reject) => {
+        productionServer.stdout.on('data', (data) => {
+          if (data.toString().includes('Node Express server listening')) {
+            resolve();
+          }
+        });
+        productionServer.on('exit', (code) =>
+          reject(new Error(`The server exited with code ${code}.`))
+        );
+      });
+      const response = await fetch(`http://localhost:${serverPort}/`);
+      const page = await response.text();
+      expect(page).toMatch(/<style[^>]*>[^<]*\.page-only\{/);
+      expect(page).not.toContain('data-beasties-media="print"');
+      expect(page.match(/id="ng-state"/g)).toHaveLength(1);
+    } finally {
+      await killProcessAndPorts(productionServer.pid, serverPort);
+    }
 
     // the application engine needs the manifests the build registers, so a
     // server that starts and renders proves they are wired up

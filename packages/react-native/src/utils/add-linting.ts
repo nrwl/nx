@@ -30,7 +30,6 @@ interface NormalizedSchema {
   tsConfigPaths: string[];
   unitTestRunner?: string;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   buildable?: boolean;
   isTsSolutionSetup?: boolean;
 }
@@ -46,7 +45,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       skipPackageJson: options.skipPackageJson,
       enableTypedLinting: isTypedLintingEnabled(options),
-      addPlugin: options.addPlugin,
       addPackageJsonDependencyChecks: options.buildable,
     })
   );

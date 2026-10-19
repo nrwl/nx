@@ -34,7 +34,6 @@ export interface LibraryGeneratorOptions {
    */
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   isUsingTsSolutionsConfig?: boolean;
   useProjectJson?: boolean;
 }

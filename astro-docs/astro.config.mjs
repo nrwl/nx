@@ -79,6 +79,26 @@ export default defineConfig({
     '/platform-features/orchestration-ci':
       '/docs/platform-features/continuous-integration-ci',
     '/kb/setup-ci': '/docs/getting-started/setup-ci',
+    // Executor reference pages removed in Nx 24 with their executors.
+    '/technologies/test-tools/cypress/executors':
+      '/docs/technologies/test-tools/cypress/introduction',
+    '/technologies/test-tools/detox/executors':
+      '/docs/technologies/test-tools/detox/introduction',
+    '/technologies/test-tools/jest/executors':
+      '/docs/technologies/test-tools/jest/introduction',
+    '/technologies/test-tools/playwright/executors':
+      '/docs/technologies/test-tools/playwright/introduction',
+    '/technologies/test-tools/storybook/executors':
+      '/docs/technologies/test-tools/storybook/introduction',
+    '/technologies/test-tools/vitest/executors':
+      '/docs/technologies/test-tools/vitest/introduction',
+    '/technologies/eslint/executors': '/docs/technologies/eslint/introduction',
+    '/technologies/react/next/executors':
+      '/docs/technologies/react/next/introduction',
+    '/technologies/build-tools/rollup/executors':
+      '/docs/technologies/build-tools/rollup/introduction',
+    '/technologies/build-tools/vite/executors':
+      '/docs/technologies/build-tools/vite/introduction',
     '/concepts/inferred-tasks': '/docs/concepts/mental-model',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',
@@ -90,6 +110,15 @@ export default defineConfig({
     '/technologies/react/guides/use-environment-variables-in-react':
       '/docs/reference/environment-variables#loading-environment-variables',
     '/knowledge-base/installation': '/docs/kb/installation-and-updates',
+    '/kb/angular-micro-frontends': '/docs/kb/migrate-angular-module-federation',
+    '/kb/angular-module-federation-with-ssr':
+      '/docs/kb/migrate-angular-module-federation',
+    '/kb/dynamic-module-federation-with-angular':
+      '/docs/kb/migrate-angular-module-federation',
+    '/kb/nx-module-federation-plugin':
+      '/docs/kb/migrate-from-nx-module-federation',
+    '/kb/faster-builds-with-module-federation':
+      '/docs/technologies/module-federation/introduction',
     '/kb/overview-react': '/docs/kb/storybook-for-react',
     '/kb/project-graph-plugins': '/docs/kb/add-language-support',
     '/kb/intro': '/docs/kb/add-language-support',
@@ -133,8 +162,8 @@ export default defineConfig({
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        light: './src/assets/nx/Nx-dark.png',
-        dark: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/nx-lockup-light.svg',
+        dark: './src/assets/nx/nx-lockup-dark.svg',
         replacesTitle: true,
       },
       disable404Route: true,

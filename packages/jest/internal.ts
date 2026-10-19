@@ -8,6 +8,8 @@ export { versions, getInstalledJestMajorVersion } from './src/utils/versions';
 
 export { findRootJestPreset } from './src/utils/config/config-file';
 
+export { ensureRootJest } from './src/generators/configuration/lib/ensure-root-jest';
+
 /**
  * The Oxlint plugins a Jest-tested project needs. Declared here so the linter
  * does not have to know what a test runner requires; `@nx/js`'s

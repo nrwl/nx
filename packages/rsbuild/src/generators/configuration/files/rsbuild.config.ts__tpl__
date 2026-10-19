@@ -1,4 +1,5 @@
 import { defineConfig } from '@rsbuild/core';
+import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
 export default defineConfig({
     source: {
@@ -20,5 +21,6 @@ export default defineConfig({
         distPath: {
             root: 'dist',
         },
-    }
+    },
+    plugins: [pluginNxReadySignal()],
 });

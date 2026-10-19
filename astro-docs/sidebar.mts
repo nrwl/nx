@@ -446,6 +446,10 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/build-tools/rollup/introduction',
           },
           {
+            label: 'Rolldown',
+            link: 'technologies/build-tools/rolldown/introduction',
+          },
+          {
             label: 'ESBuild',
             link: 'technologies/build-tools/esbuild/introduction',
           },
@@ -633,6 +637,11 @@ const referenceGroups: SidebarItems = [
         label: 'Rollup',
         collapsed: true,
         items: [...getTechnologyAPIItems('rollup', 'build-tools')],
+      },
+      {
+        label: 'Rolldown',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('rolldown', 'build-tools')],
       },
       {
         label: 'ESBuild',

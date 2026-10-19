@@ -1,8 +1,6 @@
 import { Tree, joinPathFragments } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
-  createBuildTarget,
-  createServeTarget,
   createNxWebpackPluginOptions,
   determineTsConfig,
 } from './webpack-targets';
@@ -33,38 +31,6 @@ describe('webpack-targets', () => {
         targets: {},
       })
     );
-  });
-
-  it('should create a correct build target', () => {
-    const buildTarget = createBuildTarget(tree, options);
-    expect(buildTarget.executor).toEqual('@nx/webpack:webpack');
-    expect(buildTarget.outputs).toEqual(['{options.outputPath}']);
-    expect(buildTarget.options.outputPath).toEqual(
-      joinPathFragments('dist', projectRoot, 'web')
-    );
-    expect(buildTarget.options.index).toEqual(
-      joinPathFragments(projectRoot, 'src/index.html')
-    );
-    expect(buildTarget.options.main).toEqual(
-      joinPathFragments(projectRoot, 'src/main-web.tsx')
-    );
-    expect(buildTarget.options.tsConfig).toEqual(
-      joinPathFragments(projectRoot, 'tsconfig.json')
-    );
-    expect(buildTarget.options.assets).toEqual([
-      joinPathFragments(projectRoot, 'src/favicon.ico'),
-      joinPathFragments(projectRoot, 'src/assets'),
-    ]);
-    expect(buildTarget.options.webpackConfig).toEqual(
-      joinPathFragments(projectRoot, 'webpack.config.js')
-    );
-  });
-
-  it('should create a correct serve target', () => {
-    const serveTarget = createServeTarget(options);
-    expect(serveTarget.executor).toEqual('@nx/webpack:dev-server');
-    expect(serveTarget.options.buildTarget).toEqual('my-app:build');
-    expect(serveTarget.options.hmr).toBe(true);
   });
 
   it('should create correct NxWebpackPluginOptions', () => {

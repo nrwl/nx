@@ -139,6 +139,7 @@
       "@nx/plugin",
       "@nx/react",
       "@nx/react-native",
+      "@nx/rolldown",
       "@nx/rollup",
       "@nx/remix",
       "@nx/rspack",

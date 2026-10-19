@@ -35,7 +35,7 @@ class NxProjectAnalyzer(
     val pathCalculationStart = System.currentTimeMillis()
     val canonicalWorkspaceRoot = workspaceRoot.canonicalFile
     val canonicalBasedir = project.basedir.canonicalFile
-    val root = pathFormatter.normalizeRelativePath(canonicalBasedir.relativeTo(canonicalWorkspaceRoot).path)
+    val root = pathFormatter.relativePath(canonicalBasedir, canonicalWorkspaceRoot)
     val projectName = "${project.groupId}:${project.artifactId}"
     val projectType = determineProjectType(project.packaging)
     val pathCalculationTime = System.currentTimeMillis() - pathCalculationStart
@@ -124,7 +124,7 @@ class NxProjectAnalyzer(
       dependency.addProperty("type", nxDependency.type.name.lowercase())
       dependency.addProperty("source", nxDependency.source)
       dependency.addProperty("target", nxDependency.target)
-      dependency.addProperty("sourceFile", pathFormatter.normalizeRelativePath(nxDependency.sourceFile.canonicalFile.relativeTo(canonicalWorkspaceRoot).path))
+      dependency.addProperty("sourceFile", pathFormatter.relativePath(nxDependency.sourceFile.canonicalFile, canonicalWorkspaceRoot))
       dependency
     }
 

@@ -22,7 +22,6 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
   useProjectJson?: boolean;

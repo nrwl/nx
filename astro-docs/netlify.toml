@@ -699,11 +699,11 @@ to = "/docs/kb/angular-nx-version-matrix"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
-to = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -771,7 +771,7 @@ to = "/docs/kb/flat-config"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/faster-builds-with-module-federation"
-to = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation"
@@ -787,7 +787,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/consumer-and-provider"
@@ -807,11 +807,11 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
@@ -932,6 +932,26 @@ to = "/docs/kb/overview-angular"
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-react"
 to = "/docs/kb/storybook-for-react"
+
+[[redirects]]
+from = "/docs/kb/angular-micro-frontends"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
+
+[[redirects]]
+from = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/overview-react"
@@ -1136,7 +1156,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/create-a-host"
@@ -1152,7 +1172,7 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/react-module-federation-with-ssr"
@@ -1184,6 +1204,47 @@ to = "/docs/kb/angular-nx-version-matrix"
 [[redirects]]
 from = "/docs/guides/nx-cloud/enable-ai-features"
 to = "/docs/kb/enable-ai-features"
+# Executor reference pages removed in Nx 24 along with the executors they documented
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/executors"
+to = "/docs/technologies/test-tools/cypress/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/detox/executors"
+to = "/docs/technologies/test-tools/detox/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/jest/executors"
+to = "/docs/technologies/test-tools/jest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/playwright/executors"
+to = "/docs/technologies/test-tools/playwright/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/executors"
+to = "/docs/technologies/test-tools/storybook/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/executors"
+to = "/docs/technologies/test-tools/vitest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/eslint/executors"
+to = "/docs/technologies/eslint/introduction"
+
+[[redirects]]
+from = "/docs/technologies/react/next/executors"
+to = "/docs/technologies/react/next/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/rollup/executors"
+to = "/docs/technologies/build-tools/rollup/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/executors"
+to = "/docs/technologies/build-tools/vite/introduction"
 
 # DOC-713/DOC-714: secondary CI pages moved to the Knowledge Base, CI group renamed
 [[redirects]]

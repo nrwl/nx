@@ -55,7 +55,6 @@ export async function reactNativeLibraryGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -69,7 +68,7 @@ export async function reactNativeLibraryGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     addTsPlugin,
@@ -118,7 +117,6 @@ export async function reactNativeLibraryGeneratorInternal(
     options.projectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin,
     'tsconfig.lib.json'
   );
   tasks.push(jestTask);

@@ -14,17 +14,6 @@ vi.mock('./migrate-commits', () => ({
     mockCommitCheckpointBeforeMigrations(...args),
 }));
 
-const mockRunAgenticPromptStep = vi.fn();
-// executeMigrations lazy-requires ./agentic/run-step (CJS channel).
-mockCjsModule(import.meta.url, './agentic/run-step', {
-  runAgenticPromptStep: (...args: unknown[]) =>
-    mockRunAgenticPromptStep(...args),
-});
-vi.mock('./agentic/run-step', () => ({
-  runAgenticPromptStep: (...args: unknown[]) =>
-    mockRunAgenticPromptStep(...args),
-}));
-
 const mockNgRunMigration = vi.fn();
 // execute-migration loads the ng compat layer through handleImport (CJS
 // channel), which vi.mock cannot intercept; replace it there instead.
@@ -62,7 +51,6 @@ import { dirname, join } from 'path';
 import type { MigrationsJson } from '../../config/misc-interfaces';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import type { ResolvedAgentic } from './agentic/types';
 import {
   ChangedDepInstaller,
   executeMigrations,
@@ -566,6 +554,28 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn.mock.calls[0][0]).toContain('install');
   });
 
+  it('spawns the install command when only a catalog entry changed', async () => {
+    writeFileSync(join(tmpRoot, 'pnpm-lock.yaml'), '');
+    writePackageJson({ dependencies: { foo: 'catalog:' } });
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 1.0.0\n'
+    );
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writeFileSync(
+      join(tmpRoot, 'pnpm-workspace.yaml'),
+      'catalog:\n  foo: 2.0.0\n'
+    );
+    const child = new FakeChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const promise = installer.installDepsIfChanged();
+    child.emit('close', 0);
+    await promise;
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+  });
+
   it('does not spawn a second install when nothing changes after a prior install', async () => {
     writePackageJson();
     const installer = new ChangedDepInstaller(tmpRoot, false);
@@ -749,6 +759,7 @@ describe('runInstall with an output sink', () => {
 
     expect(mockSpawn.mock.calls[0][1]).toMatchObject({
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
     });
     expect(out.calls).toEqual([
       [
@@ -907,6 +918,7 @@ describe('runInstall with an output sink', () => {
     expect(mockSpawn.mock.calls[0][1]).toMatchObject({
       stdio: ['inherit', 'inherit', 'pipe'],
     });
+    expect(mockSpawn.mock.calls[0][1].detached).toBeUndefined();
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(stderrSpy).toHaveBeenCalledWith(Buffer.from('npm warn old\n'));
   });
@@ -1074,16 +1086,6 @@ describe('executeMigrations', () => {
   describe('skipAgentic', () => {
     let infoSpy: MockInstance;
 
-    const AGENTIC_ENABLED: ResolvedAgentic = {
-      kind: 'enabled',
-      selectedAgent: {
-        id: 'claude-code',
-        displayName: 'Claude Code',
-        binary: '/usr/local/bin/claude',
-        source: 'path',
-      },
-    };
-
     // Writes a migration implementation plus its `migrations.json` entry, so
     // each case can pick its own return value and change footprint.
     const writeMigration = (
@@ -1119,9 +1121,7 @@ describe('executeMigrations', () => {
         /* shouldCreateCommits: */ true,
         'chore(repo): ',
         true,
-        AGENTIC_ENABLED,
-        false,
-        /* shouldRunValidation: */ true
+        { kind: 'disabled' }
       );
 
     const logged = () =>
@@ -1133,26 +1133,13 @@ describe('executeMigrations', () => {
         status: 'committed',
         sha: 'sha',
       });
-      mockRunAgenticPromptStep.mockResolvedValue({
-        ambiguous: false,
-        summary: 'done',
-      });
     });
 
     afterEach(() => {
       infoSpy.mockRestore();
     });
 
-    it('runs the prompt step for a hybrid that does not waive it', async () => {
-      const m = hybrid('hybrid-keeps', `tree.write('kept.txt', 'x');`);
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
-      expect(result.waivedAgenticStepsCount).toBe(0);
-    });
-
-    it('skips the prompt step, the next-steps entry, and the deferral for a waived hybrid', async () => {
+    it('drops the next-steps entry and the deferral for a waived hybrid', async () => {
       const m = hybrid(
         'hybrid-waives',
         `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
@@ -1160,33 +1147,9 @@ describe('executeMigrations', () => {
 
       const result = await run([m]);
 
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
       expect(result.skippedPrompts).toEqual([]);
       expect(result.skippedPromptsCount).toBe(0);
       expect(result.nextSteps).toEqual([]);
-      expect(result.waivedAgenticStepsCount).toBe(1);
-      expect(logged()).toContain(
-        'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
-      );
-    });
-
-    it('waives the prompt step with the agentic flow disabled too', async () => {
-      const m = hybrid(
-        'hybrid-waives-offline',
-        `tree.write('waived.txt', 'x'); return { skipAgentic: true };`
-      );
-
-      const result = await executeMigrations(
-        tmpRoot,
-        [m] as Parameters<typeof executeMigrations>[1],
-        false,
-        true,
-        'chore(repo): ',
-        true,
-        { kind: 'disabled' }
-      );
-
-      expect(result.skippedPrompts).toEqual([]);
       expect(result.waivedAgenticStepsCount).toBe(1);
       expect(logged()).toContain(
         'Prompt phase skipped. The migration reported nothing left for the AI step to do.'
@@ -1220,43 +1183,9 @@ describe('executeMigrations', () => {
       expect(result.waivedAgenticStepsCount).toBe(1);
     });
 
-    it('skips the validation step for a waived generator-only migration', async () => {
-      const m = writeMigration(
-        'gen-waives',
-        `tree.write('validated.txt', 'x'); return { skipAgentic: true };`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
-      expect(result.waivedAgenticStepsCount).toBe(1);
-      expect(logged()).toContain(
-        'Validation skipped. The migration reported its changes need no AI review.'
-      );
-    });
-
-    it('stays silent for a waived generator-only migration that had no changes to validate', async () => {
-      const m = writeMigration(
-        'gen-noop-waives',
-        `return { skipAgentic: true };`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).not.toHaveBeenCalled();
-      expect(logged()).not.toContain('Validation skipped');
-      // Nothing was going to run, so there is no waived step to report.
-      expect(result.waivedAgenticStepsCount).toBe(0);
-      expect(result.migrationsWithNoChanges.map((m) => m.name)).toEqual([
-        'gen-noop-waives',
-      ]);
-    });
-
-    // `agenticRun` requires `kind: 'enabled'` and the outer-agent hand-off
-    // requires `kind: 'inside-agent'`, so these two pin the asymmetry that
-    // falls out of that: a hybrid's prompt is owed in every mode and waiving
-    // it moots the hand-off, while a generator-only migration has no
-    // validation step to waive under `inside-agent` and keeps the hand-off.
+    // These two pin an asymmetry: a hybrid's prompt is owed in every mode and
+    // waiving it moots the hand-off, while a generator-only migration has no
+    // AI step to waive and keeps the hand-off.
     const runInsideAgent = (m: Record<string, unknown>) =>
       executeMigrations(
         tmpRoot,
@@ -1265,9 +1194,7 @@ describe('executeMigrations', () => {
         true,
         'chore(repo): ',
         true,
-        { kind: 'inside-agent' },
-        false,
-        /* shouldRunValidation: */ true
+        { kind: 'inside-agent' }
       );
 
     it('keeps the outer-agent hand-off for a waived generator-only migration under inside-agent', async () => {
@@ -1328,18 +1255,6 @@ describe('executeMigrations', () => {
       expect(written).not.toContain('<agent_context');
       expect(result.waivedAgenticStepsCount).toBe(1);
       expect(result.skippedPrompts).toEqual([]);
-    });
-
-    it('runs the validation step for a generator-only migration that does not waive it', async () => {
-      const m = writeMigration(
-        'gen-keeps',
-        `tree.write('validated.txt', 'x');`
-      );
-
-      const result = await run([m]);
-
-      expect(mockRunAgenticPromptStep).toHaveBeenCalledTimes(1);
-      expect(result.waivedAgenticStepsCount).toBe(0);
     });
   });
 });
