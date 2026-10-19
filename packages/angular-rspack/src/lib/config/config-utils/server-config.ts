@@ -158,6 +158,18 @@ export async function getServerConfig(
           ],
           options: platformServerExportsLoaderOptions,
         },
+        // The SSR entry imports the manifest module only for its side effects
+        // (registering the app and engine manifests). Without this, apps that
+        // set `sideEffects` in their package.json have the import dropped and
+        // the engine fails with "Angular app engine manifest is not set".
+        ...(engineWiring?.manifestModuleRequest
+          ? [
+              {
+                include: [engineWiring.manifestModuleRequest],
+                sideEffects: true,
+              },
+            ]
+          : []),
         ...(defaultConfig.module?.rules ?? []),
       ],
     },
