@@ -1,3 +1,8 @@
+// Node passes a stand-in require, without a cache, require.extensions or
+// Module._load, when an ESM loader hook supplies this module's source, as
+// Yarn PnP does.
+if (!require.cache) require = require('module').createRequire(__filename);
+
 const { join, basename } = require('path');
 const { copyFileSync, renameSync, statSync, unlinkSync } = require('fs');
 const { createHash } = require('crypto');
