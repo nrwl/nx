@@ -4,8 +4,6 @@ React component testing with Nx requires **Cypress version 10.7.0** and up.
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
 
 This generator is for Cypress based component testing.
-
-If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/react/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 19.
 :::
 
 This generator is designed to get your React project up and running with Cypress Component Testing.
@@ -83,7 +81,7 @@ nx g @nx/react:cypress-component-configuration --project=my-cool-react-project
 Manually specifying the build target
 
 ```shell
-nx g @nx/react:cypress-component-configuration --project=my-cool-react-project --build-target:some-react-app:build --generate-tests
+nx g @nx/react:cypress-component-configuration --project=my-cool-react-project --build-target=some-react-app:build --generate-tests
 ```
 
 :::note[Build Target with Configuration]

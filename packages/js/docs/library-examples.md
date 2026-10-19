@@ -11,7 +11,7 @@ npx nx g @nx/js:lib libs/mylib
 
 By default, the library that is generated when you use this executor without passing any options, like the example above, will be a buildable library, using the `@nx/js:tsc` executor as a builder.
 
-You may configure the tools you want to use to build your library, or bundle it too, by passing the `--bundler` flag. The `--bundler` flag controls the compiler and/or the bundler that will be used to build your library. If you choose `tsc` or `swc`, the result will be a buildable library using either `tsc` or `swc` as the compiler. If you choose `rollup` or `vite`, the result will be a buildable library using `rollup` or `vite` as the bundler. In the case of `rollup`, it will default to the `tsc` compiler. If you choose `esbuild`, you may use the [`esbuildOptions` property](https://esbuild.github.io/api/) in your `project.json` under the `build` target options to specify whether you wish to bundle your library or not.
+You may configure the tools you want to use to build your library, or bundle it too, by passing the `--bundler` flag. The `--bundler` flag controls the compiler and/or the bundler that will be used to build your library. If you choose `tsc` or `swc`, the result will be a buildable library using either `tsc` or `swc` as the compiler. If you choose `rollup` or `vite`, the result will be a buildable library using `rollup` or `vite` as the bundler. With `rollup`, the generated config uses `swc` as the compiler. If you choose `esbuild`, you may use the [`esbuildOptions` property](https://esbuild.github.io/api/) in your `project.json` under the `build` target options to specify whether you wish to bundle your library or not.
 
 ## Examples
 
