@@ -8,13 +8,18 @@ import {
 import { DaemonSocketMessenger } from './daemon-socket-messenger';
 
 describe('DaemonSocketMessenger', () => {
-  const send = (force?: 'v8' | 'json') => {
+  const send = (format: 'v8' | 'json') => {
     const writes: Buffer[] = [];
     const socket = {
       write: (data: Buffer) => writes.push(data),
     } as unknown as Socket;
 
-    new DaemonSocketMessenger(socket).sendMessage({ type: 'PING' }, force);
+    vi.stubEnv('NX_USE_V8_SERIALIZER', String(format === 'v8'));
+    try {
+      new DaemonSocketMessenger(socket).sendMessage({ type: 'PING' });
+    } finally {
+      vi.unstubAllEnvs();
+    }
     return writes;
   };
 

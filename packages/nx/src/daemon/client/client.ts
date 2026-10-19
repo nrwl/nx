@@ -932,16 +932,11 @@ export class DaemonClient {
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
-    return this.sendToDaemonViaQueue(
-      {
-        type: 'PROCESS_IN_BACKGROUND',
-        requirePath,
-        data,
-      },
-      // This method is sometimes passed data that cannot be serialized with v8
-      // so we force JSON serialization here
-      'json'
-    );
+    return this.sendToDaemonViaQueue({
+      type: 'PROCESS_IN_BACKGROUND',
+      requirePath,
+      data,
+    });
   }
 
   recordOutputsHashBatch(entries: TaskOutputs[]): Promise<any> {
@@ -1255,15 +1250,14 @@ export class DaemonClient {
   }
 
   private async sendToDaemonViaQueue<T extends DaemonMessage>(
-    messageToDaemon: T,
-    parser?: 'v8' | 'json'
+    messageToDaemon: T
   ): Promise<any> {
     return this.queue.sendToQueue(async () => {
       // Set currentSpinner inside the queued function so it's only
       // active while this specific message is in flight — preventing
       // concurrent callers from overwriting each other's spinner
       // reference before their turn arrives.
-      return await this.sendMessageToDaemon(messageToDaemon, parser);
+      return await this.sendMessageToDaemon(messageToDaemon);
     });
   }
 
@@ -1474,10 +1468,7 @@ export class DaemonClient {
   }
 
   private envReflectionSent = false;
-  private async sendMessageToDaemon(
-    message: DaemonMessage,
-    force?: 'v8' | 'json'
-  ): Promise<any> {
+  private async sendMessageToDaemon(message: DaemonMessage): Promise<any> {
     // the first message sent to the daemon includes an env prop
     // that updates the process.env values on the daemon.
     if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
@@ -1508,7 +1499,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message, force);
+      this.socketMessenger.sendMessage(message);
     }).finally(() => {
       clearTimeout(keepAlive);
     });

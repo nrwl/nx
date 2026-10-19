@@ -20,10 +20,7 @@ export class VersionMismatchError extends Error {
 export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
-  sendMessage<T extends DaemonMessage>(
-    messageToDaemon: T,
-    force?: 'v8' | 'json'
-  ) {
+  sendMessage<T extends DaemonMessage>(messageToDaemon: T) {
     if (!this.socket) {
       throw new Error('Socket not initialized.');
     }
@@ -34,7 +31,7 @@ export class DaemonSocketMessenger {
     performance.mark(
       'daemon-message-serialization-start-' + messageToDaemon.type
     );
-    const serialized = serialize(messageToDaemon, force);
+    const serialized = serialize(messageToDaemon);
     performance.mark(
       'daemon-message-serialization-end-' + messageToDaemon.type
     );
