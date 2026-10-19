@@ -250,7 +250,7 @@ export type ReadyWhen =
     } & ReadyWhenOptions)
   | {
       /**
-       * Ready when the task reports it with `signalTaskReady` from
+       * Ready when the task reports it with `emitReadySignal` from
        * `@nx/devkit`.
        */
       signal: true;

@@ -1,4 +1,4 @@
-import { signalTaskReady } from './ready-signal';
+import { emitReadySignal } from './ready-signal';
 
 /**
  * Passes the executor's results through unchanged and signals the task ready
@@ -18,7 +18,7 @@ export async function* signalReadyAtBaseUrl<T extends { success: boolean }>(
       const url = getReadySignalUrl(result.value);
       if (url) {
         signalled = true;
-        signalTaskReady({ url });
+        emitReadySignal(url);
       }
     }
     yield result.value;

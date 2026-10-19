@@ -4,7 +4,7 @@ import type { AddressInfo } from 'net';
 import { nxReadySignal } from './ready-signal';
 
 const devkit = vi.hoisted(() => ({
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
 mockCjsModule(import.meta.url, '@nx/devkit', devkit);
@@ -38,7 +38,7 @@ describe('nxReadySignal', () => {
 
   afterEach(async () => {
     vi.unstubAllEnvs();
-    devkit.signalTaskReady.mockClear();
+    devkit.emitReadySignal.mockClear();
     await new Promise((r) => server.close(r));
   });
 
@@ -70,14 +70,11 @@ describe('nxReadySignal', () => {
       // Returns while the server answers 503, as the CLI serves the app after it
       await nuxt.callHook('build:done');
       await new Promise((r) => setTimeout(r, 600));
-      expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+      expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
       status = 404;
       await vi.waitFor(
-        () =>
-          expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-            url: url(port),
-          }),
+        () => expect(devkit.emitReadySignal).toHaveBeenCalledWith(url(port)),
         { timeout: 2000 }
       );
     }
@@ -91,11 +88,11 @@ describe('nxReadySignal', () => {
     await nuxt.callHook('listen', { address }, {});
     await nuxt.callHook('build:done');
     await new Promise((r) => setTimeout(r, 600));
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
     status = 404;
     await vi.waitFor(
-      () => expect(devkit.signalTaskReady).toHaveBeenCalledWith(),
+      () => expect(devkit.emitReadySignal).toHaveBeenCalledWith(),
       { timeout: 2000 }
     );
   });
@@ -111,13 +108,13 @@ describe('nxReadySignal', () => {
     );
     await nuxt.callHook('build:done');
 
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith();
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith();
   });
 
   it('does nothing outside a signalling task', () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
 
     expect(install().hooks).toEqual({});
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
   });
 });

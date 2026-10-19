@@ -1,8 +1,8 @@
 import { signalReadyAtBaseUrl } from './executor-ready-signal';
-import { signalTaskReady } from './ready-signal';
+import { emitReadySignal } from './ready-signal';
 
 vi.mock('./ready-signal', () => ({
-  signalTaskReady: vi.fn(),
+  emitReadySignal: vi.fn(),
 }));
 
 type Result = { success: boolean; baseUrl?: string };
@@ -24,7 +24,7 @@ async function drain(results: Result[], returned?: Result) {
 
 describe('signalReadyAtBaseUrl', () => {
   beforeEach(() => {
-    vi.mocked(signalTaskReady).mockClear();
+    vi.mocked(emitReadySignal).mockClear();
   });
 
   it('signals once, at the first successful result with a url, and passes every result through', async () => {
@@ -39,10 +39,8 @@ describe('signalReadyAtBaseUrl', () => {
       yielded: results,
       returned: { success: false },
     });
-    expect(signalTaskReady).toHaveBeenCalledTimes(1);
-    expect(signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://localhost:4200/app/',
-    });
+    expect(emitReadySignal).toHaveBeenCalledTimes(1);
+    expect(emitReadySignal).toHaveBeenCalledWith('http://localhost:4200/app/');
   });
 
   it.each([
@@ -56,9 +54,9 @@ describe('signalReadyAtBaseUrl', () => {
     await drain([{ success: true, baseUrl }]);
 
     if (url) {
-      expect(signalTaskReady).toHaveBeenCalledWith({ url });
+      expect(emitReadySignal).toHaveBeenCalledWith(url);
     } else {
-      expect(signalTaskReady).not.toHaveBeenCalled();
+      expect(emitReadySignal).not.toHaveBeenCalled();
     }
   });
 });

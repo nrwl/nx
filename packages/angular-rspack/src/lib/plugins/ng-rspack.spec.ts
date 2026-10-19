@@ -1,4 +1,4 @@
-import { signalTaskReady } from '@nx/devkit';
+import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
 import { rspack } from '@rspack/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -6,7 +6,7 @@ import { _createConfig } from '../config/create-config';
 
 vi.mock('@nx/devkit', async (importOriginal) => ({
   ...(await importOriginal()),
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 vi.mock('@nx/devkit/internal', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -37,7 +37,7 @@ describe('NgRspackPlugin', () => {
 
     const compiler = rspack(config);
     try {
-      expect(signalTaskReady).not.toHaveBeenCalled();
+      expect(emitReadySignal).not.toHaveBeenCalled();
 
       const address = { address: '::', family: 'IPv6', port: 4200 };
       const devServer = compiler.options.devServer || {};
@@ -48,9 +48,7 @@ describe('NgRspackPlugin', () => {
 
       expect(log).toHaveBeenCalledWith('Listening on port:', 4200);
       expect(getListeningUrl).toHaveBeenCalledWith(address, true);
-      expect(signalTaskReady).toHaveBeenCalledWith({
-        url: 'https://localhost:4200/',
-      });
+      expect(emitReadySignal).toHaveBeenCalledWith('https://localhost:4200/');
     } finally {
       await new Promise((resolve) => compiler.close(resolve));
     }

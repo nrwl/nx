@@ -27,10 +27,10 @@ describe('ready signal client', () => {
   };
 
   it('sends ready once, with its url', async () => {
-    const { signalTaskReady } = await import('./ready-signal');
+    const { emitReadySignal } = await import('./ready-signal');
 
-    expect(signalTaskReady({ url: 'http://localhost:4300/' })).toBe(true);
-    expect(signalTaskReady({ url: 'http://localhost:9999/' })).toBe(false);
+    expect(emitReadySignal('http://localhost:4300/')).toBe(true);
+    expect(emitReadySignal('http://localhost:9999/')).toBe(false);
     await until(1);
 
     expect(received).toEqual([
@@ -42,18 +42,60 @@ describe('ready signal client', () => {
     ]);
   });
 
+  it.each([
+    [
+      { address: '127.0.0.1', family: 'IPv4', port: 4300 },
+      'http://127.0.0.1:4300/',
+    ],
+    [{ address: '::', family: 'IPv6', port: 4300 }, 'http://localhost:4300/'],
+    [{ address: '::1', family: 'IPv6', port: 4300 }, 'http://[::1]:4300/'],
+  ])('sends the url of a server listening on %j', async (address, url) => {
+    const { emitReadySignal } = await import('./ready-signal');
+
+    expect(emitReadySignal({ address: () => address })).toBe(true);
+    await until(1);
+
+    expect(received).toEqual([
+      { type: 'nx-ready-signal:ready', taskId: 'app:serve', url },
+    ]);
+  });
+
+  it('sends an https url for a TLS server', async () => {
+    const { Server } = await import('tls');
+    const tlsServer = Object.assign(Object.create(Server.prototype), {
+      address: () => ({ address: '0.0.0.0', family: 'IPv4', port: 4300 }),
+    });
+    const { emitReadySignal } = await import('./ready-signal');
+
+    emitReadySignal(tlsServer);
+    await until(1);
+
+    expect(received[0].url).toBe('https://localhost:4300/');
+  });
+
+  it('sends ready without a url for a server on a pipe', async () => {
+    const { emitReadySignal } = await import('./ready-signal');
+
+    emitReadySignal({ address: () => '/tmp/app.sock' });
+    await until(1);
+
+    expect(received).toEqual([
+      { type: 'nx-ready-signal:ready', taskId: 'app:serve' },
+    ]);
+  });
+
   it('does nothing outside a task that waits for a signal', async () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
-    const { signalTaskReady } = await import('./ready-signal');
+    const { emitReadySignal } = await import('./ready-signal');
 
-    expect(signalTaskReady()).toBe(false);
+    expect(emitReadySignal()).toBe(false);
   });
 
   it('does not throw when Nx has gone away', async () => {
     server.close();
-    const { signalTaskReady } = await import('./ready-signal');
+    const { emitReadySignal } = await import('./ready-signal');
 
-    expect(signalTaskReady()).toBe(true);
+    expect(emitReadySignal()).toBe(true);
     await new Promise((r) => setTimeout(r, 50));
   });
 });

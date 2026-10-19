@@ -1,4 +1,4 @@
-import { signalTaskReady } from '@nx/devkit';
+import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
 import type { Compiler } from '@rspack/core';
 
@@ -20,11 +20,11 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
   devServer.onListening = (server) => {
     onListening?.(server);
     // The dev server has normalized `options.server` to `{ type, options }`
-    signalTaskReady({
-      url: getListeningUrl(
+    emitReadySignal(
+      getListeningUrl(
         server.server?.address(),
         server.options.server.type !== 'http'
-      ),
-    });
+      )
+    );
   };
 }

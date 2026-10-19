@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import { nxReadySignal } from './nx-ready-signal.plugin';
 
 const devkit = vi.hoisted(() => ({
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
 mockCjsModule(import.meta.url, '@nx/devkit', devkit);
@@ -11,7 +11,7 @@ mockCjsModule(import.meta.url, '@nx/devkit', devkit);
 describe('nxReadySignal', () => {
   beforeEach(() => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.signalTaskReady.mockClear();
+    devkit.emitReadySignal.mockClear();
   });
 
   afterEach(() => {
@@ -34,12 +34,12 @@ describe('nxReadySignal', () => {
       httpServer: server,
       config: { server: {} },
     });
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
     server.emit('listening');
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://127.0.0.1:5173/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'http://127.0.0.1:5173/'
+    );
   });
 
   it('signals the preview server address with its protocol', () => {
@@ -49,9 +49,9 @@ describe('nxReadySignal', () => {
       config: { preview: { https: {} } },
     });
     server.emit('listening');
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'https://127.0.0.1:4173/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'https://127.0.0.1:4173/'
+    );
   });
 
   it('does nothing outside a signalling task or in middleware mode', () => {
@@ -65,6 +65,6 @@ describe('nxReadySignal', () => {
       httpServer: null,
       config: { server: {} },
     });
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
   });
 });

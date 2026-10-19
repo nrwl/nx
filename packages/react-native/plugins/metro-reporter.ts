@@ -48,18 +48,18 @@ class NxMetroReporter extends TerminalReporter {
     ) {
       return;
     }
-    const { signalTaskReady } =
+    const { emitReadySignal } =
       require('@nx/devkit') as typeof import('@nx/devkit');
     const { getListeningUrl } =
       require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
     const listening = event as ServerListeningEvent;
-    signalTaskReady({
-      url: getListeningUrl(
+    emitReadySignal(
+      getListeningUrl(
         listening,
         this.secureByPort.get(listening.port) ??
           process.argv.includes('--https')
-      ),
-    });
+      )
+    );
   }
 }
 

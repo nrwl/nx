@@ -28,11 +28,11 @@ function report(httpServer: HttpServer | null, https: boolean) {
   if (!httpServer || !process.env.NX_READY_SIGNAL_SOCKET) {
     return;
   }
-  const { signalTaskReady } =
+  const { emitReadySignal } =
     require('@nx/devkit') as typeof import('@nx/devkit');
   const { getListeningUrl } =
     require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
   httpServer.once('listening', () => {
-    signalTaskReady({ url: getListeningUrl(httpServer.address(), https) });
+    emitReadySignal(getListeningUrl(httpServer.address(), https));
   });
 }
