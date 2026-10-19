@@ -713,9 +713,7 @@ Set `mode` to choose how a target participates:
 
 `error` is reserved for failing the task on an undeclared read or write. Nothing enforces that per target yet, so it behaves as `warn` today.
 
-When a target omits `mode`, Nx uses the workspace default supplied by Nx Cloud through `NX_CLOUD_ULTRACACHE_MODE`. This also applies to an `ultracache` object that only sets options such as `collectStats` or `ignoreReads`. An explicit target mode takes precedence. If the Cloud client supplies no recognized workspace default, Nx retains the previous `on` default.
-
-Use `warn` or `error` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared. Use `off` to stop recording it at all.
+`on` is the default. Use `warn` or `error` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared. Use `off` to stop recording it at all.
 
 ```json
 {
@@ -765,7 +763,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 {% /aside %}
 
 {% aside type="note" title="Nx Cloud only" %}
-Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. A target's mode does not enable workspace recording or bypass Nx Cloud's recording permissions. Applying a recording additionally needs [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set in CI, and a recording for the task in question. Without that flag, Nx skips the recording read; it can still use a workspace default supplied through `NX_CLOUD_ULTRACACHE_MODE`. See [task sandboxing](/docs/kb/sandboxing).
+Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it. Applying a recording additionally needs [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) set in CI, and a recording for the task in question. See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.

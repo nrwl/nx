@@ -31,7 +31,6 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
 });
 import {
   computeAffectedTasks,
-  selectAffectedTasks,
   selectsAffectedTasks,
   taskGranularityRequirement,
 } from './affected-tasks';
@@ -49,7 +48,6 @@ import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { JsonDiffType } from '../../utils/json-diff';
-import { createTaskPlanningContext } from '../../hasher/task-planning-context';
 
 /**
  * `app` depends on `lib`. Both roots are real directories in this repo, because
@@ -883,78 +881,6 @@ describe('selection with Ultracache configurations', () => {
     dir = mkdtempSync(join(tmpdir(), 'affected-ultracache-'));
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
-  afterEach(() => vi.unstubAllEnvs());
-
-  it.each(['on', 'warn', 'error', 'off', undefined, 'invalid'])(
-    'carries workspace mode %s through daemon selection without using the daemon env',
-    async (mode) => {
-      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
-      const commit = 'head'.padEnd(40, '0');
-      const db = connectToNxDb(dir, 'ultracache');
-      const configurations = new UltracacheConfigurationStore(db).import({
-        requestedCommit: commit,
-        configurationsJson: JSON.stringify({
-          'lib:test': { commit, inputs: ['docs/README.md'], outputs: [] },
-          'app:test': { commit, inputs: ['docs/README.md'], outputs: [] },
-        }),
-      });
-      const projectGraph = graph();
-      projectGraph.nodes.lib.data.targets.test.ultracache = {
-        collectStats: true,
-      };
-      projectGraph.nodes.app.data.targets.test.ultracache = { mode: 'on' };
-      const nxJson = {
-        namedInputs: { production: ['{projectRoot}/src/**/*'] },
-      };
-      daemon.enabled.mockReturnValueOnce(true);
-      daemon.selectAffectedTasks.mockImplementationOnce(async (request) => {
-        expect(request.defaultUltracacheMode).toBe(
-          mode === 'invalid' ? undefined : mode
-        );
-        // A long-lived daemon may have inherited any other run's environment.
-        vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode === 'on' ? 'off' : 'on');
-        const selection = await selectAffectedTasks(
-          projectGraph,
-          nxJson,
-          createTaskPlanningContext(projectGraph, nxJson),
-          JSON.parse(JSON.stringify(request)),
-          {
-            touchedFiles: [],
-            packageJson: {},
-            ultracacheConfigurations: configurations,
-          }
-        );
-        return {
-          ...selection,
-          projectGraph,
-          affectedTaskIds: [...selection.affectedTaskIds],
-        };
-      });
-      const result = await computeAffectedTasks({
-        projectGraph,
-        nxJson,
-        targets: ['test'],
-        touchedFiles: [
-          { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
-        ] as any,
-        ultracacheConfigurationOutcome: { status: 'fetched', configurations },
-      });
-      const applies = mode === 'on' || mode === undefined || mode === 'invalid';
-      expect([...result.affectedTaskIds].sort()).toEqual(
-        applies ? ['app:test', 'lib:test'] : ['app:test']
-      );
-      expect(result.taskGraph.tasks['lib:test'].ultracache).toEqual({
-        collectStats: true,
-        ...(mode && mode !== 'invalid' ? { mode } : {}),
-      });
-      expect(
-        result.taskSelection.taskGraph.tasks['app:test'].ultracache
-      ).toEqual({ mode: 'on' });
-      expect(projectGraph.nodes.lib.data.targets.test.ultracache).toEqual({
-        collectStats: true,
-      });
-    }
-  );
 
   // The run hashes lib:test from what it read, so a change to a file it read
   // but never declared has to select it.
@@ -1074,31 +1000,6 @@ describe('tasks with a custom hasher', () => {
 
 describe('computeAffectedTasks with the daemon on', () => {
   beforeEach(() => vi.clearAllMocks());
-  afterEach(() => vi.unstubAllEnvs());
-
-  it.each(['on', 'warn', 'error', 'off', undefined, 'invalid'])(
-    'serializes caller mode %s in the affected request',
-    async (mode) => {
-      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', mode);
-      daemon.enabled.mockReturnValueOnce(true);
-      daemon.selectAffectedTasks.mockResolvedValueOnce({
-        projectGraph: graph(),
-        affectedTaskIds: [],
-        taskSelection: {},
-      });
-      await computeAffectedTasks({
-        nxJson: {},
-        targets: ['test'],
-        touchedFiles: [],
-      });
-      const request = JSON.parse(
-        JSON.stringify(daemon.selectAffectedTasks.mock.calls[0][0])
-      );
-      expect(request.defaultUltracacheMode).toBe(
-        mode === 'invalid' ? undefined : mode
-      );
-    }
-  );
 
   // The daemon resolves the same stored version, so it selects as the run hashes.
   it('sends the configurations version and keeps the loaded configurations for the run', async () => {

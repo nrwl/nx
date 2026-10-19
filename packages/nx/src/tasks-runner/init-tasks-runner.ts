@@ -16,10 +16,6 @@ import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
-import {
-  applyDefaultUltracacheMode,
-  getDefaultUltracacheMode,
-} from '../ultracache/config';
 
 async function createOrchestrator(
   tasks: Task[],
@@ -31,13 +27,6 @@ async function createOrchestrator(
 ) {
   loadRootEnvFiles();
   fullTaskGraph = withEdgeObjects(fullTaskGraph);
-  // Cloud has loaded workspace settings before invoking these entry points.
-  const defaultUltracacheMode = getDefaultUltracacheMode();
-  applyDefaultUltracacheMode(
-    Object.values(fullTaskGraph.tasks),
-    defaultUltracacheMode
-  );
-  applyDefaultUltracacheMode(tasks, defaultUltracacheMode);
 
   const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
     tasks

@@ -26,7 +26,7 @@ describe('fetchUltracacheConfigurations', () => {
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
-    const result = { configurations: {}, defaultUltracacheMode: 'warn' };
+    const result = { configurations: {} };
     cloud.readUltracacheConfigurations.mockResolvedValue(result);
     expect(await fetchUltracacheConfigurations({ accessToken: 't' })).toBe(
       result

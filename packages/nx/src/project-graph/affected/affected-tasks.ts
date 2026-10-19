@@ -3,10 +3,6 @@ import { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { TaskGraph } from '../../config/task-graph';
 import {
-  applyDefaultUltracacheMode,
-  getDefaultUltracacheMode,
-} from '../../ultracache/config';
-import {
   affectedTasks as nativeAffectedTasks,
   type AffectedTaskExplanation,
   type FileRevisions,
@@ -138,8 +134,6 @@ export interface AffectedTasksRequest {
   excludeTaskDependencies: boolean;
   exclude: string[];
   ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
-  /** The caller's workspace default, never the daemon's startup environment. */
-  defaultUltracacheMode?: ReturnType<typeof getDefaultUltracacheMode>;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
   /** Whether to return why each task is affected. Off, nothing is collected. */
@@ -168,7 +162,6 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
     explain: opts.explain,
-    defaultUltracacheMode: getDefaultUltracacheMode(),
   };
   const ultracacheConfigurations = configurationsOf(
     opts.ultracacheConfigurationOutcome ?? null
@@ -300,10 +293,6 @@ export async function selectAffectedTasks(
       // Dependencies carry a change even when they won't run; `keep` drops them.
       false
     );
-  applyDefaultUltracacheMode(
-    Object.values(taskGraph.tasks),
-    request.defaultUltracacheMode
-  );
   const taskIds = Object.keys(taskGraph.tasks);
   const plans = ultracacheConfigurations
     ? planningContext.planner.getPlansReference(
@@ -368,33 +357,6 @@ export async function selectAffectedTasks(
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
 
-  // Rebuilding to settle dependency overrides must retain the same default
-  // the selection used, including when selection runs inside the daemon.
-  const selectedTaskGraph =
-    filterTaskGraphToSelection(
-      projectGraph,
-      taskGraph,
-      dependencyOverrides,
-      initial,
-      new Set(keep)
-    ) ??
-    pruneToSelectedTasks(
-      createTaskGraph(
-        projectGraph,
-        request.extraTargetDependencies,
-        [...owning],
-        targets,
-        request.configuration,
-        request.overrides,
-        request.excludeTaskDependencies
-      ),
-      keep
-    );
-  applyDefaultUltracacheMode(
-    Object.values(selectedTaskGraph.tasks),
-    request.defaultUltracacheMode
-  );
-
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
@@ -411,7 +373,28 @@ export async function selectAffectedTasks(
       requested: requestedTasks(taskIds, taskGraph, targets, options),
     },
     taskSelection: {
-      taskGraph: selectedTaskGraph,
+      // Edges that disagree on a dependency's overrides leave it to a build
+      // from the owning projects, which settles them the way the run always has.
+      taskGraph:
+        filterTaskGraphToSelection(
+          projectGraph,
+          taskGraph,
+          dependencyOverrides,
+          initial,
+          new Set(keep)
+        ) ??
+        pruneToSelectedTasks(
+          createTaskGraph(
+            projectGraph,
+            request.extraTargetDependencies,
+            [...owning],
+            targets,
+            request.configuration,
+            request.overrides,
+            request.excludeTaskDependencies
+          ),
+          keep
+        ),
       initiatingTaskIds: keep.filter((id) => initial.has(id)),
       taskIds: keep,
     },
