@@ -183,6 +183,13 @@ data class CacheConfig(
                         Parameter("workDirectory", null),
                     )
                 ),
+                // Both publish the pom, the main artifact and the attached artifacts.
+                "maven-install-plugin:install" to MojoConfig(
+                    inputProperties = setOf(Property("project.artifact.file"), Property("project.attachedArtifacts")),
+                ),
+                "maven-deploy-plugin:deploy" to MojoConfig(
+                    inputProperties = setOf(Property("project.artifact.file"), Property("project.attachedArtifacts")),
+                ),
                 "spring-boot-maven-plugin:run" to MojoConfig(
                     inputParameters = setOf(
                         Parameter("testClassesDirectory", null),
