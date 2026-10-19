@@ -61,8 +61,8 @@ const packageManagers = ['pnpm', 'yarn', 'npm', 'bun'] as const;
 type PackageManager = (typeof packageManagers)[number];
 
 /**
- * Mirrors `create-nx-workspace`: an explicit `--packageManager` wins, otherwise
- * the manager that invoked this CLI, otherwise npm. Choosing at run time keeps
+ * Mirrors `create-nx-workspace`: an explicit `--packageManager` takes precedence,
+ * then the manager that invoked this CLI, then npm. Choosing at run time keeps
  * the published CLI usable under whichever manager the consumer actually has
  * installed, rather than the one the plugin author generated it from.
  */
@@ -158,7 +158,7 @@ This will invoke the `my-plugin` package's `preset` generator, which will contai
 
 ### Choosing a package manager
 
-`createWorkspace` needs a package manager, and your CLI picks one when a consumer runs it rather than when you scaffold it. An explicit `--packageManager` (or `--pm`) wins, otherwise the CLI uses the manager that invoked it, and otherwise it falls back to npm. This is the same order `create-nx-workspace` itself uses.
+`createWorkspace` needs a package manager, and your CLI picks one when a consumer runs it rather than when you scaffold it. An explicit `--packageManager` (or `--pm`) takes precedence, then the manager that invoked the CLI, then npm. This is the same order `create-nx-workspace` itself uses.
 
 Resolving at run time matters because your CLI is published. Someone who only has npm installed can run `npx create-my-plugin my-workspace` and get an npm workspace, and someone running `pnpm create my-plugin my-workspace` gets a pnpm one. Hardcoding a manager instead would make the published CLI fail for every consumer who does not already have that manager on their PATH, because `create-nx-workspace` checks the manager's version before it creates anything.
 

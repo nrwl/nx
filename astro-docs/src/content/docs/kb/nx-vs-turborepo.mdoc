@@ -280,7 +280,7 @@ A cache is only valuable if you can trust it. Turborepo has no equivalent. Durin
 
 Nx Cloud [Ultracache](/docs/features/ci-features/remote-cache#ultracache) traces the files each task reads and writes in CI, hashes later runs from what the task actually read, and surfaces the undeclared reads and writes it can't record. Undeclared dependencies show up automatically rather than through debugging production incidents.
 
-This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key wins, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/kb/cache-security).
+This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key sets the cached value, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/kb/cache-security).
 
 Ultracache is an architectural difference, not a configuration problem. There's no workaround on the Turborepo side.
 

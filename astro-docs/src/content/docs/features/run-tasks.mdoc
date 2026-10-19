@@ -108,7 +108,7 @@ nx show project my-project
 ```
 
 When a plugin infers settings you want to change, override them.
-Nx merges task configuration from three sources, with later sources winning:
+Nx merges task configuration from three sources, from lowest to highest precedence:
 
 1. Task configuration inferred by plugins registered in `nx.json`.
 2. `targetDefaults` in `nx.json`.

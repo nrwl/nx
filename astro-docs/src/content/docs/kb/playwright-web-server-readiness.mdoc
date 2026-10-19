@@ -48,7 +48,7 @@ runs before Playwright probes.
 The variables that count are the proxy variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, and
 `NO_PROXY`) for a `webServer` with a `url`, and `NODE_EXTRA_CA_CERTS` unless every such
 `webServer` sets `ignoreHTTPSErrors`.
-The proxy variables count in either spelling, and the lowercase one (`http_proxy`) wins over the
+The proxy variables count in either spelling, and the lowercase one (`http_proxy`) takes precedence over the
 uppercase one when both are set.
 That option doesn't cover the certificate of an `https` proxy that `HTTPS_PROXY` or `ALL_PROXY`
 routes through, so `NODE_EXTRA_CA_CERTS` counts whenever that's the route.

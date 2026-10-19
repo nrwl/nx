@@ -123,10 +123,10 @@ To learn about creating your own plugin read about [extending Nx](/docs/kb/add-l
 ### Plugin order
 
 Plugins are processed in the order that they appear in the `plugins` array.
-If multiple plugins create a task with the same name, the plugin listed last wins.
+If multiple plugins create a task with the same name, the plugin listed last takes precedence.
 For example, if a project has both a `vite.config.ts` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task.
 The `build` task that is executed belongs to the plugin listed lower in the `plugins` array.
-When the two targets are compatible (they run the same executor and command), their configuration is merged property by property with the later plugin's values winning.
+When the two targets are compatible (they run the same executor and command), their configuration is merged property by property with the later plugin's values taking precedence.
 When they are incompatible, the later target replaces the earlier one entirely.
 
 ### Scope plugins to specific projects
@@ -426,7 +426,7 @@ When defining any options or configurations inside of a target default, you may 
 
 Both keys above match a `build` target that uses `@nx/js:tsc`. However, only the most specific defaults, the executor-keyed defaults, will apply. The name-keyed defaults will not apply so specify the full config on the executor key.
 
-`cache` resolves the same way, from the key that applies rather than the target name key, so `"cache": true` on a name key leaves the target uncached when an executor key wins. Set `cache` on the executor key instead. That key applies to every target resolving through it, so exclude any continuous target first. Nx rejects a target that is both cacheable and continuous.
+`cache` resolves the same way, from the key that applies rather than the target name key, so `"cache": true` on a name key leaves the target uncached when an executor key takes precedence. Set `cache` on the executor key instead. That key applies to every target resolving through it, so exclude any continuous target first. Nx rejects a target that is both cacheable and continuous.
 
 {% cardgrid %}
 {% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/kb/configure-outputs" /%}
