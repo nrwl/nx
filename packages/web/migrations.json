@@ -6,7 +6,7 @@
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     },
     "update-24-0-0-add-ready-when-signal": {
-      "version": "24.0.0-beta.4",
+      "version": "24.0.0-beta.5",
       "description": "Sets `readyWhen: { signal: true }` on `@nx/web:file-server` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once the server is listening. Those targets also get their build target as a dependency.",
       "implementation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal",
       "documentation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal.md"

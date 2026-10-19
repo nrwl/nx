@@ -42,7 +42,7 @@
       "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     },
     "update-24-0-0-add-start-storybook-ready-when": {
-      "version": "24.0.0-beta.4",
+      "version": "24.0.0-beta.5",
       "description": "Sets a `readyWhen` that waits for the Storybook port on `@storybook/angular:start-storybook` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once Storybook is listening. Also sets `continuous: true` on those targets when neither they nor `targetDefaults` set `continuous` and they don't set `smokeTest`.",
       "implementation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when",
       "documentation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when.md"
