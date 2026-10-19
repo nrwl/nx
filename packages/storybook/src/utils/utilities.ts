@@ -52,7 +52,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
   storybookBuildTarget?: string;
   storybookTarget?: string;
   ngBuildTarget?: string;
-  nextBuildTarget?: string;
   viteBuildTarget?: string;
   otherBuildTarget?: string;
   compiler?: string;
@@ -61,24 +60,18 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     storybookBuildTarget?: string;
     storybookTarget?: string;
     ngBuildTarget?: string;
-    nextBuildTarget?: string;
     viteBuildTarget?: string;
     otherBuildTarget?: string;
     compiler?: string;
   } = {};
 
   const arrayOfBuilders = [
-    '@nx/js:babel',
     '@nx/js:swc',
     '@nx/js:tsc',
-    '@nx/webpack:webpack',
-    '@nx/rollup:rollup',
-    '@nx/vite:build',
     '@nx/angular:ng-packagr-lite',
     '@nx/angular:package',
     '@nx/angular:webpack-browser',
     '@nx/esbuild:esbuild',
-    '@nx/next:build',
     '@nxext/vite:build',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser',
@@ -105,20 +98,16 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
         returnObject.ngBuildTarget = target;
       } else if (targets[target].executor.includes('vite')) {
         returnObject.viteBuildTarget = target;
-      } else if (targets[target].executor.includes('next')) {
-        returnObject.nextBuildTarget = target;
       } else {
         returnObject.otherBuildTarget = target;
       }
       returnObject.compiler = targets[target].options?.compiler;
     } else if (
-      targets[target].executor === '@storybook/angular:start-storybook' ||
-      targets[target].executor === '@nx/storybook:storybook'
+      targets[target].executor === '@storybook/angular:start-storybook'
     ) {
       returnObject.storybookTarget = target;
     } else if (
-      targets[target].executor === '@storybook/angular:build-storybook' ||
-      targets[target].executor === '@nx/storybook:build'
+      targets[target].executor === '@storybook/angular:build-storybook'
     ) {
       returnObject.storybookBuildTarget = target;
     } else if (targets[target].options?.compiler) {
