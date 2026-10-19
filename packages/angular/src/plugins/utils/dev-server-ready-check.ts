@@ -30,14 +30,58 @@ const OPTION_NAMES = new Map<string, keyof NgFlags>([
   ['project', 'project'],
 ]);
 const NEGATIVE_NUMBER = /^-([0-9]+(\.[0-9]+)?|\.[0-9]+)$/;
+// The `ng serve` options typed as a boolean or an array by the CLI, from the
+// dev-server builders' schemas. `inspect` is a boolean only for ssr-dev-server.
+const BOOLEAN_OPTIONS = new Set([
+  'disable-host-check',
+  'force-esbuild',
+  'hmr',
+  'live-reload',
+  'o',
+  'open',
+  'prebundle',
+  'progress',
+  'ssl',
+  'verbose',
+  'watch',
+]);
+const ARRAY_OPTIONS = new Set(['allowed-hosts', 'define', 'headers']);
 
 /**
- * The options the Angular CLI parses from `args` that the check reads. Ports
- * the yargs-parser steps that set them, and keeps the last value of a repeated
- * option, as the CLI's middleware does.
+ * How many of `rest` yargs-parser gives an option without `=`: a boolean takes
+ * only `true` or `false`, and an array every value until the next option, as
+ * it also does after an `=` value.
  */
-function parseNgFlags(args: string[]): NgFlags {
+function countValues(
+  name: string,
+  rest: string[],
+  isValue: (arg: string | undefined) => boolean
+): number {
+  if (BOOLEAN_OPTIONS.has(name)) {
+    return /^(true|false)$/.test(rest[0] ?? '') ? 1 : 0;
+  }
+  if (!ARRAY_OPTIONS.has(name)) return isValue(rest[0]) ? 1 : 0;
+  const end = rest.findIndex((arg) => !isLongValue(arg));
+  return end === -1 ? rest.length : end;
+}
+
+function isLongValue(arg: string | undefined): boolean {
+  return (
+    arg !== undefined && (!arg.startsWith('-') || NEGATIVE_NUMBER.test(arg))
+  );
+}
+
+/**
+ * The options the Angular CLI parses from `args` that the check reads, and the
+ * positional args. Ports the yargs-parser steps that set them, and keeps the
+ * last value of a repeated option, as the CLI's middleware does.
+ */
+function parseNgArgs(args: string[]): {
+  flags: NgFlags;
+  positionals: string[];
+} {
   const flags: NgFlags = {};
+  const positionals: string[] = [];
   // Without a value, the string options are empty and the port is unset
   const set = (name: string, value?: string | false) => {
     const key = OPTION_NAMES.get(name);
@@ -49,19 +93,15 @@ function parseNgFlags(args: string[]): NgFlags {
     let match: RegExpMatchArray | null;
     if ((match = arg.match(/^--([^=]+)=([\s\S]*)$/))) {
       set(match[1], match[2]);
+      if (ARRAY_OPTIONS.has(match[1])) {
+        i += countValues(match[1], args.slice(i + 1), isLongValue);
+      }
     } else if ((match = arg.match(/^--no-(.+)$/))) {
       set(match[1], false);
     } else if ((match = arg.match(/^--(.+)$/))) {
-      if (
-        OPTION_NAMES.has(match[1]) &&
-        next !== undefined &&
-        (!next.startsWith('-') || NEGATIVE_NUMBER.test(next))
-      ) {
-        set(match[1], next);
-        i++;
-      } else {
-        set(match[1]);
-      }
+      const count = countValues(match[1], args.slice(i + 1), isLongValue);
+      set(match[1], count ? next : undefined);
+      i += count;
     } else if (/^-[^-]/.test(arg) && !NEGATIVE_NUMBER.test(arg)) {
       // In `-abc`, a letter before `=`, a number or a symbol takes the rest
       // as its value, and the last letter takes the next argument
@@ -89,19 +129,20 @@ function parseNgFlags(args: string[]): NgFlags {
       }
       const name = arg.at(-1);
       if (broken || name === '-') continue;
-      if (
-        OPTION_NAMES.has(name) &&
-        next !== undefined &&
-        (!/^(-|--)[^-]/.test(next) || NEGATIVE_NUMBER.test(next))
-      ) {
-        set(name, next);
-        i++;
-      } else {
-        set(name);
-      }
+      const count = countValues(
+        name,
+        args.slice(i + 1),
+        (value) =>
+          value !== undefined &&
+          (!/^(-|--)[^-]/.test(value) || NEGATIVE_NUMBER.test(value))
+      );
+      set(name, count ? next : undefined);
+      i += count;
+    } else {
+      positionals.push(arg);
     }
   }
-  return flags;
+  return { flags, positionals };
 }
 
 function getTargets(project: AngularProjectConfiguration) {
@@ -150,13 +191,19 @@ export function getDevServerAddress(
   if (typeof options.command !== 'string') return null;
   const [ng, command, ...commandArgs] = options.command.trim().split(/\s+/);
   if (ng !== 'ng' || (command !== 'serve' && command !== 'run')) return null;
-  const flags = parseNgFlags([...commandArgs, ...getForwardedArgs(options)]);
+  const { flags, positionals } = parseNgArgs([
+    ...commandArgs,
+    ...getForwardedArgs(options),
+  ]);
   const projects = workspace.projects ?? {};
   const [project = '', target = '', configuration] =
     command === 'run'
       ? (commandArgs[0] ?? '').split(':')
       : [
-          flags.project || getDefaultProject(projects, 'serve', root),
+          // The CLI takes the `[project]` positional over `--project`
+          positionals[0] ||
+            flags.project ||
+            getDefaultProject(projects, 'serve', root),
           'serve',
           flags.configuration || undefined,
         ];
