@@ -9,8 +9,17 @@ import {
 } from './create-task-graph';
 import * as reference from './__fixtures__/create-task-graph.reference.fixture';
 import * as utils from './utils';
+import { TaskGraphEdge } from '../config/task-graph';
 
 const executor = 'nx:run-commands';
+const ids = (edges: TaskGraphEdge[]) => edges.map((edge) => edge.id);
+const toEdges = (deps: Record<string, string[]>) =>
+  Object.fromEntries(
+    Object.entries(deps).map(([id, edges]) => [
+      id,
+      edges.map((edge) => ({ id: edge })),
+    ])
+  );
 function graph(
   targets: Record<string, Record<string, any>>,
   edges: Record<string, string[]>
@@ -53,7 +62,8 @@ function compare(
   configuration?: string,
   overrides = {},
   extra: TargetDependencies = {},
-  exclude = false
+  exclude = false,
+  allowCycleChanges = false
 ) {
   // Normalization may mutate object-form entries. Give each algorithm its own input.
   for (const name of [
@@ -73,8 +83,71 @@ function compare(
       name
     ](...structuredClone(args));
     const expected = reference[name](...structuredClone(args));
-    expect(actual).toEqual(expected);
-    expect(JSON.stringify(actual)).toBe(JSON.stringify(expected));
+    const actualGraph = 'taskGraph' in actual ? actual.taskGraph : actual;
+    const expectedGraph =
+      'taskGraph' in expected ? expected.taskGraph : expected;
+    if (allowCycleChanges) {
+      expect(new Set(Object.keys(actualGraph.tasks))).toEqual(
+        new Set(Object.keys(expectedGraph.tasks))
+      );
+      for (const [id, task] of Object.entries(actualGraph.tasks)) {
+        const {
+          overrides: _actualOverrides,
+          outputs: _actualOutputs,
+          ...actualMetadata
+        } = task;
+        const {
+          overrides: _expectedOverrides,
+          outputs: _expectedOutputs,
+          ...expectedMetadata
+        } = expectedGraph.tasks[id];
+        expect(actualMetadata).toEqual(expectedMetadata);
+      }
+      const repeated = {
+        createTaskGraph,
+        createTaskGraphWithDependencyOverrides,
+      }[name](...structuredClone(args));
+      expect(JSON.stringify(actual)).toBe(JSON.stringify(repeated));
+      for (const map of [
+        actualGraph.dependencies,
+        actualGraph.continuousDependencies,
+      ] as Record<string, TaskGraphEdge[]>[]) {
+        expect(Object.keys(map)).toEqual(Object.keys(actualGraph.tasks));
+        for (const [id, edges] of Object.entries(map)) {
+          const deps = ids(edges);
+          expect(deps).not.toContain(id);
+          expect(new Set(deps).size).toBe(deps.length);
+          for (const dep of deps) expect(actualGraph.tasks[dep]).toBeDefined();
+        }
+      }
+      expect(actualGraph.roots).toEqual(
+        Object.keys(actualGraph.dependencies).filter(
+          (id) =>
+            !actualGraph.dependencies[id].length &&
+            !actualGraph.continuousDependencies[id].length
+        )
+      );
+    } else {
+      expect(actualGraph).toEqual(expectedGraph);
+      expect(JSON.stringify(actualGraph)).toBe(JSON.stringify(expectedGraph));
+    }
+    if ('taskGraph' in actual && 'taskGraph' in expected) {
+      // Sharing deliberately removes duplicate records and changes traversal order,
+      // but every distinct origin/override combination must remain represented.
+      const unique = (records: reference.DependencyOverrides) =>
+        Object.fromEntries(
+          Object.entries(records).map(([id, edges]) => [
+            id,
+            new Set(edges.map((edge) => JSON.stringify(edge))),
+          ])
+        );
+      expect(unique(actual.dependencyOverrides)).toEqual(
+        unique(expected.dependencyOverrides)
+      );
+      expect(actual.taskGraph).toEqual(
+        createTaskGraph(...structuredClone(args))
+      );
+    }
   }
 }
 function chain(origins: number, length: number, dead = 0) {
@@ -100,7 +173,7 @@ function chain(origins: number, length: number, dead = 0) {
 afterEach(() => vi.restoreAllMocks());
 describe('task graph performance and compatibility', () => {
   it.each(Array.from({ length: 240 }, (_, i) => i + 1))(
-    'matches 23.3.0 for seeded graph %i',
+    'validates acyclic equivalence and cycle invariants for seeded graph %i',
     (seed) => {
       let state = seed;
       const random = (n: number) => {
@@ -174,17 +247,82 @@ describe('task graph performance and compatibility', () => {
       edges.p1 = ['p3'];
       edges.p2 = ['p3'];
       if (seed % 5 === 0) edges.p3 = ['p0'];
-      compare(
-        graph(targets, edges),
-        names.slice(0, 3),
-        ['lint'],
-        seed % 2 ? undefined : 'prod',
-        { flag: seed, __overrides_unparsed__: ['--flag', String(seed)] },
-        {},
-        seed % 17 === 0
-      );
+      for (const cyclic of [false, true]) {
+        const selectedEdges = cyclic
+          ? edges
+          : Object.fromEntries(
+              Object.entries(edges).map(([name, deps]) => [
+                name,
+                deps.filter((dep) => names.indexOf(dep) > names.indexOf(name)),
+              ])
+            );
+        compare(
+          graph(targets, selectedEdges),
+          names.slice(0, 3),
+          ['lint'],
+          seed % 2 ? undefined : 'prod',
+          { flag: seed, __overrides_unparsed__: ['--flag', String(seed)] },
+          {},
+          seed % 17 === 0,
+          cyclic
+        );
+        if (cyclic && seed === 70) {
+          // A shared cycle changes which conflicting incoming edge creates Y first.
+          const args: Parameters<typeof createTaskGraph> = [
+            graph(targets, selectedEdges),
+            {},
+            names.slice(0, 3),
+            ['lint'],
+            'prod',
+            { flag: seed, __overrides_unparsed__: ['--flag', String(seed)] },
+          ];
+          expect(
+            createTaskGraph(...structuredClone(args)).tasks['p1:Y:prod']
+              .overrides
+          ).toEqual({ flag: 70, __overrides_unparsed__: ['--flag', '70'] });
+          expect(
+            reference.createTaskGraph(
+              ...(structuredClone(args) as Parameters<
+                typeof reference.createTaskGraph
+              >)
+            ).tasks['p1:Y:prod'].overrides
+          ).toEqual({ __overrides_unparsed__: [] });
+        }
+      }
     }
   );
+
+  it('filters the shared dummy cycle without reconstructing legacy dummies', () => {
+    const g = graph(
+      { app: { lint: { dependsOn: ['^absent', '^Y'] }, Y: {} }, a: {} },
+      { app: ['a'], a: ['app'] }
+    );
+    const actual = createTaskGraph(
+      structuredClone(g),
+      {},
+      ['app'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    const old = reference.createTaskGraph(
+      structuredClone(g),
+      {},
+      ['app'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    expect(actual.tasks).toEqual(old.tasks);
+    expect(ids(old.dependencies['app:lint'])).toEqual(['app:Y']);
+    expect(actual.dependencies).toEqual({ 'app:lint': [], 'app:Y': [] });
+    expect(actual.continuousDependencies).toEqual({
+      'app:lint': [],
+      'app:Y': [],
+    });
+    expect(actual.roots).toEqual(['app:lint', 'app:Y']);
+    expect(old.roots).toEqual(['app:Y']);
+  });
 
   it('retains shadowed Y below a project that already has Y', () => {
     const g = graph(
@@ -196,7 +334,7 @@ describe('task graph performance and compatibility', () => {
       { app: ['lib1'], lib1: ['lib2'] }
     );
     const result = createTaskGraph(g, {}, ['app'], ['lint'], undefined, {});
-    expect(result.dependencies['app:lint']).toEqual(['lib2:Y', 'lib1:Y']);
+    expect(ids(result.dependencies['app:lint'])).toEqual(['lib2:Y', 'lib1:Y']);
     compare(g, ['app'], ['lint']);
   });
 
@@ -204,7 +342,7 @@ describe('task graph performance and compatibility', () => {
     const { g, projects } = chain(1, 50, 50);
     const spy = vi.spyOn(ProcessTasks.prototype as any, 'createDummyTask');
     const result = createTaskGraph(g, {}, projects, ['lint'], undefined, {});
-    expect(result.dependencies['app0:lint']).toEqual(['tail:X']);
+    expect(ids(result.dependencies['app0:lint'])).toEqual(['tail:X']);
     expect(Object.keys(result.tasks)).toHaveLength(2);
     expect(spy.mock.calls.length).toBeLessThanOrEqual(50);
     compare(g, projects, ['lint']);
@@ -218,7 +356,7 @@ describe('task graph performance and compatibility', () => {
       const result = createTaskGraph(g, {}, projects, ['lint'], undefined, {});
       expect(Object.keys(result.tasks)).toHaveLength(origins + 1);
       for (const name of projects)
-        expect(result.dependencies[`${name}:lint`]).toEqual(['tail:X']);
+        expect(ids(result.dependencies[`${name}:lint`])).toEqual(['tail:X']);
       const counts = {
         dummy: dummy.mock.calls.length,
         process: process.mock.calls.length,
@@ -247,7 +385,7 @@ describe('task graph performance and compatibility', () => {
     const process = vi.spyOn(ProcessTasks.prototype, 'processTask');
     const result = createTaskGraph(g, {}, projects, ['lint'], undefined, {});
     for (const project of projects)
-      expect(result.dependencies[`${project}:lint`]).toEqual(['tail:X']);
+      expect(ids(result.dependencies[`${project}:lint`])).toEqual(['tail:X']);
     expect(dummy.mock.calls.length).toBe(30);
     expect(process.mock.calls.length).toBe(51);
     vi.restoreAllMocks();
@@ -358,8 +496,8 @@ describe('task graph performance and compatibility', () => {
     };
     const actual = run(ProcessTasks);
     expect(actual).toEqual(run(reference.ProcessTasks));
-    expect(actual.dependencies['a:lint:dev']).toEqual(['tail:X:dev']);
-    expect(actual.dependencies['b:lint:prod']).toEqual(['tail:X:prod']);
+    expect(ids(actual.dependencies['a:lint:dev'])).toEqual(['tail:X:dev']);
+    expect(ids(actual.dependencies['b:lint:prod'])).toEqual(['tail:X:prod']);
     expect(actual.tasks['tail:X:dev'].overrides).toEqual({ flag: 'first' });
     expect(actual.tasks['tail:X:prod'].overrides).toEqual({ flag: 'second' });
   });
@@ -387,12 +525,12 @@ describe('task graph performance and compatibility', () => {
     g.nodes.tail.data.targets['codegen-one'] = { executor };
     const spy = vi.spyOn(ProcessTasks.prototype as any, 'createDummyTask');
     const actual = createTaskGraph(g, {}, projects, ['lint'], undefined, {});
-    expect(actual.dependencies['app0:lint']).toEqual(['tail:codegen-one']);
+    expect(ids(actual.dependencies['app0:lint'])).toEqual(['tail:codegen-one']);
     expect(spy.mock.calls.length).toBeLessThanOrEqual(20);
     compare(g, projects, ['lint']);
   });
 
-  it('records both origins and every repeated edge through dummies', () => {
+  it('shares recorded walks and retains each distinct origin once', () => {
     const { g, projects } = chain(2, 2);
     for (const project of projects) {
       g.nodes[project].data.targets.lint.dependsOn = ['^missing', '^X'];
@@ -407,25 +545,112 @@ describe('task graph performance and compatibility', () => {
     );
     expect(
       result.dependencyOverrides['tail:X'].map((edge) => edge.from)
-    ).toEqual(['app0:lint', 'app0:lint', 'app1:lint', 'app1:lint']);
+    ).toEqual(['app0:lint', 'app1:lint']);
+    const dummy = vi.spyOn(ProcessTasks.prototype as any, 'createDummyTask');
+    createTaskGraphWithDependencyOverrides(
+      g,
+      {},
+      projects,
+      ['lint'],
+      undefined,
+      {}
+    );
+    expect(dummy).toHaveBeenCalledTimes(2);
     compare(g, projects, ['lint']);
   });
 
+  it('resolves recorded shared chains in linear work', () => {
+    for (const origins of [100, 200]) {
+      const { g, projects } = chain(origins, 100);
+      const p = new ProcessTasks({}, g, true);
+      const reads = vi.spyOn((p as any).dependencyEdges, 'get');
+      p.processTasks(projects, ['lint'], undefined, {}, false);
+      expect(p.dependencyOverrides['tail:X'].map((edge) => edge.from)).toEqual(
+        projects.map((name) => `${name}:lint`)
+      );
+      expect(reads.mock.calls.length).toBeLessThan(5 * (origins + 100));
+    }
+  });
+
+  it('records all terminals for origins entering different members of a dummy cycle', () => {
+    const g = graph(
+      {
+        a: { lint: { dependsOn: ['^X', '^Y'] } },
+        b: { lint: { dependsOn: ['^X', '^Y'] } },
+        u: {},
+        v: {},
+        x: { X: {} },
+        y: { Y: {} },
+      },
+      { a: ['u'], b: ['v'], u: ['v', 'y'], v: ['u', 'x'] }
+    );
+    const result = createTaskGraphWithDependencyOverrides(
+      g,
+      {},
+      ['a', 'b'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    for (const target of ['x:X', 'y:Y'])
+      expect(result.dependencyOverrides[target]).toEqual([
+        { from: 'a:lint', overrides: { __overrides_unparsed__: [] } },
+        { from: 'b:lint', overrides: { __overrides_unparsed__: [] } },
+      ]);
+  });
+
+  it.each([
+    [{}, { missing: undefined }],
+    [{ value: 1n }, { value: 2n }],
+  ])(
+    'separates JSON-colliding and non-JSON overrides, case %#',
+    (first, second) => {
+      const { g, projects } = chain(2, 1);
+      for (const project of projects)
+        g.nodes[project].data.targets.lint.dependsOn = [
+          { dependencies: true, target: 'X', params: 'forward' },
+        ];
+      const p = new ProcessTasks({}, g, true);
+      const dummy = vi.spyOn(ProcessTasks.prototype as any, 'createDummyTask');
+      for (const [i, overrides] of [first, second].entries()) {
+        const project = projects[i];
+        const task = p.createTask(
+          `${project}:lint`,
+          g.nodes[project],
+          'lint',
+          undefined,
+          overrides
+        );
+        p.tasks[task.id] = task;
+        p.dependencies[task.id] = [];
+        p.continuousDependencies[task.id] = [];
+        p.processTask(task, project, undefined, overrides);
+      }
+      p.processTasks([], [], undefined, {}, false);
+      expect(dummy).toHaveBeenCalledTimes(2);
+      expect(p.dependencyOverrides['tail:X']).toStrictEqual([
+        { from: 'app0:lint', overrides: first },
+        { from: 'app1:lint', overrides: second },
+      ]);
+    }
+  );
+
   it('expands every dummy once in a depth 20 diamond, preserving order', () => {
-    const deps: Record<string, string[]> = {
+    const deps = toEdges({
       root: ['0a__nx_dummy_task__', '0b__nx_dummy_task__'],
       other: ['0b__nx_dummy_task__', '0a__nx_dummy_task__'],
       first: [],
       last: [],
-    };
+    });
     const reads = new Map<string, number>();
     for (let i = 0; i < 20; i++)
       for (const side of ['a', 'b']) {
         const id = `${i}${side}__nx_dummy_task__`;
-        const children =
+        const children = (
           i === 19
             ? ['last', 'first', 'last']
-            : [`${i + 1}a__nx_dummy_task__`, `${i + 1}b__nx_dummy_task__`];
+            : [`${i + 1}a__nx_dummy_task__`, `${i + 1}b__nx_dummy_task__`]
+        ).map((id) => ({ id }));
         Object.defineProperty(deps, id, {
           enumerable: true,
           configurable: true,
@@ -438,8 +663,8 @@ describe('task graph performance and compatibility', () => {
     const expected = structuredClone(deps);
     reads.clear();
     filterDummyTasks(deps);
-    expect(deps.root).toEqual(['last', 'first', 'last', 'first']);
-    expect(deps.other).toEqual(['last', 'first', 'last', 'first']);
+    expect(ids(deps.root)).toEqual(['last', 'first']);
+    expect(ids(deps.other)).toEqual(['last', 'first']);
     // findCycles and Object.entries also read each adjacency list once.
     for (const count of reads.values()) expect(count).toBeLessThanOrEqual(3);
     reference.filterDummyTasks(expected);
@@ -464,11 +689,71 @@ describe('task graph performance and compatibility', () => {
       a__nx_dummy_task__: ['a__nx_dummy_task__', 'real'],
       real: [],
     },
-  ])('preserves legacy cycle filtering: %j', (deps) => {
+  ])('preserves legacy cycle filtering: %j', (adjacency) => {
+    const deps = toEdges(adjacency);
     const expected = structuredClone(deps);
     reference.filterDummyTasks(expected);
     filterDummyTasks(deps);
     expect(deps).toEqual(expected);
+  });
+
+  it('retains readiness and input flags across shared and distinct dummy walks', () => {
+    const ready = {
+      dependencies: true,
+      target: 'serve',
+      waitFor: 'ready',
+      inputs: false,
+    };
+    const g = graph(
+      {
+        a: { lint: { dependsOn: [ready] } },
+        b: { lint: { dependsOn: [{ ...ready }] } },
+        c: { lint: { dependsOn: [{ dependencies: true, target: 'serve' }] } },
+        middle: {},
+        tail: { serve: { continuous: true } },
+      },
+      { a: ['middle'], b: ['middle'], c: ['middle'], middle: ['tail'] }
+    );
+    const dummy = vi.spyOn(ProcessTasks.prototype as any, 'createDummyTask');
+    const result = createTaskGraph(
+      g,
+      {},
+      ['a', 'b', 'c'],
+      ['lint'],
+      undefined,
+      {}
+    );
+    expect(dummy).toHaveBeenCalledTimes(2);
+    for (const project of ['a', 'b'])
+      expect(result.continuousDependencies[`${project}:lint`]).toEqual([
+        { id: 'tail:serve', waitFor: 'ready', inputs: false },
+      ]);
+    expect(result.continuousDependencies['c:lint']).toEqual([
+      { id: 'tail:serve' },
+    ]);
+    for (const project of ['a', 'b', 'c'])
+      expect(result.dependencies[`${project}:lint`]).toEqual([]);
+  });
+
+  it('merges edge metadata when memoized dummy descendants overlap', () => {
+    const deps: Record<string, TaskGraphEdge[]> = {
+      root: [{ id: 'a__nx_dummy_task__' }, { id: 'b__nx_dummy_task__' }],
+      other: [{ id: 'b__nx_dummy_task__' }, { id: 'a__nx_dummy_task__' }],
+      a__nx_dummy_task__: [
+        { id: 'service', waitFor: 'ready', inputs: false },
+        { id: 'build', inputs: false },
+      ],
+      b__nx_dummy_task__: [{ id: 'service', inputs: false }, { id: 'build' }],
+      service: [],
+      build: [],
+    };
+    filterDummyTasks(deps);
+    for (const origin of ['root', 'other'])
+      expect(deps[origin]).toEqual([
+        { id: 'service', waitFor: 'ready', inputs: false },
+        { id: 'build' },
+      ]);
+    expect(Object.keys(deps)).toEqual(['root', 'other', 'service', 'build']);
   });
 
   it('expands dependency globs once per project and target', () => {
@@ -478,7 +763,7 @@ describe('task graph performance and compatibility', () => {
     g.nodes.tail.data.targets['codegen-two'] = { executor };
     const spy = vi.spyOn(utils, 'getDependencyConfigs');
     const result = createTaskGraph(g, {}, projects, ['lint'], undefined, {});
-    expect(result.dependencies['app0:lint']).toEqual([
+    expect(ids(result.dependencies['app0:lint'])).toEqual([
       'tail:codegen-one',
       'tail:codegen-two',
     ]);

@@ -20,8 +20,8 @@ import { findCycles } from './task-graph-utils';
 const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 /**
- * For each task, the overrides every `dependsOn` edge into it would give it,
- * whether or not that edge created the task. `from` is the task the edge
+ * For each task, the distinct overrides each origin's `dependsOn` edges would
+ * give it, whether or not those edges created the task. `from` is the task the edge
  * leaves; an edge crossing a project without the target is recorded against
  * the task it started from.
  */
@@ -57,9 +57,10 @@ export class ProcessTasks {
     }
   >();
   private nextSignature = 0;
-  private projectsReachingCycles: Set<string>;
-  private changedDummyGraph = false;
-  private optimizeDummyTasks = true;
+  private readonly dependencyEdges = new Map<
+    string,
+    Array<{ id: string; overrides: Record<string, unknown> }>
+  >();
 
   constructor(
     private readonly extraTargetDependencies: TargetDependencies,
@@ -115,38 +116,7 @@ export class ProcessTasks {
       this.processTask(task, task.target.project, configuration, overrides);
     }
 
-    // findCycles is traversal-order sensitive. Sharing or pruning nodes in a
-    // cyclic graph can change which dummies it excludes. Rebuild those graphs
-    // with their original dummy identities and traversal before filtering.
-    if (
-      this.changedDummyGraph &&
-      (findCycles({ dependencies: this.dependencies }) ||
-        findCycles({ dependencies: this.continuousDependencies }))
-    ) {
-      const original = new ProcessTasks(
-        this.extraTargetDependencies,
-        this.projectGraph,
-        this.recordDependencyOverrides
-      );
-      original.optimizeDummyTasks = false;
-      const roots = original.processTasks(
-        projectNames,
-        targets,
-        configuration,
-        overrides,
-        excludeTaskDependencies
-      );
-      for (const field of [
-        'tasks',
-        'dependencies',
-        'continuousDependencies',
-        'dependencyOverrides',
-      ] as const) {
-        for (const key of Object.keys(this[field])) delete this[field][key];
-        Object.assign(this[field], original[field]);
-      }
-      return roots;
-    }
+    if (this.recordDependencyOverrides) this.recordSharedDependencyOverrides();
 
     if (excludeTaskDependencies) {
       for (let t of Object.keys(this.tasks)) {
@@ -276,34 +246,6 @@ export class ProcessTasks {
     }
     this.reachableProjects.set(target, reachable);
     return reachable;
-  }
-
-  private canReachProjectCycle(project: string): boolean {
-    if (!this.projectsReachingCycles) {
-      // Remove sinks repeatedly. The remaining projects have a path to a
-      // cycle, whose legacy dummy filtering must be preserved even when no
-      // real dependency target is reachable.
-      const remaining = new Set(Object.keys(this.projectGraph.nodes));
-      const degree = new Map<string, number>();
-      const queue: string[] = [];
-      for (const name of remaining) {
-        const count = (this.projectGraph.dependencies[name] ?? []).filter(
-          (dep) => this.projectGraph.nodes[dep.target]
-        ).length;
-        degree.set(name, count);
-        if (count === 0) queue.push(name);
-      }
-      for (let i = 0; i < queue.length; i++) {
-        remaining.delete(queue[i]);
-        for (const parent of this.reverseDependencies.get(queue[i]) ?? []) {
-          const count = degree.get(parent) - 1;
-          degree.set(parent, count);
-          if (count === 0) queue.push(parent);
-        }
-      }
-      this.projectsReachingCycles = remaining;
-    }
-    return this.projectsReachingCycles.has(project);
   }
 
   private dummySignature(
@@ -527,47 +469,31 @@ export class ProcessTasks {
         const dependencyTargets = configs.filter(
           (c) => c.dependencies && !c.projects
         );
-        const cannotReachTarget =
-          this.optimizeDummyTasks &&
-          !dependencyTargets.some((c) =>
-            this.projectsReachingTarget(c.target).has(depProject.name)
-          );
+        const cannotReachTarget = !dependencyTargets.some((c) =>
+          this.projectsReachingTarget(c.target).has(depProject.name)
+        );
         if (
           cannotReachTarget &&
           !configs.some((c) =>
             c.projects?.some((project) =>
               projectHasTarget(this.projectGraph.nodes[project], c.target)
             )
-          ) &&
-          !this.canReachProjectCycle(depProject.name)
+          )
         ) {
-          this.changedDummyGraph = true;
           continue;
         }
-        const shared =
-          this.optimizeDummyTasks && !this.recordDependencyOverrides;
         // Every dummy evaluates all of its origin's configs, regardless of
         // which missing dependency target caused the walk.
-        const dummyId = shared
-          ? createTaskId(
-              depProject.name,
-              `__nx_shared_${this.dummySignature(task, configuration, overrides)}${DUMMY_TASK_TARGET}`,
-              undefined
-            )
-          : createTaskId(
-              depProject.name,
-              task.target.project +
-                task.target.target +
-                '__' +
-                dependencyConfig.target +
-                DUMMY_TASK_TARGET,
-              undefined
-            );
+        const dummyId = createTaskId(
+          depProject.name,
+          `__nx_shared_${this.dummySignature(task, configuration, overrides)}${DUMMY_TASK_TARGET}`,
+          undefined
+        );
+        this.recordEdge(task, dummyId, {});
         this.dependencies[task.id].push({ id: dummyId });
         this.continuousDependencies[task.id].push({ id: dummyId });
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
-        if (shared) this.changedDummyGraph = true;
         if (!this.seen.has(`${dummyId}-${depProject.name}`)) {
           const noopTask = this.createDummyTask(dummyId, task);
           this.processTask(noopTask, depProject.name, configuration, overrides);
@@ -594,13 +520,87 @@ export class ProcessTasks {
     if (!this.recordDependencyOverrides) {
       return;
     }
-    // A dummy task keeps its creator's target, so `from` is the real task the edge started from.
-    const from = createTaskId(
-      task.target.project,
-      task.target.target,
-      task.target.configuration
-    );
-    (this.dependencyOverrides[dependencyId] ??= []).push({ from, overrides });
+    const edges = this.dependencyEdges.get(task.id) ?? [];
+    edges.push({ id: dependencyId, overrides });
+    this.dependencyEdges.set(task.id, edges);
+  }
+
+  private recordSharedDependencyOverrides() {
+    type Edge = { id: string; overrides: Record<string, unknown> };
+    const resolved = new Map<string, Edge[]>();
+    const expand = (edges: Edge[], internal = new Set<string>()) => {
+      const result: Edge[] = [];
+      const recorded = new Map<string, Edge[]>();
+      const append = (edge: Edge) => {
+        const matches = recorded.get(edge.id) ?? [];
+        if (
+          matches.some((other) =>
+            isDeepStrictEqual(other.overrides, edge.overrides)
+          )
+        )
+          return;
+        matches.push(edge);
+        recorded.set(edge.id, matches);
+        result.push(edge);
+      };
+      for (const edge of edges) {
+        if (!edge.id.endsWith(DUMMY_TASK_TARGET)) append(edge);
+        else if (!internal.has(edge.id)) {
+          for (const terminal of resolved.get(edge.id) ?? []) append(terminal);
+        }
+      }
+      return result;
+    };
+    // Condense dummy cycles into components. Tarjan visits downstream components
+    // first, so each component's terminal override events can be cached once.
+    const indices = new Map<string, number>();
+    const low = new Map<string, number>();
+    const stack: string[] = [];
+    const active = new Set<string>();
+    const visit = (id: string) => {
+      const index = indices.size;
+      indices.set(id, index);
+      low.set(id, index);
+      stack.push(id);
+      active.add(id);
+      for (const edge of this.dependencyEdges.get(id) ?? []) {
+        if (!edge.id.endsWith(DUMMY_TASK_TARGET)) continue;
+        if (!indices.has(edge.id)) {
+          visit(edge.id);
+          low.set(id, Math.min(low.get(id), low.get(edge.id)));
+        } else if (active.has(edge.id)) {
+          low.set(id, Math.min(low.get(id), indices.get(edge.id)));
+        }
+      }
+      if (low.get(id) !== index) return;
+      const members = new Set<string>();
+      let member: string;
+      do {
+        member = stack.pop();
+        active.delete(member);
+        members.add(member);
+      } while (member !== id);
+      const edges: Edge[] = [];
+      for (const member of members)
+        edges.push(...(this.dependencyEdges.get(member) ?? []));
+      const terminals = expand(edges, members);
+      for (const member of members) resolved.set(member, terminals);
+    };
+    for (const edges of this.dependencyEdges.values()) {
+      for (const edge of edges) {
+        if (edge.id.endsWith(DUMMY_TASK_TARGET) && !indices.has(edge.id))
+          visit(edge.id);
+      }
+    }
+    // Every real origin receives the shared subtree's distinct override events.
+    for (const from of Object.keys(this.tasks)) {
+      for (const edge of expand(this.dependencyEdges.get(from) ?? [])) {
+        (this.dependencyOverrides[edge.id] ??= []).push({
+          from,
+          overrides: edge.overrides,
+        });
+      }
+    }
   }
 
   private createDummyTask(id: string, task: Task): Task {
@@ -697,7 +697,7 @@ export function createTaskGraph(
   );
 }
 
-/** `createTaskGraph`, plus the overrides each dependency edge would give. */
+/** `createTaskGraph`, plus each origin's distinct dependency overrides. */
 export function createTaskGraphWithDependencyOverrides(
   projectGraph: ProjectGraph,
   extraTargetDependencies: TargetDependencies,
@@ -856,6 +856,7 @@ export function filterDummyTasks(dependencies: {
   const resolve = (edge: TaskGraphEdge): TaskGraphEdge[] => {
     const id = edge.id;
     if (!id.endsWith(DUMMY_TASK_TARGET)) return [edge];
+    if (cycles?.has(id)) return [];
     if (memo.has(id)) return memo.get(id);
     const result = mergeEdges((dependencies[id] ?? []).flatMap(resolve));
     memo.set(id, result);
@@ -865,11 +866,7 @@ export function filterDummyTasks(dependencies: {
     if (!key.endsWith(DUMMY_TASK_TARGET)) {
       const normalizedDeps = [];
       for (const dep of deps) {
-        normalizedDeps.push(
-          ...(cycles
-            ? getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
-            : resolve(dep).filter((edge) => edge.id !== key))
-        );
+        normalizedDeps.push(...resolve(dep).filter((edge) => edge.id !== key));
       }
 
       dependencies[key] = mergeEdges(normalizedDeps);
