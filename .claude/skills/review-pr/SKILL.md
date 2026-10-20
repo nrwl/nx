@@ -83,14 +83,13 @@ The build prints one line on the fast path (`sandbox image up to date`), so a sl
 ```bash
 gh pr view <NUMBER> \
   --repo nrwl/nx \
-  --json number,title,author,headRefOid,headRefName,baseRefName,url,isDraft,additions,deletions,changedFiles \
+  --json number,title,author,headRefOid,headRefName,baseRefName,url,additions,deletions,changedFiles \
   > /tmp/pr-<NUMBER>.json
 ```
 
 Parse out:
 
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
-- `isDraft` — if true, exit early (don't review drafts)
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
 - **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
