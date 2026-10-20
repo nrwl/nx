@@ -3,7 +3,6 @@ import {
   loadConfigFile,
   getDaemonClientEnvGeneration,
   getNamedInputs,
-  hashDaemonClientEnv,
   hashObject,
   workspaceDataDirectory,
   PluginCache,
@@ -71,9 +70,9 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
-    // A config can read process.env (a generated one reads `CI`), which no file
-    // hash covers, so key the cache on the env the daemon applies per client.
-    const ambientEnvHash = hashDaemonClientEnv();
+    // A generated config can read `CI`, which no file hash covers. Other vars
+    // stay out of the key, since loading a config can write them.
+    const ambientCI = process.env.CI;
     const ambientEnvGeneration = getDaemonClientEnvGeneration();
 
     try {
@@ -84,7 +83,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, ambientEnvHash },
+        { ...normalizedOptions, ambientCI },
         context,
         entries.map(() => [lockFileName])
       );
@@ -121,11 +120,11 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       }
       return results;
     } finally {
-      // The daemon can apply another client's env mid-pass, which would leave
-      // entries keyed on a stale env hash; skip the write and rebuild next pass.
+      // Targets built after the daemon applied another client's env, or after
+      // `CI` changed, would be cached under the wrong key.
       if (
         getDaemonClientEnvGeneration() === ambientEnvGeneration &&
-        hashDaemonClientEnv() === ambientEnvHash
+        process.env.CI === ambientCI
       ) {
         pluginCache.writeToDisk();
       }
@@ -355,8 +354,14 @@ async function buildCypressTargets(
     ...cypressConfig.e2e?.env,
   };
 
-  const webServerCommands: Record<string, string> =
+  const commands: Record<string, string> =
     pluginPresetOptions?.webServerCommands;
+  // A copy, since `default` is deleted below and configs can share the object.
+  const webServerCommands: Record<string, string> = commands && {
+    ...commands,
+    // The spread skips an inherited `default`, which the targets use.
+    ...(commands.default ? { default: commands.default } : {}),
+  };
   const shouldReuseExistingServer =
     pluginPresetOptions?.reuseExistingServer ?? true;
   const waitForServer: { waitFor?: 'ready' } =

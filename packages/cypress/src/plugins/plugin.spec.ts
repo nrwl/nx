@@ -1973,6 +1973,75 @@ describe('@nx/cypress/plugin', () => {
     }
   });
 
+  it('should reuse cached targets when the config sets an env var while loading', async () => {
+    const originalComponentTest = process.env.NX_CYPRESS_COMPONENT_TEST;
+    const globals = globalThis as { __cypressConfigLoads?: number };
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        // Sets the env var the way nxBaseCypressPreset does.
+        'apps/e2e/cypress.config.js': `globalThis.__cypressConfigLoads = (globalThis.__cypressConfigLoads ?? 0) + 1;
+process.env.NX_CYPRESS_COMPONENT_TEST = 'false';
+module.exports = {
+  e2e: {
+    env: {
+      webServerCommands: { default: 'nx run my-app:serve' },
+    },
+  },
+};`,
+      });
+
+      // Each run starts with the var unset, as a fresh daemonless process does.
+      const run = async () => {
+        delete process.env.NX_CYPRESS_COMPONENT_TEST;
+        await createNodesFunction(['apps/e2e/cypress.config.js'], {}, context);
+      };
+
+      await run();
+      await run();
+
+      expect(globals.__cypressConfigLoads).toBe(1);
+    } finally {
+      delete globals.__cypressConfigLoads;
+      mockWorkspaceDataDir = '';
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalComponentTest === undefined) {
+        delete process.env.NX_CYPRESS_COMPONENT_TEST;
+      } else {
+        process.env.NX_CYPRESS_COMPONENT_TEST = originalComponentTest;
+      }
+    }
+  });
+
+  it('should keep the default web server command for configs that share preset options', async () => {
+    const sharedOptions = {
+      webServerCommands: { default: 'nx run my-app:serve' },
+    };
+    for (const project of ['a-e2e', 'b-e2e']) {
+      const configFile = `apps/${project}/cypress.config.js`;
+      tempFs.createFileSync(`apps/${project}/project.json`, '{}');
+      tempFs.createFileSync(configFile, '');
+      mockCjsModule(import.meta.url, join(tempFs.tempDir, configFile), {
+        default: defineConfig({
+          e2e: nxE2EPreset(join(tempFs.tempDir, configFile), sharedOptions),
+        }),
+      });
+    }
+
+    const [[, a], [, b]] = await createNodesFunction(
+      ['apps/a-e2e/cypress.config.js', 'apps/b-e2e/cypress.config.js'],
+      {},
+      context
+    );
+
+    const serve = [{ projects: ['my-app'], target: 'serve', waitFor: 'ready' }];
+    expect(a.projects['apps/a-e2e'].targets['e2e'].dependsOn).toEqual(serve);
+    expect(b.projects['apps/b-e2e'].targets['e2e'].dependsOn).toEqual(serve);
+  });
+
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
     // This isn't JS, but all that really matters here
     // is that the hash is different after updating the
