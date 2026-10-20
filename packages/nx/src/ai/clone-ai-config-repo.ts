@@ -6,18 +6,67 @@ import { join } from 'path';
 const REPO_URL = 'https://github.com/nrwl/nx-ai-agents-config';
 const CACHE_DIR = join(tmpdir(), 'nx-ai-agents-config');
 
+// `git rev-parse --local-env-vars`, plus GIT_NAMESPACE and the indexed
+// GIT_CONFIG_KEY_<n> / GIT_CONFIG_VALUE_<n> pairs. Hooks export GIT_INDEX_FILE;
+// inheriting it makes `git clone` rewrite the caller's index.
+const GIT_LOCAL_REPO_ENV_VARS = new Set([
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+  'GIT_COMMON_DIR',
+  'GIT_CONFIG',
+  'GIT_CONFIG_COUNT',
+  'GIT_CONFIG_PARAMETERS',
+  'GIT_DIR',
+  'GIT_GRAFT_FILE',
+  'GIT_IMPLICIT_WORK_TREE',
+  'GIT_INDEX_FILE',
+  'GIT_NAMESPACE',
+  'GIT_NO_REPLACE_OBJECTS',
+  'GIT_OBJECT_DIRECTORY',
+  'GIT_PREFIX',
+  'GIT_REPLACE_REF_BASE',
+  'GIT_SHALLOW_FILE',
+  'GIT_WORK_TREE',
+]);
+
+function isGitLocalRepoEnvVar(key: string): boolean {
+  const upper = key.toUpperCase();
+  return (
+    GIT_LOCAL_REPO_ENV_VARS.has(upper) ||
+    upper.startsWith('GIT_CONFIG_KEY_') ||
+    upper.startsWith('GIT_CONFIG_VALUE_')
+  );
+}
+
+function environmentWithoutGitLocalRepoVars(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (isGitLocalRepoEnvVar(key)) {
+      delete env[key];
+    }
+  }
+  return env;
+}
+
+function execGitWithoutLocalRepoEnv(command: string, timeout: number): string {
+  return execSync(command, {
+    encoding: 'utf-8',
+    env: environmentWithoutGitLocalRepoVars(),
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout,
+    windowsHide: true,
+  });
+}
+
 /**
  * Get the latest commit hash from the remote repository.
  * Uses `git ls-remote` to fetch the HEAD commit hash without cloning.
  */
 function getLatestCommitHash(): string {
   try {
-    const output = execSync(`git ls-remote ${REPO_URL} HEAD`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 30000, // 30 second timeout
-      windowsHide: true,
-    });
+    const output = execGitWithoutLocalRepoEnv(
+      `git ls-remote ${REPO_URL} HEAD`,
+      30000 // 30 second timeout
+    );
     const hash = output.split('\t')[0];
     if (!hash || hash.length < 10) {
       throw new Error('Invalid commit hash received');
@@ -47,12 +96,10 @@ function cloneRepo(targetPath: string): void {
       rmSync(tempPath, { recursive: true, force: true });
     }
 
-    execSync(`git clone --depth 1 ${REPO_URL} "${tempPath}"`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 120000, // 2 minute timeout for clone
-      windowsHide: true,
-    });
+    execGitWithoutLocalRepoEnv(
+      `git clone --depth 1 ${REPO_URL} "${tempPath}"`,
+      120000 // 2 minute timeout for clone
+    );
 
     // Remove .git directory after clone
     const gitDir = join(tempPath, '.git');
