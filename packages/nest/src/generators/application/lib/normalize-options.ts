@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
+import { getDefaultUnitTestRunner } from '../../../utils/unit-test-runner';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
@@ -27,7 +28,7 @@ export async function normalizeOptions(
     appProjectName,
     appProjectRoot,
     linter: await normalizeLinterOption(tree, options.linter),
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    unitTestRunner: options.unitTestRunner ?? getDefaultUnitTestRunner(tree),
     e2eTestRunner: options.e2eTestRunner ?? 'jest',
     useProjectJson: options.useProjectJson ?? !isUsingTsSolutionSetup(tree),
   };

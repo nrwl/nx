@@ -11,6 +11,7 @@ import {
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
 import { assertVitestSupported } from '../../utils/assert-vitest-supported';
+import { assertJestSupported } from '../../utils/unit-test-runner';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import initGenerator from '../init/init';
 import {
@@ -42,6 +43,9 @@ export async function libraryGeneratorInternal(
 
   const options = await normalizeOptions(tree, rawOptions);
 
+  if (options.unitTestRunner === 'jest') {
+    assertJestSupported(tree);
+  }
   if (options.unitTestRunner === 'vitest') {
     assertVitestSupported(tree);
   }

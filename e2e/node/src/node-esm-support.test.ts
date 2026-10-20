@@ -404,7 +404,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const nestApp = uniq('nest-esm');
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=vitest`
       );
 
       // Install node-fetch (ESM-only package)
@@ -461,7 +461,7 @@ describe('Node.js Framework ESM Support', () => {
       const port = await reservePort();
       const nestApp = uniq('nest-esm-serve');
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=vitest`
       );
 
       // Install node-fetch (ESM-only package) and ajv@8 to fix dependency conflicts
