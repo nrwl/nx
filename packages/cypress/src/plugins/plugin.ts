@@ -1,7 +1,9 @@
 import {
   calculateHashesForCreateNodes,
   loadConfigFile,
+  getDaemonClientEnvGeneration,
   getNamedInputs,
+  hashDaemonClientEnv,
   hashObject,
   workspaceDataDirectory,
   PluginCache,
@@ -69,6 +71,10 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    // A config can read process.env (a generated one reads `CI`), which no file
+    // hash covers, so key the cache on the env the daemon applies per client.
+    const ambientEnvHash = hashDaemonClientEnv();
+    const ambientEnvGeneration = getDaemonClientEnvGeneration();
 
     try {
       const { entries, preErrors } = await filterCypressConfigs(
@@ -78,7 +84,7 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, ambientEnvHash },
         context,
         entries.map(() => [lockFileName])
       );
@@ -115,7 +121,14 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       }
       return results;
     } finally {
-      pluginCache.writeToDisk();
+      // The daemon can apply another client's env mid-pass, which would leave
+      // entries keyed on a stale env hash; skip the write and rebuild next pass.
+      if (
+        getDaemonClientEnvGeneration() === ambientEnvGeneration &&
+        hashDaemonClientEnv() === ambientEnvHash
+      ) {
+        pluginCache.writeToDisk();
+      }
     }
   },
 ];

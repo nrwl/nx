@@ -11,6 +11,18 @@ import {
 } from '@nx/devkit/internal-testing-utils';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 
+// `var` so the hoisted mock reads the empty value instead of hitting the TDZ.
+var mockWorkspaceDataDir = '';
+vi.mock('nx/src/utils/cache-directory', async () => {
+  const actual = await vi.importActual<any>('nx/src/utils/cache-directory');
+  return {
+    ...actual,
+    get workspaceDataDirectory() {
+      return mockWorkspaceDataDir || actual.workspaceDataDirectory;
+    },
+  };
+});
+
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
@@ -1897,6 +1909,50 @@ describe('@nx/cypress/plugin', () => {
         ],
       ]
     `);
+  });
+
+  it('should rebuild cached targets when CI changes', async () => {
+    const originalCI = process.env.CI;
+    delete process.env.CI;
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/cypress.config.js': `module.exports = {
+  e2e: {
+    env: {
+      webServerCommands: {
+        default: process.env['CI'] ? 'nx run my-app:serve-static' : 'nx run my-app:serve',
+      },
+    },
+  },
+};`,
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(['apps/e2e/cypress.config.js'], {}, context)
+        )[0][1].projects['apps/e2e'].targets;
+
+      expect((await run())['e2e'].dependsOn).toEqual([
+        { projects: ['my-app'], target: 'serve', waitFor: 'ready' },
+      ]);
+
+      process.env.CI = 'true';
+      expect((await run())['e2e'].dependsOn).toEqual([
+        { projects: ['my-app'], target: 'serve-static', waitFor: 'ready' },
+      ]);
+    } finally {
+      mockWorkspaceDataDir = '';
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalCI === undefined) {
+        delete process.env.CI;
+      } else {
+        process.env.CI = originalCI;
+      }
+    }
   });
 
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
