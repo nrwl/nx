@@ -100,7 +100,7 @@ export interface PackageManagerCommands {
   getRegistryUrl?: string;
   /**
    * @deprecated Use `publishArgv` instead, which needs no shell off Windows.
-   * This will be removed in Nx 24.
+   * This will be removed in Nx 25.
    */
   publish: (
     packageRoot: string,
