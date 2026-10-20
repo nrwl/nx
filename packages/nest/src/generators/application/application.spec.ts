@@ -142,9 +142,9 @@ describe('application generator', () => {
       directory: appDirectory,
     });
 
-    expect(tree.read(`${appDirectory}/src/main.ts`, 'utf-8')).toContain(
-      "load('@nx/js/ready-signal')"
-    );
+    const main = tree.read(`${appDirectory}/src/main.ts`, 'utf-8');
+    expect(main).toContain("load('@nx/js/ready-signal')");
+    expect(main).toContain('emitReadySignal(app.getHttpServer())');
 
     expect(
       tree.exists(`${appDirectory}/src/app/app.controller.ts`)
