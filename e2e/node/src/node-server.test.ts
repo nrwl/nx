@@ -38,13 +38,11 @@ describe('Node Applications + webpack', () => {
   function addLibImport(appName: string, libName: string, importPath?: string) {
     const mainFile = `apps/${appName}/src/main.ts`;
     const content = readFile(mainFile);
-    // Keep the shebang first so the inferred serve target still resolves.
-    const header = content.match(/^#!.*\n(?:\/\/.*\n)*/)?.[0] ?? '';
     updateFile(
       mainFile,
-      `${header}
+      `
       import { ${libName} } from '${importPath ?? `@${proj}/${libName}`}';
-      ${content.slice(header.length)}
+      ${content}
       console.log(${libName}());
       `
     );

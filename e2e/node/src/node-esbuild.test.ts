@@ -7,7 +7,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
-  updateMainFile,
+  updateFile,
 } from '@nx/e2e-utils';
 
 describe('Node Applications + esbuild', () => {
@@ -28,9 +28,8 @@ describe('Node Applications + esbuild', () => {
 
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);
 
-    updateMainFile(`apps/${app}/src/main.ts`, `console.log('Hello World!');`);
+    updateFile(`apps/${app}/src/main.ts`, `console.log('Hello World!');`);
 
-    // serve is inferred from the main file's shebang and runs it with tsx.
     const p = await runCommandUntil(`serve ${app}`, (output) => {
       process.stdout.write(output);
       return output.includes(`Hello World!`);

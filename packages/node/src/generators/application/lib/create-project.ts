@@ -20,6 +20,7 @@ import { NormalizedSchema } from './normalized-schema';
 import {
   getEsBuildConfig,
   getServeConfig,
+  getWatchServeConfig,
   getPruneTargets,
 } from './create-targets';
 
@@ -60,13 +61,9 @@ export function addProject(
     ...project.targets,
     ...getPruneTargets(options.buildTargetName, options.outputPath),
   };
-  if (!options.serveRuntime) {
-    project.targets.serve = getServeConfig(options);
-  } else {
-    // @nx/js/node or @nx/js/tsx infers the command. `^build` builds workspace
-    // libraries whose exports point at their output.
-    project.targets.serve = { continuous: true, dependsOn: ['^build'] };
-  }
+  project.targets.serve = options.serveRuntime
+    ? getWatchServeConfig(options)
+    : getServeConfig(options);
   // The framework templates call emitReadySignal once the server listens
   if (options.isNest || (options.framework && options.framework !== 'none')) {
     project.targets.serve.readyWhen = { signal: true };

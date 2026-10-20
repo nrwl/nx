@@ -64,16 +64,20 @@ nx g @nx/node:application apps/my-new-app
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
 
-The `serve` task comes from the first two lines of `src/main.ts`:
+The generator writes the `serve` target into the project configuration:
 
-```ts
-#!/usr/bin/env node
-// @nx-target-name: serve
+```json
+"serve": {
+  "continuous": true,
+  "command": "node --watch src/main.ts",
+  "options": { "cwd": "apps/my-new-app" },
+  "dependsOn": ["^build"]
+}
 ```
 
-`@nx/js/node` picks up files whose shebang names `node`, and `@nx-target-name` sets the task name. The generator registers that plugin in `nx.json` with `watch: true`, so `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Workspace libraries the application depends on are built first, through `dependsOn` on the `serve` entry in the project configuration. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
+`node --watch` restarts the application on changes without a build step, and `dependsOn` builds the workspace libraries it depends on first. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
 
-In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/plugin-registry) turned off, get an explicit `serve` target in `project.json` instead.
+In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the command uses `tsx watch` instead. [`tsx`](https://tsx.is/) resolves path aliases and extensionless imports. Applications that use webpack get a `serve` target that runs the build output with the `@nx/js:node` executor.
 
 ### Creating libraries
 
@@ -199,13 +203,13 @@ The debugger will automatically:
 
 #### Manual debugging
 
-To open the debugger on a specific port, add Node's `--inspect` flag to the shebang in `src/main.ts`, after the existing `node` or `tsx`:
+To open the debugger on a specific port, add Node's `--inspect` flag to the `serve` command, after `node --watch` or `tsx watch`:
 
-```ts
-#!/usr/bin/env -S node --inspect=9230
+```json
+"command": "node --watch --inspect=9230 src/main.ts"
 ```
 
-If the application has an explicit `serve` target in `project.json`, set its `port` option or run `nx serve my-new-app --port <number>` instead.
+If the application's `serve` target uses the `@nx/js:node` executor, set its `port` option or run `nx serve my-new-app --port <number>` instead.
 
 For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 

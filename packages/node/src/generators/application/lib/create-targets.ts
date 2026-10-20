@@ -153,3 +153,19 @@ export function getPruneTargets(
     },
   };
 }
+
+export function getWatchServeConfig(
+  options: NormalizedSchema
+): TargetConfiguration {
+  const main = options.js ? 'src/main.js' : 'src/main.ts';
+  return {
+    continuous: true,
+    command:
+      options.serveRuntime === 'node'
+        ? `node --watch ${main}`
+        : `tsx watch ${main}`,
+    options: { cwd: options.appProjectRoot },
+    // Builds workspace libraries whose exports point at their output.
+    dependsOn: ['^build'],
+  };
+}

@@ -95,7 +95,7 @@ function getServeRuntime(
   options: Schema,
   isUsingTsSolutionConfig: boolean
 ): NormalizedSchema['serveRuntime'] {
-  // Webpack apps keep the explicit @nx/js:node serve.
+  // Webpack apps keep the @nx/js:node serve.
   if (options.bundler === 'webpack') {
     return undefined;
   }

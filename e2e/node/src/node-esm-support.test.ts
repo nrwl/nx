@@ -13,7 +13,6 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateMainFile,
   updateJson,
   detectPackageManager,
 } from '@nx/e2e-utils';
@@ -135,7 +134,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${expressApp}`);
 
       // Create Express server with ESM imports
-      updateMainFile(
+      updateFile(
         `apps/${expressApp}/src/main.ts`,
         stripIndents`
           import express from 'express';
@@ -245,7 +244,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${fastifyApp}`);
 
       // Create Fastify server with ESM imports
-      updateMainFile(
+      updateFile(
         `apps/${fastifyApp}/src/main.ts`,
         stripIndents`
           import Fastify from 'fastify';
@@ -360,7 +359,7 @@ describe('Node.js Framework ESM Support', () => {
       configureAsEsm(`apps/${koaApp}`);
 
       // Create Koa server with ESM imports
-      updateMainFile(
+      updateFile(
         `apps/${koaApp}/src/main.ts`,
         stripIndents`
           import Koa from 'koa';

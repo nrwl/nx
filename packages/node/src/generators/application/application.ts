@@ -33,7 +33,6 @@ import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import {
   addAppFiles,
-  addScriptServe,
   addLintingToApplication,
   addProject,
   addProjectDependencies,
@@ -233,9 +232,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   addAppFiles(tree, options);
-  if (options.serveRuntime) {
-    addScriptServe(tree, options);
-  }
   addProject(tree, options, frameworkDependencies);
 
   if (options.bundler === 'rolldown') {
