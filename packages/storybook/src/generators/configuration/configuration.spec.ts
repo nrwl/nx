@@ -4,6 +4,7 @@ import {
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
+  readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
@@ -130,6 +131,15 @@ describe('@nx/storybook:configuration', () => {
         // angular specific
         expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
         expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
+        const { storybook } = readProjectConfiguration(
+          tree,
+          'test-ui-lib'
+        ).targets;
+        expect(storybook.continuous).toBe(true);
+        expect(storybook.readyWhen).toEqual({
+          port: '{env.SBCONFIG_PORT ?? options.port ?? 9009}',
+          host: '{env.SBCONFIG_HOSTNAME ?? options.host ?? localhost}',
+        });
         // react specific
         expect(
           packageJson.devDependencies['@storybook/react-webpack5']

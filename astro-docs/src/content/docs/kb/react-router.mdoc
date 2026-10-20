@@ -89,6 +89,15 @@ Configure the plugin in `nx.json`:
 | `buildDepsTargetName` | string | none    | Name of an optional dependency build task.      |
 | `watchDepsTargetName` | string | none    | Name of an optional dependency watch task.      |
 
+The `dev` task gets the `@nx/vite` check when `@nx/vite` is installed at the workspace root.
+That check resolves the Vite config when the task runs, with the task's environment and options, and waits for the dev server's port.
+Without `@nx/vite`, the `dev` task has no readiness check.
+The `start` task waits for the port `react-router-serve` listens on, from the `PORT` environment variable or 3000.
+When `HOST` is set, it connects to that host.
+If `PORT` is unset and another process holds 3000, `react-router-serve` moves to a free port, and this check can pass before the server is up.
+A task waits for these checks only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+
 Use `include` and `exclude` glob patterns to scope the plugin. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/react/router-plugin`.
 
 ## Running the application

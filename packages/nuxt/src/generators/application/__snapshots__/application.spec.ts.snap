@@ -8,6 +8,7 @@ import { defineNuxtConfig } from 'nuxt/config';
 export default defineNuxtConfig({
   workspaceDir: '../',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -151,6 +152,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -392,6 +394,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -422,6 +425,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -452,6 +456,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -482,6 +487,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -591,6 +597,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -832,6 +839,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -862,6 +870,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -892,6 +901,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -922,6 +932,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,

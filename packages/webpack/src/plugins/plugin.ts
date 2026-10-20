@@ -1,6 +1,7 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashObject,
   workspaceDataDirectory,
@@ -299,7 +300,7 @@ async function createWebpackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
-    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -431,11 +432,8 @@ function getDevServerReadyWhen(
     withDevServer.length === 1 && sendsReadySignal(withDevServer[0]);
   return signals
     ? { signal: true }
-    : {
-        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-        // becomes user-chosen, since the shell expands $, backticks and %.
-        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
-        // Each attempt loads the config
-        interval: 1000,
-      };
+    : getReadyCheckReadyWhen(
+        '@nx/webpack/ready-check',
+        basename(configFilePath)
+      );
 }

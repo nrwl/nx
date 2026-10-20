@@ -36,6 +36,9 @@
       "presets/cypress": [
         "dist/presets/cypress.d.ts"
       ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
       "src/*": [
         "dist/src/*.d.ts"
       ],
@@ -76,6 +79,11 @@
       "@nx/nx-source": "./presets/cypress.ts",
       "types": "./dist/presets/cypress.d.ts",
       "default": "./dist/presets/cypress.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",

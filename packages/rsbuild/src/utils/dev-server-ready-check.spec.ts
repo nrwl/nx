@@ -1,3 +1,7 @@
+import {
+  mockCjsModule,
+  unmockCjsModule,
+} from '@nx/devkit/internal-testing-utils';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { createServer, Server, type AddressInfo } from 'net';
 import { tmpdir } from 'os';
@@ -12,11 +16,8 @@ describe('parseRsbuildFlags', () => {
   it.each([
     [
       { args: ['--port', '3000', '--host', '--env-mode=staging'] },
-      { port: '3000', host: true, envMode: 'staging' },
+      { port: 3000, host: true, envMode: 'staging' },
     ],
-    [{ port: 3001, args: '--port 3000' }, { port: '3000' }],
-    // run-commands hands args to the shell, which removes the quotes
-    [{ args: '--config "a b.config.ts"' }, { config: 'a b.config.ts' }],
     [
       { args: ['-c', 'a.config.ts', '-r=apps/a', '--env-dir', 'env'] },
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env' },
@@ -29,8 +30,26 @@ describe('parseRsbuildFlags', () => {
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
       { config: 'a.config.ts', root: 'apps/a', envDir: 'env', envMode: 'x' },
     ],
+    // mri gives `-c` the value of `--config`, the alias given first
+    [
+      { config: 'a.config.ts', args: ['-c', 'b.config.ts'] },
+      { config: 'a.config.ts' },
+    ],
   ])('reads the flags of %j', (options, flags) => {
-    expect(parseRsbuildFlags(options)).toEqual(flags);
+    expect(parseRsbuildFlags(options, '2.0.15')).toEqual(flags);
+  });
+
+  it.each([
+    // commander gives `--host` the next argument and keeps the port a string
+    [
+      '1.1.14',
+      { args: ['--port', '3000', '--host', '--env-mode=staging'] },
+      { port: '3000', host: '--env-mode=staging' },
+    ],
+    ['1.2.0-alpha.0', { args: ['--no-env', '--host', '0'] }, {}],
+    ['1.3.3', { args: ['--no-env', '--host', '0'] }, { env: false }],
+  ])('reads the flags Rsbuild %s reads from %j', (version, options, flags) => {
+    expect(parseRsbuildFlags(options, version)).toEqual(flags);
   });
 });
 
@@ -130,6 +149,14 @@ describe('waitForRsbuildServer', () => {
       options: { args: ['-c', 'other.config.mjs'] },
     },
     {
+      name: 'the config an override names',
+      files: {
+        'rsbuild.config.mjs': portOne,
+        'other.config.mjs': 'export default { server: { port: <port> } };',
+      },
+      options: { __unparsed__: ['-c', 'other.config.mjs'] },
+    },
+    {
       name: 'the config in --root',
       files: {
         'rsbuild.config.mjs': portOne,
@@ -197,6 +224,21 @@ describe('waitForRsbuildServer', () => {
 
     const wait = waitForRsbuildServer('rsbuild.config.ts', 'dev');
     expect(await settle(wait, 2000)).toMatch(/^rejected/);
+  });
+
+  it('parses the options the way the loaded @rsbuild/core does', async () => {
+    mockCjsModule(import.meta.url, '@rsbuild/core', { version: '1.1.14' });
+    vi.stubEnv(
+      'NX_TASK_OPTIONS',
+      JSON.stringify({ cwd: dir, args: ['--no-env'] })
+    );
+    try {
+      await expect(
+        waitForRsbuildServer('rsbuild.config.mjs', 'dev')
+      ).rejects.toThrow("unknown option '--no-env'");
+    } finally {
+      unmockCjsModule(import.meta.url, '@rsbuild/core');
+    }
   });
 });
 

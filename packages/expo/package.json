@@ -50,6 +50,9 @@
       "plugins/jest/svg-mock": [
         "dist/plugins/jest/svg-mock.d.ts"
       ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
       "typings/*.d.ts": [
         "dist/typings/*.d.ts"
       ]
@@ -125,6 +128,11 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./plugins/with-nx-metro": {
       "@nx/nx-source": "./plugins/with-nx-metro.ts",

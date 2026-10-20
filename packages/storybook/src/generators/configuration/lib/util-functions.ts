@@ -24,6 +24,7 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
+import { getStartStorybookReadyWhen } from '../../../utils/dev-server-ready-check';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
@@ -46,6 +47,8 @@ export function addAngularStorybookTarget(
   );
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
+    continuous: true,
+    readyWhen: getStartStorybookReadyWhen(),
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,

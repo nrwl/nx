@@ -113,6 +113,7 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
   > = {
     executor: '@nx/web:file-server',
     dependsOn: [opts.parsedBuildTarget],
+    readyWhen: { signal: true },
     options: {
       buildTarget: opts.buildTarget,
       staticFilePath: opts.outputPath,

@@ -26,19 +26,6 @@ describe('parseViteFlags', () => {
       { mode: 'prod', config: 'other.config.ts' },
     ],
     [{ config: 'other.config.ts' }, 'serve', { config: 'other.config.ts' }],
-    // run-commands hands args to the shell, which removes the quotes
-    [
-      { args: '--config "other config.ts"' },
-      'serve',
-      { config: 'other config.ts' },
-    ],
-    // run-commands forwards named options first, then args, then overrides
-    [{ port: 3001, args: '--port 3000' }, 'serve', { port: '3000' }],
-    [
-      { port: 4000, args: '--port 3000', __unparsed__: ['--port=4000'] },
-      'serve',
-      { port: '4000' },
-    ],
     // Vite keeps the values of the spelling that comes first
     [{ mode: 'dev', args: ['-m', 'prod'] }, 'serve', { mode: 'dev' }],
     [{ m: 'a', mode: 'b' }, 'serve', { mode: 'a' }],
@@ -49,6 +36,19 @@ describe('parseViteFlags', () => {
     [{ args: ['--open', 'apps/foo', '--', 'apps/bar'] }, 'serve', {}],
   ] as const)('parses %j for %s', (options, command, flags) => {
     expect(parseViteFlags(options, command)).toEqual(flags);
+  });
+
+  it.each([
+    [['-p', '4000'], { port: '4000' }],
+    // The last value wins across an option's spellings
+    [['--port', '1', '-p', '2'], { port: '2' }],
+    [['--profile', 'apps/foo'], { root: 'apps/foo' }],
+    [['--watch', 'apps/foo'], { root: 'apps/foo' }],
+    [['--json', 'apps/foo'], { root: 'apps/foo' }],
+    [['--typescript', 'apps/foo'], { root: 'apps/foo' }],
+    [['--host=0.0.0.0'], { host: '0.0.0.0' }],
+  ])('parses %j as react-router dev does', (args, flags) => {
+    expect(parseViteFlags({ args }, 'react-router-dev')).toEqual(flags);
   });
 });
 
@@ -161,6 +161,21 @@ describe('waitForViteServer', () => {
       await expectReadyOnListen(waitForViteServer('vite.config.mjs', 'serve'));
     }
   );
+
+  it('reads the dev server flags of react-router dev', async () => {
+    writeFileSync(
+      join(dir, 'vite.config.mjs'),
+      `export default { server: { port: 1 } };`
+    );
+    vi.stubEnv(
+      'NX_TASK_OPTIONS',
+      JSON.stringify({ cwd: dir, args: ['-p', String(port)] })
+    );
+
+    await expectReadyOnListen(
+      waitForViteServer('vite.config.mjs', 'react-router-dev')
+    );
+  });
 });
 
 function listen(port: number, host: string): Promise<Server> {

@@ -216,6 +216,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         development: { buildTarget: `${project}:build:development` },
       },
       defaultConfiguration: 'development',
+      continuous: true,
+      readyWhen: { signal: true },
     });
     expect(projectConfig.targets.test).toStrictEqual({
       executor: '@angular/build:unit-test',

@@ -572,6 +572,24 @@ describe('setupSSR', () => {
       ).toBe('dist/app1/browser');
     });
 
+    it('should add a serve-ssr target that signals readiness', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const serveSsr = readProjectConfiguration(tree, 'app1').targets[
+        'serve-ssr'
+      ];
+      expect(serveSsr.continuous).toBe(true);
+      expect(serveSsr.readyWhen).toStrictEqual({ signal: true });
+    });
+
     it('should reference the server tsconfig with a path relative to the project tsconfig', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await generateTestApplication(tree, {

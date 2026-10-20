@@ -44,6 +44,10 @@ export type { FormatterType } from 'nx/src/devkit-internals';
 
 // Generators
 export {
+  addReadyWhenSignalToTargets,
+  readApplicableTargetDefaults,
+} from './src/generators/add-ready-when-signal';
+export {
   determineArtifactNameAndDirectoryOptions,
   getRelativeCwd,
   type FileExtensionType,
@@ -115,12 +119,21 @@ export {
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
 export { parseNxDirectives } from './src/utils/nx-directives';
+export {
+  getForwardedArgs,
+  getListeningUrl,
+  getReadyCheckReadyWhen,
+  getServerAddress,
+  parseCacArgs,
+  parseCommanderArgs,
+  runReadyCheck,
+  type ServerAddress,
+} from './src/utils/readiness';
 export { applyTestFileDirectives } from './src/utils/test-file-directives';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';
-export { splitShellArgs } from './src/utils/split-shell-args';
 export {
   camelize,
   capitalize,
@@ -298,6 +311,7 @@ export {
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
   runNxSync,
   safeExecFileSync,
   safeSpawn,

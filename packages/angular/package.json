@@ -41,6 +41,7 @@
     "./generators": "./dist/generators.js",
     "./executors": "./dist/executors.js",
     "./plugin": "./dist/plugin.js",
+    "./ready-check": "./dist/ready-check.js",
     "./tailwind": "./dist/tailwind.js",
     "./plugins/component-testing": "./dist/plugins/component-testing.js",
     "./internal": "./dist/internal.js",

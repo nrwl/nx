@@ -24,6 +24,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
+import { isDeepStrictEqual } from 'node:util';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
@@ -699,6 +700,11 @@ export async function convertToRspack(
 
     if (serveTarget.config.continuous) {
       delete serveTarget.config.continuous;
+    }
+    // Nx writes it for the dev server builders, and it would override the
+    // readyWhen inferred for the Rspack serve target
+    if (isDeepStrictEqual(serveTarget.config.readyWhen, { signal: true })) {
+      delete serveTarget.config.readyWhen;
     }
     if (
       serveTarget.config.syncGenerators?.length === 1 &&

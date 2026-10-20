@@ -1624,6 +1624,7 @@ module.exports = withModuleFederation(config, { dts: false });
             },
             serve: {
               continuous: true,
+              readyWhen: { signal: true },
               syncGenerators: ['@nx/js:typescript-sync'],
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
@@ -1720,6 +1721,7 @@ module.exports = withModuleFederation(config, { dts: false });
             },
             serve: {
               parallelism: false,
+              readyWhen: { signal: true, timeout: 120000 },
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
             },
@@ -1732,6 +1734,7 @@ module.exports = withModuleFederation(config, { dts: false });
         const updatedProject = readProjectConfiguration(tree, 'app');
         expect(updatedProject.targets.serve).toStrictEqual({
           parallelism: false,
+          readyWhen: { signal: true, timeout: 120000 },
         });
       });
 
