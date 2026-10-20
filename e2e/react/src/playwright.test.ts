@@ -1,6 +1,7 @@
 import {
   createFile,
   fileExists,
+  killPorts,
   readFile,
   reservePort,
   runCLI,
@@ -43,7 +44,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(configPath, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: (?:getReadyUrl\()?'http:\/\/[^']*'\)?/,
+        /url: (?:(?:getReadyUrl\()?'http:\/\/[^']*'\)?|webServerAddress)/,
         'url: baseURL'
       );
     });
@@ -71,7 +72,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(configPath, (content) => {
       originalConfig = content;
       return content.replace(
-        /url: (?:getReadyUrl\()?'http:\/\/[^']*'\)?/,
+        /url: (?:(?:getReadyUrl\()?'http:\/\/[^']*'\)?|webServerAddress)/,
         'url: baseURL'
       );
     });
@@ -110,6 +111,58 @@ describe('React Playwright e2e tests', () => {
     }
   });
 
+  it('should run e2e tests against the local web server when CI is not set', async () => {
+    if (!(await shouldRunPlaywrightTests())) {
+      return;
+    }
+    const e2eProject = `${appName}-e2e`;
+    const configPath = `${e2eProject}/playwright.config.mts`;
+    const viteConfigPath = `${appName}/vite.config.mts`;
+    const [, ciServerTarget, localServerTarget] =
+      readFile(configPath).match(
+        new RegExp(
+          `isCI\\s*\\?\\s*'[^']* nx run ${appName}:([^']+)'\\s*:\\s*'[^']* nx run ${appName}:([^']+)'`
+        )
+      ) ?? [];
+    expect(localServerTarget).toBeDefined();
+    const port = await reservePort();
+    let originalConfig = '';
+    updateFile(configPath, (content) => {
+      originalConfig = content;
+      return content.replace(
+        /const webServerAddress = [^;]*;/,
+        `const webServerAddress = getReadyUrl('http://localhost:${port}');`
+      );
+    });
+    let originalViteConfig = '';
+    updateFile(viteConfigPath, (content) => {
+      originalViteConfig = content;
+      return content.replace(
+        /server:\s*{[^}]*}/,
+        `server: { port: ${port}, host: 'localhost' }`
+      );
+    });
+
+    try {
+      // runCLI sets CI, and an undefined value drops it from the child env.
+      // Without CI and a TTY, an out-of-sync workspace fails the run.
+      const result = runCLI(`e2e ${e2eProject} --skip-sync`, {
+        env: { CI: undefined },
+      });
+      expect(result).toContain(
+        `Successfully ran target e2e for project ${e2eProject}`
+      );
+      expect(result).toMatch(
+        new RegExp(`nx run ${appName}:${localServerTarget}(?![\\w-])`)
+      );
+      expect(result).not.toContain(`nx run ${appName}:${ciServerTarget}`);
+    } finally {
+      updateFile(configPath, originalConfig);
+      updateFile(viteConfigPath, originalViteConfig);
+      await killPorts(port);
+    }
+  });
+
   it('lets Playwright reuse the server the readiness gate waited for instead of starting its own', async () => {
     if (!(await shouldRunPlaywrightTests())) {
       return;
@@ -125,7 +178,7 @@ describe('React Playwright e2e tests', () => {
     updateFile(`${e2eProject}/playwright.config.mts`, (content) => {
       originalConfig = content;
       return content.replace(
-        /(url: (?:getReadyUrl\()?)'http:\/\/[^']*'/,
+        /(url: (?:getReadyUrl\()?)(?:'http:\/\/[^']*'|webServerAddress)/,
         `$1'http://localhost:${port}'`
       );
     });

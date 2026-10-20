@@ -218,9 +218,12 @@ describe('app', () => {
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
+        const isCI = !!process.env['CI'];
+        // getReadyUrl moves the address to the port the server task reported.
+        const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
+
         // For CI, you may want to set BASE_URL to the deployed application.
-        // getReadyUrl moves the address to the port the dev server task reported.
-        const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
+        const baseURL = process.env['BASE_URL'] || webServerAddress;
 
         /**
          * Read environment variables from file.
@@ -246,10 +249,9 @@ describe('app', () => {
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
             trace: 'on-first-retry',
           },
-          /* Run your local dev server before starting the tests */
           webServer: {
-            command: 'npx nx run my-app:preview',
-            url: getReadyUrl('http://localhost:4300'),
+            command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+            url: webServerAddress,
             reuseExistingServer: true,
             cwd: workspaceRoot
           },

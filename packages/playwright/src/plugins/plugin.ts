@@ -468,6 +468,7 @@ async function buildPlaywrightTargets(
         : ['default', '^default']),
       ...tsconfigJsonInputs,
       { externalDependencies: ['@playwright/test'] },
+      { env: 'CI' },
     ],
     outputs: getTargetOutputs(
       testOutput,
@@ -510,6 +511,7 @@ async function buildPlaywrightTargets(
           : ['default', '^default']),
         ...tsconfigJsonInputs,
         { externalDependencies: ['@playwright/test'] },
+        { env: 'CI' },
       ],
       outputs: getTargetOutputs(
         testOutput,

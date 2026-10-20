@@ -528,6 +528,23 @@ describe('app', () => {
     });
   });
 
+  it('should run playwright against serve locally and serve-static in ci', async () => {
+    tree = createTreeWithEmptyWorkspace();
+
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      e2eTestRunner: 'playwright',
+      unitTestRunner: 'none',
+      useAppDir: false,
+    });
+
+    const config = tree.read('myapp-e2e/playwright.config.mts', 'utf-8');
+    expect(config).toContain(
+      `command: isCI ? 'npx nx run myapp:serve-static' : 'npx nx run myapp:serve'`
+    );
+    expect(config).toContain(`url: getReadyUrl('http://localhost:4200')`);
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();

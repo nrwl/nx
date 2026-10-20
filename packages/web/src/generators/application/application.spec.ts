@@ -208,6 +208,18 @@ describe('app', () => {
       ).toMatchSnapshot();
     });
 
+    it('should run playwright against serve-static if bundler is none', async () => {
+      await applicationGenerator(tree, {
+        directory: 'cool-app',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+        bundler: 'none',
+      });
+      expect(
+        tree.read('cool-app-e2e/playwright.config.mts', 'utf-8')
+      ).toContain(`command: 'npx nx run cool-app:serve-static'`);
+    });
+
     it('should generate files if bundler is vite', async () => {
       const nxJson = readNxJson(tree);
       nxJson.plugins ??= [];

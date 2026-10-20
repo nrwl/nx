@@ -179,6 +179,58 @@ Pass `--webServerCommand` and `--webServerAddress` to skip the prompts.
 nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx nx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
+### Choosing the web server per environment
+
+Most application generators pass two servers to the Playwright configuration: the dev server for
+local runs and a production build for CI.
+The generated config reads the `CI` environment variable and picks between them.
+
+```ts frame="none"
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const isCI = !!process.env['CI'];
+// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(
+  isCI ? 'http://localhost:4300' : 'http://localhost:4200'
+);
+
+export default defineConfig({
+  // ... rest of the config
+  webServer: {
+    command: isCI
+      ? 'npx nx run <your-app-name>:preview'
+      : 'npx nx run <your-app-name>:dev',
+    url: webServerAddress,
+    reuseExistingServer: true,
+    cwd: workspaceRoot,
+  },
+});
+```
+
+The dev server avoids a rebuild on every change, and the CI run tests the output you ship.
+
+These applications run against the dev server in CI as well:
+
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
+
+Pass `--ciWebServerCommand` and `--ciWebServerAddress` to choose the CI side yourself.
+Each one defaults to its local counterpart, so leaving both unset generates a config with a single
+server.
+
+```shell
+nx g @nx/playwright:configuration --project=<your-app-name> --webServerCommand="npx nx run <your-app-name>:dev" --webServerAddress="http://localhost:4200" --ciWebServerCommand="npx nx run <your-app-name>:preview" --ciWebServerAddress="http://localhost:4300"
+```
+
+The inferred Playwright targets include the `CI` environment variable in their inputs, so local and
+CI runs don't share cached results.
+An `inputs` list you set for these targets in `targetDefaults` or in a project configuration
+replaces the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
+
 ### Testing applications
 
 Run `nx e2e <your-app-name>` to execute e2e tests with Playwright
@@ -332,7 +384,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx serve <your-app-name>',
     url: baseURL,
