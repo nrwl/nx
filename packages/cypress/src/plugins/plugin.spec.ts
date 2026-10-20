@@ -132,6 +132,9 @@ describe('@nx/cypress/plugin', () => {
                           "cypress",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
@@ -352,6 +355,9 @@ describe('@nx/cypress/plugin', () => {
                           "cypress",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
@@ -557,6 +563,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -909,6 +918,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -1333,6 +1345,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -1769,6 +1784,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {

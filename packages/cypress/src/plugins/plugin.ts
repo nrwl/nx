@@ -376,7 +376,7 @@ async function buildCypressTargets(
         env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
       },
       cache: true,
-      inputs: getInputs(namedInputs),
+      inputs: [...getInputs(namedInputs), { env: 'CI' }],
       outputs: getOutputs(
         projectRoot,
         cypressConfig,
