@@ -167,8 +167,8 @@ To typecheck with `tsgo`, set `compiler: 'tsgo'` on `@nx/js/typescript`, which i
 
 The inferred `dev` and `preview` targets come with a `readyWhen` check, so a task can wait until the server accepts requests instead of only until it has started.
 The `nxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
-Generated app configs include it.
-In an existing config, import it from `@nx/vite/plugins/nx-ready-signal.plugin` and add it to `plugins` in `vite.config.*`.
+Generated app configs include it, and `nx migrate` adds it to existing application configs when you update to Nx 24.
+In any other config, import it from `@nx/vite/plugins/nx-ready-signal.plugin` and add it to `plugins` in `vite.config.*`.
 The report carries the address the server actually listens on, so the waiting task tests against it however the port was chosen.
 
 Without the plugin, the check resolves the Vite config when the task runs instead, in the task's environment and with its options.
