@@ -65,9 +65,13 @@ describe('app', () => {
   });
 
   describe('ready signal', () => {
-    it.each(['express', 'fastify', 'koa'] as const)(
+    it.each([
+      ['express', 'emitReadySignal(server)'],
+      ['fastify', 'emitReadySignal(server.server)'],
+      ['koa', 'emitReadySignal(server)'],
+    ] as const)(
       'should report readiness from a %s server',
-      async (framework) => {
+      async (framework, call) => {
         await applicationGenerator(tree, {
           directory: 'my-node-app',
           framework,
@@ -78,9 +82,9 @@ describe('app', () => {
         expect(
           readProjectConfiguration(tree, 'my-node-app').targets.serve.readyWhen
         ).toEqual({ signal: true });
-        expect(tree.read('my-node-app/src/main.ts', 'utf-8')).toContain(
-          "load('@nx/js/ready-signal')"
-        );
+        const main = tree.read('my-node-app/src/main.ts', 'utf-8');
+        expect(main).toContain("load('@nx/js/ready-signal')");
+        expect(main).toContain(call);
         expect(
           readJson(tree, 'package.json').devDependencies['@nx/js']
         ).toBeDefined();
