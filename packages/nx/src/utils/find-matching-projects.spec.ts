@@ -346,6 +346,15 @@ describe('findMatchingProjects', () => {
     expect(findMatchingProjects([':gradle-*'], graph)).toEqual([':gradle-lib']);
     expect(findMatchingProjects(['typo:app'], graph)).toEqual([]);
   });
+
+  it('should match regular expression characters literally', () => {
+    const graph = {
+      '@acme/foo.bar': node('@acme/foo.bar', 'libs/foo.bar'),
+      'foo-bar': node('foo-bar', 'libs/foo-bar'),
+    };
+    expect(findMatchingProjects(['foo.bar'], graph)).toEqual(['@acme/foo.bar']);
+    expect(findMatchingProjects(['?foo'], graph)).toEqual([]);
+  });
 });
 
 const projects = [
