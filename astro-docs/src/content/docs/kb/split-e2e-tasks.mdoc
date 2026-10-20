@@ -477,7 +477,15 @@ Learn more about configuring your [CI provider with these workflow examples](/do
 
 ## Skip unaffected test files
 
-An atomized e2e task depends on the app it tests, so a change to the app, to any project the app
-depends on, or to any test file reruns every test file.
-To skip the test files a change doesn't affect, see
-[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
+Splitting an e2e suite lets its test files run in parallel, but by default each task still depends on
+the whole app, its dependencies, and the e2e project. Even a small change can rerun every test file.
+
+Scoping each test file to the code it tests lets Nx reuse the other files' cached results.
+For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its
+cached result. A change to shared code that both tests depend on reruns both.
+
+This means fewer tests to execute on each PR, shorter CI runs, and lower compute costs as your suite grows.
+
+Use `@nx-ignore-server-inputs` with Ultracache to track the code a test imports, or `@nx-depends-on`
+to list the projects it covers. See [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests)
+for examples and setup instructions.

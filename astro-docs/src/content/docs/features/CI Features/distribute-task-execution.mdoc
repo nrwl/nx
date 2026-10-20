@@ -40,6 +40,19 @@ There's no `--parallel` value to tune and no mapping of projects to machines to 
 Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
 They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
 
+## Split and cache e2e tests by file
+
+Nx Atomizer automatically creates one task per e2e test file.
+Workers can distribute those smaller tasks across machines and use dynamic task packing to run them alongside other tasks.
+
+Each test file is also cached separately. When you scope each file to the code it tests, Nx can reuse
+cached results for unaffected tests instead of rerunning the whole suite.
+For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its cached result.
+Workers then spend their time on the tests that need to run, reducing both CI time and compute costs.
+
+See [automatically split slow tasks by file](/docs/kb/split-e2e-tasks) to enable Atomizer,
+and [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests) to scope each test file to the code it exercises.
+
 ## Enable Workers
 
 Connect your workspace to Nx Cloud if you haven't already:
