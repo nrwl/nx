@@ -116,7 +116,7 @@ With Workers, your tasks run across several machines instead of one.
 With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep agents close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
-Add a `.nx/ci-config.yaml` file with the number of agents, then start them with `start-nx-agents`:
+Add a `.nx/ci-config.yaml` file with the number of agents, then start them with `start-workers`:
 
 ```yaml
 # .nx/ci-config.yaml
@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ... checkout
-      - run: npx nx-cloud start-nx-agents
+      - run: npx nx-cloud start-workers
       # ... set up Node.js, install dependencies, and set SHAs
       - run: npx nx affected -t lint test build
 ```
@@ -182,7 +182,7 @@ jobs:
 
       # Provisions the agents declared in .nx/ci-config.yaml.
       # Run it before installing dependencies so agents boot while this job installs.
-      - run: npx nx-cloud start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - uses: actions/setup-node@v6
         with:

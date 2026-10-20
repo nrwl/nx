@@ -41,7 +41,7 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 ### Configure your CI pipeline
 
-Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx start-nx-agents` and kick off your `nx run-many` or `nx affected` commands.
+Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx-cloud start-workers` and kick off your `nx run-many` or `nx affected` commands.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
 
@@ -71,12 +71,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      # Your existing steps which check out the repo, start-nx-agents, install
+      # Your existing steps which check out the repo, start-workers, install
       # dependencies, etc.
       # These are just illustrative examples...
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
       - run: npm ci
       - run: npx nx affected -t lint test build
 
@@ -97,9 +97,9 @@ stages:
 main:
   stage: build
   script:
-    # Your existing steps which check out the repo, start-nx-agents, install
+    # Your existing steps which check out the repo, start-workers, install
     # dependencies, etc.
-    - npx nx start-nx-agents
+    - npx nx-cloud start-workers
     - npm ci
     - npx nx affected -t lint test build
   # NEW: Add this section at the end of your job if you don't
@@ -123,13 +123,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  # Your existing steps which check out the repo, start-nx-agents, install
+  # Your existing steps which check out the repo, start-workers, install
   # dependencies, etc.
   # These are just illustrative examples...
   - task: NodeTool@0
     inputs:
       versionSpec: '22.x'
-  - script: npx nx start-nx-agents
+  - script: npx nx-cloud start-workers
   - script: npm ci
   - script: npx nx affected -t lint test build
 
@@ -152,10 +152,10 @@ pipelines:
       - step:
           name: CI
           script:
-            # Your existing steps which start-nx-agents, install
+            # Your existing steps which start-workers, install
             # dependencies, etc.
             # These are just illustrative examples...
-            - npx nx start-nx-agents
+            - npx nx-cloud start-workers
             - npm ci
             - npx nx affected -t lint test build
           after-script:

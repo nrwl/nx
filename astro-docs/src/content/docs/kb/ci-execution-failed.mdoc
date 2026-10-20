@@ -26,7 +26,7 @@ Without it the CI Pipeline Execution may never complete. See [heartbeat and manu
 
 ### A command was issued to stop all Nx Cloud agents
 
-Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and complete-ci-run](/docs/reference/nx-cloud-cli#nx-cloud-stop-all-agents). The two command options are functionally equivalent, but the `complete-ci-run` command is preferred.
+Nx Cloud provides two commands to forcibly stop agents, [stop-all-workers and complete-ci-run](/docs/reference/nx-cloud-cli#nx-cloud-stop-all-workers). The two command options are functionally equivalent, but the `complete-ci-run` command is preferred.
 
 Once these commands are invoked, the current CI Pipeline Execution is closed and can no longer receive new work.
 
@@ -41,21 +41,21 @@ This behavior can be disabled by setting [`lifecycle.fail-after`](/docs/referenc
 ### A CI configuration file was detected, but start-ci-run does not load it
 
 `start-ci-run` takes its configuration from CLI flags and never reads `.nx/ci-config.yaml`, so the two cannot be combined.
-Once that file exists, replace the `start-ci-run` invocation with `nx-cloud start-nx-agents`.
-See [migrate from start-ci-run to start-nx-agents](/docs/kb/migrate-to-ci-config) for the flag-to-key mapping.
+Once that file exists, replace the `start-ci-run` invocation with `nx-cloud start-workers`.
+See [migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config) for the flag-to-key mapping.
 
 ### No CI configuration file found
 
-`nx-cloud start-nx-agents` reads all of its configuration from `.nx/ci-config.yaml` (or `.yml`) in the workspace's `.nx` folder, and exits when that file is missing.
+`nx-cloud start-workers` reads all of its configuration from `.nx/ci-config.yaml` (or `.yml`) in the workspace's `.nx` folder, and exits when that file is missing.
 Add the file and commit it. See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 ## Workers-related
 
-### Failed to start Nx Agents workflow
+### Failed to start the Workers workflow
 
 Nx Cloud was unable to start the agents workflow with the configuration in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
 
-### Unable to get workflow status from Nx Agents
+### Unable to get workflow status from Workers
 
 Nx Cloud was unable to communicate with the Workers assigned to a workflow for the current CI Pipeline Execution. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
 

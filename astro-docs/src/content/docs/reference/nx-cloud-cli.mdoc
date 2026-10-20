@@ -355,16 +355,16 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 - `connect-workspace` is the best entry point for AI agents because it can detect the repository, create an organization when needed, and return actionable JSON when GitHub authorization is required.
 - `connect github --json` starts device flow, and `connect github poll --device-code ... --json` can be used to poll for completion.
 
-### `nx-cloud start-nx-agents`
+### `nx-cloud start-workers`
 
-Invoke `npx nx-cloud start-nx-agents` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+Invoke `npx nx-cloud start-workers` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
 
-Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-nx-agents` takes no configuration flags.
+Nx Cloud reads your CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. Every Nx Cloud command reads that file, so your configuration applies to the run whichever command starts it. `start-workers` takes no configuration flags.
 
 **Usage:**
 
 ```shell
-npx nx-cloud start-nx-agents
+npx nx-cloud start-workers
 ```
 
 ```yaml
@@ -378,16 +378,16 @@ lifecycle:
     - e2e
 ```
 
-{% aside type="caution" title="start-nx-agents and start-ci-run cannot be combined" %}
-`start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and points you to `start-nx-agents`.
-Pick one path for your workspace: the config file with `start-nx-agents`, or CLI flags with `start-ci-run`.
+{% aside type="caution" title="start-workers and start-ci-run cannot be combined" %}
+`start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and points you to `start-workers`.
+Pick one path for your workspace: the config file with `start-workers`, or CLI flags with `start-ci-run`.
 {% /aside %}
 
-To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-nx-agents](/docs/kb/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
+To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
 
 ### `nx-cloud start-ci-run`
 
-`start-ci-run` configures a CI run through CLI flags. If you prefer to keep your configuration in a versioned file, use [`start-nx-agents`](#nx-cloud-start-nx-agents) with a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
+`start-ci-run` configures a CI run through CLI flags. If you prefer to keep your configuration in a versioned file, use [`start-workers`](#nx-cloud-start-workers) with a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
 
@@ -422,8 +422,8 @@ If you accidentally run this command locally, remove all generated marker files 
 | `--scheduling-constraints`      | string  | Path to a YAML file listing tasks that must not run on the same agent at the same time                                                                                 |         |
 | `--no-distribution`             | boolean | Disable distribution for this run                                                                                                                                      |         |
 | `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                      | `false` |
-| `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
-| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands) | `true`  |
+| `--stop-workers-after`          | string  | Comma-separated list of targets after which agents should terminate                                                                                                    |         |
+| `--stop-workers-on-failure`     | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands) | `true`  |
 | `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                     | `true`  |
 | `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Workers                                                                                                       |         |
 | `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                     |         |
@@ -471,10 +471,10 @@ distribute-on:
   large-changeset: 10 linux-medium-js
 ```
 
-##### --stop-agents-after
+##### --stop-workers-after
 
 You can tell Nx Cloud to terminate agents after it sees a certain
-target or group of targets: `npx nx-cloud start-ci-run --stop-agents-after=build,test,e2e`.
+target or group of targets: `npx nx-cloud start-ci-run --stop-workers-after=build,test,e2e`.
 
 {% aside type="tip" title="Be specific!" %}
 For the best results, always tell Nx Cloud about all targets that should be expected during your pipeline. This will
@@ -491,7 +491,7 @@ include one or more targets from each command.
 This example is incorrect:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: npx nx-cloud start-ci-run --stop-workers-after=build
 - run: nx affected -t build
 - run: nx affected -t lint
 - run: nx affected -t test
@@ -504,7 +504,7 @@ executed.
 Use this instead:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
+- run: npx nx-cloud start-ci-run --stop-workers-after=lint,test,build
 - run: nx affected -t lint
 - run: nx affected -t test
 - run: nx affected -t build
@@ -516,7 +516,7 @@ Use this instead:
 This example is incorrect:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=test
+- run: npx nx-cloud start-ci-run --stop-workers-after=test
 - run: nx affected -t build & nx affected -t lint & nx affected -t test
 ```
 
@@ -527,7 +527,7 @@ In this case, Nx Cloud will stop your pipeline, leaving work incomplete for both
 Use this instead:
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=lint,test,build
+- run: npx nx-cloud start-ci-run --stop-workers-after=lint,test,build
 - run: nx affected -t build & nx affected -t lint & nx affected -t test
 ```
 
@@ -540,7 +540,7 @@ In advanced pipeline setups, it is possible that you want to run multiple comman
 distinct configurations. An example of this may be doing static translations for different locales during your builds.
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=build
+- run: npx nx-cloud start-ci-run --stop-workers-after=build
 - run: nx affected -t build --configuration=locale-en
 - run: nx affected -t build --configuration=locale-es
 ```
@@ -552,7 +552,7 @@ Execution can be marked complete.
 To address this, you can pass an optional `configuration` to make your `target`s more specific.
 
 ```yaml
-- run: npx nx-cloud start-ci-run --stop-agents-after=build:locale-en,build:locale-es
+- run: npx nx-cloud start-ci-run --stop-workers-after=build:locale-en,build:locale-es
 - run: nx affected -t build --configuration=locale-en
 - run: nx affected -t build --configuration=locale-es
 ```
@@ -640,16 +640,14 @@ nx affected -t build --no-dte
 {% /tabitem %}
 {% /tabs %}
 
-### `nx-cloud start-agent`
+### `nx-cloud start-worker`
 
-Starts an agent process when you [bring your own compute](/docs/kb/bring-your-own-compute). The agent waits for Nx Cloud to assign tasks that the main CI job distributed, either through `start-nx-agents` with `dte.distribute-on: manual` in `.nx/ci-config.yaml`, or through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the agents for you, see [Workers](/docs/features/ci-features/distribute-task-execution).
-
-This command is the same as running `nx start-agent`.
+Starts a worker process when you [bring your own compute](/docs/kb/bring-your-own-compute). The worker waits for Nx Cloud to assign tasks that the main CI job distributed, either through `start-workers` with `dte.distribute-on: manual` in `.nx/ci-config.yaml`, or through `start-ci-run --distribute-on=manual`. To have Nx Cloud provision and manage the workers for you, see [Workers](/docs/features/ci-features/distribute-task-execution).
 
 **Usage:**
 
 ```shell
-npx nx-cloud start-agent
+npx nx-cloud start-worker
 ```
 
 #### Options
@@ -667,17 +665,17 @@ Use it to dedicate a pool of agents to a subset of your pipeline, for example `-
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `NX_AGENT_NAME`                                    | Name the agent for logs and the Nx Cloud UI. Defaults to the CircleCI job name, then a random name |
 | `NX_AGENT_LAUNCH_TEMPLATE`                         | Report the [launch template](/docs/kb/launch-templates) the agent runs, used by assignment rules   |
-| `NX_VERBOSE_LOGGING` or `NX_CLOUD_VERBOSE_LOGGING` | Set either to `true` to turn on verbose logging. `start-agent` has no `--verbose` flag             |
+| `NX_VERBOSE_LOGGING` or `NX_CLOUD_VERBOSE_LOGGING` | Set either to `true` to turn on verbose logging. `start-worker` has no `--verbose` flag            |
 
 ```shell
-NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
+NX_AGENT_NAME=agent-1 npx nx-cloud start-worker
 ```
 
 For complete examples across different CI providers, see the [bring your own compute guide](/docs/kb/bring-your-own-compute).
 
-### `nx-cloud stop-all-agents`
+### `nx-cloud stop-all-workers`
 
-Same as `nx-cloud complete-ci-run`, `nx stop-all-agents` and `nx complete-ci-run`.
+Same as `nx-cloud complete-ci-run` and `nx complete-ci-run`.
 
 This command tells Nx Cloud to terminate all agents associated with this CI pipeline execution.
 Invoking this command is not needed anymore. New versions of Nx Cloud can track when the main job terminates
@@ -686,7 +684,7 @@ and terminate associated agents automatically.
 **Usage:**
 
 ```shell
-npx nx-cloud stop-all-agents
+npx nx-cloud stop-all-workers
 ```
 
 ### `nx-cloud complete-ci-run`
@@ -701,7 +699,7 @@ npx nx-cloud complete-ci-run
 
 ### `nx-cloud cleanup`
 
-Remove temporary marker files created by `start-ci-run` or `start-nx-agents` if either is accidentally run locally.
+Remove temporary marker files created by `start-ci-run` or `start-workers` if either is accidentally run locally.
 
 **Usage:**
 

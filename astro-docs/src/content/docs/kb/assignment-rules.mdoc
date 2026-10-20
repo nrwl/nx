@@ -384,7 +384,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - ... # Nx commands you want to distribute
 
@@ -410,7 +410,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx start-agent
+        run: npx nx-cloud start-worker
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -438,7 +438,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx start-agent
+        run: npx nx-cloud start-worker
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -498,7 +498,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
       - ..
 ```
 

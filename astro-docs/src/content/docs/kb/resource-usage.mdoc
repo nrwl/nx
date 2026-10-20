@@ -156,7 +156,7 @@ memory metrics. Opt in by adding a single CLI step to each agent job.
 
 ### What to add
 
-At the end of each agent job, run `npx nx-cloud upload-agent-metrics`. Use your provider's
+At the end of each agent job, run `npx nx-cloud upload-worker-metrics`. Use your provider's
 always-run mechanism so the step runs even when the agent is killed mid-task, which is precisely the
 scenario where the metrics matter most.
 
@@ -165,7 +165,7 @@ Here's the GitHub Actions step:
 ```yaml
 - name: Upload agent metrics
   if: always()
-  run: npx nx-cloud upload-agent-metrics
+  run: npx nx-cloud upload-worker-metrics
   env:
     NX_AGENT_NAME: ${{ matrix.agent }}
 ```

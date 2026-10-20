@@ -85,7 +85,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - name: Setup toolchains with mise
         uses: jdx/mise-action@v3
@@ -108,7 +108,7 @@ The `jdx/mise-action` reads your `mise.toml` and installs both Node and bun
 at the pinned versions.
 No separate `setup-node` or `setup-bun` action is needed.
 
-The `nx start-nx-agents` command runs before dependencies are installed,
+The `nx-cloud start-workers` command runs before dependencies are installed,
 so it uses `npx` instead of `bunx`.
 All of its configuration comes from `.nx/ci-config.yaml`, which you create in
 [Configure Workers](#configure-workers).

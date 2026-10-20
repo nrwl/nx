@@ -56,15 +56,15 @@ Choose one of the following setup paths.
 {% tabitem label="Use an Agent" %}
 
 {% llm_copy_prompt title="Let an AI agent set it up for you" previewLines=15 %}
-You are an Nx Agents workflow migration assistant.
+You are a Workers migration assistant for Nx Cloud.
 
-Your task is to analyze an existing CI pipeline and create a correct, conservative Nx Agents setup based on the pipeline's real commands, dependencies, secrets, and execution behavior.
+Your task is to analyze an existing CI pipeline and create a correct, conservative Workers setup based on the pipeline's real commands, dependencies, secrets, and execution behavior.
 
-Do not assume the workflow is simple. Inspect the CI workflow/pipeline files, invoked scripts, env-derived target lists, existing `.nx/workflows` files, `nx.json`, package-manager config, version files, and any provided Nx Agents docs/examples.
+Do not assume the workflow is simple. Inspect the CI workflow/pipeline files, invoked scripts, env-derived target lists, existing `.nx/workflows` files, `nx.json`, package-manager config, version files, and any provided Workers docs/examples.
 
 ## Primary goal
 
-Create an Nx Agents workflow that preserves the behavior of the existing CI pipeline while moving appropriate distributed Nx task execution onto Nx Agents.
+Create a Workers setup that preserves the behavior of the existing CI pipeline while moving appropriate distributed Nx task execution onto Workers.
 
 Act on the migration plan by default: edit the relevant workflow/configuration files unless the user explicitly asks for analysis only.
 
@@ -119,7 +119,7 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
 
 Preserve semantic constraints, not incidental bottlenecks from the old CI topology.
 
-When migrating to Nx Agents, distinguish these three concepts:
+When migrating to Workers, distinguish these three concepts:
 
 1. Task ordering:
    - "This must finish before that can start."
@@ -187,7 +187,7 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 
 ## Base image policy
 
-- Use the standard Nx Agents base image unless the user explicitly provides a different supported image.
+- Use the standard Workers base image unless the user explicitly provides a different supported image.
 - Default to `ubuntu22.04-node24.14-v1`.
 - If a required tool is missing from the base image, add an init step using a reusable Nx Cloud workflow step when available, or an inline script when necessary.
 
@@ -195,9 +195,9 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 
 - Decide whether heartbeat is sufficient.
 - Use `--require-explicit-completion` plus guarded `complete-ci-run` for multi-step, multi-job, staged, or heartbeat-risky workflows.
-- Treat `--stop-agents-after` as waste reduction, not CI completion.
-- Build `--stop-agents-after` from the final distributed target set and validate target/configuration names.
-- Use `--stop-agents-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
+- Treat `--stop-workers-after` as waste reduction, not CI completion.
+- Build `--stop-workers-after` from the final distributed target set and validate target/configuration names.
+- Use `--stop-workers-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
 
 ## Output requirements
 
@@ -227,7 +227,7 @@ After making changes, produce:
 Before finalizing, verify:
 
 - Every generated target exists.
-- `--stop-agents-after` matches real distributed targets.
+- `--stop-workers-after` matches real distributed targets.
 - Every env var forwarded to agents is actually needed.
 - No secret is printed in logs.
 - Main job and agents check out the same commit.
@@ -288,7 +288,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
-      - run: pnpm dlx nx-cloud start-nx-agents
+      - run: pnpm dlx nx-cloud start-workers
       - uses: actions/setup-node@v6
         with:
           node-version: 24
