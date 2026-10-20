@@ -15,6 +15,8 @@ import { parse } from 'path';
 import { validateProject } from './lib/validate-project';
 import { assertSupportedWebpackVersion } from '../../utils/versions';
 
+const buildExecutors = ['@nx/webpack:webpack', '@nrwl/webpack:webpack'];
+
 interface Schema {
   project?: string;
   skipFormat?: boolean;
@@ -38,36 +40,38 @@ export async function convertConfigToWebpackPluginGenerator(
   let migrated = 0;
 
   const projects = getProjects(tree);
-  forEachExecutorOptions<WebpackExecutorOptions>(
-    tree,
-    '@nx/webpack:webpack',
-    (currentTargetOptions, projectName, targetName, configurationName) => {
-      if (options.project && projectName !== options.project) {
-        return;
-      }
-      if (!configurationName) {
-        const project = projects.get(projectName);
-        const target = project.targets[targetName];
-
-        const hasError = validateProject(tree, project);
-        if (hasError) {
-          throw new Error(hasError);
+  for (const executor of buildExecutors) {
+    forEachExecutorOptions<WebpackExecutorOptions>(
+      tree,
+      executor,
+      (currentTargetOptions, projectName, targetName, configurationName) => {
+        if (options.project && projectName !== options.project) {
+          return;
         }
+        if (!configurationName) {
+          const project = projects.get(projectName);
+          const target = project.targets[targetName];
 
-        const webpackConfigPath = currentTargetOptions?.webpackConfig || '';
+          const hasError = validateProject(tree, project);
+          if (hasError) {
+            throw new Error(hasError);
+          }
 
-        if (
-          webpackConfigPath &&
-          tree.exists(webpackConfigPath) &&
-          convertConfigFile(tree, project.root, webpackConfigPath)
-        ) {
-          target.options.standardWebpackConfigFunction = true;
-          updateProjectConfiguration(tree, projectName, project);
-          migrated++;
+          const webpackConfigPath = currentTargetOptions?.webpackConfig || '';
+
+          if (
+            webpackConfigPath &&
+            tree.exists(webpackConfigPath) &&
+            convertConfigFile(tree, project.root, webpackConfigPath)
+          ) {
+            target.options.standardWebpackConfigFunction = true;
+            updateProjectConfiguration(tree, projectName, project);
+            migrated++;
+          }
         }
       }
-    }
-  );
+    );
+  }
 
   // Projects already on the inference plugin keep their options in the config,
   // so only the config needs converting.
@@ -76,8 +80,8 @@ export async function convertConfigToWebpackPluginGenerator(
       continue;
     }
     if (
-      Object.values(project.targets ?? {}).some(
-        (target) => target.executor === '@nx/webpack:webpack'
+      Object.values(project.targets ?? {}).some((target) =>
+        buildExecutors.includes(target.executor)
       )
     ) {
       continue;
@@ -112,11 +116,18 @@ function convertConfigFile(
     withNxConfig: webpackOptions,
     withReactConfig,
     strippedSource,
+    leftoverHelpers,
   } = extractWebpackOptions(tree, webpackConfigPath);
 
   // if webpackOptions === undefined
   // withNx was not found in the webpack.config.js file so we should skip this project
   if (webpackOptions !== undefined) {
+    // The `.old` config would call helpers whose imports were removed, or inert stubs.
+    if (leftoverHelpers.length) {
+      throw new Error(
+        `Could not convert ${webpackConfigPath}: ${leftoverHelpers.join(', ')} would be left in the old config. Only \`require\`d helpers passed directly to \`composePlugins\` are supported.`
+      );
+    }
     let parsedOptions = {};
     if (webpackOptions) {
       // Parse before writing anything: a non-literal option value leaves the

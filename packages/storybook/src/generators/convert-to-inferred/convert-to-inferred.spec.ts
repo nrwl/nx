@@ -239,13 +239,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -315,13 +308,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -390,13 +376,6 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
               "stats-json": true,
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -449,13 +428,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -600,13 +572,6 @@ describe('Storybook - Convert To Inferred', () => {
           {
             filter: { plugin: '@nx/storybook/plugin' },
             options: { 'config-dir': '.storybook' },
-            outputs: [
-              '{projectRoot}/{options.output-dir}',
-              '{projectRoot}/storybook-static',
-              '{options.output-dir}',
-              '{options.outputDir}',
-              '{options.o}',
-            ],
           },
         ],
         storybook: [

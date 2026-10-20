@@ -29,6 +29,29 @@ function withCauses(errors: string[]): string {
     : '';
 }
 
+/** The plugin inferred no target for a migrated project, so it was not converted. */
+export function uninferredTargetWarning(
+  targetName: string,
+  projectName: string,
+  root: string,
+  rootInferred: boolean,
+  errors: Array<{ file: string | null; message: string }>
+): string {
+  const cause = rootInferred
+    ? `the plugin inferred the project at ${root} without a "${targetName}" target. Check the plugin options`
+    : errors.length > 0
+      ? `the plugin failed to infer it: ${[
+          // Each inference option set reports the same failure again.
+          ...new Set(
+            errors.map(({ file, message }) =>
+              file ? `${file}: ${message}` : message
+            )
+          ),
+        ].join('; ')}. Fix the error`
+      : `the plugin found no config file it detects in ${root}. Rename the config file to one the plugin detects`;
+  return `convert-to-inferred left target "${targetName}" in project "${projectName}" on its executor because ${cause}, then rerun the migration to convert it.`;
+}
+
 /** A target's centralization was skipped before writing anything. */
 export function retainedResidualsWarning(
   targetNames: string[],

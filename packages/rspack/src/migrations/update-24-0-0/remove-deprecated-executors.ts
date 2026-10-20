@@ -26,6 +26,8 @@ export default function update(tree: Tree) {
 async function convertHelperConfigs(tree: Tree) {
   for (const usage of inventoryComposePlugins(tree)) {
     if (!usage.usesExecutor || !usage.usesHelpers) continue;
+    // Left for the Module Federation migration, like migrate-compose-plugins.
+    if (usage.usesModuleFederation) continue;
     try {
       await convertConfigToRspackPluginGenerator(tree, {
         project: usage.name,

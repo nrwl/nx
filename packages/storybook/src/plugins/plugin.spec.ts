@@ -197,9 +197,9 @@ describe('@nx/storybook/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {
@@ -599,9 +599,9 @@ export default config;
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {

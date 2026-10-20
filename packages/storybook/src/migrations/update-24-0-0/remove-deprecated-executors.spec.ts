@@ -253,13 +253,6 @@ describe('remove-deprecated-executors', () => {
             "config-dir": ".storybook",
             "output-dir": "../../dist/storybook/apps/app1",
           },
-          "outputs": [
-            "{projectRoot}/{options.output-dir}",
-            "{projectRoot}/storybook-static",
-            "{options.output-dir}",
-            "{options.outputDir}",
-            "{options.o}",
-          ],
         },
         "storybook": {
           "configurations": {

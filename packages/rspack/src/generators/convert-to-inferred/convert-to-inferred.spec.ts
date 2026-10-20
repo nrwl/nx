@@ -723,6 +723,155 @@ describe('convert-to-inferred', () => {
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
     });
 
+    it('should keep build outputs resolvable once outputPath moves into the rspack config', async () => {
+      const project = createProject(tree);
+      project.targets.build.outputs = [
+        '{options.outputPath}',
+        '{workspaceRoot}/{options.outputPath}/stats',
+        '{workspaceRoot}/reports/{projectName}',
+      ];
+      updateProjectConfiguration(tree, project.name, project);
+      writeRspackConfig(tree, project.root);
+
+      await convertToInferred(tree, { project: project.name });
+
+      expect(readProjectConfiguration(tree, project.name).targets.build)
+        .toMatchInlineSnapshot(`
+          {
+            "configurations": {
+              "development": {},
+              "production": {},
+            },
+            "defaultConfiguration": "production",
+            "outputs": [
+              "{workspaceRoot}/dist/apps/app1",
+              "{workspaceRoot}/dist/apps/app1/stats",
+              "{workspaceRoot}/reports/{projectName}",
+            ],
+          }
+        `);
+    });
+
+    it('should not add the options to the rspack config again when a kept target is converted twice', async () => {
+      const project = createProject(tree);
+      writeRspackConfig(tree, project.root);
+      // Same-name package.json scripts keep the targets on their executors.
+      writeJson(tree, `${project.root}/package.json`, {
+        name: project.name,
+        scripts: { build: 'rspack build', serve: 'rspack serve' },
+      });
+
+      await convertToInferred(tree, { project: project.name });
+      await convertToInferred(tree, { project: project.name });
+
+      expect(tree.read(`${project.root}/rspack.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+          const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+          const { useLegacyNxPlugin } = require('@nx/rspack');
+
+          // These options were migrated by @nx/rspack:convert-to-inferred from
+          // the project.json file and merged with the options in this file
+          const configValues = {
+            build: {
+              default: {
+                outputPath: '../../dist/apps/app1',
+                index: './src/index.html',
+                main: './src/main.tsx',
+                tsConfig: './tsconfig.app.json',
+                assets: ['./src/favicon.ico', './src/assets'],
+                styles: ['./src/styles.scss'],
+              },
+              development: {
+                extractLicenses: false,
+                optimization: false,
+                sourceMap: true,
+                vendorChunk: true,
+              },
+              production: {
+                fileReplacements: [
+                  {
+                    replace: './src/environments/environment.ts',
+                    with: './src/environments/environment.prod.ts',
+                  },
+                ],
+                optimization: true,
+                outputHashing: 'all',
+                sourceMap: false,
+                namedChunks: false,
+                extractLicenses: true,
+                vendorChunk: false,
+              },
+            },
+            serve: {
+              default: {
+                hmr: true,
+                server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
+                port: 4200,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                historyApiFallback: {
+                  index: '/index.html',
+                  disableDotRule: true,
+                  htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+                },
+              },
+              development: { open: true },
+              production: { hmr: false },
+            },
+          };
+
+          // Determine the correct configValue to use based on the configuration
+          const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+          const buildOptions = {
+            ...configValues.build.default,
+            ...configValues.build[configuration],
+          };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
+
+          /**
+           * @type{import('@rspack/core').RspackOptionsNormalized}
+           */
+          module.exports = async () => ({
+            devServer: devServerOptions,
+            plugins: [
+              new NxAppRspackPlugin(buildOptions),
+              new NxReactRspackPlugin(),
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
+            ],
+          });
+          "
+        `);
+    });
+
+    it('should add the options when the rspack config declares its own configValues or devServerOptions', async () => {
+      const project = createProject(tree);
+      writeRspackConfig(tree, project.root);
+      const configPath = `${project.root}/rspack.config.js`;
+      tree.write(
+        configPath,
+        `${tree.read(configPath, 'utf-8')}
+function makeDevServer() {
+  const configValues = {};
+  const devServerOptions = { ...configValues };
+  return devServerOptions;
+}
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(configPath, 'utf-8');
+      expect(config).toContain('...configValues.build.default');
+      expect(config).toContain('...configValues.serve.default');
+      expect(config).toContain('port: 4200');
+      expect(config).toContain('devServer: devServerOptions');
+    });
+
     it('should not touch the existing "devServer" option', async () => {
       const project = createProject(tree);
       writeRspackConfig(

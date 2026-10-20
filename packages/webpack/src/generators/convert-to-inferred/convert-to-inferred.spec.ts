@@ -749,6 +749,163 @@ describe('convert-to-inferred', () => {
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
     });
 
+    it('should keep build outputs resolvable once outputPath moves into the webpack config', async () => {
+      const project = createProject(tree);
+      project.targets.build.outputs = [
+        '{options.outputPath}',
+        '{workspaceRoot}/{options.outputPath}/stats',
+        '{workspaceRoot}/reports/{projectName}',
+      ];
+      updateProjectConfiguration(tree, project.name, project);
+      writeWebpackConfig(tree, project.root);
+
+      await convertToInferred(tree, { project: project.name });
+
+      expect(readProjectConfiguration(tree, project.name).targets.build)
+        .toMatchInlineSnapshot(`
+          {
+            "configurations": {
+              "development": {},
+              "production": {},
+            },
+            "defaultConfiguration": "production",
+            "outputs": [
+              "{workspaceRoot}/dist/apps/app1",
+              "{workspaceRoot}/dist/apps/app1/stats",
+              "{workspaceRoot}/reports/{projectName}",
+            ],
+          }
+        `);
+    });
+
+    it('should not add the options to the webpack config again when a kept target is converted twice', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(tree, project.root);
+      // Same-name package.json scripts keep the targets on their executors.
+      writeJson(tree, `${project.root}/package.json`, {
+        name: project.name,
+        scripts: { build: 'webpack build', serve: 'webpack serve' },
+      });
+
+      await convertToInferred(tree, { project: project.name });
+      await convertToInferred(tree, { project: project.name });
+
+      expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+          const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+          const { useLegacyNxPlugin } = require('@nx/webpack');
+
+          // These options were migrated by @nx/webpack:convert-to-inferred from
+          // the project.json file and merged with the options in this file
+          const configValues = {
+            build: {
+              default: {
+                compiler: 'babel',
+                outputPath: '../../dist/apps/app1',
+                index: './src/index.html',
+                baseHref: '/',
+                main: './src/main.tsx',
+                tsConfig: './tsconfig.app.json',
+                assets: ['./src/favicon.ico', './src/assets'],
+                styles: ['./src/styles.scss'],
+              },
+              development: {
+                extractLicenses: false,
+                optimization: false,
+                sourceMap: true,
+                vendorChunk: true,
+              },
+              production: {
+                fileReplacements: [
+                  {
+                    replace: './src/environments/environment.ts',
+                    with: './src/environments/environment.prod.ts',
+                  },
+                ],
+                optimization: true,
+                outputHashing: 'all',
+                sourceMap: false,
+                namedChunks: false,
+                extractLicenses: true,
+                vendorChunk: false,
+              },
+            },
+            serve: {
+              default: {
+                hot: true,
+                liveReload: false,
+                server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
+                proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
+                port: 4200,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                historyApiFallback: {
+                  index: '/index.html',
+                  disableDotRule: true,
+                  htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+                },
+              },
+              development: { open: true },
+              production: { hot: false },
+            },
+          };
+
+          // Determine the correct configValue to use based on the configuration
+          const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+          const buildOptions = {
+            ...configValues.build.default,
+            ...configValues.build[configuration],
+          };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
+
+          /**
+           * @type{import('webpack').WebpackOptionsNormalized}
+           */
+          module.exports = async () => ({
+            devServer: devServerOptions,
+            plugins: [
+              new NxAppWebpackPlugin(buildOptions),
+              new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+              }),
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ],
+          });
+          "
+        `);
+    });
+
+    it('should add the options when the webpack config declares its own configValues or devServerOptions', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(tree, project.root);
+      const configPath = `${project.root}/webpack.config.js`;
+      tree.write(
+        configPath,
+        `${tree.read(configPath, 'utf-8')}
+function makeDevServer() {
+  const configValues = {};
+  const devServerOptions = { ...configValues };
+  return devServerOptions;
+}
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(configPath, 'utf-8');
+      expect(config).toContain('...configValues.build.default');
+      expect(config).toContain('...configValues.serve.default');
+      expect(config).toContain('port: 4200');
+      expect(config).toContain('devServer: devServerOptions');
+    });
+
     it('should not touch the existing "devServer" option', async () => {
       const project = createProject(tree);
       writeWebpackConfig(

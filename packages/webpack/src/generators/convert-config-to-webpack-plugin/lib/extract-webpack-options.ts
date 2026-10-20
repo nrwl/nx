@@ -25,6 +25,7 @@ export function extractWebpackOptions(tree: Tree, webpackConfigPath: string) {
   // Returned rather than written here so the caller can reject configs whose
   // options are not a plain literal before touching the file.
   let strippedSource: string | undefined;
+  let leftoverHelpers: string[] = [];
 
   withWebCall.forEach((node) => {
     const argument = node.arguments[0] || '';
@@ -72,9 +73,25 @@ export function extractWebpackOptions(tree: Tree, webpackConfigPath: string) {
     );
 
     strippedSource = updatedSource;
+    leftoverHelpers = findHelperReferences(updatedSource);
   }
 
-  return { withNxConfig, withReactConfig, strippedSource };
+  return { withNxConfig, withReactConfig, strippedSource, leftoverHelpers };
+}
+
+const REMOVED_HELPERS = new Set([
+  'composePlugins',
+  'composePluginsSync',
+  'withNx',
+  'withWeb',
+  'withReact',
+]);
+
+function findHelperReferences(source: string): string[] {
+  const names = query<ts.Identifier>(ast(source), 'Identifier')
+    .map((node) => node.text)
+    .filter((name) => REMOVED_HELPERS.has(name));
+  return [...new Set(names)];
 }
 
 // `composePlugins` is an inert stub since Nx v24, so the old config composes its

@@ -40,6 +40,11 @@ export function addConfigValuesToViteConfig(
   const viteConfigContents = tree.read(configFile, 'utf-8');
 
   const sourceFile = ast(viteConfigContents);
+  // An earlier run that kept the target already added the block; a second
+  // `const configValues` breaks parsing of the config.
+  if (viteConfigContents.includes('configValues[nxConfiguration]')) {
+    return;
+  }
   // AST TO GET SECTION TO APPEND TO
   const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   if (importNodes.length === 0) {
