@@ -37,7 +37,7 @@ export interface CypressBaseSetupSchema {
      * JSON, except for values the config picks at runtime from `CI`.
      */
     presetOptions: string;
-    /** JS expression, not a bare URL - a quoted literal or a `CI` switch. */
+    /** A JS expression rendered by `renderE2EPresetOptions`, not a bare URL. */
     baseUrl?: string;
   };
 }

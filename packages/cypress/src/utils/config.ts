@@ -31,15 +31,14 @@ export const JIT_COMPILE_DISABLE_COMMENT = [
   '// intermittently run 0 tests in CI. Remove this line to opt back in.',
 ];
 
-// The generated config picks its own web server from `CI` so that `nx e2e`
-// runs against the dev server locally and the production build in CI, the way
-// the atomized `e2e-ci` target already does. Both the freshly generated config
-// (base-setup templates) and an existing one (addDefaultE2EConfig) render the
-// preset options through here, so they stay identical.
 const CI_WEB_SERVER_COMMAND_PLACEHOLDER = '__NX_CI_WEB_SERVER_COMMAND__';
 
+function toJsStringLiteral(value: string): string {
+  return `'${JSON.stringify(value).slice(1, -1).replace(/'/g, "\\'")}'`;
+}
+
 function ciSwitch(ciValue: string, value: string): string {
-  return `process.env['CI'] ? '${ciValue}' : '${value}'`;
+  return `process.env['CI'] ? ${toJsStringLiteral(ciValue)} : ${toJsStringLiteral(value)}`;
 }
 
 export function renderE2EPresetOptions(
@@ -68,8 +67,7 @@ export function renderE2EPresetOptions(
 
   return {
     presetOptions: switchesCommand
-      ? rendered.replace(
-          `"${CI_WEB_SERVER_COMMAND_PLACEHOLDER}"`,
+      ? rendered.replace(`"${CI_WEB_SERVER_COMMAND_PLACEHOLDER}"`, () =>
           ciSwitch(options.ciWebServerCommand, webServerCommand)
         )
       : rendered,
@@ -77,7 +75,7 @@ export function renderE2EPresetOptions(
       ? undefined
       : options.ciBaseUrl && options.ciBaseUrl !== baseUrl
         ? ciSwitch(options.ciBaseUrl, baseUrl)
-        : `'${baseUrl}'`,
+        : toJsStringLiteral(baseUrl),
   };
 }
 

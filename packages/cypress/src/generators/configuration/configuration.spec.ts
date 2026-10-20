@@ -125,6 +125,51 @@ describe('Cypress e2e configuration', () => {
     expect(config).not.toContain("process.env['CI']");
   });
 
+  it.each([
+    [
+      'switching on CI',
+      {
+        baseUrl: 'http://localhost:4200',
+        webServerCommands: {
+          default: String.raw`C:\tools\serve.cmd --title 'my app'`,
+        },
+        ciWebServerCommand:
+          'npx nx run my-app:build && npx serve "dist/my app" > serve-$$.log',
+        ciBaseUrl: 'http://localhost:4300/?a=1&b=2',
+      },
+      [
+        String.raw`"default": process.env['CI'] ? 'npx nx run my-app:build && npx serve \"dist/my app\" > serve-$$.log' : 'C:\\tools\\serve.cmd --title \'my app\''`,
+        String.raw`baseUrl: process.env['CI'] ? 'http://localhost:4300/?a=1&b=2' : 'http://localhost:4200',`,
+      ],
+    ],
+    [
+      'one server',
+      {
+        baseUrl: `http://localhost:4200/?q='a'`,
+        webServerCommands: { default: 'nx run my-app:serve' },
+        ciWebServerCommand: 'nx run my-app:serve',
+      },
+      [String.raw`baseUrl: 'http://localhost:4200/?q=\'a\'',`],
+    ],
+  ])(
+    'should keep quotes, backslashes and dollar signs in web server values (%s)',
+    async (_, options, expectedLines) => {
+      await cypressInitGenerator(tree, {});
+      addProject(tree, { name: 'my-app', type: 'apps' });
+
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-app',
+        skipFormat: true,
+        ...options,
+      });
+
+      const config = tree.read('apps/my-app/cypress.config.ts', 'utf-8');
+      for (const line of expectedLines) {
+        expect(config).toContain(line);
+      }
+    }
+  );
+
   it('should add e2e target to existing lib', async () => {
     addProject(tree, { name: 'my-lib', type: 'libs' });
     addProject(tree, { name: 'my-app', type: 'apps' });
