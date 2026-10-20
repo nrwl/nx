@@ -14,6 +14,7 @@ export {
   findEslintFile,
   inspectTypedLinting,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,

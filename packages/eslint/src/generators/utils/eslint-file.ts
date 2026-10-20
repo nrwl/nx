@@ -233,6 +233,16 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
 }
 
 /**
+ * Plugins this repo installs from npm still import this, and its specs load them.
+ * TODO(v24): remove once the root `nx` catalog is on a release whose plugins no longer import it.
+ */
+export function isTypedLintingEnabled(options: {
+  enableTypedLinting?: boolean;
+}): boolean {
+  return !!options.enableTypedLinting;
+}
+
+/**
  * What a config says about typed linting.
  *
  * Only keys inside a `parserOptions` object count, so an unrelated `project`

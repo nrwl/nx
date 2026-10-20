@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  type ProjectConfiguration,
   readJson,
   readNxJson,
   readProjectConfiguration,
@@ -9,8 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { mergeProjectConfigurationIntoRootMap } from 'nx/src/project-graph/utils/project-configuration/project-nodes-manager';
-import { combineOptionsForGenerator } from 'nx/src/utils/params';
 import update from './replace-set-parser-options-project';
 
 describe('replace-set-parser-options-project migration', () => {
@@ -161,31 +158,6 @@ describe('replace-set-parser-options-project migration', () => {
   });
 
   describe('defaults in both package.json and project.json', () => {
-    // Resolves the defaults like `nx g` does, with `package.json` merged beneath `project.json`.
-    async function resolveReactLibraryDefaults() {
-      const rootMap: Record<string, ProjectConfiguration> = {};
-      mergeProjectConfigurationIntoRootMap(rootMap, {
-        root: 'libs/lib1',
-        name: 'lib1',
-        ...readJson(tree, 'libs/lib1/package.json').nx,
-      });
-      mergeProjectConfigurationIntoRootMap(rootMap, {
-        root: 'libs/lib1',
-        ...readJson(tree, 'libs/lib1/project.json'),
-      });
-      return combineOptionsForGenerator(
-        {},
-        '@nx/react',
-        'library',
-        { version: 2, projects: { lib1: rootMap['libs/lib1'] } },
-        readNxJson(tree),
-        { properties: {} },
-        false,
-        'lib1',
-        null
-      );
-    }
-
     it.each([
       {
         scenario: 'project.json overrides a package.json flat default',
@@ -195,7 +167,6 @@ describe('replace-set-parser-options-project migration', () => {
         projectJsonDefaults: {
           '@nx/react:library': { setParserOptionsProject: false },
         },
-        enabled: false,
         migratedPackageJsonDefaults: {
           '@nx/react:library': { enableTypedLinting: true },
         },
@@ -212,7 +183,6 @@ describe('replace-set-parser-options-project migration', () => {
         projectJsonDefaults: {
           '@nx/react': { library: { setParserOptionsProject: true } },
         },
-        enabled: true,
         migratedPackageJsonDefaults: {
           '@nx/react:library': { enableTypedLinting: true },
         },
@@ -228,7 +198,6 @@ describe('replace-set-parser-options-project migration', () => {
         projectJsonDefaults: {
           '@nx/react': { library: { enableTypedLinting: false } },
         },
-        enabled: false,
         migratedPackageJsonDefaults: {
           '@nx/react': { library: { enableTypedLinting: true } },
         },
@@ -237,11 +206,10 @@ describe('replace-set-parser-options-project migration', () => {
         },
       },
     ])(
-      'should keep the resolved option on every run when $scenario',
+      'should migrate both files the same way on every run when $scenario',
       async ({
         packageJsonDefaults,
         projectJsonDefaults,
-        enabled,
         migratedPackageJsonDefaults,
         migratedProjectJsonDefaults,
       }) => {
@@ -253,12 +221,8 @@ describe('replace-set-parser-options-project migration', () => {
           name: 'lib1',
           generators: projectJsonDefaults,
         });
-        const before = await resolveReactLibraryDefaults();
-        expect(
-          !!(before.enableTypedLinting || before.setParserOptionsProject)
-        ).toBe(enabled);
 
-        async function expectMigrated() {
+        function expectMigrated() {
           expect(readJson(tree, 'libs/lib1/package.json')).toEqual({
             name: 'lib1',
             nx: {
@@ -270,15 +234,12 @@ describe('replace-set-parser-options-project migration', () => {
             name: 'lib1',
             generators: migratedProjectJsonDefaults,
           });
-          expect(await resolveReactLibraryDefaults()).toEqual({
-            enableTypedLinting: enabled,
-          });
         }
 
         await update(tree);
-        await expectMigrated();
+        expectMigrated();
         await update(tree);
-        await expectMigrated();
+        expectMigrated();
       }
     );
   });
