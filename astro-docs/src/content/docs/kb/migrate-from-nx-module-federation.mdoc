@@ -496,7 +496,7 @@ options. When you move them:
   `namedChunks`, and `vendorChunk` values. The plugin derives them from `NODE_ENV`. It doesn't
   derive `extractLicenses`, so keep that on for production only.
 - Leave no build options on the target. The plugin merges in the running target's `project.json`
-  options, and they win.
+  options, and those take precedence.
 
 The wrapper also changed these bundler settings, which you now set yourself.
 
@@ -894,7 +894,7 @@ Keep `@module-federation/enhanced` as a direct dependency and commit the lockfil
 - **`--devRemotes` selection.** The targets you start decide which remotes run live and which
   serve from a build.
 - **Runtime library control.** `withModuleFederation` attached a runtime plugin when the
-  dev-server executor set `NX_MF_DEV_REMOTES`. It let a live remote's copy of a shared library win
+  dev-server executor set `NX_MF_DEV_REMOTES`. It gave a live remote's copy of a shared library precedence
   over a static one. Nothing sets that variable now.
 - **Automatic remote fallback.** A host fails the request when a remote is unavailable. Add an
   error boundary, as in Step 5, if you need one.

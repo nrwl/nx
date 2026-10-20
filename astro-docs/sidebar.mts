@@ -27,6 +27,7 @@ const learnGroups: SidebarItems = [
     collapsed: false,
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
+      { label: 'How Nx works', link: 'getting-started/how-nx-works' },
       { label: 'Installation', link: 'getting-started/installation' },
       {
         label: 'Start a new project',
@@ -77,28 +78,7 @@ const learnGroups: SidebarItems = [
   },
 
   {
-    label: 'How Nx works',
-    collapsed: true,
-    items: [
-      { label: 'Mental model', link: 'concepts/mental-model' },
-      { label: 'How caching works', link: 'concepts/how-caching-works' },
-      {
-        label: 'Task pipeline configuration',
-        link: 'concepts/task-pipeline-configuration',
-      },
-      {
-        label: 'Types of configuration',
-        link: 'concepts/types-of-configuration',
-      },
-      { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      {
-        label: 'Building blocks of fast CI',
-        link: 'concepts/ci-concepts/building-blocks-fast-ci',
-      },
-    ],
-  },
-  {
-    label: 'Platform features',
+    label: 'Core features',
     collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
@@ -143,32 +123,6 @@ const learnGroups: SidebarItems = [
                 link: 'guides/enforce-module-boundaries/tags-allow-list',
               },
             ],
-          },
-        ],
-      },
-      {
-        label: 'Continuous integration (CI)',
-        collapsed: true,
-        items: [
-          {
-            label: 'Overview',
-            link: 'features/ci-features',
-          },
-          {
-            label: 'Run affected tasks',
-            link: 'features/ci-features/affected',
-          },
-          {
-            label: 'Remote caching',
-            link: 'features/ci-features/remote-cache',
-          },
-          {
-            label: 'Distribute task execution (Nx Agents)',
-            link: 'features/ci-features/distribute-task-execution',
-          },
-          {
-            label: 'Self-healing CI',
-            link: 'features/ci-features/self-healing-ci',
           },
         ],
       },
@@ -346,6 +300,32 @@ const learnGroups: SidebarItems = [
             link: 'reference/nx-cloud/release-notes',
           },
         ],
+      },
+    ],
+  },
+  {
+    label: 'CI features',
+    collapsed: true,
+    items: [
+      {
+        label: 'CI Overview (Nx Cloud)',
+        link: 'features/ci-features',
+      },
+      {
+        label: 'Run affected tasks',
+        link: 'features/ci-features/affected',
+      },
+      {
+        label: 'Remote caching',
+        link: 'features/ci-features/remote-cache',
+      },
+      {
+        label: 'Distribute task execution (Workers)',
+        link: 'features/ci-features/distribute-task-execution',
+      },
+      {
+        label: 'Self-healing CI',
+        link: 'features/ci-features/self-healing-ci',
       },
     ],
   },

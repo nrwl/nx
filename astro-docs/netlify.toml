@@ -451,7 +451,11 @@ to = "/docs/kb/bring-your-own-compute"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/fix-sandbox-violations"
-to = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
+
+[[redirects]]
+from = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/personal-access-tokens"
@@ -1313,11 +1317,85 @@ to = "/docs/features/ci-features"
 
 [[redirects]]
 from = "/docs/concepts/ci-concepts/parallelization-distribution"
-to = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
+to = "/docs/features/ci-features#building-blocks-of-fast-ci"
 
 [[redirects]]
 from = "/docs/platform-features/orchestration-ci"
-to = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+# DOC-715: How Nx works pages folded into getting-started/how-nx-works and feature pages.
+[[redirects]]
+from = "/docs/concepts/mental-model"
+to = "/docs/getting-started/how-nx-works"
+
+[[redirects]]
+from = "/docs/concepts/how-caching-works"
+to = "/docs/features/cache-task-results#how-caching-works"
+
+[[redirects]]
+from = "/docs/concepts/task-pipeline-configuration"
+to = "/docs/features/run-tasks#defining-a-task-pipeline"
+
+[[redirects]]
+from = "/docs/concepts/types-of-configuration"
+to = "/docs/reference/project-configuration"
+
+[[redirects]]
+from = "/docs/concepts/nx-plugins"
+to = "/docs/plugin-registry"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
+to = "/docs/features/ci-features#building-blocks-of-fast-ci"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/concepts"
+to = "/docs/getting-started/how-nx-works"
+
+[[redirects]]
+from = "/docs/how-nx-works"
+to = "/docs/getting-started/how-nx-works"
+
+# DOC-715: hidden sidebar hub pages removed with the Core features / CI features split.
+[[redirects]]
+from = "/docs/platform-features"
+to = "/docs/features/run-tasks"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization"
+to = "/docs/features/explore-graph"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization/enforce-module-boundaries"
+to = "/docs/features/enforce-module-boundaries"
+
+[[redirects]]
+from = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/platform-features/release-publishing"
+to = "/docs/features/manage-releases"
+
+[[redirects]]
+from = "/docs/platform-features/maintenance"
+to = "/docs/features/automate-updating-dependencies"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise"
+to = "/docs/enterprise"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/single-tenant"
+to = "/docs/enterprise/single-tenant/overview"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/conformance-reference"
+to = "/docs/reference/conformance/overview"
 
 [[redirects]]
 from = "/docs/kb/setup-ci"

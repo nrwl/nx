@@ -248,8 +248,8 @@ For a feature that doesn't load, import the TypeScript modules it uses, or scope
 
 ### Without a recorded run
 
-Nx applies a recorded run only in CI, when your workspace has Ultracache turned on in Nx Cloud and Nx Cloud has a recorded run for the task.
-Setting `NX_CLOUD_USE_ULTRACACHE` to `false` turns it off.
+Nx applies a recorded run only when your workspace has Ultracache turned on in Nx Cloud and Nx Cloud has a recorded run for the task.
+Nx 24 and later do this in CI by default, and setting `NX_CLOUD_USE_ULTRACACHE` to `false` turns it off. See [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
 
 Without a recorded run, such as on your machine, a task with `@nx-ignore-server-inputs` hashes its declared inputs without the server task's inputs.
 Each split task's declared inputs cover the whole e2e project, so an edit to any test file reruns every test file.

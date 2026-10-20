@@ -9,7 +9,7 @@ filter: 'type:References'
 
 A project's configuration is constructed by Nx from three sources:
 
-1. [Tasks inferred by Nx plugins](/docs/concepts/mental-model#inferred-tasks) from tooling configuration
+1. [Tasks inferred by Nx plugins](/docs/features/run-tasks#inferred-tasks) from tooling configuration
 2. [Workspace `targetDefaults`](/docs/reference/nx-json#target-defaults) defined in the `nx.json` file
 3. Individual project level configuration files (`package.json` and `project.json`)
 
@@ -64,6 +64,20 @@ nx show project myproject --web
 {% /project_details %}
 
 The project details view also shows where each setting is defined so that you know where to change it.
+From the terminal, `nx show target` prints one resolved target, and `--verbose` adds the file or plugin behind each value:
+
+```shell
+nx show target myproject:build --verbose
+```
+
+Nx configuration sits next to the configuration of the tools each project uses, at both the workspace and the project level:
+
+| Scope     | Nx configuration                   | Tool configuration (TypeScript example) |
+| --------- | ---------------------------------- | --------------------------------------- |
+| Workspace | `/nx.json`                         | `/tsconfig.base.json`                   |
+| Project   | `/packages/myproject/package.json` | `/packages/myproject/tsconfig.json`     |
+
+Tool configuration stays the source of truth for the tool itself, and plugins read it to create the inferred tasks.
 
 ## Project level configuration files
 
@@ -220,7 +234,7 @@ Caching is configured by specifying `"cache": true` in a target's configuration.
 
 {% aside type="caution" title="Per Project Caching + Distribution" %}
 
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Workers enabled.
 
 {% /aside %}
 
@@ -241,7 +255,7 @@ In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default
 
 {% aside type="caution" title="Note: Parallelism is only per machine" %}
 
-If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Nx Agents is key to running tasks which do not support parallelism quickly and efficiently.
+If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Workers is key to running tasks which do not support parallelism quickly and efficiently.
 
 {% /aside %}
 
@@ -860,9 +874,8 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
-Applying a recording also needs a CI run, a recording for the task in question, and Ultracache turned on for your workspace in Nx Cloud.
+Applying a recording needs a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers. Nx 24 and later apply it in CI by default ([Ultracache and Nx versions](/docs/kb/ultracache-nx-versions)).
 Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
-See [task sandboxing](/docs/kb/sandboxing).
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.
@@ -883,7 +896,7 @@ A target that defines `ultracache` replaces the inherited settings rather than a
 A key written after the spread token overrides the inherited value. For example, `"ultracache": { "...": true, "collectStats": false }` keeps the other inherited settings and turns off successful stat collection, even if the inherited `collectStats` is `true`.
 
 {% aside type="note" title="Workspace-wide exclusions live elsewhere" %}
-`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/ultracache-config.yaml`. See [Excluding paths](/docs/kb/sandboxing#excluding-paths). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
+`ultracache` applies to one target. To exclude paths across every task in the workspace, use `.nx/workflows/ultracache-config.yaml`. See [improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs). The two combine: a task is checked against its own `ultracache` patterns and the workspace-wide ones together, so neither overrides the other.
 {% /aside %}
 
 ### Sync generators
@@ -902,7 +915,7 @@ In the same way that `dependsOn` tells Nx to run another task before running thi
 
 ### Executor/command options
 
-To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/concepts/mental-model#inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
+To define what a task does, you must configure which command or executor will run when the task is executed. In the case of [inferred tasks](/docs/features/run-tasks#inferred-tasks) you can provide project-specific overrides. As an example, if your repo has projects with a `build` inferred target running the `vite build` command, you can provide some extra options as follows:
 
 ```json
 {

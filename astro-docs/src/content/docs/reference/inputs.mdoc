@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
+When Nx [computes the hash for a given operation](/docs/features/cache-task-results#how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs, **environment variables**, and **working directory** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
@@ -186,10 +186,10 @@ A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
 
-In CI, when your workspace has Ultracache turned on in Nx Cloud, Nx can hash a task from the files it read on a recorded run.
+In CI, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes a task from the files it read on a recorded run.
 To turn this off for a run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
 Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
-An input with `"always": true` keeps its files in the hash, as [inputs kept under ultracache](#inputs-kept-under-ultracache) describes.
+An input with `"always": true` keeps its files in the hash, as [inputs kept under Ultracache](#inputs-kept-under-ultracache) describes.
 To keep a target's declared inputs authoritative, set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on it.
 
 ### JSON files
@@ -318,7 +318,7 @@ When a task depends on another task, it is possible that the outputs of the depe
 ```
 
 The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
-Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
+Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/features/run-tasks#defining-a-task-pipeline). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
 
 ### Inputs of continuous dependencies
 
@@ -356,9 +356,9 @@ For more information, see [skip unaffected split e2e tests](/docs/kb/skip-unaffe
 `nx affected` selects tasks by their inputs.
 With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects, regardless of `"inputs": false`.
 
-### Inputs kept under ultracache
+### Inputs kept under Ultracache
 
-When a task hashes from a recorded run, its declared filesets give way to the files it read.
+When a task hashes from an [Ultracache](/docs/features/ci-features/remote-cache#ultracache) recording, its declared filesets give way to the files it read.
 An `e2e` task usually doesn't read the libraries its app serves, so a library listed in its inputs drops out of the hash.
 Add `"always": true` to an input to keep the files it resolves to:
 

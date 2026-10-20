@@ -212,7 +212,7 @@ To decide how to split projects, see [folder structure](/docs/kb/folder-structur
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches. Connecting your workspace to Nx Cloud adds:
 
 - [Remote caching](/docs/features/ci-features/remote-cache) to share build and test results across your team and CI machines
-- [Nx Agents](/docs/features/ci-features/distribute-task-execution) to distribute your Angular builds, tests, and lint tasks across machines
+- [Workers](/docs/features/ci-features/distribute-task-execution) to distribute your Angular builds, tests, and lint tasks across machines
 - [Self-healing CI](/docs/features/ci-features/self-healing-ci) to propose fixes for failed tasks directly in your editor or PR
 
 Connect your workspace:
@@ -226,7 +226,7 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 ## What's next
 
 {% cardgrid %}
-{% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
+{% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Workers, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/kb/migrate-angular-cli-to-nx" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/kb/using-tailwind-css-with-angular-projects" /%}

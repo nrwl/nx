@@ -56,7 +56,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/playwright configuration
 
@@ -203,7 +203,7 @@ terminal. Test output such as reports, screenshots, and videos will be accessibl
 If a test passes and fails without a code change, use the [flaky Playwright test guide](/docs/technologies/test-tools/playwright/guides/flaky-tests) to reproduce the failure, inspect its trace, and fix its cause.
 
 {% aside type="note" title="Output Caching" %}
-If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
+If changing the output directory or report output, make sure to update the [target outputs](/docs/features/cache-task-results#what-nx-caches) so the artifacts are correctly cached
 {% /aside %}
 
 ### Watching for changes

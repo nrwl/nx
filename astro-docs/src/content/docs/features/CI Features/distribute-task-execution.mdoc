@@ -1,22 +1,17 @@
 ---
-title: 'Distribute Task Execution (Nx Agents)'
-description: 'Nx Agents distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
+title: 'Distribute Task Execution (Workers)'
+description: 'Workers distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
 keywords: [distributed tasks, dynamic task packing, task packing, CI cost]
 sidebar:
   order: 12
 filter: 'type:Features'
 ---
 
-With Nx Agents, the tasks in your CI run spread across several machines.
+With Workers, the tasks in your CI run spread across several machines.
 _Dynamic task packing_ keeps each machine close to its CPU and memory limits.
 You pay for machine-minutes, not for how busy a machine is, so the same work packed onto fewer, busier machines costs less and finishes sooner.
 
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
-
-{% youtube
-src="https://youtu.be/A1JQDGG1YG8"
-title="How Nx Agents Distribute Tasks Across Machines in CI"
-/%}
 
 ## Why CI pipelines waste compute
 
@@ -29,7 +24,7 @@ Each machine still runs only the tasks assigned to it, so a shard that gets two 
 
 Nx Cloud uses what it knows about your projects and tasks to decide which task runs where, and when:
 
-- Task order and the critical path come from the [task graph](/docs/concepts/mental-model#the-task-graph), so long chains start first.
+- Task order and the critical path come from the [task graph](/docs/features/run-tasks#the-task-graph), so long chains start first.
 - Each task's duration and its CPU and memory profile come from previous runs.
 - Each agent gets new work whenever it has room for it, instead of a batch fixed at the start of the run.
 
@@ -45,7 +40,7 @@ There's no `--parallel` value to tune and no mapping of projects to machines to 
 Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
 They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
 
-## Enable Nx Agents
+## Enable Workers
 
 Connect your workspace to Nx Cloud if you haven't already:
 
@@ -61,15 +56,15 @@ Choose one of the following setup paths.
 {% tabitem label="Use an Agent" %}
 
 {% llm_copy_prompt title="Let an AI agent set it up for you" previewLines=15 %}
-You are an Nx Agents workflow migration assistant.
+You are a Workers migration assistant for Nx Cloud.
 
-Your task is to analyze an existing CI pipeline and create a correct, conservative Nx Agents setup based on the pipeline's real commands, dependencies, secrets, and execution behavior.
+Your task is to analyze an existing CI pipeline and create a correct, conservative Workers setup based on the pipeline's real commands, dependencies, secrets, and execution behavior.
 
-Do not assume the workflow is simple. Inspect the CI workflow/pipeline files, invoked scripts, env-derived target lists, existing `.nx/workflows` files, `nx.json`, package-manager config, version files, and any provided Nx Agents docs/examples.
+Do not assume the workflow is simple. Inspect the CI workflow/pipeline files, invoked scripts, env-derived target lists, existing `.nx/workflows` files, `nx.json`, package-manager config, version files, and any provided Workers docs/examples.
 
 ## Primary goal
 
-Create an Nx Agents workflow that preserves the behavior of the existing CI pipeline while moving appropriate distributed Nx task execution onto Nx Agents.
+Create a Workers setup that preserves the behavior of the existing CI pipeline while moving appropriate distributed Nx task execution onto Workers.
 
 Act on the migration plan by default: edit the relevant workflow/configuration files unless the user explicitly asks for analysis only.
 
@@ -124,7 +119,7 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
 
 Preserve semantic constraints, not incidental bottlenecks from the old CI topology.
 
-When migrating to Nx Agents, distinguish these three concepts:
+When migrating to Workers, distinguish these three concepts:
 
 1. Task ordering:
    - "This must finish before that can start."
@@ -192,7 +187,7 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 
 ## Base image policy
 
-- Use the standard Nx Agents base image unless the user explicitly provides a different supported image.
+- Use the standard Workers base image unless the user explicitly provides a different supported image.
 - Default to `ubuntu22.04-node24.14-v1`.
 - If a required tool is missing from the base image, add an init step using a reusable Nx Cloud workflow step when available, or an inline script when necessary.
 
@@ -200,9 +195,9 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 
 - Decide whether heartbeat is sufficient.
 - Use `--require-explicit-completion` plus guarded `complete-ci-run` for multi-step, multi-job, staged, or heartbeat-risky workflows.
-- Treat `--stop-agents-after` as waste reduction, not CI completion.
-- Build `--stop-agents-after` from the final distributed target set and validate target/configuration names.
-- Use `--stop-agents-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
+- Treat `--stop-workers-after` as waste reduction, not CI completion.
+- Build `--stop-workers-after` from the final distributed target set and validate target/configuration names.
+- Use `--stop-workers-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
 
 ## Output requirements
 
@@ -232,7 +227,7 @@ After making changes, produce:
 Before finalizing, verify:
 
 - Every generated target exists.
-- `--stop-agents-after` matches real distributed targets.
+- `--stop-workers-after` matches real distributed targets.
 - Every env var forwarded to agents is actually needed.
 - No secret is printed in logs.
 - Main job and agents check out the same commit.
@@ -275,8 +270,8 @@ dte:
 ```
 
 `linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
-If tasks share a resource such as a port or a database, keep them apart with [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
-For every other option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+To keep tasks apart or send them to specific agents, see [control where tasks run](#control-where-tasks-run).
+For every option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 Then start the agents early in your CI job, before installing dependencies:
 
@@ -293,7 +288,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
-      - run: pnpm dlx nx-cloud start-nx-agents
+      - run: pnpm dlx nx-cloud start-workers
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -327,6 +322,28 @@ dte:
 Each changeset covers an equal share of that range, so their order matters.
 Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
 
+## Control where tasks run
+
+Dynamic task packing places tasks on its own.
+Two optional settings in `.nx/ci-config.yaml` add rules it follows:
+
+- [Scheduling constraints](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints) keep tasks that share a resource, such as a port or a database, from running on the same agent at the same time.
+- [Assignment rules](/docs/kb/assignment-rules) send matching tasks to specific agent types, for example `build` and `e2e-ci` to larger machines.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-large-js
+  scheduling-constraints:
+    # e2e tasks share a database, so never run two of them on one agent at once
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
+  assignment-rules: .nx/assignment-rules.yaml
+```
+
+To give a task an agent to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
+
 ## See it in action in Nx Cloud
 
 The Nx Cloud timeline view shows how tasks were distributed across agents in a CI run.
@@ -353,8 +370,6 @@ title="Flamecharts for CI"
 {% linkcard title="Resource usage" description="See how much CPU and memory each task and agent uses" href="/docs/kb/resource-usage" /%}
 
 {% linkcard title="Dedicated compute cluster" description="Reserve an isolated cluster for Docker-in-Docker and read-through caches" href="/docs/kb/dedicated-compute-cluster" /%}
-
-{% linkcard title="Bring your own compute" description="Distribute tasks on agents you run yourself" href="/docs/kb/bring-your-own-compute" /%}
 
 {% /cardgrid %}
 
