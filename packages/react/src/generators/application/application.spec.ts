@@ -1485,6 +1485,22 @@ describe('app', () => {
       `);
     });
 
+    it('should reference tsconfig.app.json once from tsconfig.spec.json with jest', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        linter: 'none',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+      });
+
+      expect(readJson(appTree, 'myapp/tsconfig.spec.json').references).toEqual([
+        { path: './tsconfig.app.json' },
+      ]);
+    });
+
     it('should respect the provided name', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',

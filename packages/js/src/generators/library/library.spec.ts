@@ -2305,7 +2305,9 @@ describe('lib', () => {
           useProjectJson: false,
         });
 
-        expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
+        expect(readJson(tree, 'my-lib/tsconfig.spec.json').references).toEqual([
+          { path: './tsconfig.lib.json' },
+        ]);
         expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
         expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
