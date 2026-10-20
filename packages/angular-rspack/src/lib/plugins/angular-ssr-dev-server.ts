@@ -25,19 +25,32 @@ export class AngularSsrDevServer implements RspackPluginInstance {
         entryValue.import = [...entryValue.import];
       }
     });
-    compiler.hooks.afterEmit.tapPromise(PLUGIN_NAME, async (compilation) => {
-      if (!compiler.watchMode || compilation.errors.length) {
-        return;
+    compiler.hooks.afterEmit.tapPromise(
+      // Prerender copies this document into its original and route HTML files.
+      { name: PLUGIN_NAME, stage: -1 },
+      async (compilation) => {
+        if (!compiler.watchMode || compilation.errors.length) {
+          return;
+        }
+        await this.#attachSSRReloadClient();
       }
-      await this.#attachSSRReloadClient();
-      await this.#stopServer();
+    );
+    compiler.hooks.afterEmit.tapPromise(
+      // The server reads its assets after prerender finishes replacing index.html.
+      { name: PLUGIN_NAME, stage: 1 },
+      async (compilation) => {
+        if (!compiler.watchMode || compilation.errors.length) {
+          return;
+        }
+        await this.#stopServer();
 
-      this.#devServerProcess = fork(
-        join(this.options.outputPath.server, 'server.js')
-      );
-      await once(this.#devServerProcess, 'spawn');
-      this.#wsServer.sendReload();
-    });
+        this.#devServerProcess = fork(
+          join(this.options.outputPath.server, 'server.js')
+        );
+        await once(this.#devServerProcess, 'spawn');
+        this.#wsServer.sendReload();
+      }
+    );
 
     compiler.hooks.shutdown.tapPromise(PLUGIN_NAME, async () => {
       try {
