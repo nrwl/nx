@@ -776,19 +776,8 @@ It takes the protocol and port from `NX_READY_URL` and keeps the path and query.
 A `localhost` host stays as it is when the server listens on a loopback address, and any other host moves to the one the server reported.
 Without `NX_READY_URL`, it returns the address unchanged.
 
-To report readiness from your own server, call `emitReadySignal` from `@nx/devkit` in the task's process:
-
-```ts
-import { emitReadySignal } from '@nx/devkit';
-
-const server = app.listen(port, () => {
-  emitReadySignal(server);
-});
-```
-
-Pass the server, and Nx reads the address it listens on, or pass the URL as a string.
-It does nothing outside a task whose `readyWhen` is `signal`.
-In application code, import it from `@nx/js/ready-signal`, and only when Nx waits for the server.
+To report readiness from your own server, call `emitReadySignal` from `@nx/js/ready-signal` once it listens.
+Import it only when Nx waits for the server.
 The server then loads nothing from Nx otherwise, and keeps running where `@nx/js`, a dev dependency, isn't installed.
 The import goes through `new Function` so TypeScript and bundlers leave it as a runtime import:
 
@@ -807,6 +796,10 @@ const server = app.listen(port, async () => {
   }
 });
 ```
+
+Pass the server, and Nx reads the address it listens on, or pass the URL as a string.
+It does nothing outside a task whose `readyWhen` is `signal`.
+Code that already depends on `@nx/devkit`, such as an executor or a bundler plugin, can import `emitReadySignal` from `@nx/devkit` instead.
 
 If you change an inferred dev target's command to something that doesn't report, set `readyWhen` on the target too, or the tasks waiting for it fail after the timeout.
 
