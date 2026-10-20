@@ -16,9 +16,9 @@ describe('ssrServerEmitsReadySignal', () => {
   });
 
   it('is false without an SSR entry, or when it cannot be read', () => {
-    expect(ssrServerEmitsReadySignal(root, undefined)).toBe(false);
-    expect(ssrServerEmitsReadySignal(root, true)).toBe(false);
-    expect(ssrServerEmitsReadySignal(root, { entry: './missing.ts' })).toBe(
+    expect(ssrServerEmitsReadySignal(root, undefined, [])).toBe(false);
+    expect(ssrServerEmitsReadySignal(root, true, [])).toBe(false);
+    expect(ssrServerEmitsReadySignal(root, { entry: './missing.ts' }, [])).toBe(
       false
     );
   });

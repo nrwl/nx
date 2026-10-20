@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { _createConfig } from '../config/create-config';
+import { _createConfig, createConfig } from '../config/create-config';
 
 vi.mock('@nx/devkit', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -63,23 +63,60 @@ describe('NgRspackPlugin', () => {
       'leaves the report to an SSR server that calls emitReadySignal',
       'emitReadySignal(server);',
       true,
+      undefined,
+      undefined,
       0,
     ],
     [
       'reports the dev server address when the SSR server does not',
       'app.listen(4000);',
       true,
+      undefined,
+      undefined,
       1,
     ],
     [
       'reports the dev server address when a missing server file leaves a browser-only build',
       'emitReadySignal(server);',
       false,
+      undefined,
+      undefined,
+      1,
+    ],
+    [
+      'reports the dev server address when a file replacement swaps in an SSR server that does not call emitReadySignal',
+      'emitReadySignal(server);',
+      true,
+      'app.listen(4000);',
+      undefined,
+      1,
+    ],
+    [
+      'leaves the report to an SSR server that a file replacement swaps in',
+      'app.listen(4000);',
+      true,
+      'emitReadySignal(server);',
+      undefined,
+      0,
+    ],
+    [
+      'reports the dev server address when the development configuration replaces the SSR server with one that does not call emitReadySignal',
+      'app.listen(4000);',
+      true,
+      'emitReadySignal(server);',
+      'app.listen(4000);',
       1,
     ],
   ])(
     '%s',
-    async (_, serverSource, hasServerFile, reports) => {
+    async (
+      _,
+      serverSource,
+      hasServerFile,
+      replacementSource,
+      developmentSource,
+      reports
+    ) => {
       vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
       vi.stubEnv('RSPACK_SERVE', 'true');
       vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -90,16 +127,55 @@ describe('NgRspackPlugin', () => {
           await writeFile(join(root, 'src', 'main.server.ts'), '');
         }
         await writeFile(join(root, 'src', 'server.ts'), serverSource);
-        const [config] = await _createConfig({
-          browser: './src/main.ts',
-          index: './src/index.html',
-          tsConfig: './tsconfig.base.json',
-          outputPath: './dist',
-          deleteOutputPath: false,
-          root,
-          server: './src/main.server.ts',
-          ssr: { entry: './src/server.ts' },
-        });
+        if (replacementSource !== undefined) {
+          await writeFile(
+            join(root, 'src', 'server.replaced.ts'),
+            replacementSource
+          );
+        }
+        if (developmentSource !== undefined) {
+          await writeFile(
+            join(root, 'src', 'server.development.ts'),
+            developmentSource
+          );
+        }
+        const [config] = await createConfig(
+          {
+            options: {
+              browser: './src/main.ts',
+              index: './src/index.html',
+              tsConfig: './tsconfig.base.json',
+              outputPath: './dist',
+              deleteOutputPath: false,
+              root,
+              server: './src/main.server.ts',
+              ssr: { entry: './src/server.ts' },
+              fileReplacements:
+                replacementSource === undefined
+                  ? []
+                  : [
+                      {
+                        replace: './src/server.ts',
+                        with: './src/server.replaced.ts',
+                      },
+                    ],
+            },
+          },
+          developmentSource === undefined
+            ? {}
+            : {
+                development: {
+                  options: {
+                    fileReplacements: [
+                      {
+                        replace: './src/server.ts',
+                        with: './src/server.development.ts',
+                      },
+                    ],
+                  },
+                },
+              }
+        );
 
         const compiler = rspack(config);
         try {
