@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import * as pc from 'picocolors';
 
+import { warnRspackSsrDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { RspackExecutorSchema } from '../rspack/schema';
 import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
 import { RspackSsrDevServerOptions, TargetOptions } from './schema';
@@ -15,6 +16,8 @@ export async function* ssrDevServerExecutor(
   options: RspackSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  warnRspackSsrDevServerExecutorDeprecation();
+
   const browserTarget = parseTargetString(
     options.browserTarget,
     context.projectGraph
