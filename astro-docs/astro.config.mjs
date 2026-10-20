@@ -268,6 +268,24 @@ if (h === "nx.dev") {
             defer: true,
           },
         },
+        // Link unfurlers (Slack) skip SVG favicons and fall back to /favicon.ico.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            type: 'image/png',
+            sizes: '32x32',
+            href: `${BASE}/favicon-32x32.png`,
+          },
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'apple-touch-icon',
+            sizes: '180x180',
+            href: `${BASE}/apple-touch-icon.png`,
+          },
+        },
       ],
       plugins: [],
       routeMiddleware: [
