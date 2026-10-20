@@ -98,7 +98,7 @@ export function updateTsConfig(
     });
 
     // A composite spec config reaches runtime sources only through a project
-    // reference, so add one unless it would form a cycle or tsc would reject it.
+    // reference. Skip it when a runtime tsconfig.json references the spec config.
     const runtimeReference = `./${posix.relative(root, runtimeTsconfigPath)}`;
     if (
       options.isTsSolutionSetup &&
