@@ -23,7 +23,7 @@ export function moveProjectFiles(
     '.eslintrc.json',
     'eslint.config.js',
     'eslint.config.cjs',
-    /^jest\.config\.((app|lib)\.)?[jt]s$/,
+    /^jest\.config\.((app|lib)\.)?(js|ts|cts)$/,
     /^vite\.config\.m?[jt]s$/,
     /^webpack.*\.js$/,
     'index.html', // Vite
@@ -50,11 +50,27 @@ export function moveProjectFiles(
     }
   };
 
+  // The workspace Jest config runs every project's config, so it stays
+  const isWorkspaceJestConfig = (file: string) =>
+    /^jest\.config\.(js|ts|cts)$/.test(file) &&
+    tree.read(file, 'utf-8').includes('getJestProjectsAsync()');
+
   visitNotIgnoredFiles(tree, project.root, (file) => {
-    if (project.root === '.' && !isKnownRootProjectFile(file)) return;
+    if (
+      project.root === '.' &&
+      (!isKnownRootProjectFile(file) || isWorkspaceJestConfig(file))
+    )
+      return;
 
     // This is a rename but Angular Devkit isn't capable of writing to a file after it's renamed so this is a workaround
-    const relativeFromOriginalSource = relative(project.root, file);
+    let relativeFromOriginalSource = relative(project.root, file);
+    if (project.root === '.') {
+      // @nx/jest/plugin infers `jest.config.app|lib` only at the workspace root
+      relativeFromOriginalSource = relativeFromOriginalSource.replace(
+        /^jest\.config\.(app|lib)\./,
+        'jest.config.'
+      );
+    }
     const newFilePath = join(
       schema.relativeToRootDestination,
       relativeFromOriginalSource

@@ -1,6 +1,12 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import { readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { monorepoGenerator } from './convert-to-monorepo';
 
@@ -82,6 +88,70 @@ describe('monorepo generator', () => {
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
   });
+
+  it.each([
+    ['its default name', false],
+    ['the name it gets next to a workspace config', true],
+  ])(
+    'should move the root project Jest config with %s',
+    async (_, withWorkspaceConfig) => {
+      await reactAppGenerator(tree, {
+        name: 'demo',
+        directory: '.',
+        style: 'css',
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+        linter: 'eslint',
+        rootProject: true,
+      });
+      const generatedConfig = ['jest.config.ts', 'jest.config.cts'].find((f) =>
+        tree.exists(f)
+      );
+      const workspaceConfig = `export default async () => ({ projects: await getJestProjectsAsync() });`;
+      if (withWorkspaceConfig) {
+        tree.rename(generatedConfig, 'jest.config.app.cts');
+        tree.write('jest.config.ts', workspaceConfig);
+        updateJson(tree, 'tsconfig.spec.json', (json) => {
+          json.include = [
+            ...json.include.map((p: string) =>
+              p.replace(/^jest\.config\./, 'jest.config.app.')
+            ),
+            'src/unit/jest.config.app.ts',
+          ];
+          return json;
+        });
+        const project = readProjectConfiguration(tree, 'demo');
+        project.targets.test = {
+          command: 'jest --config ./jest.config.app.cts',
+        };
+        updateProjectConfiguration(tree, 'demo', project);
+      } else {
+        tree.rename(generatedConfig, 'jest.config.cts');
+      }
+
+      await monorepoGenerator(tree, {});
+
+      expect(tree.exists('apps/demo/jest.config.cts')).toBe(true);
+      if (withWorkspaceConfig) {
+        expect(
+          readProjectConfiguration(tree, 'demo').targets.test.command
+        ).toBe('jest --config apps/demo/jest.config.cts');
+        expect(
+          readJson(tree, 'apps/demo/tsconfig.spec.json').include
+        ).toContain('src/unit/jest.config.app.ts');
+      }
+      expect(readJson(tree, 'apps/demo/tsconfig.spec.json').include).toContain(
+        'jest.config.cts'
+      );
+      expect(
+        tree.children('').filter((f) => f.startsWith('jest.config.'))
+      ).toEqual(withWorkspaceConfig ? ['jest.config.ts'] : []);
+      if (withWorkspaceConfig) {
+        expect(tree.read('jest.config.ts', 'utf-8')).toContain(workspaceConfig);
+      }
+    }
+  );
 
   it('should respect nested libraries', async () => {
     await reactAppGenerator(tree, {

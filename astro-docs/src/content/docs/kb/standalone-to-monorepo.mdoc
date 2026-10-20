@@ -55,21 +55,21 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
    | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.config.ts`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`) |
    | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.app.ts`, `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js`                                         |
 
-   {% aside title="jest.config.app.ts" type="note" %}
-   `jest.config.app.ts` in the root should be renamed to `jest.config.ts` when moved to `apps/temp`. Also update the `jestConfig` option in `project.json` to point to `jest.config.ts` instead of `jest.config.app.ts`.
+   {% aside title="jest.config.app" type="note" %}
+   Check the root for a `jest.config.app` file with any extension, such as `jest.config.app.cts`. If it exists, the root `jest.config.ts` (or `jest.config.js`) file is the workspace Jest config. Leave it in the root. Remove `.app` from the file name when you move it to `apps/temp`. Update every reference to it the same way, such as the `include` list in `tsconfig.spec.json` and any `--config` flag in `project.json`. Without a `jest.config.app` file, the root Jest config file belongs to the app, so move it to `apps/temp`.
    {% /aside %}
 
 5. Update the paths of the project-specific config files that were copied into `apps/temp`.
 
    Here is a non-exhaustive list of properties that will need to be updated to have the correct path:
 
-   | Config File(s)                                             | Properties to Check                                                                                                                                                   |
-   | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `project.json`                                             | `$schema`, `sourceRoot`, `root`, `outputPath`, `reportsDirectory`, `cypressConfig`, `lintFilePatterns`, `index`, `main`, `tsConfig`, `assets`, `styles`, `jestConfig` |
-   | `tsconfig.json`, `tsconfig.app.json`, `tsconfig.spec.json` | `extends`, `outDir`, `files`                                                                                                                                          |
-   | `.eslintrc.json`                                           | `extends`                                                                                                                                                             |
-   | `jest.config.ts`                                           | `preset`, `coverageDirectory`                                                                                                                                         |
-   | `vite.config.ts`                                           | `cacheDir`, `root`, `dir`                                                                                                                                             |
+   | Config File(s)                                             | Properties to Check                                                                                                                                     |
+   | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `project.json`                                             | `$schema`, `sourceRoot`, `root`, `outputPath`, `reportsDirectory`, `cypressConfig`, `lintFilePatterns`, `index`, `main`, `tsConfig`, `assets`, `styles` |
+   | `tsconfig.json`, `tsconfig.app.json`, `tsconfig.spec.json` | `extends`, `outDir`, `files`                                                                                                                            |
+   | `.eslintrc.json`                                           | `extends`                                                                                                                                               |
+   | `jest.config.ts`                                           | `preset`, `coverageDirectory`                                                                                                                           |
+   | `vite.config.ts`                                           | `cacheDir`, `root`, `dir`                                                                                                                               |
 
 6. Doublecheck that all the tasks defined in the `apps/temp/project.json` file still work.
 
