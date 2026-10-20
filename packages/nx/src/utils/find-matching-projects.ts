@@ -264,11 +264,13 @@ function parseStringPattern(
     // The pattern may contain a label
   } else {
     const potentialType = pattern.substring(0, indexOfFirstPotentialSeparator);
-    return {
-      type: isValidPatternType(potentialType) ? potentialType : 'unlabeled',
-      value: pattern.substring(indexOfFirstPotentialSeparator + 1),
-      exclude: isExclude,
-    };
+    return isValidPatternType(potentialType)
+      ? {
+          type: potentialType,
+          value: pattern.substring(indexOfFirstPotentialSeparator + 1),
+          exclude: isExclude,
+        }
+      : { type: 'unlabeled', value: pattern, exclude: isExclude };
   }
 }
 

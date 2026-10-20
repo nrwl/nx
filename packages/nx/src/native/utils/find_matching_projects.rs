@@ -15,13 +15,14 @@ enum ProjectPatternType {
     Directory,
     Unlabeled,
 }
-impl From<&str> for ProjectPatternType {
-    fn from(value: &str) -> Self {
-        match value {
-            "name" => ProjectPatternType::Name,
-            "tag" => ProjectPatternType::Tag,
-            "directory" => ProjectPatternType::Directory,
-            _ => ProjectPatternType::Unlabeled,
+impl ProjectPatternType {
+    fn from_label(label: &str) -> Option<Self> {
+        match label {
+            "name" => Some(ProjectPatternType::Name),
+            "tag" => Some(ProjectPatternType::Tag),
+            "directory" => Some(ProjectPatternType::Directory),
+            "unlabeled" => Some(ProjectPatternType::Unlabeled),
+            _ => None,
         }
     }
 }
@@ -137,10 +138,17 @@ fn parse_string_pattern<'a>(
         let index_of_first_separator =
             index_of_first_potential_separator.expect("separator was already checked");
         let (prefix, value) = pattern.split_at(index_of_first_separator);
-        ProjectPattern {
-            exclude: is_exclude,
-            pattern_type: prefix.into(),
-            value: &value[1..],
+        match ProjectPatternType::from_label(prefix) {
+            Some(pattern_type) => ProjectPattern {
+                exclude: is_exclude,
+                pattern_type,
+                value: &value[1..],
+            },
+            None => ProjectPattern {
+                exclude: is_exclude,
+                pattern_type: ProjectPatternType::Unlabeled,
+                value: pattern,
+            },
         }
     }
 }
@@ -299,5 +307,25 @@ mod tests {
         assert_eq!(matching(&["directory:libs/b("], &graph), ["b"]);
         assert!(matching(&["name:a("], &graph).is_empty());
         assert!(matching(&["c("], &graph).is_empty());
+    }
+
+    #[test]
+    fn an_unknown_prefix_is_part_of_the_pattern() {
+        let graph = graph(&[
+            ("dev.nx.maven:core", "maven/core", &[]),
+            ("dev.nx.maven:plugin", "maven/plugin", &[]),
+            (":gradle-lib", "gradle/lib", &[]),
+            ("app", "apps/app", &[]),
+        ]);
+        assert_eq!(
+            matching(&["dev.nx.maven:*"], &graph),
+            ["dev.nx.maven:core", "dev.nx.maven:plugin"]
+        );
+        assert_eq!(
+            matching(&["*", "!dev.nx.maven:*"], &graph),
+            [":gradle-lib", "app"]
+        );
+        assert_eq!(matching(&[":gradle-*"], &graph), [":gradle-lib"]);
+        assert!(matching(&["typo:app"], &graph).is_empty());
     }
 }
