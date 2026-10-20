@@ -580,7 +580,10 @@ describe('jestProject', () => {
         project: 'pkg1',
       });
 
-      expect(tree.exists('packages/pkg1/tsconfig.spec.json')).toBeTruthy();
+      expect(
+        readJson(tree, 'packages/pkg1/tsconfig.spec.json').compilerOptions
+          .rootDir
+      ).toBe('.');
       expect(tree.exists('packages/pkg1/jest.config.ts')).toBeTruthy();
       expect(tree.read('packages/pkg1/jest.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
