@@ -32,8 +32,9 @@ export function applyDevServerReadySignal(compiler: Compiler): void {
 }
 
 /**
- * Whether the SSR server entry reports readiness itself. The forked SSR
- * server, not the dev server, is then the address the waiting tasks need.
+ * Whether the SSR server entry mentions `emitReadySignal`, taken to mean it
+ * reports readiness itself. The forked SSR server, not the dev server, is then
+ * the address the waiting tasks need.
  */
 export function ssrServerEmitsReadySignal(
   root: string,
