@@ -46,12 +46,17 @@ type ListeningServer = {
 /**
  * Tells Nx that the task running this process is ready, for a target whose
  * readyWhen is `signal`. Only the first call counts, so call it once the server
- * listens. Pass the listening server or its url to have it passed on to the
- * tasks that waited, as NX_READY_URL.
+ * listens. A server that isn't listening reports nothing. Pass the listening
+ * server or its url to have it passed on to the tasks that waited, as
+ * NX_READY_URL.
  */
 export function emitReadySignal(server?: ListeningServer | string): boolean {
   const connection = connect();
   if (!connection || readySent) {
+    return false;
+  }
+  // Express 5 calls the listen callback with the error when listening fails
+  if (server && typeof server !== 'string' && !server.address()) {
     return false;
   }
   readySent = true;

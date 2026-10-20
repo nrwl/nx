@@ -84,6 +84,22 @@ describe('ready signal client', () => {
     ]);
   });
 
+  it('does not report a server that is not listening, so a later call still counts', async () => {
+    const { emitReadySignal } = await import('./ready-signal');
+
+    expect(emitReadySignal({ address: () => null })).toBe(false);
+    expect(emitReadySignal('http://localhost:4300/')).toBe(true);
+    await until(1);
+
+    expect(received).toEqual([
+      {
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      },
+    ]);
+  });
+
   it('does nothing outside a task that waits for a signal', async () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
     const { emitReadySignal } = await import('./ready-signal');
