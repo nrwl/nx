@@ -23,6 +23,7 @@ lifecycle:
 
 The main job in each recipe starts the run with `nx-cloud start-workers`, which reads that file.
 The command takes no configuration flags.
+Each recipe also runs `nx fix-ci` in the main job and in every agent job, so [Self-Healing CI](/docs/features/ci-features/self-healing-ci) works the same as on Workers.
 
 {% tabs syncKey="ci-provider" %}
 
