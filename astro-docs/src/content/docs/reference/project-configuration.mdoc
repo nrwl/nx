@@ -837,7 +837,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
-Applying a recording needs a CI run and a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers.
+Applying a recording needs a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers. Nx 24 and later apply it in CI by default; on Nx 23 or outside CI, set `NX_CLOUD_USE_ULTRACACHE` to `true`.
 Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
 {% /aside %}
 

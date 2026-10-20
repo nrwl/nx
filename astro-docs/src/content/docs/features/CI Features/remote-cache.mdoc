@@ -99,7 +99,7 @@ Later CI runs hash the task from that recording, and the recording grows when th
 It lives in Nx Cloud, so your configuration files don't change, and declared `outputs` still decide what Nx caches.
 
 Only runs on Workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
-Runs outside CI hash from declared `inputs`.
+Runs outside CI hash from declared `inputs` unless they set `NX_CLOUD_USE_ULTRACACHE` to `true`.
 Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't traced.
 
 ### Turn on Ultracache
@@ -107,8 +107,8 @@ Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batc
 New Nx Cloud workspaces start with Ultracache on.
 For an existing workspace, open the workspace's **Settings** page in Nx Cloud and set **Ultracache** to **On**.
 
-Nx 24 and later hash CI runs from Ultracache configurations by default.
-On Nx 23.3, set `NX_CLOUD_USE_ULTRACACHE` to `true` in your CI environment:
+Nx 24 and later use Ultracache in CI by default, and versions before Nx 23 can't use it.
+On Nx 23, set `NX_CLOUD_USE_ULTRACACHE` to `true` in your CI environment:
 
 ```yaml
 # .github/workflows/ci.yml
