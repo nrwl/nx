@@ -107,6 +107,25 @@ describe('Cypress e2e configuration', () => {
     );
   });
 
+  it('should write the CI switch only at the default web server command', async () => {
+    await cypressInitGenerator(tree, {});
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      directory: '__NX_CI_WEB_SERVER_COMMAND__',
+      baseUrl: 'http://localhost:4200',
+      webServerCommands: { default: 'nx run my-app:serve' },
+      ciWebServerCommand: 'nx run my-app:preview',
+    });
+
+    const config = tree.read('apps/my-app/cypress.config.ts', 'utf-8');
+    expect(config).toContain("cypressDir: '__NX_CI_WEB_SERVER_COMMAND__',");
+    expect(config).toContain(
+      "default: process.env['CI'] ? 'nx run my-app:preview' : 'nx run my-app:serve',"
+    );
+  });
+
   it('should keep plain values when there is no separate CI web server', async () => {
     await cypressInitGenerator(tree, {});
     addProject(tree, { name: 'my-app', type: 'apps' });

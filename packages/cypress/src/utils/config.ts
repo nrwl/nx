@@ -31,14 +31,25 @@ export const JIT_COMPILE_DISABLE_COMMENT = [
   '// intermittently run 0 tests in CI. Remove this line to opt back in.',
 ];
 
-const CI_WEB_SERVER_COMMAND_PLACEHOLDER = '__NX_CI_WEB_SERVER_COMMAND__';
-
 function toJsStringLiteral(value: string): string {
   return `'${JSON.stringify(value).slice(1, -1).replace(/'/g, "\\'")}'`;
 }
 
 function ciSwitch(ciValue: string, value: string): string {
   return `process.env['CI'] ? ${toJsStringLiteral(ciValue)} : ${toJsStringLiteral(value)}`;
+}
+
+function stringifyAt(value: unknown, indent: string): string | undefined {
+  return JSON.stringify(value, null, 2)?.split('\n').join(`\n${indent}`);
+}
+
+type RenderedMember = [key: string, rendered: string | undefined];
+
+function renderObject(members: RenderedMember[], indent: string): string {
+  const lines = members
+    .filter(([, rendered]) => rendered !== undefined)
+    .map(([key, rendered]) => `${indent}  ${JSON.stringify(key)}: ${rendered}`);
+  return `{\n${lines.join(',\n')}\n${indent}}`;
 }
 
 export function renderE2EPresetOptions(
@@ -51,26 +62,28 @@ export function renderE2EPresetOptions(
     !!options.ciWebServerCommand &&
     options.ciWebServerCommand !== webServerCommand;
 
-  const rendered = JSON.stringify(
-    switchesCommand
-      ? {
-          ...options,
-          webServerCommands: {
-            ...options.webServerCommands,
-            default: CI_WEB_SERVER_COMMAND_PLACEHOLDER,
-          },
-        }
-      : options,
-    null,
-    2
-  );
-
   return {
     presetOptions: switchesCommand
-      ? rendered.replace(`"${CI_WEB_SERVER_COMMAND_PLACEHOLDER}"`, () =>
-          ciSwitch(options.ciWebServerCommand, webServerCommand)
+      ? renderObject(
+          Object.entries(options).map(([key, value]): RenderedMember => [
+            key,
+            key === 'webServerCommands'
+              ? renderObject(
+                  Object.entries(options.webServerCommands).map(
+                    ([name, command]): RenderedMember => [
+                      name,
+                      name === 'default'
+                        ? ciSwitch(options.ciWebServerCommand, webServerCommand)
+                        : stringifyAt(command, '    '),
+                    ]
+                  ),
+                  '  '
+                )
+              : stringifyAt(value, '  '),
+          ]),
+          ''
         )
-      : rendered,
+      : JSON.stringify(options, null, 2),
     baseUrl: !baseUrl
       ? undefined
       : options.ciBaseUrl && options.ciBaseUrl !== baseUrl
