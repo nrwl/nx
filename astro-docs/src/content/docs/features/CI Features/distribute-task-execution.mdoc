@@ -1,13 +1,13 @@
 ---
-title: 'Distribute Task Execution (Nx Agents)'
-description: 'Nx Agents distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
+title: 'Distribute Task Execution (Workers)'
+description: 'Workers distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
 keywords: [distributed tasks, dynamic task packing, task packing, CI cost]
 sidebar:
   order: 12
 filter: 'type:Features'
 ---
 
-With Nx Agents, the tasks in your CI run spread across several machines.
+With Workers, the tasks in your CI run spread across several machines.
 _Dynamic task packing_ keeps each machine close to its CPU and memory limits.
 You pay for machine-minutes, not for how busy a machine is, so the same work packed onto fewer, busier machines costs less and finishes sooner.
 
@@ -40,7 +40,7 @@ There's no `--parallel` value to tune and no mapping of projects to machines to 
 Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
 They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
 
-## Enable Nx Agents
+## Enable Workers
 
 Connect your workspace to Nx Cloud if you haven't already:
 
@@ -270,8 +270,8 @@ dte:
 ```
 
 `linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
-If tasks share a resource such as a port or a database, keep them apart with [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
-For every other option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+To keep tasks apart or send them to specific agents, see [control where tasks run](#control-where-tasks-run).
+For every option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
 Then start the agents early in your CI job, before installing dependencies:
 
@@ -321,6 +321,28 @@ dte:
 
 Each changeset covers an equal share of that range, so their order matters.
 Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
+
+## Control where tasks run
+
+Dynamic task packing places tasks on its own.
+Two optional settings in `.nx/ci-config.yaml` add rules it follows:
+
+- [Scheduling constraints](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints) keep tasks that share a resource, such as a port or a database, from running on the same agent at the same time.
+- [Assignment rules](/docs/kb/assignment-rules) send matching tasks to specific agent types, for example `build` and `e2e-ci` to larger machines.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-large-js
+  scheduling-constraints:
+    # e2e tasks share a database, so never run two of them on one agent at once
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
+  assignment-rules: .nx/assignment-rules.yaml
+```
+
+To give a task an agent to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
 
 ## See it in action in Nx Cloud
 
