@@ -27,6 +27,13 @@ import { applicationGenerator } from './application';
 
 describe('application generator', () => {
   let tree: Tree;
+
+  // the generated jest setup can't load @nestjs/testing 12, so jest needs Nest <= 11
+  const useNest11 = () =>
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, '@nestjs/core': '^11.0.0' };
+      return json;
+    });
   const appDirectory = 'my-node-app';
 
   beforeEach(() => {
@@ -109,11 +116,6 @@ describe('application generator', () => {
               "signal": true,
             },
           },
-          "test": {
-            "options": {
-              "passWithNoTests": true,
-            },
-          },
         },
       }
     `);
@@ -154,6 +156,7 @@ describe('application generator', () => {
   });
 
   it('should generate spec files when unitTestRunner is jest', async () => {
+    useNest11();
     await applicationGenerator(tree, {
       directory: appDirectory,
       unitTestRunner: 'jest',
@@ -182,6 +185,40 @@ describe('application generator', () => {
     expect(
       tree.exists(`${appDirectory}/src/app/app.service.spec.ts`)
     ).toBeTruthy();
+  });
+
+  describe('unit test runner', () => {
+    it('should default to vitest on Nest 12', async () => {
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        e2eTestRunner: 'none',
+      });
+
+      expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeTruthy();
+      expect(tree.exists(`${appDirectory}/jest.config.cts`)).toBeFalsy();
+    });
+
+    it('should throw for jest on Nest 12', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: appDirectory,
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+        })
+      ).rejects.toThrow(/--unitTestRunner=vitest/);
+    });
+
+    it('should default to jest on Nest 11', async () => {
+      useNest11();
+
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        e2eTestRunner: 'none',
+      });
+
+      expect(tree.exists(`${appDirectory}/jest.config.cts`)).toBeTruthy();
+      expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeFalsy();
+    });
   });
 
   describe('vitest requires vite 8', () => {
@@ -229,6 +266,7 @@ describe('application generator', () => {
     });
 
     it('should not throw for jest on an older vite', async () => {
+      useNest11();
       setViteVersion('^7.0.0');
 
       await expect(
@@ -242,6 +280,7 @@ describe('application generator', () => {
   });
 
   it('should configure tsconfig correctly', async () => {
+    useNest11();
     // pin TS<6 to exercise the 'node10' branch deterministically
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies ??= {};
@@ -365,7 +404,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         linter: 'eslint',
         directory: 'myapp',
-        unitTestRunner: 'jest',
         useProjectJson: false,
       });
 
@@ -452,11 +490,6 @@ describe('application generator', () => {
                   "signal": true,
                 },
               },
-              "test": {
-                "options": {
-                  "passWithNoTests": true,
-                },
-              },
             },
           },
           "private": true,
@@ -496,10 +529,18 @@ describe('application generator', () => {
           "exclude": [
             "out-tsc",
             "dist",
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/**/*.spec.ts",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
             "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
             "eslint.config.js",
             "eslint.config.cjs",
             "eslint.config.mjs",
@@ -517,18 +558,29 @@ describe('application generator', () => {
             "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "./out-tsc/jest",
+            "outDir": "./out-tsc/vitest",
             "types": [
-              "jest",
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
               "node",
+              "vitest",
             ],
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "jest.config.ts",
-            "jest.config.cts",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
             "src/**/*.d.ts",
           ],
           "references": [
@@ -544,7 +596,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
         name: 'myapp',
-        unitTestRunner: 'jest',
         useProjectJson: false,
         skipFormat: true,
       });
@@ -577,79 +628,74 @@ describe('application generator', () => {
       expect(tree.exists('myapp/project.json')).toBeTruthy();
       expect(readProjectConfiguration(tree, '@proj/myapp'))
         .toMatchInlineSnapshot(`
-        {
-          "$schema": "../node_modules/nx/schemas/project-schema.json",
-          "name": "@proj/myapp",
-          "projectType": "application",
-          "root": "myapp",
-          "sourceRoot": "myapp/src",
-          "tags": [],
-          "targets": {
-            "copy-workspace-modules": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:copy-workspace-modules",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/myapp/dist/workspace_modules",
-              ],
-            },
-            "prune": {
-              "dependsOn": [
-                "prune-lockfile",
-                "copy-workspace-modules",
-              ],
-              "executor": "nx:noop",
-            },
-            "prune-lockfile": {
-              "cache": true,
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:prune-lockfile",
-              "options": {
-                "buildTarget": "build",
-              },
-              "outputs": [
-                "{workspaceRoot}/myapp/dist/package.json",
-                "{workspaceRoot}/myapp/dist/package-lock.json",
-              ],
-            },
-            "serve": {
-              "configurations": {
-                "development": {
-                  "buildTarget": "@proj/myapp:build:development",
+          {
+            "$schema": "../node_modules/nx/schemas/project-schema.json",
+            "name": "@proj/myapp",
+            "projectType": "application",
+            "root": "myapp",
+            "sourceRoot": "myapp/src",
+            "tags": [],
+            "targets": {
+              "copy-workspace-modules": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:copy-workspace-modules",
+                "options": {
+                  "buildTarget": "build",
                 },
-                "production": {
-                  "buildTarget": "@proj/myapp:build:production",
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/workspace_modules",
+                ],
+              },
+              "prune": {
+                "dependsOn": [
+                  "prune-lockfile",
+                  "copy-workspace-modules",
+                ],
+                "executor": "nx:noop",
+              },
+              "prune-lockfile": {
+                "cache": true,
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:prune-lockfile",
+                "options": {
+                  "buildTarget": "build",
+                },
+                "outputs": [
+                  "{workspaceRoot}/myapp/dist/package.json",
+                  "{workspaceRoot}/myapp/dist/package-lock.json",
+                ],
+              },
+              "serve": {
+                "configurations": {
+                  "development": {
+                    "buildTarget": "@proj/myapp:build:development",
+                  },
+                  "production": {
+                    "buildTarget": "@proj/myapp:build:production",
+                  },
+                },
+                "continuous": true,
+                "defaultConfiguration": "development",
+                "dependsOn": [
+                  "build",
+                ],
+                "executor": "@nx/js:node",
+                "options": {
+                  "buildTarget": "@proj/myapp:build",
+                  "runBuildTargetDependencies": false,
+                },
+                "readyWhen": {
+                  "signal": true,
                 },
               },
-              "continuous": true,
-              "defaultConfiguration": "development",
-              "dependsOn": [
-                "build",
-              ],
-              "executor": "@nx/js:node",
-              "options": {
-                "buildTarget": "@proj/myapp:build",
-                "runBuildTargetDependencies": false,
-              },
-              "readyWhen": {
-                "signal": true,
-              },
             },
-            "test": {
-              "options": {
-                "passWithNoTests": true,
-              },
-            },
-          },
-        }
-      `);
+          }
+        `);
       expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
       expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
       expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))

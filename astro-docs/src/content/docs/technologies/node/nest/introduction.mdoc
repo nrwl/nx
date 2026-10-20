@@ -36,6 +36,8 @@ The plugin detects the installed `@nestjs/core` major and routes the rest of the
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
+NestJS 12 ships `@nestjs/testing` as an ES module, and the Jest setup that Nx generates can't load it. With NestJS 12, use Vitest for unit tests. The generators fail with an error when you pass `--unitTestRunner=jest`. NestJS 11 and earlier still work with Jest.
+
 ## Setting up @nx/nest
 
 ### Generating a new workspace
