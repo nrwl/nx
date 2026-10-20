@@ -494,3 +494,35 @@ describe('apply-base-config minimizer', () => {
     }
   );
 });
+
+describe('apply-base-config watch option', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.resetModules();
+  });
+
+  it.each([
+    ['keeps the watch mode `rspack build --watch` set', undefined, true],
+    ['lets the plugin option override it', false, false],
+  ])('%s', async (_, watch, expected) => {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const config: Partial<Configuration> = { watch: true };
+
+    applyBaseConfig(
+      {
+        root: '/test',
+        projectRoot: 'apps/test',
+        target: 'node',
+        watch,
+      } as NormalizedNxAppRspackPluginOptions,
+      config
+    );
+
+    expect(config.watch).toBe(expected);
+  });
+});

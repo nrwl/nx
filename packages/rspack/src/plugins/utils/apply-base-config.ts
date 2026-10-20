@@ -175,7 +175,7 @@ function applyNxIndependentConfig(
     clean: config.output?.clean ?? true,
   };
 
-  config.watch = options.watch;
+  config.watch = options.watch ?? config.watch;
 
   config.watchOptions = {
     poll: options.poll,
