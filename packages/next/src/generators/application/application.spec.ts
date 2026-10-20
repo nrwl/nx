@@ -393,6 +393,24 @@ describe('app', () => {
     });
   });
 
+  it('should run playwright against the dev server locally and the production server in ci', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      e2eTestRunner: 'playwright',
+    });
+
+    const config = tree.read(`${name}-e2e/playwright.config.mts`, 'utf-8');
+    expect(config).toContain(
+      `getReadyUrl(isCI ? 'http://localhost:3000' : 'http://127.0.0.1:3000')`
+    );
+    expect(config).toContain(
+      `command: isCI ? 'npx nx run ${name}:start' : 'npx nx run ${name}:dev'`
+    );
+  });
+
   it('should generate functional components by default', async () => {
     const name = uniq();
 
