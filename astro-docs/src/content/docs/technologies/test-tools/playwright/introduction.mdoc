@@ -185,11 +185,13 @@ local runs and a production build for CI.
 The generated config reads the `CI` environment variable and picks between them.
 
 ```ts frame="none"
-// CI and local runs use different web servers.
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
 const isCI = !!process.env['CI'];
-const webServerAddress = isCI
-  ? 'http://localhost:4300'
-  : 'http://localhost:4200';
+// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(
+  isCI ? 'http://localhost:4300' : 'http://localhost:4200'
+);
 
 export default defineConfig({
   // ... rest of the config
@@ -210,7 +212,10 @@ These applications run against the dev server in CI as well:
 
 - Angular applications
 - React applications that use React Router (`--useReactRouter`)
-- Expo applications whose targets come from the `@nx/expo/plugin` plugin
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
 
 Pass `--ciWebServerCommand` and `--ciWebServerAddress` to choose the CI side yourself.
 Each one defaults to its local counterpart, so leaving both unset generates a config with a single
@@ -219,6 +224,12 @@ server.
 ```shell
 nx g @nx/playwright:configuration --project=<your-app-name> --webServerCommand="npx nx run <your-app-name>:dev" --webServerAddress="http://localhost:4200" --ciWebServerCommand="npx nx run <your-app-name>:preview" --ciWebServerAddress="http://localhost:4300"
 ```
+
+The inferred Playwright targets include the `CI` environment variable in their inputs, so local and
+CI runs don't share cached results.
+An `inputs` list you set for these targets in `targetDefaults` or in a project configuration
+replaces the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
 
 ### Testing applications
 
@@ -373,7 +384,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx serve <your-app-name>',
     url: baseURL,
