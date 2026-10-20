@@ -49,6 +49,8 @@ describe('app', () => {
     expect(mainFile).toContain(`import express from 'express';`);
     expect(mainFile).toContain("load('@nx/js/ready-signal')");
     expect(mainFile).toContain('emitReadySignal(server)');
+    expect(mainFile).toContain('app.listen(port, async (error?: Error) =>');
+    expect(mainFile).toContain('process.exit(1)');
 
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`

@@ -58,7 +58,11 @@ app.get('/api', (req, res) => {
 });
 
 const port = process.env.PORT || 3333;
-const server = app.listen(port, async () => {
+const server = app.listen(port, async (error${options.js ? '' : '?: Error'}) => {
+  // A failed listen also reaches the 'error' listener below
+  if (error) {
+    return;
+  }
   console.log(\`Listening at http://localhost:\${port}/api\`);
   // Set when Nx waits for this server to be ready
   if (process.env.NX_READY_SIGNAL_SOCKET) {
@@ -71,7 +75,13 @@ const server = app.listen(port, async () => {
     }
   }
 });
-server.on('error', console.error);
+server.on('error', (error) => {
+  console.error(error);
+  // Errors after listen, such as a failed accept, leave the server running
+  if (!server.listening) {
+    process.exit(1);
+  }
+});
 `
   );
 
