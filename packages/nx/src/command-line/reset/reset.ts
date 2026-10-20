@@ -9,6 +9,7 @@ import {
   workspaceDataDirectory,
 } from '../../utils/cache-directory';
 import { output } from '../../utils/output';
+import { globalSpinner } from '../../utils/spinner';
 import { getNativeFileCacheLocationToDelete } from '../../native/native-file-cache-location';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ResetCommandOptions } from './command-object';
@@ -26,7 +27,7 @@ const INCREMENTAL_BACKOFF_MAX_DURATION = 5000;
 const INCREMENTAL_BACKOFF_FIRST_DELAY = 100;
 
 export async function resetHandler(args: ResetCommandOptions) {
-  let errors = [];
+  const errors: string[] = [];
 
   const all =
     args.onlyDaemon === undefined &&
@@ -36,74 +37,56 @@ export async function resetHandler(args: ResetCommandOptions) {
   const nxJson = readNxJson();
   const cloudEnabled = isNxCloudUsed(nxJson);
 
-  const startupMessage = all
-    ? 'Resetting the Nx cache and stopping the daemon.'
-    : 'Resetting:';
-  const bodyLines = [];
-  if (!all) {
-    if (args.onlyDaemon) {
-      bodyLines.push('- Nx Daemon and its workspace data');
-    }
-    if (args.onlyCache) {
-      bodyLines.push('- Cache directory');
-    }
-    if (args.onlyWorkspaceData) {
-      bodyLines.push('- Workspace data directory');
-    }
-    if (args.onlyCloud && cloudEnabled) {
-      bodyLines.push('- Nx Cloud Client');
-    }
-  }
-  output.note({ title: startupMessage, bodyLines });
-
   if (all || args.onlyDaemon) {
-    try {
-      await killDaemon();
-    } catch (e) {
-      errors.push('Failed to stop the Nx Daemon.', e.toString());
-    }
-    try {
-      await cleanupDaemonWorkspaceData();
-    } catch (e) {
-      errors.push(
-        'Failed to clean up the daemon workspace data directory.',
-        e.toString()
-      );
-    }
+    await runResetStep(errors, {
+      start: 'Stopping the Nx Daemon',
+      success: 'Stopped the Nx Daemon',
+      failure: 'Failed to stop the Nx Daemon.',
+      run: killDaemon,
+    });
+    await runResetStep(errors, {
+      start: 'Removing the Nx Daemon workspace data',
+      success: 'Removed the Nx Daemon workspace data',
+      failure: 'Failed to clean up the daemon workspace data directory.',
+      run: cleanupDaemonWorkspaceData,
+    });
   }
   if (all || args.onlyCache) {
-    try {
-      await cleanupCacheEntries();
-    } catch (e) {
-      errors.push('Failed to clean up the cache directory.', e.toString());
-    }
+    await runResetStep(errors, {
+      start: 'Removing the cache directory',
+      success: 'Removed the cache directory',
+      failure: 'Failed to clean up the cache directory.',
+      run: cleanupCacheEntries,
+    });
   }
   if (all || args.onlyWorkspaceData) {
-    try {
-      await cleanupNativeFileCache();
-    } catch {
-      // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
-    }
-    try {
-      await cleanupWorkspaceData();
-    } catch (e) {
-      errors.push(
-        'Failed to clean up the workspace data directory.',
-        e.toString()
-      );
-    }
+    await runResetStep(errors, {
+      start: 'Removing the workspace data directory',
+      success: 'Removed the workspace data directory',
+      failure: 'Failed to clean up the workspace data directory.',
+      run: async () => {
+        try {
+          await cleanupNativeFileCache();
+        } catch {
+          // ignore, deleting the native file cache is not critical and can fail if another process is locking the file
+        }
+        await cleanupWorkspaceData();
+      },
+    });
   }
   if ((cloudEnabled && all) || args.onlyCloud) {
-    try {
-      await resetCloudClient();
-    } catch (e) {
-      errors.push('Failed to clean up the Nx Cloud client.', e.toString());
-    }
-    try {
-      await removeInstalledNxCloudClient();
-    } catch (e) {
-      errors.push('Failed to reset the Nx Cloud client.', e.toString());
-    }
+    await runResetStep(errors, {
+      start: 'Cleaning up the Nx Cloud client',
+      success: 'Cleaned up the Nx Cloud client',
+      failure: 'Failed to clean up the Nx Cloud client.',
+      run: resetCloudClient,
+    });
+    await runResetStep(errors, {
+      start: 'Removing the installed Nx Cloud client',
+      success: 'Removed the installed Nx Cloud client',
+      failure: 'Failed to reset the Nx Cloud client.',
+      run: removeInstalledNxCloudClient,
+    });
   }
   if (errors.length > 0) {
     output.error({
@@ -115,6 +98,26 @@ export async function resetHandler(args: ResetCommandOptions) {
     output.success({
       title: 'Successfully reset the Nx workspace.',
     });
+  }
+}
+
+/** Records a failure in `errors` so the remaining steps still run. */
+async function runResetStep(
+  errors: string[],
+  step: {
+    start: string;
+    success: string;
+    failure: string;
+    run: () => Promise<void>;
+  }
+) {
+  globalSpinner.start(step.start);
+  try {
+    await step.run();
+    globalSpinner.succeed(step.success);
+  } catch (e) {
+    globalSpinner.fail(step.failure);
+    errors.push(step.failure, e.toString());
   }
 }
 
