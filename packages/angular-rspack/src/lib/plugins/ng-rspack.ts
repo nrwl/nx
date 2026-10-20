@@ -83,6 +83,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
 
     if (
       !isDevServer ||
+      !this.pluginOptions.hasServer ||
       !ssrServerEmitsReadySignal(root, this.pluginOptions.ssr)
     ) {
       applyDevServerReadySignal(compiler);

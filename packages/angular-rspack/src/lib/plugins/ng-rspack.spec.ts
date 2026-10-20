@@ -62,23 +62,33 @@ describe('NgRspackPlugin', () => {
     [
       'leaves the report to an SSR server that calls emitReadySignal',
       'emitReadySignal(server);',
+      true,
       0,
     ],
     [
       'reports the dev server address when the SSR server does not',
       'app.listen(4000);',
+      true,
+      1,
+    ],
+    [
+      'reports the dev server address when a missing server file leaves a browser-only build',
+      'emitReadySignal(server);',
+      false,
       1,
     ],
   ])(
     '%s',
-    async (_, serverSource, reports) => {
+    async (_, serverSource, hasServerFile, reports) => {
       vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
       vi.stubEnv('RSPACK_SERVE', 'true');
       vi.spyOn(console, 'log').mockImplementation(() => {});
       const root = await mkdtemp(join(tmpdir(), 'ng-rspack-ssr-'));
       try {
         await mkdir(join(root, 'src'), { recursive: true });
-        await writeFile(join(root, 'src', 'main.server.ts'), '');
+        if (hasServerFile) {
+          await writeFile(join(root, 'src', 'main.server.ts'), '');
+        }
         await writeFile(join(root, 'src', 'server.ts'), serverSource);
         const [config] = await _createConfig({
           browser: './src/main.ts',
