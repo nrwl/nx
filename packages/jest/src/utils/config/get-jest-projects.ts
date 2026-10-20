@@ -8,12 +8,12 @@ function getJestConfigProjectPath(projectJestConfigPath: string): string {
 
 /**
  * Get a list of paths to all the jest config files
- * using the Nx Jest executor and `@nx/run:commands`
- * running `jest`.
+ * used by `nx:run-commands` targets running `jest`,
+ * including the targets `@nx/jest/plugin` infers.
  *
  * This is used to configure Jest multi-project support.
  *
- * To add a project not using the Nx Jest executor:
+ * To add a project without such a target:
  * export default async () => ({
  *   projects: [...(await getJestProjectsAsync()), '<rootDir>/path/to/jest.config.ts'];
  * });
@@ -31,15 +31,7 @@ export async function getJestProjectsAsync() {
       continue;
     }
     for (const targetConfiguration of Object.values(projectConfig.targets)) {
-      if (
-        targetConfiguration.executor === '@nx/jest:jest' ||
-        targetConfiguration.executor === '@nrwl/jest:jest'
-      ) {
-        collectJestConfigFromJestExecutor(
-          targetConfiguration,
-          jestConfigurations
-        );
-      } else if (targetConfiguration.executor === 'nx:run-commands') {
+      if (targetConfiguration.executor === 'nx:run-commands') {
         collectJestConfigFromRunCommandsExecutor(
           targetConfiguration,
           projectConfig.root,
@@ -61,28 +53,6 @@ function removeDuplicates(configs: Set<string>): void {
     // If the directory has been added previously, remove it and keep the current, more specific path.
     if (ext) configs.delete(dir);
   });
-}
-
-function collectJestConfigFromJestExecutor(
-  targetConfiguration: TargetConfiguration,
-  jestConfigurations: Set<string>
-): void {
-  if (targetConfiguration.options?.jestConfig) {
-    jestConfigurations.add(
-      getJestConfigProjectPath(targetConfiguration.options.jestConfig)
-    );
-  }
-  if (targetConfiguration.configurations) {
-    for (const configurationObject of Object.values(
-      targetConfiguration.configurations
-    )) {
-      if (configurationObject.jestConfig) {
-        jestConfigurations.add(
-          getJestConfigProjectPath(configurationObject.jestConfig)
-        );
-      }
-    }
-  }
 }
 
 function collectJestConfigFromRunCommandsExecutor(
