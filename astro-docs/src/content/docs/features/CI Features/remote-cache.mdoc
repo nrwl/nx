@@ -77,18 +77,29 @@ with a coding agent, and on Nx Cloud, Ultracache handles most of them for you.
 
 ## Ultracache
 
-Whether a task hits or misses the remote cache depends on its `inputs`.
-You can configure them in three ways:
+Ultracache improves cache hit rates and keeps file inputs correct without requiring you to maintain complex configuration.
+It gives you several benefits:
 
-- **By hand.** You [list every file and setting](/docs/kb/configure-inputs) the task depends on in
-  `project.json` or `package.json`, and keep the list up to date as the task changes.
-- **From inference.** Nx plugins [infer inputs](/docs/features/run-tasks#inferred-tasks) from the
-  tool's own configuration, such as the `include` and `files` a `tsconfig.json` lists, so they
-  follow the tool without hand-written configuration. Making those settings precise is still up to
-  you.
-- **With Ultracache.** When a task runs on Workers, Nx Cloud traces the files it reads and records
-  them as its inputs. Later runs use that record in place of the declared file inputs, so a change to
-  a file the task never reads no longer invalidates it.
+- **Faster CI and lower compute costs.** Changing a file a task never reads no longer invalidates its cache.
+  Fewer unnecessary cache misses mean fewer tasks to run, which can substantially reduce CI compute (**up to 3× in some cases**).
+- **Correct cache invalidation.** By default, Ultracache tracks every file a task reads,
+  preventing stale cache hits from missing input declarations.
+- **No input configuration maintenance.** Ultracache records file inputs for new targets
+  automatically and keeps them up to date as your tasks change. You don't need to maintain file
+  lists by hand.
+- **Increased extensibility.** Ultracache automatically configures file inputs for scripts you run
+  through Nx. Any new technology you add gets the same automatic configuration, without needing
+  an Nx plugin.
+
+[Manually configured inputs](/docs/kb/configure-inputs) and [inputs inferred by plugins](/docs/features/run-tasks#inferred-tasks)
+can include files a task doesn't need, causing unnecessary cache misses, or omit files it does need,
+causing stale cache hits. Ultracache records the task's actual file reads instead of requiring you to
+keep that list precise as the task changes.
+
+{% aside type="note" title="Works with complex workspaces" %}
+Ultracache tracks file reads across project boundaries, so you can improve cache reuse in workspaces
+with large projects or circular dependencies without reorganizing them first.
+{% /aside %}
 
 Ultracache is part of every Nx Cloud plan, including Hobby, and traced tasks don't use credits.
 
@@ -136,6 +147,13 @@ To keep Ultracache on but leave paths such as a tool's scratch directory out of 
 list them in `ultracache.ignoreReads` and `ultracache.ignoreWrites`.
 For every mode and option, see the [`ultracache` target property](/docs/reference/project-configuration#ultracache).
 
+### Ultracache and affected
+
+[`nx affected`](/docs/features/ci-features/affected) uses task inputs to determine which tasks a change affects and need to run.
+For tasks with an Ultracache recording, those inputs come from the files the task actually reads.
+This makes `nx affected` more efficient and accurate: unused files no longer select tasks unnecessarily,
+and files missing from declared inputs no longer cause affected tasks to be overlooked.
+
 ## Remote cache security
 
 A cache hit replays files and terminal output without running the task, so the main risk is cache poisoning: a tampered entry that developers and CI then use as real task output.
@@ -144,6 +162,7 @@ Nx Cloud guards against it in several ways:
 - Your source code never reaches the cache. Nx Cloud stores the task hash, the files matched by `outputs`, and the terminal output.
 - Cache entries are immutable. Once Nx Cloud stores an entry, no later run can overwrite it.
 - CI writes are scoped by token. Use a [read-write token](/docs/kb/access-tokens#read-write-access) only on protected branches, such as `main`. On other branches, a [read-only token](/docs/kb/access-tokens#read-only-access) reads the shared cache and writes to a cache isolated to that run, so a pull request can't change what `main` restores.
+- Nx Cloud protects against [CREEP (CVE-2025-36852)](https://nx.dev/blog/creep-vulnerability-build-cache-security#the-creep-vulnerability), where an untrusted pull request writes a poisoned artifact that a trusted build later restores. With the token setup above, pull request writes stay isolated from the cache used by protected branches.
 - Developers authenticate with [personal access tokens](/docs/kb/personal-access-tokens). Workspace settings decide whether each developer can write to the cache, and whether unauthenticated machines get read-write, read-only, or no access.
 - [End-to-end encryption](/docs/kb/encryption) encrypts artifacts on your machines before they're uploaded, with a key Nx Cloud never sees.
 

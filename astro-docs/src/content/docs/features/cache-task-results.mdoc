@@ -151,7 +151,7 @@ Learn more [about configuring inputs including `namedInputs`](/docs/kb/configure
 On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) traces the files a task reads when it runs on Workers.
 Later CI runs hash the task from those files in place of its declared file inputs, so a change to a file the task never reads no longer causes a cache miss.
 
-Declared `outputs` still decide which files Nx stores and restores, and runs outside CI hash from declared `inputs`. Ultracache requires Nx 24.0.0 or later.
+Ultracache requires Nx 24.0.0 or later.
 To set it up, [connect your workspace to Nx Cloud](/docs/features/ci-features/remote-cache), [turn on Ultracache](/docs/features/ci-features/remote-cache#turn-on-ultracache), and [distribute tasks on Workers](/docs/features/ci-features/distribute-task-execution).
 
 ## Troubleshoot cache settings
