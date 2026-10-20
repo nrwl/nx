@@ -250,6 +250,56 @@ The `@nx/cypress:configuration` generator is not a project generator. It won't g
 To set up a separate project, you can generate a separate project with a project generator like `@nx/js:library` first and then run the `@nx/cypress:configuration` generator.
 {% /aside %}
 
+### Choosing the web server per environment
+
+Most application generators pass two servers to the Cypress configuration: the dev server for local
+runs and a production build for CI.
+When the two differ, the generated config reads the `CI` environment variable and picks between them.
+
+```ts
+// apps/<your-app-name>-e2e/cypress.config.ts
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(import.meta.url, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: process.env['CI']
+          ? 'npx nx run <your-app-name>:preview'
+          : 'npx nx run <your-app-name>:dev',
+        production: 'npx nx run <your-app-name>:preview',
+      },
+      ciWebServerCommand: 'npx nx run <your-app-name>:preview',
+      ciBaseUrl: 'http://localhost:4300',
+    }),
+    baseUrl: process.env['CI']
+      ? 'http://localhost:4300'
+      : 'http://localhost:4200',
+  },
+});
+```
+
+`nx e2e` runs against the dev server locally, which avoids a rebuild on every change, and against a
+production build in CI.
+The `e2e-ci` tasks always run against `ciWebServerCommand`.
+
+These applications run against the dev server in CI as well:
+
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
+
+The inferred `e2e` task includes the `CI` environment variable in its inputs, so local and CI runs
+don't share cached results.
+An `inputs` list you set for this task in `targetDefaults` or in a project configuration replaces
+the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
+
 ### Testing applications
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.

@@ -154,13 +154,13 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: 'npx nx run cool-app:dev',
+                default: process.env['CI'] ? 'npx nx run cool-app:preview' : 'npx nx run cool-app:dev',
                 production: 'npx nx run cool-app:preview',
               },
               ciWebServerCommand: 'npx nx run cool-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',
           },
         });
         "
@@ -183,7 +183,9 @@ describe('app', () => {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
               webServerCommands: {
-                default: 'npx nx run cool-app:serve',
+                default: process.env['CI']
+                  ? 'npx nx run cool-app:serve-static'
+                  : 'npx nx run cool-app:serve',
                 production: 'npx nx run cool-app:serve-static',
               },
               ciWebServerCommand: 'npx nx run cool-app:serve-static',
@@ -208,17 +210,29 @@ describe('app', () => {
       ).toMatchSnapshot();
     });
 
-    it('should run playwright against serve-static if bundler is none', async () => {
-      await applicationGenerator(tree, {
-        directory: 'cool-app',
-        e2eTestRunner: 'playwright',
-        unitTestRunner: 'none',
-        bundler: 'none',
-      });
-      expect(
-        tree.read('cool-app-e2e/playwright.config.mts', 'utf-8')
-      ).toContain(`command: 'npx nx run cool-app:serve-static'`);
-    });
+    it.each([
+      [
+        'playwright',
+        'cool-app-e2e/playwright.config.mts',
+        `command: 'npx nx run cool-app:serve-static'`,
+      ],
+      [
+        'cypress',
+        'cool-app-e2e/cypress.config.ts',
+        `default: 'npx nx run cool-app:serve-static'`,
+      ],
+    ] as const)(
+      'should run %s against serve-static if bundler is none',
+      async (e2eTestRunner, configPath, expected) => {
+        await applicationGenerator(tree, {
+          directory: 'cool-app',
+          e2eTestRunner,
+          unitTestRunner: 'none',
+          bundler: 'none',
+        });
+        expect(tree.read(configPath, 'utf-8')).toContain(expected);
+      }
+    );
 
     it('should generate files if bundler is vite', async () => {
       const nxJson = readNxJson(tree);
