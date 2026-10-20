@@ -5,7 +5,8 @@ With it on, the inferred e2e tasks wait for the dev server task's `readyWhen` ch
 
 This migration sets `waitForServerReady` to `false` on every `@nx/cypress/plugin` entry in `nx.json`, so existing workspaces keep the old behavior.
 It expands a string entry into an object entry, keeps `include`, `exclude`, and other options, and leaves an entry alone when it already sets `waitForServerReady`.
-To opt in later, set the option to `true`.
+The option is deprecated and will be removed in Nx 25, when the e2e tasks always wait for the dev server task's `readyWhen`.
+To opt in before then, remove `waitForServerReady` from the plugin entries.
 
 #### Sample code changes
 
