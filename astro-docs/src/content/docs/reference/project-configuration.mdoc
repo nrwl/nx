@@ -725,6 +725,7 @@ These report it once the server listens:
 
 The report carries the port the server actually uses, so it's right however the port was chosen.
 Generators write `"readyWhen": { "signal": true }` on the `@nx/web:file-server` and Angular dev server targets they create.
+They also write it on the `serve` target of Express, Fastify, Koa, and NestJS apps, and on the Next.js `serve-custom-server` target.
 `@nx/web` and `@nx/angular` each ship an `update-24-0-0-add-ready-when-signal` migration.
 It adds the setting to existing targets that use those executors and builders.
 The file server runs its `buildTarget` before it listens.

@@ -105,6 +105,7 @@ With the `waitForServerReady` option, on by default, the Playwright tasks wait f
 task's `readyWhen` instead of only for the task to start.
 The Vite, webpack, Rspack, Rsbuild, Angular, Next.js, Expo, Nuxt, React Router, React Native, and Storybook plugins infer `readyWhen` on the server targets they can check.
 Generated Angular dev server, Angular Storybook, and `@nx/web:file-server` targets set it too.
+So do the Next.js `serve-custom-server` target and the `serve` target of generated Express, Fastify, Koa, and NestJS apps.
 A `storybook dev` target without a set port counts as ready once it has started, and an Angular Storybook target waits for its port.
 For the details, see [wait for Storybook to be ready](/docs/technologies/test-tools/storybook/introduction#wait-for-storybook-to-be-ready).
 The tasks get the address the server reported in the `NX_READY_URL` environment variable, which
