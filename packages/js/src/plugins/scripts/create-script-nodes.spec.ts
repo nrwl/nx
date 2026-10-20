@@ -37,12 +37,13 @@ describe('createScriptNodes', () => {
 
   async function run(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-    return createNodes(Object.keys(files), options, context);
+    // Only what the plugin glob would hand over; markers are found on disk.
+    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    return createNodes(matched, options, context);
   }
 
-  it('should match scripts and project markers', () => {
-    expect(glob).toContain('package.json');
-    expect(glob).toContain('*.{js,cjs,mjs,ts,cts,mts}');
+  it('should only match script files', () => {
+    expect(glob).toBe('**/*.{js,cjs,mjs,ts,cts,mts}');
   });
 
   it('should infer a target per claimed script in its nearest project', async () => {
@@ -67,7 +68,8 @@ describe('createScriptNodes', () => {
                 "targets": {
                   "publish": {
                     "cache": false,
-                    "command": "node --enable-source-maps scripts/publish.ts",
+                    "command": "node --watch --enable-source-maps scripts/publish.ts",
+                    "continuous": true,
                     "metadata": {
                       "description": "Runs scripts/publish.ts",
                       "technologies": [
@@ -92,7 +94,8 @@ describe('createScriptNodes', () => {
                 "targets": {
                   "seed": {
                     "cache": false,
-                    "command": "node scripts/seed.mjs",
+                    "command": "node --watch scripts/seed.mjs",
+                    "continuous": true,
                     "metadata": {
                       "description": "Runs scripts/seed.mjs",
                       "technologies": [
@@ -122,15 +125,11 @@ describe('createScriptNodes', () => {
 
     // Same files on disk; a narrower include hands the plugin fewer scripts.
     const all = await createNodes(
-      ['package.json', 'scripts/a.js', 'scripts/b.js'],
+      ['scripts/a.js', 'scripts/b.js'],
       {},
       context
     );
-    const narrowed = await createNodes(
-      ['package.json', 'scripts/a.js'],
-      {},
-      context
-    );
+    const narrowed = await createNodes(['scripts/a.js'], {}, context);
 
     expect(Object.keys(all[0][1].projects['.'].targets)).toEqual(['a', 'b']);
     expect(Object.keys(narrowed[0][1].projects['.'].targets)).toEqual(['a']);
@@ -151,14 +150,28 @@ describe('createScriptNodes', () => {
     ]);
   });
 
-  it('should run claimed scripts in watch mode when watch is set', async () => {
+  it('should not watch when watch is false', async () => {
     const results = await run(
       {
         'package.json': '{}',
-        'src/main.ts': '#!/usr/bin/env node\n// @nx-target-name: serve\n',
+        'scripts/seed.js': '#!/usr/bin/env node\n',
       },
-      { watch: true }
+      { watch: false }
     );
+
+    expect(results[0][1].projects['.'].targets.seed).not.toHaveProperty(
+      'continuous'
+    );
+    expect(results[0][1].projects['.'].targets.seed.command).toBe(
+      'node scripts/seed.js'
+    );
+  });
+
+  it('should run claimed scripts in watch mode by default', async () => {
+    const results = await run({
+      'package.json': '{}',
+      'src/main.ts': '#!/usr/bin/env node\n// @nx-target-name: serve\n',
+    });
 
     expect(results[0][1].projects['.'].targets).toMatchInlineSnapshot(`
       {
@@ -187,7 +200,7 @@ describe('createScriptNodes', () => {
     });
 
     expect(results[0][1].projects['.'].targets['my tool'].command).toBe(
-      'node "scripts/my tool.js"'
+      'node --watch "scripts/my tool.js"'
     );
   });
 

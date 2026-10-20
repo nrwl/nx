@@ -854,17 +854,13 @@ describe('app', () => {
           "import express from 'express';",
         ]
       `);
-      expect(readNxJson(tree).plugins).toContainEqual({
-        plugin: '@nx/js/tsx',
-        include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
-        options: { watch: true },
-      });
+      expect(readNxJson(tree).plugins).toContain('@nx/js/tsx');
       expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
         'tsx'
       );
     });
 
-    it('should scope one watch registration of @nx/js/tsx to each app', async () => {
+    it('should scope a registration to each app when @nx/js/tsx is already scoped', async () => {
       updateNxJson(tree, {
         ...readNxJson(tree),
         plugins: [{ plugin: '@nx/js/tsx', include: ['tools/**/*'] }],
@@ -887,18 +883,12 @@ describe('app', () => {
         )
       ).toEqual([
         { plugin: '@nx/js/tsx', include: ['tools/**/*'] },
-        {
-          plugin: '@nx/js/tsx',
-          include: [
-            '{package.json,project.json,src/main.{ts,js}}',
-            'myapp/{package.json,project.json,src/main.{ts,js}}',
-          ],
-          options: { watch: true },
-        },
+        { plugin: '@nx/js/tsx', include: ['src/main.ts'] },
+        { plugin: '@nx/js/tsx', include: ['myapp/src/main.ts'] },
       ]);
     });
 
-    it('should add a watch registration next to an unscoped @nx/js/tsx', async () => {
+    it('should reuse an unscoped @nx/js/tsx', async () => {
       updateNxJson(tree, { ...readNxJson(tree), plugins: ['@nx/js/tsx'] });
       await applicationGenerator(tree, {
         directory: 'myapp',
@@ -909,82 +899,44 @@ describe('app', () => {
         readNxJson(tree).plugins.filter(
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
-      ).toEqual([
-        '@nx/js/tsx',
-        {
-          plugin: '@nx/js/tsx',
-          include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
-          options: { watch: true },
-        },
-      ]);
+      ).toEqual(['@nx/js/tsx']);
     });
 
-    it.each([
-      ['api/{package.json,project.json,src/main.{ts,js}}'],
-      ['myapp/{package.json,project.json,src/main.{ts,js}}'],
-    ])(
-      'should not reuse a watch registration (%s) that a later unscoped one overrides',
-      async (include) => {
-        const scoped = {
-          plugin: '@nx/js/tsx',
-          include: [include],
-          options: { watch: true },
-        };
-        updateNxJson(tree, {
-          ...readNxJson(tree),
-          plugins: [scoped, '@nx/js/tsx'],
-        });
-        await applicationGenerator(tree, {
-          directory: 'myapp',
-          skipFormat: true,
-        });
-
-        expect(
-          readNxJson(tree).plugins.filter(
-            (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
-          )
-        ).toEqual([
-          scoped,
-          '@nx/js/tsx',
-          {
-            plugin: '@nx/js/tsx',
-            include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
-            options: { watch: true },
-          },
-        ]);
-      }
-    );
-
-    it('should not widen a watch registration when a later one sees the app through package.json', async () => {
+    it('should reuse the last registration that sees the main file', async () => {
       const scoped = {
         plugin: '@nx/js/tsx',
         include: ['tools/**/*'],
-        options: { watch: true },
+        options: { watch: false },
       };
-      const later = {
-        plugin: '@nx/js/tsx',
-        include: ['**/package.json', '**/*.ts'],
-      };
+      const later = { plugin: '@nx/js/tsx', include: ['**/*.ts'] };
       updateNxJson(tree, { ...readNxJson(tree), plugins: [scoped, later] });
       await applicationGenerator(tree, {
         directory: 'myapp',
-        useProjectJson: true,
         skipFormat: true,
       });
 
-      expect(tree.exists('myapp/package.json')).toBe(true);
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
+        )
+      ).toEqual([scoped, later]);
+    });
+
+    it('should scope a registration to the app when the last match disables watch', async () => {
+      const noWatch = { plugin: '@nx/js/tsx', options: { watch: false } };
+      updateNxJson(tree, { ...readNxJson(tree), plugins: [noWatch] });
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        skipFormat: true,
+      });
+
       expect(
         readNxJson(tree).plugins.filter(
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
       ).toEqual([
-        scoped,
-        later,
-        {
-          plugin: '@nx/js/tsx',
-          include: ['myapp/{package.json,project.json,src/main.{ts,js}}'],
-          options: { watch: true },
-        },
+        noWatch,
+        { plugin: '@nx/js/tsx', include: ['myapp/src/main.ts'] },
       ]);
     });
 
@@ -1508,11 +1460,7 @@ describe('app', () => {
       expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
         /^#!\/usr\/bin\/env node\n\/\/ @nx-target-name: serve\n/
       );
-      expect(readNxJson(tree).plugins).toContainEqual({
-        plugin: '@nx/js/node',
-        include: ['apps/api/{package.json,project.json,src/main.{ts,js}}'],
-        options: { watch: true },
-      });
+      expect(readNxJson(tree).plugins).toContain('@nx/js/node');
       expect(readJson(tree, 'package.json').devDependencies).not.toHaveProperty(
         'tsx'
       );
@@ -1560,11 +1508,7 @@ describe('app', () => {
         )
       ).toEqual([
         { plugin: '@nx/js/node', exclude: ['apps/**'] },
-        {
-          plugin: '@nx/js/node',
-          include: ['apps/api/{package.json,project.json,src/main.{ts,js}}'],
-          options: { watch: true },
-        },
+        { plugin: '@nx/js/node', include: ['apps/api/src/main.ts'] },
       ]);
     });
 

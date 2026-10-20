@@ -25,11 +25,9 @@ describe('@nx/js/tsx', () => {
 
   async function targetsFor(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-    const [[, result]] = await createNodesFunction(
-      Object.keys(files),
-      options,
-      context
-    );
+    // Only what the plugin glob would hand over; markers are found on disk.
+    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    const [[, result]] = await createNodesFunction(matched, options, context);
     return result.projects['.'].targets;
   }
 
@@ -41,19 +39,15 @@ describe('@nx/js/tsx', () => {
     });
 
     expect(Object.keys(targets)).toEqual(['gen']);
-    expect(targets.gen.command).toBe('tsx scripts/gen.ts');
+    expect(targets.gen.command).toBe('tsx watch scripts/gen.ts');
     expect(targets.gen.metadata.technologies).toEqual(['tsx']);
-    expect(targets.gen.continuous).toBeUndefined();
   });
 
-  it('should put watch before shebang flags when watch is set', async () => {
-    const targets = await targetsFor(
-      {
-        'package.json': '{}',
-        'scripts/dev.ts': '#!/usr/bin/env -S tsx --env-file=.env\n',
-      },
-      { watch: true }
-    );
+  it('should put watch before shebang flags', async () => {
+    const targets = await targetsFor({
+      'package.json': '{}',
+      'scripts/dev.ts': '#!/usr/bin/env -S tsx --env-file=.env\n',
+    });
 
     expect(targets.dev.command).toBe(
       'tsx watch --env-file=.env scripts/dev.ts'

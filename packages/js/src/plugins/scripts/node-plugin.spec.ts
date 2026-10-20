@@ -29,11 +29,9 @@ describe('@nx/js/node', () => {
     options = {}
   ) {
     await tempFs.createFiles(files);
-    const results = await createNodesFunction(
-      Object.keys(files),
-      options,
-      context
-    );
+    // Only what the plugin glob would hand over; markers are found on disk.
+    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    const results = await createNodesFunction(matched, options, context);
     return results.find(([, r]) => r.projects?.[root])?.[1].projects[root]
       .targets;
   }
@@ -49,7 +47,7 @@ describe('@nx/js/node', () => {
     );
 
     expect(Object.keys(targets)).toEqual(['a']);
-    expect(targets.a.command).toBe('node scripts/a.js');
+    expect(targets.a.command).toBe('node --watch scripts/a.js');
   });
 
   it('should infer serve from the header @nx/node:application writes', async () => {
@@ -59,8 +57,7 @@ describe('@nx/js/node', () => {
         'apps/api/src/main.ts':
           '#!/usr/bin/env node\n// @nx-target-name: serve\nconsole.log("hi");\n',
       },
-      'apps/api',
-      { watch: true }
+      'apps/api'
     );
 
     expect(targets).toEqual({
@@ -130,6 +127,7 @@ describe('@nx/js/node', () => {
           name: '@proj/tool',
           bin: 'dist/index.js',
         }),
+        'packages/tool/src/index.ts': 'export {};\n',
       },
       'packages/tool',
       { binDependsOn: ['compile'] }
@@ -148,6 +146,6 @@ describe('@nx/js/node', () => {
       '.'
     );
 
-    expect(targets.release.command).toBe('node scripts/release.mjs');
+    expect(targets.release.command).toBe('node --watch scripts/release.mjs');
   });
 });

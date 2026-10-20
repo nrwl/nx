@@ -68,18 +68,12 @@ To add it, see [waiting for the server to be ready](/docs/technologies/node/intr
 The name `serve-ssr` keeps the target apart from the `serve` target that `@nx/webpack/plugin` and
 `@nx/rspack/plugin` infer for the browser dev server.
 
-Register the plugin in `nx.json`, scoped to the app, with `watch` on so the server restarts when
-its files change:
+Register the plugin in `nx.json`.
+It runs scripts in watch mode by default, so the server restarts when its files change:
 
 ```json {% title="nx.json" %}
 {
-  "plugins": [
-    {
-      "plugin": "@nx/js/tsx",
-      "include": ["apps/my-app/{package.json,project.json,server.ts}"],
-      "options": { "watch": true }
-    }
-  ]
+  "plugins": ["@nx/js/tsx"]
 }
 ```
 
