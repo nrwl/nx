@@ -36,13 +36,15 @@ export function getReadyCheckReadyWhen(
   configFileName?: string,
   ...literals: string[]
 ): { command: string; interval: number } {
+  // Unquoted in the command, as no quoting works in every shell
+  if (configFileName !== undefined && !/^[\w.-]+$/.test(configFileName)) {
+    throw new Error(`Unsupported config file name: ${configFileName}`);
+  }
   const args = [
     ...(configFileName === undefined ? [] : ['process.argv[1]']),
     ...literals.map((literal) => `'${literal}'`),
   ].join(', ');
   return {
-    // Unquoted: the plugins' globs fix the file name. Quote it if it ever
-    // becomes user-chosen, since the shell expands $, backticks and %.
     command: `node -e "require('${module}').waitForDevServer(${args})"${
       configFileName === undefined ? '' : ` ${configFileName}`
     }`,

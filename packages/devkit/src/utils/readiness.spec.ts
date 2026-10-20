@@ -1,6 +1,7 @@
 import {
   getForwardedArgs,
   getListeningUrl,
+  getReadyCheckReadyWhen,
   parseCommanderArgs,
 } from './readiness';
 
@@ -97,6 +98,23 @@ describe('getForwardedArgs', () => {
     ],
   ])('forwards %s', (_, options, expected) => {
     expect(getForwardedArgs(options)).toEqual(expected);
+  });
+});
+
+describe('getReadyCheckReadyWhen', () => {
+  it('passes the config file name to the check', () => {
+    expect(
+      getReadyCheckReadyWhen('@nx/vite/ready-check', 'vite.config.ts', 'serve')
+        .command
+    ).toBe(
+      `node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts`
+    );
+  });
+
+  it('rejects a config file name the shell would expand', () => {
+    expect(() =>
+      getReadyCheckReadyWhen('@nx/vite/ready-check', 'vite.$HOME.ts')
+    ).toThrow('Unsupported config file name: vite.$HOME.ts');
   });
 });
 

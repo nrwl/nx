@@ -83,6 +83,23 @@ describe('nxReadySignal', () => {
     }
   );
 
+  it('signals without a url once serving when nuxi 3.7.0 to 3.7.2 pass no listener', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+    const nuxt = install();
+    const address = () => ({ address: '127.0.0.1', family: 'IPv4', port });
+
+    await nuxt.callHook('listen', { address }, {});
+    await nuxt.callHook('build:done');
+    await new Promise((r) => setTimeout(r, 600));
+    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+
+    status = 404;
+    await vi.waitFor(
+      () => expect(devkit.signalTaskReady).toHaveBeenCalledWith(),
+      { timeout: 2000 }
+    );
+  });
+
   it('signals without a url once built when the server listens on a socket', async () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
     const nuxt = install();

@@ -46,9 +46,14 @@ export function nxReadySignal(_options: unknown, nuxt: NuxtWithHooks) {
         signalTaskReady();
         return;
       }
+      // nuxi 3.7.0 to 3.7.2 pass `{}` from a forked child, whose server is
+      // internal, so its address isn't the one to report
+      const internal = Object.keys(listener).length === 0;
       // The CLI serves the app only after this hook returns: until then it
       // answers 503 or holds the request, so the hook must not wait for it
-      void waitUntilServing([url]).then(() => signalTaskReady({ url }));
+      void waitUntilServing([url]).then(() =>
+        internal ? signalTaskReady() : signalTaskReady({ url })
+      );
     });
   });
 }
