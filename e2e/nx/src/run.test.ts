@@ -1133,9 +1133,9 @@ describe('Nx Running Tests', () => {
             // The workspace itself does not depend on @nx/devkit: pnpm exposes it only
             // next to the packages that do
             const { createRequire } = require('module');
-            const { signalTaskReady } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
+            const { emitReadySignal } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
             setTimeout(() => {
-              console.log('SIGNALLED=' + signalTaskReady({ url: 'http://localhost:${port}/' }));
+              console.log('SIGNALLED=' + emitReadySignal('http://localhost:${port}/'));
             }, 1500);
             setInterval(() => {}, 1000);
           `

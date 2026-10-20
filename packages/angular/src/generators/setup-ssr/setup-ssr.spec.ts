@@ -654,6 +654,34 @@ describe('setupSSR', () => {
     expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
   });
 
+  it.each([
+    ['the application builder', undefined, nxVersion],
+    ['a webpack server target', '@nx/angular:webpack-browser', undefined],
+  ])(
+    'should add "@nx/js", which the server file imports to report readiness, only for %s',
+    async (_, executor, expected) => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      if (executor) {
+        const project = readProjectConfiguration(tree, 'app1');
+        project.targets.build.executor = executor;
+        updateProjectConfiguration(tree, 'app1', project);
+      }
+      updateJson(tree, 'package.json', (json) => {
+        delete json.devDependencies['@nx/js'];
+        return json;
+      });
+
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+      const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+      expect(devDependencies['@nx/js']).toBe(expected);
+    }
+  );
+
   it('should not install webpack dependencies for a non-webpack build executor', async () => {
     const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {

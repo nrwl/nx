@@ -138,9 +138,11 @@ It then waits for the target's `readyWhen` check, which depends on how the targe
 - `project.json` targets that run a dev server builder as their executor, such as `@angular/build:dev-server` or `@nx/angular:dev-server`, need `"readyWhen": { "signal": true }`.
   Nx then reports the `baseUrl` that the builder returns.
   Generated targets include the setting, and a migration adds it to existing ones.
+- Rspack applications get `"readyWhen": { "signal": true }` from `@nx/rspack/plugin`, and `NgRspackPlugin` reports the dev server's address once it listens.
+  With SSR, the server in `server.ts` reports its own address instead, when it calls `emitReadySignal` from `@nx/js/ready-signal`, as generated SSR servers do.
 - The `serve-static` target runs the `@nx/web:file-server` executor, which reports its address once it listens.
 
-With the last two, the waiting task gets the reported address in the `NX_READY_URL` environment variable.
+With the last three, the waiting task gets the reported address in the `NX_READY_URL` environment variable.
 A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
 For the details, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
 

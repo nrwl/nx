@@ -30,7 +30,7 @@ export function nxReadySignal(_options: unknown, nuxt: NuxtWithHooks) {
   if (!process.env.NX_READY_SIGNAL_SOCKET) {
     return;
   }
-  const { signalTaskReady } =
+  const { emitReadySignal } =
     require('@nx/devkit') as typeof import('@nx/devkit');
   const { getListeningUrl } =
     require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
@@ -43,7 +43,7 @@ export function nxReadySignal(_options: unknown, nuxt: NuxtWithHooks) {
         getListeningUrl(server.address(), !!listener.https);
       if (!url) {
         // A server on a socket can't be probed
-        signalTaskReady();
+        emitReadySignal();
         return;
       }
       // nuxi 3.7.0 to 3.7.2 pass `{}` from a forked child, whose server is
@@ -52,7 +52,7 @@ export function nxReadySignal(_options: unknown, nuxt: NuxtWithHooks) {
       // The CLI serves the app only after this hook returns: until then it
       // answers 503 or holds the request, so the hook must not wait for it
       void waitUntilServing([url]).then(() =>
-        internal ? signalTaskReady() : signalTaskReady({ url })
+        internal ? emitReadySignal() : emitReadySignal(url)
       );
     });
   });

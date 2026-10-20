@@ -17,6 +17,7 @@ export interface Schema {
    */
   setParserOptionsProject?: boolean;
   swc?: boolean;
+  /** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;

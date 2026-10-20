@@ -739,6 +739,7 @@ These report it once the server listens:
 
 The report carries the port the server actually uses, so it's right however the port was chosen.
 Generators write `"readyWhen": { "signal": true }` on the `@nx/web:file-server` and Angular dev server targets they create.
+They also write it on the `serve` target of Express, Fastify, Koa, and NestJS apps, and on the Next.js `serve-custom-server` target.
 `@nx/web` and `@nx/angular` each ship an `update-24-0-0-add-ready-when-signal` migration.
 It adds the setting to existing targets that use those executors and builders.
 The file server runs its `buildTarget` before it listens.
@@ -756,7 +757,7 @@ The `@nx/web` migration therefore also adds that target to the file server targe
 }
 ```
 
-A `signal` check only passes on the report, so use it for a target whose server runs one of those plugins or calls `signalTaskReady` itself.
+A `signal` check only passes on the report, so use it for a target whose server runs one of those plugins or calls `emitReadySignal` itself.
 The webpack, Rspack, Vite, and Rsbuild plugins infer it only when the config loads one of those plugins, and a check that reads the config at task time otherwise.
 The Nuxt plugin infers it on the dev server task only when the config loads the Nuxt module.
 The `@nx/web:file-server` targets that the webpack, Rspack, Vite, Nuxt, and Storybook plugins infer, such as `serve-static`, always use it.
@@ -789,17 +790,30 @@ It takes the protocol and port from `NX_READY_URL` and keeps the path and query.
 A `localhost` host stays as it is when the server listens on a loopback address, and any other host moves to the one the server reported.
 Without `NX_READY_URL`, it returns the address unchanged.
 
-To report readiness from your own server, call `signalTaskReady` from `@nx/devkit` in the task's process:
+To report readiness from your own server, call `emitReadySignal` from `@nx/js/ready-signal` once it listens.
+Import it only when Nx waits for the server.
+The server then loads nothing from Nx otherwise, and keeps running where `@nx/js`, a dev dependency, isn't installed.
+The import goes through `new Function` so TypeScript and bundlers leave it as a runtime import:
 
 ```ts
-import { signalTaskReady } from '@nx/devkit';
-
-server.listen(port, () => {
-  signalTaskReady({ url: `http://localhost:${port}/` });
+const server = app.listen(port, async () => {
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (
+        s: string
+      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
 });
 ```
 
+Pass the server, and Nx reads the address it listens on, or pass the URL as a string.
 It does nothing outside a task whose `readyWhen` is `signal`.
+Code that already depends on `@nx/devkit`, such as an executor or a bundler plugin, can import `emitReadySignal` from `@nx/devkit` instead.
 
 If you change an inferred dev target's command to something that doesn't report, set `readyWhen` on the target too, or the tasks waiting for it fail after the timeout.
 

@@ -108,7 +108,8 @@
     "customServer": {
       "description": "Use a custom Express server for the Next.js application.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-deprecated": "Next.js discourages custom servers. Write your own server following https://nextjs.org/docs/app/guides/custom-server instead. It will be removed in Nx v25."
     },
     "skipPackageJson": {
       "type": "boolean",

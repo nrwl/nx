@@ -7,7 +7,7 @@ import { resolve } from 'path';
 import { splitShellArgs } from './split-shell-args';
 
 /**
- * The url of a server listening on `address`, for `signalTaskReady`. A
+ * The url of a server listening on `address`, for `emitReadySignal`. A
  * wildcard address maps to localhost. Undefined for a socket or a pipe.
  */
 export function getListeningUrl(

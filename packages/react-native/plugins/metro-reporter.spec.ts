@@ -3,7 +3,7 @@ import { createServer } from 'https';
 import type { AddressInfo } from 'net';
 
 const devkit = vi.hoisted(() => ({
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
 mockCjsModule(import.meta.url, '@nx/devkit', devkit);
@@ -20,7 +20,7 @@ describe('NxMetroReporter', () => {
 
   beforeEach(() => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.signalTaskReady.mockClear();
+    devkit.emitReadySignal.mockClear();
     terminal = { log: vi.fn(), status: () => {} };
     const NxMetroReporter = require('./metro-reporter');
     reporter = new NxMetroReporter(terminal);
@@ -52,10 +52,10 @@ describe('NxMetroReporter', () => {
     (args, address, url) => {
       process.argv = [...argv, 'start', ...args];
       reporter.update({ type: 'bundle_save_log', message: 'saved' });
-      expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+      expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
       reporter.update({ type: 'server_listening', ...address });
-      expect(devkit.signalTaskReady).toHaveBeenCalledExactlyOnceWith({ url });
+      expect(devkit.emitReadySignal).toHaveBeenCalledExactlyOnceWith(url);
     }
   );
 
@@ -70,9 +70,9 @@ describe('NxMetroReporter', () => {
     reporter.update({ type: 'server_listening', ...address });
     server.close();
 
-    expect(devkit.signalTaskReady).toHaveBeenCalledExactlyOnceWith({
-      url: `https://127.0.0.1:${address.port}/`,
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledExactlyOnceWith(
+      `https://127.0.0.1:${address.port}/`
+    );
   });
 
   it('does nothing outside a signalling task', () => {
@@ -83,6 +83,6 @@ describe('NxMetroReporter', () => {
       family: 'IPv6',
       port: 8081,
     });
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
   });
 });

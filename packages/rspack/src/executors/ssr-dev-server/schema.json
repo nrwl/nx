@@ -5,6 +5,7 @@
   "description": "Serve a SSR application using rspack.",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/rspack:ssr-dev-server` executor is deprecated and will be removed in Nx v25. Run the server from source with the `@nx/js/tsx` plugin, with the browser build in watch mode as a continuous dependency. See https://nx.dev/docs/kb/replace-ssr-dev-server.",
   "properties": {
     "browserTarget": {
       "type": "string",

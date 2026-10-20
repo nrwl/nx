@@ -112,10 +112,13 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.customServer) {
-    await customServerGenerator(host, {
+    const customServerTask = await customServerGenerator(host, {
       project: options.projectName,
       compiler: options.swc ? 'swc' : 'tsc',
     });
+    if (customServerTask) {
+      tasks.push(customServerTask);
+    }
   }
 
   if (!options.skipPackageJson) {
