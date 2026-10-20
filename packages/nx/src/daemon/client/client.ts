@@ -387,14 +387,8 @@ export class DaemonClient {
     sourceMaps: ConfigurationSourceMaps;
   }> {
     preventRecursionInGraphConstruction();
-    let spinner: DelayedSpinner;
-    // If the graph takes a while to load, we want to show a spinner.
-    spinner = new DelayedSpinner(
-      'Calculating the project graph on the Nx Daemon'
-    );
-    this.currentSpinner = spinner;
     try {
-      const response = await this.sendToDaemonViaQueue({
+      const response = await this.sendWithGraphSpinner({
         type: 'REQUEST_PROJECT_GRAPH',
       });
       return {
@@ -407,9 +401,6 @@ export class DaemonClient {
       } else {
         throw e;
       }
-    } finally {
-      spinner?.cleanup();
-      this.currentSpinner = null;
     }
   }
 
@@ -1088,7 +1079,7 @@ export class DaemonClient {
       type: SELECT_AFFECTED_TASKS,
       request,
     };
-    return this.sendToDaemonViaQueue(message);
+    return this.sendWithGraphSpinner(message);
   }
 
   updateWorkspaceContext(
@@ -1249,15 +1240,33 @@ export class DaemonClient {
     }
   }
 
-  private async sendToDaemonViaQueue<T extends DaemonMessage>(
+  /** Shows the daemon's streamed graph and selection progress while waiting. */
+  private async sendWithGraphSpinner<T extends DaemonMessage>(
     messageToDaemon: T
   ): Promise<any> {
+    const spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    );
+    try {
+      return await this.sendToDaemonViaQueue(messageToDaemon, spinner);
+    } finally {
+      spinner.cleanup();
+    }
+  }
+
+  private async sendToDaemonViaQueue<T extends DaemonMessage>(
+    messageToDaemon: T,
+    spinner?: DelayedSpinner
+  ): Promise<any> {
     return this.queue.sendToQueue(async () => {
-      // Set currentSpinner inside the queued function so it's only
-      // active while this specific message is in flight — preventing
-      // concurrent callers from overwriting each other's spinner
-      // reference before their turn arrives.
-      return await this.sendMessageToDaemon(messageToDaemon);
+      // Set inside the queued function so a waiting request cannot take
+      // over the in-flight request's spinner.
+      this.currentSpinner = spinner ?? null;
+      try {
+        return await this.sendMessageToDaemon(messageToDaemon);
+      } finally {
+        this.currentSpinner = null;
+      }
     });
   }
 

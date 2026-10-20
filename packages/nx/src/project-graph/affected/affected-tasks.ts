@@ -45,6 +45,8 @@ import {
   type InternedExplanation,
 } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
   createTaskPlanningContext,
   TaskPlanningContext,
@@ -232,6 +234,19 @@ export async function computeAffectedTasks(
  * daemon.
  */
 export async function selectAffectedTasks(
+  ...args: Parameters<typeof matchAffectedTasks>
+): ReturnType<typeof matchAffectedTasks> {
+  const spinner = new DelayedSpinner('Calculating affected tasks', {
+    progressTopic: ProgressTopics.AffectedTasks,
+  });
+  try {
+    return await matchAffectedTasks(...args);
+  } finally {
+    spinner.cleanup();
+  }
+}
+
+async function matchAffectedTasks(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   planningContext: TaskPlanningContext,
