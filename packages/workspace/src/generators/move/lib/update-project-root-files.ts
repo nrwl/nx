@@ -72,6 +72,12 @@ export function updateFilesForRootProjects(
     );
     let newContent = oldContent
       .replace(regex, newRelativeRoot)
+      // Restore the `jest` command the @nx/jest configuration generator rewrote,
+      // so the target keeps merging with the one @nx/jest/plugin infers
+      .replace(
+        /(["'`])jest --config jest\.config\.(?:app|lib)\.[cm]?[jt]s\1/g,
+        '$1jest$1'
+      )
       // moveProjectFiles drops `.app`/`.lib` from the root-level Jest config only
       .replace(/([^\s'"`=]*?)jest\.config\.(?:app|lib)\./g, (reference, dir) =>
         rootDirPrefixes.includes(dir) ? `${dir}jest.config.` : reference

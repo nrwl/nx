@@ -123,7 +123,10 @@ describe('monorepo generator', () => {
         });
         const project = readProjectConfiguration(tree, 'demo');
         project.targets.test = {
-          command: 'jest --config ./jest.config.app.cts',
+          command: 'jest --config jest.config.app.cts',
+        };
+        project.targets['test-coverage'] = {
+          command: 'jest --config ./jest.config.app.cts --coverage',
         };
         updateProjectConfiguration(tree, 'demo', project);
       } else {
@@ -134,9 +137,11 @@ describe('monorepo generator', () => {
 
       expect(tree.exists('apps/demo/jest.config.cts')).toBe(true);
       if (withWorkspaceConfig) {
-        expect(
-          readProjectConfiguration(tree, 'demo').targets.test.command
-        ).toBe('jest --config apps/demo/jest.config.cts');
+        const { targets } = readProjectConfiguration(tree, 'demo');
+        expect(targets.test.command).toBe('jest');
+        expect(targets['test-coverage'].command).toBe(
+          'jest --config apps/demo/jest.config.cts --coverage'
+        );
         expect(
           readJson(tree, 'apps/demo/tsconfig.spec.json').include
         ).toContain('src/unit/jest.config.app.ts');
