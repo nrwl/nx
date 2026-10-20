@@ -143,7 +143,7 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const server = app.listen(port, async () => {
     console.log(\`Node Express server listening on http://localhost:\${port}\`);
     // Set when Nx waits for this server to be ready
-    if (process.env.NX_READY_SIGNAL_SOCKET) {
+    if (process.env['NX_READY_SIGNAL_SOCKET']) {
       try {
         // Function keeps TypeScript and bundlers from rewriting or bundling the import
         const load = new Function('s', 'return import(s)') as (
