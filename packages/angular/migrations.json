@@ -388,6 +388,12 @@
       "description": "Sets `readyWhen: { signal: true }` on `@angular/build:dev-server`, `@angular-devkit/build-angular:dev-server`, `@angular-devkit/build-angular:ssr-dev-server` and `@nx/angular:dev-server` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once the server is listening.",
       "implementation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal",
       "documentation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal.md"
+    },
+    "update-24-0-0-remove-scam-generator-defaults": {
+      "version": "24.0.0-beta.5",
+      "description": "Removes generator defaults for the removed `@nx/angular:scam`, `@nx/angular:scam-directive`, `@nx/angular:scam-pipe`, and `@nx/angular:scam-to-standalone` generators from `nx.json` and project configurations.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-scam-generator-defaults",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-scam-generator-defaults.md"
     }
   },
   "packageJsonUpdates": {
