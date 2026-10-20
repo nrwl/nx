@@ -22,7 +22,7 @@ export class ReadySignalServer {
   private started: Promise<void> | undefined;
   private listeners = new Map<string, ReadySignalListener>();
   // A producer can signal before its probe subscribes. Only tasks given the
-  // socket are buffered for.
+  // socket are buffered for, until their probe subscribes.
   private early = new Map<string, ReadySignalMessage[]>();
   private issued = new Set<string>();
 
@@ -42,6 +42,7 @@ export class ReadySignalServer {
 
   subscribe(taskId: string, listener: ReadySignalListener): () => void {
     this.listeners.set(taskId, listener);
+    this.issued.delete(taskId);
     for (const message of this.early.get(taskId) ?? []) {
       listener(message);
     }
