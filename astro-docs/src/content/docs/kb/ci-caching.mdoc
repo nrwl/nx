@@ -14,7 +14,7 @@ it again.
 In a typical workflow, the same code is built and tested many times: locally before pushing, on
 every CI run of a PR, and again after merging.
 A build cache eliminates every repeat execution, which is why teams adopting one commonly see
-30-70% faster CI.
+40-90% faster CI.
 
 ## How a build cache works
 
@@ -74,7 +74,7 @@ of caching the noise.
 ### How much faster does CI get with a remote cache?
 
 It depends on how often the same task re-runs on unchanged code.
-Across Nx Cloud workspaces we observed 30-70% faster CI, with the biggest wins in repositories
+Across Nx Cloud workspaces we observed 40-90% faster CI, with the biggest wins in repositories
 with many projects where most PRs touch a small slice.
 
 ### Do I need a monorepo to benefit from CI caching?
