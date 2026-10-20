@@ -88,8 +88,8 @@ identifier `@nx/rsbuild`.
 
 The inferred `dev` and `preview` targets come with a `readyWhen` check, so a task can wait until the server accepts requests instead of only until it has started.
 The `pluginNxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
-Generated configs include it.
-In an existing config, import it from `@nx/rsbuild/ready-signal` and add it to `plugins` in `rsbuild.config.*`.
+Generated configs include it, and the migration to Nx 24 adds it to existing configs.
+In a config the migration skipped, import it from `@nx/rsbuild/ready-signal` and add it to `plugins` in `rsbuild.config.*`.
 The report carries the address the server actually listens on, so the waiting task tests against it however the port was chosen.
 
 Without the plugin, the check loads the config when the task runs instead, in the task's environment and with its flags, the way the Rsbuild CLI does.
