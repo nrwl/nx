@@ -50,6 +50,10 @@ export function serializeResult(
   )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }
 
+function stackOf(e: unknown): string {
+  return e instanceof Error ? (e.stack ?? String(e)) : String(e);
+}
+
 function serializeAs(data: any, format: 'v8' | 'json'): Buffer {
   return format === 'v8'
     ? v8_serialize(data)
@@ -71,12 +75,23 @@ export function serializeWithFallback(
 ): Buffer {
   try {
     return serializeAs(data, preferred);
-  } catch (e) {
+  } catch (preferredError) {
     const fallback = preferred === 'v8' ? 'json' : 'v8';
     console.warn(
-      `Data could not be serialized using ${preferred} serialization: ${e}. Falling back to ${fallback} serialization.`
+      `Data could not be serialized using ${preferred} serialization: ${preferredError}. Falling back to ${fallback} serialization.`
     );
-    return serializeAs(data, fallback);
+    try {
+      return serializeAs(data, fallback);
+    } catch (fallbackError) {
+      throw new Error(
+        [
+          `Data could not be serialized using either ${preferred} or ${fallback} serialization.`,
+          `${preferred} failed with: ${stackOf(preferredError)}`,
+          `${fallback} failed with: ${stackOf(fallbackError)}`,
+        ].join('\n\n'),
+        { cause: fallbackError }
+      );
+    }
   }
 }
 
@@ -84,15 +99,10 @@ export function serializeWithFallback(
  * Serialize data for IPC using the format the user configured.
  *
  * @param data Data to serialize
- * @param force Use this format without falling back. For callers whose data is
- *              known to be unrepresentable in the other format, where a fallback
- *              would only swap one failure for a less obvious one.
  * @returns Serialized data as bytes ready to be framed onto a socket
  */
-export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
-  return force
-    ? serializeAs(data, force)
-    : serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
+export function serialize(data: any): Buffer {
+  return serializeWithFallback(data, isV8SerializerEnabled() ? 'v8' : 'json');
 }
 
 /**
@@ -106,8 +116,7 @@ export function serialize(data: any, force?: 'v8' | 'json'): Buffer {
 export function sendMessage(
   socket: Socket,
   data: any,
-  force?: 'v8' | 'json',
   callback?: (err?: Error) => void
 ): void {
-  writeMessage(socket, serialize(data, force), callback);
+  writeMessage(socket, serialize(data), callback);
 }

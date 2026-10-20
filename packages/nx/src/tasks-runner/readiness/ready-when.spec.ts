@@ -245,7 +245,74 @@ describe('normalizeReadyWhen', () => {
   });
 });
 
+describe('normalizeReadyWhen signal', () => {
+  const normalize = (readyWhen: any) =>
+    normalizeReadyWhen(readyWhen, 'app:serve', data);
+
+  it('fills in the default timeout', () => {
+    expect(normalize({ signal: true })).toEqual({
+      kind: 'signal',
+      timeout: 60_000,
+    });
+    expect(normalize({ signal: true, timeout: 5000 })).toEqual({
+      kind: 'signal',
+      timeout: 5000,
+    });
+  });
+
+  it.each([
+    [{ signal: false }, '"signal" must be true'],
+    [{ signal: true, interval: 10 }, '"interval" is not used by "signal"'],
+    [{ signal: true, port: 1 }, 'expected exactly one of'],
+  ])('rejects %j', (readyWhen, reason) => {
+    expect(() => normalize(readyWhen)).toThrow(reason);
+  });
+});
+
 describe('getReadyWhen', () => {
+  it('gives a command check the env and options the producer runs with', () => {
+    const serve = {
+      executor: 'nx:run-commands',
+      continuous: true,
+      readyWhen: { command: 'check-ready' },
+      options: { command: 'serve', env: { NX_READY_WHEN_PORT: '5001' } },
+    };
+    const projectGraph = {
+      nodes: {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: { root: 'apps/app', targets: { serve } },
+        },
+      },
+    } as unknown as ProjectGraph;
+    const projects = { app: { root: 'apps/app', targets: { serve } } };
+    const task = {
+      id: 'app:serve',
+      target: { project: 'app', target: 'serve' },
+      overrides: { port: 4400 },
+      continuous: true,
+    } as Task;
+
+    const readyWhen = getReadyWhen(task, projectGraph, projects, '/w', {
+      NX_TASK_ENV: 'yes',
+    });
+
+    expect(readyWhen).toMatchObject({
+      kind: 'command',
+      command: 'check-ready',
+    });
+    const { env } = readyWhen as any;
+    expect(env).toMatchObject({
+      NX_TASK_ENV: 'yes',
+      NX_READY_WHEN_PORT: '5001',
+    });
+    expect(JSON.parse(env.NX_TASK_OPTIONS)).toMatchObject({
+      command: 'serve',
+      port: 4400,
+    });
+  });
+
   it('resolves against the options the executor receives', () => {
     const serve = {
       executor: '@nx/web:file-server',

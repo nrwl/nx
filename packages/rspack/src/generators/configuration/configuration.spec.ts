@@ -5,10 +5,20 @@ import {
   updateJson,
   workspaceRoot,
   writeJson,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import { confirmationPrompt } from '@nx/devkit/internal';
 import configurationGenerator from './configuration';
 import type { ConfigurationSchema } from './schema';
+
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    confirmationPrompt: vi.fn(actual.confirmationPrompt),
+  };
+});
 
 describe('rspack configuration generator', () => {
   let tree: Tree;
@@ -21,6 +31,8 @@ describe('rspack configuration generator', () => {
       json.devDependencies['@rspack/core'] = '1.0.0';
       return json;
     });
+    // inferred targets aren't in project.json, so the generator asks first
+    vi.mocked(confirmationPrompt).mockResolvedValue(true);
   });
 
   // `projectIsRootProjectInStandaloneWorkspace` checks
@@ -38,13 +50,15 @@ describe('rspack configuration generator', () => {
     }
   }
 
-  function setupReactProject(root: string) {
+  function setupReactProject(
+    root: string,
+    targets?: Record<string, TargetConfiguration>
+  ) {
     addProjectConfiguration(tree, 'app', {
       root,
       sourceRoot: `${root}/src`,
       projectType: 'application',
-      // a supported build executor so the generator converts without prompting
-      targets: { build: { executor: '@nx/webpack:webpack', options: {} } },
+      targets,
     });
     const tsconfigPath =
       root === '.' ? 'tsconfig.json' : `${root}/tsconfig.json`;
@@ -140,6 +154,34 @@ describe('rspack configuration generator', () => {
         "
       `);
   });
+
+  it.each([
+    [
+      { build: { executor: '@nx/webpack:webpack' } },
+      'removed executors: build (@nx/webpack:webpack). Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=app".',
+    ],
+    [
+      { serve: { executor: '@nx/rspack:dev-server' } },
+      'removed @nx/rspack executors',
+    ],
+  ])(
+    'should refuse to convert a project with targets on removed executors (%j)',
+    async (targets, message) => {
+      setupReactProject('apps/app', targets);
+      tree.write('apps/app/webpack.config.js', '');
+
+      await expect(
+        configurationGenerator(tree, {
+          project: 'app',
+          framework: 'react',
+          target: 'web',
+          newProject: false,
+        })
+      ).rejects.toThrow(message);
+      expect(tree.exists('apps/app/webpack.config.js')).toBe(true);
+      expect(tree.exists('apps/app/rspack.config.js')).toBe(false);
+    }
+  );
 
   describe('non-standalone project', () => {
     it('should extend the root tsconfig.base.json instead of inlining the base options', async () => {

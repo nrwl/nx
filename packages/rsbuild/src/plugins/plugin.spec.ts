@@ -124,6 +124,10 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'dev')" rsbuild.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "inspect-serve": {
                     "command": "rsbuild inspect",
@@ -153,6 +157,10 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'preview')" rsbuild.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -168,6 +176,26 @@ describe('@nx/rsbuild', () => {
         ],
       ]
     `);
+  });
+
+  it('waits for the signal when the config loads pluginNxReadySignal()', async () => {
+    // Rsbuild's plugins option nests arrays and promises
+    loadConfig.mockResolvedValueOnce({
+      filePath: 'my-app/rsbuild.config.ts',
+      content: {
+        plugins: [false, [Promise.resolve({ name: 'nx:ready-signal' })]],
+      },
+    });
+
+    const nodes = await createNodesFunction(
+      ['my-app/rsbuild.config.ts'],
+      {},
+      context
+    );
+
+    const targets = nodes[0][1].projects['my-app'].targets;
+    expect(targets.dev.readyWhen).toEqual({ signal: true });
+    expect(targets.preview.readyWhen).toEqual({ signal: true });
   });
 
   it('should not infer a typecheck target', async () => {

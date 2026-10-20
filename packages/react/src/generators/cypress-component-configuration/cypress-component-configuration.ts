@@ -37,15 +37,11 @@ export async function cypressComponentConfigGeneratorInternal(
   >('@nx/cypress', nxVersion);
 
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const { found, bundler } = await resolveCypressCTTarget(tree, {
+  const { found, bundler: buildBundler } = await resolveCypressCTTarget(tree, {
     project: options.project,
     buildTarget: options.buildTarget,
-    bundler: options.bundler,
-    validExecutorNames: new Set<string>([
-      '@nx/webpack:webpack',
-      '@nx/vite:build',
-    ]),
   });
+  const bundler = options.bundler ?? buildBundler;
 
   const installTask = await baseCyCtConfig(tree, {
     project: options.project,
@@ -56,7 +52,7 @@ export async function cypressComponentConfigGeneratorInternal(
 
   await configureCypressCT(tree, { project: options.project, found, bundler });
 
-  await addFiles(tree, projectConfig, options, found);
+  await addFiles(tree, projectConfig, options, buildBundler);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

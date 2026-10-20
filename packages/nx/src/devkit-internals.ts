@@ -331,3 +331,4 @@ export {
 } from './utils/workspace-context';
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
+export { resolveStartupHost } from './tasks-runner/readiness/startup-host';

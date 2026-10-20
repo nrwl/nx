@@ -8,6 +8,14 @@ import {
   createTaskId,
   getDependencyConfigs,
 } from '../../../tasks-runner/utils';
+import {
+  hasAlwaysInput,
+  isUltracacheOnInCI,
+  ultracacheDocsLink,
+  ultracacheInCINotice,
+  ultracacheModeInCI,
+  type UltracacheModeInCI,
+} from '../../../ultracache/ci-status';
 import type { ShowTargetBaseOptions } from '../command-object';
 import {
   resolveTarget,
@@ -23,6 +31,13 @@ export async function showTargetInfoHandler(
 ): Promise<void> {
   const t = await resolveTarget(args, { withSourceMaps: true });
   const data = resolveTargetInfoData(t);
+  if (
+    !args.json &&
+    data.ultracacheMode &&
+    (await isUltracacheOnInCI(t.nxJson))
+  ) {
+    data.ultracacheInCI = data.ultracacheMode;
+  }
   renderTargetInfo(data, args);
 }
 
@@ -84,7 +99,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     commandSourceKey = 'options.script';
   }
 
-  const { dependsOn, depSourceIndices, transitiveTasks } =
+  const { dependsOn, depSourceIndices, transitiveTasks, continuousDeps } =
     resolveTaskGraphDependencies(
       graph,
       {},
@@ -101,6 +116,9 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     sourceMaps
   );
   const usesCustomHasher = hasCustomHasher(projectName, targetName, graph);
+  const expandedInputs = targetConfig.inputs
+    ? expandInputsForDisplay(targetConfig.inputs, node, nxJson)
+    : undefined;
 
   return {
     project: projectName,
@@ -110,24 +128,21 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     ...(command ? { command, _commandSourceKey: commandSourceKey } : {}),
     ...(usesCustomHasher ? { customHasher: true } : {}),
     ...(dependsOn.length > 0
-      ? { dependsOn, _depSources: depSourceIndices }
+      ? {
+          dependsOn,
+          _depSources: depSourceIndices,
+          _continuousDeps: continuousDeps,
+        }
       : {}),
     ...(transitiveTasks.length > 0 ? { transitiveTasks } : {}),
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
     cache: targetConfig.cache ?? false,
-    ...(targetConfig.inputs
-      ? (() => {
-          const expanded = expandInputsForDisplay(
-            targetConfig.inputs,
-            node,
-            nxJson
-          );
-          return {
-            inputs: expanded.map((e) => e.value),
-            _inputSources: expanded.map((e) => e.originalIndex),
-          };
-        })()
+    ...(expandedInputs
+      ? {
+          inputs: expandedInputs.map((e) => e.value),
+          _inputSources: expandedInputs.map((e) => e.originalIndex),
+        }
       : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
@@ -143,6 +158,9 @@ function resolveTargetInfoData(t: ResolvedTarget) {
       ? { defaultConfiguration: targetConfig.defaultConfiguration }
       : {}),
     ...(targetSourceMap ? { sourceMap: targetSourceMap } : {}),
+    /** Set by the handler once Nx Cloud confirms the workspace is On. */
+    ultracacheInCI: undefined as UltracacheModeInCI | undefined,
+    ultracacheMode: ultracacheModeInCI(targetConfig, usesCustomHasher),
   };
 }
 
@@ -188,6 +206,8 @@ function resolveTaskGraphDependencies(
   dependsOn: string[];
   depSourceIndices: number[];
   transitiveTasks: string[];
+  /** Direct continuous dependencies, and whether this task hashes their inputs. */
+  continuousDeps?: Record<string, { inputsHashed: boolean }>;
 } {
   try {
     const taskGraph = createTaskGraph(
@@ -215,6 +235,12 @@ function resolveTaskGraphDependencies(
       ...(taskGraph.continuousDependencies[rootId] ?? []),
     ].map((edge) => edge.id);
     const directDepSet = new Set<string>(directDeps);
+    const continuousDeps = Object.fromEntries(
+      (taskGraph.continuousDependencies[rootId] ?? []).map((edge) => [
+        edge.id,
+        { inputsHashed: edge.inputs !== false },
+      ])
+    );
 
     const depSourceIndices = directDeps.map((depTaskId) => {
       const task = taskGraph.tasks[depTaskId];
@@ -229,7 +255,12 @@ function resolveTaskGraphDependencies(
       (id) => id !== rootId && !directDepSet.has(id)
     );
 
-    return { dependsOn: directDeps, depSourceIndices, transitiveTasks };
+    return {
+      dependsOn: directDeps,
+      depSourceIndices,
+      transitiveTasks,
+      continuousDeps,
+    };
   } catch {
     return {
       ...resolveDependsOnFromConfigs(depConfigs, projectName, graph),
@@ -376,7 +407,15 @@ function extractTargetSourceMap(
 function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (args.json) {
     // Strip internal renderer-only fields from JSON output
-    const { _inputSources, _depSources, _commandSourceKey, ...jsonData } = data;
+    const {
+      _inputSources,
+      _depSources,
+      _commandSourceKey,
+      _continuousDeps,
+      ultracacheMode,
+      ultracacheInCI,
+      ...jsonData
+    } = data;
     console.log(JSON.stringify(jsonData, null, 2));
     return;
   }
@@ -428,7 +467,10 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
         srcIdx !== undefined && srcIdx >= 0
           ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
           : sourceHint('dependsOn');
-      console.log(`  ${data.dependsOn[i]}${hint}`);
+      const note = data._continuousDeps?.[data.dependsOn[i]]
+        ? ` ${c.dim('(continuous)')}`
+        : '';
+      console.log(`  ${data.dependsOn[i]}${note}${hint}`);
     }
     if (data.transitiveTasks && data.transitiveTasks.length > 0) {
       console.log(`  ${c.dim(formatTransitiveSummary(data.transitiveTasks))}`);
@@ -443,8 +485,21 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   );
   console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
 
-  if (data.inputs && data.inputs.length > 0) {
+  if (data.ultracacheInCI) {
+    const notice = ultracacheInCINotice(
+      data.ultracacheInCI,
+      hasAlwaysInput(data.inputs)
+    );
+    console.log(`${c.bold('Ultracache')}: ${notice} ${ultracacheDocsLink()}`);
+  }
+
+  const hashedContinuousDeps = Object.entries(data._continuousDeps ?? {})
+    .filter(([, { inputsHashed }]) => inputsHashed)
+    .map(([depId]) => depId);
+  if (data.inputs?.length || hashedContinuousDeps.length) {
     console.log(`${c.bold('Inputs')}:`);
+  }
+  if (data.inputs && data.inputs.length > 0) {
     const inputSources = data._inputSources;
     // Build sortable entries with their source index
     const entries = data.inputs.map((input, i) => ({
@@ -475,6 +530,9 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
           : '';
       console.log(`  - ${display}${hint}`);
     }
+  }
+  for (const depId of hashedContinuousDeps) {
+    console.log(`  - inputs of ${depId} ${c.dim('(continuous dependency)')}`);
   }
 
   if (data.outputs && data.outputs.length > 0) {

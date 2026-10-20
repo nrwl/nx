@@ -66,6 +66,12 @@ export interface PlaywrightPluginOptions {
    * true.
    */
   waitForWebServer?: boolean;
+  /**
+   * Whether the inferred dependencies on the web server tasks wait for those
+   * tasks' `readyWhen` (`waitFor: 'ready'`) rather than for them to start.
+   * Defaults to true.
+   */
+  waitForServerReady?: boolean;
 }
 
 interface NormalizedOptions {
@@ -74,6 +80,7 @@ interface NormalizedOptions {
   mergeReportsTargetName: string;
   webServerTimeout?: number;
   waitForWebServer: boolean;
+  waitForServerReady: boolean;
 }
 
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -436,7 +443,12 @@ async function buildPlaywrightTargets(
     },
   };
 
-  applyChainDependsOn(baseTargetConfig, e2eChain, e2eReadyTargetName);
+  applyChainDependsOn(
+    baseTargetConfig,
+    e2eChain,
+    e2eReadyTargetName,
+    options.waitForServerReady
+  );
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -459,13 +471,15 @@ async function buildPlaywrightTargets(
   if (e2eReadyTargetName) {
     targets[e2eReadyTargetName] = buildWaitForWebserverTarget(
       e2eChain,
-      options.webServerTimeout
+      options.webServerTimeout,
+      options.waitForServerReady
     );
   }
   if (ciReadyTargetName && ciReadyTargetName !== e2eReadyTargetName) {
     targets[ciReadyTargetName] = buildWaitForWebserverTarget(
       ciChain,
-      options.webServerTimeout
+      options.webServerTimeout,
+      options.waitForServerReady
     );
   }
 
@@ -499,7 +513,12 @@ async function buildPlaywrightTargets(
     // Unconditionally: the chains can differ in ways the shared-gate check
     // deliberately ignores (an extra uncovered server flips parallelism), and
     // re-deriving is a no-op when they match.
-    applyChainDependsOn(ciBaseTargetConfig, ciChain, ciReadyTargetName);
+    applyChainDependsOn(
+      ciBaseTargetConfig,
+      ciChain,
+      ciReadyTargetName,
+      options.waitForServerReady
+    );
 
     const groupName = 'E2E (CI)';
     metadata = { targetGroups: { [groupName]: [] } };
@@ -708,6 +727,7 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     ciTargetName,
     mergeReportsTargetName: `${ciTargetName}--merge-reports`,
     waitForWebServer: options?.waitForWebServer ?? true,
+    waitForServerReady: options?.waitForServerReady !== false,
   };
 }
 
@@ -981,7 +1001,8 @@ function sameChain(a: ChainWebserver, b: ChainWebserver): boolean {
 
 function buildWaitForWebserverTarget(
   chain: ChainWebserver,
-  webServerTimeout: number | undefined
+  webServerTimeout: number | undefined,
+  waitForServerReady: boolean
 ): TargetConfiguration {
   return {
     executor: '@nx/playwright:wait-for-webserver',
@@ -990,7 +1011,7 @@ function buildWaitForWebserverTarget(
       servers: chain.readinessServers,
       ...(webServerTimeout != null ? { timeout: webServerTimeout } : {}),
     },
-    dependsOn: getDependsOn(chain.commandTasks),
+    dependsOn: getDependsOn(chain.commandTasks, waitForServerReady),
     metadata: {
       technologies: ['playwright'],
       description:
@@ -1161,12 +1182,17 @@ function chainRequiresSerialization(chain: ChainWebserver): boolean {
 function applyChainDependsOn(
   targetConfig: TargetConfiguration,
   chain: ChainWebserver,
-  readyTargetName: string | undefined
+  readyTargetName: string | undefined,
+  waitForServerReady: boolean
 ): void {
   if (chain.commandTasks.length) {
+    const serverDependsOn = getDependsOn(
+      chain.commandTasks,
+      waitForServerReady
+    );
     targetConfig.dependsOn = readyTargetName
-      ? [...getDependsOn(chain.commandTasks), { target: readyTargetName }]
-      : getDependsOn(chain.commandTasks);
+      ? [...serverDependsOn, { target: readyTargetName }]
+      : serverDependsOn;
   } else {
     delete targetConfig.dependsOn;
   }
@@ -1178,8 +1204,9 @@ function applyChainDependsOn(
 }
 
 function getDependsOn(
-  tasks: Array<{ project: string; target: string }>
-): TargetConfiguration['dependsOn'] {
+  tasks: Array<{ project: string; target: string }>,
+  waitForServerReady: boolean
+): TargetDependencyConfig[] {
   const projectsPerTask = new Map<string, string[]>();
 
   for (const { project, target } of tasks) {
@@ -1192,6 +1219,7 @@ function getDependsOn(
   return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({
     projects,
     target,
+    ...(waitForServerReady ? { waitFor: 'ready' as const } : {}),
   }));
 }
 

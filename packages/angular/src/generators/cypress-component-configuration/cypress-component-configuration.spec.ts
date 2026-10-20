@@ -75,6 +75,16 @@ describe('Cypress Component Testing Configuration', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
+    // Cypress can't run component tests on Angular 22.2+ yet.
+    // See: https://github.com/cypress-io/cypress/issues/34259
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@angular/core': '~22.1.0',
+        '@angular-devkit/build-angular': '~22.1.0',
+      };
+      return json;
+    });
     mockedInstalledCypressVersion.mockReturnValue(10);
     projectGraph = {
       dependencies: {},

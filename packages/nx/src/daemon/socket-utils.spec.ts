@@ -95,44 +95,47 @@ describe('serializeWithFallback', () => {
     const circularWithFunction: any = { fn: () => {} };
     circularWithFunction.self = circularWithFunction;
 
-    expect(() => serializeWithFallback(circularWithFunction, 'json')).toThrow(
-      'could not be cloned'
+    let error: Error;
+    try {
+      serializeWithFallback(circularWithFunction, 'json');
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.message).toContain(
+      'Data could not be serialized using either json or v8 serialization.'
     );
+    expect(error.message).toMatch(
+      /json failed with: TypeError: Converting circular structure[\s\S]*\n\s+at /
+    );
+    expect(error.message).toMatch(
+      /v8 failed with: Error: .* could not be cloned\.\n\s+at /
+    );
+    expect((error.cause as Error).message).toContain('could not be cloned');
   });
 });
 
 describe('serialize', () => {
-  const jsonHostile = { value: 1n };
-
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
-  it('does not fall back when a format is forced', () => {
-    // `processInBackground` forces JSON because its payloads cannot be cloned
-    // by v8 - silently switching formats there would trade one failure for
-    // another, less obvious one.
-    expect(() => serialize(jsonHostile, 'json')).toThrow(
-      'Do not know how to serialize a BigInt'
-    );
-    expect(() => serialize({ fn: () => {} }, 'v8')).toThrow(
-      'could not be cloned'
-    );
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it('honours a forced format when the v8 serializer is enabled', () => {
-    const previous = process.env.NX_USE_V8_SERIALIZER;
-    process.env.NX_USE_V8_SERIALIZER = 'true';
+  it('uses JSON by default', () => {
+    expect(serialize({ a: 1 }).toString('utf8')).toBe('{"a":1}');
+  });
 
-    try {
-      expect(serialize({ a: 1 }, 'json').toString('utf8')).toBe('{"a":1}');
-    } finally {
-      if (previous === undefined) {
-        delete process.env.NX_USE_V8_SERIALIZER;
-      } else {
-        process.env.NX_USE_V8_SERIALIZER = previous;
-      }
-    }
+  it('uses v8 when the v8 serializer is enabled', () => {
+    vi.stubEnv('NX_USE_V8_SERIALIZER', 'true');
+
+    expect(v8_deserialize(serialize({ a: 1 }))).toEqual({ a: 1 });
+  });
+
+  it('falls back to v8 when JSON cannot represent the data', () => {
+    expect(v8_deserialize(serialize({ value: 1n }))).toEqual({ value: 1n });
   });
 });
 
@@ -143,21 +146,10 @@ describe('sendMessage', () => {
       write: (data: Buffer) => writes.push(data),
     } as unknown as Socket;
 
-    sendMessage(socket, { a: 1 }, 'json');
+    sendMessage(socket, { a: 1 });
 
     const [header, payload] = writes;
     expect(header.toString('ascii')).toBe(`NX_MSG_${payload.length}:`);
     expect(payload.toString('utf8')).toBe('{"a":1}');
-  });
-
-  it('passes the forced format through to the serializer', () => {
-    const writes: Buffer[] = [];
-    const socket = {
-      write: (data: Buffer) => writes.push(data),
-    } as unknown as Socket;
-
-    sendMessage(socket, { a: 1 }, 'v8');
-
-    expect(writes[1][0]).toBe(0xff);
   });
 });

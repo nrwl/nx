@@ -131,6 +131,20 @@ describe('@nx/vite/plugin', () => {
       expect(targets?.['serve-input'].command).toMatch(/vite/);
     });
 
+    it('waits for the signal when the config loads nxReadySignal()', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'nx-ready-signal' }] }),
+      });
+
+      const nodes = await createNodesFunction(['vite.config.ts'], {}, context);
+
+      const targets = nodes[0]?.[1]?.projects?.['.']?.targets;
+      expect(targets.dev.readyWhen).toEqual({ signal: true });
+      expect(targets.preview.readyWhen).toEqual({ signal: true });
+    });
+
     it.each([false, true])(
       'should not infer typecheck for non-Vue projects (TS solution: %s)',
       async (tsSolution) => {
@@ -583,6 +597,10 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "preview": {
                       "command": "vite preview",
@@ -616,6 +634,10 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "serve": {
                       "command": "vite",
@@ -647,6 +669,10 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "serve-static": {
                       "continuous": true,
@@ -663,6 +689,10 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "buildTarget": "build",
                         "spa": true,
+                      },
+                      "readyWhen": {
+                        "host": "{options.host ?? localhost}",
+                        "port": "{options.port}",
                       },
                     },
                     "watch-deps": {

@@ -5,7 +5,7 @@ These rules apply to all content under `astro-docs/src/content/docs/`.
 
 ## Information architecture
 
-When creating or reorganizing documentation, follow these five principles to determine where content belongs.
+When creating or reorganizing documentation, follow these seven principles to determine where content belongs.
 
 ### 1. Progressive disclosure (the "journey" rule)
 

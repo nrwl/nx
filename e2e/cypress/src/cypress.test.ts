@@ -85,10 +85,10 @@ describe('Cypress E2E Test runner', () => {
 
       const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
       expect(targets['e2e-ci--src/e2e/app.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview' },
+        { projects: [app], target: 'preview', waitFor: 'ready' },
       ]);
       expect(targets['e2e-ci--src/e2e/feature.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview', inputs: false },
+        { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
       ]);
 
       expect(runCLI(`lint ${app}-e2e`)).toContain(
@@ -231,7 +231,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+  xit(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);

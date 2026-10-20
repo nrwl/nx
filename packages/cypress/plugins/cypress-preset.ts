@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { execSync, spawn } from 'child_process';
 import { lstatSync } from 'fs';
@@ -175,6 +175,29 @@ export function nxE2EPreset(
         on('file:preprocessor', vitePreprocessor(options?.viteConfigOverrides));
       }
 
+      // Set by Nx when the web server task already reported it is ready
+      const readyUrl = process.env.NX_READY_URL;
+      if (readyUrl && isBaseUrlOverridden(config, options)) {
+        console.log(
+          `Testing against ${config.baseUrl} from --config or CYPRESS_BASE_URL, not the server Nx started on ${readyUrl}`
+        );
+        await waitForServer(
+          config.baseUrl,
+          options?.webServerConfig,
+          (ms) =>
+            `${config.baseUrl} did not respond within ${ms}ms. This can be configured in cypress.config.ts.`
+        );
+        return;
+      }
+      if (readyUrl) {
+        config.baseUrl = getReadyUrl(config.baseUrl);
+        console.log(
+          `Testing against the server Nx started on ${config.baseUrl}`
+        );
+        // Cypress only applies config changes returned from setupNodeEvents.
+        return config;
+      }
+
       if (!options?.webServerCommands) {
         return;
       }
@@ -212,34 +235,70 @@ export function nxE2EPreset(
   return baseConfig;
 }
 
+// Cypress keeps the config file's values in rawJson, without --config, and
+// reports CYPRESS_BASE_URL as from 'env'. A config file that reads
+// CYPRESS_BASE_URL has it in rawJson too. Inferred CI targets pass ciBaseUrl.
+function isBaseUrlOverridden(
+  config: any,
+  options: NxCypressE2EPresetOptions | undefined
+) {
+  if (!config.baseUrl) {
+    return false;
+  }
+  if (config.resolved?.baseUrl?.from === 'env') {
+    return true;
+  }
+  const isInferredCiTarget =
+    !!options?.ciWebServerCommand &&
+    config.env?.webServerCommand === options.ciWebServerCommand;
+  return (
+    !isSameUrl(config.baseUrl, config.rawJson?.e2e?.baseUrl) &&
+    !(isInferredCiTarget && isSameUrl(config.baseUrl, options.ciBaseUrl))
+  );
+}
+
+function isSameUrl(url: string, other: unknown) {
+  if (typeof other !== 'string') {
+    return false;
+  }
+  try {
+    return new URL(url).href === new URL(other).href;
+  } catch {
+    return url === other;
+  }
+}
+
 function waitForServer(
   url: string,
-  webServerConfig: WebServerConfig
+  webServerConfig: WebServerConfig,
+  timeoutMessage = (ms: number) =>
+    `Web server failed to start in ${ms}ms. This can be configured in cypress.config.ts.`
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     let pollTimeout: NodeJS.Timeout | null;
     const { protocol } = new URL(url);
 
+    let settled = false;
     const timeoutDuration = webServerConfig?.timeout ?? 60 * 1000;
     const timeout = setTimeout(() => {
+      settled = true;
       clearTimeout(pollTimeout);
-      reject(
-        new Error(
-          `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`
-        )
-      );
+      reject(new Error(timeoutMessage(timeoutDuration)));
     }, timeoutDuration);
 
     const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
 
     function pollForServer() {
       const request = makeRequest(url, () => {
+        settled = true;
         clearTimeout(timeout);
         resolve();
       });
 
       request.on('error', () => {
-        pollTimeout = setTimeout(pollForServer, 100);
+        if (!settled) {
+          pollTimeout = setTimeout(pollForServer, 100);
+        }
       });
 
       // Don't forget to end the request

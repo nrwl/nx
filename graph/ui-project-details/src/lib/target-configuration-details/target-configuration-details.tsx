@@ -16,6 +16,7 @@ import { TargetConfigurationProperty } from './target-configuration-property';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 import { ExpandedTargetsContext } from '../expanded-targets-provider';
+import { ExternalLink } from '../tooltips/external-link';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -50,6 +51,9 @@ export default function TargetConfigurationDetails({
   collapsable,
 }: TargetConfigurationDetailsProps) {
   const isCompact = variant === 'compact';
+  const ultracacheMode = (
+    targetConfiguration as { ultracacheInCI?: UltracacheModeInCI }
+  ).ultracacheInCI;
   const [collapsed, setCollapsed] = useState(true);
   const { expandedTargets, toggleTarget } = useContext(ExpandedTargetsContext);
 
@@ -201,6 +205,12 @@ export default function TargetConfigurationDetails({
             </>
           ) : null}
 
+          {ultracacheMode && (
+            <UltracacheInCINote
+              mode={ultracacheMode}
+              inputs={targetConfiguration.inputs}
+            />
+          )}
           {targetConfiguration.inputs && (
             <div className="group">
               <h4 className="mb-4">
@@ -443,5 +453,45 @@ export default function TargetConfigurationDetails({
         </div>
       )}
     </div>
+  );
+}
+
+type UltracacheModeInCI = 'on' | 'warn' | 'error' | 'off';
+
+/** Shown on targets Nx marks `ultracacheInCI`; mirrors `ultracacheInCINotice` in nx. */
+function UltracacheInCINote({
+  mode,
+  inputs,
+}: {
+  mode: UltracacheModeInCI;
+  inputs: TargetConfiguration['inputs'];
+}) {
+  const hasAlways = inputs?.some(
+    (input) => typeof input === 'object' && 'always' in input && input.always
+  );
+  return (
+    <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      <span className="font-medium">Ultracache:</span>{' '}
+      {mode === 'on' && (
+        <>
+          In CI, file inputs are replaced by the files this task read during
+          previous runs.
+          {hasAlways && (
+            <>
+              {' '}
+              <code>always</code> inputs still count.
+            </>
+          )}
+        </>
+      )}
+      {mode === 'warn' &&
+        'In CI, Nx Cloud warns if this task reads files outside its hash or writes files outside its outputs.'}
+      {mode === 'error' &&
+        'In CI, Nx Cloud fails the run if this task reads files outside its hash or writes files outside its outputs.'}
+      {mode === 'off' && 'In CI, this task is not recorded.'}{' '}
+      <ExternalLink href="https://nx.dev/docs/reference/project-configuration#ultracache">
+        Learn more
+      </ExternalLink>
+    </p>
   );
 }

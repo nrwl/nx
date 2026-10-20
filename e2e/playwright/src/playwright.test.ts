@@ -93,11 +93,11 @@ describe('Playwright E2E Test runner', () => {
 
       const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
       expect(targets['e2e-ci--src/example.spec.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview' },
+        { projects: [app], target: 'preview', waitFor: 'ready' },
         { target: 'e2e--wait-for-webserver' },
       ]);
       expect(targets['e2e-ci--src/feature.spec.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview', inputs: false },
+        { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
         { target: 'e2e--wait-for-webserver' },
       ]);
 

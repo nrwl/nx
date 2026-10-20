@@ -33,7 +33,7 @@ export function findExistingJsBuildTargetInProject(targets: {
   } = {};
 
   const supportedExecutors = {
-    build: ['@nx/js:babel', '@nx/js:swc', '@nx/rollup:rollup'],
+    build: ['@nx/js:swc'],
   };
   const unsupportedExecutors = [
     '@nx/angular:ng-packagr-lite',
@@ -76,6 +76,33 @@ export function findExistingJsBuildTargetInProject(targets: {
     }
   }
   return output;
+}
+
+// A leftover target on one of these can't run, and it shadows the inferred
+// target with the same name, so converting around it leaves a broken project.
+const removedConvertibleExecutors = [
+  '@nx/rollup:rollup',
+  '@nx/vite:build',
+  '@nx/vite:dev-server',
+  '@nx/vite:preview-server',
+  '@nx/webpack:dev-server',
+  '@nx/webpack:webpack',
+];
+
+export function assertNoRemovedExecutorTargets(
+  projectName: string,
+  targets: Record<string, TargetConfiguration> | undefined
+) {
+  const removedTargets = Object.entries(targets ?? {})
+    .filter(([, target]) =>
+      removedConvertibleExecutors.includes(target.executor)
+    )
+    .map(([targetName, target]) => `${targetName} (${target.executor})`);
+  if (removedTargets.length) {
+    throw new Error(
+      `The project ${projectName} has targets using removed executors: ${removedTargets.join(', ')}. Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=${projectName}".`
+    );
+  }
 }
 
 export function editTsConfig(
@@ -315,6 +342,14 @@ export function createOrEditViteConfig(
     );
   }
 
+  // Lets the inferred serve and preview targets know when the server is up
+  if (!onlyVitest && !options.includeLib) {
+    imports.push(
+      `import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin'`
+    );
+    plugins.push('nxReadySignal()');
+  }
+
   const reportsDirectory = isTsSolutionSetup
     ? './test-output/vitest/coverage'
     : projectRoot === '.'
@@ -459,18 +494,10 @@ export function getViteConfigPathForProject(
   projectName: string,
   target?: string
 ) {
-  let viteConfigPath: string | undefined;
   const { targets, root } = readProjectConfiguration(tree, projectName);
-  if (target) {
-    viteConfigPath = targets?.[target]?.options?.configFile;
-  } else {
-    const config = Object.values(targets).find(
-      (config) =>
-        config.executor === '@nrwl/nx:build' ||
-        config.executor === '@nrwl/vite:build'
-    );
-    viteConfigPath = config?.options?.configFile;
-  }
+  const viteConfigPath: string | undefined = target
+    ? targets?.[target]?.options?.configFile
+    : undefined;
 
   return normalizeViteConfigFilePathWithTree(tree, root, viteConfigPath);
 }

@@ -40,24 +40,8 @@ export function findExistingTargetsInProject(
   };
 
   const supportedExecutors = {
-    build: [
-      '@nxext/vite:build',
-      '@nrwl/webpack:webpack',
-      '@nrwl/rollup:rollup',
-      '@nrwl/web:rollup',
-      '@nrwl/vite:build',
-      '@nx/webpack:webpack',
-      '@nx/rollup:rollup',
-      '@nx/web:rollup',
-      '@nx/vite:build',
-    ],
-    serve: [
-      '@nxext/vite:dev',
-      '@nrwl/webpack:dev-server',
-      '@nrwl/vite:dev-server',
-      '@nx/webpack:dev-server',
-      '@nx/vite:dev-server',
-    ],
+    build: ['@nxext/vite:build'],
+    serve: ['@nxext/vite:dev'],
   };
 
   const unsupportedExecutors = [
@@ -151,6 +135,37 @@ export function findExistingTargetsInProject(
   }
 
   return output;
+}
+
+// A leftover target on one of these can't run, and it shadows the inferred
+// target with the same name, so converting around it leaves a broken project.
+const removedConvertibleExecutors = [
+  '@nrwl/rollup:rollup',
+  '@nrwl/vite:build',
+  '@nrwl/vite:dev-server',
+  '@nrwl/webpack:dev-server',
+  '@nrwl/webpack:webpack',
+  '@nx/rollup:rollup',
+  '@nx/vite:build',
+  '@nx/vite:dev-server',
+  '@nx/webpack:dev-server',
+  '@nx/webpack:webpack',
+];
+
+export function assertNoRemovedExecutorTargets(
+  projectName: string,
+  targets: Record<string, TargetConfiguration> | undefined
+) {
+  const removedTargets = Object.entries(targets ?? {})
+    .filter(([, target]) =>
+      removedConvertibleExecutors.includes(target.executor)
+    )
+    .map(([targetName, target]) => `${targetName} (${target.executor})`);
+  if (removedTargets.length) {
+    throw new Error(
+      `The project ${projectName} has targets using removed executors: ${removedTargets.join(', ')}. Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=${projectName}".`
+    );
+  }
 }
 
 export function writeRspackConfigFile(
@@ -536,10 +551,7 @@ export function determineFrameworkAndTarget(
   if (options.target !== 'node') {
     // Try to infer from jest config if the env is node
     let jestConfigPath: string;
-    if (
-      targets?.test?.executor !== '@nx/jest:jest' &&
-      targets?.test?.options?.jestConfig
-    ) {
+    if (targets?.test?.options?.jestConfig) {
       jestConfigPath = targets?.test?.options?.jestConfig;
     } else {
       jestConfigPath = joinPathFragments(projectRoot, 'jest.config.ts');

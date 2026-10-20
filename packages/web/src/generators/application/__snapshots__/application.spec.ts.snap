@@ -3,10 +3,11 @@
 exports[`app > not nested > should generate files if bundler is vite 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+// getReadyUrl moves the address to the port the dev server task reported.
+const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
 
 /**
  * Read environment variables from file.
@@ -35,7 +36,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    url: getReadyUrl('http://localhost:4300'),
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -82,10 +83,11 @@ export default defineConfig({
 exports[`app > not nested > should setup playwright e2e project correctly for webpack 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+// getReadyUrl moves the address to the port the dev server task reported.
+const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4200');
 
 /**
  * Read environment variables from file.
@@ -114,7 +116,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx run cool-app:serve-static',
-    url: 'http://localhost:4200',
+    url: getReadyUrl('http://localhost:4200'),
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -161,10 +163,11 @@ export default defineConfig({
 exports[`app > not nested > should use serve target and port if bundler=vite, e2eTestRunner=playwright 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+// getReadyUrl moves the address to the port the dev server task reported.
+const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
 
 /**
  * Read environment variables from file.
@@ -193,7 +196,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    url: getReadyUrl('http://localhost:4300'),
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
