@@ -193,7 +193,7 @@ export type TargetUltracacheSettings = Spreadable<TaskUltracacheSettings>;
 export interface ReadyWhenOptions {
   /**
    * Milliseconds to wait for readiness before failing dependents that wait
-   * for it. Default is 60000.
+   * for it. Default is 600000 (10 minutes).
    */
   timeout?: number;
 

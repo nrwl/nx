@@ -1089,7 +1089,7 @@ describe('Nx Running Tests', () => {
             silenceError: true,
           });
           expect(output).toContain(
-            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: url http://localhost:${port}).`
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: url http://localhost:${port}).`
           );
           expect(output).toMatch(
             new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
@@ -1179,7 +1179,7 @@ describe('Nx Running Tests', () => {
             silenceError: true,
           });
           expect(output).toContain(
-            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: signal).`
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: signal).`
           );
           expect(output).toMatch(
             new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)

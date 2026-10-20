@@ -164,6 +164,44 @@ export default function TargetConfigurationDetails({
             </div>
           )}
 
+          {targetConfiguration.readyWhen !== undefined ? (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="readyWhen" />) as any}
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Ready When</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"readyWhen": ${JSON.stringify(
+                      targetConfiguration.readyWhen
+                    )}`}
+                    tooltipText="Copy Ready When"
+                  />
+                </span>
+              </h4>
+              <div className="group/line overflow-hidden pl-5 whitespace-nowrap">
+                <TargetConfigurationProperty
+                  data={
+                    targetConfiguration.readyWhen === null
+                      ? 'off (null)'
+                      : readyWhenProperties(targetConfiguration.readyWhen)
+                  }
+                >
+                  <TargetSourceInfo
+                    className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                    propertyKey={`targets.${targetName}.readyWhen`}
+                    sourceMap={sourceMap}
+                  />
+                </TargetConfigurationProperty>
+              </div>
+            </div>
+          ) : null}
+
           {shouldRenderOptions || targetConfiguration.metadata?.help ? (
             <>
               <h4 className="mb-4">
@@ -454,6 +492,35 @@ export default function TargetConfigurationDetails({
       )}
     </div>
   );
+}
+
+function readyWhenProperties(
+  readyWhen: NonNullable<TargetConfiguration['readyWhen']>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(readyWhen).map(([key, value]) => [
+      key,
+      Array.isArray(value)
+        ? JSON.stringify(value)
+        : (key === 'timeout' || key === 'interval') && typeof value === 'number'
+          ? formatDuration(value)
+          : String(value),
+    ])
+  );
+}
+
+// Mirrors nx's native formatDuration, which the browser bundle can't import
+function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    const rounded = Math.round(ms);
+    return rounded === 0 ? '<1ms' : `${rounded}ms`;
+  }
+  const seconds = Math.round(ms / 100) / 10;
+  if (seconds >= 60) {
+    const total = Math.round(ms / 1000);
+    return `${Math.floor(total / 60)}m ${total % 60}s`;
+  }
+  return `${seconds.toFixed(1)}s`;
 }
 
 type UltracacheModeInCI = 'on' | 'warn' | 'error' | 'off';
