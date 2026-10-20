@@ -50,15 +50,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/angular:ngrx-feature-store',
     path: '/packages/angular/generators/ngrx-feature-store',
   },
-  { title: '@nx/angular:scam', path: '/packages/angular/generators/scam' },
-  {
-    title: '@nx/angular:scam-directive',
-    path: '/packages/angular/generators/scam-directive',
-  },
-  {
-    title: '@nx/angular:scam-pipe',
-    path: '/packages/angular/generators/scam-pipe',
-  },
   {
     title: '@nx/angular:setup-mf',
     path: '/packages/angular/generators/setup-mf',
