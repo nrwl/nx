@@ -104,17 +104,14 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 ### Wait for the dev server to be ready
 
-The `waitForServerReady` option defaults to `true`.
-It is deprecated and will be removed in Nx 25, when the e2e tasks always wait for the dev server task's `readyWhen`.
-With it on, the e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#signal-readiness-from-the-task) before Cypress starts.
+The e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) before Cypress starts.
 `nxE2EPreset` then takes the protocol and port from the address the server reported in `NX_READY_URL`, and keeps the path and query of `baseUrl`.
 A `localhost` host stays as it is when the server listens on a loopback address.
 Any other host moves to the one the server reported.
 `nxE2EPreset` keeps a `baseUrl` set with `CYPRESS_BASE_URL`, or a `--config` value other than the one Cypress would use anyway: the config file's `baseUrl`, or `ciBaseUrl` in `e2e-ci` tasks.
 Nx still starts the dev server.
 The preset waits up to `webServerConfig.timeout` (60 seconds by default) for that `baseUrl` to respond, then Cypress tests against it.
-A migration sets the option to `false` in existing workspaces.
-To opt in, set it back to `true`:
+To start Cypress as soon as the dev server task starts instead, set the `waitForServerReady` plugin option to `false`:
 
 ```json
 // nx.json
@@ -123,12 +120,14 @@ To opt in, set it back to `true`:
     {
       "plugin": "@nx/cypress/plugin",
       "options": {
-        "waitForServerReady": true
+        "waitForServerReady": false
       }
     }
   ]
 }
 ```
+
+The option is deprecated and will be removed in Nx 25, when the e2e tasks always wait.
 
 The plugin infers the dependency on the dev server from `webServerCommands` in `nxE2EPreset`.
 In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself:
