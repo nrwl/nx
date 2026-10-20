@@ -33,6 +33,10 @@ Choose one path: either the config file with `start-workers`, or CLI flags with 
 For a mapping between the two, see the [Nx Cloud CLI reference](/docs/reference/nx-cloud-cli).
 {% /aside %}
 
+{% aside type="note" title="Runs without distribution use start-ci-run" %}
+If you don't want distribution, use `npx nx-cloud start-ci-run --no-distribution` instead.
+{% /aside %}
+
 ## File location
 
 Nx Cloud reads the file from `.nx/ci-config.yaml`. A `.nx/ci-config.yml` extension also works.

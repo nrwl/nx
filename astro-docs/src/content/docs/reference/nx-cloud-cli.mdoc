@@ -383,6 +383,10 @@ lifecycle:
 Pick one path for your workspace: the config file with `start-workers`, or CLI flags with `start-ci-run`.
 {% /aside %}
 
+{% aside type="note" title="Runs without distribution use start-ci-run" %}
+If you don't want distribution, use `npx nx-cloud start-ci-run --no-distribution` instead.
+{% /aside %}
+
 To move an existing `start-ci-run` setup to the config file, see [Migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config), which maps each flag to its `.nx/ci-config.yaml` counterpart.
 
 ### `nx-cloud start-ci-run`
