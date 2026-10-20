@@ -157,6 +157,45 @@ describe('replace-set-parser-options-project migration', () => {
     expect(readProjectConfiguration(tree, 'lib1').generators).toEqual(expected);
   });
 
+  it('should replace the option in angular.json project defaults', async () => {
+    setGenerators({ '@nx/angular:library': { setParserOptionsProject: true } });
+    writeJson(tree, 'angular.json', {
+      version: 1,
+      projects: {
+        app1: {
+          projectType: 'application',
+          root: 'apps/app1',
+          schematics: {
+            '@nx/angular:application': { setParserOptionsProject: true },
+            '@nx/angular:library': { enableTypedLinting: false },
+            '@nx/angular': {
+              'add-linting': { setParserOptionsProject: false },
+            },
+          },
+        },
+        app2: {
+          projectType: 'application',
+          root: 'apps/app2',
+          generators: { '@nx/js:library': { setParserOptionsProject: false } },
+        },
+      },
+    });
+
+    await update(tree);
+
+    expect(readJson(tree, 'angular.json').projects).toEqual({
+      app1: {
+        projectType: 'application',
+        root: 'apps/app1',
+        schematics: {
+          '@nx/angular:application': { enableTypedLinting: true },
+          '@nx/angular:library': { enableTypedLinting: true },
+        },
+      },
+      app2: { projectType: 'application', root: 'apps/app2' },
+    });
+  });
+
   describe('defaults in both package.json and project.json', () => {
     it.each([
       {

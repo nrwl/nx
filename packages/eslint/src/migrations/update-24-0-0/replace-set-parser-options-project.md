@@ -1,6 +1,6 @@
 #### Replace `setParserOptionsProject` with `enableTypedLinting` in generator defaults
 
-Nx 24 removes the deprecated `setParserOptionsProject` generator option, which `enableTypedLinting` replaces. The migration rewrites the generator defaults in `nx.json`, in `project.json` files and in the `nx` key of project `package.json` files. It handles both the flat form (`@nx/react:library`) and the nested form (`@nx/react` -> `library`).
+Nx 24 removes the deprecated `setParserOptionsProject` generator option, which `enableTypedLinting` replaces. The migration rewrites the generator defaults in `nx.json`, in `angular.json` projects, in `project.json` files and in the `nx` key of project `package.json` files. It handles both the flat form (`@nx/react:library`) and the nested form (`@nx/react` -> `library`).
 
 It covers every generator that accepted the option and still exists in Nx 24:
 
@@ -9,7 +9,7 @@ It covers every generator that accepted the option and still exists in Nx 24:
 - `configuration`: `@nx/cypress` and `@nx/playwright`
 - `@nx/angular:add-linting` and `@nx/plugin:plugin`
 
-Generators enabled typed linting when either option was `true`, and the migrated defaults keep that result. `setParserOptionsProject: true` becomes `enableTypedLinting: true`, and `setParserOptionsProject: false` is dropped. When the options are set in several places (nested and flat keys, `nx.json`, `project.json` and `package.json`), the migration rewrites each one so the merged default doesn't change.
+Generators enabled typed linting when either option was `true`, and the migrated defaults keep that result. `setParserOptionsProject: true` becomes `enableTypedLinting: true`, and `setParserOptionsProject: false` is dropped. When the options are set in several places (nested and flat keys, `nx.json`, `angular.json`, `project.json` and `package.json`), the migration rewrites each one so the merged default doesn't change.
 
 The migration doesn't update scripts that pass `--setParserOptionsProject` to `nx g`. Pass `--enableTypedLinting` instead. Most generators ignore the removed flag without an error, so an unchanged script generates projects without typed linting.
 

@@ -34,7 +34,10 @@ const REPLACEMENT = 'enableTypedLinting';
 
 type GeneratorDefaults = Record<string, unknown>;
 
-/** `nx.json`, a `project.json`, or the `nx` key of a project's `package.json`. */
+/**
+ * `nx.json`, an `angular.json` project, a `project.json`, or the `nx` key of a
+ * project's `package.json`.
+ */
 interface GeneratorsOwner {
   generators?: Record<string, any>;
 }
@@ -55,7 +58,12 @@ export default async function update(tree: Tree) {
     changed = true;
   }
 
-  for (const { root } of getProjects(tree).values()) {
+  const angularJson = tree.exists('angular.json')
+    ? readJson(tree, 'angular.json')
+    : undefined;
+  let angularJsonChanged = false;
+
+  for (const [projectName, { root }] of getProjects(tree)) {
     // Edit each file in place: `updateProjectConfiguration` would write the
     // merged configuration to `project.json` and leave `package.json` as is.
     const packageJsonPath = joinPathFragments(root, 'package.json');
@@ -67,11 +75,32 @@ export default async function update(tree: Tree) {
       ? readJson(tree, projectJsonPath)
       : undefined;
 
-    // Nx merges the `package.json` configuration beneath `project.json`.
-    const [packageJsonChanged, projectJsonChanged] = migrateGenerators(
-      [isRecord(packageJson?.nx) ? packageJson.nx : {}, projectJson ?? {}],
-      new Map(fromNxJson)
-    );
+    // Nx reads an `angular.json` project's `schematics` as its `generators`.
+    const angularJsonProject = angularJson?.projects?.[projectName];
+    const angularJsonKey =
+      angularJsonProject?.schematics !== undefined
+        ? 'schematics'
+        : 'generators';
+    const angularJsonDefaults = {
+      generators: angularJsonProject?.[angularJsonKey],
+    };
+
+    // Nx merges `angular.json`, then `package.json`, then `project.json`.
+    const [angularJsonProjectChanged, packageJsonChanged, projectJsonChanged] =
+      migrateGenerators(
+        [
+          angularJsonDefaults,
+          isRecord(packageJson?.nx) ? packageJson.nx : {},
+          projectJson ?? {},
+        ],
+        new Map(fromNxJson)
+      );
+    if (angularJsonProjectChanged) {
+      if (!angularJsonDefaults.generators) {
+        delete angularJsonProject[angularJsonKey];
+      }
+      angularJsonChanged = true;
+    }
     if (packageJsonChanged) {
       writeJson(tree, packageJsonPath, packageJson);
       changed = true;
@@ -80,6 +109,11 @@ export default async function update(tree: Tree) {
       writeJson(tree, projectJsonPath, projectJson);
       changed = true;
     }
+  }
+
+  if (angularJsonChanged) {
+    writeJson(tree, 'angular.json', angularJson);
+    changed = true;
   }
 
   if (!changed) {
