@@ -698,7 +698,9 @@ Other text in braces, such as a `{{.State.Health.Status}}` template in a command
 In `port` and `host`, such text makes `readyWhen` invalid instead.
 
 The optional `timeout` key is how long Nx waits for readiness, in milliseconds.
-It defaults to `60000`.
+It defaults to `600000`, 10 minutes, which covers a cold first build.
+To give an inferred check more time without replacing it, spread it: `"readyWhen": { "...": true, "timeout": 1200000 }`.
+`nx show target` shows a target's `readyWhen`, with the timeout Nx waits and where the check came from, and the project details in `nx graph` show the check and its source.
 The optional `interval` key is the time between attempts, in milliseconds.
 It defaults to `250`.
 A `signal` check doesn't take `interval`.

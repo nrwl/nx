@@ -7,7 +7,7 @@ Tasks that depend on such a target with `waitFor: 'ready'` then start once the s
 This migration sets `readyWhen: { signal: true }` on the `@nx/web:file-server` targets in your projects.
 A target without its own `executor` is updated too when a `targetDefaults` entry in `nx.json` gives it `@nx/web:file-server`.
 
-The file server runs its `buildTarget` before it listens, and that time counts against the 60-second readiness timeout.
+The file server runs its `buildTarget` before it listens, and that time counts against the 10-minute readiness timeout.
 So the migration also adds the build target to the target's `dependsOn`, which runs the build first.
 The migration reads `buildTarget`, `configurations`, and `dependsOn` from the target and from the `targetDefaults` entry that applies to it.
 It leaves `dependsOn` unchanged when an entry there already names the build target.
