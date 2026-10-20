@@ -298,10 +298,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
     const {
-      isTypedLintingEnabled,
       addIgnoresToLintConfig,
     }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
-    enableTypedLinting = isTypedLintingEnabled(options);
+    enableTypedLinting = options.enableTypedLinting;
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,

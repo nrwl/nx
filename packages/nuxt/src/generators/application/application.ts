@@ -4,7 +4,6 @@ import {
   createNxCloudOnboardingURLForWelcomeApp,
   type PackageJson,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -192,7 +191,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
     })
   );
 

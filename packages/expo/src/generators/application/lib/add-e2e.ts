@@ -12,7 +12,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
@@ -122,7 +121,7 @@ export async function addE2e(
         directory: 'src',
         js: false,
         linter: options.linter,
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting: options.enableTypedLinting,
         webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
         webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
         ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -144,7 +143,6 @@ export async function addE2e(
         appDisplayName: options.displayName,
         appName: options.simpleName,
         framework: 'expo',
-        enableTypedLinting: isTypedLintingEnabled(options),
         skipFormat: true,
       });
     case 'none':

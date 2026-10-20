@@ -285,8 +285,3 @@ parserOptions: {
 ```
 
 ESLint merges `parserOptions` across every config entry that matches a file, and typescript-eslint rejects a merged `parserOptions.project` next to `projectService`. Your config can pick one up from anywhere it extends, spreads in, or composes, so the block neutralizes it rather than guessing. Once you've checked that nothing your config pulls in sets `parserOptions.project`, you can delete the line.
-
-{% aside type="note" title="Deprecated flag" %}
-`--setParserOptionsProject` is the former name of this flag and still works, but it's deprecated and will be removed in Nx v24.
-Use `--enableTypedLinting` instead.
-{% /aside %}

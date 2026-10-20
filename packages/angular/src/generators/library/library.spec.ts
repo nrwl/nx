@@ -1447,7 +1447,7 @@ describe('lib', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');

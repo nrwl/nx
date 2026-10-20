@@ -17,7 +17,6 @@ import {
   addTypedLintingToFlatConfig,
   findEslintFile,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -29,10 +28,6 @@ export interface CyLinterOptions {
   project: string;
   linter: LinterType;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
   js?: boolean;
@@ -60,7 +55,7 @@ export async function addLinterToCyProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  const enableTypedLinting = isTypedLintingEnabled(options);
+  const { enableTypedLinting } = options;
 
   // Register whichever linter was asked for. An existing ESLint config means
   // the project is already registered, so skip straight to the Cypress-specific

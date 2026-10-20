@@ -846,7 +846,7 @@ describe('app', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await generateApp(appTree, 'my-app', {
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
@@ -922,19 +922,6 @@ describe('app', () => {
           ];
           "
         `);
-      });
-
-      it('should treat the deprecated setParserOptionsProject as enableTypedLinting (flat config)', async () => {
-        appTree.write('eslint.config.cjs', '');
-
-        await generateApp(appTree, 'my-app', {
-          linter: 'eslint',
-          setParserOptionsProject: true,
-        });
-
-        const eslintConfig = appTree.read('my-app/eslint.config.cjs', 'utf-8');
-        expect(eslintConfig).toContain('projectService: true');
-        expect(eslintConfig).toContain('tsconfigRootDir: __dirname');
       });
     });
 

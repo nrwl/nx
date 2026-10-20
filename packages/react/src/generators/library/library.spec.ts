@@ -787,12 +787,12 @@ module.exports = withNx(
     });
   });
 
-  describe('--setParserOptionsProject', () => {
+  describe('--enableTypedLinting', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
       });
 
       const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');

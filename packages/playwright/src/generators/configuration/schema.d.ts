@@ -13,10 +13,6 @@ export interface ConfigurationGeneratorSchema {
   linter?: LinterType;
   enableTypedLinting?: boolean; // default is false
   /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean; // default is false
-  /**
    * command to give playwright to run the web server
    * @example: "npx nx serve my-fe-app"
    **/
