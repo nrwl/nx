@@ -6,8 +6,7 @@ namespace MsbuildAnalyzer.Tests;
 
 /// <summary>
 /// What makes a project a test project, and so which projects get a <c>test</c>
-/// target and lose <c>pack</c>. <c>publish</c> and <c>run</c> are decided by
-/// OutputType alone, so an MTP runner keeps both.
+/// target and lose <c>pack</c>, <c>publish</c> and <c>run</c>.
 ///
 /// The expectations here mirror the SDK's own gate in
 /// <c>Microsoft.TestPlatform.ImportAfter.targets</c>:
