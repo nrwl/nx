@@ -1,10 +1,8 @@
 import {
   createProjectGraphAsync,
-  readNxJson,
   readProjectConfiguration,
-  stripIndents,
+  updateJson,
   updateProjectConfiguration,
-  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import {
@@ -13,7 +11,6 @@ import {
 } from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
 import { getProjectType } from '@nx/js/internal';
-import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 
 export function writeRootJestPreset(
   tree: Tree,
@@ -60,95 +57,71 @@ export async function createJestConfig(
     return;
   }
 
-  if (tree.exists(rootJestPath)) {
-    // moving from root project config to monorepo-style config
-    const { nodes: projects } = await createProjectGraphAsync();
-    const projectConfigurations = Object.values(projects);
-    const rootProject = projectConfigurations.find(
-      (projectNode) => projectNode.data?.root === '.'
-    );
-    // root project might have been removed,
-    // if it's missing there's nothing to migrate
-    if (rootProject) {
-      const jestTarget = Object.entries(rootProject.data?.targets ?? {}).find(
-        ([_, t]) =>
-          ((t?.executor === '@nx/jest:jest' ||
-            t?.executor === '@nrwl/jest:jest') &&
-            t?.options?.jestConfig === rootJestPath) ||
-          (t?.executor === 'nx:run-commands' && t?.options?.command === 'jest')
-      );
-      if (!jestTarget) {
-        return;
-      }
-
-      const [jestTargetName, jestTargetConfigInGraph] = jestTarget;
-      // if root project doesn't have jest target, there's nothing to migrate
-      const rootProjectConfig = readProjectConfiguration(
-        tree,
-        rootProject.name
-      );
-
-      if (
-        rootProjectConfig.targets?.['test']?.executor === 'nx:run-commands'
-          ? rootProjectConfig.targets?.['test']?.command !== 'jest'
-          : rootProjectConfig.targets?.['test']?.options?.jestConfig !==
-            rootJestPath
-      ) {
-        // Jest target has already been updated
-        return;
-      }
-
-      const jestProjectConfig = `jest.config.${
-        getProjectType(
-          tree,
-          rootProjectConfig.root,
-          rootProjectConfig.projectType
-        ) === 'application'
-          ? 'app'
-          : 'lib'
-      }.${options.js ? 'js' : 'ts'}`;
-
-      tree.rename(rootJestPath, jestProjectConfig);
-
-      const nxJson = readNxJson(tree);
-      const targetDefaults = readTargetDefaultsForTarget(
-        jestTargetName,
-        nxJson.targetDefaults,
-        jestTargetConfigInGraph.executor
-      );
-
-      const target: TargetConfiguration = (rootProjectConfig.targets[
-        jestTargetName
-      ] ??=
-        jestTargetConfigInGraph.executor === 'nx:run-commands'
-          ? { command: `jest --config ${jestProjectConfig}` }
-          : {
-              executor: jestTargetConfigInGraph.executor,
-              options: {},
-            });
-
-      if (target.executor === '@nx/jest:jest') {
-        target.options.jestConfig = jestProjectConfig;
-      }
-
-      if (targetDefaults?.cache === undefined) {
-        target.cache = jestTargetConfigInGraph.cache;
-      }
-      if (targetDefaults?.inputs === undefined) {
-        target.inputs = jestTargetConfigInGraph.inputs;
-      }
-      if (targetDefaults?.outputs === undefined) {
-        target.outputs = jestTargetConfigInGraph.outputs;
-      }
-      if (targetDefaults?.dependsOn === undefined) {
-        target.dependsOn = jestTargetConfigInGraph.dependsOn;
-      }
-
-      updateProjectConfiguration(tree, rootProject.name, rootProjectConfig);
-      // generate new global config as it was move to project config or is missing
-      generateGlobalConfig(tree, options.js);
-    }
+  if (tree.read(rootJestPath, 'utf-8').includes('getJestProjectsAsync()')) {
+    return;
   }
+
+  // moving from root project config to monorepo-style config
+  const { nodes: projects } = await createProjectGraphAsync();
+  const rootProject = Object.values(projects).find(
+    (projectNode) => projectNode.data?.root === '.'
+  );
+  // root project might have been removed,
+  // if it's missing there's nothing to migrate
+  if (!rootProject) {
+    return;
+  }
+  const jestTargetName = Object.entries(rootProject.data?.targets ?? {}).find(
+    ([_, t]) =>
+      t?.executor === 'nx:run-commands' && t?.options?.command === 'jest'
+  )?.[0];
+  // if root project doesn't have jest target, there's nothing to migrate
+  if (!jestTargetName) {
+    return;
+  }
+
+  const rootProjectConfig = readProjectConfiguration(tree, rootProject.name);
+  const projectType =
+    getProjectType(
+      tree,
+      rootProjectConfig.root,
+      rootProjectConfig.projectType
+    ) === 'application'
+      ? 'app'
+      : 'lib';
+  const jestProjectConfig = rootJestPath.replace(
+    /^jest\.config\./,
+    `jest.config.${projectType}.`
+  );
+  tree.rename(rootJestPath, jestProjectConfig);
+
+  if (tree.exists('tsconfig.spec.json')) {
+    updateJson(tree, 'tsconfig.spec.json', (json) => {
+      if (Array.isArray(json.include)) {
+        json.include = json.include.map((pattern: string) =>
+          pattern.replace(
+            /^(\.\/)?jest\.config\.(?=[cm]?[jt]s$)/,
+            `$1jest.config.${projectType}.`
+          )
+        );
+      }
+      return json;
+    });
+  }
+
+  // The @nx/jest/plugin infers the renamed config with `--config`, but an
+  // explicit `jest` target would keep running the workspace config
+  const target = rootProjectConfig.targets?.[jestTargetName];
+  if (target?.command === 'jest') {
+    target.command = `jest --config ${jestProjectConfig}`;
+    updateProjectConfiguration(tree, rootProject.name, rootProjectConfig);
+  } else if (target?.options?.command === 'jest') {
+    target.options.command = `jest --config ${jestProjectConfig}`;
+    updateProjectConfiguration(tree, rootProject.name, rootProjectConfig);
+  }
+
+  // generate new global config as it was move to project config or is missing
+  generateGlobalConfig(tree, options.js);
 }
 
 function generateGlobalConfig(tree: Tree, isJS: boolean) {

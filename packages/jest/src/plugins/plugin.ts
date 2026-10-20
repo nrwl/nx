@@ -28,6 +28,7 @@ import {
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import {
+  basename,
   dirname,
   isAbsolute,
   join,
@@ -79,7 +80,9 @@ type IsolatedModulesResult = {
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
+const jestConfigGlob =
+  '**/{jest.config,jest.config.app,jest.config.lib}.{cjs,mjs,js,cts,mts,ts}';
+const defaultJestConfigFileRegex = /^jest\.config\.[cm]?[jt]s$/;
 
 export const createNodes: CreateNodes<JestPluginOptions> = [
   jestConfigGlob,
@@ -282,17 +285,30 @@ function checkIfConfigFileShouldBeProject(
     }
   }
 
-  const jestConfigContent = readFileSync(
-    resolve(context.workspaceRoot, configFilePath),
-    'utf-8'
-  );
-  if (jestConfigContent.includes('getJestProjectsAsync()')) {
-    // The `getJestProjectsAsync` function uses the project graph, which leads to a
-    // circular dependency. We can skip this since it's no intended to be used for
-    // an Nx project.
-    return false;
+  if (!defaultJestConfigFileRegex.test(basename(configFilePath))) {
+    // The configuration generator renames a root project's config to
+    // `jest.config.app|lib.<ext>` when it turns the root config into the
+    // workspace one
+    const rootJestConfig = siblingFiles.find((f) =>
+      defaultJestConfigFileRegex.test(f)
+    );
+    return (
+      projectRoot === '.' &&
+      rootJestConfig !== undefined &&
+      isJestProjectsConfig(rootJestConfig, context.workspaceRoot)
+    );
   }
-  return true;
+
+  // The `getJestProjectsAsync` function uses the project graph, which leads to a
+  // circular dependency. We can skip this since it's no intended to be used for
+  // an Nx project.
+  return !isJestProjectsConfig(configFilePath, context.workspaceRoot);
+}
+
+function isJestProjectsConfig(configFilePath: string, workspaceRoot: string) {
+  return readFileSync(resolve(workspaceRoot, configFilePath), 'utf-8').includes(
+    'getJestProjectsAsync()'
+  );
 }
 
 async function buildJestTargets(
@@ -320,8 +336,12 @@ async function buildJestTargets(
     TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions,
   };
 
+  const jestCommand = defaultJestConfigFileRegex.test(basename(configFilePath))
+    ? 'jest'
+    : `jest --config ${basename(configFilePath)}`;
+
   const target: TargetConfiguration = (targets[options.targetName] = {
-    command: 'jest',
+    command: jestCommand,
     options: {
       cwd: projectRoot,
       // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
@@ -441,7 +461,7 @@ async function buildJestTargets(
 
         targets[targetName] = applyTestFileDirectives(
           {
-            command: `jest ${relativePath}`,
+            command: `${jestCommand} ${relativePath}`,
             cache,
             inputs,
             outputs,
@@ -591,7 +611,7 @@ async function buildJestTargets(
           });
           targets[targetName] = applyTestFileDirectives(
             {
-              command: `jest ${relativePath}`,
+              command: `${jestCommand} ${relativePath}`,
               cache,
               inputs,
               outputs,
