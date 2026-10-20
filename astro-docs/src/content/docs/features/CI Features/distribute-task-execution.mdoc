@@ -13,11 +13,6 @@ You pay for machine-minutes, not for how busy a machine is, so the same work pac
 
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
-{% youtube
-src="https://youtu.be/A1JQDGG1YG8"
-title="How Nx Agents Distribute Tasks Across Machines in CI"
-/%}
-
 ## Why CI pipelines waste compute
 
 Most pipelines use static partitioning (binning and sharding), splitting work into fixed jobs, such as one machine per task type, with e2e tests split into shards across more machines.
