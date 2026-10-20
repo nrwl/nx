@@ -7,7 +7,7 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { WebpackExecutorOptions } from '../../../executors/webpack/schema';
 import type { NxAppWebpackPluginOptions } from '../../../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function buildPostTargetTransformerFactory(
@@ -180,10 +180,7 @@ function updateWebpackConfig(
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
-  if (
-    query(sourceFile, 'VariableDeclaration > Identifier[name=configValues]')
-      .length
-  ) {
+  if (hasMigratedConfigValues(sourceFile, 'build')) {
     return;
   }
 

@@ -660,6 +660,36 @@ describe('buildPostTargetTransformer', () => {
         export default config;"
       `);
   });
+
+  it('should add configValues when the storybook config declares its own configValues', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/myapp/.storybook/main.ts',
+      `${storybookConfigFileV17_ReactVite}
+function getAddons() {
+  const configValues = { addons: [] };
+  return configValues.addons;
+}
+`
+    );
+
+    buildPostTargetTransformer(new AggregatedLog())(
+      {
+        options: {
+          outputDir: 'dist/storybook/myapp',
+          configDir: 'apps/myapp/.storybook',
+          docsMode: true,
+        },
+      },
+      tree,
+      { projectName: 'myapp', root: 'apps/myapp' },
+      { outputs: ['{projectRoot}/{options.output-dir}'] }
+    );
+
+    expect(tree.read('apps/myapp/.storybook/main.ts', 'utf-8')).toContain(
+      'const configValues = {"default":{"docsMode":true}};'
+    );
+  });
 });
 
 const storybookConfigFileV17_ReactVite = `import type { StorybookConfig } from '@storybook/react-vite';

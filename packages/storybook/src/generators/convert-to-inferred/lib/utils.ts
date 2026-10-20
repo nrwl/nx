@@ -30,10 +30,7 @@ export function addConfigValuesToConfigFile(
   const sourceFile = ast(configFileContents);
   // An earlier run that kept the target already added the block; a second
   // `const configValues` breaks parsing of the config.
-  if (
-    query(sourceFile, 'VariableDeclaration > Identifier[name=configValues]')
-      .length > 0
-  ) {
+  if (configFileContents.includes('configValues[nxConfiguration]')) {
     return;
   }
   // AST TO GET SECTION TO APPEND TO

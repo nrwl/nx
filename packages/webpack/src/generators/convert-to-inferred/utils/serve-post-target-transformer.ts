@@ -13,7 +13,7 @@ import * as ts from 'typescript';
 import type { WebpackOptionsNormalized } from 'webpack';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { WebDevServerOptions as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function servePostTargetTransformerFactory(
@@ -242,10 +242,7 @@ function updateWebpackConfig(
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
-  if (
-    query(sourceFile, 'VariableDeclaration > Identifier[name=devServerOptions]')
-      .length
-  ) {
+  if (hasMigratedConfigValues(sourceFile, 'serve')) {
     return;
   }
 

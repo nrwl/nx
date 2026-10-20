@@ -225,6 +225,39 @@ export default defineConfig(() => ({
         "
       `);
   });
+
+  it('should add configValues when the vite config declares its own configValues', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'libs/ui/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+function getDefines() {
+  const configValues = { DEBUG: false };
+  return configValues;
+}
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+  define: getDefines(),
+}));
+`
+    );
+
+    buildPostTargetTransformer(
+      {
+        options: { outputPath: 'dist/libs/ui' },
+        configurations: { production: { mode: 'production' } },
+      },
+      tree,
+      { projectName: 'ui', root: 'libs/ui' },
+      { outputs: ['{projectRoot}/{options.outDir}'] }
+    );
+
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toContain(
+      'These options were migrated by @nx/vite:convert-to-inferred'
+    );
+  });
 });
 
 const viteConfigFileV17 = `/// <reference types='vitest' />

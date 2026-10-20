@@ -7,7 +7,7 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function buildPostTargetTransformerFactory(
@@ -178,10 +178,7 @@ function updateRspackConfig(
 
   // A target kept on its executor is converted again on rerun, and its options
   // are already in the config.
-  if (
-    query(sourceFile, 'VariableDeclaration > Identifier[name=configValues]')
-      .length
-  ) {
+  if (hasMigratedConfigValues(sourceFile, 'build')) {
     return;
   }
 

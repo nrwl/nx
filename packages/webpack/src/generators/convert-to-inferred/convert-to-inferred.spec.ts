@@ -882,6 +882,30 @@ describe('convert-to-inferred', () => {
         `);
     });
 
+    it('should add the options when the webpack config declares its own configValues or devServerOptions', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(tree, project.root);
+      const configPath = `${project.root}/webpack.config.js`;
+      tree.write(
+        configPath,
+        `${tree.read(configPath, 'utf-8')}
+function makeDevServer() {
+  const configValues = {};
+  const devServerOptions = { ...configValues };
+  return devServerOptions;
+}
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(configPath, 'utf-8');
+      expect(config).toContain('...configValues.build.default');
+      expect(config).toContain('...configValues.serve.default');
+      expect(config).toContain('port: 4200');
+      expect(config).toContain('devServer: devServerOptions');
+    });
+
     it('should not touch the existing "devServer" option', async () => {
       const project = createProject(tree);
       writeWebpackConfig(
