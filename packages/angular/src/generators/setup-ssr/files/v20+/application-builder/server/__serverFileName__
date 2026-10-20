@@ -55,7 +55,11 @@ app.use('/**', (req, res, next) => {
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || <%= serverPort %>;
-  const server = app.listen(port, async () => {
+  const server = app.listen(port, async (error?: Error) => {
+    if (error) {
+      throw error;
+    }
+
     console.log(`Node Express server listening on http://localhost:${port}`);
     // Set when Nx waits for this server to be ready
     if (process.env['NX_READY_SIGNAL_SOCKET']) {

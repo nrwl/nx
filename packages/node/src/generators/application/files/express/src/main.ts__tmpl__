@@ -9,7 +9,10 @@ app.get('/', (req, res) => {
     res.send({ 'message': 'Hello API'});
 });
 
-const server = app.listen(port, host, async () => {
+const server = app.listen(port, host, async (error?: Error) => {
+    if (error) {
+      throw error;
+    }
     console.log(`[ ready ] http://${host}:${port}`);
     // Set when Nx waits for this server to be ready
     if (process.env.NX_READY_SIGNAL_SOCKET) {
