@@ -240,6 +240,15 @@ function updateWebpackConfig(
   };
   updateSources();
 
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (
+    query(sourceFile, 'VariableDeclaration > Identifier[name=devServerOptions]')
+      .length
+  ) {
+    return;
+  }
+
   setOptionsInWebpackConfig(
     tree,
     webpackConfigText,

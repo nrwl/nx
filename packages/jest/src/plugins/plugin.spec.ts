@@ -1,4 +1,4 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { readdirSync } from 'fs';
@@ -114,6 +114,33 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         ],
       ]
     `);
+  });
+
+  it('should report a config that fails to load against its own file and infer the others', async () => {
+    mockJestConfig({}, context);
+    await tempFs.createFiles({
+      'broken/jest.config.js': `throw new Error('cannot load preset');`,
+      'broken/project.json': '{}',
+    });
+
+    let error: AggregateCreateNodesError;
+    try {
+      await createNodesFunction(
+        ['proj/jest.config.js', 'broken/jest.config.js'],
+        { targetName: 'test', disableJestRuntime },
+        context
+      );
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(AggregateCreateNodesError);
+    expect(error.errors.map(([file, e]) => [file, e.message])).toEqual([
+      ['broken/jest.config.js', 'cannot load preset'],
+    ]);
+    expect(error.partialResults.map(([file]) => file)).toEqual([
+      'proj/jest.config.js',
+    ]);
   });
 
   it('should create test-ci targets based on jest.config.ts', async () => {

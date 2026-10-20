@@ -28,6 +28,14 @@ export function addConfigValuesToConfigFile(
   const configFileContents = tree.read(configFile, 'utf-8');
 
   const sourceFile = ast(configFileContents);
+  // An earlier run that kept the target already added the block; a second
+  // `const configValues` breaks parsing of the config.
+  if (
+    query(sourceFile, 'VariableDeclaration > Identifier[name=configValues]')
+      .length > 0
+  ) {
+    return;
+  }
   // AST TO GET SECTION TO APPEND TO
   const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   let startPosition = 0;

@@ -16,6 +16,7 @@ import {
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import type { JestPluginOptions } from '../../plugins/plugin';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
@@ -215,6 +216,104 @@ describe('remove-deprecated-executors', () => {
     expect(
       readProjectConfiguration(tree, project.name).targets
     ).toMatchInlineSnapshot(`{}`);
+  });
+
+  describe('when the plugin cannot infer one project', () => {
+    let warn: jest.SpyInstance;
+
+    beforeEach(() => {
+      // The converter is required lazily, so it binds a fresh logger module.
+      warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    function addApp2(configFileName: string, contents?: string) {
+      const root = 'apps/app2';
+      if (contents === undefined) {
+        writeJestConfig(tree, root, undefined, configFileName);
+      } else {
+        tree.write(`${root}/${configFileName}`, contents);
+        fs.createFileSync(`${root}/${configFileName}`, contents);
+      }
+      const project: ProjectConfiguration = {
+        name: 'app2',
+        root,
+        projectType: 'application',
+        targets: {
+          test: {
+            executor: '@nx/jest:jest',
+            options: { jestConfig: `${root}/${configFileName}` },
+          },
+        },
+      };
+      addProject(tree, 'app2', project);
+      fs.createFileSync(`${root}/project.json`, JSON.stringify(project));
+    }
+
+    async function runUpdate() {
+      const result = await update(tree);
+      return {
+        app1: readProjectConfiguration(tree, 'app1').targets,
+        app2: readProjectConfiguration(tree, 'app2').targets,
+        nextSteps: result.nextSteps,
+        warnings: warn.mock.calls
+          .map(([message]) => stripVTControlCharacters(String(message)))
+          .filter((message) => message.includes('left target')),
+      };
+    }
+
+    it('converts the other projects when one uses a config file name the plugin does not detect', async () => {
+      createTestProject(tree);
+      addApp2('jest.app.config.js');
+
+      expect(await runUpdate()).toMatchInlineSnapshot(`
+        {
+          "app1": {},
+          "app2": {
+            "test": {
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "apps/app2/jest.app.config.js",
+              },
+            },
+          },
+          "nextSteps": [
+            "These targets still use removed executors: app2:test (@nx/jest:jest). Replace each one before running them.",
+          ],
+          "warnings": [
+            "convert-to-inferred left target "test" in project "app2" on its executor because the plugin found no config file it detects in apps/app2. Rename the config file to one the plugin detects, then rerun the migration to convert it.",
+          ],
+        }
+      `);
+    });
+
+    it('converts the other projects when one config file fails to load', async () => {
+      createTestProject(tree);
+      addApp2('jest.config.js', `throw new Error('cannot load preset');`);
+
+      expect(await runUpdate()).toMatchInlineSnapshot(`
+        {
+          "app1": {},
+          "app2": {
+            "test": {
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "apps/app2/jest.config.js",
+              },
+            },
+          },
+          "nextSteps": [
+            "These targets still use removed executors: app2:test (@nx/jest:jest). Replace each one before running them.",
+          ],
+          "warnings": [
+            "convert-to-inferred left target "test" in project "app2" on its executor because the plugin failed to infer it: apps/app2/jest.config.js: cannot load preset. Fix the error, then rerun the migration to convert it.",
+          ],
+        }
+      `);
+    });
   });
 
   it('skips the prompt when no project uses the removed executors', async () => {

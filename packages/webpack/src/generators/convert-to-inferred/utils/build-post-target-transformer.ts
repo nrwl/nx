@@ -25,6 +25,19 @@ export function buildPostTargetTransformerFactory(
       projectRoot: projectDetails.root,
     };
 
+    // outputPath moves into the config, where `{options.outputPath}` can't resolve.
+    const outputPath = target.options?.outputPath;
+    if (target.outputs && typeof outputPath === 'string') {
+      target.outputs = target.outputs.map((output) =>
+        output.startsWith('{options.outputPath}')
+          ? output.replace(
+              '{options.outputPath}',
+              `{workspaceRoot}/${outputPath}`
+            )
+          : output.replace('{options.outputPath}', outputPath)
+      );
+    }
+
     const { pluginOptions, webpackConfigPath } = processOptions(
       target,
       context
@@ -164,6 +177,15 @@ function updateWebpackConfig(
     sourceFile = ast(webpackConfigText);
   };
   updateSources();
+
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (
+    query(sourceFile, 'VariableDeclaration > Identifier[name=configValues]')
+      .length
+  ) {
+    return;
+  }
 
   setOptionsInWebpackConfig(
     tree,

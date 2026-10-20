@@ -163,6 +163,68 @@ describe('buildPostTargetTransformer', () => {
       }
     `);
   });
+
+  it('should not add configValues to a vite config file twice when rerun', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'libs/ui/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+}));
+`
+    );
+    const createTarget = () => ({
+      outputs: ['{options.outputPath}'],
+      options: { outputPath: 'dist/libs/ui' },
+      configurations: {
+        development: { mode: 'development' },
+        production: { mode: 'production' },
+      },
+    });
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+    const projectDetails = { projectName: 'ui', root: 'libs/ui' };
+
+    // A package.json script with the same name keeps the target, so a rerun
+    // transforms it again.
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
+
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vite';
+          
+          // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+          const configValues = {"default":{},"development":{},"production":{}};
+          
+          // Determine the correct configValue to use based on the configuration
+          const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+          
+          const options = {
+            ...configValues.default,
+            ...(configValues[nxConfiguration] ?? {})
+          }
+          
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+        }));
+        "
+      `);
+  });
 });
 
 const viteConfigFileV17 = `/// <reference types='vitest' />
