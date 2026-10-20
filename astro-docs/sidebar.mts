@@ -308,7 +308,7 @@ const learnGroups: SidebarItems = [
     collapsed: true,
     items: [
       {
-        label: 'Overview',
+        label: 'CI Overview (Nx Cloud)',
         link: 'features/ci-features',
       },
       {
