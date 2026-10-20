@@ -140,6 +140,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
@@ -176,6 +179,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
@@ -209,6 +215,9 @@ describe('@nx/playwright/plugin', () => {
                         "externalDependencies": [
                           "@playwright/test",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -282,6 +291,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
@@ -320,6 +332,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
@@ -355,6 +370,9 @@ describe('@nx/playwright/plugin', () => {
                         "externalDependencies": [
                           "@playwright/test",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -446,6 +464,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
@@ -482,6 +503,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -526,6 +550,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -625,6 +652,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
@@ -662,6 +692,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -709,6 +742,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
@@ -755,6 +791,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -820,6 +859,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests",
@@ -867,6 +909,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -921,6 +966,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
@@ -966,6 +1014,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -1214,6 +1265,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         always: true,
       },
       { externalDependencies: ['@playwright/test'] },
+      { env: 'CI' },
     ];
 
     async function atomizedTargets() {
@@ -3706,6 +3758,9 @@ module.exports = {};`,
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests",
@@ -3753,6 +3808,9 @@ module.exports = {};`,
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -3815,6 +3873,9 @@ module.exports = {};`,
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
@@ -3868,6 +3929,9 @@ module.exports = {};`,
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
