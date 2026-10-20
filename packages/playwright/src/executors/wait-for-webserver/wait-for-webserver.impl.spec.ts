@@ -339,17 +339,43 @@ describe('waitForWebserverExecutor', () => {
     await listen(server, 0);
     const { port } = server.address() as AddressInfo;
 
-    const result = await waitForWebserverExecutor(
-      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
-      context
-    );
+    const request = vi.mocked(http.request);
+    const actualRequest = request.getMockImplementation()!;
+    const clearWatchdog = clearTimeout;
+    // Expire the fake budget if a regression prevents the connection error.
+    const watchdog = setTimeout(() => vi.advanceTimersByTime(300), 10_000);
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    const deadline = Date.now() + 300;
+    request.mockImplementation((...args) => {
+      const req = actualRequest(...args);
+      if ((args[0] as URL).port === String(deadPort)) {
+        req.on('error', (error: NodeJS.ErrnoException) => {
+          if (error.code === 'ECONNREFUSED') {
+            // Finish the real refused hop before expiring the readiness budget.
+            vi.setSystemTime(deadline);
+          }
+        });
+      }
+      return req;
+    });
 
-    // Without the hop count this reads as the configured server refusing
-    // connections, which is the one thing it is known not to be doing.
-    expect(result).toEqual({ success: false });
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ECONNREFUSED after 1 redirects')
-    );
+    try {
+      const result = await waitForWebserverExecutor(
+        { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+        context
+      );
+
+      // Without the hop count this reads as the configured server refusing
+      // connections, which is the one thing it is known not to be doing.
+      expect(result).toEqual({ success: false });
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ECONNREFUSED after 1 redirects')
+      );
+    } finally {
+      clearWatchdog(watchdog);
+      request.mockImplementation(actualRequest);
+      vi.useRealTimers();
+    }
   });
 
   it('waits for every configured server, not just the first', async () => {
