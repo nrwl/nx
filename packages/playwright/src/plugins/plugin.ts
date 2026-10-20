@@ -63,13 +63,14 @@ export interface PlaywrightPluginOptions {
    */
   webServerTimeout?: number;
   /**
-   * Whether to infer a task that waits for the web server to be ready before the
-   * Playwright test tasks run. When false, no readiness task is inferred and the
-   * tests fall back to Playwright's own `reuseExistingServer` probe. Defaults to
-   * true.
+   * Whether to infer a task that probes the web server's port or url before the
+   * Playwright test tasks run. Defaults to false: the test tasks wait for the
+   * web server task's `readyWhen` instead. Turn it on for a server without a
+   * `readyWhen`, which counts as ready once it starts, so that Playwright's own
+   * probe doesn't miss and start a second server.
    *
-   * @deprecated Wait for the web server task's `readyWhen` instead, which
-   * `waitForServerReady` turns on. This option will be removed in Nx 25.
+   * @deprecated The test tasks wait for the web server task's `readyWhen`.
+   * This option will be removed in Nx 25.
    */
   waitForWebServer?: boolean;
   /**
@@ -737,7 +738,7 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
     targetName: options?.targetName ?? 'e2e',
     ciTargetName,
     mergeReportsTargetName: `${ciTargetName}--merge-reports`,
-    waitForWebServer: options?.waitForWebServer ?? true,
+    waitForWebServer: options?.waitForWebServer ?? false,
     waitForServerReady: options?.waitForServerReady !== false,
   };
 }
