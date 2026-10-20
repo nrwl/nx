@@ -40,10 +40,7 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import {
-  addIgnoresToLintConfig,
-  isTypedLintingEnabled,
-} from '@nx/eslint/internal';
+import { addIgnoresToLintConfig } from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -215,7 +212,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: options.rootProject ?? projectConfig.root === '.',
     })
   );

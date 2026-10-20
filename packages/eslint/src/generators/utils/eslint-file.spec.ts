@@ -11,7 +11,6 @@ import {
   addTypedLintingToFlatConfig,
   findEslintFile,
   inspectTypedLinting,
-  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
 } from './eslint-file';
@@ -1712,31 +1711,6 @@ module.exports = [
           `const base = { opts: { project: true } };\nconst registry = { ...base, ...getExtra() };\nexport default [{ languageOptions: { parserOptions: registry.opts } }];`
         )
       ).toEqual(PROJECT);
-    });
-  });
-
-  describe('isTypedLintingEnabled', () => {
-    it('is enabled by the new flag', () => {
-      expect(isTypedLintingEnabled({ enableTypedLinting: true })).toBe(true);
-    });
-
-    it('falls back to the deprecated setParserOptionsProject flag', () => {
-      expect(isTypedLintingEnabled({ setParserOptionsProject: true })).toBe(
-        true
-      );
-    });
-
-    it('honors the deprecated flag even when enableTypedLinting defaults to false', () => {
-      expect(
-        isTypedLintingEnabled({
-          enableTypedLinting: false,
-          setParserOptionsProject: true,
-        })
-      ).toBe(true);
-    });
-
-    it('is disabled when neither flag is set', () => {
-      expect(isTypedLintingEnabled({})).toBe(false);
     });
   });
 

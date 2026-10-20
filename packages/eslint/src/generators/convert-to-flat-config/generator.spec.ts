@@ -81,7 +81,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
       });
       await convertToFlatConfigGenerator(tree, options);
 
@@ -107,7 +107,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       await convertToFlatConfigGenerator(tree, options);
@@ -134,7 +134,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
@@ -165,7 +165,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
@@ -195,7 +195,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -274,7 +274,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       // An Angular eslintrc workspace has the scoped packages installed; the
@@ -305,7 +305,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -326,7 +326,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'package.json', (json) => {
@@ -359,7 +359,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'package.json', (json) => {
@@ -388,7 +388,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'package.json', (json) => {
@@ -444,7 +444,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
       });
       tree.write('.eslintignore', 'ignore/me');
       await convertToFlatConfigGenerator(tree, options);
@@ -460,7 +460,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       tree.write('another-folder/.myeslintignore', 'ignore/me');
@@ -492,7 +492,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -511,7 +511,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -531,7 +531,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -550,7 +550,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -572,7 +572,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -594,7 +594,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -611,7 +611,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -660,7 +660,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -689,7 +689,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -725,7 +725,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -773,7 +773,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
 
@@ -808,7 +808,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
 
         project: 'dx-assets-ui',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'apps/dx-assets-ui/.eslintrc.json', () => {
@@ -884,7 +884,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       await convertToFlatConfigGenerator(tree, options);
@@ -911,7 +911,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       await convertToFlatConfigGenerator(tree, options);
@@ -938,7 +938,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
@@ -969,7 +969,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
         eslintFilePatterns: ['**/*.ts'],
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       const yamlContent = dump(readJson(tree, 'libs/test-lib/.eslintrc.json'));
@@ -999,7 +999,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1080,7 +1080,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
       });
       tree.write('.eslintignore', 'ignore/me');
       await convertToFlatConfigGenerator(tree, options);
@@ -1096,7 +1096,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       tree.write('another-folder/.myeslintignore', 'ignore/me');
@@ -1128,7 +1128,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1147,7 +1147,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1167,7 +1167,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1186,7 +1186,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1208,7 +1208,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1230,7 +1230,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1247,7 +1247,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, '.eslintrc.json', (json) => {
@@ -1296,7 +1296,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -1325,7 +1325,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -1366,7 +1366,7 @@ describe('convert-to-flat-config generator', () => {
         linter: 'eslint',
 
         project: 'dx-assets-ui',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, 'apps/dx-assets-ui/.eslintrc.json', () => {
@@ -1435,7 +1435,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'mjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
@@ -1543,7 +1543,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       // A third-party `extends` forces the FlatCompat shim (`@eslint/eslintrc`)
@@ -1583,7 +1583,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'package.json', (json) => {
@@ -1633,7 +1633,7 @@ describe('convert-to-flat-config generator', () => {
           skipFormat: false,
           linter: 'eslint',
           project: 'test-lib',
-          setParserOptionsProject: false,
+          enableTypedLinting: false,
           eslintConfigFormat: 'cjs',
         });
         // Swap the project's JSON config for a JS one the converter cannot read.
@@ -1658,7 +1658,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       // An already-flat project must not be reported as "cannot be converted".

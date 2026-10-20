@@ -57,10 +57,6 @@ export interface CypressE2EConfigSchema {
   js?: boolean;
   skipFormat?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
   devServerTarget?: string;

@@ -12,7 +12,6 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -23,10 +22,6 @@ interface NormalizedSchema {
   projectName: string;
   projectRoot: string;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   tsConfigPaths: string[];
   unitTestRunner?: string;
   skipPackageJson?: boolean;
@@ -44,7 +39,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       tsConfigPaths: options.tsConfigPaths,
       unitTestRunner: options.unitTestRunner,
       skipPackageJson: options.skipPackageJson,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
       addPackageJsonDependencyChecks: options.buildable,
     })
   );

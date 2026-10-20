@@ -17,10 +17,6 @@ export interface Schema {
   publishable?: boolean;
   routing?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipTsConfig?: boolean;

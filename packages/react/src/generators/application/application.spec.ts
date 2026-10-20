@@ -707,18 +707,6 @@ describe('app', () => {
       }
     );
 
-    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        e2eTestRunner: 'playwright',
-        setParserOptionsProject: true,
-      });
-
-      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
-        'projectService: true'
-      );
-    });
-
     it('should not set up typed linting in the e2e project by default', async () => {
       await applicationGenerator(appTree, {
         ...schema,
