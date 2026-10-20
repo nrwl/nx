@@ -36,6 +36,9 @@
       "tailwind": [
         "dist/tailwind.d.ts"
       ],
+      "module-federation": [
+        "dist/module-federation.d.ts"
+      ],
       "webpack-plugin": [
         "dist/webpack-plugin.d.ts"
       ],
@@ -145,6 +148,11 @@
       "@nx/nx-source": "./tailwind.ts",
       "types": "./dist/tailwind.d.ts",
       "default": "./dist/tailwind.js"
+    },
+    "./module-federation": {
+      "@nx/nx-source": "./module-federation.ts",
+      "types": "./dist/module-federation.d.ts",
+      "default": "./dist/module-federation.js"
     },
     "./webpack-plugin": {
       "@nx/nx-source": "./webpack-plugin.ts",
