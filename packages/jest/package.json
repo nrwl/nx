@@ -111,6 +111,7 @@
     "jest-resolve": "catalog:jest",
     "jsonc-parser": "catalog:",
     "minimatch": "catalog:",
+    "picomatch": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
     "tslib": "catalog:typescript",

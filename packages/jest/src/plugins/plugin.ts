@@ -26,9 +26,11 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import picomatch = require('picomatch');
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import {
   dirname,
+  extname,
   isAbsolute,
   join,
   normalize,
@@ -401,11 +403,6 @@ async function buildJestTargets(
         },
       };
 
-      const specIgnoreRegexes: undefined | RegExp[] =
-        rawConfig.testPathIgnorePatterns?.map(
-          (p: string) => new RegExp(replaceRootDirInPath(projectRoot, p))
-        );
-
       for (const testPath of specs) {
         const relativePath = normalizePath(
           relative(join(context.workspaceRoot, projectRoot), testPath)
@@ -426,10 +423,6 @@ async function buildJestTargets(
                 2
               )}`
           );
-        }
-
-        if (specIgnoreRegexes?.some((regex) => regex.test(relativePath))) {
-          continue;
         }
 
         const targetName = `${options.ciTargetName}--${relativePath}`;
@@ -1020,6 +1013,26 @@ function requireJestUtil<T>(
   );
 }
 
+// Defaults copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts
+const DEFAULT_TEST_MATCH = [
+  '**/__tests__/**/*.?([mc])[jt]s?(x)',
+  '**/?(*.)+(spec|test).?([mc])[jt]s?(x)',
+];
+const DEFAULT_MODULE_FILE_EXTENSIONS = [
+  'js',
+  'mjs',
+  'cjs',
+  'jsx',
+  'ts',
+  'mts',
+  'cts',
+  'tsx',
+  'json',
+  'node',
+];
+
+// Mirrors how Jest selects test files: jest-haste-map's file list, then
+// SearchSource's checks, all on the absolute path
 async function getTestPaths(
   projectRoot: string,
   rawConfig: any,
@@ -1027,41 +1040,147 @@ async function getTestPaths(
   context: CreateNodesContext,
   presetCache: Record<string, unknown>
 ): Promise<{ specs: string[]; testMatch: string[] }> {
-  const testMatch = await getJestOption<string[]>(
-    rawConfig,
-    rootDir,
-    'testMatch',
-    presetCache
-  );
+  // Jest resolves rootDir's symlinks. Resolve the workspace root with it so
+  // file paths still compare; a default rootDir needs neither
+  let workspaceRoot = context.workspaceRoot;
+  if (rawConfig.rootDir) {
+    rootDir = tryRealpath(rootDir);
+    workspaceRoot = tryRealpath(workspaceRoot);
+  }
+  const getOption = async <T>(name: string, defaultValue: T): Promise<T> =>
+    (await getJestOption<T>(rawConfig, rootDir, name, presetCache)) ??
+    defaultValue;
+  const toArray = (value: string | string[]) =>
+    Array.isArray(value) ? value : [value];
+  const posixRootDir = normalizePath(rootDir);
+  const toRegExp = (patterns: string[]) =>
+    patterns.length > 0
+      ? new RegExp(
+          patterns
+            .map((pattern) => pattern.replaceAll('<rootDir>', posixRootDir))
+            .join('|')
+        )
+      : undefined;
 
-  let paths = await globWithWorkspaceContext(
+  const testRegex = toArray(
+    await getOption<string | string[]>('testRegex', [])
+  );
+  // jest-config drops the default testMatch when testRegex is set
+  const testMatch = toArray(
+    await getOption<string | string[]>(
+      'testMatch',
+      testRegex.length > 0 ? [] : DEFAULT_TEST_MATCH
+    )
+  );
+  const roots = (await getOption('roots', ['<rootDir>'])).map(
+    (root) =>
+      `${normalizePath(resolve(rootDir, replaceRootDirInPath(rootDir, root)))}/`
+  );
+  const extensions = new Set([
+    'snap',
+    ...(await getOption(
+      'moduleFileExtensions',
+      DEFAULT_MODULE_FILE_EXTENSIONS
+    )),
+  ]);
+  // jest-config concatenates preset and config modulePathIgnorePatterns
+  const preset = await loadPresetConfig(rawConfig, rootDir, presetCache);
+  const modulePathIgnorePattern = toRegExp(
+    (preset?.modulePathIgnorePatterns ?? []).concat(
+      rawConfig.modulePathIgnorePatterns ?? []
+    )
+  );
+  const testPathIgnorePattern = toRegExp(
+    await getOption('testPathIgnorePatterns', ['/node_modules/'])
+  );
+  const testRegexes = testRegex.map((regex) => new RegExp(regex));
+  // Globbing from the project root already applies `**/` globs, so only other
+  // globs need a match check
+  const testMatchers: GlobMatcher[] = testMatch.every((pattern) =>
+    pattern.startsWith('**/')
+  )
+    ? []
+    : testMatch.map((pattern) => {
+        // Built like jest-util's: minimatch would read `(a|b)` groups literally
+        const isMatch = picomatch(
+          replacePathSepForGlob(
+            replaceRootDirInPath(escapeGlobCharacters(rootDir), pattern)
+          ),
+          { dot: true },
+          true
+        );
+        return {
+          isMatch,
+          negated: isMatch.state.negated || !!isMatch.state.negatedExtglob,
+        };
+      });
+
+  // Unless every testMatch glob is negated, a file must match a non-negated one
+  const includePatterns = testMatch.filter((_, i) => !testMatchers[i]?.negated);
+  const candidates = await globWithWorkspaceContext(
     context.workspaceRoot,
-    (
-      testMatch || [
-        // Default copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts#L84
-        '**/__tests__/**/*.?([mc])[jt]s?(x)',
-        '**/?(*.)+(spec|test).?([mc])[jt]s?(x)',
-      ]
-    ).map((pattern) => posix.join(projectRoot, pattern)),
+    includePatterns.length > 0
+      ? includePatterns.map((pattern) => {
+          const path = replaceRootDirInPath(rootDir, pattern);
+          return isAbsolute(path)
+            ? normalizePath(relative(workspaceRoot, path))
+            : posix.join(projectRoot, pattern);
+        })
+      : [posix.join(projectRoot, '**/*')],
     []
   );
 
-  const testRegex = await getJestOption<string[]>(
-    rawConfig,
-    rootDir,
-    'testRegex',
-    presetCache
-  );
-  if (testRegex) {
-    const testRegexes = Array.isArray(rawConfig.testRegex)
-      ? rawConfig.testRegex.map((r: string) => new RegExp(r))
-      : [new RegExp(rawConfig.testRegex)];
-    paths = paths.filter((path: string) =>
-      testRegexes.some((r: RegExp) => r.test(path))
+  const workspacePath = normalizePath(join(workspaceRoot, '/'));
+  const specs = candidates.filter((file) => {
+    const path = workspacePath + file;
+    return (
+      extensions.has(extname(path).slice(1)) &&
+      !modulePathIgnorePattern?.test(path) &&
+      roots.some((root) => path.includes(root)) &&
+      (testMatchers.length === 0 || matchesGlobs(testMatchers, path)) &&
+      !testPathIgnorePattern?.test(path) &&
+      (testRegexes.length === 0 || testRegexes.some((r) => r.test(path)))
     );
-  }
+  });
 
-  return { specs: paths, testMatch };
+  return { specs, testMatch };
+}
+
+// Port of jest-util's globsToMatcher: the last glob that keeps or drops a path
+// decides, and with only negated globs a path none of them drops is kept
+type GlobMatcher = { isMatch: (path: string) => boolean; negated: boolean };
+
+function matchesGlobs(matchers: GlobMatcher[], path: string): boolean {
+  let kept: boolean | undefined;
+  for (const { isMatch, negated } of matchers) {
+    const matched = isMatch(path);
+    if (!matched && negated) {
+      kept = false;
+    } else if (matched && !negated) {
+      kept = true;
+    }
+  }
+  return matchers.every(({ negated }) => negated)
+    ? kept !== false
+    : kept === true;
+}
+
+// Ports of the jest-config and jest-util helpers Jest uses to put rootDir into
+// testMatch globs
+function escapeGlobCharacters(path: string): string {
+  return path.replaceAll(/([!()*?[\\\]{}])/g, '\\$1');
+}
+
+function replacePathSepForGlob(path: string): string {
+  return path.replaceAll(/\\(?![$()+.?^{}])/g, '/');
+}
+
+function tryRealpath(path: string): string {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    return path;
+  }
 }
 
 /**
