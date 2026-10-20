@@ -959,6 +959,43 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask resolves relative copy sources outside the project`() {
+      val root = ProjectBuilder.builder().build()
+      val app = ProjectBuilder.builder().withParent(root).withName("app").build()
+      val copyTask = app.tasks.register("bundleWeb", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from("../web/dist/app.tar.gz")
+      copyTask.from("../web/site")
+      copyTask.into(app.layout.buildDirectory.dir("out"))
+      val classifier = BuildOutputClassifier(listOf(app.layout.buildDirectory.get().asFile))
+      fun inputs() =
+          getInputsForTask(
+                  null,
+                  copyTask,
+                  app.projectDir.path,
+                  root.rootDir.path,
+                  mutableMapOf(),
+                  classifier)
+              ?.toSet()
+
+      val clean = inputs()
+      java.io.File(root.rootDir, "web/dist").mkdirs()
+      java.io.File(root.rootDir, "web/dist/app.tar.gz").writeText("x")
+      java.io.File(root.rootDir, "web/site").mkdirs()
+      java.io.File(root.rootDir, "web/site/index.html").writeText("x")
+      val built = inputs()
+
+      assertEquals(clean, built)
+      assertTrue(
+          built!!.contains(
+              includeIgnoredInput(Path("{workspaceRoot}", "web", "dist", "app.tar.gz").toString())),
+          "got $built")
+      assertTrue(
+          built.contains(
+              includeIgnoredInput(Path("{workspaceRoot}", "web", "site").toString() + "/**/*")),
+          "got $built")
+    }
+
+    @Test
     fun `test getInputsForTask excludes build dirs under a copy source glob`() {
       java.io.File("$workspaceRoot/README.md").writeText("readme")
       val copyTask =

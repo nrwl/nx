@@ -449,7 +449,7 @@ private fun collectCopySourceDirs(
     buildOutputClassifier: BuildOutputClassifier
 ) {
   fun addSourceDir(dir: File) {
-    val resolved = if (dir.isAbsolute) dir else File(task.project.projectDir, dir.path)
+    val resolved = task.project.file(dir).normalize()
     if (buildOutputClassifier.isBuildOutput(resolved)) return
     when {
       resolved.isDirectory -> into.dirs.add(resolved)
