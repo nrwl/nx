@@ -285,7 +285,6 @@ async function normalizeOptions(
   };
 }
 
-// The template only switches on `CI` for the parts that actually differ.
 function getCiWebServer(options: NormalizedGeneratorOptions): {
   ciWebServerCommand: string | null;
   ciWebServerAddress: string | null;

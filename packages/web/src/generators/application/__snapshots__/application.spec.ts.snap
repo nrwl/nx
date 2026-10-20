@@ -5,7 +5,6 @@ exports[`app > not nested > should generate files if bundler is vite 1`] = `
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
-// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // getReadyUrl moves the address to the port the server task reported.
 const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
@@ -37,7 +36,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
     url: webServerAddress,
@@ -89,7 +87,6 @@ exports[`app > not nested > should setup playwright e2e project correctly for we
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
-// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
 // getReadyUrl moves the address to the port the dev server task reported.
@@ -119,7 +116,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: isCI ? 'npx nx run cool-app:serve-static' : 'npx nx run cool-app:serve',
     url: getReadyUrl('http://localhost:4200'),
@@ -171,7 +167,6 @@ exports[`app > not nested > should use serve target and port if bundler=vite, e2
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
-// CI and local runs use different web servers.
 const isCI = !!process.env['CI'];
 // getReadyUrl moves the address to the port the server task reported.
 const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
@@ -203,7 +198,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
     url: webServerAddress,
