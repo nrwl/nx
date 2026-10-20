@@ -5,6 +5,7 @@
   "description": "Serve a SSR application using rspack.",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/rspack:ssr-dev-server` executor is deprecated and will be removed in Nx v25. No generator creates it anymore. Build the browser and server bundles and start the server from your own continuous target, and set `readyWhen` on it.",
   "properties": {
     "browserTarget": {
       "type": "string",
