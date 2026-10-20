@@ -7,7 +7,6 @@ filter: 'type:Guides'
 topics:
   - 'React'
   - 'Webpack'
-  - 'Rspack'
 ---
 
 The `@nx/webpack:ssr-dev-server` and `@nx/rspack:ssr-dev-server` executors are deprecated and will
@@ -20,10 +19,16 @@ needs no build of its own.
 
 ## Run the server from source
 
+`@nx/js` doesn't install `tsx`, so add it to the workspace's dev dependencies:
+
+```shell
+npm install -D tsx
+```
+
 Add a shebang and a target name to the top of `server.ts`, and report readiness once the server
 listens:
 
-```ts title="apps/my-app/server.ts"
+```ts {% title="apps/my-app/server.ts" %}
 #!/usr/bin/env tsx
 // @nx-target-name: serve-ssr
 
@@ -52,7 +57,7 @@ The name `serve-ssr` keeps the target apart from the `serve` target that `@nx/we
 Register the plugin in `nx.json`, scoped to the app, with `watch` on so the server restarts when
 its files change:
 
-```json title="nx.json"
+```json {% title="nx.json" %}
 {
   "plugins": [
     {
@@ -70,7 +75,7 @@ In the project configuration, replace the `serve`, `server`, and `serve-server` 
 the executors.
 Add a continuous target that rebuilds the browser bundle, and make `serve-ssr` depend on it:
 
-```json title="apps/my-app/project.json"
+```json {% title="apps/my-app/project.json" %}
 {
   "targets": {
     "build-watch": {
