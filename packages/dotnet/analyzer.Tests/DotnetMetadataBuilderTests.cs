@@ -43,7 +43,6 @@ public class DotnetMetadataBuilderTests
         Assert.False(tfm.Capabilities.Publishable, "IsPublishable falls back to the executable heuristic when unevaluated.");
         Assert.False(tfm.Capabilities.Test);
         Assert.False(tfm.Capabilities.Tool);
-        Assert.Equal(metadata.Capabilities, tfm.Capabilities);
     }
 
     [Fact]
@@ -59,9 +58,10 @@ public class DotnetMetadataBuilderTests
 
         var metadata = DotnetMetadataBuilder.Build(evaluations);
 
-        Assert.True(metadata.Capabilities.Executable);
-        Assert.True(metadata.Capabilities.Publishable, "Unevaluated IsPublishable falls back to the executable capability.");
-        Assert.False(metadata.Capabilities.Packable);
+        var capabilities = Assert.Single(metadata.TargetFrameworks).Capabilities;
+        Assert.True(capabilities.Executable);
+        Assert.True(capabilities.Publishable, "Unevaluated IsPublishable falls back to the executable capability.");
+        Assert.False(capabilities.Packable);
     }
 
     [Fact]
@@ -81,14 +81,17 @@ public class DotnetMetadataBuilderTests
 
         var metadata = DotnetMetadataBuilder.Build(evaluations);
 
-        Assert.True(metadata.Capabilities.Test);
-        Assert.True(metadata.Capabilities.Executable);
-        Assert.False(metadata.Capabilities.Publishable);
+        var capabilities = Assert.Single(metadata.TargetFrameworks).Capabilities;
+        Assert.True(capabilities.Test);
+        Assert.True(capabilities.Executable);
+        Assert.False(capabilities.Publishable);
     }
 
     [Theory]
     [InlineData("Microsoft.NET.Test.Sdk")]
     [InlineData("Microsoft.Testing.Platform")]
+    [InlineData("microsoft.net.test.sdk")]
+    [InlineData("microsoft.testing.platform")]
     public void Build_TestPackageReference_MarksTestCapability(string packageId)
     {
         var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
@@ -98,18 +101,57 @@ public class DotnetMetadataBuilderTests
                 new List<PackageReference> { new() { Include = packageId } }),
         };
 
-        Assert.True(DotnetMetadataBuilder.Build(evaluations).Capabilities.Test);
+        Assert.True(Assert.Single(DotnetMetadataBuilder.Build(evaluations).TargetFrameworks).Capabilities.Test);
     }
 
-    [Fact]
-    public void Build_PackAsTool_MarksToolCapability()
+    [Theory]
+    [InlineData("IsTestProject", "True", true)]
+    [InlineData("IsTestProject", "false", false)]
+    [InlineData("IsTestingPlatformApplication", "True", true)]
+    public void Build_TestCapability_UsesCurrentTargetInferenceRules(string property, string value, bool expected)
     {
         var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
         {
-            Evaluation(Properties(("TargetFramework", "net9.0"), ("PackAsTool", "true"))),
+            Evaluation(
+                Properties(("TargetFramework", "net9.0"), (property, value)),
+                new List<PackageReference> { new() { Include = "Microsoft.NET.Test.Sdk" } }),
         };
 
-        Assert.True(DotnetMetadataBuilder.Build(evaluations).Capabilities.Tool);
+        var capabilities = Assert.Single(DotnetMetadataBuilder.Build(evaluations).TargetFrameworks).Capabilities;
+
+        Assert.Equal(expected, capabilities.Test);
+    }
+
+    [Theory]
+    [InlineData("true")]
+    [InlineData("True")]
+    public void Build_PackAsTool_MarksToolCapability(string value)
+    {
+        var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
+        {
+            Evaluation(Properties(("TargetFramework", "net9.0"), ("PackAsTool", value))),
+        };
+
+        Assert.True(Assert.Single(DotnetMetadataBuilder.Build(evaluations).TargetFrameworks).Capabilities.Tool);
+    }
+
+    [Theory]
+    [InlineData("True", true)]
+    [InlineData("FALSE", false)]
+    public void Build_EvaluatedPackagingCapabilities_AreCaseInsensitive(string value, bool expected)
+    {
+        var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
+        {
+            Evaluation(Properties(
+                ("TargetFramework", "net9.0"),
+                ("IsPackable", value),
+                ("IsPublishable", value))),
+        };
+
+        var capabilities = Assert.Single(DotnetMetadataBuilder.Build(evaluations).TargetFrameworks).Capabilities;
+
+        Assert.Equal(expected, capabilities.Packable);
+        Assert.Equal(expected, capabilities.Publishable);
     }
 
     // --- Target framework/platform facts ------------------------------------------------------
@@ -181,8 +223,6 @@ public class DotnetMetadataBuilderTests
         Assert.Equal(new[] { "linux-x64", "win-x64", "osx-arm64" }, tfm.RuntimeIdentifiers);
     }
 
-    // --- Multi-targeting: aggregation and per-framework variance -------------------------------
-
     [Fact]
     public void Build_MultiTarget_PreservesGivenOrder()
     {
@@ -201,10 +241,8 @@ public class DotnetMetadataBuilderTests
     }
 
     [Fact]
-    public void Build_MultiTarget_ProjectCapabilities_AreOrAggregatedAcrossFrameworks()
+    public void Build_MultiTarget_KeepsCapabilitiesPerFramework()
     {
-        // A project that is only a test project under net8.0 (e.g. a conditional
-        // PackageReference), and only produces a RID-specific executable under net9.0.
         var evaluations = new List<DotnetMetadataBuilder.TargetFrameworkEvaluation>
         {
             Evaluation(
@@ -215,11 +253,6 @@ public class DotnetMetadataBuilderTests
 
         var metadata = DotnetMetadataBuilder.Build(evaluations);
 
-        // Project-level capabilities are the OR across every target framework...
-        Assert.True(metadata.Capabilities.Test);
-        Assert.True(metadata.Capabilities.Executable);
-
-        // ...while each per-framework entry keeps its own, non-aggregated capabilities.
         var net8 = metadata.TargetFrameworks.Single(f => f.TargetFramework == "net8.0");
         var net9 = metadata.TargetFrameworks.Single(f => f.TargetFramework == "net9.0");
         Assert.True(net8.Capabilities.Test);

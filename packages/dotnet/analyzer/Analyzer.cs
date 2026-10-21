@@ -229,10 +229,7 @@ public static class Analyzer
                         directoryBuildInputs
                     );
 
-                    // Structured, evaluated .NET metadata (metadata.dotnet): reuses the same
-                    // grouped inner-build nodes above rather than re-evaluating XML, aggregating
-                    // per-target-framework facts/capabilities across every framework the
-                    // project targets (not just the primary node used for target generation).
+                    // Reuse every grouped inner-build node without re-evaluating MSBuild.
                     var frameworkEvaluations = CollectTargetFrameworkEvaluations(nodes, primaryNode);
                     var dotnetMetadata = DotnetMetadataBuilder.Build(frameworkEvaluations);
 
