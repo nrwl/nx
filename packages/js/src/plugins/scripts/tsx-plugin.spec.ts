@@ -36,7 +36,10 @@ describe('@nx/js/tsx', () => {
 
   it('should only claim tsx shebangs', async () => {
     const targets = await targetsFor({
-      'package.json': JSON.stringify({ bin: { cli: './dist/cli.js' } }),
+      'package.json': JSON.stringify({
+        name: 'root',
+        bin: { cli: './dist/cli.js' },
+      }),
       'scripts/gen.ts': '#!/usr/bin/env -S npx tsx\n',
       'scripts/plain.js': '#!/usr/bin/env node\n',
     });
@@ -48,7 +51,7 @@ describe('@nx/js/tsx', () => {
 
   it('should put watch before shebang flags', async () => {
     const targets = await targetsFor({
-      'package.json': '{}',
+      'package.json': '{ "name": "root" }',
       'scripts/dev.ts': '#!/usr/bin/env -S tsx --env-file=.env\n',
     });
 

@@ -1,6 +1,7 @@
 import {
   type CreateNodes,
   type CreateNodesResultArray,
+  readJsonFile,
   type TargetConfiguration,
 } from '@nx/devkit';
 import {
@@ -57,6 +58,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
     async (files, options, context) => {
       const scriptsByRoot = groupScriptsByProjectRoot(
         files,
+        context.workspaceRoot,
         !!definition.extraTargets
       );
       const projectRoots = [...scriptsByRoot.keys()];
@@ -126,15 +128,34 @@ interface ProjectScripts {
  */
 function groupScriptsByProjectRoot(
   files: readonly string[],
+  workspaceRoot: string,
   includeAllRoots: boolean
 ): Map<string, ProjectScripts> {
-  const markers = new Map<string, string>();
+  const handed = new Map<
+    string,
+    { packageJson?: string; projectJson?: string }
+  >();
   const scripts: string[] = [];
   for (const file of files) {
-    if (PROJECT_MARKERS.includes(basename(file))) {
-      markers.set(dirname(file), file);
-    } else {
+    const name = basename(file);
+    if (!PROJECT_MARKERS.includes(name)) {
       scripts.push(file);
+      continue;
+    }
+    const dir = dirname(file);
+    const entry = handed.get(dir) ?? {};
+    entry[name === 'project.json' ? 'projectJson' : 'packageJson'] = file;
+    handed.set(dir, entry);
+  }
+  // A package.json without a name cannot be a project on its own: nx has no
+  // name to give it and rejects the graph, so `{"type":"module"}` beside
+  // scripts is not a root.
+  const markers = new Map<string, string>();
+  for (const [dir, { packageJson, projectJson }] of handed) {
+    if (projectJson) {
+      markers.set(dir, projectJson);
+    } else if (namesProject(join(workspaceRoot, packageJson))) {
+      markers.set(dir, packageJson);
     }
   }
 
@@ -158,6 +179,14 @@ function groupScriptsByProjectRoot(
     byRoot.get(dir).scripts.push(script);
   }
   return byRoot;
+}
+
+function namesProject(packageJsonPath: string): boolean {
+  try {
+    return !!readJsonFile<{ name?: string }>(packageJsonPath).name;
+  } catch {
+    return false;
+  }
 }
 
 interface ClaimedScript {

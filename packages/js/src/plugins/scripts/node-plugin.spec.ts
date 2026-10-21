@@ -42,7 +42,7 @@ describe('@nx/js/node', () => {
   it('should only claim node shebangs', async () => {
     const targets = await targetsFor(
       {
-        'package.json': '{}',
+        'package.json': '{ "name": "root" }',
         'scripts/a.js': '#!/usr/bin/env node\n',
         'scripts/b.ts': '#!/usr/bin/env -S npx tsx\n',
       },
@@ -56,7 +56,7 @@ describe('@nx/js/node', () => {
   it('should infer serve from the header @nx/node:application writes', async () => {
     const targets = await targetsFor(
       {
-        'apps/api/package.json': '{}',
+        'apps/api/package.json': '{ "name": "api" }',
         'apps/api/src/main.ts':
           '#!/usr/bin/env node\n// @nx-target-name: serve\nconsole.log("hi");\n',
       },
@@ -142,7 +142,10 @@ describe('@nx/js/node', () => {
   it('should prefer a script target over a bin with the same name', async () => {
     const targets = await targetsFor(
       {
-        'package.json': JSON.stringify({ bin: { release: './dist/r.js' } }),
+        'package.json': JSON.stringify({
+          name: 'root',
+          bin: { release: './dist/r.js' },
+        }),
         'scripts/release.mjs': '#!/usr/bin/env node\n',
       },
       '.'
