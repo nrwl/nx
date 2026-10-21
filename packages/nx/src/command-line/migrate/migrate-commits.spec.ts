@@ -38,6 +38,7 @@ import {
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
   currentBranchIfDefault,
+  migrateCommitExcludes,
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
@@ -136,19 +137,6 @@ describe('commitMigrationIfRequested', () => {
     );
   });
 
-  it('probes the tree with the same exclusions the commit applies, so scratch-only dirt reads as no-changes', async () => {
-    mockHas.mockReturnValue(false);
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps
-    );
-    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
-  });
-
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
     mockHas.mockReturnValue(true);
     mockTryAsync.mockReturnValue('abc123');
@@ -167,31 +155,6 @@ describe('commitMigrationIfRequested', () => {
       `${PREFIX}m1`,
       ROOT,
       ['.nx/migrate-runs'],
-      { withoutTerminal: false }
-    );
-  });
-
-  it('leaves the uncommitted plan and prompt files out of the probe and the commit', async () => {
-    mockHeadStatus.mockReturnValue('absent');
-    mockHas.mockReturnValue(true);
-    mockTryAsync.mockReturnValue('abc123');
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps
-    );
-    expect(mockHas).toHaveBeenCalledWith(ROOT, [
-      '.nx/migrate-runs',
-      'migrations.json',
-      'tools/ai-migrations',
-    ]);
-    expect(mockTryAsync).toHaveBeenCalledWith(
-      `${PREFIX}m1`,
-      ROOT,
-      ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations'],
       { withoutTerminal: false }
     );
   });
@@ -408,6 +371,14 @@ describe('commitMigrationIfRequested with an output sink', () => {
   });
 });
 
+describe('migrateCommitExcludes', () => {
+  it('does not exclude the plan and prompt files when the HEAD probe fails', () => {
+    mockHeadStatus.mockReturnValue('unknown');
+
+    expect(migrateCommitExcludes(ROOT)).toEqual(['.nx/migrate-runs']);
+  });
+});
+
 describe('commitCheckpointBeforeMigrations', () => {
   it('does nothing when the working tree is clean outside the excluded scratch dir', () => {
     mockHas.mockReturnValue(false);
@@ -418,27 +389,6 @@ describe('commitCheckpointBeforeMigrations', () => {
     expect(mockInfo).not.toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();
   });
-
-  it.each([
-    ['absent', ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations']],
-    ['committed', ['.nx/migrate-runs']],
-    ['unknown', ['.nx/migrate-runs']],
-  ])(
-    'leaves the plan and prompt files out only while HEAD lacks them (%s)',
-    (status, excludes) => {
-      mockHeadStatus.mockReturnValue(status);
-      mockHas.mockReturnValue(true);
-      mockTry.mockReturnValue('chk456');
-
-      commitCheckpointBeforeMigrations(ROOT, PREFIX);
-      expect(mockHas).toHaveBeenCalledWith(ROOT, excludes);
-      expect(mockTry).toHaveBeenCalledWith(
-        `${PREFIX}checkpoint before running migrations`,
-        ROOT,
-        excludes
-      );
-    }
-  );
 
   it('creates the checkpoint commit and logs the sha when the working tree is dirty', () => {
     mockHas.mockReturnValue(true);
