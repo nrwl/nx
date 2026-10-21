@@ -42,7 +42,7 @@ describe('@nx/js/node', () => {
   it('should only claim node shebangs', async () => {
     const targets = await targetsFor(
       {
-        'package.json': '{ "name": "root" }',
+        'package.json': '{ "name": "root", "nx": {} }',
         'scripts/a.js': '#!/usr/bin/env node\n',
         'scripts/b.ts': '#!/usr/bin/env -S npx tsx\n',
       },
@@ -56,6 +56,8 @@ describe('@nx/js/node', () => {
   it('should infer serve from the header @nx/node:application writes', async () => {
     const targets = await targetsFor(
       {
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["apps/*"] }',
         'apps/api/package.json': '{ "name": "api" }',
         'apps/api/src/main.ts':
           '#!/usr/bin/env node\n// @nx-target-name: serve\nconsole.log("hi");\n',
@@ -75,6 +77,8 @@ describe('@nx/js/node', () => {
   it('should infer bin targets', async () => {
     const targets = await targetsFor(
       {
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["packages/*"] }',
         'packages/cli/package.json': JSON.stringify({
           name: '@proj/cli',
           bin: { cli: './bin/cli.js', 'cli-dist': './dist/cli.js' },
@@ -126,6 +130,8 @@ describe('@nx/js/node', () => {
   it('should infer a string bin named after the unscoped package, with no scripts beside it', async () => {
     const targets = await targetsFor(
       {
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["packages/*"] }',
         'packages/tool/package.json': JSON.stringify({
           name: '@proj/tool',
           bin: 'dist/index.js',
@@ -144,6 +150,7 @@ describe('@nx/js/node', () => {
       {
         'package.json': JSON.stringify({
           name: 'root',
+          nx: {},
           bin: { release: './dist/r.js' },
         }),
         'scripts/release.mjs': '#!/usr/bin/env node\n',

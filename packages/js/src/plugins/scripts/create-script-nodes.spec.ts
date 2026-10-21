@@ -56,7 +56,7 @@ describe('createScriptNodes', () => {
 
   it('should not treat specs, tests, stories or typings as scripts', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/seed.ts': '#!/usr/bin/env node\n',
       'scripts/seed.spec.ts': '#!/usr/bin/env node\n',
       'scripts/seed.test.js': '#!/usr/bin/env node\n',
@@ -69,7 +69,7 @@ describe('createScriptNodes', () => {
 
   it('should infer a target per claimed script in its nearest project', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {}, "workspaces": ["tools/*"] }',
       'tools/release/package.json': '{ "name": "release" }',
       'tools/release/scripts/publish.ts':
         '#!/usr/bin/env -S node --enable-source-maps\n',
@@ -139,7 +139,7 @@ describe('createScriptNodes', () => {
   it('should not reuse cached targets when the matched scripts change', async () => {
     process.env.NX_CACHE_PROJECT_GRAPH = 'true';
     await tempFs.createFiles({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/a.js': '#!/usr/bin/env node\n',
       'scripts/b.js': '#!/usr/bin/env node\n',
     });
@@ -163,7 +163,7 @@ describe('createScriptNodes', () => {
   it('should not reuse cached targets when a script header changes', async () => {
     process.env.NX_CACHE_PROJECT_GRAPH = 'true';
     const before = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name: seed\n',
     });
 
@@ -183,19 +183,25 @@ describe('createScriptNodes', () => {
     expect(Object.keys(after[0][1].projects['.'].targets)).toEqual(['reseed']);
   });
 
-  it('should not treat a package.json without a name as a project root', async () => {
+  it('should treat a package.json as a project root only where nx does', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json':
+        '{ "name": "root", "nx": {}, "workspaces": ["tools/esm"] }',
+      // Outside the workspaces, no project.json: not a project, so its script
+      // belongs to the root.
       'tools/scripts/package.json': '{ "type": "module" }',
       'tools/scripts/release.js': '#!/usr/bin/env node\n',
       'tools/named/package.json': '{ "type": "module" }',
       'tools/named/project.json': '{}',
       'tools/named/gen.js': '#!/usr/bin/env node\n',
+      'tools/esm/package.json': '{ "type": "module" }',
+      'tools/esm/run.js': '#!/usr/bin/env node\n',
     });
 
     expect(results.map(([, r]) => Object.keys(r.projects))).toEqual([
       ['.'],
       ['tools/named'],
+      ['tools/esm'],
     ]);
     expect(Object.keys(results[0][1].projects['.'].targets)).toEqual([
       'release',
@@ -203,11 +209,14 @@ describe('createScriptNodes', () => {
     expect(Object.keys(results[1][1].projects['tools/named'].targets)).toEqual([
       'gen',
     ]);
+    expect(Object.keys(results[2][1].projects['tools/esm'].targets)).toEqual([
+      'run',
+    ]);
   });
 
   it('should disambiguate scripts that share a name', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/a/build.js': '#!/usr/bin/env node\n',
       'scripts/b/build.js': '#!/usr/bin/env node\n',
       'scripts/c/run.js': '#!/usr/bin/env node\n// @nx-target-name: build\n',
@@ -223,7 +232,7 @@ describe('createScriptNodes', () => {
   it('should not watch when watch is false', async () => {
     const results = await run(
       {
-        'package.json': '{ "name": "root" }',
+        'package.json': '{ "name": "root", "nx": {} }',
         'scripts/seed.js': '#!/usr/bin/env node\n',
       },
       { watch: false }
@@ -239,7 +248,7 @@ describe('createScriptNodes', () => {
 
   it('should run claimed scripts in watch mode by default', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'src/main.ts': '#!/usr/bin/env node\n// @nx-target-name: serve\n',
     });
 
@@ -265,7 +274,7 @@ describe('createScriptNodes', () => {
 
   it('should quote script paths the shell would split', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/my tool.js': '#!/usr/bin/env node\n',
     });
 
@@ -276,7 +285,7 @@ describe('createScriptNodes', () => {
 
   it('should warn and fall back to the file name on an invalid directive', async () => {
     const results = await run({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name:\n',
     });
 

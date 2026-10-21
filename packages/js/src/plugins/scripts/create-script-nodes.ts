@@ -5,6 +5,8 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import {
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
   calculateHashesForCreateNodes,
   combineGlobPatterns,
   emitPluginWorkerLog,
@@ -144,14 +146,15 @@ function groupScriptsByProjectRoot(
     entry[name === 'project.json' ? 'projectJson' : 'packageJson'] = file;
     handed.set(dir, entry);
   }
-  // A package.json without a name cannot be a project on its own: nx has no
-  // name to give it and rejects the graph, so `{"type":"module"}` beside
-  // scripts is not a root.
+  // A package.json is a project root only where nx's package-json plugin makes
+  // one: in the package manager workspaces, or beside a project.json. Nothing
+  // names any other, and nx rejects a project without a name.
+  const inWorkspaces = isInPackageManagerWorkspaces(workspaceRoot);
   const markers = new Map<string, string>();
   for (const [dir, { packageJson, projectJson }] of handed) {
     if (projectJson) {
       markers.set(dir, projectJson);
-    } else if (namesProject(join(workspaceRoot, packageJson))) {
+    } else if (inWorkspaces(packageJson)) {
       markers.set(dir, packageJson);
     }
   }
@@ -178,12 +181,17 @@ function groupScriptsByProjectRoot(
   return byRoot;
 }
 
-function namesProject(packageJsonPath: string): boolean {
-  try {
-    return !!readJsonFile<{ name?: string }>(packageJsonPath).name;
-  } catch {
-    return false;
+function isInPackageManagerWorkspaces(
+  workspaceRoot: string
+): (packageJsonPath: string) => boolean {
+  if (process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true') {
+    return () => true;
   }
+  return buildPackageJsonWorkspacesMatcher(
+    buildPackageJsonPatterns(workspaceRoot, (file) =>
+      readJsonFile(join(workspaceRoot, file))
+    )
+  );
 }
 
 interface ClaimedScript {

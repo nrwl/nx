@@ -38,6 +38,7 @@ describe('@nx/js/tsx', () => {
     const targets = await targetsFor({
       'package.json': JSON.stringify({
         name: 'root',
+        nx: {},
         bin: { cli: './dist/cli.js' },
       }),
       'scripts/gen.ts': '#!/usr/bin/env -S npx tsx\n',
@@ -51,7 +52,7 @@ describe('@nx/js/tsx', () => {
 
   it('should put watch before shebang flags', async () => {
     const targets = await targetsFor({
-      'package.json': '{ "name": "root" }',
+      'package.json': '{ "name": "root", "nx": {} }',
       'scripts/dev.ts': '#!/usr/bin/env -S tsx --env-file=.env\n',
     });
 
