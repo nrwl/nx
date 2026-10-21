@@ -1,11 +1,9 @@
 import {
-  type ExpandedPluginConfiguration,
   joinPathFragments,
   readNxJson,
   type Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { findMatchingConfigFiles } from '@nx/devkit/internal';
 import type { NormalizedSchema } from './normalized-schema';
 
 /**
@@ -21,49 +19,20 @@ export function addScriptServe(tree: Tree, options: NormalizedSchema): void {
   );
   const header = `#!/usr/bin/env ${runtime}\n// @nx-target-name: serve\n`;
   tree.write(mainFile, header + tree.read(mainFile, 'utf-8'));
-  registerScriptPlugin(
-    tree,
-    `@nx/js/${runtime}`,
-    mainFile,
-    // Written later by addProject.
-    joinPathFragments(
-      options.appProjectRoot,
-      options.useProjectJson ? 'project.json' : 'package.json'
-    )
-  );
+  registerScriptPlugin(tree, `@nx/js/${runtime}`);
 }
 
-function registerScriptPlugin(
-  tree: Tree,
-  plugin: string,
-  mainFile: string,
-  marker: string
-): void {
+/** Registers the plugin once; an existing entry, however scoped, is the user's. */
+function registerScriptPlugin(tree: Tree, plugin: string): void {
   const nxJson = readNxJson(tree) ?? {};
   nxJson.plugins ??= [];
-
-  type Registration = ExpandedPluginConfiguration<{ watch?: boolean }>;
-  const registrations: Registration[] = nxJson.plugins
-    .map((p) => (typeof p === 'string' ? { plugin: p } : p))
-    .filter((p): p is Registration => p.plugin === plugin);
-  // The plugin finds projects through the markers it is handed, so an entry
-  // covers the app only when it sees the main file and the marker. Later
-  // entries take precedence, so the last one that covers it decides whether
-  // serve watches.
-  const last = [...registrations]
-    .reverse()
-    .find(
-      (p) =>
-        findMatchingConfigFiles([mainFile, marker], p.include, p.exclude)
-          .length === 2
-    );
-  if (last && last.options?.watch !== false) {
+  if (
+    nxJson.plugins.some(
+      (p) => (typeof p === 'string' ? p : p.plugin) === plugin
+    )
+  ) {
     return;
   }
-  // An unscoped entry would undo the user's existing include/exclude or
-  // `watch: false`, so scope it to this app in that case.
-  nxJson.plugins.push(
-    registrations.length ? { plugin, include: [marker, mainFile] } : plugin
-  );
+  nxJson.plugins.push(plugin);
   updateNxJson(tree, nxJson);
 }

@@ -860,17 +860,13 @@ describe('app', () => {
       );
     });
 
-    it('should scope a registration to each app when @nx/js/tsx is already scoped', async () => {
-      updateNxJson(tree, {
-        ...readNxJson(tree),
-        plugins: [{ plugin: '@nx/js/tsx', include: ['tools/**/*'] }],
-      });
-      await applicationGenerator(tree, {
-        directory: '.',
-        name: 'root-app',
-        e2eTestRunner: 'none',
-        skipFormat: true,
-      });
+    it('should leave an existing @nx/js/tsx registration alone, however scoped', async () => {
+      const scoped = {
+        plugin: '@nx/js/tsx',
+        include: ['tools/**/*'],
+        options: { watch: false },
+      };
+      updateNxJson(tree, { ...readNxJson(tree), plugins: [scoped] });
       await applicationGenerator(tree, {
         directory: 'myapp',
         e2eTestRunner: 'none',
@@ -881,14 +877,7 @@ describe('app', () => {
         readNxJson(tree).plugins.filter(
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
-      ).toEqual([
-        { plugin: '@nx/js/tsx', include: ['tools/**/*'] },
-        { plugin: '@nx/js/tsx', include: ['project.json', 'src/main.ts'] },
-        {
-          plugin: '@nx/js/tsx',
-          include: ['myapp/project.json', 'myapp/src/main.ts'],
-        },
-      ]);
+      ).toEqual([scoped]);
     });
 
     it('should reuse an unscoped @nx/js/tsx', async () => {
@@ -903,70 +892,6 @@ describe('app', () => {
           (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
         )
       ).toEqual(['@nx/js/tsx']);
-    });
-
-    it('should reuse the last registration that sees the main file and its project marker', async () => {
-      const scoped = {
-        plugin: '@nx/js/tsx',
-        include: ['tools/**/*'],
-        options: { watch: false },
-      };
-      const later = { plugin: '@nx/js/tsx', include: ['myapp/**/*'] };
-      updateNxJson(tree, { ...readNxJson(tree), plugins: [scoped, later] });
-      await applicationGenerator(tree, {
-        directory: 'myapp',
-        skipFormat: true,
-      });
-
-      expect(
-        readNxJson(tree).plugins.filter(
-          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
-        )
-      ).toEqual([scoped, later]);
-    });
-
-    it('should scope a registration to the app when the last match misses its project marker', async () => {
-      // Sees src/main.ts but not myapp/project.json, so the plugin would be
-      // handed no marker for the app.
-      const scriptsOnly = { plugin: '@nx/js/tsx', include: ['**/*.ts'] };
-      updateNxJson(tree, { ...readNxJson(tree), plugins: [scriptsOnly] });
-      await applicationGenerator(tree, {
-        directory: 'myapp',
-        skipFormat: true,
-      });
-
-      expect(
-        readNxJson(tree).plugins.filter(
-          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
-        )
-      ).toEqual([
-        scriptsOnly,
-        {
-          plugin: '@nx/js/tsx',
-          include: ['myapp/project.json', 'myapp/src/main.ts'],
-        },
-      ]);
-    });
-
-    it('should scope a registration to the app when the last match disables watch', async () => {
-      const noWatch = { plugin: '@nx/js/tsx', options: { watch: false } };
-      updateNxJson(tree, { ...readNxJson(tree), plugins: [noWatch] });
-      await applicationGenerator(tree, {
-        directory: 'myapp',
-        skipFormat: true,
-      });
-
-      expect(
-        readNxJson(tree).plugins.filter(
-          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
-        )
-      ).toEqual([
-        noWatch,
-        {
-          plugin: '@nx/js/tsx',
-          include: ['myapp/project.json', 'myapp/src/main.ts'],
-        },
-      ]);
     });
 
     it('should keep the @nx/js:node serve target for webpack', async () => {
@@ -1519,7 +1444,7 @@ describe('app', () => {
       expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
     });
 
-    it('should register the node plugin when an existing one excludes the app', async () => {
+    it('should leave an existing @nx/js/node registration alone when it excludes the app', async () => {
       updateNxJson(tree, {
         ...readNxJson(tree),
         plugins: [{ plugin: '@nx/js/node', exclude: ['apps/**'] }],
@@ -1533,15 +1458,9 @@ describe('app', () => {
 
       expect(
         readNxJson(tree).plugins.filter(
-          (p) => typeof p !== 'string' && p.plugin === '@nx/js/node'
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/node'
         )
-      ).toEqual([
-        { plugin: '@nx/js/node', exclude: ['apps/**'] },
-        {
-          plugin: '@nx/js/node',
-          include: ['apps/api/package.json', 'apps/api/src/main.ts'],
-        },
-      ]);
+      ).toEqual([{ plugin: '@nx/js/node', exclude: ['apps/**'] }]);
     });
 
     it('should use the target name of the rolldown registration that matches the app', async () => {
