@@ -122,11 +122,16 @@
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
       }
     },
-    "build": {
-      "dependsOn": ["^build", "typecheck", "build-base"],
-      "inputs": ["production", "^production"],
-      "cache": true
-    },
+    "build": [
+      {
+        "filter": {
+          "projects": ["*", "!MsbuildAnalyzer*"]
+        },
+        "dependsOn": ["^build", "typecheck", "build-base"],
+        "inputs": ["production", "^production"],
+        "cache": true
+      }
+    ],
     "@nx/esbuild:esbuild": {
       "cache": true,
       "dependsOn": ["^build", "typecheck", "build-base"],
@@ -159,6 +164,9 @@
     },
     "test": [
       {
+        "filter": {
+          "projects": ["*", "!MsbuildAnalyzer*"]
+        },
         "dependsOn": ["test-native", "build-native", "^build-native"]
       },
       {
@@ -357,15 +365,7 @@
     },
     {
       "plugin": "@nx/dotnet",
-      "exclude": ["examples/**/*"],
-      "options": {
-        "build": {
-          "targetName": "build:dotnet"
-        },
-        "test": {
-          "targetName": "test-native"
-        }
-      }
+      "exclude": ["examples/**/*"]
     },
     {
       "plugin": "@nx/storybook/plugin",
