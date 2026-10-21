@@ -214,23 +214,17 @@ To view inferred tasks for a project, open the [project details view](/docs/feat
 
 ## Structured .NET project metadata
 
-In addition to inferred tasks, the plugin publishes evaluated MSBuild facts about each project as
-structured, namespaced metadata under `metadata.dotnet` in the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace)
-and the [project graph API](/docs/reference/core-api/devkit/documents/ProjectGraph). This metadata
-reflects the project as MSBuild actually evaluated it — including every target framework of a
-multi-targeted project — rather than re-parsing the project file's XML.
+Read evaluated MSBuild facts under `metadata.dotnet` in the project details view
+or through the [project graph API](/docs/reference/core-api/devkit/documents/ProjectGraph).
+Each target framework has its own facts and capabilities, including conditional MSBuild properties
+and package references.
+Import `DotnetProjectMetadata`, `DotnetTargetFrameworkMetadata`, and `DotnetCapabilities` from
+`@nx/dotnet` for typed consumption.
 
 ```json
 {
   "dotnet": {
     "packageId": "MyCompany.MyLibrary",
-    "capabilities": {
-      "test": false,
-      "executable": false,
-      "packable": true,
-      "publishable": false,
-      "tool": false
-    },
     "targetFrameworks": [
       {
         "packageId": "MyCompany.MyLibrary",
@@ -267,25 +261,24 @@ multi-targeted project — rather than re-parsing the project file's XML.
 }
 ```
 
-- **`packageId`** — the project's evaluated NuGet package identity (`PackageId`, falling back to
-  `AssemblyName` as MSBuild itself does), set at the project level only when every evaluated
-  target framework agrees on it. It's omitted when no target framework evaluates one, or when
-  they disagree — e.g. a conditional `PackageId` that varies per `TargetFramework` — since a
-  single project-level value would misrepresent one of the frameworks; check each entry's own
-  `packageId` in `targetFrameworks` in that case.
-- **`capabilities`** — project-level capabilities, aggregated across every target framework:
-  - `test` — the project opts in via `IsTestProject` or references `Microsoft.NET.Test.Sdk`/`Microsoft.Testing.*`.
-  - `executable` — the evaluated `OutputType` is `Exe`.
-  - `packable` — the evaluated `IsPackable` (defaults to `true`).
-  - `publishable` — the evaluated `IsPublishable` (falls back to `executable` when unset).
-  - `tool` — the evaluated `PackAsTool`.
-- **`targetFrameworks`** — one entry per evaluated target framework (in declared `TargetFrameworks`
-  order for multi-targeted projects), each with its own evaluated `packageId`, framework/platform
-  identifiers, evaluated `RuntimeIdentifier`/`RuntimeIdentifiers`, and its own (non-aggregated)
-  capabilities — a project can be, for example, a test project on one target framework only.
+`packageId` is the evaluated NuGet package identity, falling back to `AssemblyName` when unset.
+The project-level value is present only when the target frameworks that evaluate an identity agree.
+If conditional identities disagree, read `packageId` from each entry in `targetFrameworks`.
 
-These capabilities are informational: the plugin does not use them to infer a project `type`, apply
-tags, or generate additional targets.
+`targetFrameworks` contains one entry per evaluated target framework in declared order.
+Each entry includes framework and platform identifiers, `RuntimeIdentifier`, the `RuntimeIdentifiers`
+list, and these capabilities:
+
+- `test` uses the same detection as target inference, including `IsTestProject`,
+  `IsTestingPlatformApplication`, and test SDK package references.
+  An explicit `IsTestProject=false` suppresses the package-reference fallback.
+- `executable` is `true` when `OutputType` is `Exe`.
+- `packable` reads `IsPackable`, defaulting to `true` when unset.
+- `publishable` reads `IsPublishable`, falling back to `executable` when unset.
+- `tool` reads `PackAsTool`.
+
+Capabilities belong only to each target framework.
+They don't infer a project `type`, apply tags, or generate additional targets.
 
 ## @nx/dotnet configuration
 

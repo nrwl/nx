@@ -11,7 +11,7 @@ namespace MsbuildAnalyzer.Tests;
 /// per-target-framework grouping, and public JSON serialization — against an actual temporary
 /// multi-targeted project on disk. This complements <see cref="DotnetMetadataBuilderTests"/>,
 /// which drives the pure builder directly with plain dictionaries and does not exercise MSBuild
-/// evaluation, <c>Analyzer.CollectProperties</c>'s allow-list, or serialization at all.
+/// evaluation, property collection, or serialization.
 /// </summary>
 public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
 {
@@ -86,14 +86,6 @@ public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
         // real MSBuild evaluation, not a test-supplied dictionary.
         Assert.Equal("Sample.MultiTarget.Package", dotnet!.PackageId);
 
-        // Project-level capabilities are the OR across both real evaluated target frameworks:
-        // net8.0 contributes Test, net9.0 contributes Executable.
-        Assert.True(dotnet.Capabilities.Test, "net8.0 evaluates a Microsoft.NET.Test.Sdk PackageReference.");
-        Assert.True(dotnet.Capabilities.Executable, "net9.0 evaluates OutputType=Exe.");
-        Assert.True(dotnet.Capabilities.Publishable);
-        Assert.True(dotnet.Capabilities.Packable, "IsPackable defaults to true when unevaluated.");
-        Assert.False(dotnet.Capabilities.Tool);
-
         Assert.Equal(2, dotnet.TargetFrameworks.Count);
         Assert.Equal(new[] { "net8.0", "net9.0" }, dotnet.TargetFrameworks.Select(f => f.TargetFramework));
 
@@ -102,6 +94,7 @@ public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
         Assert.False(net8.Capabilities.Executable, "net8.0 never sets OutputType.");
         Assert.True(net8.Capabilities.Publishable, "The evaluated IsPublishable is true independent of OutputType here.");
         Assert.True(net8.Capabilities.Packable);
+        Assert.False(net8.Capabilities.Tool);
         Assert.Equal("Sample.MultiTarget.Package", net8.PackageId);
         Assert.Equal(".NETCoreApp", net8.TargetFrameworkIdentifier);
 
@@ -110,6 +103,7 @@ public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
         Assert.True(net9.Capabilities.Executable, "net9.0 declares its own OutputType=Exe.");
         Assert.True(net9.Capabilities.Publishable);
         Assert.True(net9.Capabilities.Packable);
+        Assert.False(net9.Capabilities.Tool);
         Assert.Equal("Sample.MultiTarget.Package", net9.PackageId);
     }
 
@@ -141,17 +135,27 @@ public class DotnetMetadataAnalyzerEndToEndTests : IDisposable
 
         Assert.Equal("Sample.MultiTarget.Package", dotnet.GetProperty("packageId").GetString());
 
-        var capabilities = dotnet.GetProperty("capabilities");
-        Assert.True(capabilities.GetProperty("test").GetBoolean());
-        Assert.True(capabilities.GetProperty("executable").GetBoolean());
-        Assert.True(capabilities.GetProperty("packable").GetBoolean());
-        Assert.True(capabilities.GetProperty("publishable").GetBoolean());
-        Assert.False(capabilities.GetProperty("tool").GetBoolean());
+        Assert.Equal(
+            new[] { "packageId", "targetFrameworks" },
+            dotnet.EnumerateObject().Select(property => property.Name).OrderBy(name => name));
+        Assert.False(dotnet.TryGetProperty("capabilities", out _));
 
         var targetFrameworks = dotnet.GetProperty("targetFrameworks");
         Assert.Equal(2, targetFrameworks.GetArrayLength());
         Assert.Equal("net8.0", targetFrameworks[0].GetProperty("targetFramework").GetString());
         Assert.Equal("net9.0", targetFrameworks[1].GetProperty("targetFramework").GetString());
         Assert.Equal("Sample.MultiTarget.Package", targetFrameworks[0].GetProperty("packageId").GetString());
+        Assert.True(targetFrameworks[0].GetProperty("capabilities").GetProperty("test").GetBoolean());
+        Assert.False(targetFrameworks[0].GetProperty("capabilities").GetProperty("executable").GetBoolean());
+        Assert.False(targetFrameworks[1].GetProperty("capabilities").GetProperty("test").GetBoolean());
+        Assert.True(targetFrameworks[1].GetProperty("capabilities").GetProperty("executable").GetBoolean());
+
+        foreach (var framework in targetFrameworks.EnumerateArray())
+        {
+            var capabilities = framework.GetProperty("capabilities");
+            Assert.True(capabilities.GetProperty("packable").GetBoolean());
+            Assert.True(capabilities.GetProperty("publishable").GetBoolean());
+            Assert.False(capabilities.GetProperty("tool").GetBoolean());
+        }
     }
 }

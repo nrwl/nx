@@ -8,9 +8,7 @@ namespace MsbuildAnalyzer.Models;
 public record DotnetCapabilities
 {
     /// <summary>
-    /// True when the project opts in via <c>IsTestProject</c> or references the test SDK/platform
-    /// packages (<c>Microsoft.NET.Test.Sdk</c>, <c>Microsoft.Testing.*</c>) — the same signal the
-    /// analyzer uses to decide whether to emit a <c>test</c> target.
+    /// Uses the same evaluated-property and package-reference checks as test target inference.
     /// </summary>
     public bool Test { get; init; }
 
@@ -29,9 +27,7 @@ public record DotnetCapabilities
 
     /// <summary>
     /// True when the evaluated <c>IsPublishable</c> property allows <c>dotnet publish</c> to
-    /// produce output. Falls back to <see cref="Executable"/> when unevaluated, since the SDK
-    /// otherwise defaults <c>IsPublishable</c> based on whether the project produces an exe
-    /// (and explicitly turns it off for test projects).
+    /// produce output. Falls back to <see cref="Executable"/> when unevaluated.
     /// </summary>
     public bool Publishable { get; init; }
 
@@ -84,11 +80,7 @@ public record DotnetTargetFrameworkMetadata
 }
 
 /// <summary>
-/// Structured, evaluated .NET metadata for a project (<c>metadata.dotnet</c>): project-scoped
-/// capabilities aggregated across every evaluated target framework, plus the per-framework
-/// facts they were derived from. Built from the analyzer's already-grouped MSBuild inner-build
-/// nodes — this is intentionally a small, stable model rather than a mirror of every MSBuild
-/// property.
+/// Evaluated .NET metadata (<c>metadata.dotnet</c>) from the grouped MSBuild inner-build nodes.
 /// </summary>
 public record DotnetProjectMetadata
 {
@@ -101,11 +93,6 @@ public record DotnetProjectMetadata
     /// <see cref="TargetFrameworks"/> for the per-framework identity in that case.
     /// </summary>
     public string? PackageId { get; init; }
-
-    /// <summary>
-    /// Project-level capabilities: true if any evaluated target framework has the capability.
-    /// </summary>
-    public DotnetCapabilities Capabilities { get; init; } = new();
 
     /// <summary>
     /// Evaluated facts for each target framework, in <c>TargetFrameworks</c> declaration order.
