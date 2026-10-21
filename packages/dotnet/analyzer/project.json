@@ -4,6 +4,11 @@
   "targets": {
     "build": {
       "executor": "nx:noop",
+      "inputs": [
+        "...",
+        "{workspaceRoot}/Directory.Build.props",
+        "{workspaceRoot}/.editorconfig"
+      ],
       "dependsOn": ["build:dotnet"]
     },
     "run": {

@@ -87,7 +87,12 @@
     "lint": {
       "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
       "cache": true,
-      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+      "inputs": [
+        "{projectRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ]
     },
     "lint-pnpm-lock": {
       "cache": true,
