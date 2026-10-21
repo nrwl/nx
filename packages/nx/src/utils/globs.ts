@@ -13,3 +13,13 @@ export function isGlobPattern(pattern: string) {
   }
   return false;
 }
+
+const GLOB_METACHARACTERS = /[\\*?[\]{}()!]/g;
+
+/**
+ * Escapes glob syntax in a path so it matches only itself. Keep the
+ * character set in step with `escape_glob_literal` in `native/glob.rs`.
+ */
+export function escapeGlob(path: string): string {
+  return path.replace(GLOB_METACHARACTERS, '\\$&');
+}

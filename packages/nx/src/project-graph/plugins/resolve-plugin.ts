@@ -2,19 +2,15 @@ import * as path from 'node:path';
 import { existsSync } from 'node:fs';
 import { resolve as resolveExports } from 'resolve.exports';
 
-import {
-  getWorkspacePackagesMetadata,
-  matchImportToWildcardEntryPointsToProjectMap,
-} from '../../plugins/js/utils/packages';
 import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
-import { normalizePath } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
-  findProjectForPath,
-  ProjectRootMappings,
-} from '../utils/find-project-for-path';
+  createLocalPluginLookup,
+  findNxProjectForImportPath,
+  LocalPluginLookup,
+} from './local-plugin-project';
 import {
   clearProjectsWithoutPluginInferenceCache,
   retrieveProjectConfigurationsWithoutPluginInference,
@@ -35,6 +31,7 @@ type LocalPluginMatch = {
 const TS_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.cts', '.mts']);
 
 let projectsWithoutInference: Record<string, ProjectConfiguration>;
+let localPluginLookup: LocalPluginLookup | undefined;
 let projectsWithoutInferencePromise: Promise<
   typeof projectsWithoutInference
 > | null = null;
@@ -291,7 +288,13 @@ function lookupLocalPlugin(
   projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): LocalPluginMatch | null {
-  const match = findNxProjectForImportPath(importPath, projects, root);
+  localPluginLookup ??= createLocalPluginLookup(projects, root);
+  const match = findNxProjectForImportPath(
+    importPath,
+    projects,
+    localPluginLookup,
+    root
+  );
   if (!match) {
     return null;
   }
@@ -311,86 +314,6 @@ function lookupLocalPlugin(
   };
 }
 
-let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
-let wildcardEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
-function findNxProjectForImportPath(
-  importPath: string,
-  projects: Record<string, ProjectConfiguration>,
-  root = workspaceRoot
-): { projectConfig: ProjectConfiguration; tsPathFile?: string } | null {
-  const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
-  const possibleTsPaths =
-    tsConfigPaths[importPath]?.map((p) =>
-      normalizePath(path.relative(root, path.join(root, p)))
-    ) ?? [];
-
-  const projectRootMappings: ProjectRootMappings = new Map();
-  if (possibleTsPaths.length) {
-    const projectNameMap = new Map<string, ProjectConfiguration>();
-    for (const projectRoot in projects) {
-      const project = projects[projectRoot];
-      projectRootMappings.set(project.root, project.name);
-      projectNameMap.set(project.name, project);
-    }
-    for (const tsConfigPath of possibleTsPaths) {
-      const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
-      if (nxProject) {
-        return {
-          projectConfig: projectNameMap.get(nxProject)!,
-          tsPathFile: tsConfigPath,
-        };
-      }
-    }
-  }
-
-  if (!packageEntryPointsToProjectMap && !wildcardEntryPointsToProjectMap) {
-    ({
-      entryPointsToProjectMap: packageEntryPointsToProjectMap,
-      wildcardEntryPointsToProjectMap,
-    } = getWorkspacePackagesMetadata(projects));
-  }
-  if (packageEntryPointsToProjectMap[importPath]) {
-    return { projectConfig: packageEntryPointsToProjectMap[importPath] };
-  }
-
-  const project = matchImportToWildcardEntryPointsToProjectMap(
-    wildcardEntryPointsToProjectMap,
-    importPath
-  );
-  if (project) {
-    return { projectConfig: project };
-  }
-
-  logger.verbose(
-    'Unable to find local plugin',
-    possibleTsPaths,
-    projectRootMappings
-  );
-  return null;
-}
-
-let tsconfigPaths: Record<string, string[]>;
-
-function readTsConfigPaths(root: string = workspaceRoot) {
-  if (!tsconfigPaths) {
-    const tsconfigPath: string | null = ['tsconfig.base.json', 'tsconfig.json']
-      .map((x) => path.join(root, x))
-      .filter((x) => existsSync(x))[0];
-    if (!tsconfigPath) {
-      // Workspaces that wire up packages purely through package-manager
-      // workspaces + package.json exports have no root tsconfig — they simply
-      // have no tsconfig path mappings. Local plugin lookup must fall through
-      // to the package-metadata matching in `findNxProjectForImportPath`
-      // instead of failing the whole plugin load.
-      tsconfigPaths = {};
-      return tsconfigPaths;
-    }
-    const { compilerOptions } = readJsonFile(tsconfigPath);
-    tsconfigPaths = compilerOptions?.paths;
-  }
-  return tsconfigPaths ?? {};
-}
-
 /**
  * Drops the cached workspace-layout snapshot local-plugin resolution relies on
  * (project configs, tsconfig paths, package entry points). Kept for the life
@@ -400,8 +323,6 @@ function readTsConfigPaths(root: string = workspaceRoot) {
 export function resetResolvePluginCache(): void {
   projectsWithoutInference = undefined;
   projectsWithoutInferencePromise = null;
-  packageEntryPointsToProjectMap = undefined;
-  wildcardEntryPointsToProjectMap = undefined;
-  tsconfigPaths = undefined;
+  localPluginLookup = undefined;
   clearProjectsWithoutPluginInferenceCache();
 }

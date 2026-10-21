@@ -102,6 +102,11 @@ export { offsetFromRoot } from './src/utils/offset-from-root';
 /**
  * @category Utils
  */
+export { escapeGlob } from './src/utils/escape-glob';
+
+/**
+ * @category Utils
+ */
 export { convertNxGenerator } from './src/utils/invoke-nx-generator';
 
 /**

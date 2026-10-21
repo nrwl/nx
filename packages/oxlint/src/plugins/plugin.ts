@@ -10,6 +10,7 @@ import {
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
+  escapeGlob,
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
@@ -910,15 +911,17 @@ function getProjectUsingOxlintConfig(
       {
         fileset: `{projectRoot}/**/{${[...OXLINT_CONFIG_FILENAMES, ...IGNORE_FILENAMES, 'tsconfig*.json'].join(',')}}`,
       },
-      ...configInputs.map((config) => `{workspaceRoot}/${config}`),
-      ...[...jsPluginFiles].map((file) => `{workspaceRoot}/${file}`),
+      ...configInputs.map((config) => `{workspaceRoot}/${escapeGlob(config)}`),
+      ...[...jsPluginFiles].map(
+        (file) => `{workspaceRoot}/${escapeGlob(file)}`
+      ),
       // Oxlint layers ignore files from every ancestor of a linted file.
       // Declared even when absent, like the extends chain.
       ...ancestorIgnorePaths(projectRoot).map(
-        (file) => `{workspaceRoot}/${file}`
+        (file) => `{workspaceRoot}/${escapeGlob(file)}`
       ),
       ...tsconfigChainOutsideProjectRoot.map(
-        (file) => `{workspaceRoot}/${file}`
+        (file) => `{workspaceRoot}/${escapeGlob(file)}`
       ),
       { externalDependencies: ['oxlint'] },
     ],

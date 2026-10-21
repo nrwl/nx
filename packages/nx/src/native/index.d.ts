@@ -1317,6 +1317,8 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+  /** The workspace project a local `@nx/*` executor loads from. */
+  executorProject?: string
 }
 
 /** A representation of the invocation of an Executor */

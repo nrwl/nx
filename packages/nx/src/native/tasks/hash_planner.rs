@@ -17,7 +17,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use tracing::trace;
 
 use crate::native::glob::{
-    NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
+    NxGlobSet, NxGlobSetBuilder, escape_glob_literal, expand_literal_braces, normalize_glob,
+    partition_glob,
 };
 use crate::native::tasks::hashers::{
     OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
@@ -705,104 +706,99 @@ impl HashPlanner {
             return Ok(None);
         };
 
-        // we can only vouch for @nx packages's executor dependencies
-        // if it's "run commands" or third-party we skip traversing since we have no info what this command depends on
-        if target
-            .executor
-            .as_ref()
-            .is_some_and(|e| e.starts_with("@nrwl/") || e.starts_with("@nx/"))
-        {
-            let executor_package = target
-                .executor
-                .as_ref()
-                .unwrap()
-                .split(':')
-                .next()
-                .expect("Executors should always have a ':'");
-            let existing_packages =
-                find_external_dependency_node_names(executor_package, &self.project_graph);
-            if existing_packages.is_empty() {
-                // this usually happens because the executor was a local plugin.
-                // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
-                return Ok(None);
-            }
-            let mut external_deps = hashbrown::HashSet::new();
-            for existing_package in existing_packages {
-                trace!(
-                    "Add External Instruction for executor {existing_package}: {}",
-                    target.executor.as_ref().unwrap()
-                );
-                trace!(
-                    "Add External Instructions for dependencies of executor {existing_package}: {:?}",
-                    &external_deps_map[existing_package]
-                );
-                external_deps.insert(existing_package);
-                external_deps.extend(&external_deps_map[existing_package]);
-            }
-            Ok(Some(
-                external_deps
-                    .iter()
-                    .map(|s| HashInstruction::External(s.to_string()))
-                    .collect(),
-            ))
-        } else {
-            let mut external_deps = hashbrown::HashSet::new();
-            let mut has_external_deps = false;
-            for input in self_inputs {
-                match input {
-                    Input::ExternalDependency(deps) => {
-                        has_external_deps = true;
-                        for dep in deps.iter() {
-                            let external_node_names =
-                                find_external_dependency_node_names(dep, &self.project_graph);
-                            if external_node_names.is_empty() {
-                                if self.project_graph.nodes.contains_key(dep) {
-                                    let deps = self.project_graph.dependencies.get(project_name);
-                                    if deps.is_some_and(|deps| deps.contains(dep)) {
-                                        anyhow::bail!(
-                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs."
-                                        )
-                                    } else {
-                                        anyhow::bail!(
-                                            "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'"
-                                        )
-                                    }
-                                } else {
-                                    anyhow::bail!(
-                                        "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
-                                    )
-                                }
-                            }
-                            for external_node_name in external_node_names {
-                                trace!(
-                                    "Add External Instruction for External Input {external_node_name}: {}",
-                                    target.executor.as_ref().unwrap()
-                                );
-                                trace!(
-                                    "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
-                                    &external_deps_map[external_node_name]
-                                );
-                                external_deps.insert(external_node_name);
-                                external_deps.extend(&external_deps_map[external_node_name]);
-                            }
+        let mut external_deps = hashbrown::HashSet::new();
+        let mut declares_external_deps = false;
+        for input in self_inputs {
+            let Input::ExternalDependency(deps) = input else {
+                continue;
+            };
+            declares_external_deps = true;
+            for dep in deps.iter() {
+                let external_node_names =
+                    find_external_dependency_node_names(dep, &self.project_graph);
+                if external_node_names.is_empty() {
+                    if self.project_graph.nodes.contains_key(dep) {
+                        let deps = self.project_graph.dependencies.get(project_name);
+                        if deps.is_some_and(|deps| deps.contains(dep)) {
+                            anyhow::bail!(
+                                "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs."
+                            )
+                        } else {
+                            anyhow::bail!(
+                                "The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'"
+                            )
                         }
+                    } else {
+                        anyhow::bail!(
+                            "The externalDependency '{dep}' for '{project_name}:{target_name}' could not be found"
+                        )
                     }
-                    _ => continue,
+                }
+                for external_node_name in external_node_names {
+                    trace!(
+                        "Add External Instructions for External Input {external_node_name} of {project_name}:{target_name}: {:?}",
+                        &external_deps_map[external_node_name]
+                    );
+                    external_deps.insert(external_node_name);
+                    external_deps.extend(&external_deps_map[external_node_name]);
                 }
             }
-            if !external_deps.is_empty() {
-                Ok(Some(
-                    external_deps
-                        .iter()
-                        .map(|s| HashInstruction::External(s.to_string()))
-                        .collect(),
-                ))
-            } else if !has_external_deps {
-                Ok(Some(vec![HashInstruction::AllExternalDependencies]))
-            } else {
-                Ok(None)
-            }
         }
+
+        // Only @nx executors have a known package. Anything else could depend
+        // on any external, unless the target declares which ones it uses.
+        let Some(executor_package) = target
+            .executor
+            .as_deref()
+            .filter(|e| e.starts_with("@nrwl/") || e.starts_with("@nx/"))
+            .map(|e| {
+                e.split(':')
+                    .next()
+                    .expect("Executors should always have a ':'")
+            })
+        else {
+            return Ok(Some(if declares_external_deps {
+                external_instructions(external_deps)
+            } else {
+                vec![HashInstruction::AllExternalDependencies]
+            }));
+        };
+
+        let executor_nodes =
+            find_external_dependency_node_names(executor_package, &self.project_graph);
+        if !executor_nodes.is_empty() {
+            for executor_node in executor_nodes {
+                trace!(
+                    "Add External Instructions for executor {executor_node} of {project_name}:{target_name}: {:?}",
+                    &external_deps_map[executor_node]
+                );
+                external_deps.insert(executor_node);
+                external_deps.extend(&external_deps_map[executor_node]);
+            }
+            return Ok(Some(external_instructions(external_deps)));
+        }
+
+        // A local plugin's executor is workspace source, so its project's
+        // files stand in for the installed package's closure.
+        let mut instructions = external_instructions(external_deps);
+        if let Some((executor_project, executor_config)) = target
+            .executor_project
+            .as_ref()
+            .and_then(|name| self.project_graph.nodes.get_key_value(name))
+        {
+            trace!(
+                "Add Project File Instruction for local executor {executor_project} of {project_name}:{target_name}"
+            );
+            instructions.push(HashInstruction::ProjectFileSet(
+                executor_project.to_string(),
+                vec![resolve_tokens(
+                    "{projectRoot}/**/*",
+                    &executor_config.root,
+                    executor_project,
+                )],
+            ));
+        }
+        Ok(Some(instructions))
     }
 
     fn self_and_deps_inputs<'a>(
@@ -1893,22 +1889,35 @@ fn covered_by_native_instruction(glob: &str) -> bool {
         || ALWAYS_ON_FILES.contains(&path)
 }
 
-/// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
-/// For root-level projects (project_root == "."), strips `{projectRoot}/` instead of
-/// replacing with "." to avoid producing invalid paths like `./**/*`.
+/// Resolves `{projectRoot}` and `{projectName}` in a fileset pattern, escaped so
+/// a root like `app/(group)` matches only itself. One pass, so a substituted
+/// value is never read for tokens. A root-level project strips `{projectRoot}/`
+/// rather than producing `./**/*`.
 fn resolve_tokens(fileset: &str, project_root: &str, project_name: &str) -> String {
-    let resolved = if project_root == "." {
-        fileset.replace("{projectRoot}/", "")
-    } else {
-        fileset.replace("{projectRoot}", project_root)
+    let root_token = match project_root {
+        "." => "{projectRoot}/",
+        _ => "{projectRoot}",
     };
-    // Most patterns have no project-name token. Keep the first allocation in
-    // that case, preserving sequential substitution when the root adds a token.
-    if resolved.contains("{projectName}") {
-        resolved.replace("{projectName}", project_name)
-    } else {
-        resolved
+    let mut resolved = String::with_capacity(fileset.len());
+    let mut rest = fileset;
+    while let Some(start) = rest.find('{') {
+        resolved.push_str(&rest[..start]);
+        rest = &rest[start..];
+        if let Some(after) = rest.strip_prefix(root_token) {
+            if project_root != "." {
+                resolved.push_str(&escape_glob_literal(project_root));
+            }
+            rest = after;
+        } else if let Some(after) = rest.strip_prefix("{projectName}") {
+            resolved.push_str(&escape_glob_literal(project_name));
+            rest = after;
+        } else {
+            resolved.push('{');
+            rest = &rest[1..];
+        }
     }
+    resolved.push_str(rest);
+    resolved
 }
 
 /// Disk-backed globs are workspace-relative once resolved: `{workspaceRoot}/`
@@ -1922,6 +1931,13 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
             .map(str::to_string)
             .unwrap_or(resolved),
     }
+}
+
+fn external_instructions(external_deps: hashbrown::HashSet<&String>) -> Vec<HashInstruction> {
+    external_deps
+        .into_iter()
+        .map(|dep| HashInstruction::External(dep.to_string()))
+        .collect()
 }
 
 /// Without an exact `<pkg>`/`npm:<pkg>` node, every installed version of the
@@ -1951,6 +1967,7 @@ fn find_external_dependency_node_names<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::glob::{build_glob_set, fileset_patterns};
     use crate::native::project_graph::types::{ExternalNode, Project, Target};
     use crate::native::test_utils::edges_to;
 
@@ -2283,26 +2300,44 @@ mod tests {
     }
 
     #[test]
-    fn token_resolution_preserves_root_and_sequential_substitution() {
-        for (pattern, root, name) in [
-            ("!{projectRoot}/**/*", ".", "app"),
-            ("{projectRoot}", ".", "app"),
-            ("{workspaceRoot}/file", "libs/app", "app"),
+    fn token_resolution_escapes_the_substituted_root_and_name() {
+        for (pattern, root, name, resolved) in [
+            ("!{projectRoot}/**/*", ".", "app", "!**/*"),
+            ("{projectRoot}", ".", "app", "{projectRoot}"),
             (
-                "{projectRoot}/{projectName}/{projectRoot}",
-                "libs/{projectName}",
+                "{workspaceRoot}/file",
+                "libs/app",
                 "app",
+                "{workspaceRoot}/file",
             ),
-            ("{projectRoot}/{projectName}", "libs/app", "{projectRoot}"),
+            ("{projectRoot}/**/*", "libs/(g)", "app", r"libs/\(g\)/**/*"),
+            (
+                "{projectRoot}/{projectName}.ts",
+                "libs/a",
+                "[id]",
+                r"libs/a/\[id\].ts",
+            ),
+            (
+                "{projectRoot}/{projectName}",
+                "libs/{projectName}",
+                "{projectRoot}",
+                r"libs/\{projectName\}/\{projectRoot\}",
+            ),
         ] {
-            let old = if root == "." {
-                pattern.replace("{projectRoot}/", "")
-            } else {
-                pattern.replace("{projectRoot}", root)
-            }
-            .replace("{projectName}", name);
-            assert_eq!(resolve_tokens(pattern, root, name), old);
+            assert_eq!(resolve_tokens(pattern, root, name), resolved, "{pattern}");
         }
+    }
+
+    #[test]
+    fn a_project_root_with_glob_characters_matches_only_itself() {
+        let globs = fileset_patterns(&[resolve_tokens(
+            "{projectRoot}/**/*",
+            "packages/(group)/lib-a",
+            "lib-a",
+        )]);
+        let glob_set = build_glob_set(&globs).unwrap();
+        assert!(glob_set.is_match("packages/(group)/lib-a/src/index.ts"));
+        assert!(!glob_set.is_match("packages/group/lib-a/src/index.ts"));
     }
 
     #[test]
