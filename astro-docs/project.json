@@ -123,11 +123,6 @@
         "cwd": "astro-docs"
       }
     },
-    "test": {
-      "executor": "nx:noop",
-      "inputs": [],
-      "dependsOn": ["validate-links", "format"]
-    },
     "pw-e2e": {
       "dependsOn": ["serve"],
       "parallelism": true
