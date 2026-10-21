@@ -1187,7 +1187,8 @@ export interface ReadinessProbeConfig {
 /**
  * The `files` (workspace-relative) that start with `#!`, each with its header
  * (see `read_shebang_header`), read in parallel and sorted by path. Files that
- * cannot be read are left out.
+ * cannot be read are left out, as are entries that `join` would follow out of
+ * the root (rooted, drive-prefixed, or climbing with `..`).
  */
 export declare function readShebangHeaders(workspaceRoot: string, files: Array<string>): Array<ShebangFile>
 
