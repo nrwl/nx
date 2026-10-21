@@ -42,6 +42,9 @@ export type ScriptTargets = Record<string, TargetConfiguration>;
 /** Specs, tests, stories and typings are never scripts. */
 const SCRIPT_GLOB = '**/!(*.spec|*.test|*.stories|*.d).{js,cjs,mjs,ts,cts,mts}';
 const PROJECT_MARKERS = ['package.json', 'project.json'];
+// Bumped when an unchanged key maps to different targets, as when watch became
+// the default; the previous file would keep serving the old ones.
+const CACHE_VERSION = 'v2';
 
 export function createScriptNodes<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>
@@ -64,7 +67,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
       const cache = new PluginCache<ScriptTargets>(
         join(
           workspaceDataDirectory,
-          `${definition.cacheName}-${hashObject(options ?? {})}.hash`
+          `${definition.cacheName}-${CACHE_VERSION}-${hashObject(options ?? {})}.hash`
         )
       );
       try {
