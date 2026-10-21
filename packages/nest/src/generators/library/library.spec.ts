@@ -11,6 +11,13 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 
+const realNodeVersion = process.versions.node;
+const setNodeVersion = (version: string) =>
+  Object.defineProperty(process.versions, 'node', {
+    value: version,
+    configurable: true,
+  });
+
 describe('lib', () => {
   let tree: Tree;
 
@@ -403,10 +410,28 @@ describe('lib', () => {
       expect(tree.exists(`${'my-lib'}/jest.config.cts`)).toBeFalsy();
     });
 
-    it('should throw for jest on Nest 12', async () => {
+    afterEach(() => setNodeVersion(realNodeVersion));
+
+    it('should throw for jest on Nest 12 below Node 24.9', async () => {
+      setNodeVersion('22.12.0');
+
       await expect(
         libraryGenerator(tree, { directory: 'my-lib', unitTestRunner: 'jest' })
-      ).rejects.toThrow(/--unitTestRunner=vitest/);
+      ).rejects.toThrow(/requires Node\.js 24\.9\.0 or later/);
+    });
+
+    it('should set up jest for Nest 12 on Node 24.9+', async () => {
+      setNodeVersion('24.9.0');
+
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+        unitTestRunner: 'jest',
+      });
+
+      expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
+      expect(
+        readProjectConfiguration(tree, 'my-lib').targets.test.options.env
+      ).toEqual({ '...': true, NODE_OPTIONS: '--experimental-vm-modules' });
     });
 
     it('should default to jest on Nest 11', async () => {

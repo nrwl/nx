@@ -10,7 +10,11 @@ import {
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { assertSupportedNestJsVersion } from '../../utils/assert-supported-nestjs-version';
 import { assertVitestSupported } from '../../utils/assert-vitest-supported';
-import { assertJestSupported } from '../../utils/unit-test-runner';
+import {
+  assertJestSupported,
+  configureJestForEsmOnlyNestJs,
+  usesEsmOnlyNestJs,
+} from '../../utils/unit-test-runner';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import initGenerator from '../init/init';
 import {
@@ -61,6 +65,10 @@ export async function libraryGeneratorInternal(
   addExportsToBarrelFile(tree, options);
   updateTsConfig(tree, options);
   addProject(tree, options);
+  const jestTask =
+    options.unitTestRunner === 'jest' && usesEsmOnlyNestJs(tree)
+      ? configureJestForEsmOnlyNestJs(tree, options.projectName)
+      : () => {};
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -71,6 +79,7 @@ export async function libraryGeneratorInternal(
       jsLibraryTask,
       initTask,
       depsTask,
+      jestTask,
       () => {
         logShowProjectCommand(options.projectName);
       },

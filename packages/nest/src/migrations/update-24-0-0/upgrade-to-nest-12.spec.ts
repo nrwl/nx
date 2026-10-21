@@ -1,15 +1,20 @@
 import {
   addProjectConfiguration,
   readJson,
+  readProjectConfiguration,
   updateJson,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { typescriptVersion } from '@nx/js/internal';
-import { getCurrentNodeVersion } from './node-version';
 import migration from './upgrade-to-nest-12';
 
-vi.mock('./node-version', () => ({ getCurrentNodeVersion: vi.fn() }));
+const realNodeVersion = process.versions.node;
+const setNodeVersion = (version: string) =>
+  Object.defineProperty(process.versions, 'node', {
+    value: version,
+    configurable: true,
+  });
 
 const NEST_SPEC = `import { Test } from '@nestjs/testing';
 import { AppService } from './app.service';
@@ -27,7 +32,7 @@ describe('upgrade-to-nest-12 migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    vi.mocked(getCurrentNodeVersion).mockReturnValue('24.11.0');
+    setNodeVersion('24.11.0');
     updateJson(tree, 'package.json', (json) => ({
       ...json,
       dependencies: {
@@ -43,6 +48,8 @@ describe('upgrade-to-nest-12 migration', () => {
       },
     }));
   });
+
+  afterEach(() => setNodeVersion(realNodeVersion));
 
   function addNestProject(name: string, testRunner: 'jest' | 'vitest') {
     addProjectConfiguration(tree, name, { root: `apps/${name}` });
@@ -89,7 +96,7 @@ describe('upgrade-to-nest-12 migration', () => {
   });
 
   it('should keep Nest 11 when Jest tests Nest code on Node below 24.9', async () => {
-    vi.mocked(getCurrentNodeVersion).mockReturnValue('22.12.0');
+    setNodeVersion('22.12.0');
     addNestProject('api', 'jest');
     addNestProject('web-api', 'vitest');
 
@@ -133,21 +140,26 @@ describe('upgrade-to-nest-12 migration', () => {
     );
   });
 
-  it('should bump when Jest tests Nest code on Node 24.9+', async () => {
+  it('should set up Jest for Nest 12 when Jest tests Nest code on Node 24.9+', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies.jest = '~30.3.0';
+      return json;
+    });
     addNestProject('api', 'jest');
 
     const result = await migration(tree);
 
-    expect(readJson(tree, 'package.json').dependencies['@nestjs/core']).toBe(
-      '^12.0.1'
-    );
-    expect(result.agentContext).toContain(
-      'These projects test Nest code with Jest, which needs Node.js 24.9.0+ on NestJS 12: api'
-    );
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+    expect(dependencies['@nestjs/core']).toBe('^12.0.1');
+    expect(devDependencies.jest).toBe('^30.5.0');
+    expect(
+      readProjectConfiguration(tree, 'api').targets.test.options.env
+    ).toEqual({ '...': true, NODE_OPTIONS: '--experimental-vm-modules' });
+    expect(result.agentContext[1]).toContain(': api');
   });
 
   it('should bump when old Node only runs Jest for non-Nest projects', async () => {
-    vi.mocked(getCurrentNodeVersion).mockReturnValue('22.12.0');
+    setNodeVersion('22.12.0');
     addProjectConfiguration(tree, 'ui', { root: 'libs/ui' });
     tree.write('libs/ui/jest.config.cts', 'export default {};\n');
     tree.write('libs/ui/src/index.ts', "export const ui = 'ui';\n");

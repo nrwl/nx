@@ -2,7 +2,7 @@
 
 ## Overview
 
-The deterministic migration bumped the declared `@nestjs/*` core packages to `^12.0.1` and, when the workspace was on TypeScript 5, upgraded `typescript` to 6 because `@nestjs/schematics` 12 requires it. NestJS 12 ships every core package as ESM only. A CommonJS app loads them through `require(esm)`, which needs Node.js 20.19+ or 22.12+ to run the app. Jest loads them only on Node.js 24.9 or later and fails with `ERR_REQUIRE_ASYNC_MODULE` below that. The migration checked the Node.js version it ran on, `.nvmrc`, `.node-version` and `engines.node`, but it cannot see the Node.js version CI uses. This runbook covers that check and the source changes that need judgment. Do not change Nx target configuration or the webpack build setup.
+The deterministic migration bumped the declared `@nestjs/*` core packages to `^12.0.1` and, when the workspace was on TypeScript 5, upgraded `typescript` to 6 because `@nestjs/schematics` 12 requires it. NestJS 12 ships every core package as ESM only. A CommonJS app loads them through `require(esm)`, which needs Node.js 20.19+ or 22.12+ to run the app. Jest loads them only on Node.js 24.9 or later, with Jest 30.5+ and `--experimental-vm-modules`, so for each project that tests Nest code with Jest the migration upgraded `jest` to `^30.5.0` and set `NODE_OPTIONS=--experimental-vm-modules` in the `env` of the project's Jest target. The migration checked the Node.js version it ran on, `.nvmrc`, `.node-version` and `engines.node`, but it cannot see the Node.js version CI uses. This runbook covers that check and the source changes that need judgment. Do not change Nx target configuration or the webpack build setup.
 
 ## Pre-Migration Checklist
 
@@ -19,10 +19,12 @@ For each Jest-tested project listed in `impl.agentContext`, find every place its
 - Dockerfiles and dev container configs that run tests.
 - Version manager files the migration does not read, such as `.tool-versions` and `mise.toml`.
 
-If any of them runs these tests on a Node.js below 24.9, the bump leaves the workspace broken: the tests fail there with `ERR_REQUIRE_ASYNC_MODULE` or `SyntaxError: Unexpected token 'export'`. In that case, **revert to NestJS 11**:
+Also check how those places run the tests. A job that sets `NODE_OPTIONS` itself, or runs `jest` directly instead of through the Nx target, does not get `--experimental-vm-modules`. Add the flag to that job's `NODE_OPTIONS` (keeping its existing value), or run the tests through `nx test`.
+
+If any of them runs these tests on a Node.js below 24.9, the bump leaves the workspace broken: the tests fail there with `SyntaxError: Unexpected token 'export'` or a "could not be executed as CommonJS" error. In that case, **revert to NestJS 11**:
 
 1. Set every `@nestjs/*` package the migration bumped back to `^11.0.0` in `package.json` (or its catalog entry).
-2. Leave a `typescript` upgrade in place; TypeScript 6 works with NestJS 11.
+2. Remove the `NODE_OPTIONS` entry the migration added to each Jest target's `env`. Leave the `jest` and `typescript` upgrades in place; both work with NestJS 11.
 3. Install, and report to the user which CI job or file runs Node.js below 24.9, and that they can move those tests to Vitest (`nx g @nx/vitest:configuration <project>`, then replace `jest.*` calls with `vi.*`) or raise that Node.js version, then re-run the migration.
 
 Stop after reverting; skip the remaining steps.
@@ -56,11 +58,11 @@ Check `package.json` for each package below and follow the NestJS 12 migration g
 ## Post-Migration Validation
 
 1. Run typecheck on the Nest projects (`npx nx run-many -t typecheck -p <projects>`).
-2. Run their tests (`npx nx run-many -t test -p <projects>`). A Jest run that fails with `ERR_REQUIRE_ASYNC_MODULE` means it runs on Node.js below 24.9; go back to Step 1.
+2. Run their tests (`npx nx run-many -t test -p <projects>`). A Jest run that fails with `Unexpected token 'export'` means it runs on Node.js below 24.9 or without `--experimental-vm-modules`; go back to Step 1.
 3. Build and serve one app (`npx nx build <app>`, `npx nx serve <app>`) to confirm it starts on the workspace's Node.js.
 4. Fix failures caused by this migration and re-run until green.
 
 ## Nx-Specific Notes
 
-- New Nest projects generated on NestJS 12 use Vitest, and the `@nx/nest` generators reject `--unitTestRunner=jest` on NestJS 12. Existing Jest projects keep working on Node.js 24.9+.
+- New Nest projects generated on NestJS 12 use Vitest by default. `--unitTestRunner=jest` works on Node.js 24.9+ and sets up Jest the same way this migration does.
 - Keep the webpack build and `@nx/js:node` serve targets as they are; a CommonJS bundle loads NestJS 12 through `require(esm)`.
