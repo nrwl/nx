@@ -209,7 +209,11 @@ Module._load = function (request, parent, isMain) {
 };
 
 const indexModulePath = require.resolve('./native-bindings.js');
-delete require.cache[indexModulePath];
+// Absent when a `module.registerHooks()` hook makes node evaluate this file
+// with its internal CommonJS loader, as an ESM Playwright config does.
+if (require.cache) {
+  delete require.cache[indexModulePath];
+}
 // A direct re-export: node's CommonJS export lexer follows this form, so ESM
 // importers see the named exports. Assigning via a variable hides them.
 module.exports = require('./native-bindings.js');
