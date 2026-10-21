@@ -1,15 +1,15 @@
 import type { Tree } from '@nx/devkit';
-import { clean, coerce, major } from 'semver';
+import { coerce, major } from 'semver';
 import { getInstalledNestJsVersion, nestJsVersion } from './versions';
 
 const firstEsmOnlyNestJsMajor = 12;
 
-// An unparseable range (workspace:, catalog:) falls back to the latest major,
-// like `versions()` does.
+// A missing or unresolvable version (e.g. `workspace:`) falls back to the
+// latest major, like `versions()` does.
 function getNestJsMajor(tree: Tree): number {
-  const declared = getInstalledNestJsVersion(tree);
-  const version = declared && (clean(declared) ?? coerce(declared)?.version);
-  return major(version || coerce(nestJsVersion)!.version);
+  return major(
+    getInstalledNestJsVersion(tree) ?? coerce(nestJsVersion)!.version
+  );
 }
 
 /**
@@ -21,13 +21,14 @@ export function getDefaultUnitTestRunner(tree: Tree): 'jest' | 'vitest' {
 }
 
 export function assertJestSupported(tree: Tree): void {
-  if (getDefaultUnitTestRunner(tree) === 'jest') {
+  const nestJsMajor = getNestJsMajor(tree);
+  if (nestJsMajor < firstEsmOnlyNestJsMajor) {
     return;
   }
 
   throw new Error(
-    `Using jest with @nx/nest requires Nest ${firstEsmOnlyNestJsMajor - 1} or earlier, but this workspace uses Nest ${firstEsmOnlyNestJsMajor}.\n` +
-      `The jest setup that Nx generates cannot load @nestjs/testing ${firstEsmOnlyNestJsMajor}, which is ESM only, so the generated specs fail to run.\n` +
-      `Generate with "--unitTestRunner=vitest".`
+    `Using jest with @nx/nest requires Nest ${firstEsmOnlyNestJsMajor - 1} or earlier, but this workspace uses Nest ${nestJsMajor}.\n` +
+      `The jest setup that Nx generates cannot load @nestjs/testing ${firstEsmOnlyNestJsMajor} or later, which is ESM only, so the generated specs fail to run.\n` +
+      `Generate with "--unitTestRunner=vitest", or add "@nestjs/core@^${firstEsmOnlyNestJsMajor - 1}.0.0" to the workspace first to keep jest.`
   );
 }
