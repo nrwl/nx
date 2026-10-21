@@ -7,7 +7,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { join } from 'path';
-import { coerce, lt, minVersion, validRange } from 'semver';
+import { intersects, lt, minVersion, validRange } from 'semver';
 import { ensureTypescriptForNestSchematics } from '../../utils/ensure-typescript-for-schematics';
 import {
   configureJestForEsmOnlyNestJs,
@@ -39,7 +39,7 @@ const JEST_CONFIG_FILES = [
 ];
 const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
 const NEST_IMPORT = /(?:from\s+|require\(\s*|import\(\s*)['"]@nestjs\//;
-const RERUN_COMMAND = `npx nx migrate @nx/nest@${nxVersion} --from=@nx/nest@24.0.0-rc.0 --include=all && npx nx migrate --run-migration=@nx/nest:upgrade-to-nest-12`;
+const RERUN_COMMAND = `npx nx migrate @nx/nest@${nxVersion} --from=@nx/nest@24.0.0 --include=all && npx nx migrate --run-migration=@nx/nest:upgrade-to-nest-12`;
 
 type MigrationResult = {
   nextSteps: string[];
@@ -129,10 +129,14 @@ function findNodeVersionsBelowJestFloor(tree: Tree): string[] {
   if (lt(current, jestNodeFloor)) {
     found.push(`this migration runs on Node.js ${current}`);
   }
+  // Version managers resolve a partial version like `24` to the latest match.
   for (const file of ['.nvmrc', '.node-version']) {
-    const version = tree.exists(file) ? coerce(tree.read(file, 'utf-8')) : null;
-    if (version && lt(version, jestNodeFloor)) {
-      found.push(`\`${file}\` pins Node.js ${version.version}`);
+    const pinned = tree.exists(file) ? tree.read(file, 'utf-8').trim() : '';
+    if (
+      validRange(pinned) &&
+      !intersects(pinned, `>=${jestNodeFloor}`, { includePrerelease: true })
+    ) {
+      found.push(`\`${file}\` pins Node.js ${pinned}`);
     }
   }
   const engines = readJson(tree, 'package.json').engines?.node;

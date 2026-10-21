@@ -19,26 +19,30 @@ Many conventions and best practices used in Angular applications can be also be 
 
 ## Requirements
 
-The `@nx/nest` plugin supports the following NestJS package versions.
+The `@nx/nest` plugin supports the following NestJS package versions. NestJS 12 requires Nx 24.1 or later.
 
 | Package        | Supported Versions                |
 | -------------- | --------------------------------- |
 | `@nestjs/core` | ^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0 |
 
-The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Fresh installs default to NestJS v12.
+The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Starting with Nx 24.1, fresh installs default to NestJS v12.
 
-| Nx Version     | Default NestJS Version |
-| -------------- | ---------------------- |
-| 23.x (current) | ^12.0.0                |
-| 22.x           | ^11.0.0                |
-| 21.x           | ^11.0.0                |
-| 20.x           | ^10.0.0                |
+| Nx Version      | Default NestJS Version |
+| --------------- | ---------------------- |
+| 24.1+ (current) | ^12.0.0                |
+| 24.0.x          | ^11.0.0                |
+| 23.x            | ^11.0.0                |
+| 22.x            | ^11.0.0                |
+| 21.x            | ^11.0.0                |
+| 20.x            | ^10.0.0                |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
 Version 12 of `@nestjs/schematics` requires TypeScript 6 or later. If your workspace is on TypeScript 5 when a generator installs NestJS 12, the generator also upgrades `typescript` to the version Nx installs by default.
 
 NestJS 12 ships as ES modules only, so new NestJS 12 projects use Vitest for unit tests by default. Jest can load NestJS 12 only on Node.js 24.9 or later. When you pass `--unitTestRunner=jest` on Node.js 24.9+, the generators install Jest 30.5 and run the project's test target with `NODE_OPTIONS=--experimental-vm-modules`. On an older Node.js, they fail with an error. NestJS 11 and earlier work with Jest on any supported Node.js.
+
+To move an existing NestJS 11 workspace to NestJS 12, run `nx migrate latest --include=all`. The NestJS 12 migration is optional, so it runs only when you include optional migrations. If a project tests NestJS code with Jest and the workspace runs a Node.js below 24.9, the migration keeps NestJS 11 and prints the command to run once that project moves to Vitest or Node.js 24.9+.
 
 ## Setting up @nx/nest
 
