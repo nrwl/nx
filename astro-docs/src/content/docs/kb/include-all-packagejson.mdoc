@@ -16,3 +16,6 @@ If you would prefer to add all `package.json` files as projects, add the followi
   "plugins": ["nx/plugins/package-json"]
 }
 ```
+
+The `@nx/js/node` and `@nx/js/tsx` plugins pick project roots by the package-manager workspaces or a `project.json`.
+Packages this plugin adds outside the workspaces get no script or bin targets from them.
