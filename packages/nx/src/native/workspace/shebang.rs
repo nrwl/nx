@@ -1,3 +1,4 @@
+use crate::native::utils::path::escapes_workspace;
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Read;
@@ -18,29 +19,20 @@ pub struct ShebangFile {
 
 /// The `files` (workspace-relative) that start with `#!`, each with its header
 /// (see `read_shebang_header`), read in parallel and sorted by path. Files that
-/// cannot be read are left out, as are entries that are rooted or climb out of
-/// the root with `..`.
+/// cannot be read are left out, as are entries that `join` would follow out of
+/// the root (rooted, drive-prefixed, or climbing with `..`).
 #[napi]
 pub fn read_shebang_headers(workspace_root: String, files: Vec<String>) -> Vec<ShebangFile> {
     let root = PathBuf::from(workspace_root);
     let mut found: Vec<ShebangFile> = files
         .into_par_iter()
-        .filter(|file| stays_inside_root(Path::new(file)))
+        .filter(|file| !escapes_workspace(Path::new(file)))
         .filter_map(|file| {
             read_shebang_header(&root.join(&file)).map(|header| ShebangFile { file, header })
         })
         .collect();
     found.sort_by(|a, b| a.file.cmp(&b.file));
     found
-}
-
-// `has_root`, not `is_absolute`: on Windows `\evil.ts` is rooted without a
-// prefix, and `root.join` would still replace everything after the drive.
-fn stays_inside_root(file: &Path) -> bool {
-    !file.has_root()
-        && !file
-            .components()
-            .any(|c| matches!(c, std::path::Component::ParentDir))
 }
 
 /// `shebang_header` of a file on disk, reading no more than the cap. `None`
@@ -182,7 +174,7 @@ mod tests {
     #[test]
     fn drops_the_line_the_cap_cuts_behind_a_byte_order_mark() {
         let mut content = b"\xEF\xBB\xBF#!/usr/bin/env node\n// ".to_vec();
-        content.extend(std::iter::repeat_n(b'x', 490 - content.len() - 1));
+        content.extend(std::iter::repeat_n(b'x', 485 - content.len() - 1));
         content.push(b'\n');
         content.extend(b"// @nx-target-name: serve-all\n");
         // What a capped read hands over: the cap lands inside the target name,
