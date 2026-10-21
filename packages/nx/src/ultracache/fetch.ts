@@ -5,6 +5,7 @@ import {
 } from '../nx-cloud/update-manager';
 import { workspaceRoot } from '../utils/workspace-root';
 import type { UltracacheCloudOptions } from './config';
+import type { UltracacheMode } from './mode';
 
 const READ_TIMEOUT_MS = 10_000;
 
@@ -13,6 +14,8 @@ export interface ReadUltracacheConfigurationsOptions {
   workspaceRoot?: string;
   nxCloudOptions?: UltracacheCloudOptions;
   timeoutMs?: number;
+  /** Request configurations for per-task modes, including an Off workspace. */
+  taskModes?: boolean;
 }
 
 export interface ReadUltracacheConfiguration {
@@ -22,6 +25,8 @@ export interface ReadUltracacheConfiguration {
 }
 
 export interface ReadUltracacheConfigurationsResult {
+  /** Absent in older clients, whose available configurations imply On. */
+  defaultMode?: UltracacheMode;
   configurations: Readonly<Record<string, ReadUltracacheConfiguration>>;
 }
 
@@ -55,6 +60,7 @@ export async function fetchUltracacheConfigurations(
     workspaceRoot,
     nxCloudOptions: runnerOptions,
     timeoutMs: READ_TIMEOUT_MS,
+    taskModes: true,
   });
   if (!result) {
     // The client returns `null` only for a `knownUpdatedAt` match, which nx

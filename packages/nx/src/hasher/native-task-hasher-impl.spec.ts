@@ -1851,6 +1851,62 @@ describe('native task hasher', () => {
     closeDbConnection(configurationDb);
   });
 
+  it.each(['warn', 'error', 'off'] as const)(
+    'uses workspace %s, permits explicit on, and invalidates upfront plans when modes change',
+    async (defaultMode) => {
+      const { taskGraph, impl } = await upfrontFixture();
+      const db = connectToNxDb(
+        join(tempFs.tempDir, `modes-${defaultMode}`),
+        'ultracache'
+      );
+      const configurations = new UltracacheConfigurationStore(db).import({
+        requestedCommit: 'head',
+        defaultMode,
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit: 'head',
+            inputs: ['libs/child/observed.txt'],
+            outputs: [],
+          },
+        }),
+      });
+      await tempFs.createFiles({ 'libs/child/observed.txt': 'observed' });
+      const task = taskGraph.tasks['child:compile'];
+      const hash = () =>
+        impl.hashTask(
+          task,
+          taskGraph,
+          {},
+          tempFs.tempDir,
+          true,
+          configurations
+        );
+      const declared = await impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        true
+      );
+      expect((await hash()).value).toBe(declared.value);
+      task.ultracache = { mode: 'on' };
+      await impl.hashTasksUpfront(
+        [task],
+        taskGraph,
+        { [task.id]: {} },
+        tempFs.tempDir,
+        true,
+        configurations
+      );
+      const learned = await hash();
+      expect(learned.value).not.toBe(declared.value);
+      expect(learned.inputs.files).toContain('libs/child/observed.txt');
+      task.ultracache = { mode: defaultMode };
+      expect((await hash()).value).toBe(declared.value);
+      closeDbConnection(db);
+    }
+  );
+
   it('keeps hashing from its own version after the commit is re-imported', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({

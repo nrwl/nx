@@ -136,6 +136,7 @@ pub(crate) fn ultracache_configurations(
     );
     let configurations = store
         .import_set(UltracacheConfigurationImportOptions {
+            default_mode: None,
             requested_commit: commit,
             configurations_json: json.to_string(),
         })

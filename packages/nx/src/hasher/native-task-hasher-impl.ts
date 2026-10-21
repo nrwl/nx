@@ -219,6 +219,8 @@ function taskGraphFingerprint(
       task.target.target,
       task.target.configuration ?? '',
       (task.outputs ?? []).join(','),
+      JSON.stringify(task.ultracache ?? null),
+      String(task.continuous ?? false),
       (taskGraph.dependencies[id] ?? []).map((edge) => edge.id).join(','),
       (taskGraph.continuousDependencies[id] ?? [])
         .map((edge) => JSON.stringify([edge.id, edge.inputs === false]))

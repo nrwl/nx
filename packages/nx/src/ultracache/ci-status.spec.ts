@@ -1,5 +1,6 @@
 import {
   hasAlwaysInput,
+  ultracacheDefaultModeInCI,
   isUltracacheOnInCI,
   resetUltracacheStatus,
   ULTRACACHE_DOCS_URL,
@@ -40,7 +41,50 @@ describe('isUltracacheOnInCI', () => {
     expect(readUltracacheStatus).toHaveBeenCalledWith({
       nxCloudOptions: { accessToken: 't' },
       timeoutMs: 2_000,
+      taskModes: true,
     });
+  });
+
+  it.each(['on', 'warn', 'error', 'off'] as const)(
+    'uses workspace default %s even when enabled is false',
+    async (defaultMode) => {
+      cloud.loadCloudClient.mockResolvedValue({
+        readUltracacheStatus: async () => ({ enabled: false, defaultMode }),
+      });
+      expect(await ultracacheDefaultModeInCI(nxJson)).toBe(defaultMode);
+      expect(ultracacheModeInCI({ cache: true }, false, defaultMode)).toBe(
+        defaultMode
+      );
+      expect(
+        ultracacheModeInCI(
+          { cache: true, ultracache: { mode: 'on' } },
+          false,
+          defaultMode
+        )
+      ).toBe('on');
+    }
+  );
+
+  it('uses Off for a legacy disabled response', async () => {
+    cloud.loadCloudClient.mockResolvedValue({
+      readUltracacheStatus: async () => ({ enabled: false }),
+    });
+    expect(await ultracacheDefaultModeInCI(nxJson)).toBe('off');
+  });
+
+  it('validates env overrides even when status is cached', async () => {
+    cloud.loadCloudClient.mockResolvedValue({
+      readUltracacheStatus: async () => ({ enabled: true }),
+    });
+    await ultracacheDefaultModeInCI(nxJson);
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'invalid');
+    try {
+      expect(() => ultracacheDefaultModeInCI(nxJson)).toThrow(
+        'NX_CLOUD_ULTRACACHE_MODE'
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it('is off when the workspace is not On', async () => {

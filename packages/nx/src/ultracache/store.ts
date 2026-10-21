@@ -24,6 +24,7 @@ import {
   fetchUltracacheConfigurations,
   type ReadUltracacheConfigurationsResult,
 } from './fetch';
+import { ultracacheModeOverride, type UltracacheMode } from './mode';
 
 /**
  * What resolving this run's Ultracache configurations came to. Only an
@@ -64,16 +65,19 @@ export function getUltracacheConfigurationStore(): UltracacheConfigurationStore 
 
 /**
  * Stores the configurations the Nx Cloud client read for `requestedCommit` and
- * returns their handle, for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
+ * retains the workspace default with them, including empty sets, and returns
+ * their handle for `runDiscreteTasks` and `runContinuousTasks`. Exposed to the
  * client through `nx/nx-cloud-internals`. Throws with the store's `code`.
  */
 export function importUltracacheConfigurations(
   requestedCommit: string,
-  configurations: ReadUltracacheConfigurationsResult['configurations']
+  configurations: ReadUltracacheConfigurationsResult['configurations'],
+  defaultMode?: UltracacheMode
 ): UltracacheConfigurations {
   return getUltracacheConfigurationStore().import({
     requestedCommit,
     configurationsJson: JSON.stringify(configurations),
+    defaultMode,
   });
 }
 
@@ -94,13 +98,15 @@ export function openUltracacheConfigurations(
  * fetch: the newest stored set, otherwise what Nx Cloud reads, imported into
  * the store. The Nx Cloud client imports a fresh set when each CI run starts,
  * so a stored set is never older than its run. Returns `null` when Ultracache
- * is not enabled for this workspace; never throws.
+ * fetching is disabled. Invalid NX_CLOUD_ULTRACACHE_MODE values throw; fetch
+ * and store failures return a skipped outcome.
  */
 export async function loadUltracacheConfigurationsForRun(
   nxJson: NxJsonConfiguration,
   runnerOptions: UltracacheCloudOptions,
   env: UltracacheEnv = ultracacheEnv()
 ): Promise<UltracacheConfigurationOutcome | null> {
+  ultracacheModeOverride();
   if (!isUltracacheConfigurationFetchEnabled(nxJson, runnerOptions, env)) {
     return null;
   }
@@ -136,6 +142,7 @@ export async function loadUltracacheConfigurationsForRun(
           configurations: store.import({
             requestedCommit: head,
             configurationsJson: JSON.stringify(result.configurations),
+            defaultMode: result.defaultMode,
           }),
         });
       }))

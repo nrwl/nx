@@ -46,7 +46,8 @@ pub struct Task {
 /// the OSS runner records or applies IO, so every mode behaves as `Off` without
 /// it.
 #[napi(string_enum = "lowercase")]
-#[derive(Default, Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum UltracacheMode {
     /// Record IO and let the recording stand in for the target's declared
     /// inputs and outputs. The default.
@@ -66,7 +67,8 @@ pub enum UltracacheMode {
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct TaskUltracacheSettings {
-    /// How this target's tasks participate. Defaults to `on`.
+    /// How this target's tasks participate. Inherits the workspace default when absent.
+    /// NX_CLOUD_ULTRACACHE_MODE overrides both the target and workspace modes.
     #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
     pub mode: Option<UltracacheMode>,
     /// Collect successful stat metadata accesses as inputs. Defaults to `false`.

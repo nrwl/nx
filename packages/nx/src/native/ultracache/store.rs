@@ -53,7 +53,8 @@ impl UltracacheConfigurationStore {
                     format!("Nx Cloud returned Ultracache configurations nx cannot read: {err}"),
                 )
             })?;
-        let set = ImportedSet::new(options.requested_commit, entries);
+        let mut set = ImportedSet::new(options.requested_commit, entries);
+        set.resolution.default_mode = options.default_mode;
         self.write(&set)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
         let ImportedSet {
@@ -120,6 +121,12 @@ CREATE TABLE IF NOT EXISTS io_snapshot_versions (
     tasks INTEGER NOT NULL,
     PRIMARY KEY (commit_sha, fetched_at)
 ) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS io_snapshot_modes (
+    commit_sha TEXT NOT NULL,
+    fetched_at INTEGER NOT NULL,
+    default_mode TEXT,
+    PRIMARY KEY (commit_sha, fetched_at)
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS io_snapshot_entries (
     commit_sha TEXT NOT NULL,
     fetched_at INTEGER NOT NULL,
@@ -144,11 +151,20 @@ impl UltracacheConfigurationStore {
         let resolution = &set.resolution;
         let commit = &resolution.requested_commit;
         let fetched_at = resolution.fetched_at;
+        let default_mode = resolution
+            .default_mode
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()?;
         self.db.lock().unwrap().transaction(|conn| {
             conn.execute(
                 "INSERT OR REPLACE INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
                  VALUES (?1, ?2, ?3)",
                 params![commit, fetched_at, resolution.tasks],
+            )?;
+            conn.execute(
+                "INSERT OR REPLACE INTO io_snapshot_modes (commit_sha, fetched_at, default_mode) VALUES (?1, ?2, ?3)",
+                params![commit, fetched_at, default_mode],
             )?;
             // A version rewritten at the same instant.
             conn.execute(
@@ -173,15 +189,28 @@ impl UltracacheConfigurationStore {
         fetched_at: Option<i64>,
     ) -> Result<Option<UltracacheConfigurationResolution>> {
         self.db.lock().unwrap().query_row(
-            "SELECT fetched_at, tasks FROM io_snapshot_versions \
-             WHERE commit_sha = ?1 AND (?2 IS NULL OR fetched_at = ?2) \
-             ORDER BY fetched_at DESC LIMIT 1",
+            "SELECT v.fetched_at, v.tasks, m.default_mode FROM io_snapshot_versions v \
+             LEFT JOIN io_snapshot_modes m USING (commit_sha, fetched_at) \
+             WHERE v.commit_sha = ?1 AND (?2 IS NULL OR v.fetched_at = ?2) \
+             ORDER BY v.fetched_at DESC LIMIT 1",
             params![commit, fetched_at],
             |row| {
                 Ok(UltracacheConfigurationResolution {
                     requested_commit: commit.to_string(),
                     fetched_at: row.get(0)?,
                     tasks: row.get(1)?,
+                    default_mode: row
+                        .get::<_, Option<String>>(2)?
+                        .map(|mode| {
+                            serde_json::from_str(&mode).map_err(|e| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    2,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(e),
+                                )
+                            })
+                        })
+                        .transpose()?,
                 })
             },
         )
@@ -237,6 +266,7 @@ mod tests {
         store.import_set(UltracacheConfigurationImportOptions {
             requested_commit: "head".into(),
             configurations_json: json.into(),
+            default_mode: None,
         })
     }
 
@@ -281,6 +311,58 @@ mod tests {
             1
         );
         assert_eq!(stored.entries_for(&["web:build"]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn persists_modes_with_empty_configs_and_reopens_pinned_versions() {
+        use crate::native::tasks::types::UltracacheMode;
+        let (_dir, store) = temp_store();
+        for (i, mode) in [
+            UltracacheMode::On,
+            UltracacheMode::Warn,
+            UltracacheMode::Error,
+            UltracacheMode::Off,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let mut set = imported("head", i as i64, &[]);
+            set.resolution.default_mode = Some(mode.clone());
+            store.write(&set).unwrap();
+            assert_eq!(
+                store.get("head".into()).unwrap().resolution().default_mode,
+                Some(mode)
+            );
+        }
+        assert_eq!(
+            store
+                .get_version("head".into(), 1)
+                .unwrap()
+                .resolution()
+                .default_mode,
+            Some(UltracacheMode::Warn)
+        );
+        assert_eq!(store.get("head".into()).unwrap().resolution().tasks, 0);
+    }
+
+    #[test]
+    fn reads_legacy_versions_without_mode_metadata() {
+        let (_dir, store) = temp_store();
+        let set = import(&store, "{}").unwrap();
+        store
+            .db
+            .lock()
+            .unwrap()
+            .execute("DELETE FROM io_snapshot_modes", [])
+            .unwrap();
+        assert_eq!(
+            store
+                .get_version("head".into(), set.resolution().fetched_at)
+                .unwrap()
+                .resolution()
+                .default_mode,
+            None
+        );
     }
 
     #[test]

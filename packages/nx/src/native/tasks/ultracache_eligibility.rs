@@ -148,7 +148,10 @@ pub(crate) fn resolve<'a>(
         // `On` is the only mode that lets a recording stand in for what the
         // target declared; `Warn` and `Error` still record, but report against
         // the declaration rather than replacing it.
-        match ultracache.and_then(|ultracache| ultracache.mode.as_ref()) {
+        match ultracache
+            .and_then(|ultracache| ultracache.mode.as_ref())
+            .or(configurations.resolution_ref().default_mode.as_ref())
+        {
             Some(UltracacheMode::Off) => {
                 diagnostics.push(UltracacheDiagnostic::task("disabled", task_id));
                 continue;

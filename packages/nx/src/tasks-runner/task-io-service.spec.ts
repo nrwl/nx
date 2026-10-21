@@ -1,3 +1,4 @@
+import { resolveTaskUltracacheModes } from '../ultracache/mode';
 import {
   getTaskIOService,
   registerTaskProcessStart,
@@ -23,6 +24,18 @@ describe('registerTaskProcessStart', () => {
   });
 
   afterEach(() => registerTaskProcess.mockRestore());
+
+  it.each(['on', 'warn', 'error', 'off'] as const)(
+    'reports PIDs using resolved workspace %s with no learned configurations',
+    (mode) => {
+      const task = { id: 'proj:resolved', ultracache: undefined };
+      resolveTaskUltracacheModes([task], mode);
+      registerTaskProcessStart(task, 42);
+      expect(updates).toEqual(
+        mode === 'off' ? [] : [{ taskId: task.id, pid: 42 }]
+      );
+    }
+  );
 
   it('notifies PID subscribers for a task without a ultracache configuration', () => {
     registerTaskProcessStart({ id: 'proj:tracked' }, 100);

@@ -26,13 +26,16 @@ describe('fetchUltracacheConfigurations', () => {
   });
 
   it('reads with the run options and returns what Nx Cloud sent', async () => {
-    const result = { configurations: {} };
+    const result = { configurations: {}, defaultMode: 'warn' };
     cloud.readUltracacheConfigurations.mockResolvedValue(result);
     expect(await fetchUltracacheConfigurations({ accessToken: 't' })).toBe(
       result
     );
     expect(cloud.readUltracacheConfigurations).toHaveBeenCalledWith(
-      expect.objectContaining({ nxCloudOptions: { accessToken: 't' } })
+      expect.objectContaining({
+        nxCloudOptions: { accessToken: 't' },
+        taskModes: true,
+      })
     );
   });
 

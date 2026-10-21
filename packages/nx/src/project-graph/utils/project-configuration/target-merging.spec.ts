@@ -480,6 +480,16 @@ describe('target merging', () => {
   });
 
   describe('ultracache', () => {
+    it('preserves explicit on separately from an absent mode', () => {
+      for (const mode of ['on', undefined] as const) {
+        const result = mergeTargetConfigurations(
+          { executor: 'nx:run-commands', ultracache: { mode } },
+          { executor: 'nx:run-commands', ultracache: { mode: 'warn' } }
+        );
+        expect(result.ultracache.mode).toBe(mode);
+      }
+    });
+
     it.each<
       [
         TargetUltracacheSettings | undefined,

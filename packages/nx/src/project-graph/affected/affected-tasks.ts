@@ -1,3 +1,8 @@
+import {
+  resolveTaskUltracacheModes,
+  ultracacheModeOverride,
+  type UltracacheMode,
+} from '../../ultracache/mode';
 import { NxJsonConfiguration, TargetDependencies } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
@@ -136,6 +141,7 @@ export interface AffectedTasksRequest {
   excludeTaskDependencies: boolean;
   exclude: string[];
   ultracacheConfigurationsVersion?: UltracacheConfigurationVersion;
+  ultracacheModeOverride?: UltracacheMode;
   /** The runner's `selectivelyHashTsConfig`, which decides what the tsconfig hash reads. */
   selectivelyHashTsConfig?: boolean;
   /** Whether to return why each task is affected. Off, nothing is collected. */
@@ -164,6 +170,7 @@ export async function computeAffectedTasks(
     exclude: opts.exclude ?? [],
     selectivelyHashTsConfig: opts.selectivelyHashTsConfig,
     explain: opts.explain,
+    ultracacheModeOverride: ultracacheModeOverride(),
   };
   const ultracacheConfigurations = configurationsOf(
     opts.ultracacheConfigurationOutcome ?? null
@@ -308,6 +315,11 @@ async function matchAffectedTasks(
       // Dependencies carry a change even when they won't run; `keep` drops them.
       false
     );
+  resolveTaskUltracacheModes(
+    Object.values(taskGraph.tasks),
+    ultracacheConfigurations?.resolution.defaultMode ?? 'on',
+    request.ultracacheModeOverride
+  );
   const taskIds = Object.keys(taskGraph.tasks);
   const plans = ultracacheConfigurations
     ? planningContext.planner.getPlansReference(

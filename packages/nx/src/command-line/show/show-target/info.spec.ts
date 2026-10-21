@@ -12,10 +12,14 @@ import {
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
 
-const ultracache = vi.hoisted(() => ({ on: false }));
+const ultracache = vi.hoisted(() => ({
+  on: false,
+  defaultMode: undefined as 'on' | 'warn' | 'error' | 'off' | undefined,
+}));
 vi.mock('../../../ultracache/ci-status', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../ultracache/ci-status')>()),
-  isUltracacheOnInCI: async () => ultracache.on,
+  ultracacheDefaultModeInCI: async () =>
+    ultracache.defaultMode ?? (ultracache.on ? 'on' : undefined),
 }));
 
 describe('show target info', () => {
@@ -532,7 +536,11 @@ describe('show target info', () => {
   });
 
   describe('ultracache', () => {
-    afterEach(() => (ultracache.on = false));
+    afterEach(() => {
+      ultracache.on = false;
+      ultracache.defaultMode = undefined;
+      vi.unstubAllEnvs();
+    });
 
     const buildTarget = (target: Record<string, unknown>) =>
       setGraph(
@@ -565,6 +573,37 @@ describe('show target info', () => {
       expect(text().indexOf('Ultracache:')).toBeLessThan(
         text().indexOf('Inputs:')
       );
+    });
+
+    it.each(['warn', 'error', 'off'] as const)(
+      'reflects workspace %s and explicit target on',
+      async (defaultMode) => {
+        ultracache.defaultMode = defaultMode;
+        buildTarget({ cache: true });
+        await showTargetInfoHandler({ target: 'my-app:build' });
+        expect(text()).toContain(
+          defaultMode === 'warn'
+            ? 'Nx Cloud warns'
+            : defaultMode === 'error'
+              ? 'Nx Cloud fails'
+              : 'not recorded'
+        );
+        (console.log as Mock).mockClear();
+        buildTarget({ cache: true, ultracache: { mode: 'on' } });
+        await showTargetInfoHandler({ target: 'my-app:build' });
+        expect(text()).toContain('file inputs are replaced');
+      }
+    );
+
+    it.each([
+      ['off', 'on', 'not recorded'],
+      ['on', 'off', 'file inputs are replaced'],
+    ])('uses env %s over target %s', async (override, mode, expected) => {
+      ultracache.defaultMode = 'warn';
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', override);
+      buildTarget({ cache: true, ultracache: { mode } });
+      await showTargetInfoHandler({ target: 'my-app:build' });
+      expect(text()).toContain(expected);
     });
 
     it('leaves the JSON output alone', async () => {

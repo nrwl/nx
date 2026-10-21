@@ -7,6 +7,11 @@ import { getCloudOptions } from '../nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { supportsHyperlinks, terminalLink } from '../utils/terminal-link';
 import { loadCloudClient } from './fetch';
+import {
+  resolveUltracacheMode,
+  ultracacheModeOverride,
+  type UltracacheMode,
+} from './mode';
 
 const STATUS_TIMEOUT_MS = 2_000;
 
@@ -24,17 +29,23 @@ export function ultracacheDocsLink(): string {
     : pc.dim(ULTRACACHE_DOCS_URL);
 }
 
-let status: Promise<boolean> | undefined;
+let status: Promise<UltracacheMode | undefined> | undefined;
 
-/**
- * Whether Nx Cloud's workspace setting has CI hash tasks from their Ultracache
- * configs. `false` whenever Nx Cloud cannot say. Asked once per process.
- */
-export function isUltracacheOnInCI(
+/** Workspace default in CI; undefined when Cloud cannot report its setting. */
+export function ultracacheDefaultModeInCI(
   nxJson: NxJsonConfiguration
-): Promise<boolean> {
+): Promise<UltracacheMode | undefined> {
+  const override = ultracacheModeOverride();
+  if (override !== undefined) return Promise.resolve(override);
   status ??= readUltracacheStatus(nxJson);
   return status;
+}
+
+/** Compatibility for callers interested only in the workspace's On setting. */
+export async function isUltracacheOnInCI(
+  nxJson: NxJsonConfiguration
+): Promise<boolean> {
+  return (await ultracacheDefaultModeInCI(nxJson)) === 'on';
 }
 
 /** For specs. */
@@ -44,40 +55,46 @@ export function resetUltracacheStatus(): void {
 
 async function readUltracacheStatus(
   nxJson: NxJsonConfiguration
-): Promise<boolean> {
+): Promise<UltracacheMode | undefined> {
   if (!isNxCloudUsed(nxJson)) {
-    return false;
+    return undefined;
   }
   try {
     const nxCloudOptions = getCloudOptions();
     const client = await loadCloudClient(nxCloudOptions);
     if (typeof client?.readUltracacheStatus !== 'function') {
-      return false;
+      return undefined;
     }
-    const { enabled } = await client.readUltracacheStatus({
+    const { enabled, defaultMode } = await client.readUltracacheStatus({
       nxCloudOptions,
       timeoutMs: STATUS_TIMEOUT_MS,
+      taskModes: true,
     });
-    return enabled === true;
+    return defaultMode ?? (enabled === true ? 'on' : 'off');
   } catch {
-    return false;
+    return undefined;
   }
 }
 
-export type UltracacheModeInCI = 'on' | 'warn' | 'error' | 'off';
+export type UltracacheModeInCI = UltracacheMode;
 
 /**
- * How CI treats this target's tasks when the workspace is On; `undefined` when
+ * How CI treats this target's tasks; `undefined` when
  * Ultracache doesn't apply. Mirrors the eligibility walk in `ultracache_eligibility.rs`.
  */
 export function ultracacheModeInCI(
   target: TargetConfiguration,
-  customHasher: boolean
+  customHasher: boolean,
+  defaultMode: UltracacheMode = 'on'
 ): UltracacheModeInCI | undefined {
   if (target.cache !== true || target.continuous || customHasher) {
     return undefined;
   }
-  return target.ultracache?.mode ?? 'on';
+  return resolveUltracacheMode(
+    target.ultracache,
+    defaultMode,
+    ultracacheModeOverride()
+  );
 }
 
 export function hasAlwaysInput(

@@ -5,6 +5,7 @@ import type { TaskGraph } from '../config/task-graph';
 import { BatchMessageType } from './batch/batch-messages';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { pruneTaskGraph } from './prune-task-graph';
+import { resolveTaskUltracacheModes } from '../ultracache/mode';
 
 vi.mock('child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('child_process')>()),
@@ -81,6 +82,7 @@ describe('task graph transport to worker processes', () => {
     'sends the graph without hash details (piped output=%s)',
     async (pipeOutput) => {
       const input = graph();
+      resolveTaskUltracacheModes(Object.values(input.tasks), 'warn');
       const runner = new ForkedProcessTaskRunner(
         { lifeCycle: {} } as any,
         false
@@ -102,13 +104,16 @@ describe('task graph transport to worker processes', () => {
         'outputs',
         'overrides',
         'target',
+        'ultracache',
       ]);
+      expect(message.taskGraph.tasks.a.ultracache.mode).toBe('warn');
       expect(input.tasks.a.hashDetails).toBeDefined();
     }
   );
 
   it('sends a pruned graph on the pseudo-terminal path too', async () => {
     const input = graph();
+    resolveTaskUltracacheModes(Object.values(input.tasks), 'off');
     const runner = new ForkedProcessTaskRunner({ lifeCycle: {} } as any, true);
     await runner.forkProcess(input.tasks.a, {
       taskGraph: input,
@@ -122,10 +127,12 @@ describe('task graph transport to worker processes', () => {
     const message = pty.proc.send.mock.calls[0][0];
     expect(message.taskGraph).toBe(pruneTaskGraph(input));
     expect(message.taskGraph.tasks.a).not.toHaveProperty('hashDetails');
+    expect(message.taskGraph.tasks.a.ultracache.mode).toBe('off');
   });
 
   it('sends both batch graphs without hash details', async () => {
     const full = graph();
+    resolveTaskUltracacheModes(Object.values(full.tasks), 'error');
     const batch: TaskGraph = {
       ...full,
       tasks: { a: full.tasks.a, b: full.tasks.b },
@@ -144,5 +151,7 @@ describe('task graph transport to worker processes', () => {
     expect(message.fullTaskGraph).toBe(pruneTaskGraph(full));
     expect(Object.keys(message.batchTaskGraph.tasks)).toEqual(['a', 'b']);
     expect(message.fullTaskGraph.tasks.c).not.toHaveProperty('hash');
+    expect(message.batchTaskGraph.tasks.a.ultracache.mode).toBe('error');
+    expect(message.fullTaskGraph.tasks.c.ultracache.mode).toBe('error');
   });
 });

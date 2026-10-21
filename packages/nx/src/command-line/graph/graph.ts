@@ -67,8 +67,9 @@ import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import {
-  isUltracacheOnInCI,
+  ultracacheDefaultModeInCI,
   ultracacheModeInCI,
+  type UltracacheModeInCI,
 } from '../../ultracache/ci-status';
 import { hasCustomHasher } from '../show/show-target/utils';
 import { splitTargetFromNodes } from '../../utils/split-target';
@@ -935,7 +936,7 @@ function createProjectGraphListener() {
             currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
             isFilteredGraph ? currentProjectGraphClientResponse.exclude : [],
-            await isUltracacheOnInCI(readNxJson())
+            await ultracacheDefaultModeInCI(readNxJson())
           );
 
         if (
@@ -974,7 +975,8 @@ function createProjectGraphListener() {
 
 /** The graph's nodes, with `ultracacheInCI` set to each target's Ultracache mode in CI. */
 function markTargetsHashedFromUltracacheInCI(
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  defaultMode: UltracacheModeInCI
 ): ProjectGraphProjectNode[] {
   return Object.values(graph.nodes).map((node) => {
     const targets = Object.entries(node.data.targets ?? {});
@@ -982,7 +984,8 @@ function markTargetsHashedFromUltracacheInCI(
       targets.flatMap(([name, target]) => {
         const mode = ultracacheModeInCI(
           target,
-          hasCustomHasher(node.name, name, graph)
+          hasCustomHasher(node.name, name, graph),
+          defaultMode
         );
         return mode ? [[name, mode] as const] : [];
       })
@@ -1014,7 +1017,7 @@ function transformProjectGraphToClientResponse(
   affected: string[] = [],
   focus: string = null,
   exclude: string[] = [],
-  ultracacheOnInCI = false
+  ultracacheDefaultMode?: UltracacheModeInCI
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -1030,8 +1033,8 @@ function transformProjectGraphToClientResponse(
     readFileMapCache()?.fileMap.projectFileMap || {};
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = ultracacheOnInCI
-    ? markTargetsHashedFromUltracacheInCI(graph)
+  const projects: ProjectGraphProjectNode[] = ultracacheDefaultMode
+    ? markTargetsHashedFromUltracacheInCI(graph, ultracacheDefaultMode)
     : Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
@@ -1127,7 +1130,7 @@ async function createProjectGraphAndSourceMapClientResponse(
       affected,
       focus,
       exclude,
-      await isUltracacheOnInCI(readNxJson())
+      await ultracacheDefaultModeInCI(readNxJson())
     );
 
   performance.mark('project graph response generation:end');

@@ -79,7 +79,11 @@ export interface NxCloudClient {
   readUltracacheStatus?: (options: {
     nxCloudOptions?: CloudTaskRunnerOptions;
     timeoutMs?: number;
-  }) => Promise<{ enabled: boolean }>;
+    taskModes?: boolean;
+  }) => Promise<{
+    enabled: boolean;
+    defaultMode?: import('../ultracache/mode').UltracacheMode;
+  }>;
 }
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;

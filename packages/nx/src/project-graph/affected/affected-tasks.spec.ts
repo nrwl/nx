@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resolveTaskUltracacheModes } from '../../ultracache/mode';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
@@ -755,6 +756,7 @@ describe('the run graph selection hands over', () => {
       ),
       result.taskSelection.taskIds
     );
+    resolveTaskUltracacheModes(Object.values(expected.tasks));
     expect(result.taskSelection.taskGraph.tasks).toEqual(expected.tasks);
     expect(result.taskSelection.taskGraph.tasks['lib:test'].overrides).toEqual({
       __overrides_unparsed__: [],
@@ -880,7 +882,51 @@ describe('selection with Ultracache configurations', () => {
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'affected-ultracache-'));
   });
-  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['warn', undefined, undefined, false],
+    ['error', undefined, undefined, false],
+    ['off', 'on', undefined, true],
+    ['warn', 'on', 'off', false],
+    ['off', 'off', 'on', true],
+  ] as const)(
+    'selects with workspace %s, target %s, env %s',
+    async (defaultMode, mode, override, selected) => {
+      vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', override);
+      const configurations = new UltracacheConfigurationStore(
+        connectToNxDb(dir, 'ultracache')
+      ).import({
+        requestedCommit: 'head',
+        defaultMode,
+        configurationsJson: JSON.stringify({
+          'lib:test': {
+            commit: 'head',
+            inputs: ['docs/README.md'],
+            outputs: [],
+          },
+        }),
+      });
+      const projectGraph = graph();
+      projectGraph.nodes.lib.data.targets.test.ultracache = { mode };
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: { namedInputs: { production: ['{projectRoot}/src/**/*'] } },
+        targets: ['test'],
+        touchedFiles: [
+          { file: 'docs/README.md', getChanges: () => [new WholeFileChange()] },
+        ] as any,
+        ultracacheConfigurationOutcome: { status: 'fetched', configurations },
+      });
+      expect(result.affectedTaskIds.has('lib:test')).toBe(selected);
+      expect(projectGraph.nodes.lib.data.targets.test.ultracache.mode).toBe(
+        mode
+      );
+    }
+  );
 
   // The run hashes lib:test from what it read, so a change to a file it read
   // but never declared has to select it.
@@ -1038,6 +1084,7 @@ describe('computeAffectedTasks with the daemon on', () => {
   });
 
   it('asks the daemon to select, sending the request as plain data', async () => {
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'error');
     daemon.enabled.mockReturnValueOnce(true);
     const daemonGraph = graph();
     daemon.selectAffectedTasks.mockResolvedValueOnce({
@@ -1087,6 +1134,8 @@ describe('computeAffectedTasks with the daemon on', () => {
     expect([...result.affectedTaskIds]).toEqual(['lib:test']);
     expect(result.taskSelection.taskIds).toEqual(['lib:test']);
     expect(result.taskSelection.initiatingTaskIds).toEqual(['lib:test']);
+    expect(request.ultracacheModeOverride).toBe('error');
+    vi.unstubAllEnvs();
     // The planner stays in the daemon, which is what hashes.
     expect(result.taskSelection.planningContext).toBeUndefined();
     // The command runs with the graph the daemon selected against.

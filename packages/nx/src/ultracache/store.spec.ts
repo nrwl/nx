@@ -134,6 +134,47 @@ describe('loadUltracacheConfigurationsForRun', () => {
     expect(result).toEqual({ status: 'fetched', configurations: set });
   });
 
+  it.each(['on', 'warn', 'error', 'off'] as const)(
+    'stores workspace %s with no learned configurations',
+    async (defaultMode) => {
+      cloud.fetchUltracacheConfigurations.mockResolvedValue({
+        configurations: {},
+        defaultMode,
+      });
+      const set = {
+        ...stored(),
+        resolution: { ...stored().resolution, tasks: 0, defaultMode },
+      };
+      store.import.mockReturnValue(set);
+      const outcome = await loadUltracacheConfigurationsForRun(
+        nxJson,
+        {},
+        optedIn()
+      );
+      expect(store.import).toHaveBeenCalledWith({
+        requestedCommit: 'head',
+        configurationsJson: '{}',
+        defaultMode,
+      });
+      expect(outcome).toEqual({ status: 'fetched', configurations: set });
+      store.get.mockReturnValue(set);
+      expect(
+        await loadUltracacheConfigurationsForRun(nxJson, {}, optedIn())
+      ).toEqual({ status: 'cached', configurations: set });
+    }
+  );
+
+  it('rejects invalid env overrides even when fetching is disabled', async () => {
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'invalid');
+    await expect(
+      loadUltracacheConfigurationsForRun(
+        nxJson,
+        {},
+        optedIn({ NX_CLOUD_USE_ULTRACACHE: 'false' })
+      )
+    ).rejects.toThrow('NX_CLOUD_ULTRACACHE_MODE');
+  });
+
   it('fetches once under the lock, and uses a set another process stored meanwhile', async () => {
     lock.wait.mockClear();
     lock.unlock.mockClear();
@@ -244,6 +285,16 @@ describe('loadUltracacheConfigurationsForRun', () => {
 });
 
 describe('importUltracacheConfigurations', () => {
+  it('accepts the Cloud client workspace default as an optional third argument', () => {
+    store.import.mockReset();
+    importUltracacheConfigurations('head', {}, 'off');
+    expect(store.import).toHaveBeenCalledWith({
+      requestedCommit: 'head',
+      configurationsJson: '{}',
+      defaultMode: 'off',
+    });
+  });
+
   it('stores what the Nx Cloud client read and returns the handle', () => {
     const handle = { commit: 'head' };
     store.import.mockReturnValue(handle);
@@ -254,6 +305,7 @@ describe('importUltracacheConfigurations', () => {
     expect(store.import).toHaveBeenCalledWith({
       requestedCommit: 'head',
       configurationsJson: JSON.stringify(configurations),
+      defaultMode: undefined,
     });
   });
 });

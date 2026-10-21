@@ -7,7 +7,7 @@ import {
 import { createTaskId } from '../../../tasks-runner/utils';
 import {
   hasAlwaysInput,
-  isUltracacheOnInCI,
+  ultracacheDefaultModeInCI,
   ultracacheDocsLink,
   ultracacheInCINotice,
   ultracacheModeInCI,
@@ -60,9 +60,13 @@ export async function showTargetInputsHandler(
   }
 
   const targetConfig = t.node.data.targets[targetName];
-  const mode = args.json ? undefined : ultracacheModeInCI(targetConfig, false);
+  const defaultMode = args.json
+    ? undefined
+    : await ultracacheDefaultModeInCI(t.nxJson);
   const ultracacheInCI =
-    mode && (await isUltracacheOnInCI(t.nxJson)) ? mode : undefined;
+    defaultMode === undefined
+      ? undefined
+      : ultracacheModeInCI(targetConfig, false, defaultMode);
 
   renderInputs(
     { project: projectName, target: targetName, ...hashInputs },

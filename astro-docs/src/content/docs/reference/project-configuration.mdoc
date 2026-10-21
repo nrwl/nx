@@ -832,14 +832,22 @@ Set `mode` to choose how a target participates:
 | `error` | yes        | fails the CI run          | no                    |
 | `off`   | no         | no                        | no                    |
 
-The modes apply when your workspace has Ultracache turned on in Nx Cloud.
+Nx resolves the mode for every task in this order:
 
-`on` is the default.
+1. `NX_CLOUD_ULTRACACHE_MODE`, when set to `on`, `warn`, `error`, or `off`.
+2. The target's explicit `ultracache.mode` (including settings inherited from `targetDefaults`).
+3. The workspace's default mode in Nx Cloud.
+
+An omitted mode inherits the workspace default. Explicit `on` enables a target even when the workspace default is `off`, `warn`, or `error`. The environment variable overrides every task, including targets that explicitly select the opposite mode. Invalid environment values fail the command.
+
+For example, `NX_CLOUD_ULTRACACHE_MODE=off pnpm nx build my-app` disables Ultracache recording and learned inputs for that run. Setting it to `on` enables every task, including targets configured with `mode: "off"`. Tasks still need a learned configuration before Nx can apply one.
+
+Older Nx Cloud clients that do not supply a default keep their existing behavior: available configurations imply `on`.
 Use `warn` on a target whose inputs depend on dynamic behavior or external state: Nx keeps watching it and tells you what it touched, but hashes it from what it declared.
 `error` also hashes from what the target declared, and fails the CI run when the target reads a file outside its `inputs` or writes one outside its `outputs`.
 Use `off` to stop recording it at all.
 
-In a workspace with Ultracache turned on, `nx show target` and the project details in `nx graph` say which mode applies to a target.
+`nx show target` and the project details in `nx graph` show the effective mode, accounting for the workspace default, target settings, and environment override.
 
 ```json
 {
@@ -891,7 +899,7 @@ The first path segment cannot contain `*`, so `**/generated/**` is not supported
 {% aside type="note" title="Nx Cloud only" %}
 Nothing outside Nx Cloud records or applies IO, so every mode behaves as `off` without it.
 Applying a recording needs a recording for the task in question, which [Ultracache](/docs/features/ci-features/remote-cache#ultracache) makes when the task runs on Workers. Nx 24 and later apply it in CI by default ([Ultracache and Nx versions](/docs/kb/ultracache-nx-versions)).
-Setting [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false` turns it off for a run.
+Set [`NX_CLOUD_ULTRACACHE_MODE`](/docs/reference/environment-variables) to `off` to disable Ultracache for every task in a run. The legacy `NX_CLOUD_USE_ULTRACACHE=false` switch skips fetching learned configurations.
 {% /aside %}
 
 A target that defines `ultracache` replaces the inherited settings rather than adding to it. Use the [spread token](#spread-token) to merge instead, either at the object level to keep inherited keys, or inside `ignoreReads` and `ignoreWrites` to keep inherited patterns.

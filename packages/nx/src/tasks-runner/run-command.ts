@@ -29,6 +29,10 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
+import {
+  resolveTaskUltracacheModes,
+  ultracacheModeOverride,
+} from '../ultracache/mode';
 import { buildUltracacheOverrides } from '../ultracache/overrides';
 import { formatUltracacheSummary } from '../ultracache/report';
 import {
@@ -1078,6 +1082,12 @@ export async function invokeTasksRunner({
       : await loadUltracacheConfigurationsForRun(nxJson, runnerOptions);
   const ultracacheConfigurations = configurationsOf(
     ultracacheConfigurationOutcome
+  );
+
+  resolveTaskUltracacheModes(
+    Object.values(taskGraph.tasks),
+    ultracacheConfigurations?.resolution.defaultMode ?? 'on',
+    ultracacheModeOverride()
   );
 
   let hasher = createTaskHasher(

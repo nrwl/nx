@@ -15,7 +15,7 @@ import { DEFAULT_READY_TIMEOUT } from '../../../tasks-runner/readiness/ready-whe
 import { formatDuration } from '../../../native';
 import {
   hasAlwaysInput,
-  isUltracacheOnInCI,
+  ultracacheDefaultModeInCI,
   ultracacheDocsLink,
   ultracacheInCINotice,
   ultracacheModeInCI,
@@ -36,12 +36,15 @@ export async function showTargetInfoHandler(
 ): Promise<void> {
   const t = await resolveTarget(args, { withSourceMaps: true });
   const data = resolveTargetInfoData(t);
-  if (
-    !args.json &&
-    data.ultracacheMode &&
-    (await isUltracacheOnInCI(t.nxJson))
-  ) {
-    data.ultracacheInCI = data.ultracacheMode;
+  if (!args.json && data.ultracacheMode) {
+    const defaultMode = await ultracacheDefaultModeInCI(t.nxJson);
+    if (defaultMode !== undefined) {
+      data.ultracacheInCI = ultracacheModeInCI(
+        t.node.data.targets[t.targetName],
+        false,
+        defaultMode
+      );
+    }
   }
   renderTargetInfo(data, args);
 }

@@ -28,6 +28,7 @@ impl ImportedSet {
             requested_commit,
             fetched_at: current_timestamp_millis(),
             tasks: entries.len() as u32,
+            default_mode: None,
         };
         Self {
             resolution,

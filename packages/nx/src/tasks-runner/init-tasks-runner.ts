@@ -11,6 +11,10 @@ import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import type { UltracacheConfigurations } from '../native';
+import {
+  resolveTaskUltracacheModes,
+  ultracacheModeOverride,
+} from '../ultracache/mode';
 import type { ProjectGraph } from '../config/project-graph';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
@@ -27,6 +31,12 @@ async function createOrchestrator(
 ) {
   loadRootEnvFiles();
   fullTaskGraph = withEdgeObjects(fullTaskGraph);
+  resolveTaskUltracacheModes(
+    [...Object.values(fullTaskGraph.tasks), ...tasks],
+    ultracacheConfigurations?.resolution.defaultMode ?? 'on',
+    ultracacheModeOverride(),
+    true
+  );
 
   const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
     tasks

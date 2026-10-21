@@ -43,7 +43,40 @@ describe.each([
   } as any;
   const projectGraph = { nodes: {}, dependencies: {} } as any;
 
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete task.ultracache;
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each(['warn', 'error', 'off'] as const)(
+    'resolves workspace %s without learned configs',
+    async (defaultMode) => {
+      await run(
+        [task],
+        projectGraph,
+        fullTaskGraph,
+        {},
+        {} as any,
+        { resolution: { defaultMode, tasks: 0 } } as any
+      );
+      expect(task.ultracache.mode).toBe(defaultMode);
+    }
+  );
+
+  it('preserves server-resolved mode over a different agent env', async () => {
+    vi.stubEnv('NX_CLOUD_ULTRACACHE_MODE', 'off');
+    task.ultracache = { mode: 'on' };
+    await run(
+      [task],
+      projectGraph,
+      fullTaskGraph,
+      {},
+      {} as any,
+      { resolution: { defaultMode: 'warn' } } as any
+    );
+    expect(task.ultracache.mode).toBe('on');
+  });
 
   it('hashes from the configurations the caller passes', async () => {
     const configurations = {

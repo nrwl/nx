@@ -1480,7 +1480,10 @@ export interface TaskTarget {
 
 /** Ultracache settings of a task's target */
 export interface TaskUltracacheSettings {
-  /** How this target's tasks participate. Defaults to `on`. */
+  /**
+   * How this target's tasks participate. Inherits the workspace default when absent.
+   * NX_CLOUD_ULTRACACHE_MODE overrides both the target and workspace modes.
+   */
   mode?: 'on' | 'warn' | 'error' | 'off'
   /**
    * Collect successful stat metadata accesses as inputs. Defaults to `false`.
@@ -1541,6 +1544,7 @@ export interface UltracacheConfigurationImportOptions {
   requestedCommit: string
   /** `Record<taskId, { commit, inputs, outputs }>` as JSON. */
   configurationsJson: string
+  defaultMode?: 'on' | 'warn' | 'error' | 'off'
 }
 
 /** What was resolved for a commit; stored beside its entries. */
@@ -1548,6 +1552,8 @@ export interface UltracacheConfigurationResolution {
   requestedCommit: string
   fetchedAt: number
   tasks: number
+  /** Workspace default; absent for configurations imported by older clients. */
+  defaultMode?: 'on' | 'warn' | 'error' | 'off'
 }
 
 /**
