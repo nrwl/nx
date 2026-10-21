@@ -184,9 +184,6 @@ function groupScriptsByProjectRoot(
 function isInPackageManagerWorkspaces(
   workspaceRoot: string
 ): (packageJsonPath: string) => boolean {
-  if (process.env.NX_INFER_ALL_PACKAGE_JSONS === 'true') {
-    return () => true;
-  }
   return buildPackageJsonWorkspacesMatcher(
     buildPackageJsonPatterns(workspaceRoot, (file) =>
       readJsonFile(join(workspaceRoot, file))
