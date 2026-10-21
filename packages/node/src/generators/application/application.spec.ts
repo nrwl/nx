@@ -42,6 +42,13 @@ import { applicationGenerator as angularApplicationGenerator } from '@nx/angular
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
 
+const realNodeVersion = process.versions.node;
+const setNodeVersion = (version: string) =>
+  Object.defineProperty(process.versions, 'node', {
+    value: version,
+    configurable: true,
+  });
+
 describe('app', () => {
   let tree: Tree;
   let envBackup: string | undefined;
@@ -2076,7 +2083,10 @@ describe('app', () => {
       expect(tree.exists('my-nest-app/jest.config.cts')).toBeFalsy();
     });
 
-    it('should throw for jest on Nest 12', async () => {
+    it('should throw for jest on Nest 12 below Node 24.9', async () => {
+      setNodeVersion('22.12.0');
+      onTestFinished(() => setNodeVersion(realNodeVersion));
+
       await expect(
         applicationGenerator(tree, {
           directory: 'my-nest-app',
@@ -2084,7 +2094,7 @@ describe('app', () => {
           unitTestRunner: 'jest',
           e2eTestRunner: 'none',
         })
-      ).rejects.toThrow(/--unitTestRunner=vitest/);
+      ).rejects.toThrow(/requires Node\.js 24\.9\.0 or later/);
     });
 
     it('should keep jest on Nest 11', async () => {

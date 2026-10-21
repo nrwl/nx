@@ -9,8 +9,11 @@ import {
 import { join } from 'path';
 import { coerce, lt, minVersion, validRange } from 'semver';
 import { ensureTypescriptForNestSchematics } from '../../utils/ensure-typescript-for-schematics';
+import {
+  configureJestForEsmOnlyNestJs,
+  jestNodeFloor,
+} from '../../utils/unit-test-runner';
 import { nxVersion } from '../../utils/versions';
-import { getCurrentNodeVersion } from './node-version';
 
 // Keep these versions pinned; versions.ts advances to later majors.
 // 12.0.0 shipped with its peers still on ^11.
@@ -26,9 +29,6 @@ const NEST_12_VERSIONS: Record<string, string> = {
   '@nestjs/testing': '^12.0.1',
   '@nestjs/websockets': '^12.0.1',
 };
-// Jest loads the ESM-only Nest 12 packages through require(esm), which fails
-// with ERR_REQUIRE_ASYNC_MODULE below this version.
-const JEST_NODE_FLOOR = '24.9.0';
 const JEST_CONFIG_FILES = [
   'jest.config.ts',
   'jest.config.cts',
@@ -55,11 +55,11 @@ export default async function upgradeToNest12(
   if (jestProjects.length > 0 && oldNode.length > 0) {
     return {
       nextSteps: [
-        `Kept NestJS 11: Jest loads NestJS 12 only on Node.js ${JEST_NODE_FLOOR} or later, and ${oldNode.join(
+        `Kept NestJS 11: Jest loads NestJS 12 only on Node.js ${jestNodeFloor} or later, and ${oldNode.join(
           ', '
         )}. These projects test Nest code with Jest: ${jestProjects.join(
           ', '
-        )}. Move their tests to Vitest, or run them on Node.js ${JEST_NODE_FLOOR}+, then run \`${RERUN_COMMAND}\` to move to NestJS 12.`,
+        )}. Move their tests to Vitest, or run them on Node.js ${jestNodeFloor}+, then run \`${RERUN_COMMAND}\` to move to NestJS 12.`,
       ],
       agentContext: [],
       skipAgentic: true,
@@ -75,6 +75,9 @@ export default async function upgradeToNest12(
   );
   addDependenciesToPackageJson(tree, {}, bumped);
   ensureTypescriptForNestSchematics(tree);
+  for (const project of jestProjects) {
+    configureJestForEsmOnlyNestJs(tree, project);
+  }
   await formatFiles(tree);
 
   return {
@@ -84,7 +87,7 @@ export default async function upgradeToNest12(
         .map(([name, version]) => `\`${name}\` to \`${version}\``)
         .join(', ')} in package.json`,
       jestProjects.length > 0
-        ? `These projects test Nest code with Jest, which needs Node.js ${JEST_NODE_FLOOR}+ on NestJS 12: ${jestProjects.join(
+        ? `These projects test Nest code with Jest, which needs Node.js ${jestNodeFloor}+ on NestJS 12; their Jest target now runs with NODE_OPTIONS=--experimental-vm-modules and Jest is on ^30.5.0: ${jestProjects.join(
             ', '
           )}`
         : 'No project tests Nest code with Jest',
@@ -122,13 +125,13 @@ function importsNest(tree: Tree, root: string): boolean {
 // AI instructions.
 function findNodeVersionsBelowJestFloor(tree: Tree): string[] {
   const found: string[] = [];
-  const current = getCurrentNodeVersion();
-  if (lt(current, JEST_NODE_FLOOR)) {
+  const current = process.versions.node;
+  if (lt(current, jestNodeFloor)) {
     found.push(`this migration runs on Node.js ${current}`);
   }
   for (const file of ['.nvmrc', '.node-version']) {
     const version = tree.exists(file) ? coerce(tree.read(file, 'utf-8')) : null;
-    if (version && lt(version, JEST_NODE_FLOOR)) {
+    if (version && lt(version, jestNodeFloor)) {
       found.push(`\`${file}\` pins Node.js ${version.version}`);
     }
   }
@@ -137,7 +140,7 @@ function findNodeVersionsBelowJestFloor(tree: Tree): string[] {
     typeof engines === 'string' && validRange(engines)
       ? minVersion(engines)
       : null;
-  if (enginesFloor && lt(enginesFloor, JEST_NODE_FLOOR)) {
+  if (enginesFloor && lt(enginesFloor, jestNodeFloor)) {
     found.push(`\`engines.node\` allows Node.js ${enginesFloor.version}`);
   }
   return found;

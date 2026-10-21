@@ -38,7 +38,7 @@ The plugin detects the installed `@nestjs/core` major and routes the rest of the
 
 Version 12 of `@nestjs/schematics` requires TypeScript 6 or later. If your workspace is on TypeScript 5 when a generator installs NestJS 12, the generator also upgrades `typescript` to the version Nx installs by default.
 
-NestJS 12 ships `@nestjs/testing` as an ES module, and the Jest setup that Nx generates can't load it. With NestJS 12, use Vitest for unit tests. The generators fail with an error when you pass `--unitTestRunner=jest`. NestJS 11 and earlier still work with Jest.
+NestJS 12 ships as ES modules only, so new NestJS 12 projects use Vitest for unit tests by default. Jest can load NestJS 12 only on Node.js 24.9 or later. When you pass `--unitTestRunner=jest` on Node.js 24.9+, the generators install Jest 30.5 and run the project's test target with `NODE_OPTIONS=--experimental-vm-modules`. On an older Node.js, they fail with an error. NestJS 11 and earlier work with Jest on any supported Node.js.
 
 ## Setting up @nx/nest
 
