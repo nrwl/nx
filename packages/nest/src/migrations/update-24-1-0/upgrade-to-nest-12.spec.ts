@@ -123,7 +123,28 @@ describe('upgrade-to-nest-12 migration', () => {
     expect(readJson(tree, 'package.json').dependencies['@nestjs/core']).toBe(
       '^11.0.0'
     );
-    expect(result.nextSteps[0]).toContain('`.nvmrc` pins Node.js 22.0.0');
+    expect(result.nextSteps[0]).toContain('`.nvmrc` pins Node.js v22');
+  });
+
+  it('should bump when .nvmrc pins a major whose latest release is 24.9+', async () => {
+    tree.write('.nvmrc', 'v24\n');
+    tree.write('.node-version', '24.10\n');
+    addNestProject('api', 'jest');
+
+    await migration(tree);
+
+    expect(readJson(tree, 'package.json').dependencies['@nestjs/core']).toBe(
+      '^12.0.1'
+    );
+  });
+
+  it('should keep Nest 11 when .node-version pins a minor below 24.9', async () => {
+    tree.write('.node-version', '24.8\n');
+    addNestProject('api', 'jest');
+
+    const result = await migration(tree);
+
+    expect(result.nextSteps[0]).toContain('`.node-version` pins Node.js 24.8');
   });
 
   it('should keep Nest 11 when engines.node allows Node below 24.9', async () => {
