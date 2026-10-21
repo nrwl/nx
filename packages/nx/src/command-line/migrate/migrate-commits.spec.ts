@@ -1,5 +1,7 @@
 import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
+  getPathHeadStatus: vi.fn(),
+  getWorkingTreeStatus: vi.fn(),
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
   tryCommitChangesAsync: vi.fn(),
@@ -23,6 +25,8 @@ import { readNxJson } from '../../config/configuration';
 import {
   getGitCurrentBranch,
   getGitRemoteNames,
+  getPathHeadStatus,
+  getWorkingTreeStatus,
   hasUncommittedChanges,
   tryCommitChanges,
   tryCommitChangesAsync,
@@ -37,6 +41,8 @@ import {
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
+const mockHeadStatus = getPathHeadStatus as Mock;
+const mockTreeStatus = getWorkingTreeStatus as Mock;
 const mockHas = hasUncommittedChanges as Mock;
 const mockTry = tryCommitChanges as Mock;
 const mockTryAsync = tryCommitChangesAsync as Mock;
@@ -59,6 +65,8 @@ const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]/g;
 const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 
 beforeEach(() => {
+  mockHeadStatus.mockReset().mockReturnValue('committed');
+  mockTreeStatus.mockReset();
   mockHas.mockReset();
   mockTry.mockReset();
   mockTryAsync.mockReset();
@@ -159,6 +167,31 @@ describe('commitMigrationIfRequested', () => {
       `${PREFIX}m1`,
       ROOT,
       ['.nx/migrate-runs'],
+      { withoutTerminal: false }
+    );
+  });
+
+  it('leaves the uncommitted plan and prompt files out of the probe and the commit', async () => {
+    mockHeadStatus.mockReturnValue('absent');
+    mockHas.mockReturnValue(true);
+    mockTryAsync.mockReturnValue('abc123');
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps
+    );
+    expect(mockHas).toHaveBeenCalledWith(ROOT, [
+      '.nx/migrate-runs',
+      'migrations.json',
+      'tools/ai-migrations',
+    ]);
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations'],
       { withoutTerminal: false }
     );
   });
@@ -385,6 +418,27 @@ describe('commitCheckpointBeforeMigrations', () => {
     expect(mockInfo).not.toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['absent', ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations']],
+    ['committed', ['.nx/migrate-runs']],
+    ['unknown', ['.nx/migrate-runs']],
+  ])(
+    'leaves the plan and prompt files out only while HEAD lacks them (%s)',
+    (status, excludes) => {
+      mockHeadStatus.mockReturnValue(status);
+      mockHas.mockReturnValue(true);
+      mockTry.mockReturnValue('chk456');
+
+      commitCheckpointBeforeMigrations(ROOT, PREFIX);
+      expect(mockHas).toHaveBeenCalledWith(ROOT, excludes);
+      expect(mockTry).toHaveBeenCalledWith(
+        `${PREFIX}checkpoint before running migrations`,
+        ROOT,
+        excludes
+      );
+    }
+  );
 
   it('creates the checkpoint commit and logs the sha when the working tree is dirty', () => {
     mockHas.mockReturnValue(true);

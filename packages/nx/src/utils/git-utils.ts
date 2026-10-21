@@ -859,6 +859,39 @@ export function getPathCommitExposure(
   }
 }
 
+export type PathHeadStatus = 'committed' | 'absent' | 'unknown';
+
+// Whether HEAD's tree has an entry at the `directory`-relative `path`. It reads
+// the commit, not the index, so staging a copy or a deletion does not change
+// the answer. An unborn HEAD has no entries; 'unknown' means git failed.
+export function getPathHeadStatus(
+  path: string,
+  directory: string
+): PathHeadStatus {
+  const options = {
+    encoding: 'utf8' as const,
+    cwd: directory,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  };
+  try {
+    execFileSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], options);
+  } catch (e) {
+    // --verify -q exits 1 for a ref that does not resolve: an unborn HEAD.
+    return (e as { status?: number })?.status === 1 ? 'absent' : 'unknown';
+  }
+  try {
+    const entries = execFileSync(
+      'git',
+      ['ls-tree', '--name-only', 'HEAD', '--', path],
+      options
+    );
+    return entries.trim() === '' ? 'absent' : 'committed';
+  } catch {
+    return 'unknown';
+  }
+}
+
 // Returns a content-sensitive sha1 snapshot of the working tree state for
 // before/after comparison. Hashes three probes:
 //   1. `git diff HEAD` with defensive flags — every byte of tracked-file
@@ -1114,26 +1147,38 @@ function collectOutput(
 }
 
 /**
- * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (git
- * exclusion patterns, repo-relative) out of the clean. Throws with git's
- * stderr when either fails. `ref` is a sha a caller validated with `GIT_SHA`,
- * never user input.
+ * `git reset --hard <ref>` then `git clean -fd`, sparing the
+ * `directory`-relative `keepPaths`, staged or not. A kept path `ref` tracks
+ * comes back at `ref`'s version. Throws with git's stderr when git fails.
+ * `ref` is a sha a caller validated with `GIT_SHA`, never user input.
  */
 export function resetWorkingTree(
   ref: string,
   keepPaths: string[],
   directory: string
 ): void {
+  // `git clean -e` takes ignore patterns, which resolve from the repository
+  // root whatever the cwd, and match at any depth when they hold no slash.
+  const prefix = getGitRootRelativePath(directory);
+  if (prefix === null) {
+    throw new Error(`${directory} is not inside a git repository.`);
+  }
+  const keepPatterns = keepPaths.map(
+    (keepPath) => `/${posix.join(prefix, keepPath).replace(/[\\*?[]/g, '\\$&')}`
+  );
   const options = {
     encoding: 'utf8' as const,
     stdio: 'pipe' as const,
     cwd: directory,
     windowsHide: true,
   };
+  // `reset --hard` deletes a kept path staged since `ref`, so its index entry
+  // goes back to `ref` first, leaving it untracked for the clean to skip.
+  execFileSync('git', ['reset', '-q', ref, '--', ...keepPaths], options);
   execFileSync('git', ['reset', '--hard', ref], options);
   execFileSync(
     'git',
-    ['clean', '-fd', ...keepPaths.flatMap((keepPath) => ['-e', keepPath])],
+    ['clean', '-fd', ...keepPatterns.flatMap((pattern) => ['-e', pattern])],
     options
   );
 }

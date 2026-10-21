@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
 import {
   existsSync,
@@ -42,7 +42,6 @@ import {
   getGitRepositoryStatus,
   getLatestCommitSha,
   getPathCommitExposure,
-  getWorkingTreeStatus,
   type PathCommitExposure,
 } from '../../../utils/git-utils';
 import { nxVersion } from '../../../utils/versions';
@@ -68,6 +67,9 @@ import {
 import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
+  migrateCommitExcludes,
+  MIGRATE_OWNED_PATHS,
+  migrateTreeStatus,
 } from '../migrate-commits';
 import {
   reportMigrateOrchestratorComplete,
@@ -512,8 +514,7 @@ export async function runOrchestratorInit(
   // step's gitRefBefore and rules out clean retries for the whole run. A
   // failed probe counts as dirty: mistaking it for clean would let a later
   // retry-clean reset destroy the very work this flag exists to protect.
-  const checkpointFailed =
-    createCommits && getWorkingTreeStatus(root) !== 'clean';
+  const checkpointFailed = createCommits && migrateTreeStatus(root) !== 'clean';
   const branch = getGitCurrentBranch(root);
   const state: MigrateRunState = {
     formatVersion: CURRENT_RUN_STATE_FORMAT_VERSION,
@@ -1086,7 +1087,7 @@ function ensureCheckpoint(
     // The retried checkpoint captured everything, so clean retries are safe
     // again. Only a verified-clean tree clears the flag: a failed probe proves
     // nothing was captured.
-    const cleared = getWorkingTreeStatus(root) === 'clean';
+    const cleared = migrateTreeStatus(root) === 'clean';
     if (!checkpoint && !cleared) return state;
     return updateRunState(dir, (fresh) => {
       // Re-check both guards on the fresh state: a concurrent reconcile may
@@ -1121,7 +1122,7 @@ function checkpointEntry(
 ): MigrateCommitLedgerEntry | null {
   // Skip only on a verified-clean tree; on a failed probe the commit attempt
   // below re-probes and may succeed once the transient failure passes.
-  if (getWorkingTreeStatus(root) === 'clean') {
+  if (migrateTreeStatus(root) === 'clean') {
     return null;
   }
   commitCheckpointBeforeMigrations(root, commitPrefix);
@@ -1825,7 +1826,7 @@ async function retainedTreeSideEffects(
     scope
   );
   const entry =
-    state.createCommits && getWorkingTreeStatus(root) !== 'clean'
+    state.createCommits && migrateTreeStatus(root) !== 'clean'
       ? { kind: 'failed' as const, stepIds: [step.id] }
       : null;
   return { entry, installFailed };
@@ -2019,7 +2020,7 @@ async function applyReconcileStepAction(
     // Only the tree can say whether the reset left it clean. Anything else is
     // refused: accepting would rearm a step whose next attempt reruns the
     // generator over the previous attempt's output.
-    if (getWorkingTreeStatus(root) !== 'clean') {
+    if (migrateTreeStatus(root) !== 'clean') {
       return {
         kind: 'error',
         reason: `Cannot apply action 'retry-clean' to step '${step.id}': the working tree is not verifiably clean after the reset to ${step.gitRefBefore}. Inspect it with \`git status\`, then re-run it. ${fallback}`,
@@ -2059,7 +2060,7 @@ async function applyReconcileStepAction(
         reason: `Cannot apply action 'unresolved' to step '${step.id}': the reset to ${step.gitRefBefore} failed: ${e instanceof Error ? e.message : String(e)}`,
       };
     }
-    if (getWorkingTreeStatus(root) !== 'clean') {
+    if (migrateTreeStatus(root) !== 'clean') {
       return {
         kind: 'error',
         reason: `Cannot apply action 'unresolved' to step '${step.id}': the working tree is not verifiably clean after the reset to ${step.gitRefBefore}. Inspect it with \`git status\`, then re-run it.`,
@@ -2479,7 +2480,7 @@ function dispenseNextStep(
 function readDispenseBaselines(root: string): DispenseBaselines {
   return {
     gitRefBefore: getLatestCommitSha(root) ?? undefined,
-    treeCleanAtDispense: getWorkingTreeStatus(root) === 'clean',
+    treeCleanAtDispense: migrateTreeStatus(root) === 'clean',
     depsHashAtDispense: depsHash(root),
   };
 }
@@ -2615,7 +2616,7 @@ function emitRetryFailed(
     lines.push(
       `  retry-clean: reset the tree to ${
         step.gitRefBefore ?? 'the pre-migration ref'
-      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, ${MIGRATE_RUNS_RELATIVE_DIR} kept) and retry from that clean state by running: ${reconcileCommand(
+      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, keeping ${KEPT_OWNED_PATHS}) and retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'
@@ -2828,7 +2829,7 @@ function assessPreMarkerRetry(
       } this migration started from, so the failed attempt's changes may already be committed and rerunning the generator could apply them twice.`,
     };
   }
-  if (getWorkingTreeStatus(root) !== 'clean') {
+  if (migrateTreeStatus(root) !== 'clean') {
     return {
       kind: 'unsafe',
       reason: `the working tree is not verifiably clean, and the failed attempt may have written to it before failing; rerunning the generator over those changes could apply them twice.`,
@@ -2864,7 +2865,7 @@ function unresolvedOptionLine(
   if (resetTree) {
     return `  unresolved: give up on this ${noun}, resetting the tree to ${
       step.gitRefBefore ?? 'the pre-migration ref'
-    } (discarding what the failed attempt left, ${MIGRATE_RUNS_RELATIVE_DIR} kept), then run: ${command}. ${recorded}`;
+    } (discarding what the failed attempt left, keeping ${KEPT_OWNED_PATHS}), then run: ${command}. ${recorded}`;
   }
   if (state.createCommits) {
     return `  unresolved: give up on this ${noun}; its partial changes are committed under its name, marked unresolved, and the run moves on. Then run: ${command}. ${recorded}`;
@@ -2911,7 +2912,7 @@ function emitDied(
     options.push(
       `  retry-clean: reset the tree to ${
         ref ?? 'the pre-migration ref'
-      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, ${MIGRATE_RUNS_RELATIVE_DIR} kept) and retry from that clean state by running: ${reconcileCommand(
+      } (discarding its uncommitted tracked changes and the untracked files git does not ignore, keeping ${KEPT_OWNED_PATHS}) and retry from that clean state by running: ${reconcileCommand(
         root,
         runId,
         'retry-clean'
@@ -3364,7 +3365,7 @@ export function completionWarnings(
   // "may remain".
   const debtStepIds = uncoveredFailedStepIds(state);
   const uncommitted =
-    debtStepIds.length > 0 && getWorkingTreeStatus(root) !== 'clean'
+    debtStepIds.length > 0 && migrateTreeStatus(root) !== 'clean'
       ? state.steps.filter((s) => debtStepIds.includes(s.id))
       : [];
   const uninstalled = state.steps.filter((s) => s.installFailed);
@@ -3640,17 +3641,30 @@ function removeHandoff(dir: string, stepId: string): void {
   }
 }
 
+const KEPT_OWNED_PATHS = `${MIGRATE_OWNED_PATHS.slice(0, -1).join(', ')} and ${
+  MIGRATE_OWNED_PATHS[MIGRATE_OWNED_PATHS.length - 1]
+}`;
+
 // null means the probe itself failed; the death dispense renders that as
 // '(unknown)', because '(clean)' would invite a retry-clean reset over
 // evidence that was never gathered (getWorkingTreeStatus's contract).
 function dirtyTreeSummary(root: string): string | null {
   try {
-    return execSync('git status --porcelain', {
-      encoding: 'utf8',
-      cwd: root,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    }).trim();
+    return execFileSync(
+      'git',
+      [
+        'status',
+        '--porcelain',
+        '--',
+        ...migrateCommitExcludes(root).map((path) => `:(exclude)${path}`),
+      ],
+      {
+        encoding: 'utf8',
+        cwd: root,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      }
+    ).trim();
   } catch {
     return null;
   }

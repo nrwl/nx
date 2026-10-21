@@ -718,6 +718,7 @@ describe('migrate orchestrator', () => {
 
   it('should hand the final validation pass to the agent after the last migration and commit its result', () => {
     writePlan([genMig]);
+    updateFile('pre-run-change.txt', 'uncommitted before the run');
 
     // `--no-validate` turns off the per-migration validation only; the pass
     // is its own policy and stays on.
@@ -735,9 +736,9 @@ describe('migrate orchestrator', () => {
       'final validation pass over the workspace is awaiting your outcome'
     );
     expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
-    // The plan file written before init dirtied the tree, so a checkpoint
-    // commit landed; the pass diffs against its parent so the checkpoint's
-    // own content is in the diff.
+    // The change written before init dirtied the tree, so a checkpoint commit
+    // landed; the pass diffs against its parent so the checkpoint's own
+    // content is in the diff.
     const parked = readRunStateFile(init.runId);
     expect(parked.commits[0].kind).toBe('checkpoint');
     expect(parked.gitRefAtInit).toBe(
@@ -1308,7 +1309,10 @@ describe('migrate orchestrator', () => {
     );
 
     expect(commitCountFor('prompt-mig (unresolved)')).toBe(1);
-    expect(runCommand('git status --porcelain').trim()).toBe('');
+    // The untracked plan stays out of every commit.
+    expect(runCommand('git status --porcelain').trim()).toBe(
+      '?? migrations.json'
+    );
     const state = readRunStateFile(failed.runId);
     expect(state.status).toBe('completed');
     const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
@@ -1601,7 +1605,9 @@ describe('migrate orchestrator', () => {
         ).length
       ).toBe(1);
     }
-    expect(runCommand('git status --porcelain').trim()).toBe('');
+    expect(runCommand('git status --porcelain').trim()).toBe(
+      '?? migrations.json'
+    );
   }, 600000);
 
   it('should warn and continue when a reconcile finds the newest recorded commit gone from HEAD', () => {
@@ -2283,7 +2289,7 @@ process.exit(status ?? 1);
         runCommand(
           'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'
         ).trim()
-      ).toBe('');
+      ).toBe('?? migrations.json');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
         expect.stringMatching(/^[0-9a-f]{8}-step-2-1-commit\.result\.json$/),
@@ -2431,7 +2437,7 @@ process.exit(status ?? 1);
         runCommand(
           'git status --porcelain -- . :!fake-agent.log :!migrate-exit-code'
         ).trim()
-      ).toBe('');
+      ).toBe('?? migrations.json');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-install\.result\.json$/),
