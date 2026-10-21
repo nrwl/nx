@@ -185,7 +185,7 @@ public static class Analyzer
                         .Select(node => node.ProjectInstance!)
                         .ToList();
                     var tags = ProjectUtilities.GetCommonNxTags(
-                        innerBuilds.Any() ? innerBuilds : nodes.Select(node => node.ProjectInstance!));
+                        innerBuilds.Count > 0 ? innerBuilds : nodes.Select(node => node.ProjectInstance!).ToList());
 
                     // Everything outside the project directory that feeds the build — the nearest
                     // Directory.* ancestors, every file MSBuild imported, and sources or analyzer

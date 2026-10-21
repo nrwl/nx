@@ -1,6 +1,8 @@
 import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
 import { minimatch } from 'minimatch';
+import { vi } from 'vitest';
+import * as analyzerClient from '../analyzer/analyzer-client';
 import {
   createNodes,
   DotNetPluginOptions,
@@ -8,6 +10,79 @@ import {
 } from './create-nodes';
 
 describe('@nx/dotnet - createNodes', () => {
+  describe('project tags', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it.each([undefined, { build: { targetName: 'compile' } }])(
+      'should preserve analyzer tags with options %j',
+      async (options) => {
+        vi.spyOn(analyzerClient, 'analyzeProjects').mockResolvedValue({
+          nodesByFile: {
+            'apps/my-app/MyApp.csproj': {
+              name: 'my-app',
+              root: 'apps/my-app',
+              tags: ['owner:devflow', 'scope:client'],
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: 'dotnet build' },
+                },
+              },
+            },
+            'libs/untagged/Untagged.csproj': {
+              name: 'untagged',
+              root: 'libs/untagged',
+              targets: {},
+            },
+          },
+          referencesByRoot: {},
+        });
+
+        const results = await createNodes[1](
+          ['apps/my-app/MyApp.csproj', 'libs/untagged/Untagged.csproj'],
+          options,
+          {
+            workspaceRoot: '/workspace',
+            nxJsonConfiguration: {},
+          }
+        );
+
+        expect(results[0]).toEqual([
+          'apps/my-app/MyApp.csproj',
+          {
+            projects: {
+              'apps/my-app': {
+                name: 'my-app',
+                root: 'apps/my-app',
+                tags: ['owner:devflow', 'scope:client'],
+                targets: {
+                  [options ? 'compile' : 'build']: {
+                    executor: 'nx:run-commands',
+                    options: { command: 'dotnet build' },
+                  },
+                },
+              },
+            },
+          },
+        ]);
+        expect(results[1]).toEqual([
+          'libs/untagged/Untagged.csproj',
+          {
+            projects: {
+              'libs/untagged': {
+                name: 'untagged',
+                root: 'libs/untagged',
+                targets: {},
+              },
+            },
+          },
+        ]);
+      }
+    );
+  });
+
   describe('mergeUserTargetConfigurations', () => {
     it('should return node unchanged when no options provided', () => {
       const node: ProjectConfiguration = {
