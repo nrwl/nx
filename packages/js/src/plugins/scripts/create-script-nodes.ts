@@ -5,19 +5,15 @@ import {
 } from '@nx/devkit';
 import {
   calculateHashesForCreateNodes,
+  combineGlobPatterns,
   emitPluginWorkerLog,
   hashObject,
   PluginCache,
+  readShebangHeaders,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
-import { existsSync } from 'node:fs';
 import { basename, dirname, extname, join, posix } from 'node:path';
-import {
-  getShebangLine,
-  parseShebang,
-  readScriptHeader,
-  type Shebang,
-} from './shebang';
+import { getShebangLine, parseShebang, type Shebang } from './shebang';
 import { parseTargetName } from './target-name';
 
 export interface ScriptPluginOptions {
@@ -43,18 +39,22 @@ export interface ScriptPluginDefinition<T extends ScriptPluginOptions> {
 
 export type ScriptTargets = Record<string, TargetConfiguration>;
 
-const SCRIPT_GLOB = '**/*.{js,cjs,mjs,ts,cts,mts}';
+/** Specs, tests, stories and typings are never scripts. */
+const SCRIPT_GLOB = '**/!(*.spec|*.test|*.stories|*.d).{js,cjs,mjs,ts,cts,mts}';
 const PROJECT_MARKERS = ['package.json', 'project.json'];
 
 export function createScriptNodes<T extends ScriptPluginOptions>(
   definition: ScriptPluginDefinition<T>
 ): CreateNodes<T> {
   return [
-    SCRIPT_GLOB,
+    combineGlobPatterns([
+      SCRIPT_GLOB,
+      ...PROJECT_MARKERS.map((marker) => `**/${marker}`),
+    ]),
     async (files, options, context) => {
       const scriptsByRoot = groupScriptsByProjectRoot(
         files,
-        context.workspaceRoot
+        !!definition.extraTargets
       );
       const projectRoots = [...scriptsByRoot.keys()];
       if (!projectRoots.length) {
@@ -75,7 +75,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
         );
         const results: CreateNodesResultArray = [];
         for (const [i, projectRoot] of projectRoots.entries()) {
-          const scripts = scriptsByRoot.get(projectRoot);
+          const { marker, scripts } = scriptsByRoot.get(projectRoot);
           // include/exclude can change which scripts a project gets without
           // changing its contents.
           const key = hashObject([hashes[i], [...scripts].sort()]);
@@ -98,7 +98,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
           const targets = cache.get(key);
           if (Object.keys(targets).length) {
             results.push([
-              scripts[0],
+              scripts[0] ?? marker,
               { projects: { [projectRoot]: { root: projectRoot, targets } } },
             ]);
           }
@@ -111,49 +111,48 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
   ];
 }
 
+interface ProjectScripts {
+  marker: string;
+  scripts: string[];
+}
+
 /**
- * Assigns each script to its nearest enclosing project root. Roots are
- * resolved from disk rather than globbed, so markers never reach createNodes.
+ * Assigns each script to its nearest enclosing project root among the
+ * markers the plugin was handed, so `include`/`exclude` scope projects as well
+ * as scripts. Roots without scripts are kept only when `includeAllRoots` is set.
  */
 function groupScriptsByProjectRoot(
   files: readonly string[],
-  workspaceRoot: string
-): Map<string, string[]> {
-  // Directory -> nearest project root, or null outside any project.
-  const rootOf = new Map<string, string | null>();
-  const findRoot = (start: string) => {
-    const visited: string[] = [];
-    let dir = start;
-    let root = rootOf.get(dir);
-    while (root === undefined) {
-      visited.push(dir);
-      if (
-        PROJECT_MARKERS.some((m) => existsSync(join(workspaceRoot, dir, m)))
-      ) {
-        root = dir;
-      } else if (dir === '.') {
-        root = null;
-      } else {
-        dir = dirname(dir);
-        root = rootOf.get(dir);
-      }
+  includeAllRoots: boolean
+): Map<string, ProjectScripts> {
+  const markers = new Map<string, string>();
+  const scripts: string[] = [];
+  for (const file of files) {
+    if (PROJECT_MARKERS.includes(basename(file))) {
+      markers.set(dirname(file), file);
+    } else {
+      scripts.push(file);
     }
-    for (const v of visited) {
-      rootOf.set(v, root);
-    }
-    return root;
-  };
+  }
 
-  const byRoot = new Map<string, string[]>();
-  for (const script of files) {
-    const root = findRoot(dirname(script));
-    if (root === null) {
+  const byRoot = new Map<string, ProjectScripts>();
+  if (includeAllRoots) {
+    for (const [root, marker] of markers) {
+      byRoot.set(root, { marker, scripts: [] });
+    }
+  }
+  for (const script of scripts) {
+    let dir = dirname(script);
+    while (!markers.has(dir) && dir !== '.') {
+      dir = dirname(dir);
+    }
+    if (!markers.has(dir)) {
       continue;
     }
-    if (!byRoot.has(root)) {
-      byRoot.set(root, []);
+    if (!byRoot.has(dir)) {
+      byRoot.set(dir, { marker: markers.get(dir), scripts: [] });
     }
-    byRoot.get(root).push(script);
+    byRoot.get(dir).scripts.push(script);
   }
   return byRoot;
 }
@@ -173,20 +172,18 @@ function createTargets<T extends ScriptPluginOptions>(
   watch: boolean
 ): ScriptTargets {
   const claimed: ClaimedScript[] = [];
-  for (const script of scripts) {
-    const header = readScriptHeader(join(workspaceRoot, script));
-    const shebang =
-      header === null ? null : parseShebang(getShebangLine(header));
+  for (const { file, header } of readShebangHeaders(workspaceRoot, scripts)) {
+    const shebang = parseShebang(getShebangLine(header));
     if (!shebang || !definition.claims(shebang)) {
       continue;
     }
     const { name, warnings } = parseTargetName(header);
     for (const warning of warnings) {
-      emitPluginWorkerLog('warn', `${script}: ${warning}.`);
+      emitPluginWorkerLog('warn', `${file}: ${warning}.`);
     }
     claimed.push({
-      path: script,
-      relativePath: posix.relative(projectRoot, script),
+      path: file,
+      relativePath: posix.relative(projectRoot, file),
       shebang,
       targetName: name,
     });
