@@ -1,0 +1,11 @@
+---
+title: Vitest
+description: Vitest API reference for Nx plugins
+sidebar:
+  hidden: true
+pagefind: false
+---
+
+For setup and guides, see [Nx with Vitest](/docs/technologies/test-tools/vitest/introduction). The pages below are the API reference.
+
+{% sidebar_group_cards group="Reference/Vitest" /%}

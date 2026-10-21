@@ -1,0 +1,11 @@
+---
+title: Detox
+sidebar:
+  hidden: true
+description: React Native testing with Detox
+pagefind: false
+---
+
+Get started with [Nx with Detox](/docs/technologies/test-tools/detox/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/test-tools/detox" /%}

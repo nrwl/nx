@@ -1,0 +1,52 @@
+---
+title: 'What is Nx? Smart Monorepo Build System & CI'
+description: 'Nx is a build system with smart caching and task orchestration for monorepos and polyrepos. Ship faster and keep CI fast as your codebase scales.'
+sidebar:
+  order: 1
+  label: Introduction
+filter: 'type:Features'
+---
+
+Nx is a build system for JavaScript and TypeScript monorepos, with plugins extending it to any language. It helps you **develop faster** and **keep CI fast** as your codebase scales.
+
+{% youtube src="https://youtu.be/pbAQErStl9o" title="What is Nx?" width="100%" /%}
+
+## Challenges of monorepos
+
+Monorepos have many advantages and are especially useful for AI agents to have more context and tools to make cross-cutting changes. But as teams and codebases grow, monorepos are hard to scale:
+
+- **Slow builds and tests** - Hundreds or thousands of tasks compete for CI resources.
+- **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order, and that's hard to manage by hand.
+- **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
+- **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
+
+## What Nx does
+
+**Nx reduces friction across your entire development cycle** with intelligent caching, task orchestration, and deep understanding of your codebase structure.
+
+Nx:
+
+1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice.
+2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects.
+3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible.
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects.
+5. **Makes CI fast** - [Remote caching](/docs/features/ci-features/remote-cache), [distributed task execution](/docs/features/ci-features/distribute-task-execution), and [task splitting](/docs/kb/split-e2e-tasks) across machines.
+6. **Handles flakiness** - [Automatically detects and re-runs flaky tests](/docs/kb/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci).
+
+## Start small, grow as needed
+
+Nx is modular. Start with the CLI and add capabilities as your needs grow.
+
+| Component                                  | What It Does                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Core**                                | Task runner with [local caching](/docs/features/cache-task-results) and [affected commands](/docs/features/ci-features/affected). Works with any tech stack.                                                                                                                                                                                                                                               |
+| [**Nx Plugins**](/docs/plugin-registry)    | Technology-specific automation (generators, auto-configured projects and tasks, dependency detection).                                                                                                                                                                                                                                                                                                     |
+| [**Nx Cloud**](/docs/features/ci-features) | [Remote caching](/docs/features/ci-features/remote-cache), [task distribution](/docs/features/ci-features/distribute-task-execution), [task splitting](/docs/kb/split-e2e-tasks), and [self-healing CI](/docs/features/ci-features/self-healing-ci). [Try it for free](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=intro-cloud-table). |
+
+## Where to go from here
+
+- **Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
+- **Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
+- **Already using Nx?** → [Keep your CI fast with Nx Cloud](https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=intro-next-steps)
+
+**Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribing to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).

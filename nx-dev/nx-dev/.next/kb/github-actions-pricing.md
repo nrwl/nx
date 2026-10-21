@@ -1,0 +1,199 @@
+---
+title: 'GitHub Actions Pricing and How to Cut Your CI Bill'
+description: 'GitHub Actions per-minute rates for private repositories, and when caching cuts your CI bill. With 70% of task time served from cache a workspace can cut total CI spend about 40% and halve its CI duration.'
+sidebar:
+  label: GitHub Actions pricing
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Nx Cloud'
+---
+
+With 70% of task time served from cache,
+[a workspace using 160 machine-minutes of CI per run](#example-eight-job-matrix-on-8-core-runners)
+halves both its GitHub Actions minutes and its CI duration (wall clock).
+Total CI spend, Nx Cloud included, drops about 40%.
+
+GitHub Actions bills private repositories by the minute, so the bill tracks machine-minutes, the
+total across every job, rather than how long the pipeline takes end to end.
+Four 25-minute jobs running in parallel use 100 machine-minutes and cost the same as a 100-minute
+pipeline on a single runner.
+At the same cache share, the more machine-minutes your pipeline uses today, the more you save.
+A remote cache is one way to cut them.
+
+## GitHub Actions pricing for private repositories
+
+Selected per-minute rates for
+[GitHub-hosted runners](https://docs.github.com/en/billing/reference/actions-runner-pricing):
+
+| Runner                      | USD per minute |
+| --------------------------- | -------------- |
+| Linux x64, 2 core, standard | $0.006         |
+| Linux x64, 4 core           | $0.012         |
+| Linux x64, 8 core           | $0.022         |
+| Linux x64, 16 core          | $0.042         |
+| Linux arm64, 2 core         | $0.005         |
+| macOS, 3 to 4 core          | $0.062         |
+
+GitHub rounds each job up to a whole minute, so many sub-minute jobs cost more than the sum of
+their runtimes.
+Private repositories get
+[included minutes](https://docs.github.com/en/billing/concepts/product-billing/github-actions) each
+month, 2,000 on Free, 3,000 on Pro and Team, and 50,000 on Enterprise Cloud.
+Saved standard-runner minutes only reach the invoice past that allowance.
+Standard runners on public repositories and self-hosted runners are free, and larger runners are
+always billed with no allowance.
+
+## What Nx Cloud costs in GitHub Actions minutes
+
+Nx Cloud bills in credits, $5.50 per 10,000 on the Team plan, so 10,000 credits cost the same as
+about 917 minutes on a standard 2-core GitHub runner.
+
+Every CI run connected to Nx Cloud costs 500 credits, or $0.275, plus 10 credits per machine for a
+[resource usage report](/docs/kb/resource-usage).
+
+Moving work onto [Nx Agents](/docs/features/ci-features/distribute-task-execution) instead of GitHub
+runners prices out like this:
+
+| Nx Agents resource class | Credits per minute | USD per minute | Comparable GitHub runner | GitHub USD per minute |
+| ------------------------ | ------------------ | -------------- | ------------------------ | --------------------- |
+| Linux medium, 2 vCPU     | 10                 | $0.0055        | Linux x64, 2 core        | $0.006                |
+| Linux XL, 8 vCPU         | 40                 | $0.022         | Linux x64, 8 core        | $0.022                |
+
+Linux x64 agents cost roughly the same as the equivalent GitHub runners at 2 and 8 cores.
+GitHub arm64 runners are cheaper than the matching Nx Agents class, so price those workloads
+separately.
+These are compute rates only, and a Team plan bill can also include contributors, concurrent
+connections, and add-ons.
+Full rates are in the [credit pricing reference](/docs/reference/nx-cloud/credits-pricing).
+
+## Caching and cost savings
+
+The per-minute rates are close enough that switching runners barely changes the bill.
+The difference is in machine-minutes.
+A task that hits the [remote cache](/docs/features/ci-features/remote-cache) costs a few seconds of
+download instead of its full runtime, and the cache is shared across every PR and every machine.
+
+Nx Cloud comes out cheaper than plain GitHub Actions when the minutes the cache avoids are worth
+more than the per-run Nx Cloud charge.
+Every figure here bills each job as a whole minute, the way GitHub does.
+
+The table below is roughly the baseline a single-job pipeline needs today, in machine-minutes per
+run, before the cache pays for itself.
+Each row holds the runner fixed and compares a pipeline against itself.
+Above these numbers Nx Cloud is faster and cheaper, below them it is faster and costs more.
+
+| Runner                | Break-even at 50% cached | Break-even at 70% cached |
+| --------------------- | ------------------------ | ------------------------ |
+| Linux 2-core ($0.006) | ~100 machine-minutes     | ~72 machine-minutes      |
+| Linux 8-core ($0.022) | ~31 machine-minutes      | ~23 machine-minutes      |
+
+The more expensive the runner, the sooner the cache pays for itself, because every minute it skips
+is worth more.
+
+{% aside type="note" %}
+The examples below price remote caching only, counting runner minutes rather than Actions
+storage, with the jobs left on GitHub runners.
+50% and 70% are two points on a dial, not what a workspace should expect.
+The tables show the model's exact output so you can check the arithmetic, but what you get depends
+on your task mix, how often [inputs](/docs/kb/configure-inputs) change, and how your task time is
+spread across tasks.
+[Run the numbers](#appendix-run-it-on-your-own-numbers) on your own workspace.
+{% /aside %}
+
+## Example: four-job matrix on standard runners
+
+A workspace runs 500 CI pipelines a month.
+To keep the wall clock near 30 minutes it splits lint, test, build, and e2e across a four-job
+matrix on standard 2-core Linux runners.
+Each job takes about 30 minutes, 3 of them checkout and install, for 120 machine-minutes per run.
+
+| Setup                | Billed minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs | Wall clock |
+| -------------------- | -------------- | -------------- | ---------------- | ------------- | -------- | ---------- |
+| Plain GitHub Actions | 120            | $0.72          | None             | $0.72         | $360.00  | 30 min     |
+| Nx Cloud, 50% cached | 72             | $0.432         | $0.297           | $0.729        | $364.50  | 17.5 min   |
+| Nx Cloud, 70% cached | 52             | $0.312         | $0.297           | $0.609        | $304.50  | 12.1 min   |
+
+At 50% cached the month costs $4.50 more than plain GitHub Actions, so the cache buys 12.5 minutes
+off every run rather than a lower bill.
+At 70% the bill falls 15%.
+
+## Example: eight-job matrix on 8-core runners
+
+A larger workspace runs the same 500 pipelines a month across eight jobs on 8-core runners,
+20 minutes each including 3 of checkout and install, for 160 machine-minutes per run.
+That baseline is well above break-even, so the cache is cheaper at either share.
+
+| Setup                | Billed minutes | GitHub per run | Nx Cloud per run | Total per run | 500 runs  | Wall clock |
+| -------------------- | -------------- | -------------- | ---------------- | ------------- | --------- | ---------- |
+| Plain GitHub Actions | 160            | $3.52          | None             | $3.52         | $1,760.00 | 20 min     |
+| Nx Cloud, 50% cached | 104            | $2.288         | $0.319           | $2.607        | $1,303.50 | 12.5 min   |
+| Nx Cloud, 70% cached | 80             | $1.76          | $0.319           | $2.079        | $1,039.50 | 9.1 min    |
+
+That is 25% off the bill at 50% cached and 40% off at 70%, with the wall clock down to 12 and 9
+minutes.
+On large runners each skipped minute is worth almost four times what it is on a standard one.
+The same cache pays off here at 50%, where the four-job example needs 70% to get there.
+The Nx Cloud share is about $160 a month, 500 pipeline executions plus the resource usage reports,
+and the Team plan covers the first $29 of it.
+
+A small single-job pipeline is where Nx Cloud doesn't pay for itself on compute.
+A 30-minute job on one 2-core runner costs about $90 a month at 500 runs, and about $195 with
+Nx Cloud at 50% cached.
+It finishes in 18 billed minutes instead of 30, so what you are buying here is speed.
+
+## How to cut your GitHub Actions bill
+
+- Count machine-minutes, not wall-clock minutes.
+  Matrix jobs and larger runners multiply the baseline, so those are the pipelines most likely to
+  clear break-even.
+- Connect the pipelines already on large runners first.
+  At 50% cached an 8-core job breaks even after about 30 machine-minutes, a 2-core job after
+  about 100.
+- Read the computation time saved in the Nx Cloud workspace overview after two weeks, then divide
+  it by that figure plus the task time actually run.
+  That ratio is your cache share.
+  If it is low, over-broad `inputs` and `namedInputs` are worth checking first.
+- Nx runs 3 tasks at a time by default, so raise `--parallel` on larger runners unless your tasks
+  already use several cores each.
+
+Nx Agents also take over the job matrix you maintain by hand.
+One `distribute-on` line in the [CI configuration file](/docs/reference/nx-cloud/ci-config) sets how
+many machines a run uses, and raising it leaves the workflow file alone.
+
+## Appendix: run it on your own numbers
+
+Per run, with the jobs still on GitHub runners.
+`ceil` rounds up to the whole minute, the way GitHub bills each job:
+
+```plaintext
+fixed      = 0.275 + J * 0.0055
+savings    = J * r * (ceil(s + w) - ceil(s + c + w * (1 - h))) - fixed
+wall_clock = s + c + w * (1 - h)
+```
+
+- `J` jobs per run
+- `r` runner rate in dollars per minute, from the rate card above
+- `s` setup minutes per job, meaning checkout and install
+- `w` task minutes per job today, not counting setup
+- `h` share of task minutes the cache avoids, between 0 and 1
+- `c` minutes to restore the cache, about 1
+
+Nx Cloud is cheaper whenever `savings` is positive.
+The four-job example above has `J=4`, `r=0.006`, `s=3`, `w=27`, and `c=1`, so at `h=0.7` each job
+bills as 13 minutes instead of 30 and the run saves
+`4 * 0.006 * (30 - 13) - 0.297`, or $0.111 and $55.50 across 500 runs.
+
+Two assumptions move the answer more than the rest.
+`h` is a share of task minutes, not a share of tasks, and the two match only when cached and
+uncached tasks take about the same time, so a pipeline whose slowest task always misses saves less.
+And `fixed` counts a 10 credit resource usage report per machine, on by default for new
+organizations and switchable off.
+
+The rest:
+
+- Jobs stay on GitHub runners. Nx Agents would replace `r` with the agent rate.
+- Setup is never cached, so `s` is the same either way.
+- `c` is charged once per job, though Nx restores each cached task separately.
+- Jobs are balanced and parallel, so the wall clock is one job's time.
+- Monthly totals are metered usage, and contributor seats and add-ons sit outside `fixed`.

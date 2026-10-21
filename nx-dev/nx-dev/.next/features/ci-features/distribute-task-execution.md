@@ -1,0 +1,371 @@
+---
+title: 'Distribute Task Execution (Nx Agents)'
+description: 'Nx Agents distribute CI tasks across machines, and dynamic task packing fills each machine by CPU and memory use, so pull requests finish faster on fewer machine-minutes.'
+keywords: [distributed tasks, dynamic task packing, task packing, CI cost]
+sidebar:
+  order: 12
+filter: 'type:Features'
+---
+
+With Nx Agents, the tasks in your CI run spread across several machines.
+_Dynamic task packing_ keeps each machine close to its CPU and memory limits.
+You pay for machine-minutes, not for how busy a machine is, so the same work packed onto fewer, busier machines costs less and finishes sooner.
+
+In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
+
+{% youtube
+src="https://youtu.be/9JkEbqgS8cY"
+title="How Nx Agents Distribute Tasks Across Machines in CI"
+/%}
+
+## Why CI pipelines waste compute
+
+Most pipelines use static partitioning (binning and sharding), splitting work into fixed jobs, such as one machine per task type, with e2e tests split into shards across more machines.
+Each machine still runs only the tasks assigned to it, so a shard that gets two long e2e tests holds up the whole run while the other machines finish early or sit mostly idle.
+
+![Fixed jobs: a unit test VM, three e2e shards, and a build VM run 21 tasks in 10 minutes and 31 machine-minutes. One shard runs two long e2e tests back to back while the other VMs finish early.](../../../../assets/features/nx-agents-fixed-jobs.svg)
+
+## How dynamic task packing works
+
+Nx Cloud uses what it knows about your projects and tasks to decide which task runs where, and when:
+
+- Task order and the critical path come from the [task graph](/docs/concepts/mental-model#the-task-graph), so long chains start first.
+- Each task's duration and its CPU and memory profile come from previous runs.
+- Each agent gets new work whenever it has room for it, instead of a batch fixed at the start of the run.
+
+![Nx Cloud packs the same 21 tasks onto three agents, with one e2e test per agent at a time, finishing in 6 minutes on 18 machine-minutes.](../../../../assets/features/nx-agents-task-packing.svg)
+
+A lint task and a memory-heavy e2e test can share an agent because Nx Cloud knows they fit together.
+When an agent fails during setup, other agents pick up its tasks.
+Task logs and outputs are replayed to your main CI job, so the steps that come after keep working.
+
+Apart from the number of agents, dynamic task packing needs no configuration.
+There's no `--parallel` value to tune and no mapping of projects to machines to maintain.
+
+Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
+They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
+
+## Enable Nx Agents
+
+Connect your workspace to Nx Cloud if you haven't already:
+
+```shell
+npx nx@latest connect
+```
+
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=distribute-task-execution" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+
+Choose one of the following setup paths.
+
+{% tabs %}
+{% tabitem label="Use an Agent" %}
+
+{% llm_copy_prompt title="Let an AI agent set it up for you" previewLines=15 %}
+You are an Nx Agents workflow migration assistant.
+
+Your task is to analyze an existing CI pipeline and create a correct, conservative Nx Agents setup based on the pipeline's real commands, dependencies, secrets, and execution behavior.
+
+Do not assume the workflow is simple. Inspect the CI workflow/pipeline files, invoked scripts, env-derived target lists, existing `.nx/workflows` files, `nx.json`, package-manager config, version files, and any provided Nx Agents docs/examples.
+
+## Primary goal
+
+Create an Nx Agents workflow that preserves the behavior of the existing CI pipeline while moving appropriate distributed Nx task execution onto Nx Agents.
+
+Act on the migration plan by default: edit the relevant workflow/configuration files unless the user explicitly asks for analysis only.
+
+Favor correctness over cleverness. Keep coordinator-only responsibilities in the CI provider's orchestration job.
+
+## Required analysis
+
+1. Identify the CI topology:
+   - CI provider: GitHub Actions, GitLab CI, Bitbucket Pipelines, or another equivalent system.
+   - Trigger types: PR/MR, push, merge queue, manual dispatch, reusable workflow/pipeline calls.
+   - Required checks/statuses, protected branches, environments, permissions, concurrency.
+   - Main orchestration job vs manually sharded jobs vs release/deploy jobs.
+
+2. Identify commands:
+   - Nx commands: `affected`, `run-many`, `run`, `record`, `fix-ci`, `complete-ci-run`.
+   - Non-Nx commands that must remain local or be wrapped in `nx-cloud record`.
+   - Hidden commands in shell scripts, TypeScript scripts, env vars, matrices, or conditionals.
+   - Commands using `--no-dte`, `--no-agents`, special configs, custom base/head, or different retry behavior.
+
+3. Classify execution plane:
+   - Coordinator-only: checkout, base/head setup, secret loading, artifact upload, comments, deployment, release, commits, status reporting.
+   - Agent init: checkout, toolchain setup, dependency install, registry auth, caches, services, browsers.
+   - Distributed Nx work: cacheable Nx targets that should run on agents.
+   - Recorded local work: checks that should use `nx-cloud record`.
+   - Explicitly local work: commands that must not be distributed.
+
+4. Infer toolchains and services:
+   - Default agent image: `ubuntu22.04-node24.14-v1`.
+   - Node/package manager/Corepack version.
+   - Java/Gradle, Python/uv, Rust/Cargo, .NET, Go, browsers, Docker/Testcontainers.
+   - Private registries, package caches, read-through registries.
+   - Service containers or Docker Compose requirements.
+   - Version sources such as `.nvmrc`, `packageManager`, `mise.toml`, Gradle wrapper, pinned CI-provider steps/actions.
+   - If the workflow requires a different Node version than the base image, install it during init using the appropriate reusable step or script.
+
+5. Identify env vars and secrets:
+   - CI-provider-only vars.
+   - Main orchestration job vars.
+   - Agent-required vars to pass via `--with-env-vars`.
+   - Vars that must be configured in Nx Cloud UI.
+   - Secrets that must not be forwarded.
+   - Do not recommend `--with-env-vars=auto` unless the workflow already uses it or the user explicitly accepts broad forwarding.
+   - Never print full env in agent setup.
+
+6. Map reusable CI steps:
+   - Prefer Nx Cloud reusable workflow steps where equivalent: checkout, install-node, install-node-modules, cache, install-browsers, install-mise, install-aws-cli.
+   - Use inline scripts when no equivalent exists.
+   - Keep CI-provider-only steps in the coordinator job, especially SHA/base-head setup, artifact upload, comments, provider app/token auth, cloud deployment auth, and release tooling.
+   - Preserve version behavior from pinned provider steps/actions as closely as possible.
+
+## Semantic constraints rule
+
+Preserve semantic constraints, not incidental bottlenecks from the old CI topology.
+
+When migrating to Nx Agents, distinguish these three concepts:
+
+1. Task ordering:
+   - "This must finish before that can start."
+   - Prefer to model or verify this through the Nx task graph.
+
+2. Per-machine concurrency:
+   - "This machine should only run N tasks at once because of CPU, memory, ports, browsers, Docker, services, etc."
+   - Nx Cloud packs tasks onto each agent from their measured CPU and memory use, so CPU and memory limits need no configuration. Drop old `--parallel` values.
+   - When tasks share a machine-local resource such as a port, a browser, or a database, keep them apart with `dte.scheduling-constraints` in `.nx/ci-config.yaml` (`cannot-run-with`).
+
+3. Global serialization:
+   - "Only one of these tasks may run anywhere in the whole CI run."
+   - Preserve this only when there is concrete evidence of a global shared resource, external environment, deployment, rate limit, mutable shared artifact, commit/push behavior, or an unmodeled dependency.
+
+Treat old CI job boundaries, dependency edges such as `needs:`, and `--parallel` values as implementation evidence only.
+
+They do not automatically prove global serialization or coordinator-level ordering.
+
+If Nx models the dependency, let Nx schedule it.
+
+If a target uses only machine-local resources, it can usually distribute safely. Preserve global serialization or coordinator-local execution only when supported by concrete evidence.
+
+## Manual sharding rule
+
+Apply the Semantic Constraints Rule first. Do not assume separate CI jobs or dependency edges such as `needs:` imply coordinator-level ordering that must be preserved in the CI provider.
+
+Separate CI jobs only prove the old implementation split execution there. They do not prove that the split is semantically required.
+
+When manually sharded jobs each run distinct Nx targets, first check whether Nx already models the real ordering through:
+
+- `nx.json` `targetDefaults`
+- project target `dependsOn`
+- resolved project config from `nx show project <project> --json`
+- inferred task dependencies from Nx plugins
+- generated task graph output from `nx run-many -t <targets> --graph=graph.json`
+
+If Nx already models relationships such as `e2e` depending on `build`, generated-code checks depending on generation, or tests depending on build/setup targets, consolidate compatible commands and let Nx schedule the task graph.
+
+Do not preserve separate Nx command steps merely for old job names, check readability, failure attribution, or step-level gating if the Nx task graph models the dependency.
+
+Treat those as non-semantic implementation details unless artifacts, env, retry/failure behavior, or execution plane truly differs.
+
+Preserve separate coordinator commands only when required ordering or behavior is not represented in Nx, or when commands differ by config, base/head range, retry policy, coverage behavior, event conditionals, non-DTE behavior, artifacts, or failure aggregation.
+
+If separate commands are preserved, explicitly state which Nx dependency relationship could not be proven.
+
+## Command consolidation
+
+- Apply the Manual Sharding Rule before preserving separate CI jobs.
+- Treat manually sharded CI jobs as candidates for consolidation, especially when each job runs a distinct Nx target.
+- When deciding whether commands can be consolidated, generate and inspect the Nx task graph for the relevant targets.
+- Use the workspace package manager, for example: `pnpm nx run-many -t <targets> --graph=graph.json`.
+- Inspect `graph.json` to verify which tasks depend on each other. Use this evidence, plus `targetDefaults`, project `dependsOn`, and resolved project config, before deciding whether old job splits must remain.
+- If Nx target dependencies model the required ordering, combine compatible commands into one `nx affected -t ...` or `nx run-many -t ...`.
+- Combine multiple Nx commands only when semantics remain equivalent.
+- Do not combine commands with different configs, target sets, `--no-dte`, retry behavior, coverage behavior, self-healing behavior, failure aggregation, or event conditionals.
+- Preserve intentional parallel shell fan-out only when consolidation would change behavior or when required semantics cannot be represented by the Nx task graph.
+- Preserve performance intent through Nx scheduling and agent count. Nx Cloud decides per-agent concurrency.
+
+## Assignment rules policy
+
+- Do not add assignment rules for concurrency. Nx Cloud packs tasks by resource use.
+- Use assignment rules only when a target needs a different agent type, such as a larger machine or one with a GPU, and the existing setup already routes it that way.
+- Verify every referenced agent template exists in every relevant `distribute-on` tier.
+
+## Base image policy
+
+- Use the standard Nx Agents base image unless the user explicitly provides a different supported image.
+- Default to `ubuntu22.04-node24.14-v1`.
+- If a required tool is missing from the base image, add an init step using a reusable Nx Cloud workflow step when available, or an inline script when necessary.
+
+## Shutdown
+
+- Decide whether heartbeat is sufficient.
+- Use `--require-explicit-completion` plus guarded `complete-ci-run` for multi-step, multi-job, staged, or heartbeat-risky workflows.
+- Treat `--stop-agents-after` as waste reduction, not CI completion.
+- Build `--stop-agents-after` from the final distributed target set and validate target/configuration names.
+- Use `--stop-agents-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
+
+## Output requirements
+
+After making changes, produce:
+
+1. A concise migration summary.
+2. A list of files changed.
+3. A summary of what changed in each file.
+4. A command classification table:
+   - Command
+   - Current location
+   - New location
+   - Reason
+5. A toolchain/setup checklist for agents.
+6. An env/secrets transfer checklist split into:
+   - CI-provider-only
+   - Agent forwarded
+   - Nx Cloud UI / external setup
+7. The generated or updated `.nx/workflows/agents.yaml`.
+8. The generated or updated distribution config if needed.
+9. Scheduling constraints and assignment rules only where the analysis requires them.
+10. Shutdown/heartbeat recommendation.
+11. Validation performed and validation still required.
+
+## Validation checklist
+
+Before finalizing, verify:
+
+- Every generated target exists.
+- `--stop-agents-after` matches real distributed targets.
+- Every env var forwarded to agents is actually needed.
+- No secret is printed in logs.
+- Main job and agents check out the same commit.
+- `NX_BASE` / `NX_HEAD` works for PR/MR, push, merge queue, and manual dispatch.
+- For each preserved ordering constraint, classify it as task ordering, per-machine concurrency, or global serialization.
+- Preserve global serialization only when evidence exists for a global shared resource, external environment, deployment, rate limit, mutable shared artifact, commit/push behavior, or unmodeled dependency.
+- Old runner-local CPU and memory limits are dropped. Shared machine-local resources become `scheduling-constraints`.
+- For manually sharded pipelines, verify whether Nx target dependencies already model the old job ordering before preserving separate coordinator jobs.
+- For consolidated target sets, generate a task graph with `nx run-many -t <targets> --graph=graph.json` and inspect the dependency edges.
+- Do not preserve old job boundaries solely for job names, check readability, failure attribution, or step-level gating if Nx already models the dependency.
+- For any preserved separate Nx commands, document why they could not be safely combined.
+- For any combined commands, verify target ordering is represented in `targetDefaults`, resolved project target `dependsOn`, or generated task graph edges.
+- Agent init steps do not race on shared files, caches, or `$NX_CLOUD_ENV`.
+- Required tools missing from the default base image are installed during agent init.
+- YAML syntax, anchors, env interpolation, and CI-provider expressions are valid.
+- A trial CI run shows agents start, receive tasks, restore outputs, and shut down correctly.
+
+## Style
+
+Do not stop at a proposal unless the user asks for one. Make the changes, then explain what was changed and why.
+
+Be conservative. Explain tradeoffs. When unsure, call out the uncertainty instead of inventing behavior. Preserve existing CI semantics first; reduce complexity second; optimize agent usage third.
+{% /llm_copy_prompt %}
+
+{% /tabitem %}
+{% tabitem label="Manual" %}
+
+If you don't have a CI workflow yet, generate one:
+
+```shell
+npx nx g ci-workflow
+```
+
+Add a `.nx/ci-config.yaml` file that sets how many agents to use:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-large-js
+  scheduling-constraints:
+    # e2e tasks share a resource, so never run two of them on one agent at once
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
+lifecycle:
+  stop-after:
+    - build
+```
+
+`linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
+Leave out `scheduling-constraints` unless your tasks share a resource such as a port or a database.
+
+Then start the agents early in your CI job, before installing dependencies:
+
+```yaml {% meta="{13}" %}
+// .github/workflows/ci.yml
+name: CI
+# ... triggers
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - run: pnpm dlx nx-cloud start-nx-agents
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      # ... install dependencies
+      - run: pnpm exec nx affected -t lint test build
+```
+
+Every Nx command in the job then runs its tasks across the three agents.
+For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
+For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).
+For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+
+{% /tabitem %}
+{% /tabs %}
+
+## Scale agents with PR size
+
+A small pull request doesn't need as many agents as a change that affects the whole workspace.
+Give `distribute-on` a map of changesets, ordered from smallest to largest, and Nx Cloud picks one based on the share of projects the pull request affects:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on:
+    small-changeset: 3 linux-large-js # 1-25% of projects affected
+    medium-changeset: 6 linux-large-js # 26-50%
+    large-changeset: 10 linux-large-js # 51-75%
+    extra-large-changeset: 15 linux-large-js # 76-100%
+```
+
+Each changeset covers an equal share of that range, so their order matters.
+Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
+
+## See it in action in Nx Cloud
+
+The Nx Cloud timeline view shows how tasks were distributed across agents in a CI run.
+
+{% youtube
+src="https://youtu.be/-ZAA8GR80aQ"
+title="Flamecharts for CI"
+/%}
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Create custom launch templates" description="Set up agents with the exact tools and machine size your tasks need" href="/docs/kb/launch-templates" /%}
+
+{% linkcard title="Enforce a custom Node version" description="Pin the Node version on your agents from .nvmrc, Volta, or mise" href="/docs/kb/launch-template-examples#custom-node-version" /%}
+
+{% linkcard title="Assignment rules" description="Send specific tasks to specific agent types, such as larger machines" href="/docs/kb/assignment-rules" /%}
+
+{% linkcard title="Split slow tasks by file" description="Turn a large e2e or test suite into one task per file so agents can share the work" href="/docs/kb/split-e2e-tasks" /%}
+
+{% linkcard title="Detect and retry flaky tasks" description="Rerun flaky tasks on a different agent when they fail" href="/docs/kb/flaky-tasks" /%}
+
+{% linkcard title="Resource usage" description="See how much CPU and memory each task and agent uses" href="/docs/kb/resource-usage" /%}
+
+{% linkcard title="Dedicated compute cluster" description="Reserve an isolated cluster for Docker-in-Docker and read-through caches" href="/docs/kb/dedicated-compute-cluster" /%}
+
+{% linkcard title="Bring your own compute" description="Distribute tasks on agents you run yourself" href="/docs/kb/bring-your-own-compute" /%}
+
+{% /cardgrid %}
+
+## Learn more
+
+- [Reliable CI: a new execution model fixing both flakiness and slowness](https://nx.dev/blog/reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness)

@@ -1,0 +1,5 @@
+▸ **isDaemonEnabled**(): `boolean`
+
+#### Returns
+
+`boolean`

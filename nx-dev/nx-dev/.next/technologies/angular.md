@@ -1,0 +1,11 @@
+---
+title: Angular
+sidebar:
+  hidden: true
+description: Build scalable Angular applications with Nx powerful tooling and generators
+pagefind: false
+---
+
+Get started with [Nx with Angular](/docs/technologies/angular/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/angular" /%}

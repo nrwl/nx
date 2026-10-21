@@ -1,0 +1,119 @@
+---
+title: Remote caching
+description: Share cached task results across developer machines and CI with Nx Cloud remote caching, so CI skips work that already ran and costs less.
+sidebar:
+  order: 11
+filter: 'type:Features'
+---
+
+{% youtube
+src="https://youtu.be/NF1__N_snog"
+title="Remote caching with Nx Cloud"
+/%}
+
+Nx [caches task results locally](/docs/features/cache-task-results) so the same machine doesn't repeat
+a task with the same inputs.
+Remote caching shares those results across developer machines and CI jobs.
+
+![Three developers and CI sharing cached task results](../../../../assets/features/distributed-caching.svg)
+
+On a remote cache hit, Nx restores the terminal output and declared task artifacts, such as a build
+or distribution directory.
+The command behaves like a local cache hit without running the task again.
+
+Every cache hit is a task your CI machines don't run, so remote caching shortens pipelines and cuts machine-minutes, which reduces cost.
+Paired with [distributed task execution](/docs/features/ci-features/distribute-task-execution), most workspaces use about 50% fewer machine-minutes than with remote caching alone.
+
+## Configure remote caching
+
+Connect your workspace to Nx Cloud:
+
+```shell
+npx nx@latest connect
+```
+
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=remote-cache" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+
+For authentication and CI setup details, see [Setting Up CI](/docs/getting-started/setup-ci).
+
+## Why use remote caching
+
+Remote caching can reduce work in several places:
+
+- Repeated CI runs can reuse tasks that already ran with the same inputs.
+- Developers can reuse results created in CI when their cache permissions grant access.
+- CI jobs and Nx Agents can transfer task artifacts through the shared cache.
+
+Remote caching complements [affected tasks](/docs/features/ci-features/affected).
+Affected calculations remove projects that don't need a task, while caching avoids rerunning matching
+tasks in the remaining graph.
+
+Nx Agents use remote caching to share artifacts
+between machines.
+When a task depends on output produced by another agent, Nx restores that output before running the
+dependent task.
+
+## What Nx Cloud stores
+
+Each cached task result contains:
+
+- Terminal output written to standard output and standard error.
+- Files matched by the task's `outputs` configuration.
+- The hash that identifies the task computation.
+
+The cache entry doesn't contain the input source files.
+Nx hashes those inputs to calculate the task hash.
+For more information, see [how caching works](/docs/concepts/how-caching-works#what-nx-caches).
+
+Cache correctness depends on accurate `inputs` and `outputs`.
+A missing input can produce a stale cache hit, while an undeclared output won't be restored.
+[Task sandboxing](/docs/kb/sandboxing) can identify file access that isn't represented
+in the task configuration.
+
+## Remote cache security
+
+Nx Cloud protects cached results with several controls:
+
+- Cache entries are immutable after they're written.
+- Access tokens control read and write permissions.
+- End-to-end encryption is available for task artifacts.
+- Enterprise plans offer regional and self-hosted deployment options.
+
+Configure token permissions so developer machines can read cached results while trusted CI jobs write
+them.
+For the permission model and protection against cache poisoning, see
+[cache security](/docs/kb/cache-security).
+
+For end-to-end encryption setup, see [encryption](/docs/kb/encryption).
+Nx publishes current compliance information on the [Nx security site](https://security.nx.app).
+
+## Remote cache availability
+
+Nx checks the local cache before requesting a result from the remote cache.
+If the remote cache is unavailable, local cache hits remain available, and Nx runs tasks that aren't
+cached locally.
+
+## Enterprise remote caching
+
+Organizations with specific data residency or infrastructure requirements can
+[contact the Nx Enterprise team](https://nx.dev/enterprise/trial) to discuss remote caching deployment
+options.
+
+## Skip remote caching
+
+Use `--skipRemoteCache` when one command shouldn't read from or write to the remote cache.
+For related local cache options, see [skip task caching](/docs/kb/skipping-cache).
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Cache security" description="Prevent cache poisoning and control what reaches the cache" href="/docs/kb/cache-security" /%}
+
+{% linkcard title="CI access tokens" description="Scope cache access for CI with read-only and read-write tokens" href="/docs/kb/access-tokens" /%}
+
+{% linkcard title="End-to-end encryption" description="Encrypt cached artifacts before they leave your machines" href="/docs/kb/encryption" /%}
+
+{% linkcard title="Self-hosted remote cache" description="Run your own cache server against the OpenAPI specification" href="/docs/kb/self-hosted-caching" /%}
+
+{% /cardgrid %}

@@ -1,0 +1,11 @@
+---
+title: Docker
+sidebar:
+  hidden: true
+description: Containerize your projects with Docker and Nx
+pagefind: false
+---
+
+Get started with [Nx with Docker](/docs/technologies/build-tools/docker/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/build-tools/docker" /%}

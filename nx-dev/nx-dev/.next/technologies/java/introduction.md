@@ -1,0 +1,102 @@
+---
+title: Nx with Java
+description: Nx scales your Java monorepo with caching, distributed task execution, and affected-only builds.
+sidebar:
+  label: 'Introduction'
+weight: 2
+filter: 'type:References'
+---
+
+Nx brings caching, affected-only builds, and a project graph to your Java monorepo, working with both Gradle and Maven build systems. Whether you're working with Spring Boot, Micronaut, Quarkus, or any other Java framework, Nx helps you build faster and more efficiently.
+
+## Requirements
+
+| Dependency | Supported Versions |
+| ---------- | ------------------ |
+| Java       | >= 17              |
+
+Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [GitHub](https://github.com/nrwl/nx).
+
+## Quick start
+
+### Install Nx
+
+You can install Nx globally. Depending on your package manager, use one of the following commands:
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```shell
+npm add --global nx@latest
+```
+
+{% /tabitem %}
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Add Nx to your Java project
+
+In any Gradle or Maven project, run the following command to add Nx:
+
+```shell
+nx init
+```
+
+Nx will automatically detect your build tool and you can then add the appropriate plugin (see Build System Support below).
+
+## Build system support
+
+Nx offers dedicated plugins for the two most popular Java build tools:
+
+- **[@nx/gradle](/docs/technologies/java/gradle/introduction)** - For projects using Gradle
+- **[@nx/maven](/docs/technologies/java/maven/introduction)** - For projects using Maven (experimental, requires Nx 22+)
+
+Add the plugin for your build system:
+
+```shell
+nx add @nx/gradle
+# or
+nx add @nx/maven
+```
+
+These Nx plugins for Gradle and Maven register your Gradle or Maven projects in your Nx workspace, and allow their tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/getting-started/setup-ci).
+
+For a hands-on tutorial, check out the [Gradle tutorial](/docs/kb/gradle-tutorial).
+
+## What Nx adds to your Java workspace
+
+Nx enhances your Java development workflow with:
+
+- **[Smart Caching](/docs/features/cache-task-results)** - Cache build and test results to avoid redundant work
+- **[Distributed Task Execution](/docs/features/ci-features/distribute-task-execution)** - Run tasks in parallel across multiple machines in CI
+- **[Affected Commands](/docs/features/ci-features/affected)** - Only build and test what changed
+- **[Interactive Graph](/docs/features/explore-graph)** - Visualize your project dependencies
+- **[CI Optimization](/docs/getting-started/setup-ci)** - Make your CI pipeline dramatically faster
+
+## Set up CI for your Java monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

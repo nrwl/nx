@@ -1,0 +1,1 @@
+{"version":3,"file":"terminal-shell.d.ts","sourceRoot":"","sources":["../../../../src/lib/fences/terminal-shell.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,GAAG,EAAE,SAAS,EAAE,MAAM,OAAO,CAAC;AAEvC,wBAAgB,oBAAoB,CAAC,EACnC,KAAK,EACL,QAAQ,GACT,EAAE;IACD,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,QAAQ,EAAE,SAAS,CAAC;CACrB,GAAG,GAAG,CAAC,OAAO,CAcd"}

@@ -1,0 +1,239 @@
+# Nx Reference
+
+> Reference pages from the Nx documentation. See https://nx.dev/llms.txt for the full index.
+
+## Reference
+
+- [References](https://nx.dev/docs/reference.md): API references, commands, and configuration documentation
+- [Angular](https://nx.dev/docs/reference/angular.md): Angular API reference for Nx plugins
+- [Benchmarks](https://nx.dev/docs/reference/benchmarks.md): Performance benchmarks and comparisons
+- [Code Formatting Reference](https://nx.dev/docs/reference/code-formatting.md): Learn how Nx detects which code formatter your workspace uses, how oxfmt and Prettier differ, and how to switch between them.
+- [Conformance](https://nx.dev/docs/reference/conformance.md): Code conformance and standards
+- [Create a Conformance Rule](https://nx.dev/docs/reference/conformance/create-conformance-rule.md): Learn how to create custom conformance rules to enforce standards and best practices across your Nx workspace.
+- [@nx/conformance - Executors](https://nx.dev/docs/reference/conformance/executors.md): The @nx/conformance plugin provides various executors to help you create and configure conformance within your Nx workspace. Below is a complete...
+- [@nx/conformance - Generators](https://nx.dev/docs/reference/conformance/generators.md): Generators for Nx Conformance
+- [Overview of the Nx Conformance Plugin](https://nx.dev/docs/reference/conformance/overview.md): The Nx Conformance plugin provides the ability to write and apply rules for your workspace
+- [Test a Conformance Rules](https://nx.dev/docs/reference/conformance/test-conformance-rule.md): Learn how to test custom conformance rules the @nx/conformance/testing utilities.
+- [Cypress](https://nx.dev/docs/reference/cypress.md): Cypress API reference for Nx plugins
+- [Deprecated](https://nx.dev/docs/reference/deprecated.md): Deprecated features and APIs in Nx
+- [affected:graph - CLI command](https://nx.dev/docs/reference/deprecated/affected-graph.md): Graph dependencies affected by changes
+- [Angular Schematics and Builders](https://nx.dev/docs/reference/deprecated/angular-schematics-builders.md): Learn about the deprecation of Angular schematics and builders in Nx 17, and how to handle interoperability between Nx and Angular CLI tools.
+- [As Provided vs. Derived Generator Path Options](https://nx.dev/docs/reference/deprecated/as-provided-vs-derived.md): Learn about the transition from derived to as-provided path options in Nx generators, improving transparency and predictability in code generation.
+- [Cacheable Operations](https://nx.dev/docs/reference/deprecated/cacheable-operations.md): Learn about the transition from cacheableOperations array to the cache property in Nx 17 for defining which tasks are cacheable.
+- [Deprecating Custom Tasks Runner](https://nx.dev/docs/reference/deprecated/custom-tasks-runner.md): Learn about the transition from Custom Tasks Runner to the new plugin-based API in Nx, including pre and post task execution hooks and self-hosted...
+- [Global Implicit Dependencies](https://nx.dev/docs/reference/deprecated/global-implicit-dependencies.md): Learn about the transition from global implicit dependencies to inputs and namedInputs in Nx, and how to properly configure project dependencies on...
+- [Integrated Repos vs. Package-Based Repos vs. Standalone Apps](https://nx.dev/docs/reference/deprecated/integrated-vs-package-based.md): Understand the historical differences between integrated, package-based, and standalone repositories in Nx, and how to choose the right approach for...
+- [Legacy Cache](https://nx.dev/docs/reference/deprecated/legacy-cache.md): Learn about the transition from legacy file system cache to the new database cache in Nx 21, including migration options for custom task runners and...
+- [NPM Scope](https://nx.dev/docs/reference/deprecated/npm-scope.md): Learn about the deprecation of npmScope property in nx.json and how to properly configure organization prefixes using package.json name property.
+- [print-affected - CLI command](https://nx.dev/docs/reference/deprecated/print-affected.md): Prints information about the projects and targets affected by changes
+- [Rescoping Packages from @nrwl to @nx](https://nx.dev/docs/reference/deprecated/rescope.md): Learn about the transition of official Nx plugins from @nrwl to @nx npm scope, and how to update your dependencies accordingly.
+- [Runtime Cache Inputs](https://nx.dev/docs/reference/deprecated/runtime-cache-inputs.md): Learn about the transition from runtimeCacheInputs in tasksRunnerOptions to the new inputs and namedInputs configuration for runtime cache inputs.
+- [Deprecation notice: self-hosted remote cache packages](https://nx.dev/docs/reference/deprecated/self-hosted-cache-packages.md): @nx/s3-cache, @nx/gcs-cache, @nx/azure-cache, and @nx/shared-fs-cache are deprecated due to CVE-2025-36852 (CREEP).
+- [Extending the Project Graph (v1 API)](https://nx.dev/docs/reference/deprecated/v1-nx-plugin-api.md): Learn about the deprecated v1 API for extending the Nx project graph through project inference and project graph plugins.
+- [Workspace Executors](https://nx.dev/docs/reference/deprecated/workspace-executors.md): Learn how to migrate from workspace executors to local executors in Nx plugins for better build process management.
+- [Workspace Generators](https://nx.dev/docs/reference/deprecated/workspace-generators.md): Learn how to migrate from workspace generators to local generators in Nx plugins for better code generation management.
+- [workspace.json](https://nx.dev/docs/reference/deprecated/workspace-json.md): Learn about the deprecation of workspace.json in Nx and how to migrate to project.json files for better project configuration management.
+- [Detox](https://nx.dev/docs/reference/detox.md): Detox API reference for Nx plugins
+- [.NET](https://nx.dev/docs/reference/dotnet.md): .NET API reference for Nx plugins
+- [Nx Environment Variables](https://nx.dev/docs/reference/environment-variables.md): Learn how Nx loads environment variables and find a reference for the variables that configure Nx, plugins, and Nx Cloud.
+- [ESBuild](https://nx.dev/docs/reference/esbuild.md): ESBuild API reference for Nx plugins
+- [ESLint](https://nx.dev/docs/reference/eslint.md): ESLint API reference for Nx plugins
+- [Nx Glossary](https://nx.dev/docs/reference/glossary.md): A reference of Nx-specific terms used throughout the documentation.
+- [Inputs and Named Inputs](https://nx.dev/docs/reference/inputs.md): Learn how Nx uses inputs to compute cache hashes for tasks, including file sets, runtime inputs, and environment variables that affect task outputs.
+- [Java](https://nx.dev/docs/reference/java.md): Java API reference for Nx plugins
+- [Jest](https://nx.dev/docs/reference/jest.md): Jest API reference for Nx plugins
+- [Module Federation](https://nx.dev/docs/reference/module-federation.md): Module Federation API reference for Nx plugins
+- [Node](https://nx.dev/docs/reference/node.md): Node.js API reference for Nx plugins
+- [Nx Cloud References](https://nx.dev/docs/reference/nx-cloud.md): API references, commands, and configuration documentation for Nx Cloud
+- [Cloud Commands](https://nx.dev/docs/reference/nx-cloud-cli.md): Reference for the Nx Cloud CLI commands you run directly
+- [CI Configuration File](https://nx.dev/docs/reference/nx-cloud/ci-config.md): Configure Nx Cloud CI Pipeline Executions with the .nx/ci-config.yaml file
+- [Nx Cloud Credit Pricing Reference](https://nx.dev/docs/reference/nx-cloud/credits-pricing.md): Pricing information for Nx Cloud credits and agent resource classes
+- [Nx Cloud Public API](https://nx.dev/docs/reference/nx-cloud/public-api.md): Nx Cloud Public API reference generated from the deployed OpenAPI specification.
+- [Enterprise Release Notes](https://nx.dev/docs/reference/nx-cloud/release-notes.md): Release notes for Nx Cloud Enterprise
+- [Nx Console Settings Reference](https://nx.dev/docs/reference/nx-console-settings.md): Complete reference of all configuration settings for Nx Console in VSCode and JetBrains IDEs.
+- [Nx Daemon](https://nx.dev/docs/reference/nx-daemon.md): Learn how the Nx Daemon watches workspace files and keeps project graph computation fast between commands.
+- [nx.json Reference](https://nx.dev/docs/reference/nx-json.md): A comprehensive reference for the nx.json configuration file, which controls Nx CLI behavior, project defaults, and workspace settings.
+- [Nx MCP Server Reference](https://nx.dev/docs/reference/nx-mcp.md): Complete reference for the Nx MCP (Model Context Protocol) server, including available tools, configuration options, and setup instructions for...
+- [.nxignore Reference](https://nx.dev/docs/reference/nxignore.md): Learn how to use the .nxignore file to specify files in your workspace that should be completely ignored by Nx during affected calculations.
+- [Code Owners](https://nx.dev/docs/reference/owners.md): Managing code ownership
+- [@nx/owners - Generators](https://nx.dev/docs/reference/owners/generators.md): Generators for Nx Owners configuration
+- [Overview of the Nx Owners Plugin](https://nx.dev/docs/reference/owners/overview.md): The Nx Owners plugin provides the ability to define code ownership based on projects in addition to files
+- [Playwright](https://nx.dev/docs/reference/playwright.md): Playwright API reference for Nx plugins
+- [Nx Powerpack End User License Agreement](https://nx.dev/docs/reference/powerpack-license.md): Legacy Nx Powerpack EULA, preserved for reference.
+- [Project Configuration](https://nx.dev/docs/reference/project-configuration.md): Learn how Nx constructs project configuration from inferred tasks, workspace defaults, and project-level files, with detailed explanations of task...
+- [React](https://nx.dev/docs/reference/react.md): React API reference for Nx plugins
+- [Nx Release Schedule and Support Policy](https://nx.dev/docs/reference/releases.md): Information about Nx package releases, including version support timelines, LTS policy, and deprecation guidelines for the nx and @nx/* packages.
+- [Rollup](https://nx.dev/docs/reference/rollup.md): Rollup API reference for Nx plugins
+- [Rsbuild](https://nx.dev/docs/reference/rsbuild.md): Rsbuild API reference for Nx plugins
+- [Rspack](https://nx.dev/docs/reference/rspack.md): Rspack API reference for Nx plugins
+- [Storybook](https://nx.dev/docs/reference/storybook.md): Storybook API reference for Nx plugins
+- [Telemetry](https://nx.dev/docs/reference/telemetry.md): Learn about the usage data Nx collects, why it's collected, and how to opt out.
+- [TypeScript](https://nx.dev/docs/reference/typescript.md): TypeScript API reference for Nx plugins
+- [Vite](https://nx.dev/docs/reference/vite.md): Vite API reference for Nx plugins
+- [Vitest](https://nx.dev/docs/reference/vitest.md): Vitest API reference for Nx plugins
+- [Vue](https://nx.dev/docs/reference/vue.md): Vue API reference for Nx plugins
+- [Webpack](https://nx.dev/docs/reference/webpack.md): Webpack API reference for Nx plugins
+
+## Devkit API Reference (@nx/devkit)
+
+API docs for `@nx/devkit`, the package plugin authors use to extend Nx with custom generators, executors, and project graph plugins.
+
+- [@nx/devkit Overview](https://nx.dev/docs/reference/devkit/.md): @nx/devkit Overview Devkit documentation
+- [addDependenciesToPackageJson](https://nx.dev/docs/reference/devkit/addDependenciesToPackageJson.md): addDependenciesToPackageJson Devkit documentation
+- [addProjectConfiguration](https://nx.dev/docs/reference/devkit/addProjectConfiguration.md): addProjectConfiguration Devkit documentation
+- [AggregateCreateNodesError](https://nx.dev/docs/reference/devkit/AggregateCreateNodesError.md): AggregateCreateNodesError Devkit documentation
+- [applyChangesToString](https://nx.dev/docs/reference/devkit/applyChangesToString.md): applyChangesToString Devkit documentation
+- [AsyncIteratorExecutor](https://nx.dev/docs/reference/devkit/AsyncIteratorExecutor.md): AsyncIteratorExecutor Devkit documentation
+- [cacheDir](https://nx.dev/docs/reference/devkit/cacheDir.md): cacheDir Devkit documentation
+- [ChangeType](https://nx.dev/docs/reference/devkit/ChangeType.md): ChangeType Devkit documentation
+- [convertNxExecutor](https://nx.dev/docs/reference/devkit/convertNxExecutor.md): convertNxExecutor Devkit documentation
+- [convertNxGenerator](https://nx.dev/docs/reference/devkit/convertNxGenerator.md): convertNxGenerator Devkit documentation
+- [createBuilderContext](https://nx.dev/docs/reference/devkit/ngcli_adapter/createBuilderContext.md): createBuilderContext Devkit documentation
+- [CreateDependencies](https://nx.dev/docs/reference/devkit/CreateDependencies.md): CreateDependencies Devkit documentation
+- [CreateDependenciesContext](https://nx.dev/docs/reference/devkit/CreateDependenciesContext.md): CreateDependenciesContext Devkit documentation
+- [CreateMetadata](https://nx.dev/docs/reference/devkit/CreateMetadata.md): CreateMetadata Devkit documentation
+- [CreateMetadataContext](https://nx.dev/docs/reference/devkit/CreateMetadataContext.md): CreateMetadataContext Devkit documentation
+- [CreateNodes](https://nx.dev/docs/reference/devkit/CreateNodes.md): CreateNodes Devkit documentation
+- [CreateNodesContext](https://nx.dev/docs/reference/devkit/CreateNodesContext.md): CreateNodesContext Devkit documentation
+- [CreateNodesContextV2](https://nx.dev/docs/reference/devkit/CreateNodesContextV2.md): CreateNodesContextV2 Devkit documentation
+- [createNodesFromFiles](https://nx.dev/docs/reference/devkit/createNodesFromFiles.md): createNodesFromFiles Devkit documentation
+- [CreateNodesFunction](https://nx.dev/docs/reference/devkit/CreateNodesFunction.md): CreateNodesFunction Devkit documentation
+- [CreateNodesFunctionV2](https://nx.dev/docs/reference/devkit/CreateNodesFunctionV2.md): CreateNodesFunctionV2 Devkit documentation
+- [CreateNodesResult](https://nx.dev/docs/reference/devkit/CreateNodesResult.md): CreateNodesResult Devkit documentation
+- [CreateNodesResultArray](https://nx.dev/docs/reference/devkit/CreateNodesResultArray.md): CreateNodesResultArray Devkit documentation
+- [CreateNodesResultV2](https://nx.dev/docs/reference/devkit/CreateNodesResultV2.md): CreateNodesResultV2 Devkit documentation
+- [CreateNodesV2](https://nx.dev/docs/reference/devkit/CreateNodesV2.md): CreateNodesV2 Devkit documentation
+- [createProjectFileMapUsingProjectGraph](https://nx.dev/docs/reference/devkit/createProjectFileMapUsingProjectGraph.md): createProjectFileMapUsingProjectGraph Devkit documentation
+- [createProjectGraphAsync](https://nx.dev/docs/reference/devkit/createProjectGraphAsync.md): createProjectGraphAsync Devkit documentation
+- [CustomHasher](https://nx.dev/docs/reference/devkit/CustomHasher.md): CustomHasher Devkit documentation
+- [defaultTasksRunner](https://nx.dev/docs/reference/devkit/defaultTasksRunner.md): defaultTasksRunner Devkit documentation
+- [DefaultTasksRunnerOptions](https://nx.dev/docs/reference/devkit/DefaultTasksRunnerOptions.md): DefaultTasksRunnerOptions Devkit documentation
+- [DependencyType](https://nx.dev/docs/reference/devkit/DependencyType.md): DependencyType Devkit documentation
+- [detectPackageManager](https://nx.dev/docs/reference/devkit/detectPackageManager.md): detectPackageManager Devkit documentation
+- [DynamicDependency](https://nx.dev/docs/reference/devkit/DynamicDependency.md): DynamicDependency Devkit documentation
+- [ensurePackage](https://nx.dev/docs/reference/devkit/ensurePackage.md): ensurePackage Devkit documentation
+- [Executor](https://nx.dev/docs/reference/devkit/Executor.md): Executor Devkit documentation
+- [ExecutorContext](https://nx.dev/docs/reference/devkit/ExecutorContext.md): ExecutorContext Devkit documentation
+- [ExecutorsJson](https://nx.dev/docs/reference/devkit/ExecutorsJson.md): ExecutorsJson Devkit documentation
+- [ExpandedPluginConfiguration](https://nx.dev/docs/reference/devkit/ExpandedPluginConfiguration.md): ExpandedPluginConfiguration Devkit documentation
+- [extractLayoutDirectory](https://nx.dev/docs/reference/devkit/extractLayoutDirectory.md): extractLayoutDirectory Devkit documentation
+- [FileChange](https://nx.dev/docs/reference/devkit/FileChange.md): FileChange Devkit documentation
+- [FileData](https://nx.dev/docs/reference/devkit/FileData.md): FileData Devkit documentation
+- [FileMap](https://nx.dev/docs/reference/devkit/FileMap.md): FileMap Devkit documentation
+- [formatFiles](https://nx.dev/docs/reference/devkit/formatFiles.md): formatFiles Devkit documentation
+- [generateFiles](https://nx.dev/docs/reference/devkit/generateFiles.md): generateFiles Devkit documentation
+- [Generator](https://nx.dev/docs/reference/devkit/Generator.md): Generator Devkit documentation
+- [GeneratorCallback](https://nx.dev/docs/reference/devkit/GeneratorCallback.md): GeneratorCallback Devkit documentation
+- [GeneratorsJson](https://nx.dev/docs/reference/devkit/GeneratorsJson.md): GeneratorsJson Devkit documentation
+- [getDependencyVersionFromPackageJson](https://nx.dev/docs/reference/devkit/getDependencyVersionFromPackageJson.md): getDependencyVersionFromPackageJson Devkit documentation
+- [getOutputsForTargetAndConfiguration](https://nx.dev/docs/reference/devkit/getOutputsForTargetAndConfiguration.md): getOutputsForTargetAndConfiguration Devkit documentation
+- [getPackageManagerCommand](https://nx.dev/docs/reference/devkit/getPackageManagerCommand.md): getPackageManagerCommand Devkit documentation
+- [getPackageManagerVersion](https://nx.dev/docs/reference/devkit/getPackageManagerVersion.md): getPackageManagerVersion Devkit documentation
+- [getProjects](https://nx.dev/docs/reference/devkit/getProjects.md): getProjects Devkit documentation
+- [getWorkspaceLayout](https://nx.dev/docs/reference/devkit/getWorkspaceLayout.md): getWorkspaceLayout Devkit documentation
+- [glob](https://nx.dev/docs/reference/devkit/glob.md): glob Devkit documentation
+- [globAsync](https://nx.dev/docs/reference/devkit/globAsync.md): globAsync Devkit documentation
+- [GraphJson](https://nx.dev/docs/reference/devkit/GraphJson.md): GraphJson Devkit documentation
+- [Hash](https://nx.dev/docs/reference/devkit/Hash.md): Hash Devkit documentation
+- [hashArray](https://nx.dev/docs/reference/devkit/hashArray.md): hashArray Devkit documentation
+- [Hasher](https://nx.dev/docs/reference/devkit/Hasher.md): Hasher Devkit documentation
+- [HasherContext](https://nx.dev/docs/reference/devkit/HasherContext.md): HasherContext Devkit documentation
+- [ImplicitDependency](https://nx.dev/docs/reference/devkit/ImplicitDependency.md): ImplicitDependency Devkit documentation
+- [ImplicitDependencyEntry](https://nx.dev/docs/reference/devkit/ImplicitDependencyEntry.md): ImplicitDependencyEntry Devkit documentation
+- [ImplicitJsonSubsetDependency](https://nx.dev/docs/reference/devkit/ImplicitJsonSubsetDependency.md): ImplicitJsonSubsetDependency Devkit documentation
+- [installPackagesTask](https://nx.dev/docs/reference/devkit/installPackagesTask.md): installPackagesTask Devkit documentation
+- [isDaemonEnabled](https://nx.dev/docs/reference/devkit/isDaemonEnabled.md): isDaemonEnabled Devkit documentation
+- [isWorkspacesEnabled](https://nx.dev/docs/reference/devkit/isWorkspacesEnabled.md): isWorkspacesEnabled Devkit documentation
+- [joinPathFragments](https://nx.dev/docs/reference/devkit/joinPathFragments.md): joinPathFragments Devkit documentation
+- [JsonParseOptions](https://nx.dev/docs/reference/devkit/JsonParseOptions.md): JsonParseOptions Devkit documentation
+- [JsonSerializeOptions](https://nx.dev/docs/reference/devkit/JsonSerializeOptions.md): JsonSerializeOptions Devkit documentation
+- [logger](https://nx.dev/docs/reference/devkit/logger.md): logger Devkit documentation
+- [Migration](https://nx.dev/docs/reference/devkit/Migration.md): Migration Devkit documentation
+- [MigrationReturnObject](https://nx.dev/docs/reference/devkit/MigrationReturnObject.md): MigrationReturnObject Devkit documentation
+- [MigrationsJson](https://nx.dev/docs/reference/devkit/MigrationsJson.md): MigrationsJson Devkit documentation
+- [mockSchematicsForTesting](https://nx.dev/docs/reference/devkit/ngcli_adapter/mockSchematicsForTesting.md): mockSchematicsForTesting Devkit documentation
+- [moveFilesToNewDirectory](https://nx.dev/docs/reference/devkit/moveFilesToNewDirectory.md): moveFilesToNewDirectory Devkit documentation
+- [names](https://nx.dev/docs/reference/devkit/names.md): names Devkit documentation
+- [ngcli_adapter Overview](https://nx.dev/docs/reference/devkit/ngcli_adapter.md): ngcli_adapter Overview Devkit documentation
+- [normalizePath](https://nx.dev/docs/reference/devkit/normalizePath.md): normalizePath Devkit documentation
+- [NX_VERSION](https://nx.dev/docs/reference/devkit/NX_VERSION.md): NX_VERSION Devkit documentation
+- [NxAffectedConfig](https://nx.dev/docs/reference/devkit/NxAffectedConfig.md): NxAffectedConfig Devkit documentation
+- [NxJsonConfiguration](https://nx.dev/docs/reference/devkit/NxJsonConfiguration.md): NxJsonConfiguration Devkit documentation
+- [NxPlugin](https://nx.dev/docs/reference/devkit/NxPlugin.md): NxPlugin Devkit documentation
+- [NxPluginV2](https://nx.dev/docs/reference/devkit/NxPluginV2.md): NxPluginV2 Devkit documentation
+- [NxScopedHost](https://nx.dev/docs/reference/devkit/ngcli_adapter/NxScopedHost.md): NxScopedHost Devkit documentation
+- [offsetFromRoot](https://nx.dev/docs/reference/devkit/offsetFromRoot.md): offsetFromRoot Devkit documentation
+- [Optional](https://nx.dev/docs/reference/devkit/Optional.md): Optional Devkit documentation
+- [output](https://nx.dev/docs/reference/devkit/output.md): output Devkit documentation
+- [OverwriteStrategy](https://nx.dev/docs/reference/devkit/OverwriteStrategy.md): OverwriteStrategy Devkit documentation
+- [PackageManager](https://nx.dev/docs/reference/devkit/PackageManager.md): PackageManager Devkit documentation
+- [parseJson](https://nx.dev/docs/reference/devkit/parseJson.md): parseJson Devkit documentation
+- [parseTargetString](https://nx.dev/docs/reference/devkit/parseTargetString.md): parseTargetString Devkit documentation
+- [PluginConfiguration](https://nx.dev/docs/reference/devkit/PluginConfiguration.md): PluginConfiguration Devkit documentation
+- [PostTasksExecution](https://nx.dev/docs/reference/devkit/PostTasksExecution.md): PostTasksExecution Devkit documentation
+- [PostTasksExecutionContext](https://nx.dev/docs/reference/devkit/PostTasksExecutionContext.md): PostTasksExecutionContext Devkit documentation
+- [PreTasksExecution](https://nx.dev/docs/reference/devkit/PreTasksExecution.md): PreTasksExecution Devkit documentation
+- [PreTasksExecutionContext](https://nx.dev/docs/reference/devkit/PreTasksExecutionContext.md): PreTasksExecutionContext Devkit documentation
+- [ProjectConfiguration](https://nx.dev/docs/reference/devkit/ProjectConfiguration.md): ProjectConfiguration Devkit documentation
+- [ProjectFileMap](https://nx.dev/docs/reference/devkit/ProjectFileMap.md): ProjectFileMap Devkit documentation
+- [ProjectGraph](https://nx.dev/docs/reference/devkit/ProjectGraph.md): ProjectGraph Devkit documentation
+- [ProjectGraphDependency](https://nx.dev/docs/reference/devkit/ProjectGraphDependency.md): ProjectGraphDependency Devkit documentation
+- [ProjectGraphExternalNode](https://nx.dev/docs/reference/devkit/ProjectGraphExternalNode.md): ProjectGraphExternalNode Devkit documentation
+- [ProjectGraphProjectNode](https://nx.dev/docs/reference/devkit/ProjectGraphProjectNode.md): ProjectGraphProjectNode Devkit documentation
+- [ProjectsConfigurations](https://nx.dev/docs/reference/devkit/ProjectsConfigurations.md): ProjectsConfigurations Devkit documentation
+- [ProjectsMetadata](https://nx.dev/docs/reference/devkit/ProjectsMetadata.md): ProjectsMetadata Devkit documentation
+- [ProjectType](https://nx.dev/docs/reference/devkit/ProjectType.md): ProjectType Devkit documentation
+- [PromiseExecutor](https://nx.dev/docs/reference/devkit/PromiseExecutor.md): PromiseExecutor Devkit documentation
+- [RawProjectGraphDependency](https://nx.dev/docs/reference/devkit/RawProjectGraphDependency.md): RawProjectGraphDependency Devkit documentation
+- [readCachedProjectGraph](https://nx.dev/docs/reference/devkit/readCachedProjectGraph.md): readCachedProjectGraph Devkit documentation
+- [readJson](https://nx.dev/docs/reference/devkit/readJson.md): readJson Devkit documentation
+- [readJsonFile](https://nx.dev/docs/reference/devkit/readJsonFile.md): readJsonFile Devkit documentation
+- [readNxJson](https://nx.dev/docs/reference/devkit/readNxJson.md): readNxJson Devkit documentation
+- [readProjectConfiguration](https://nx.dev/docs/reference/devkit/readProjectConfiguration.md): readProjectConfiguration Devkit documentation
+- [readProjectsConfigurationFromProjectGraph](https://nx.dev/docs/reference/devkit/readProjectsConfigurationFromProjectGraph.md): readProjectsConfigurationFromProjectGraph Devkit documentation
+- [readTargetOptions](https://nx.dev/docs/reference/devkit/readTargetOptions.md): readTargetOptions Devkit documentation
+- [RemoteCache](https://nx.dev/docs/reference/devkit/RemoteCache.md): RemoteCache Devkit documentation
+- [removeDependenciesFromPackageJson](https://nx.dev/docs/reference/devkit/removeDependenciesFromPackageJson.md): removeDependenciesFromPackageJson Devkit documentation
+- [removeProjectConfiguration](https://nx.dev/docs/reference/devkit/removeProjectConfiguration.md): removeProjectConfiguration Devkit documentation
+- [reverse](https://nx.dev/docs/reference/devkit/reverse.md): reverse Devkit documentation
+- [runExecutor](https://nx.dev/docs/reference/devkit/runExecutor.md): runExecutor Devkit documentation
+- [runTasksInSerial](https://nx.dev/docs/reference/devkit/runTasksInSerial.md): runTasksInSerial Devkit documentation
+- [serializeJson](https://nx.dev/docs/reference/devkit/serializeJson.md): serializeJson Devkit documentation
+- [StaleProjectGraphCacheError](https://nx.dev/docs/reference/devkit/StaleProjectGraphCacheError.md): StaleProjectGraphCacheError Devkit documentation
+- [StaticDependency](https://nx.dev/docs/reference/devkit/StaticDependency.md): StaticDependency Devkit documentation
+- [StringChange](https://nx.dev/docs/reference/devkit/StringChange.md): StringChange Devkit documentation
+- [StringDeletion](https://nx.dev/docs/reference/devkit/StringDeletion.md): StringDeletion Devkit documentation
+- [StringInsertion](https://nx.dev/docs/reference/devkit/StringInsertion.md): StringInsertion Devkit documentation
+- [stripIndents](https://nx.dev/docs/reference/devkit/stripIndents.md): stripIndents Devkit documentation
+- [stripJsonComments](https://nx.dev/docs/reference/devkit/stripJsonComments.md): stripJsonComments Devkit documentation
+- [Target](https://nx.dev/docs/reference/devkit/Target.md): Target Devkit documentation
+- [TargetConfiguration](https://nx.dev/docs/reference/devkit/TargetConfiguration.md): TargetConfiguration Devkit documentation
+- [TargetDefaultArrayEntry](https://nx.dev/docs/reference/devkit/TargetDefaultArrayEntry.md): TargetDefaultArrayEntry Devkit documentation
+- [TargetDefaultEntry](https://nx.dev/docs/reference/devkit/TargetDefaultEntry.md): TargetDefaultEntry Devkit documentation
+- [TargetDefaultFilter](https://nx.dev/docs/reference/devkit/TargetDefaultFilter.md): TargetDefaultFilter Devkit documentation
+- [TargetDefaults](https://nx.dev/docs/reference/devkit/TargetDefaults.md): TargetDefaults Devkit documentation
+- [TargetDefaultValue](https://nx.dev/docs/reference/devkit/TargetDefaultValue.md): TargetDefaultValue Devkit documentation
+- [TargetDependencyConfig](https://nx.dev/docs/reference/devkit/TargetDependencyConfig.md): TargetDependencyConfig Devkit documentation
+- [targetToTargetString](https://nx.dev/docs/reference/devkit/targetToTargetString.md): targetToTargetString Devkit documentation
+- [Task](https://nx.dev/docs/reference/devkit/Task.md): Task Devkit documentation
+- [TaskGraph](https://nx.dev/docs/reference/devkit/TaskGraph.md): TaskGraph Devkit documentation
+- [TaskGraphExecutor](https://nx.dev/docs/reference/devkit/TaskGraphExecutor.md): TaskGraphExecutor Devkit documentation
+- [TaskHasher](https://nx.dev/docs/reference/devkit/TaskHasher.md): TaskHasher Devkit documentation
+- [TaskResult](https://nx.dev/docs/reference/devkit/TaskResult.md): TaskResult Devkit documentation
+- [TaskResults](https://nx.dev/docs/reference/devkit/TaskResults.md): TaskResults Devkit documentation
+- [toJS](https://nx.dev/docs/reference/devkit/toJS.md): toJS Devkit documentation
+- [ToJSOptions](https://nx.dev/docs/reference/devkit/ToJSOptions.md): ToJSOptions Devkit documentation
+- [Tree](https://nx.dev/docs/reference/devkit/Tree.md): Tree Devkit documentation
+- [updateJson](https://nx.dev/docs/reference/devkit/updateJson.md): updateJson Devkit documentation
+- [updateNxJson](https://nx.dev/docs/reference/devkit/updateNxJson.md): updateNxJson Devkit documentation
+- [updateProjectConfiguration](https://nx.dev/docs/reference/devkit/updateProjectConfiguration.md): updateProjectConfiguration Devkit documentation
+- [updateTsConfigsToJs](https://nx.dev/docs/reference/devkit/updateTsConfigsToJs.md): updateTsConfigsToJs Devkit documentation
+- [validateDependency](https://nx.dev/docs/reference/devkit/validateDependency.md): validateDependency Devkit documentation
+- [visitNotIgnoredFiles](https://nx.dev/docs/reference/devkit/visitNotIgnoredFiles.md): visitNotIgnoredFiles Devkit documentation
+- [Workspace](https://nx.dev/docs/reference/devkit/Workspace.md): Workspace Devkit documentation
+- [WorkspaceJsonConfiguration](https://nx.dev/docs/reference/devkit/WorkspaceJsonConfiguration.md): WorkspaceJsonConfiguration Devkit documentation
+- [workspaceLayout](https://nx.dev/docs/reference/devkit/workspaceLayout.md): workspaceLayout Devkit documentation
+- [workspaceRoot](https://nx.dev/docs/reference/devkit/workspaceRoot.md): workspaceRoot Devkit documentation
+- [wrapAngularDevkitSchematic](https://nx.dev/docs/reference/devkit/ngcli_adapter/wrapAngularDevkitSchematic.md): wrapAngularDevkitSchematic Devkit documentation
+- [writeJson](https://nx.dev/docs/reference/devkit/writeJson.md): writeJson Devkit documentation
+- [writeJsonFile](https://nx.dev/docs/reference/devkit/writeJsonFile.md): writeJsonFile Devkit documentation

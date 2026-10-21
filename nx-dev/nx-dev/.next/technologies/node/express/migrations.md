@@ -1,0 +1,7 @@
+For an overview of the plugin and setup instructions, see the [@nx/express introduction](/docs/technologies/node/express/introduction).
+
+No migrations found for `@nx/express`.
+Nx only retains migrations for the last 2 major versions of Nx.
+It's possible migrations existed in previous versions of `@nx/express`.
+
+You can check the previous docs for [Nx v22](https://22.nx.dev/docs) or [Nx v21](https://21.nx.dev/docs).

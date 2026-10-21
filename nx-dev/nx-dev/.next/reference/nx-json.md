@@ -1,0 +1,1236 @@
+---
+title: nx.json Reference
+description: A comprehensive reference for the nx.json configuration file, which controls Nx CLI behavior, project defaults, and workspace settings.
+sidebar:
+  order: 2
+  label: Nx Configuration
+filter: 'type:References'
+---
+
+The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
+
+The following is an expanded example showing all options. Your `nx.json` will likely be much shorter.
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ],
+  "parallel": 4,
+  "cacheDirectory": "tmp/my-nx-cache",
+  "defaultBase": "main",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
+  },
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "inputs": ["production", "^production"],
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "{projectRoot}/src/index.ts"
+      },
+      "cache": true
+    },
+    "test": [
+      {
+        "cache": true,
+        "inputs": ["default", "^production"]
+      },
+      {
+        "filter": { "executor": "@nx/jest:jest" },
+        "inputs": ["...", "{workspaceRoot}/jest.preset.js"],
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      }
+    ]
+  },
+  "release": {
+    "version": {
+      "conventionalCommits": true
+    },
+    "changelog": {
+      "git": {
+        "commit": true,
+        "tag": true
+      },
+      "workspaceChangelog": {
+        "createRelease": "github"
+      },
+      "projectChangelogs": true
+    }
+  },
+  "sync": {
+    "globalGenerators": ["my-plugin:my-sync-generator"]
+  },
+  "migrate": {
+    "createCommits": true
+  },
+  "generators": {
+    "@nx/js:library": {
+      "buildable": true
+    }
+  },
+  "extends": "nx/presets/npm.json",
+  "tui": {
+    "enabled": true,
+    "autoExit": true
+  },
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-module-boundaries",
+        "status": "evaluated"
+      },
+      {
+        "rule": "./tools/local-conformance-rules/check-project.ts",
+        "projects": ["*"]
+      }
+    ]
+  },
+  "analytics": true
+}
+```
+
+## Plugins
+
+Nx plugins improve the experience of using different tools with Nx. One key feature of plugins is that they can [automatically configure the way Nx runs tasks](/docs/concepts/mental-model#inferred-tasks) for a tool based on that tool's configuration. In order for a plugin to configure tasks for Nx, it needs to be registered in the `plugins` array. If a plugin has no options, it can be listed as a string. Otherwise, it should be listed as an object with a `plugin` property and an `options` property.
+
+Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/docs/plugin-registry) for available plugins.
+
+To learn about creating your own plugin read about [extending Nx](/docs/kb/add-language-support).
+
+```json
+// nx.json
+{
+  "plugins": [
+    "@my-org/graph-plugin",
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
+```
+
+### Plugin order
+
+Plugins are processed in the order that they appear in the `plugins` array.
+If multiple plugins create a task with the same name, the plugin listed last wins.
+For example, if a project has both a `vite.config.ts` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task.
+The `build` task that is executed belongs to the plugin listed lower in the `plugins` array.
+When the two targets are compatible (they run the same executor and command), their configuration is merged property by property with the later plugin's values winning.
+When they are incompatible, the later target replaces the earlier one entirely.
+
+### Scope plugins to specific projects
+
+Plugins use config files to infer tasks for projects. You can specify which config files are processed by Nx plugins using the `include` and `exclude` properties in the plugin configuration object.
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "include": ["packages/**/*"], // include any projects in the packages folder
+      "exclude": ["**/*-e2e/**/*"], // exclude any projects in a *-e2e folder
+    },
+  ],
+}
+```
+
+The `include` and `exclude` properties are each file glob patterns that are used to include or exclude the configuration file that the plugin is interpreting. In the example provided, the `@nx/jest/plugin` plugin will only infer tasks for projects where the `jest.config.ts` file path matches the `packages/**/*` glob but does not match the `**/*-e2e/**/*` glob.
+
+#### Using negation patterns
+
+You can use negation patterns (patterns starting with `!`) to create more precise include/exclude rules. Patterns are processed in order, with later patterns overriding earlier ones.
+
+**Example: Excluding all e2e projects except one**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "exclude": ["**/*-e2e/**/*", "!**/toolkit-workspace-e2e/**/*"],
+    },
+  ],
+}
+```
+
+This will exclude all e2e projects except `toolkit-workspace-e2e`.
+
+**Example: Including packages except legacy ones**
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": ["packages/**/*", "!packages/legacy/**/*"],
+    },
+  ],
+}
+```
+
+**How negation patterns work:**
+
+- Patterns are processed in order from first to last
+- A pattern starting with `!` removes files from the match set
+- A pattern without `!` adds files to the match set
+- The last matching pattern determines if a file is included
+- If the first pattern is a negation, all files are matched initially
+
+## Plugins config
+
+`pluginsConfig` holds options for a plugin that apply workspace-wide, rather than to a single registered plugin entry. It is keyed by plugin package name.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+### projectsAffectedByDependencyUpdates
+
+Controls which projects Nx marks as affected when the package manager lock file changes.
+
+| Value      | Description                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is affected. Safest, and the most CI work.                                       |
+| `"auto"`   | Only projects whose resolved dependencies changed. Nx parses the lock file at both revisions and diffs the resolved packages. |
+| `string[]` | Project names or glob patterns, for example `["app-*", "shared-lib"]`. Only matching projects are affected.                   |
+
+In `"auto"` mode Nx supports `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`. Binary Bun lock files are rendered by Bun before diffing, so Bun must be available wherever `nx affected` runs.
+
+For how the affected set is computed, see [run only tasks affected by a PR](/docs/features/ci-features/affected).
+
+## Task options
+
+The following properties affect the way Nx runs tasks and can be set at the root of `nx.json`.
+
+| Property             | Description                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| parallel             | defines the max number of targets run in parallel                                                                                                                                                                                                                                                                                          |
+| cacheDirectory       | defines where the local cache is stored (defaults to `~/.nx/<id>/cache`, shared by every checkout of the workspace)                                                                                                                                                                                                                        |
+| nxCloudEncryptionKey | (when connected to Nx Cloud only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable |
+
+You can configure `parallel` in `nx.json`, but you can also set a `--parallel` flag in the terminal `nx run-many -t test --parallel=5`.
+
+To skip the cache for a single run, pass `--skip-nx-cache` (alias `--disableNxCache`) on the command line. There is no root `nx.json` property for it.
+
+## Default base
+
+Tells Nx which base branch to use when calculating affected projects.
+
+- `defaultBase` defines the default base branch, defaults to `main`.
+
+## Target defaults
+
+Target defaults provide a way to configure common options for targets across projects without duplicating the configuration. When Nx builds a project's configuration, it applies applicable defaults for each target as the base for that target's configuration.
+
+`targetDefaults` is a map keyed by target name (e.g. `test`), glob which matches target names (e.g. `e2e-ci--*`), or an executor (e.g. `@nx/js:tsc`). Each value is **either** an object (the common case, when no filtering is needed) **or** an ordered array of filtered entries (when a default should only apply to a subset of targets).
+
+When all targets matching an entry in the map should have the same defaults, use the plain object form:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": { "cache": true }
+  }
+}
+```
+
+When some targets matching an entry in the map should have different defaults than others also matching the entry in the map — for example, two plugins both infer `test` targets — use the array form. Each entry may have a `filter` property to scope its configuration to a subset of targets:
+
+```json
+// nx.json — polyglot example
+{
+  "targetDefaults": {
+    "test": [
+      { "cache": true },
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "inputs": ["default", "^production"]
+      },
+      {
+        "filter": { "projects": ["tag:dotnet"] },
+        "options": { "configuration": "Release" }
+      }
+    ]
+  }
+}
+```
+
+| Field             | Type                                                                         | Description                                                                                                                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| key               | `string`                                                                     | The map key: a target name (e.g. `test`), a glob (e.g. `e2e-ci--*`), or an executor identifier (e.g. `@nx/js:tsc`).                                                                                  |
+| value             | `object` \| `array`                                                          | A plain configuration object, or an ordered array of filtered entries.                                                                                                                               |
+| `filter.plugin`   | `string`                                                                     | Optional. Restricts the entry to targets inferred by a specific plugin (e.g. `@nx/vitest`). Useful when two plugins expose a target with the same name (e.g. `@nx/vitest:test` and `@nx/jest:test`). |
+| `filter.projects` | `string` \| `string[]`                                                       | Optional. Restricts the entry to matching projects. Accepts project names, globs, directory patterns, tags (`tag:foo`), and negation (`!foo`) — anything `findMatchingProjects` understands.         |
+| `filter.executor` | `string`                                                                     | Optional. Restricts the entry to targets that resolve to this executor.                                                                                                                              |
+| other             | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the entry matches.                                                                                                                                                         |
+
+Within a key's array, entries apply in document order. **Later entries override prior entries**. An entry with **no `filter`** is a catch-all baseline that applies to every variant of that target; an entry **with a `filter`** applies only where its `plugin`, `projects`, and `executor` match. Because a later entry overrides an earlier one, a trailing catch-all can reset a value set above it. Target defaults apply after targets have been inferred by plugins but before project configuration in `project.json` or `package.json`.
+
+{% aside type="caution" title="Beware" %}
+When a key's value is a plain object (or an array entry has no `filter`), Nx matches by the key alone. Make sure all defaults make sense to all targets that match the key. Anything set in a target default will also override the configuration of [tasks inferred by plugins](/docs/concepts/mental-model#inferred-tasks).
+{% /aside %}
+
+Some common scenarios for this follow.
+
+### inputs & namedInputs
+
+Named inputs defined in `nx.json` are merged with the named inputs defined in [project level configuration](/docs/reference/project-configuration). In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
+
+Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
+Using pseudocode `inputs = projectJson.targets.build.inputs || nxJsonTargetDefaults.build.inputs`. To merge with the base inputs instead of replacing them, use the [spread token](#spread-token).
+
+You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": {
+      "inputs": ["default", "^production"]
+    }
+  }
+}
+```
+
+And projects can define their `production` inputs, without having to redefine the inputs for the `test` target.
+
+```json
+// project.json
+{
+  "namedInputs": {
+    "production": ["default", "!{projectRoot}/**/*.test.js"]
+  }
+}
+```
+
+In this case Nx will use the right `production` input for each project.
+
+{% cardgrid %}
+{% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/docs/reference/inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/kb/configure-inputs" /%}
+{% /cardgrid %}
+
+### Task pipelines
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before
+building the project. The `dependsOn` property in `project.json` can be used to define the list of dependencies of an
+individual target.
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when
+defining `targetDefaults` in `nx.json` is helpful.
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
+```
+
+The configuration above is identical to adding `{"dependsOn": ["^build"]}` to every `build` target of every project.
+
+{% cardgrid %}
+{% linkcard title="Project Configuration reference" description="For full documentation of the `dependsOn` property, see the project configuration reference" href="/docs/reference/project-configuration#dependson" /%}
+{% linkcard title="What is a Task Pipeline" description="This guide describes how to think about task pipelines" href="/docs/concepts/task-pipeline-configuration" /%}
+{% /cardgrid %}
+
+### Outputs
+
+Another target default you can configure is `outputs`:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "outputs": ["{projectRoot}/custom-dist"]
+    }
+  }
+}
+```
+
+When defining any options or configurations inside of a target default, you may use the `{workspaceRoot}` and `{projectRoot}` tokens. This is useful for defining options whose values are paths.
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "options": {
+        "main": "{projectRoot}/src/index.ts"
+      },
+      "configurations": {
+        "prod": {
+          "tsconfig": "{projectRoot}/tsconfig.prod.json"
+        }
+      },
+      "inputs": ["prod"],
+      "outputs": ["{workspaceRoot}/{projectRoot}"]
+    },
+    "build": {
+      "inputs": ["prod"],
+      "outputs": ["{workspaceRoot}/{projectRoot}"],
+      "cache": true
+    }
+  }
+}
+```
+
+#### Target default priority
+
+Both keys above match a `build` target that uses `@nx/js:tsc`. However, only the most specific defaults, the executor-keyed defaults, will apply. The name-keyed defaults will not apply so specify the full config on the executor key.
+
+`cache` is the one exception. When an executor key shadows a name key that sets `"cache": true`, Nx reads that value back so the target stays cacheable, and warns that relying on it is deprecated. Nx skips continuous targets and long-running ones such as `serve`, `dev` and `start`, because caching them is invalid. Set `cache` on the executor key instead. An executor key applies to every target that resolves through it, so exclude any continuous target first. Nx rejects a target that is both cacheable and continuous.
+
+{% cardgrid %}
+{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/kb/configure-outputs" /%}
+{% /cardgrid %}
+
+### Cache
+
+Caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% aside type="caution" title="Per Project Caching + Distribution" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
+
+{% /aside %}
+
+### Executor/command options
+
+You can configure options specific to a target's executor. As an example, if your repo has projects using the `@nx/js:tsc` executor, you can provide some default options as follows:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "options": {
+        "generateExportsField": true
+      }
+    }
+  }
+}
+```
+
+You can also provide defaults for [inferred targets](/docs/concepts/mental-model#inferred-tasks) or targets running a command using the `nx:run-commands` executor. As an example, if your repo has projects where **all the `build` targets** run the same `vite build` command, you can provide some default options as follows:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "assetsInlineLimit": 2048,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+If two plugins expose a target with the same name (e.g. both `@nx/vitest` and `@nx/jest` infer `test`), use the `plugin` filter to scope per-plugin defaults:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "inputs": ["default", "^production"]
+      },
+      {
+        "filter": { "plugin": "@nx/jest/plugin" },
+        "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
+      }
+    ]
+  }
+}
+```
+
+Or use the `projects` filter — which accepts the same patterns as the `--projects` CLI flag (names, globs, `tag:foo`, `!exclude`) — to scope a default to targets on a subset of projects:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "projects": ["tag:dotnet"] },
+        "options": { "configuration": "Release" }
+      },
+      {
+        "filter": { "projects": ["apps/*", "!apps/legacy"] },
+        "cache": true
+      }
+    ]
+  }
+}
+```
+
+{% aside type="caution" title="Be careful" %}
+If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
+{% /aside %}
+
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/kb/pass-args-to-commands).
+
+### Task atomizer configuration
+
+Task Atomizer plugins create several targets with a similar pattern. For example, the `@nx/cypress` plugin creates a top level `e2e-ci` target and a target for each test file that looks like `e2e-ci--test/my/test.spec.ts`. To avoid having to write a target default for each of these targets, you can use a glob pattern in the target default key.
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "e2e-ci--**/**": {
+      "options": {
+        "headless": true
+      }
+    }
+  }
+}
+```
+
+{% aside type="note" title="Pattern Matching" %}
+Nx uses glob patterns to match against the target name. This means that the `**/**` pattern above is required because tests can be nested within a directory which would make the target name contain a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
+{% /aside %}
+
+### Spread token
+
+By default, a target default replaces the corresponding value from a matching [inferred task](/docs/concepts/mental-model#inferred-tasks) (and from any lower-priority configuration source) rather than merging with it. The spread token (`"..."`) lets a target default contribute to the base value instead of overwriting it.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position. For example, to add an input to every `build` target while keeping the inputs its plugin already infers:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "inputs": ["...", "{workspaceRoot}/babel.config.json"]
+    }
+  }
+}
+```
+
+If the inferred `build` target has `inputs: ["default", "^production"]`, the result is `["default", "^production", "{workspaceRoot}/babel.config.json"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position, which is useful for adding an option without discarding the ones a plugin already set. Keys defined after `"..."` override base values, and keys defined before `"..."` can be overridden by base values.
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "options": {
+        "...": true,
+        "assetsDir": "static/assets"
+      }
+    }
+  }
+}
+```
+
+The spread token behaves the same way in `nx.json` target defaults as it does in `project.json`. For the full list of levels where it applies (target root, `options`, `configurations`, and nested values) and important cautions, see the [Spread token reference](/docs/reference/project-configuration#spread-token).
+
+## Release
+
+The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
+
+For more information on how `nx release` works, see [manage releases](/docs/features/manage-releases).
+
+The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
+
+### Projects
+
+If you want to limit the projects that `nx release` targets, you can use the `projects` property in `nx.json` to do so. This property is either a string, or an array of strings. The strings can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    // Here we are configuring nx release to target all projects
+    // except the one called "ignore-me"
+    "projects": ["*", "!ignore-me"],
+  },
+}
+```
+
+### Projects relationship
+
+The `projectsRelationship` property tells Nx whether to release projects independently or together. By default Nx will release all your projects together in lock step, which is an equivalent of `"projectRelationships": "fixed"`. If you want to release projects independently, you can set `"projectsRelationship": "independent"`.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    // Here we are configuring nx release to release projects
+    // independently, as opposed to the default of "fixed"
+    "projectsRelationship": "independent",
+  },
+}
+```
+
+### Release tag
+
+The `releaseTag` property controls how git tags are parsed and generated. By default tags conform to semantic version and are validated as such.
+
+{% aside type="note" title="Nx 23 Changes" %}
+The legacy flat properties (`releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`, `releaseTagPatternPreferDockerVersion`, `releaseTagPatternCheckAllBranchesWhen`) were removed in Nx 23. Use the nested `releaseTag` object below. An automated migration in Nx 22 moved configuration to the new shape.
+{% /aside %}
+
+#### Configuration options
+
+| Property                 | Type                | Default                                                           | Description                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **pattern**              | string              | `v{version}` for fixed, `{projectName}@{version}` for independent | The git tag pattern to use. Supports interpolation of `{version}`, `{projectName}`, and `{releaseGroupName}`                                                                                                                                                                                          |
+| **requireSemver**        | boolean             | `true`                                                            | Whether to require that all tags match semantic versioning                                                                                                                                                                                                                                            |
+| **strictPreid**          | boolean             | `true`                                                            | Whether to ensure prerelease IDs are consistent across packages                                                                                                                                                                                                                                       |
+| **preferDockerVersion**  | boolean             | `false`                                                           | Whether to prefer Docker-compatible version format in git tags                                                                                                                                                                                                                                        |
+| **checkAllBranchesWhen** | boolean \| string[] | undefined                                                         | Controls whether to check all branches or only merged branches when resolving current versions from git tags. `true` = always check all branches, `false` = only check the current branch, `string[]` = check all branches when the current branch matches any of the provided names or glob patterns |
+
+#### Branch resolution for git tags
+
+The `checkAllBranchesWhen` option controls how Nx resolves existing git tags to determine the current version of your projects.
+
+By default, Nx checks for matching tags on the current branch. If no tags are found, it falls back to checking all branches.
+
+| Value      | Behavior                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `true`     | Always check all branches for the latest matching tag                                                                                                                     |
+| `false`    | Only check the current branch (no fallback to all branches)                                                                                                               |
+| `string[]` | Check all branches when the current branch matches any of the provided names or [glob patterns](https://github.com/isaacs/minimatch). Otherwise, use the default behavior |
+
+This option is useful when release tags may exist on multiple branches. Setting `checkAllBranchesWhen` to `true` or to a list of branch patterns ensures Nx finds the latest tag regardless of which branch it was created on.
+
+#### Tag pattern syntax
+
+The tag pattern supports interpolating the following values:
+
+- `{version}` - The version currently being released
+- `{projectName}` - The name of the project being released (for independent releases)
+- `{releaseGroupName}` - The name of the release group being released (when using release groups)
+
+Example patterns and their results:
+
+- `v{version}` → `v1.0.0` (default for fixed releases)
+- `{projectName}@{version}` → `my-lib@1.0.0` (default for independent releases)
+- `{releaseGroupName}/{projectName}/{version}` → `backend/api/1.0.0`
+- `release/{version}` → `release/1.0.0`
+
+#### Example configuration
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "releaseTag": {
+      "pattern": "{releaseGroupName}-v{version}",
+      "requireSemver": true,
+      "strictPreid": true,
+      "preferDockerVersion": false,
+      "checkAllBranchesWhen": ["main", "release/*"],
+    },
+  },
+}
+```
+
+### Version
+
+The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
+
+{% aside type="note" title="Breaking Changes in Nx v22" %}
+In Nx v22, the legacy versioning implementation was removed entirely. This had been deprecated since Nx 21.
+An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
+
+For Nx 22, this automated migration was re-added to allow updating your configuration by running `nx migrate`.
+{% /aside %}
+
+Behind the scenes, ecosystem-specific `version` logic is powered by a `VersionActions` implementation. Out of the box Nx wires up the most widely applicable `VersionActions` implementation for you, which is `@nx/js/src/release/version-actions` provided by the `@nx/js` plugin.
+
+{% aside type="note" title="Programmatic API (Nx 22+)" %}
+For advanced use cases, the `ReleaseClient` programmatic API allows you to trigger releases from custom scripts. In Nx 22+, you can optionally ignore the `nx.json` release configuration entirely when using the API, which is useful for ad-hoc scripts that only work with a subset of the repository.
+{% /aside %}
+
+Core version options are therefore directly at the top level of the `version` property (as of Nx v21), while ecosystem-specific options are available through `versionActionsOptions`:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "version": {
+      // Core options
+      "conventionalCommits": true,
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      // Ecosystem-specific options
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true,
+      },
+    },
+  },
+}
+```
+
+Some important changes in Nx 22:
+
+- `preserveMatchingDependencyRanges` now defaults to `true` (previously `false`)
+  - When `true`, dependency version ranges are preserved if they already satisfy the new version being released
+  - Example: If releasing version `1.2.0` and a dependent has range `^1.0.0`, it remains `^1.0.0` instead of being updated to `1.2.0`
+  - Set to `false` explicitly if you need exact versions in all dependents
+- `updateDependents` now defaults to `"always"` (previously `"auto"`)
+  - `"always"`: Update dependents wherever they exist in the graph, regardless of filter selection
+  - `"auto"`: Update dependents only if they're within the selected projects or release groups
+  - `"never"`: Never update dependents
+- `releaseTag.strictPreid` now defaults to `true`
+- Fixed Release Group Release Tag Pattern now defaults to `{releaseGroupName}-v{version}`
+
+Some important changes in Nx 23:
+
+- `version.adjustSemverBumpsForZeroMajorVersion` now defaults to `true`. For 0.x versions, breaking changes bump the minor and new features bump the patch (instead of major/minor respectively). Set to `false` to preserve the prior behavior of treating all bumps the same regardless of major version.
+- The deprecated `releaseTag*` flat properties (`releaseTagPattern`, `releaseTagPatternRequireSemver`, `releaseTagPatternStrictPreid`, `releaseTagPatternPreferDockerVersion`, `releaseTagPatternCheckAllBranchesWhen`) were removed in favor of the nested `releaseTag` object introduced in Nx 22.
+
+#### Propagating `--preid` to dependent bumps
+
+When versioning with `--preid`, the implicit patch bumps given to dependents (and to other projects in a fixed release group) are stable patches by default. That means `project-b` being bumped to `2.0.1-rc.0` still bumps its dependent `project-a` to `1.0.1`, not `1.0.1-rc.0`.
+
+Set `version.applyPreidToDependents` to `true` if you want the `--preid` value to flow through to those side-effectful bumps instead. It can also be set per release group under `release.groups.<group>.version.applyPreidToDependents`. See [Update Dependents](/docs/guides/nx-release/update-dependents#propagating-preid-to-dependent-bumps) for the full walkthrough and guidance on when to enable it.
+
+### Changelog
+
+The `changelog` property configures the changelog phase of the release process. It is used to generate a changelog for your projects, and commit it to your repository.
+
+There are two types of possible changelog that can be generated:
+
+- **Workspace Changelog**: A changelog that contains all changes across all projects in your workspace. This is not applicable when releasing projects independently.
+
+- **Project Changelogs**: A changelog that contains all changes for a given project.
+
+The `changelog` property is used to configure both of these changelogs.
+
+#### Workspace changelog
+
+The `changelog.workspaceChangelog` property configures the workspace changelog. It is used to determine if and how the workspace changelog is generated.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      // This disables the workspace changelog
+      "workspaceChangelog": false,
+    },
+  },
+}
+```
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        // This will create a GitHub release containing the workspace
+        // changelog contents
+        "createRelease": "github",
+        // This will disable creating a workspace CHANGELOG.md file
+        "file": false,
+      },
+    },
+  },
+}
+```
+
+#### Project changelogs
+
+The `changelog.projectChangelogs` property configures the project changelogs. It is used to determine if and how the project changelogs are generated.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      // This enables project changelogs with the default options
+      "projectChangelogs": true,
+    },
+  },
+}
+```
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        // This will create one GitHub release per project containing
+        // the project changelog contents
+        "createRelease": "github",
+        // This will disable creating any project level CHANGELOG.md
+        // files
+        "file": false,
+      },
+    },
+  },
+}
+```
+
+#### Replace existing contents {% badge  text="Nx 22+" /%}
+
+By default, changelog entries are prepended to existing changelog files. To completely replace the entire changelog file contents instead, use the `replaceExistingContents` option:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        // Replaces the entire CHANGELOG.md file with the new content
+        "replaceExistingContents": true,
+      },
+    },
+  },
+}
+```
+
+This option is available for both `workspaceChangelog` and `projectChangelogs`. It's useful when you want to regenerate the entire changelog from scratch rather than maintaining a cumulative history.
+
+### Git
+
+The `git` property configures the automated git operations that take place as part of the release process.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "git": {
+      // This will enable committing any changes (e.g. package.json
+      // updates, CHANGELOG.md files) to git
+      "commit": true,
+      // This will enable create a git for the overall release, or
+      // one tag per project for independent project releases
+      "tag": false,
+    },
+  },
+}
+```
+
+### Docker {% badge  text="experimental" /%}
+
+{% aside type="caution" title="Experimental Feature" %}
+Docker support in Nx is currently experimental and may undergo breaking changes without following semantic versioning.
+{% /aside %}
+
+The `docker` property configures Docker image versioning and publishing when using `nx release`. This enables calendar-based versioning schemes and automated Docker registry publishing as part of your release workflow.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    // Simple configuration - enables Docker with defaults
+    "docker": true,
+  },
+}
+```
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "docker": {
+      // Run this command before versioning Docker images
+      "preVersionCommand": "npx nx run-many -t docker:build",
+
+      // Define versioning schemes for different environments
+      "versionSchemes": {
+        "production": "{currentDate|YYMM.DD}.{shortCommitSha}",
+        "hotfix": "{currentDate|YYMM.DD}.{shortCommitSha}-hotfix",
+        "staging": "{currentDate|YYMM.DD}-staging",
+        "development": "{currentDate|YYMM.DD}-dev-{shortCommitSha}",
+      },
+
+      // Skip Docker versioning for these projects to prevent versioning with other tools like NPM
+      // Only set this if you are not using {versionActionsVersion} in your docker version scheme
+      "skipVersionActions": ["api"],
+
+      // Default Docker repository name (can be overridden per project)
+      "repositoryName": "myorg",
+
+      // Docker registry URL
+      "registryUrl": "docker.io",
+    },
+  },
+}
+```
+
+Read more about it in the [Release Docker Images guide](/docs/kb/release-docker-images).
+
+#### Docker plugin options
+
+When configuring the `@nx/docker` plugin in `nx.json`, you can customize the behavior of Docker build and run targets. One important option is `skipDefaultTag`:
+
+```jsonc
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/docker/plugin",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build",
+          // Skip the default --tag argument
+          "skipDefaultTag": true,
+          // You must provide your own tags via args
+          "args": ["--tag myorg/myapp:latest", "--tag myorg/myapp:1.0.0"],
+        },
+      },
+    },
+  ],
+}
+```
+
+**Important:** Setting `skipDefaultTag: true` opts out of Nx Release support for that project. When you explicitly manage your own Docker tags via the `args` property, the automatic versioning and publishing features of `nx release` will not work for those Docker projects. Only use `skipDefaultTag: true` if you are not using `nx release` to manage your Docker image versions.
+
+If you want to use `nx release` with Docker projects, leave `skipDefaultTag` as `false` (the default) or omit it entirely.
+
+#### Version scheme syntax
+
+Docker version schemes support calendar-based patterns using the following placeholders:
+
+- `{projectName}` - The name of the project being released
+- `{currentDate}` - Current date in ISO format (e.g., 2025-01-30T14:30:00Z)
+- `{currentDate|FORMAT}` - Current date with custom format using these tokens:
+  - `YYYY` - 4-digit year (e.g., 2025)
+  - `YY` - 2-digit year (e.g., 25)
+  - `MM` - 2-digit month (01-12)
+  - `DD` - 2-digit day (01-31)
+  - `HH` - 2-digit hour in 24-hour format (00-23)
+  - `mm` - 2-digit minutes (00-59)
+  - `ss` - 2-digit seconds (00-59)
+- `{shortCommitSha}` - First 7 characters of the current commit SHA
+- `{commitSha}` - Full commit SHA
+- `{versionActionsVersion}` - The version generated during the version actions such as "1.2.3"
+
+Example patterns:
+
+- `{currentDate|YYMM.DD}.{shortCommitSha}` - Results in: 2501.30.a1b2c3d
+- `{projectName}-{currentDate|YYYY.MM.DD}` - Results in: api-2025.01.30
+- `{currentDate|YY.MM.DD.HHmm}-{commitSha}` - Results in: 25.01.30.1430-abcdef1234567890
+- `{projectName}-{versionActionsVersion}` - Results in: api-1.2.3
+
+#### Group-level Docker configuration
+
+You can configure [Docker release](/docs/kb/release-docker-images) settings at the release group level:
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "groups": {
+      "backend": {
+        "projects": ["api"],
+        "projectsRelationship": "independent",
+        "docker": {
+          // Only set this to true if you are not using {versionActionsVersion} in your docker version scheme
+          "skipVersionActions": true
+          // Run a script before tagging Docker version
+          "groupPreVersionCommand": "echo Preparing backend release",
+        },
+        "changelog": {
+          "projectChangelogs": true
+        }
+      }
+    }
+  }
+}
+```
+
+This allows you to have other releases such as [NPM](/docs/kb/release-npm-packages) or [Rust crates](/docs/kb/publish-rust-crates) in the same workspace.
+
+## Sync
+
+These are global configuration options for the [`nx sync`](/docs/reference/nx-commands#nx-sync) command. The `nx sync` command runs all global and task-specific [sync generators](/docs/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
+
+```jsonc
+// nx.json
+{
+  "sync": {
+    "applyChanges": true,
+    "globalGenerators": ["my-plugin:my-sync-generator"],
+    "generatorOptions": {
+      "my-plugin:my-sync-generator": {
+        "verbose": true,
+      },
+    },
+    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"],
+  },
+}
+```
+
+| Property                       | Description                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **applyChanges**               | Whether to automatically apply task sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied. |
+| **globalGenerators**           | Sync generators that are only run when the `nx sync` command is executed. These are not associated with a particular task.                                                                                                                                                                   |
+| **generatorOptions**           | Options to be passed to sync generators                                                                                                                                                                                                                                                      |
+| **disabledTaskSyncGenerators** | Globally disable specific task sync generators                                                                                                                                                                                                                                               |
+
+## Migrate
+
+These are workspace-wide defaults for the [`nx migrate`](/docs/reference/nx-commands#nx-migrate) command. Most options mirror an `nx migrate` flag, so you can set a value once instead of passing the flag on every run. A flag passed on the command line always takes precedence over the value in `nx.json`.
+
+`include`, `multiMajorMode`, and `useRegistryResolution` apply when generating migrations (`nx migrate <target>`); the rest apply when running them (`nx migrate --run-migrations`).
+
+```jsonc
+// nx.json
+{
+  "migrate": {
+    "createCommits": true,
+    "commitPrefix": "chore(repo): apply nx migration ",
+    "multiMajorMode": "direct",
+    "agentic": "claude-code",
+  },
+}
+```
+
+| Property                  | Description                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **createCommits**         | Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `false`.                                                                                                                                                                                                                                         |
+| **commitPrefix**          | Commit message prefix applied to each migration commit when commits are enabled. Equivalent to the `--commit-prefix` flag. Defaults to `"chore: [nx migration] "`.                                                                                                                                                                                                              |
+| **include**               | Restricts which packages to migrate, for target packages that support optional updates: `required` (the target package and the related packages it ships with), `optional` (the optional dependency updates those packages recommend), or `all`. Equivalent to the `--include` flag. Defaults to `all`.                                                                         |
+| **multiMajorMode**        | How to handle a migration that crosses more than one major version: `direct` (migrate straight to the target) or `gradual` (migrate to the smallest recommended step). Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE` environment variable takes precedence over this value.                                                                            |
+| **useRegistryResolution** | Whether `nx migrate` resolves package versions via the npm registry (faster) instead of a package-manager install. Set to `false` to always resolve versions through your package manager. The `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and the deprecated `NX_MIGRATE_SKIP_REGISTRY_FETCH` (removed in Nx 24) environment variables take precedence over this. Defaults to `true`. |
+| **agentic**               | Default for the agentic flow used by `nx migrate --run-migrations`: `false` (never use it), `true` (use it and resolve the installed agent), or an agent id (`"claude-code"`, `"codex"`, `"opencode"`) to always use that agent. Equivalent to the `--agentic` flag.                                                                                                            |
+| **validate**              | Whether to run agent-driven validation after generator-only migrations when the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults to `true` when the agentic flow is enabled.                                                                                                                                                                              |
+
+## Generators
+
+Default generator options can be configured in `nx.json`. For instance, the following tells Nx to always
+pass `--buildable=true` when creating new libraries with the `@nx/js` plugin.
+
+```json
+// nx.json
+{
+  "generators": {
+    "@nx/js:library": {
+      "buildable": true
+    }
+  }
+}
+```
+
+## Extends
+
+Some presets use the `extends` property to hide some default options in a separate json file. The json file specified in the `extends` property is located in your `node_modules` folder. The Nx preset files are specified in [the `nx` package](https://github.com/nrwl/nx/tree/master/packages/nx/presets).
+
+## Nx Cloud
+
+There are also options for [Nx Cloud](https://cloud.nx.app?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=nx-json) that are set in the `nx.json` file. For instance, you connect to the Nx Cloud service using an `nxCloudId` like this:
+
+```json
+// nx.json
+{
+  "nxCloudId": "SOMEID"
+}
+```
+
+If connecting to a different Nx Cloud instance, you can define the `nxCloudUrl`:
+
+> The default is `https://cloud.nx.app`
+
+```json
+// nx.json
+"nxCloudUrl": "https://nx.custom-company-domain.net"
+```
+
+For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/docs/reference/nx-cloud-cli).
+
+## Max cache size
+
+The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
+
+You can also override this value using the `NX_MAX_CACHE_SIZE` environment variable, which accepts the same units and takes precedence over the `maxCacheSize` option in `nx.json`.
+
+This behavior can be opted out by setting `maxCacheSize` to `0`.
+
+Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
+
+| Value    | Description                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `819200` | 819200 bytes (800 KB)                                            |
+| `100MB`  | 100 megabytes (100 \* 1024 \* 1024 bytes)                        |
+| `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
+| `0`      | No limit on the local cache size (disables the cache size limit) |
+
+```json
+// nx.json
+{
+  "maxCacheSize": "0" // No limit on the local cache size
+}
+```
+
+```json
+// nx.json
+{
+  "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
+}
+```
+
+Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.
+
+## TUI
+
+The `tui` property in `nx.json` configures the [Terminal UI](/docs/kb/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+
+```json
+// nx.json
+{
+  "tui": {
+    // Enable the Nx TUI
+    "enabled": true,
+    // Automatically exit the TUI when completed
+    // Use a number to specify the seconds to keep the TUI open for after completion
+    "autoExit": true
+  }
+}
+```
+
+## Conformance
+
+The `conformance` property in `nx.json` configures the usage of [Nx Conformance](/docs/enterprise/conformance).
+
+```jsonc
+// nx.json
+{
+  "conformance": {
+    "outputPath": "dist/conformance-result.json",
+    "rules": [
+      {
+        "rule": "@nx/conformance/enforce-module-boundaries",
+        "status": "evaluated",
+        "explanation": "This rule ensures proper module boundaries are maintained across the workspace",
+      },
+      {
+        "rule": "./tools/local-conformance-rules/check-project.ts",
+        "projects": ["*"],
+        "options": {
+          "strictMode": true,
+        },
+      },
+      {
+        "rule": "nx-cloud://my-custom-rule",
+        "projects": [
+          "frontend-*",
+          {
+            "matcher": "backend-legacy",
+            "explanation": "Legacy backend project is exempt until migration is complete",
+          },
+        ],
+        "status": "enforced",
+      },
+    ],
+  },
+}
+```
+
+### Configuration options
+
+| Property       | Type                | Description                                                                                                                                           |
+| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **outputPath** | `string \| false`   | Optional path to write the conformance results to. Defaults to `"dist/conformance-result.json"`. Set to `false` to disable writing results to a file. |
+| **rules**      | `Array<RuleConfig>` | List of conformance rules to apply to your workspace.                                                                                                 |
+
+### Rule configuration
+
+Each rule in the `rules` array can have the following properties:
+
+| Property        | Type                                                        | Required | Description                                                                                                                                                                                              |
+| --------------- | ----------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **rule**        | `string`                                                    | Yes      | Relative path to a local rule implementation, node_module path, or nx-cloud rule ID for Nx Cloud Enterprise (e.g., `"nx-cloud://my-rule"`).                                                              |
+| **options**     | `Record<string, unknown>`                                   | No       | Rule-specific configuration options. The available options depend on the specific rule being used.                                                                                                       |
+| **projects**    | `Array<string \| { matcher: string; explanation: string }>` | No       | Projects to apply the rule to. See [Projects](#projects-conformance) section below.                                                                                                                      |
+| **explanation** | `string`                                                    | No       | Optional explanation to communicate to colleagues why this rule is enabled and important to the workspace.                                                                                               |
+| **status**      | `"enforced" \| "evaluated" \| "disabled"`                   | No       | Override the default status of the rule (defaults to `"enforced"`). If set to `"evaluated"`, violations are reported but don't cause failures. If set to `"disabled"`, the rule is not evaluated at all. |
+
+### Projects (Conformance)
+
+If you want to limit the projects that a conformance rule applies to, you can use the `projects` property. This property accepts an array of strings which can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.
+
+By default, the implied value is `["*"]` (all projects).
+
+You can also use objects with `matcher` and `explanation` properties to document why specific projects are included or excluded from the rule.
+
+```jsonc
+{
+  "rule": "my-rule",
+  // Here we are configuring the rule to apply to all frontend projects
+  // except the one called "frontend-legacy"
+  "projects": ["frontend-*", "!frontend-legacy"],
+}
+```
+
+```jsonc
+{
+  "rule": "my-rule",
+  "projects": [
+    "frontend-*",
+    {
+      "matcher": "!frontend-legacy",
+      "explanation": "Exempt until migration to new architecture is complete",
+    },
+  ],
+}
+```
+
+### Rule status values
+
+- **enforced** (default): Rule violations will cause the conformance check to fail (exit code 1)
+- **evaluated**: Rule violations are reported but don't cause failures (exit code 0)
+- **disabled**: Rule is not evaluated at all
+
+## Analytics
+
+The `analytics` property controls whether Nx collects usage telemetry. When not set, Nx prompts you on first run in an interactive terminal.
+
+```json
+// nx.json
+{
+  "analytics": true
+}
+```
+
+For more information, see [telemetry](/docs/reference/telemetry).

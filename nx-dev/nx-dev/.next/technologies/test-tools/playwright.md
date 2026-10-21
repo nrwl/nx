@@ -1,0 +1,11 @@
+---
+title: Playwright
+sidebar:
+  hidden: true
+description: E2E testing with Playwright
+pagefind: false
+---
+
+Get started with [Nx with Playwright](/docs/technologies/test-tools/playwright/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/test-tools/playwright" /%}

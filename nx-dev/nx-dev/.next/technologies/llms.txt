@@ -1,0 +1,217 @@
+# Nx Technologies
+
+> Technologies pages from the Nx documentation. See https://nx.dev/llms.txt for the full index.
+
+## Technologies
+
+- [Technologies](https://nx.dev/docs/technologies.md): Explore Nx technology integrations and how it can support your specific stack
+- [Angular](https://nx.dev/docs/technologies/angular.md): Build scalable Angular applications with Nx powerful tooling and generators
+- [Angular with Rsbuild](https://nx.dev/docs/technologies/angular/angular-rsbuild.md): Using Rsbuild with Angular
+- [createServer - @nx/angular-rsbuild/ssr](https://nx.dev/docs/technologies/angular/angular-rsbuild/create-server.md): API Reference for createServer from @nx/angular-rsbuild/ssr
+- [Nx with Angular Rsbuild](https://nx.dev/docs/technologies/angular/angular-rsbuild/introduction.md): Use Angular Rsbuild with Nx to build and cache Angular projects across your monorepo, with affected-only builds and distributed CI.
+- [Angular with Rspack](https://nx.dev/docs/technologies/angular/angular-rspack.md): Using Rspack with Angular
+- [Angular Rspack Compiler](https://nx.dev/docs/technologies/angular/angular-rspack-compiler.md): Compilation utilities for Angular with Rspack and Rsbuild.
+- [Angular Rspack Compiler](https://nx.dev/docs/technologies/angular/angular-rspack-compiler/introduction.md): Compilation utilities for Angular with Rspack and Rsbuild.
+- [angular-rspack-compiler](https://nx.dev/docs/technologies/angular/angular-rspack-compiler/introduction.md): Compilation utilities for Angular with Rspack and Rsbuild.
+- [Guides](https://nx.dev/docs/technologies/angular/angular-rspack/guides.md): Guides for using Rspack with Angular
+- [Nx with Angular Rspack](https://nx.dev/docs/technologies/angular/angular-rspack/introduction.md): Use Angular Rspack with Nx to build and cache Angular projects across your monorepo, with affected-only builds and distributed CI.
+- [angular-rspack](https://nx.dev/docs/technologies/angular/angular-rspack/introduction.md): Rspack Plugin and Loaders for building Angular.
+- [@nx/angular Executors](https://nx.dev/docs/technologies/angular/executors.md): The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It...
+- [@nx/angular Generators](https://nx.dev/docs/technologies/angular/generators.md): The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It...
+- [Guides](https://nx.dev/docs/technologies/angular/guides.md): In-depth guides for Angular development with Nx
+- [Nx with Angular](https://nx.dev/docs/technologies/angular/introduction.md): Nx scales your Angular monorepo with caching, distributed task execution, and affected-only builds.
+- [angular](https://nx.dev/docs/technologies/angular/introduction.md): The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It...
+- [Angular Migration](https://nx.dev/docs/technologies/angular/migration.md): Migrating Angular applications to Nx
+- [@nx/angular Migrations](https://nx.dev/docs/technologies/angular/migrations.md): The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace. It...
+- [Build Tools](https://nx.dev/docs/technologies/build-tools.md): Modern build tools support including Vite, Webpack, Rspack, Rollup, and ESBuild
+- [Docker](https://nx.dev/docs/technologies/build-tools/docker.md): Containerize your projects with Docker and Nx
+- [Nx with Docker](https://nx.dev/docs/technologies/build-tools/docker/introduction.md): Use Docker with Nx to build, cache, and deploy containerized projects from your monorepo.
+- [docker](https://nx.dev/docs/technologies/build-tools/docker/introduction.md): The Nx Plugin for Docker to aid in containerizing projects.
+- [@nx/docker Migrations](https://nx.dev/docs/technologies/build-tools/docker/migrations.md): The Nx Plugin for Docker to aid in containerizing projects.
+- [ESBuild](https://nx.dev/docs/technologies/build-tools/esbuild.md): Fast JavaScript bundler
+- [@nx/esbuild Executors](https://nx.dev/docs/technologies/build-tools/esbuild/executors.md): The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild
+- [@nx/esbuild Generators](https://nx.dev/docs/technologies/build-tools/esbuild/generators.md): The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild
+- [Nx with esbuild](https://nx.dev/docs/technologies/build-tools/esbuild/introduction.md): Use esbuild with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+- [esbuild](https://nx.dev/docs/technologies/build-tools/esbuild/introduction.md): The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild
+- [@nx/esbuild Migrations](https://nx.dev/docs/technologies/build-tools/esbuild/migrations.md): The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild
+- [Rollup](https://nx.dev/docs/technologies/build-tools/rollup.md): Module bundler for JavaScript
+- [@nx/rollup Executors](https://nx.dev/docs/technologies/build-tools/rollup/executors.md): The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+- [@nx/rollup Generators](https://nx.dev/docs/technologies/build-tools/rollup/generators.md): The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+- [Nx with Rollup](https://nx.dev/docs/technologies/build-tools/rollup/introduction.md): Use Rollup with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+- [rollup](https://nx.dev/docs/technologies/build-tools/rollup/introduction.md): The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+- [@nx/rollup Migrations](https://nx.dev/docs/technologies/build-tools/rollup/migrations.md): The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.
+- [Rsbuild](https://nx.dev/docs/technologies/build-tools/rsbuild.md): Rspack-based build tool
+- [@nx/rsbuild Generators](https://nx.dev/docs/technologies/build-tools/rsbuild/generators.md): The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.
+- [Nx with Rsbuild](https://nx.dev/docs/technologies/build-tools/rsbuild/introduction.md): Use Rsbuild with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+- [rsbuild](https://nx.dev/docs/technologies/build-tools/rsbuild/introduction.md): The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.
+- [@nx/rsbuild Migrations](https://nx.dev/docs/technologies/build-tools/rsbuild/migrations.md): The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.
+- [Rspack](https://nx.dev/docs/technologies/build-tools/rspack.md): Fast Rust-based bundler
+- [@nx/rspack Executors](https://nx.dev/docs/technologies/build-tools/rspack/executors.md): The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.
+- [@nx/rspack Generators](https://nx.dev/docs/technologies/build-tools/rspack/generators.md): The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.
+- [Nx with Rspack](https://nx.dev/docs/technologies/build-tools/rspack/introduction.md): Rspack is a Rust-based bundler with a webpack-compatible API. Learn how to use Rspack in an Nx monorepo with caching, affected builds, and fast CI.
+- [rspack](https://nx.dev/docs/technologies/build-tools/rspack/introduction.md): The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.
+- [@nx/rspack Migrations](https://nx.dev/docs/technologies/build-tools/rspack/migrations.md): The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.
+- [Vite](https://nx.dev/docs/technologies/build-tools/vite.md): Fast frontend build tool
+- [@nx/vite Executors](https://nx.dev/docs/technologies/build-tools/vite/executors.md): The Nx Plugin for building and testing applications using Vite
+- [@nx/vite Generators](https://nx.dev/docs/technologies/build-tools/vite/generators.md): The Nx Plugin for building and testing applications using Vite
+- [Guides](https://nx.dev/docs/technologies/build-tools/vite/guides.md): Guides for using Vite with Nx
+- [Nx with Vite](https://nx.dev/docs/technologies/build-tools/vite/introduction.md): Use Vite with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+- [vite](https://nx.dev/docs/technologies/build-tools/vite/introduction.md): The Nx Plugin for building and testing applications using Vite
+- [@nx/vite Migrations](https://nx.dev/docs/technologies/build-tools/vite/migrations.md): The Nx Plugin for building and testing applications using Vite
+- [Webpack](https://nx.dev/docs/technologies/build-tools/webpack.md): Powerful module bundler
+- [@nx/webpack Executors](https://nx.dev/docs/technologies/build-tools/webpack/executors.md): The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
+- [@nx/webpack Generators](https://nx.dev/docs/technologies/build-tools/webpack/generators.md): The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
+- [Guides](https://nx.dev/docs/technologies/build-tools/webpack/guides.md): Guides for configuring Webpack
+- [Nx with Webpack](https://nx.dev/docs/technologies/build-tools/webpack/introduction.md): Use Webpack with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+- [webpack](https://nx.dev/docs/technologies/build-tools/webpack/introduction.md): The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
+- [@nx/webpack Migrations](https://nx.dev/docs/technologies/build-tools/webpack/migrations.md): The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.
+- [.NET](https://nx.dev/docs/technologies/dotnet.md): Build scalable .NET applications
+- [@nx/dotnet Generators](https://nx.dev/docs/technologies/dotnet/generators.md): The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.
+- [Guides](https://nx.dev/docs/technologies/dotnet/guides.md): In-depth guides for .NET development with Nx
+- [Nx with .NET](https://nx.dev/docs/technologies/dotnet/introduction.md): Nx scales your .NET monorepo with caching, distributed task execution, and affected-only builds.
+- [dotnet](https://nx.dev/docs/technologies/dotnet/introduction.md): The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.
+- [@nx/dotnet Migrations](https://nx.dev/docs/technologies/dotnet/migrations.md): The Nx Plugin for .NET containing graph support for working with .NET projects in an Nx workspace.
+- [ESLint](https://nx.dev/docs/technologies/eslint.md): Guides and API references for ESLint in Nx
+- [ESLint Plugin](https://nx.dev/docs/technologies/eslint/eslint-plugin.md): Nx ESLint plugin features
+- [Guides](https://nx.dev/docs/technologies/eslint/eslint-plugin/guides.md): ESLint plugin configuration guides
+- [eslint-plugin](https://nx.dev/docs/technologies/eslint/eslint-plugin/introduction.md): The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your...
+- [@nx/eslint-plugin Migrations](https://nx.dev/docs/technologies/eslint/eslint-plugin/migrations.md): The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your...
+- [@nx/eslint Executors](https://nx.dev/docs/technologies/eslint/executors.md): The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [@nx/eslint Generators](https://nx.dev/docs/technologies/eslint/generators.md): The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [Guides](https://nx.dev/docs/technologies/eslint/guides.md): Configuration and usage guides
+- [Nx with ESLint](https://nx.dev/docs/technologies/eslint/introduction.md): Use ESLint with Nx to lint projects across your monorepo, with caching, affected-only runs, and module boundary rules.
+- [eslint](https://nx.dev/docs/technologies/eslint/introduction.md): The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [@nx/eslint Migrations](https://nx.dev/docs/technologies/eslint/migrations.md): The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [Java](https://nx.dev/docs/technologies/java.md): Build scalable Java applications
+- [Gradle](https://nx.dev/docs/technologies/java/gradle.md): Using Gradle with Nx
+- [@nx/gradle Executors](https://nx.dev/docs/technologies/java/gradle/executors.md): The Nx Plugin for Gradle allows Gradle tasks to be run through Nx
+- [@nx/gradle Generators](https://nx.dev/docs/technologies/java/gradle/generators.md): The Nx Plugin for Gradle allows Gradle tasks to be run through Nx
+- [Nx with Gradle](https://nx.dev/docs/technologies/java/gradle/introduction.md): Use Gradle with Nx to cache and run tasks across your Java monorepo, with affected-only builds and distributed CI.
+- [gradle](https://nx.dev/docs/technologies/java/gradle/introduction.md): The Nx Plugin for Gradle allows Gradle tasks to be run through Nx
+- [@nx/gradle Migrations](https://nx.dev/docs/technologies/java/gradle/migrations.md): The Nx Plugin for Gradle allows Gradle tasks to be run through Nx
+- [Nx with Java](https://nx.dev/docs/technologies/java/introduction.md): Nx scales your Java monorepo with caching, distributed task execution, and affected-only builds.
+- [Maven](https://nx.dev/docs/technologies/java/maven.md): Using Maven with Nx
+- [@nx/maven Executors](https://nx.dev/docs/technologies/java/maven/executors.md): Nx plugin for Maven integration
+- [@nx/maven Generators](https://nx.dev/docs/technologies/java/maven/generators.md): Nx plugin for Maven integration
+- [Nx with Maven](https://nx.dev/docs/technologies/java/maven/introduction.md): Use Maven with Nx to cache and run tasks across your Java monorepo, with affected-only builds and distributed CI.
+- [maven](https://nx.dev/docs/technologies/java/maven/introduction.md): Nx plugin for Maven integration
+- [@nx/maven Migrations](https://nx.dev/docs/technologies/java/maven/migrations.md): Nx plugin for Maven integration
+- [Module Federation](https://nx.dev/docs/technologies/module-federation.md): Advanced guides to utilize Module Federation with Nx for micro frontends
+- [Nx with Module Federation](https://nx.dev/docs/technologies/module-federation/introduction.md): Build micro frontends with Module Federation and Nx, sharing code across your monorepo with caching and affected-only builds.
+- [module-federation](https://nx.dev/docs/technologies/module-federation/introduction.md): The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.
+- [@nx/module-federation Migrations](https://nx.dev/docs/technologies/module-federation/migrations.md): The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.
+- [Node.js](https://nx.dev/docs/technologies/node.md): Build scalable Node.js applications with Express, NestJS, and serverless support
+- [Express](https://nx.dev/docs/technologies/node/express.md): Express framework support
+- [@nx/express Generators](https://nx.dev/docs/technologies/node/express/generators.md): The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.
+- [Nx with Express](https://nx.dev/docs/technologies/node/express/introduction.md): Nx scales your Express monorepo with caching, distributed task execution, and affected-only builds.
+- [express](https://nx.dev/docs/technologies/node/express/introduction.md): The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.
+- [@nx/express Migrations](https://nx.dev/docs/technologies/node/express/migrations.md): The Nx Plugin for Express contains executors and generators for allowing your workspace to create powerful Express Node applications and APIs.
+- [@nx/node Generators](https://nx.dev/docs/technologies/node/generators.md): The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.
+- [Guides](https://nx.dev/docs/technologies/node/guides.md): Backend development guides
+- [Nx with Node.js](https://nx.dev/docs/technologies/node/introduction.md): Nx scales your Node.js monorepo with caching, distributed task execution, and affected-only builds.
+- [node](https://nx.dev/docs/technologies/node/introduction.md): The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.
+- [@nx/node Migrations](https://nx.dev/docs/technologies/node/migrations.md): The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.
+- [NestJS](https://nx.dev/docs/technologies/node/nest.md): NestJS framework support
+- [@nx/nest Generators](https://nx.dev/docs/technologies/node/nest/generators.md): The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.
+- [Nx with Nest.js](https://nx.dev/docs/technologies/node/nest/introduction.md): Nx scales your Nest.js monorepo with caching, distributed task execution, and affected-only builds.
+- [nest](https://nx.dev/docs/technologies/node/nest/introduction.md): The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.
+- [@nx/nest Migrations](https://nx.dev/docs/technologies/node/nest/migrations.md): The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.
+- [Oxlint](https://nx.dev/docs/technologies/oxlint.md): Guides and API references for Oxlint in Nx
+- [@nx/oxlint Executors](https://nx.dev/docs/technologies/oxlint/executors.md): Experimental. The Oxlint plugin for Nx contains generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [@nx/oxlint Generators](https://nx.dev/docs/technologies/oxlint/generators.md): Experimental. The Oxlint plugin for Nx contains generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [Nx with Oxlint](https://nx.dev/docs/technologies/oxlint/introduction.md): Set up and use the @nx/oxlint plugin with inferred tasks, type-aware linting, and experimental module-boundary enforcement.
+- [oxlint](https://nx.dev/docs/technologies/oxlint/introduction.md): Experimental. The Oxlint plugin for Nx contains generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [@nx/oxlint Migrations](https://nx.dev/docs/technologies/oxlint/migrations.md): Experimental. The Oxlint plugin for Nx contains generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+- [React](https://nx.dev/docs/technologies/react.md): Create modern React applications with Nx comprehensive React support
+- [@nx/react Executors](https://nx.dev/docs/technologies/react/executors.md): The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides: -...
+- [Expo](https://nx.dev/docs/technologies/react/expo.md): Expo React Native framework
+- [@nx/expo Executors](https://nx.dev/docs/technologies/react/expo/executors.md): The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can...
+- [@nx/expo Generators](https://nx.dev/docs/technologies/react/expo/generators.md): The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can...
+- [Nx with Expo](https://nx.dev/docs/technologies/react/expo/introduction.md): Nx scales your Expo monorepo with caching, distributed task execution, and affected-only builds.
+- [expo](https://nx.dev/docs/technologies/react/expo/introduction.md): The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can...
+- [@nx/expo Migrations](https://nx.dev/docs/technologies/react/expo/migrations.md): The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can...
+- [@nx/react Generators](https://nx.dev/docs/technologies/react/generators.md): The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides: -...
+- [Guides](https://nx.dev/docs/technologies/react/guides.md): React development guides
+- [Nx with React](https://nx.dev/docs/technologies/react/introduction.md): Nx scales your React monorepo with caching, distributed task execution, and affected-only builds.
+- [react](https://nx.dev/docs/technologies/react/introduction.md): The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides: -...
+- [@nx/react Migrations](https://nx.dev/docs/technologies/react/migrations.md): The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides: -...
+- [Next.js](https://nx.dev/docs/technologies/react/next.md): Next.js framework support
+- [@nx/next Executors](https://nx.dev/docs/technologies/react/next/executors.md): The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides: -...
+- [@nx/next Generators](https://nx.dev/docs/technologies/react/next/generators.md): The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides: -...
+- [Guides](https://nx.dev/docs/technologies/react/next/guides.md): Next.js configuration guides
+- [Nx with Next.js](https://nx.dev/docs/technologies/react/next/introduction.md): Nx scales your Next.js monorepo with caching, distributed task execution, and affected-only builds.
+- [next](https://nx.dev/docs/technologies/react/next/introduction.md): The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides: -...
+- [@nx/next Migrations](https://nx.dev/docs/technologies/react/next/migrations.md): The Next.js plugin for Nx contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides: -...
+- [React Native](https://nx.dev/docs/technologies/react/react-native.md): Mobile app development with React Native
+- [@nx/react-native Executors](https://nx.dev/docs/technologies/react/react-native/executors.md): The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:...
+- [@nx/react-native Generators](https://nx.dev/docs/technologies/react/react-native/generators.md): The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:...
+- [Nx with React Native](https://nx.dev/docs/technologies/react/react-native/introduction.md): Nx scales your React Native monorepo with caching, distributed task execution, and affected-only builds.
+- [react-native](https://nx.dev/docs/technologies/react/react-native/introduction.md): The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:...
+- [@nx/react-native Migrations](https://nx.dev/docs/technologies/react/react-native/migrations.md): The Nx Plugin for React Native contains generators for managing React Native applications and libraries within an Nx workspace. It provides:...
+- [Remix](https://nx.dev/docs/technologies/react/remix.md): Remix framework support
+- [@nx/remix Executors](https://nx.dev/docs/technologies/react/remix/executors.md): The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides: -...
+- [@nx/remix Generators](https://nx.dev/docs/technologies/react/remix/generators.md): The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides: -...
+- [Nx with Remix](https://nx.dev/docs/technologies/react/remix/introduction.md): Nx scales your Remix monorepo with caching, distributed task execution, and affected-only builds.
+- [remix](https://nx.dev/docs/technologies/react/remix/introduction.md): The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides: -...
+- [@nx/remix Migrations](https://nx.dev/docs/technologies/react/remix/migrations.md): The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides: -...
+- [Test Tools](https://nx.dev/docs/technologies/test-tools.md): Comprehensive testing support with Vitest, Jest, Cypress, Playwright, Storybook, and Detox
+- [Cypress](https://nx.dev/docs/technologies/test-tools/cypress.md): E2E testing with Cypress
+- [@nx/cypress Executors](https://nx.dev/docs/technologies/test-tools/cypress/executors.md): The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.
+- [@nx/cypress Generators](https://nx.dev/docs/technologies/test-tools/cypress/generators.md): The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.
+- [Guides](https://nx.dev/docs/technologies/test-tools/cypress/guides.md): Cypress configuration and usage
+- [Nx with Cypress](https://nx.dev/docs/technologies/test-tools/cypress/introduction.md): Run Cypress through Nx for caching, affected test runs, and faster CI across your monorepo.
+- [cypress](https://nx.dev/docs/technologies/test-tools/cypress/introduction.md): The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.
+- [@nx/cypress Migrations](https://nx.dev/docs/technologies/test-tools/cypress/migrations.md): The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.
+- [Detox](https://nx.dev/docs/technologies/test-tools/detox.md): React Native testing with Detox
+- [@nx/detox Executors](https://nx.dev/docs/technologies/test-tools/detox/executors.md): The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.
+- [@nx/detox Generators](https://nx.dev/docs/technologies/test-tools/detox/generators.md): The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.
+- [Nx with Detox](https://nx.dev/docs/technologies/test-tools/detox/introduction.md): Run Detox through Nx for caching, affected test runs, and faster CI across your monorepo.
+- [detox](https://nx.dev/docs/technologies/test-tools/detox/introduction.md): The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.
+- [@nx/detox Migrations](https://nx.dev/docs/technologies/test-tools/detox/migrations.md): The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.
+- [Jest](https://nx.dev/docs/technologies/test-tools/jest.md): Unit testing with Jest
+- [@nx/jest Executors](https://nx.dev/docs/technologies/test-tools/jest/executors.md): The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.
+- [@nx/jest Generators](https://nx.dev/docs/technologies/test-tools/jest/generators.md): The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.
+- [Nx with Jest](https://nx.dev/docs/technologies/test-tools/jest/introduction.md): Run Jest through Nx for caching, affected test runs, and faster CI across your monorepo.
+- [jest](https://nx.dev/docs/technologies/test-tools/jest/introduction.md): The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.
+- [@nx/jest Migrations](https://nx.dev/docs/technologies/test-tools/jest/migrations.md): The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.
+- [Playwright](https://nx.dev/docs/technologies/test-tools/playwright.md): E2E testing with Playwright
+- [@nx/playwright Executors](https://nx.dev/docs/technologies/test-tools/playwright/executors.md): The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing...
+- [@nx/playwright Generators](https://nx.dev/docs/technologies/test-tools/playwright/generators.md): The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing...
+- [Guides](https://nx.dev/docs/technologies/test-tools/playwright/guides.md): Playwright configuration and usage
+- [How to Fix Flaky Playwright Tests](https://nx.dev/docs/technologies/test-tools/playwright/guides/flaky-tests.md): Reproduce, debug, and fix flaky Playwright tests, then use Nx to isolate retries and detect recurring failures in CI.
+- [Nx with Playwright](https://nx.dev/docs/technologies/test-tools/playwright/introduction.md): Run Playwright through Nx for caching, affected test runs, and faster CI across your monorepo.
+- [playwright](https://nx.dev/docs/technologies/test-tools/playwright/introduction.md): The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing...
+- [@nx/playwright Migrations](https://nx.dev/docs/technologies/test-tools/playwright/migrations.md): The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing...
+- [Storybook](https://nx.dev/docs/technologies/test-tools/storybook.md): Component development with Storybook
+- [@nx/storybook Executors](https://nx.dev/docs/technologies/test-tools/storybook/executors.md): The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing &...
+- [@nx/storybook Generators](https://nx.dev/docs/technologies/test-tools/storybook/generators.md): The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing &...
+- [Guides](https://nx.dev/docs/technologies/test-tools/storybook/guides.md): Storybook configuration guides
+- [Nx with Storybook](https://nx.dev/docs/technologies/test-tools/storybook/introduction.md): Use Storybook with Nx for caching, affected builds, and faster CI across your monorepo.
+- [storybook](https://nx.dev/docs/technologies/test-tools/storybook/introduction.md): The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing &...
+- [@nx/storybook Migrations](https://nx.dev/docs/technologies/test-tools/storybook/migrations.md): The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing &...
+- [Vitest](https://nx.dev/docs/technologies/test-tools/vitest.md): Component development with Vitest
+- [@nx/vitest Executors](https://nx.dev/docs/technologies/test-tools/vitest/executors.md): The Nx Plugin for Vitest to enable fast unit testing with Vitest.
+- [@nx/vitest Generators](https://nx.dev/docs/technologies/test-tools/vitest/generators.md): The Nx Plugin for Vitest to enable fast unit testing with Vitest.
+- [Guides](https://nx.dev/docs/technologies/test-tools/vitest/guides.md): Vitest configuration and usage guides
+- [Nx with Vitest](https://nx.dev/docs/technologies/test-tools/vitest/introduction.md): Run Vitest through Nx for caching, affected test runs, and faster CI across your monorepo.
+- [vitest](https://nx.dev/docs/technologies/test-tools/vitest/introduction.md): The Nx Plugin for Vitest to enable fast unit testing with Vitest.
+- [@nx/vitest Migrations](https://nx.dev/docs/technologies/test-tools/vitest/migrations.md): The Nx Plugin for Vitest to enable fast unit testing with Vitest.
+- [TypeScript](https://nx.dev/docs/technologies/typescript.md): Advanced TypeScript support with project references, incremental builds, and more
+- [@nx/js Executors](https://nx.dev/docs/technologies/typescript/executors.md): The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects.
+- [@nx/js Generators](https://nx.dev/docs/technologies/typescript/generators.md): The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects.
+- [Guides](https://nx.dev/docs/technologies/typescript/guides.md): TypeScript configuration and best practices
+- [Nx with TypeScript](https://nx.dev/docs/technologies/typescript/introduction.md): Nx scales your TypeScript or JavaScript monorepo with caching, distributed task execution, and affected-only builds.
+- [js](https://nx.dev/docs/technologies/typescript/introduction.md): The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects.
+- [@nx/js Migrations](https://nx.dev/docs/technologies/typescript/migrations.md): The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects.
+- [rolldown](https://nx.dev/docs/technologies/undefined/rolldown/introduction.md): The Nx Plugin for rolldown
+- [Vue](https://nx.dev/docs/technologies/vue.md): Build Vue applications with Nx Vue plugin supporting Vue 3 and Nuxt
+- [@nx/vue Generators](https://nx.dev/docs/technologies/vue/generators.md): The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides: -...
+- [Nx with Vue](https://nx.dev/docs/technologies/vue/introduction.md): Nx scales your Vue monorepo with caching, distributed task execution, and affected-only builds.
+- [vue](https://nx.dev/docs/technologies/vue/introduction.md): The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides: -...
+- [@nx/vue Migrations](https://nx.dev/docs/technologies/vue/migrations.md): The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides: -...
+- [Nuxt](https://nx.dev/docs/technologies/vue/nuxt.md): Nuxt framework support
+- [@nx/nuxt Generators](https://nx.dev/docs/technologies/vue/nuxt/generators.md): The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides: -...
+- [Guides](https://nx.dev/docs/technologies/vue/nuxt/guides.md): Nuxt configuration guides
+- [Nx with Nuxt](https://nx.dev/docs/technologies/vue/nuxt/introduction.md): Nx scales your Nuxt monorepo with caching, distributed task execution, and affected-only builds.
+- [nuxt](https://nx.dev/docs/technologies/vue/nuxt/introduction.md): The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides: -...
+- [@nx/nuxt Migrations](https://nx.dev/docs/technologies/vue/nuxt/migrations.md): The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides: -...

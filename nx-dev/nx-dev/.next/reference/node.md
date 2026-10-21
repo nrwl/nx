@@ -1,0 +1,11 @@
+---
+title: Node
+description: Node.js API reference for Nx plugins
+sidebar:
+  hidden: true
+pagefind: false
+---
+
+For setup and guides, see [Nx with Node.js](/docs/technologies/node/introduction). The pages below are the API reference.
+
+{% sidebar_group_cards group="Reference/Node" /%}

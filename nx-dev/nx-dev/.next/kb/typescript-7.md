@@ -1,0 +1,79 @@
+---
+title: Use TypeScript 7.0 alongside TypeScript 6.0
+description: Run TypeScript 7.0 through Nx tasks while keeping TypeScript 6.0 available for tools that need the compiler API.
+sidebar:
+  label: Use TypeScript 7.0
+filter: 'type:Guides'
+featured: true
+topics:
+  - 'TypeScript'
+---
+
+TypeScript 7.0 provides a faster native compiler, but it does not yet ship a programmatic API. Some tools, including the `@nx/js/typescript` plugin, `vite`, and `typescript-eslint`, still need that API. Install TypeScript 6.0 and 7.0 side by side: TypeScript 6.0 supplies the API, while TypeScript 7.0 supplies the `tsc` executable used by your Nx tasks.
+
+## Install TypeScript 6.0 and TypeScript 7.0
+
+Add two aliases to the root `package.json`:
+
+```json
+{
+  "devDependencies": {
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}
+```
+
+The alias names are intentional:
+
+- `typescript` resolves to `@typescript/typescript6`, so tools that import the TypeScript API continue to receive TypeScript 6.0.
+- `@typescript/native` resolves to TypeScript 7.0. Its `tsc` binary is available on the workspace path, while TypeScript 6.0 exposes `tsc6` without a naming conflict.
+
+Install dependencies with your package manager, then confirm both compilers are available:
+
+```shell
+npx tsc --version
+npx tsc6 --version
+```
+
+`tsc` should report TypeScript 7.0 and `tsc6` should report TypeScript 6.0.
+
+{% aside type="note" title="Why use aliases?" %}
+
+Installing only `typescript@npm:@typescript/typescript6` preserves API compatibility but exposes only `tsc6`. Adding the TypeScript 7.0 alias restores `tsc`, letting commands that already invoke `tsc` use TypeScript 7.0 without changing their names.
+
+{% /aside %}
+
+## Run TypeScript 7.0 with Nx
+
+The `@nx/js/typescript` plugin infers `typecheck` and `build` tasks that run `tsc`. With the aliases above, those tasks use TypeScript 7.0 while Nx continues to analyze TypeScript configuration through the TypeScript 6.0 API.
+
+Run the inferred tasks as usual:
+
+```shell
+nx run my-library:typecheck
+nx run my-library:build
+```
+
+### Legacy workspaces using the `@nx/js:tsc` executor
+
+No additional configuration is required. The `typescript` alias above makes `require('typescript')` resolve to TypeScript 6.0, which keeps API-dependent executors working.
+
+## Prepare your configuration for TypeScript 7.0
+
+TypeScript 7.0 is designed to match TypeScript 6.0's type-checking and command-line behavior. Before switching, update your workspace for TypeScript 6.0 and remove any temporary `ignoreDeprecations` setting. In particular, review TypeScript 6.0's changed defaults and deprecated compiler options.
+
+TypeScript 7.0 does not yet support workflows that need its programmatic API, including many language-service integrations and embedded-language tools. Angular, Vue, MDX, Astro, and Svelte projects may need TypeScript 6.0 for editor or template tooling even when they use TypeScript 7.0 for CLI type checking. Keep `tsc6` available as a fallback while those tools add TypeScript 7.0 support.
+
+For the complete compatibility model and current limitations, see Microsoft's [TypeScript 7 announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0).
+
+## Validate the migration
+
+Start with a representative project, then validate the affected workspace:
+
+```shell
+nx affected -t build,test,lint
+nx affected -t e2e
+```
+
+Run your full validation suite before committing the dependency change. This catches API-dependent tooling that still requires TypeScript 6.0 while retaining TypeScript 7.0 for the tasks that can use it.

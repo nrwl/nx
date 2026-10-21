@@ -1,0 +1,187 @@
+---
+title: Automate Updating Dependencies
+description: Learn how to use Nx migrate to automatically update package dependencies, configuration files, and source code to match new package versions.
+keywords: [update, migrate]
+sidebar:
+  order: 7
+filter: 'type:Features'
+---
+
+{% youtube
+src="https://youtu.be/A0FjwsTlZ8A"
+title="How Automated Code Migrations Work"
+/%}
+
+Keeping your tooling up to date is a tedious and time-consuming part of maintaining any project. The `nx migrate` command automates that work by:
+
+- Updating your `package.json` dependencies.
+- Updating your configuration files (e.g. Vite, Playwright, Nx config).
+- Updating your source code to match the new versions of packages (e.g., migrating across breaking changes).
+
+The command guides you through the update interactively:
+
+```shell
+nx migrate
+```
+
+## How Nx migrate works
+
+Nx knows where its configuration files are located and ensures they match the expected format. This automated update process is commonly referred to as "migration." Each [Nx plugin](/docs/plugin-registry) can provide migrations for its area of competency. For example, the Vite plugin ships migrations that update Vite configuration files across breaking changes. When you run `nx migrate`, Nx collects the pending migrations from all the plugins you have installed and applies the necessary changes to your workspace.
+
+## Migration steps
+
+Updating your Nx workspace happens in two phases:
+
+1. **Generate** - `nx migrate` applies the package version updates to your `package.json` and writes a `migrations.json` file. No source code is touched yet.
+2. **Run** - `nx migrate --run-migrations` runs the generated migrations to update your configuration files and source code.
+
+You can intervene between the phases and make adjustments as needed for your specific workspaces. This is especially important in large codebases where you might want to control the changes more granularly.
+
+### Step 1: Generate migrations
+
+Run the `migrate` command and follow the prompts:
+
+```shell
+nx migrate
+```
+
+Nx resolves the latest version and, when the update crosses more than one major version, asks how far to jump. Updating [one major version at a time](/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps) is the safest path and is what Nx recommends.
+
+Nx also asks which package versions to migrate. The answer maps to the `--include` flag:
+
+- `required` - the target package and the packages it ships with. For example, Nx itself and its plugins such as `@nx/vite`.
+- `optional` - the dependency updates those packages recommend. For example, `vite` itself rather than `@nx/vite`.
+- `all` - both of the above.
+
+When unsure, choose `required`. Updating only Nx and its plugins keeps the PR scope small and has less chance of introducing issues, which matters most in large workspaces. Follow up with `nx migrate --include=optional` to catch up on the rest. If you're okay with doing everything in one PR, use `--include=all`.
+
+In some cases you can scope the optional catch-up to a single plugin's dependencies, such as `nx migrate @nx/vite --include=optional` - see [choosing which packages to migrate](/docs/guides/tips-n-tricks/advanced-update#choosing-which-packages-to-migrate) for the caveat.
+
+This results in:
+
+- The `package.json` being updated with the new package versions
+- A `migrations.json` being generated if there are pending migrations.
+
+At this point, no packages have been installed, and no other files have been touched.
+
+Now, inspect `package.json` to see if the changes make sense. Sometimes the migration can update a package to a version that is either not allowed or conflicts with another package. You are free to adjust versions before running install.
+
+{% tabs syncKey="install-type" %}
+{% tabitem label="npm" %}
+
+```shell
+npm install
+```
+
+{% /tabitem %}
+{% tabitem label="yarn" %}
+
+```shell
+yarn install
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```shell
+pnpm install
+```
+
+{% /tabitem %}
+{% tabitem label="bun" %}
+
+```shell
+bun install
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Also, look at the `migrations.json` file for the type of migrations that are going to be applied. If this file does not exist, then there are no migrations to run.
+
+### Step 2: Run migrations
+
+Run the migrations that were generated in the previous step (`migrations.json`):
+
+```shell
+nx migrate --run-migrations
+```
+
+#### What's in a migration?
+
+Migrations run one at a time and contain two types of changes:
+
+1. **Generator-based** ("script-based"): programmatic config or code changes (e.g. `rollupOptions` becomes `rolldownOptions` in `vite.config.ts` for Vite 8).
+2. **Prompt-based**: AI-aided changes that can't be expressed deterministically and need judgment about your specific code.
+
+A migration can be **generator-only**, **prompt-only**, or a **hybrid** (a generator followed by AI-aided changes).
+
+#### Running the migrations
+
+Generator-only migrations run automatically. All the changes are unstaged ready for you to review.
+
+When prompt-only or hybrid migrations are queued and a supported AI agent is installed (Claude Code, OpenAI Codex, or OpenCode), Nx asks whether to continue with an agentic flow. You can answer for this run only, or have Nx remember your choice in `nx.json`. With the agentic flow enabled:
+
+- Generator-based changes run first, and the agent validates the results.
+- The agent then applies the prompt-based changes as instructed in the prompt.
+
+Nx creates a commit for each migration while the agentic flow is enabled, so the agent reviews each migration's changes in isolation.
+
+Without an agent, generator-only migrations and the generator half of hybrid migrations still run. The skipped prompt files are listed in the next-steps output, in order, so you can apply them yourself.
+
+{% aside type="note" title="Running inside an AI agent" %}
+If you run `nx migrate --run-migrations` from within an AI agent's terminal, Nx defers the prompt-based migrations to that agent instead of spawning another one.
+{% /aside %}
+
+{% aside type="tip" title="Migrations are version specific" %}
+Each Nx plugin provides migrations that are relevant to particular versions of the package. The generated `migrations.json` only contains the migrations appropriate for the update you are currently applying.
+{% /aside %}
+
+### Step 3: Clean up
+
+After you run all the migrations, you can remove `migrations.json` and commit any outstanding changes.
+
+Note: You may want to keep the `migrations.json` until every branch that was created before the migration has been merged. Leaving the `migrations.json` in place allows devs to run `nx migrate --run-migrations` to apply the same migration process to their newly merged code as well.
+
+### Step 4: Update community plugins (Optional)
+
+If you have any [Nx community plugins](/docs/plugin-registry) installed you need to migrate them individually (assuming they provide migration scripts) by using the following command:
+
+```shell
+nx migrate my-plugin
+```
+
+For a list of all the plugins you currently have installed, run:
+
+```shell
+nx report
+```
+
+## Configure migrate defaults
+
+Set workspace-wide defaults for `nx migrate` in the `migrate` section of `nx.json` instead of passing the same flags on every run. You can control commit behavior, package selection, multi-major version handling, and the agentic flow:
+
+```json
+// nx.json
+{
+  "migrate": {
+    "agentic": "claude-code",
+    "createCommits": true,
+    "commitPrefix": "chore(repo): apply nx migration "
+  }
+}
+```
+
+For all available options, see the [`migrate` section of the `nx.json` reference](/docs/reference/nx-json#migrate).
+
+## Keep Nx packages on the same version
+
+When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/docs/kb/keep-nx-versions-in-sync) to have Nx work properly.
+
+As long as you run `nx migrate` instead of manually changing the version numbers, you shouldn't have to worry about it. Also, when you add a new plugin, use `nx add <plugin>` to automatically install the version that matches your repository's version of Nx.
+
+## Need more control?
+
+Sometimes you need to deviate from the defaults: skip optional package updates and catch them up later, pin a specific AI agent or disable the agentic flow, run migrations one at a time, or opt out of specific migrations by adjusting `migrations.json`.
+
+Find all of these in our [Advanced Update Process](/docs/guides/tips-n-tricks/advanced-update) guide.

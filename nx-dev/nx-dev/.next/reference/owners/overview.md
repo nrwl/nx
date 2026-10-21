@@ -1,0 +1,387 @@
+---
+title: Overview of the Nx Owners Plugin
+description: The Nx Owners plugin provides the ability to define code ownership based on projects in addition to files
+sidebar:
+  label: Overview
+weight: 2.1
+filter: 'type:References'
+---
+
+The `@nx/owners` plugin extends the CODEOWNERS functionality to allow you to define code ownership based on projects in addition to the standard file-based definitions. It leverages the [`nx sync`](/docs/concepts/sync-generators) command to compile `owners` configuration settings from `nx.json` and project configuration files into valid CODEOWNERS files for [GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners), [Bitbucket](https://support.atlassian.com/bitbucket-cloud/docs/set-up-and-use-code-owners/) or [GitLab](https://docs.gitlab.com/ee/user/project/codeowners/).
+
+With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/docs/reference/nx-commands#nx-run-many). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
+
+{% aside type="note" title="This plugin requires an active Nx Enterprise license" %}
+In order to use `@nx/owners`, you need to have an active Nx Enterprise license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
+{% /aside %}
+
+## Set up @nx/owners
+
+1. [Activate your license](/docs/enterprise/activate-license) if you haven't already
+2. Install the package
+
+   ```shell
+   nx add @nx/owners
+   ```
+
+3. Configure Ownership
+
+   Configure the `@nx/owners` plugin in the `nx.json` file or in individual project configuration files. Consult the [Owners Configuration Reference](#owners-configuration-reference) section for more details.
+
+4. Configure the [Sync Generator](/docs/concepts/sync-generators) and CI
+
+The `nx add @nx/owners` command should have registered the `@nx/owners:sync-codeowners-file` generator as a `globalGenerator` in `nx.json`. You can double check to make sure:
+
+```jsonc
+// nx.json
+{
+  "sync": {
+    "globalGenerators": ["@nx/owners:sync-codeowners-file"],
+  },
+}
+```
+
+Add `nx sync:check` to the beginning of the CI process.
+
+```yaml
+- name: Ensure the workspace configuration is in sync
+  run: npx nx sync:check
+```
+
+It is also often helpful to add `nx sync` as a git push hook or git commit hook.
+
+## Owners configuration reference
+
+{% tabs %}
+{% tabitem label="GitHub" %}
+
+```jsonc
+// nx.json
+{
+  // Can be set to true instead of an object to accept all defaults
+  "owners": {
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "github",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
+    // (Optional)
+    "patterns": [
+      {
+        "description": "A description of the rule",
+        "owners": ["@joelovesrust"],
+        // specify either projects or files, not both
+        // Can be any project specifier that could be used in `nx run-many`
+        // See https://nx.dev/docs/reference/nx-commands#nx-run-many
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"],
+      },
+    ],
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Bitbucket" %}
+
+```jsonc
+// nx.json
+{
+  // Can be set to true instead of an object to accept all defaults
+  "owners": {
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "bitbucket",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
+    // (Optional)
+    "patterns": [
+      {
+        "description": "A description of the rule",
+        "owners": ["@joelovesrust"],
+        // specify either projects or files, not both
+        // Can be any project specifier that could be used in `nx run-many`
+        // See https://nx.dev/docs/reference/nx-commands#nx-run-many
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"],
+      },
+    ],
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="GitLab" %}
+
+If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitlab.com/ee/user/project/codeowners/#organize-code-owners-by-putting-them-into-sections) which give you a little more control over the PR process.
+
+```jsonc
+// nx.json
+{
+  // Can be set to true instead of an object to accept all defaults
+  "owners": {
+    // Options are `github`, `bitbucket` or `gitlab`. (Optional) Defaults to `github`
+    "format": "gitlab",
+    // (Optional) Default changes based on format: `.github/CODEOWNERS`, `.bitbucket/CODEOWNERS`, `.gitlab/CODEOWNERS`
+    "outputPath": "CODEOWNERS",
+    // (Optional)
+    "patterns": [
+      {
+        "description": "A description of the rule",
+        "owners": ["@joelovesrust"],
+        // Specify either `projects` or `files`, not both
+        // Can be any project specifier that could be used in `nx run-many`
+        // See https://nx.dev/docs/reference/nx-commands#nx-run-many
+        "projects": ["my-rust-app", "rust-*", "tag:rust"],
+        // File globs
+        "files": [".github/workflows/**/*"],
+      },
+    ],
+    // (Optional)
+    "sections": [
+      {
+        // Labels the section
+        "name": "My section",
+        // (Optional) The owners to use if a pattern does not specify a set of owners
+        "defaultOwners": ["@cheddar"],
+        // Specify either `numberOfRequiredApprovals` or `optional`, not both
+        // (Optional) Require more than one person to approve the PR
+        "numberOfRequiredApprovals": 2,
+        // (Optional) Do not require any approvals, just notify the owners
+        "optional": true,
+        // Same format as the root patterns
+        "patterns": [],
+      },
+    ],
+  },
+}
+```
+
+```jsonc
+// path/to/project/project.json
+{
+  "owners": {
+    // Keys are file globs relative to the root of the project
+    // Owners can be listed as a string array
+    "**/*": ["@ahmed", "@petra"],
+    // Owners can be listed as an object with a description
+    "README.md": {
+      "description": "Jared is very particular about the README file",
+      "owners": ["@jared"]
+    }
+  }
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+**Examples:**
+
+{% tabs %}
+{% tabitem label="GitHub" %}
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    // defaults to "github"
+    "format": "github",
+    // defaults to ".github/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Joe should double check all changes to rust code",
+        "projects": ["tag:rust"],
+        "owners": ["@joelovesrust"],
+      },
+      {
+        "description": "The Finance team owns these projects",
+        "projects": ["finance-*"],
+        "owners": ["@finance-team"],
+      },
+      {
+        "description": "Alice, Bob and Cecil work together on these projects",
+        "projects": ["admin", "booking", "cart"],
+        "owners": ["@alice", "@bob", "@cecil"],
+      },
+      {
+        "description": "CI Workflows",
+        "files": [".github/workflows/**/*"],
+        "owners": ["@devops"],
+      },
+    ],
+  },
+}
+```
+
+```jsonc
+// packages/my-project/project.json
+{
+  "owners": {
+    "**/*": ["@ahmed", "@petra"],
+    "package.json": ["@ahmed"],
+    "README.md": {
+      "owners": ["@jared"],
+      "description": "Jared is very particular about the README file"
+    }
+  },
+};
+```
+
+{% /tabitem %}
+{% tabitem label="Bitbucket" %}
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "format": "bitbucket",
+    // defaults to ".bitbucket/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Joe should double check all changes to rust code",
+        "projects": ["tag:rust"],
+        "owners": ["@joelovesrust"],
+      },
+      {
+        "description": "The Finance team owns these projects",
+        "projects": ["finance-*"],
+        "owners": ["@finance-team"],
+      },
+      {
+        "description": "Alice, Bob and Cecil work together on these projects",
+        "projects": ["admin", "booking", "cart"],
+        "owners": ["@alice", "@bob", "@cecil"],
+      },
+      {
+        "description": "CI Workflows",
+        "files": [".github/workflows/**/*"],
+        "owners": ["@devops"],
+      },
+    ],
+  },
+}
+```
+
+```jsonc
+// packages/my-project/project.json
+{
+  "owners": {
+    "**/*": ["@ahmed", "@petra"],
+    "package.json": ["@ahmed"],
+    "README.md": {
+      "owners": ["@jared"],
+      "description": "Jared is very particular about the README file"
+    }
+  },
+};
+```
+
+{% /tabitem %}
+{% tabitem label="GitLab" %}
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "format": "gitlab",
+    // defaults to ".gitlab/CODEOWNERS"
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Joe should double check all changes to rust code",
+        "projects": ["tag:rust"],
+        "owners": ["@joelovesrust"],
+      },
+      {
+        "description": "CI Workflows",
+        "files": [".github/workflows/**/*"],
+        "owners": ["@devops"],
+      },
+    ],
+    "sections": [
+      {
+        "name": "Finance",
+        "defaultOwners": ["@finance-team"],
+        "numberOfRequiredApprovals": 2,
+        "patterns": [
+          {
+            "description": "The Finance team owns these projects",
+            "projects": ["finance-*"],
+          },
+          {
+            "description": "Alice, Bob and Cecil work together on these projects",
+            "projects": ["admin", "booking", "cart"],
+            "owners": ["@alice", "@bob", "@cecil"],
+          },
+        ],
+      },
+    ],
+  },
+}
+```
+
+```jsonc
+// packages/my-project/project.json
+{
+  "owners": {
+    "**/*": ["@ahmed", "@petra"],
+    "package.json": ["@ahmed"],
+    "README.md": {
+      "owners": ["@jared"],
+      "description": "Jared is very particular about the README file"
+    }
+  },
+};
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Set a default owner
+
+To give the whole repository a fallback owner, use a file wildcard (`files: ["*"]`), not a project wildcard (`projects: ["*"]`). The two behave differently:
+
+- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. This pattern only covers files that live inside a project. Files outside every project root such as a top-level configuration files do not get an owner.
+- `files: ["*"]` matches all files in the repository and emits a single entry in CODEOWNERS, `* @owner`. You can use this pattern as a repo-wide default owner. List it first and let the more specific patterns below it override since CODEOWNERS applies the last matching rule for a given file.
+
+{% aside type="note" title="Order matters" %}
+CODEOWNERS resolves a file to the **last** pattern that matches it. Put the `files: ["*"]` catch-all at the top of your `patterns` array so the specific rules that follow override it.
+{% /aside %}
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "format": "github",
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Default owner for everything",
+        "files": ["*"],
+        "owners": ["@platform-team"],
+      },
+      {
+        "description": "The Finance team owns these projects",- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. This pattern only covers files that live inside a project. Files outside every project root such as a a top-level configuration files do not get an owner.
+        "projects": ["finance-*"],
+        "owners": ["@finance-team"],
+      },
+    ],
+  },
+}
+```
+
+Nx generates the following CODEOWNERS file:
+
+```yaml {% title=".github/CODEOWNERS" %}
+# Default owner for everything
+* @platform-team
+
+# The Finance team owns these projects
+/packages/finance-ui @finance-team
+/packages/finance-data @finance-team
+```
+
+Every file falls back to `@platform-team`, and the later, more specific rule reassigns the finance projects to `@finance-team`.

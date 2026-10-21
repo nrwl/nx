@@ -1,0 +1,1 @@
+import{i as e}from"./src.DVAKpSzT.js";document.addEventListener(`DOMContentLoaded`,()=>{e(`custom_page_view`,`404`,window.location.pathname)});

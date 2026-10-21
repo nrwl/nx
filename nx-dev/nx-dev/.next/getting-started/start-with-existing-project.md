@@ -1,0 +1,65 @@
+---
+title: Add to an Existing Project
+description: Add Nx to any existing project with a single command. Start with task running and caching, then gradually adopt more capabilities.
+sidebar:
+  order: 4
+  label: Add to Existing Project
+filter: 'type:Guides'
+---
+
+{% llm_copy_prompt title="Let an AI agent set it up for you" %}
+Help me add Nx to my existing repository.
+
+1. Run `npx nx@latest init` from the repo root and walk me through the prompts. Do not pass `--interactive=false`, the answers depend on how my repo is laid out.
+2. Show me the diff. `nx.json` is new, and `package.json` gains an `nx` devDependency. Scripts should be left alone.
+3. Run `npx nx run-many -t build` to confirm tasks still work, then run it a second time so I can see the cache hit.
+4. Run `npx nx graph` and walk me through the project graph.
+
+Stage what changed but do not commit. Do not add plugins or restructure the repo unless I ask.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
+Nx is designed for incremental adoption. Start with task running and [caching](/docs/features/cache-task-results), then add [plugins](/docs/technologies), CI integrations, or other capabilities as your needs grow.
+
+{% youtube
+src="https://youtu.be/o4k4KRF9YZk"
+title="Add Nx to an existing monorepo"
+/%}
+
+Add Nx to any existing project with a single command:
+
+```shell {% meta="prompt=true" %}
+$ npx nx@latest init
+✓ detecting workspace structure
+✓ adding Nx to package.json
+→ ready in 12s
+```
+
+Whether a monorepo, single project, or something in between, `nx init` walks you through adding and configuring Nx. At the end you'll have an Nx workspace ready for anything.
+
+## Next steps
+
+After initializing Nx, try these commands:
+
+```shell
+nx build <project-name>      # Run a task
+nx build <project-name>      # Run again - instant cache hit
+nx run-many -t build test    # Run tasks across all projects
+nx graph                     # Visualize project dependencies
+```
+
+From here you can:
+
+- [Configure task caching](/docs/features/cache-task-results) to speed up repeated builds
+- [Add Nx plugins](/docs/technologies) for your tech stack (React, Angular, Node, etc.)
+- Work through the [adoption guides](/docs/kb/adoption) for your setup, such as [migrating from the Angular CLI](/docs/kb/migrate-angular-cli-to-nx) or [importing projects](/docs/kb/import-project) from another repo
+
+## Keep learning
+
+- **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on
+- **Working with AI?** → [Set up AI integrations](/docs/getting-started/ai-setup) so agents understand your workspace
+- **Ready for CI?** → [Set up CI](/docs/getting-started/setup-ci) with remote caching and affected commands
+- **Prefer video?** → [Learn with our video courses](https://nx.dev/courses)
+
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}

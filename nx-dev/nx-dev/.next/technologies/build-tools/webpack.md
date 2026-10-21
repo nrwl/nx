@@ -1,0 +1,11 @@
+---
+title: Webpack
+sidebar:
+  hidden: true
+description: Powerful module bundler
+pagefind: false
+---
+
+Get started with [Nx with Webpack](/docs/technologies/build-tools/webpack/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/build-tools/webpack" /%}

@@ -1,0 +1,428 @@
+---
+title: Run Only Tasks Affected by a PR
+description: Learn how to use Nx affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
+sidebar:
+  order: 13
+
+filter: 'type:Features'
+---
+
+{% youtube src="https://youtu.be/q-cu5Lw3DoE" title="Only Run Tasks for Projects That Changed" /%}
+
+As your workspace grows, re-testing, re-building, and re-linting **all projects becomes too slow**. To address this, Nx comes with an "affected" command. Using this command, Nx
+
+- determines the minimum set of **projects that are affected by the change**
+- only runs tasks on those affected projects
+
+This drastically improves the speed of your CI and reduces the amount of compute needed. This advantage is further enhanced when [paired with remote caching and distribution](#best-paired-with-remote-caching-and-distribution).
+
+{% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
+
+```json
+{
+  "projects": [
+    {
+      "type": "app",
+      "name": "app1",
+      "data": {}
+    },
+    {
+      "type": "app",
+      "name": "app2",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib1",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib2",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib3",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib4",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib5",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib6",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib7",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib8",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib9",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib10",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib11",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib12",
+      "data": {}
+    }
+  ],
+  "groupByFolder": false,
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "dependencies": {
+    "app1": [
+      {
+        "target": "lib1",
+        "source": "app1",
+        "type": "direct"
+      },
+      {
+        "target": "lib2",
+        "source": "app1",
+        "type": "direct"
+      }
+    ],
+    "app2": [
+      {
+        "target": "lib4",
+        "source": "app2",
+        "type": "direct"
+      },
+      {
+        "target": "lib5",
+        "source": "app2",
+        "type": "direct"
+      },
+      {
+        "target": "lib6",
+        "source": "app2",
+        "type": "direct"
+      }
+    ],
+    "lib1": [
+      {
+        "target": "lib7",
+        "source": "lib1",
+        "type": "direct"
+      },
+      {
+        "target": "lib8",
+        "source": "lib1",
+        "type": "direct"
+      }
+    ],
+    "lib2": [
+      {
+        "target": "lib3",
+        "source": "lib2",
+        "type": "direct"
+      }
+    ],
+    "lib3": [
+      {
+        "target": "lib8",
+        "source": "lib3",
+        "type": "direct"
+      }
+    ],
+    "lib4": [
+      {
+        "target": "lib3",
+        "source": "lib4",
+        "type": "direct"
+      },
+      {
+        "target": "lib9",
+        "source": "lib4",
+        "type": "direct"
+      },
+      {
+        "target": "lib10",
+        "source": "lib4",
+        "type": "direct"
+      }
+    ],
+    "lib5": [
+      {
+        "target": "lib10",
+        "source": "lib5",
+        "type": "direct"
+      },
+      {
+        "target": "lib11",
+        "source": "lib5",
+        "type": "direct"
+      },
+      {
+        "target": "lib12",
+        "source": "lib5",
+        "type": "direct"
+      }
+    ],
+    "lib6": [
+      {
+        "target": "lib12",
+        "source": "lib6",
+        "type": "direct"
+      }
+    ],
+    "lib7": [],
+    "lib8": [],
+    "lib9": [],
+    "lib10": [],
+    "lib11": [],
+    "lib12": []
+  },
+  "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
+}
+```
+
+{% /graph %}
+
+## Using Nx affected commands
+
+To leverage this feature, use the following command when running your tasks, particularly on CI:
+
+```shell
+nx affected -t <task>
+```
+
+When you run `nx affected -t test`, Nx will:
+
+- Use Git to determine the files you changed in your PR.
+- Use the [project graph](/docs/features/explore-graph) to determine which projects the files belong to.
+- Determine which projects depend on the projects you modified.
+
+Once the projects are identified, Nx runs the tasks you specified on that subset of projects.
+
+You can also visualize the affected projects using the [Nx graph](/docs/features/explore-graph). Simply run:
+
+```shell
+nx graph --affected
+```
+
+## Selecting affected tasks instead of projects
+
+By default Nx selects whole projects, so every task of every affected project runs. Set `NX_LEGACY_AFFECTED=false` to select individual tasks instead, based on whether your change reaches what each task reads:
+
+```shell
+NX_LEGACY_AFFECTED=false nx affected -t test
+```
+
+Changing one spec file then runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
+
+Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
+
+Set the variable for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set. The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
+
+{% aside type="caution" title="What changes when you opt in" %}
+Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
+
+**`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
+
+**Inputs and outputs matter even when a task isn't cached.** Nx uses them to select tasks, not only to cache them. A task whose inputs miss what it depends on can stop running when that dependency changes, and files a task writes without listing them in `outputs` don't carry a change to the tasks that read them.
+
+**A task whose executor defines a custom hasher is always selected** for the targets you run. Its hash comes from code outside its inputs, so Nx can't tell which changes reach it.
+
+**Sync generators that change files during a run don't update the selection.** Nx selects tasks before syncing, so run the command again after a sync applies changes.
+{% /aside %}
+
+## Understanding why something is affected
+
+Use the `--explain` flag to show why tasks are affected. Nx prints the explanation, then exits without running anything:
+
+```shell
+NX_LEGACY_AFFECTED=false nx affected -t build --explain
+```
+
+`--explain` explains task selection, so it needs `NX_LEGACY_AFFECTED=false` and targets passed with `-t`. Without task selection, it stops with an error.
+
+```text
+ NX   3 out of 12 build tasks are affected
+
+Changing 1 file touches 1 build task. Pass --verbose to list each with its reasons.
+
+  libs/ui/src/index.ts:
+    - ui:build
+
+Touching those tasks changes outputs read by 2 build tasks. Pass --verbose to list each with its reasons.
+  - admin:build
+  - app:build
+```
+
+Pass `--explain=stdout` for the data as JSON, or `--explain=reasons.json` to write it to a file. `nx show projects --affected -t build --explain` works the same way.
+
+## Best paired with remote caching and distribution
+
+Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
+
+- If you're modifying a **project that is used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
+- If you have a set of 10 projects affected by a PR and you continue making changes, you will **always end up running tasks for those 10 projects**. The set of affected projects doesn't change but is always calculated with respect to your last successful run on the main branch.
+
+This is why Nx Affected is best paired with [remote caching](/docs/features/ci-features/remote-cache) and [distributed task execution](/docs/features/ci-features/distribute-task-execution).
+
+## Configure affected on CI
+
+To understand which projects are affected, Nx uses the Git history and the [project graph](/docs/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
+
+The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
+
+```shell
+nx affected -t build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
+nx affected -t build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
+```
+
+You can also set the base and head SHAs as environment variables:
+
+```shell
+NX_BASE=origin/main~1
+NX_HEAD=origin/main
+```
+
+**The recommended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
+
+{% tabs syncKey="ci-provider" %}
+{% tabitem label="GitHub" %}
+The [`nrwl/nx-set-shas`](https://github.com/nrwl/nx-set-shas) action uses the GitHub API to find the last successful workflow run on `main` and sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra flags.
+
+```yaml
+// .github/workflows/ci.yml
+steps:
+  - uses: actions/checkout@v7
+    with:
+      fetch-depth: 0
+      filter: tree:0
+  - run: npm ci
+  - uses: nrwl/nx-set-shas@v5
+  - run: npx nx affected -t lint test build
+```
+
+`fetch-depth: 0` is required. Without the full Git history, there is no base commit to compare against.
+{% /tabitem %}
+{% tabitem label="CircleCI" %}
+The `nx/set-shas` command from the [Nx Orb](https://github.com/nrwl/nx-orb) finds the last successful pipeline on `main` and sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra flags.
+
+```yaml
+// .circleci/config.yml
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.7.0
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run: npm ci
+      - nx/set-shas:
+          main-branch-name: 'main'
+      - run: npx nx affected -t lint test build
+```
+
+{% /tabitem %}
+{% tabitem label="GitLab" %}
+GitLab has no equivalent action. Set `NX_BASE` and `NX_HEAD` from GitLab's predefined variables instead. Merge request pipelines compare against the merge request's diff base, and pushes to `main` compare against the previous commit on the branch.
+
+```yaml
+// .gitlab-ci.yml
+image: node:22
+
+CI:
+  only:
+    - main
+    - merge_requests
+  script:
+    - npm ci
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - npx nx affected -t lint test build
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/affected-base-commit).
+
+## Ignoring files from affected commands
+
+Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands:
+
+- Glob patterns defined in your `.gitignore` file are ignored.
+- Glob patterns defined in an optional `.nxignore` file are ignored.
+
+## Marking projects affected by dependency updates
+
+By default, Nx will mark **all** projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. You can configure this behavior with the `projectsAffectedByDependencyUpdates` option in `nx.json`:
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}
+```
+
+The `projectsAffectedByDependencyUpdates` option accepts the following values:
+
+| Value      | Description                                                                                                                                                                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is marked as affected when the lock file changes. This is the safest option but may result in unnecessary CI work.                                                                              |
+| `"auto"`   | Only projects whose dependencies actually changed in the lock file are marked as affected. Nx inspects the lock file structure to determine which workspace projects had their resolved dependencies change. See the note below for details. |
+| `string[]` | An array of project names or glob patterns (e.g., `["app-*", "shared-lib"]`). Only the matching projects are marked as affected when the lock file changes.                                                                                  |
+
+{% aside type="note" title="How 'auto' works per package manager" %}
+In `"auto"` mode, Nx parses both the base and head revisions of your lock file using the same parsers it uses to build the project graph, diffs the resolved package metadata to find which dependencies changed, then maps those packages back to the workspace projects that depend on them.
+
+Nx supports the following lock files: `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`.
+
+For binary Bun lockfiles (`bun.lockb`), Nx asks Bun to render the lockfile before diffing it, so Bun needs to be available in the environment that runs `nx affected`.
+{% /aside %}
+
+## Not using git
+
+If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Set the affected base commit in CI" description="How each CI provider passes the base and head commits" href="/docs/kb/affected-base-commit" /%}
+
+{% linkcard title="Reduce wasted time in CI" description="How affected and remote caching cut work from every run" href="/docs/kb/reduce-waste" /%}
+
+{% linkcard title="Reduce affected projects in a pipeline" description="Find why a pipeline affected more projects than expected" href="/docs/kb/cipe-affected-project-graph" /%}
+
+{% /cardgrid %}

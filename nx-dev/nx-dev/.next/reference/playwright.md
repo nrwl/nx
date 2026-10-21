@@ -1,0 +1,11 @@
+---
+title: Playwright
+description: Playwright API reference for Nx plugins
+sidebar:
+  hidden: true
+pagefind: false
+---
+
+For setup and guides, see [Nx with Playwright](/docs/technologies/test-tools/playwright/introduction). The pages below are the API reference.
+
+{% sidebar_group_cards group="Reference/Playwright" /%}

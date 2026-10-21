@@ -1,0 +1,11 @@
+---
+title: Module Federation
+sidebar:
+  hidden: true
+description: Advanced guides to utilize Module Federation with Nx for micro frontends
+pagefind: false
+---
+
+Get started with [Nx with Module Federation](/docs/technologies/module-federation/introduction), or browse the topics below.
+
+{% index_page_cards path="technologies/module-federation" /%}
