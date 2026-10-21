@@ -21,8 +21,8 @@ Many conventions and best practices used in Angular applications can be also be 
 
 The `@nx/nest` plugin supports the following NestJS package versions.
 
-| Package        | Supported Versions                  |
-| -------------- | ----------------------------------- |
+| Package        | Supported Versions                |
+| -------------- | --------------------------------- |
 | `@nestjs/core` | ^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0 |
 
 The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Fresh installs default to NestJS v12.
@@ -35,6 +35,8 @@ The plugin detects the installed `@nestjs/core` major and routes the rest of the
 | 20.x           | ^10.0.0                |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+
+Version 12 of `@nestjs/schematics` requires TypeScript 6 or later. If your workspace is on TypeScript 5 when a generator installs NestJS 12, the generator also upgrades `typescript` to the version Nx installs by default.
 
 NestJS 12 ships `@nestjs/testing` as an ES module, and the Jest setup that Nx generates can't load it. With NestJS 12, use Vitest for unit tests. The generators fail with an error when you pass `--unitTestRunner=jest`. NestJS 11 and earlier still work with Jest.
 
