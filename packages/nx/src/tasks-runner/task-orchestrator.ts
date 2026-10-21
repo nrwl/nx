@@ -579,7 +579,11 @@ export class TaskOrchestrator {
 
   public processAllScheduledTasks() {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-    for (const taskId of scheduledTasks) {
+    this.processTasks(scheduledTasks);
+  }
+
+  public processTasks(taskIds: string[]) {
+    for (const taskId of taskIds) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
         this.processedTasks.set(taskId, this.processTask(taskId));
@@ -1427,8 +1431,8 @@ export class TaskOrchestrator {
    * for running those via {@link runTaskDirectly}.
    *
    * Fires scheduleTask lifecycle for hits that haven't been through
-   * processAllScheduledTasks yet. That's a coordinator gap-filler and
-   * a no-op for callers that pre-process the schedule.
+   * processTasks yet. That's a coordinator gap-filler and a no-op for
+   * callers that process their tasks first.
    *
    * The caller provides `groupId` — cache hits share one slot since they
    * don't actually compete for parallelism.
@@ -1452,7 +1456,7 @@ export class TaskOrchestrator {
 
     // scheduleTask lifecycle for hits the coordinator resolved before
     // processAllScheduledTasks could fire it. No-op for callers that
-    // already ran processAllScheduledTasks (every hit is in processedTasks).
+    // already ran processTasks (every hit is in processedTasks).
     await Promise.all(
       cacheHits
         .filter(({ task }) => !this.processedTasks.has(task.id))
@@ -1861,6 +1865,8 @@ export class TaskOrchestrator {
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
+      // This branch never reads the hash, so a failure to compute it is dropped
+      void this.processedTasks.get(task.id)?.catch(() => {});
       let readyWhen: ReadyWhenWait | null;
       let uncheckedReason: string | undefined;
       try {

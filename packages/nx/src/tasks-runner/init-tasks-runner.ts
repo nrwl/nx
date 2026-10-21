@@ -94,8 +94,6 @@ async function createOrchestrator(
 
   await orchestrator.init();
 
-  orchestrator.processAllScheduledTasks();
-
   return orchestrator;
 }
 
@@ -161,6 +159,8 @@ export async function runDiscreteTasks(
   }
 
   const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
+  // Every task here starts directly, but the schedule hashes only the tasks it admits
+  orchestrator.processTasks(discreteTasks.map((task) => task.id));
 
   // Bulk-resolve every discrete task's cache state in one shot —
   // single SQL call plus parallel remote retrievals. Batches kicked
@@ -209,6 +209,7 @@ export async function runContinuousTasks(
     lifeCycle,
     ultracacheConfigurations
   );
+  orchestrator.processTasks(tasks.map((task) => task.id));
   const runningTasks = tasks.reduce(
     (current, task, index) => {
       current[task.id] = orchestrator.startContinuousTask(task, index);
