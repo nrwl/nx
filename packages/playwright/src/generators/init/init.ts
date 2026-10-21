@@ -4,7 +4,6 @@ import {
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -14,7 +13,7 @@ import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
 export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
-  return initGeneratorInternal(tree, { addPlugin: false, ...options });
+  return initGeneratorInternal(tree, options);
 }
 
 export async function initGeneratorInternal(
@@ -24,13 +23,6 @@ export async function initGeneratorInternal(
   assertSupportedPlaywrightVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
-
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPluginDefault;
 
   if (!options.skipPackageJson) {
     tasks.push(
@@ -47,16 +39,14 @@ export async function initGeneratorInternal(
     );
   }
 
-  if (options.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/playwright/plugin',
-      createNodesV2,
-      { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
-      options.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/playwright/plugin',
+    createNodesV2,
+    { targetName: ['e2e', 'playwright:e2e', 'playwright-e2e'] },
+    options.updatePackageScripts
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -25,7 +25,6 @@ describe('@nx/playwright:init', () => {
   it('should add the plugin', async () => {
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -47,7 +46,6 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -70,7 +68,6 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -79,15 +76,5 @@ describe('@nx/playwright:init', () => {
         "@nx/playwright/plugin",
       ]
     `);
-  });
-
-  it('should not add plugin if NX_ADD_PLUGINS variable is set', async () => {
-    await initGenerator(tree, {
-      skipFormat: true,
-      addPlugin: false,
-      skipPackageJson: false,
-    });
-    const nxJson = readNxJson(tree);
-    expect(nxJson.plugins).toMatchInlineSnapshot(`undefined`);
   });
 });

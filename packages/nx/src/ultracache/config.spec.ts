@@ -7,38 +7,37 @@ describe('isUltracacheConfigurationFetchEnabled', () => {
   beforeEach(() => vi.stubEnv('CI', 'true'));
   afterEach(() => vi.unstubAllEnvs());
 
-  it('is on when a run in a connected workspace opts in', () => {
-    expect(isUltracacheConfigurationFetchEnabled(connected, {}, optedIn)).toBe(
-      true
-    );
-  });
-
-  // Connecting a workspace to Nx Cloud is not the opt-in: a run that says
-  // nothing hashes exactly as it does today.
-  it('is off until then, whatever else the env says', () => {
+  it('is on by default in CI for a connected workspace', () => {
     for (const env of [
       {},
+      // CI expands an unset variable to ''.
       { NX_CLOUD_USE_ULTRACACHE: '' },
-      { NX_CLOUD_USE_ULTRACACHE: 'false' },
-      { NX_CLOUD_USE_ULTRACACHE: '1' },
-      { NX_CLOUD_USE_ULTRACACHE: 'TRUE' },
-      // The pre-release names are gone.
-      { NX_IO_SNAPSHOTS: 'true', NX_CLOUD_USE_IO_SNAPSHOTS: 'true' } as any,
+      optedIn,
     ]) {
       expect(isUltracacheConfigurationFetchEnabled(connected, {}, env)).toBe(
-        false
+        true
       );
     }
   });
 
-  it('is off outside CI, opt-in or not', () => {
+  it('is off when a run opts out', () => {
+    expect(
+      isUltracacheConfigurationFetchEnabled(
+        connected,
+        {},
+        { NX_CLOUD_USE_ULTRACACHE: 'false' }
+      )
+    ).toBe(false);
+  });
+
+  it('is off outside CI, even when opted in', () => {
     vi.stubEnv('CI', 'false');
     expect(isUltracacheConfigurationFetchEnabled(connected, {}, optedIn)).toBe(
       false
     );
   });
 
-  it('is off in a workspace that does not use Nx Cloud, opt-in or not', () => {
+  it('is off in a workspace that does not use Nx Cloud, even when opted in', () => {
     expect(isUltracacheConfigurationFetchEnabled({} as any, {}, optedIn)).toBe(
       false
     );
@@ -54,7 +53,7 @@ describe('isUltracacheConfigurationFetchEnabled', () => {
     ).toBe(true);
   });
 
-  it('is off when Nx Cloud is disabled, opt-in or not', () => {
+  it('is off when Nx Cloud is disabled, even when opted in', () => {
     expect(
       isUltracacheConfigurationFetchEnabled(
         connected,
@@ -79,11 +78,10 @@ describe('isUltracacheConfigurationFetchEnabled', () => {
   });
 
   it('reads the run env by default', () => {
-    delete process.env.NX_CLOUD_USE_ULTRACACHE;
+    vi.stubEnv('NX_CLOUD_USE_ULTRACACHE', 'false');
     expect(isUltracacheConfigurationFetchEnabled(connected)).toBe(false);
-    process.env.NX_CLOUD_USE_ULTRACACHE = 'true';
+    vi.stubEnv('NX_CLOUD_USE_ULTRACACHE', undefined);
     expect(isUltracacheConfigurationFetchEnabled(connected)).toBe(true);
-    delete process.env.NX_CLOUD_USE_ULTRACACHE;
   });
 });
 

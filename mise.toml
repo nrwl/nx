@@ -3,7 +3,6 @@ bun = "1.3"
 # Keep Java 24 as the default runtime; Gradle compiles with JDK 17.
 java = ["24", "temurin-17"]
 node = "{{ env['NODE_VERSION'] | default(value='26.7.0') }}"
-"asdf:mise-plugins/mise-maven" = "4.0.0-rc-5"
 rust = "1.97.0"
 vale = "3.13.1"
 
@@ -15,6 +14,11 @@ vale = "3.13.1"
 # On Windows, the vfox plugin is buggy: https://github.com/jdx/mise/discussions/4738
 [tools.dotnet]
 version = "9"
+os = ["linux", "macos"]
+
+# asdf plugins are bash scripts and can't install on Windows; mvnw.cmd covers it.
+[tools."asdf:mise-plugins/mise-maven"]
+version = "4.0.0-rc-5"
 os = ["linux", "macos"]
 
 [env]

@@ -1,5 +1,5 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import {
   constructLifeCycles,
   getRunner,
@@ -26,6 +26,7 @@ async function createOrchestrator(
   ultracacheConfigurations: UltracacheConfigurations | undefined
 ) {
   loadRootEnvFiles();
+  fullTaskGraph = withEdgeObjects(fullTaskGraph);
 
   const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
     tasks
@@ -96,6 +97,24 @@ async function createOrchestrator(
   orchestrator.processAllScheduledTasks();
 
   return orchestrator;
+}
+
+// A client bundle built before edges became objects hands plain task ids
+function withEdgeObjects(taskGraph: TaskGraph): TaskGraph {
+  const normalize = (edges: Record<string, (TaskGraphEdge | string)[]>) =>
+    Object.fromEntries(
+      Object.entries(edges).map(([taskId, taskEdges]) => [
+        taskId,
+        taskEdges.map((edge) =>
+          typeof edge === 'string' ? { id: edge } : edge
+        ),
+      ])
+    );
+  return {
+    ...taskGraph,
+    dependencies: normalize(taskGraph.dependencies),
+    continuousDependencies: normalize(taskGraph.continuousDependencies),
+  };
 }
 
 // Nothing awaits the dispose chains below, so an unhandled rejection would take

@@ -1,6 +1,7 @@
 import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
+import { canResolve } from './router-plugin-utils';
 import {
   mockCjsModule,
   resetCjsMocks,
@@ -12,6 +13,11 @@ import { join } from 'path';
 vi.mock('nx/src/utils/cache-directory', async () => ({
   ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
+
+// In the vm, require.resolve ignores `paths`. By default @nx/vite resolves.
+vi.mock('./router-plugin-utils', () => ({
+  canResolve: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock('@nx/js/internal', async () => ({
@@ -49,6 +55,7 @@ describe('@nx/react/react-router-plugin', () => {
         'acme/react-router.config.js': 'module.exports = {}',
         'acme/vite.config.js': '',
         'acme/project.json': JSON.stringify({ name: 'acme' }),
+        'acme/tsconfig.json': '{}',
       });
     });
 
@@ -89,6 +96,34 @@ describe('@nx/react/react-router-plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should not make dev wait when the workspace cannot resolve @nx/vite/ready-check', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      (canResolve as Mock).mockReturnValueOnce(false);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.dev.readyWhen).toBeUndefined();
+    });
+
+    it('should not create a typecheck target', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets.build).toBeDefined();
     });
   });
 

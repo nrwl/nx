@@ -21,14 +21,10 @@
     "jest.config.ts",
     "test-setup.ts",
     "eslint.config.mjs",
-    "index.ts",
-    "mf/**/*"
+    "index.ts"
   ],
   "include": ["**/*.ts"],
   "references": [
-    {
-      "path": "../web/tsconfig.lib.json"
-    },
     {
       "path": "../js/tsconfig.lib.json"
     },
@@ -52,9 +48,6 @@
     },
     {
       "path": "../rspack/tsconfig.lib.json"
-    },
-    {
-      "path": "../module-federation/tsconfig.lib.json"
     },
     {
       "path": "../playwright/tsconfig.lib.json"

@@ -131,6 +131,12 @@ export interface MigrationsJsonEntry {
    * an outer agent or to the user.
    */
   documentation?: string;
+  /**
+   * Marks a migration that applies an optional dependency update.
+   * `nx migrate --include=required` skips it, and `--include=optional` runs it
+   * whenever `requires` is met, so it must set `requires`.
+   */
+  optionalUpdate?: boolean;
 }
 
 export type MigrationDetailsWithId = GeneratedMigrationDetails & {

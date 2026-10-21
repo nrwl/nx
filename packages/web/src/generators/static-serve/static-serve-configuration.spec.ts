@@ -33,6 +33,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "react-app:build",
           "spa": true,
         },
+        "readyWhen": {
+          "signal": true,
+        },
       }
     `);
     await webStaticServeGenerator(tree, {
@@ -51,6 +54,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "angular-app:build",
           "spa": true,
         },
+        "readyWhen": {
+          "signal": true,
+        },
       }
     `);
 
@@ -68,6 +74,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "storybook:build-storybook",
           "spa": true,
           "staticFilePath": "dist/storybook/storybook",
+        },
+        "readyWhen": {
+          "signal": true,
         },
       }
     `);
@@ -91,6 +100,9 @@ describe('Static serve configuration generator', () => {
         "options": {
           "buildTarget": "react-app:build",
           "spa": true,
+        },
+        "readyWhen": {
+          "signal": true,
         },
       }
     `);
@@ -121,6 +133,9 @@ describe('Static serve configuration generator', () => {
           "buildTarget": "angular-app:build",
           "spa": true,
           "staticFilePath": "dist/angular-app",
+        },
+        "readyWhen": {
+          "signal": true,
         },
       }
     `);

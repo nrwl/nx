@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, vi, it } from 'vitest';
 import {
   isPresent,
   isUsingWindows,
+  maxTransformWorkers,
   maxWorkers,
   parseMaxWorkers,
 } from './utils';
@@ -129,4 +130,24 @@ describe('isUsingWindows', async () => {
     expect(isUsingWindows()).toBe(false);
     expect(platformSpy).toHaveBeenCalledTimes(1);
   });
+});
+
+describe('maxTransformWorkers', () => {
+  beforeEach(() => {
+    vi.spyOn(nodeOSModule, 'availableParallelism').mockReturnValue(16);
+  });
+
+  it.each([
+    ['3', 3],
+    ['2.5', 4],
+    ['0', 4],
+    ['', 4],
+  ])(
+    'should resolve NG_BUILD_MAX_WORKERS=%j to %i workers',
+    (value, expected) => {
+      vi.stubEnv(ENV_NG_BUILD_MAX_WORKERS, value);
+
+      expect(maxTransformWorkers()).toBe(expected);
+    }
+  );
 });

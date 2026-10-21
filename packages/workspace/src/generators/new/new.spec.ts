@@ -14,6 +14,26 @@ import { newGenerator, NormalizedSchema } from './new';
 import * as getNpmPackageVersion from './../utils/get-npm-package-version';
 import * as generatePreset from './generate-preset';
 
+// Hoisted so the mock factory and the tests share one function without a
+// static import: specs outside packages/nx may not import nx/src directly.
+const { packageRegistryView, pinnedPnpmVersion } = vi.hoisted(() => ({
+  packageRegistryView: vi.fn(),
+  // Set by a test to skip the `pnpm --version` probe the helper runs when the
+  // generated package.json carries no packageManager pin.
+  pinnedPnpmVersion: { value: undefined as string | undefined },
+}));
+vi.mock('nx/src/utils/package-manager', async (importOriginal) => {
+  const original = await importOriginal<{
+    getPackageManagerVersion: (...args: unknown[]) => string;
+  }>();
+  return {
+    ...original,
+    packageRegistryView,
+    getPackageManagerVersion: (...args: unknown[]) =>
+      pinnedPnpmVersion.value ?? original.getPackageManagerVersion(...args),
+  };
+});
+
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
 
 const defaultOptions: Omit<
@@ -298,6 +318,56 @@ describe('new', () => {
           });
         }
       );
+
+      it('should record the build-script decisions a preset declares before the first pnpm install', async () => {
+        // No terminal to ask in, so a declared `true` is recorded as blocked.
+        process.env.NX_INTERACTIVE = 'false';
+        pinnedPnpmVersion.value = '11.22.0';
+        packageRegistryView.mockResolvedValue(
+          JSON.stringify({ esbuild: false, workerd: true })
+        );
+
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: '3rd-party-package@1.1.2',
+          packageManager: 'pnpm',
+        });
+
+        expect(packageRegistryView).toHaveBeenCalledWith(
+          '3rd-party-package',
+          '1.1.2',
+          ['pnpm.allowBuilds', '--json']
+        );
+        expect(
+          load(tree.read('my-workspace/pnpm-workspace.yaml', 'utf-8'))
+        ).toStrictEqual({
+          autoInstallPeers: true,
+          allowBuilds: {
+            nx: true,
+            '3rd-party-package': false,
+            esbuild: false,
+            workerd: false,
+          },
+        });
+        delete process.env.NX_INTERACTIVE;
+        pinnedPnpmVersion.value = undefined;
+      });
+
+      it('should not query the registry for a preset when not using pnpm', async () => {
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: '3rd-party-package',
+          packageManager: 'npm',
+        });
+
+        expect(packageRegistryView).not.toHaveBeenCalled();
+      });
 
       it('should deny the build script of a custom preset on pnpm 11', async () => {
         process.env['NX_E2E_PRESET_VERSION'] = '1.1.1';

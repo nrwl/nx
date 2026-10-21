@@ -1,4 +1,5 @@
 import {
+  type ChildProcess,
   ExecFileOptions,
   exec,
   execFile,
@@ -9,6 +10,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { dirname, join, posix, relative, resolve, sep } from 'path';
 import { isOwnedRealDirectory } from './owned-private-dir';
+import { spawnWithoutTerminal } from './spawn-without-terminal';
 
 function execFileAsync(
   file: string,
@@ -1006,18 +1008,22 @@ export function tryCommitChanges(
 /**
  * `tryCommitChanges` for a process that has to stay responsive while git
  * runs: a signing prompt or a hook can hold the commit for minutes.
+ * `withoutTerminal` is for a caller sharing the terminal with another program:
+ * git runs without it (see `spawnWithoutTerminal`), so such a prompt fails the
+ * commit instead.
  */
 export async function tryCommitChangesAsync(
   commitMessage: string,
   directory: string,
-  excludePaths: string[] = []
+  excludePaths: string[] = [],
+  { withoutTerminal = false }: { withoutTerminal?: boolean } = {}
 ): Promise<string | null> {
   try {
     for (const { command, input } of commitCommands(
       commitMessage,
       excludePaths
     )) {
-      await execAsync(command, directory, input);
+      await execAsync(command, directory, input, withoutTerminal);
     }
   } catch (err) {
     throw commitFailure(err);
@@ -1059,22 +1065,52 @@ function commitFailure(err: unknown): Error {
   );
 }
 
-function execAsync(command: string, cwd: string, input?: string) {
+function execAsync(
+  command: string,
+  cwd: string,
+  input: string | undefined,
+  withoutTerminal: boolean
+) {
   return new Promise<void>((res, rej) => {
-    const child = exec(
-      command,
-      { encoding: 'utf8', cwd, windowsHide: true },
-      // The streams ride on the error as `execSync` reports them, so
-      // `commitFailure` shapes both the same way.
-      (err, stdout, stderr) =>
-        err ? rej(Object.assign(err, { stdout, stderr })) : res()
-    );
+    // The streams ride on the error as `execSync` reports them, so
+    // `commitFailure` shapes both the same way.
+    const settle = (err: Error | null, stdout: string, stderr: string) =>
+      err ? rej(Object.assign(err, { stdout, stderr })) : res();
+    const child = withoutTerminal
+      ? collectOutput(spawnWithoutTerminal(command, { cwd }), command, settle)
+      : exec(command, { encoding: 'utf8', cwd, windowsHide: true }, settle);
     // Closed for every command, since `git commit -F -` reads to end of
     // input. A child that exits before reading raises EPIPE here, which the
     // exit callback already reports.
     child.stdin?.on('error', () => {});
     child.stdin?.end(input ?? '');
   });
+}
+
+// What `exec` reports through its callback; `exec` itself ignores `detached`.
+function collectOutput(
+  child: ChildProcess,
+  command: string,
+  done: (err: Error | null, stdout: string, stderr: string) => void
+): ChildProcess {
+  let stdout = '';
+  let stderr = '';
+  child.stdout?.setEncoding('utf8').on('data', (chunk) => (stdout += chunk));
+  child.stderr?.setEncoding('utf8').on('data', (chunk) => (stderr += chunk));
+  child.once('error', (err) => done(err, stdout, stderr));
+  child.once('close', (code, signal) =>
+    done(
+      code === 0
+        ? null
+        : Object.assign(new Error(`Command failed: ${command}`), {
+            code,
+            signal,
+          }),
+      stdout,
+      stderr
+    )
+  );
+  return child;
 }
 
 /**

@@ -243,16 +243,6 @@
     "e2e-base": {
       "inputs": ["default", "^production"]
     },
-    "build-storybook": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/.storybook/**/*",
-        "{projectRoot}/.storybook/**/*",
-        "{projectRoot}/tsconfig.storybook.json"
-      ],
-      "cache": true
-    },
     "build-ng": {
       "cache": true
     },
@@ -303,7 +293,8 @@
       "exclude": ["examples/**"],
       "options": {
         "targetName": "pw-e2e",
-        "ciTargetName": "e2e-ci"
+        "ciTargetName": "e2e-ci",
+        "waitForServerReady": false
       }
     },
     {
@@ -410,7 +401,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3242,
+  "bust": 3243,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -559,7 +550,6 @@
             "NX_AI_FILES_USE_LOCAL",
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
-            "NX_MIGRATE_ORCHESTRATOR",
             "NX_MIGRATE_BROKER",
             "NX_CSS_MODULE_HASH_FUNCTION",
             "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",

@@ -33,6 +33,19 @@
       "description": "Rename imports of `createNodesV2` from `@nx/storybook/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/storybook` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-add-start-storybook-ready-when": {
+      "version": "24.0.0-beta.5",
+      "description": "Sets a `readyWhen` that waits for the Storybook port on `@storybook/angular:start-storybook` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once Storybook is listening. Also sets `continuous: true` on those targets when neither they nor `targetDefaults` set `continuous` and they don't set `smokeTest`.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when.md"
     }
   },
   "packageJsonUpdates": {

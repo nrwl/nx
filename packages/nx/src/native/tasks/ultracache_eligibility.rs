@@ -236,31 +236,40 @@ pub fn get_ultracache_report(
     .report()
 }
 
-/// The marker's digest: the task's `ignoredReads`, which shape the reads its
-/// recording holds, so editing them re-runs the task and records it afresh.
-/// Sorted, since their order means nothing.
+/// The marker's digest: the task's `ignoreReads` and `collectStats`, which
+/// shape the reads its recording holds, so editing them re-runs the task and
+/// records it afresh. Sorted, since glob order means nothing.
 fn configuration_digest(ultracache: Option<&TaskUltracacheSettings>) -> String {
     // Destructured so a new ultracache key must be placed here: one left out
     // would never re-run a task that keeps hitting. Any mode but `on` means no
     // marker, since the task never reaches here. Recorded writes are never
-    // used, so `ignoredWrites` can't change what the task caches.
-    let mut reads = match ultracache {
+    // used, so `ignoreWrites` can't change what the task caches.
+    let (mut reads, collect_stats) = match ultracache {
         Some(TaskUltracacheSettings {
-            ignored_reads,
-            ignored_writes: _,
+            ignore_reads,
+            ignore_writes: _,
             mode: _,
-        }) => ignored_reads.clone().unwrap_or_default(),
-        None => Vec::new(),
+            collect_stats,
+        }) => (
+            ignore_reads.clone().unwrap_or_default(),
+            collect_stats.unwrap_or(false),
+        ),
+        None => (Vec::new(), false),
     };
     reads.sort();
     reads.dedup();
     // Equals the old marker of a task with no exclusions that recorded no writes.
     let base = Xxh3::new().digest().to_string();
-    if reads.is_empty() {
+    if reads.is_empty() && !collect_stats {
         return base;
     }
     let mut hasher = Xxh3::new();
     hasher.update(base.as_bytes());
+    // Only `true` is hashed, so unset and `false` keep their existing markers.
+    // 0xFF never occurs in UTF-8, so no glob can produce this tag.
+    if collect_stats {
+        hasher.update(b"\xFFcollectStats\0");
+    }
     // NUL after each glob, so adjacent globs cannot run together.
     for glob in reads {
         hasher.update(glob.as_bytes());
@@ -328,11 +337,11 @@ fn reads_dependency_outputs(task_id: &str, files: &[String], task_graph: &TaskGr
     let mut queue: Vec<&str> = vec![task_id];
     while let Some(current) = queue.pop() {
         for dep in task_graph.dependencies.get(current).into_iter().flatten() {
-            if !visited.insert(dep.as_str()) {
+            if !visited.insert(dep.id.as_str()) {
                 continue;
             }
-            queue.push(dep);
-            let Some(producer) = task_graph.tasks.get(dep) else {
+            queue.push(&dep.id);
+            let Some(producer) = task_graph.tasks.get(&dep.id) else {
                 continue;
             };
             // Only reads under an output's walk root can match it; glob
@@ -458,5 +467,38 @@ mod tests {
         ] {
             assert!(!escapes_workspace(glob), "{glob}");
         }
+    }
+
+    #[test]
+    fn only_collect_stats_true_changes_the_configuration_digest() {
+        let digest = |collect_stats, ignore_reads: Option<Vec<String>>| {
+            configuration_digest(Some(&TaskUltracacheSettings {
+                collect_stats,
+                ignore_reads,
+                ..Default::default()
+            }))
+        };
+        let reads = Some(vec!["tmp/**".to_string()]);
+
+        assert_eq!(digest(None, None), configuration_digest(None));
+        assert_eq!(digest(Some(false), None), digest(None, None));
+        assert_ne!(digest(Some(true), None), digest(None, None));
+        assert_eq!(
+            digest(Some(false), reads.clone()),
+            digest(None, reads.clone())
+        );
+        assert_ne!(
+            digest(Some(true), reads.clone()),
+            digest(None, reads.clone())
+        );
+        assert_ne!(digest(Some(true), reads.clone()), digest(Some(true), None));
+        assert_eq!(
+            digest(Some(true), Some(vec!["b".into(), "a".into(), "a".into()])),
+            digest(Some(true), Some(vec!["a".into(), "b".into()]))
+        );
+        assert_ne!(
+            digest(Some(true), None),
+            digest(None, Some(vec!["\u{1}collectStats".into()]))
+        );
     }
 }

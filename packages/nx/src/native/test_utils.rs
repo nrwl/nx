@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::{
-    HashInstruction, HashPlans, InstructionPool, Task, TaskGraph, TaskTarget,
+    HashInstruction, HashPlans, InstructionPool, Task, TaskGraph, TaskGraphEdge, TaskTarget,
 };
 
 pub(crate) fn project(root: &str) -> Project {
@@ -42,6 +42,16 @@ pub(crate) fn files(paths: &[&str]) -> Vec<String> {
 
 pub(crate) fn strings(v: &[&str]) -> Vec<String> {
     v.iter().map(|s| s.to_string()).collect()
+}
+
+pub(crate) fn edges_to(ids: &[&str]) -> Vec<TaskGraphEdge> {
+    ids.iter()
+        .map(|id| TaskGraphEdge {
+            id: id.to_string(),
+            wait_for: None,
+            inputs: None,
+        })
+        .collect()
 }
 
 /// Plans for each task, interned into one shared pool.
@@ -86,10 +96,49 @@ pub(crate) fn task_graph(tasks: &[(&str, &[&str])], deps: &[(&str, &[&str])]) ->
             .collect(),
         dependencies: deps
             .iter()
-            .map(|(id, d)| (id.to_string(), strings(d)))
+            .map(|(id, d)| (id.to_string(), edges_to(d)))
             .collect(),
         continuous_dependencies: HashMap::new(),
-        continuous_dependencies_without_inputs: None,
         roots: vec![],
     }
+}
+
+/// A configuration set holding `entries` (task id to observed reads), imported into
+/// a temporary database the returned directory owns.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn ultracache_configurations(
+    entries: &[(&str, &[&str])],
+) -> (
+    tempfile::TempDir,
+    crate::native::ultracache::UltracacheConfigurations,
+) {
+    use crate::native::ultracache::{
+        UltracacheConfigurationImportOptions, UltracacheConfigurationStore,
+    };
+    use napi::bindgen_prelude::External;
+    use std::sync::Mutex;
+
+    let dir = tempfile::tempdir().unwrap();
+    let db = crate::native::db::initialize::initialize_db(&dir.path().join("test.db")).unwrap();
+    let store =
+        UltracacheConfigurationStore::new(&External::new(Arc::new(Mutex::new(db)))).unwrap();
+    let commit = "c".repeat(40);
+    let json = serde_json::Value::Object(
+        entries
+            .iter()
+            .map(|(id, inputs)| {
+                (
+                    id.to_string(),
+                    serde_json::json!({ "commit": commit, "inputs": inputs, "outputs": [] }),
+                )
+            })
+            .collect(),
+    );
+    let configurations = store
+        .import_set(UltracacheConfigurationImportOptions {
+            requested_commit: commit,
+            configurations_json: json.to_string(),
+        })
+        .unwrap();
+    (dir, configurations)
 }

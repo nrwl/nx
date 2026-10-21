@@ -15,7 +15,7 @@ import {
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { output } from '../utils/output';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 vi.mock('../command-line/run/executor-utils', async (importOriginal) => {
@@ -258,6 +258,119 @@ describe('utils', () => {
           })
         )
       ).toEqual([]);
+    });
+
+    it.each([
+      [{}, ['dist/myapp']],
+      [{ outputPath: 'build/myapp' }, ['build/myapp']],
+    ])(
+      'should resolve ?? fallbacks with overrides %j',
+      (overrides, outputs) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            overrides,
+            getNode({
+              outputs: [
+                '{options.outputPath ?? {workspaceRoot}/dist/{projectRoot}}',
+              ],
+            })
+          )
+        ).toEqual(outputs);
+      }
+    );
+
+    it.each([
+      ['dist/', 'myapp/dist/myapp'],
+      ['../', 'myapp'],
+    ])(
+      'should keep the separator a fallback literal ends with: %s',
+      (dir, output) => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            task.overrides,
+            getNode({
+              outputs: [`{projectRoot}/{options.dir ?? ${dir}}{projectName}`],
+            })
+          )
+        ).toEqual([output]);
+      }
+    );
+
+    it.each([
+      ['myapp', '{options.dir ?? /root/build/myapp}', '/root/build/myapp'],
+      [
+        '.',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        '/root/build/myapp',
+      ],
+      [
+        'myapp',
+        '{projectRoot}/{options.dir ?? /root/build/myapp}',
+        'myapp/root/build/myapp',
+      ],
+    ])(
+      'should resolve a fallback literal starting with / like the same option value (root %s): %s',
+      (root, output, expected) => {
+        const node = getNode({ outputs: [output] });
+        node.data.root = root;
+        expect(
+          getOutputsForTargetAndConfiguration(task.target, {}, node)
+        ).toEqual([expected]);
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task.target,
+            { dir: '/root/build/myapp' },
+            node
+          )
+        ).toEqual([expected]);
+      }
+    );
+
+    it('should interpolate options set to 0 or false', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/shard-{options.shard}-{options.cache}'],
+            options: { shard: 0, cache: false },
+          })
+        )
+      ).toEqual(['myapp/shard-0-false']);
+    });
+
+    it('should use a fallback that starts with env. as a path', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: ['{projectRoot}/{options.outputFile ?? env.json}'],
+          })
+        )
+      ).toEqual(['myapp/env.json']);
+    });
+
+    it('should keep a glob that starts with env. as written', () => {
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          getNode({
+            outputs: [
+              '{projectRoot}/src/{env.ts,env.d.ts}',
+              '{projectRoot}/{env.json}',
+              '{options.outputPath ?? {projectRoot}/dist/{env.json}}',
+            ],
+          })
+        )
+      ).toEqual([
+        'myapp/src/{env.ts,env.d.ts}',
+        'myapp/{env.json}',
+        'myapp/dist/{env.json}',
+      ]);
     });
 
     it('should support interpolation based on configuration-specific options', () => {
@@ -959,11 +1072,11 @@ describe('expandInitiatingTasksThroughNoop', () => {
   ): TaskGraph {
     const taskMap: Record<string, Task> = {};
     for (const t of tasks) taskMap[t] = mkTask(t);
-    const deps: Record<string, string[]> = {};
-    const cdeps: Record<string, string[]> = {};
+    const deps: Record<string, TaskGraphEdge[]> = {};
+    const cdeps: Record<string, TaskGraphEdge[]> = {};
     for (const t of tasks) {
-      deps[t] = dependencies[t] ?? [];
-      cdeps[t] = continuousDependencies[t] ?? [];
+      deps[t] = (dependencies[t] ?? []).map((id) => ({ id }));
+      cdeps[t] = (continuousDependencies[t] ?? []).map((id) => ({ id }));
     }
     return {
       tasks: taskMap,
@@ -1212,7 +1325,7 @@ describe('pruneToSelectedTasks', () => {
       'other:build': { id: 'other:build' } as Task,
     },
     dependencies: {
-      'app:build': ['lib:build'],
+      'app:build': [{ id: 'lib:build' }],
       'lib:build': [],
       'other:build': [],
     },
@@ -1229,7 +1342,7 @@ describe('pruneToSelectedTasks', () => {
       'app:build',
       'lib:build',
     ]);
-    expect(pruned.dependencies['app:build']).toEqual(['lib:build']);
+    expect(pruned.dependencies['app:build']).toEqual([{ id: 'lib:build' }]);
     expect(pruned.roots).toEqual(['lib:build']);
   });
 

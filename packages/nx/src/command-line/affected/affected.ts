@@ -28,6 +28,7 @@ import { generateGraph } from '../graph/graph';
 import {
   computeAffectedTasks,
   selectsAffectedTasks,
+  taskGranularityRequirement,
 } from '../../project-graph/affected/affected-tasks';
 import type { TaskSelection } from '../../tasks-runner/run-command';
 import {
@@ -71,7 +72,7 @@ export async function affected(
   // Task selection needs a target to select against, so `nx graph --affected`
   // and the deprecated print-affected stay project-grained.
   const useTasks =
-    selectsAffectedTasks() &&
+    selectsAffectedTasks(nxJson) &&
     command === 'affected' &&
     !!nxArgs.targets?.length;
 
@@ -79,7 +80,7 @@ export async function affected(
     throw new Error(
       explainUnavailable(
         [
-          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !selectsAffectedTasks(nxJson) && taskGranularityRequirement(),
           !nxArgs.targets?.length && 'targets passed with --targets (-t)',
         ].filter(Boolean)
       )

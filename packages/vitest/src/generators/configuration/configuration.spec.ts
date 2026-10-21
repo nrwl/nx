@@ -51,7 +51,6 @@ describe('@nx/vitest:configuration', () => {
         project: 'mylib',
         uiFramework: 'none',
         coverageProvider: 'v8',
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -67,7 +66,6 @@ describe('@nx/vitest:configuration', () => {
         project: 'mylib',
         uiFramework: 'angular',
         coverageProvider: 'v8',
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -76,6 +74,47 @@ describe('@nx/vitest:configuration', () => {
       expect(devDependencies.vitest).toBe('^4.0.0');
       expect(devDependencies['@vitest/coverage-v8']).toBe('^4.0.0');
       expect(devDependencies['@vitest/ui']).toBe('^4.0.0');
+    });
+
+    it('should not resolve vitest versions when skipping package.json', async () => {
+      setVitestVersion('~5.0.1');
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies['@angular/build'] = '~22.1.0';
+        return json;
+      });
+
+      await expect(
+        configurationGenerator(tree, {
+          project: 'mylib',
+          uiFramework: 'none',
+          coverageProvider: 'v8',
+          skipPackageJson: true,
+          skipFormat: true,
+        })
+      ).resolves.not.toThrow();
+      expect(tree.exists('libs/mylib/vitest.config.mts')).toBe(true);
+    });
+
+    it('should keep vitest 5 when the angular packages peer it', async () => {
+      setVitestVersion('~5.0.1');
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies['@angular/build'] = '~22.2.2';
+        json.devDependencies['@analogjs/vitest-angular'] = '~2.8.0';
+        return json;
+      });
+
+      await configurationGenerator(tree, {
+        project: 'mylib',
+        uiFramework: 'none',
+        coverageProvider: 'v8',
+        skipFormat: true,
+      });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies.vitest).toBe('~5.0.1');
+      expect(devDependencies['@vitest/coverage-v8']).toBe(
+        vitestCoverageV8Version
+      );
     });
   });
 
@@ -88,7 +127,6 @@ describe('@nx/vitest:configuration', () => {
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -117,7 +155,6 @@ describe('@nx/vitest:configuration', () => {
         coverageProvider: 'v8',
         passWithNoTests,
         skipPackageJson: true,
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -150,7 +187,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       passWithNoTests: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -168,7 +204,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -188,7 +223,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -212,7 +246,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -239,7 +272,6 @@ export default defineConfig(() => ({ test: { globals: true } }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -270,7 +302,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -301,7 +332,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -332,7 +362,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -365,7 +394,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -389,7 +417,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -408,7 +435,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 

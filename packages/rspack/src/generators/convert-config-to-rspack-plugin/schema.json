@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/schema",
   "$id": "NxRspackConvertConfigToRspackPlugin",
-  "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor that uses `withNx` to use `NxAppRspackPlugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "description": "Convert existing Rspack config(s) that use `withNx` to use `NxAppRspackPlugin`, for projects on the `@nx/rspack:rspack` executor or the `@nx/rspack/plugin` inference plugin. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
   "title": "Convert Rspack project using withNx to NxAppRspackPlugin",
   "type": "object",
   "properties": {
     "project": {
       "type": "string",
-      "description": "The project to convert from using the `@nx/rspack:rspack` executor and `withNx` plugin to use `NxAppRspackPlugin`.",
+      "description": "The project whose rspack config to convert from the `withNx` plugin to `NxAppRspackPlugin`.",
       "x-priority": "important"
     },
     "skipFormat": {

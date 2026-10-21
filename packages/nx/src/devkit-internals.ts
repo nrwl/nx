@@ -31,6 +31,7 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export {
   mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
 } from './project-graph/utils/project-configuration/target-merging';
 export {
   findMatchingTargetNames,
@@ -140,7 +141,10 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+export {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './utils/acknowledge-build-scripts';
 
 // Exposed for first-party plugins in this repo (imported via @nx/devkit/internal).
 export { default as runCommandsExecutor } from './executors/run-commands/run-commands.impl';
@@ -170,7 +174,11 @@ export type { InputDefinition } from './config/workspace-json-project-json';
 export type { ChangedFile, UnregisterCallback } from './daemon/client/client';
 export { daemonClient } from './daemon/client/client';
 export type { RunCommandsOptions } from './executors/run-commands/run-commands.impl';
-export { LARGE_BUFFER } from './executors/run-commands/run-commands.impl';
+export {
+  LARGE_BUFFER,
+  interpolateArgsIntoCommand,
+  normalizeArgs as normalizeRunCommandsArgs,
+} from './executors/run-commands/run-commands.impl';
 export { FsTree } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
@@ -328,3 +336,4 @@ export {
 } from './utils/workspace-context';
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
+export { resolveStartupHost } from './tasks-runner/readiness/startup-host';

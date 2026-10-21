@@ -10,7 +10,7 @@ topics:
 
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
-(whether explicit or [inferred](/docs/concepts/mental-model#inferred-tasks)).
+(whether explicit or [inferred](/docs/features/run-tasks#inferred-tasks)).
 Reading a file the task didn't declare, or writing outside its declared outputs, is a sandbox
 violation.
 Undeclared dependencies have direct implications on [caching](/docs/features/cache-task-results)
@@ -142,7 +142,7 @@ the JSON report.
 ![View raw sandbox report button](../../../assets/features/sandboxing-raw-report.png)
 
 Once you have identified the violating tasks, follow
-[Fix sandbox violations](/docs/kb/fix-sandbox-violations)
+[Improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs)
 to download every report on a branch, classify each violation, and update your project configuration in a structured loop.
 
 ## Sandbox violations dashboard
@@ -157,7 +157,7 @@ The **How to fix these violations** panel offers two paths.
 **Fix with AI** copies a ready-made prompt for your coding agent that downloads the reports, edits
 the task config, and validates before stopping.
 The manual path gives you the equivalent command sequence.
-Either way, [Fix sandbox violations](/docs/kb/fix-sandbox-violations) walks through the
+Either way, [Improve cache inputs and outputs](/docs/kb/improve-cache-inputs-outputs) walks through the
 full loop.
 
 ## Inspecting inputs and outputs
@@ -240,7 +240,7 @@ and reports discrepancies.
 
 Sandboxing requires a
 [dedicated compute cluster](/docs/kb/dedicated-compute-cluster) and runs on
-[Nx Agents](/docs/features/ci-features/distribute-task-execution).
+[Workers](/docs/features/ci-features/distribute-task-execution).
 It is not supported when you [bring your own compute](/docs/kb/bring-your-own-compute).
 
 1. Request a dedicated compute cluster under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), if you don't already have one.
@@ -253,26 +253,26 @@ Contact your Nx representative to turn on sandboxing for your deployment.
 
 ### Excluding paths
 
-Create a `.nx/workflows/sandboxing-config.yaml` file to exclude paths from sandboxing checks.
+Create a `.nx/workflows/ultracache-config.yaml` file to exclude paths from sandboxing checks.
 
 ```yaml
-# .nx/workflows/sandboxing-config.yaml
-exclude-reads:
+# .nx/workflows/ultracache-config.yaml
+ignore-reads:
   - '**/vite.config.*.timestamp-*'
 
 task-exclusions:
   - project: myapp
     target: build
-    exclude-reads:
+    ignore-reads:
       - .next/cache/**
-    exclude-writes:
+    ignore-writes:
       - logs/**
   - target: lint
-    exclude-reads:
+    ignore-reads:
       - .eslintcache/**
 ```
 
-Global `exclude-reads` and `exclude-writes` apply to all tasks.
+Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 
 Patterns use glob syntax relative to the workspace root.

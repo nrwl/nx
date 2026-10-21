@@ -4,13 +4,11 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -32,7 +30,6 @@ import {
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...options,
   });
@@ -47,7 +44,6 @@ export async function applicationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
-    _options.addPlugin,
     _options.useTsSolution
   );
   tasks.push(
@@ -69,12 +65,6 @@ export async function applicationGeneratorInternal(
   if (options.isUsingTsSolutionConfig) {
     await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
-
-  const nxJson = readNxJson(tree);
-
-  options.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
 
   const packageJson: PackageJson = {
     name: options.importPath,
@@ -133,9 +123,8 @@ export async function applicationGeneratorInternal(
         linter: options.linter,
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting: options.enableTypedLinting,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
         projectName: options.projectName,
       },
       'app'

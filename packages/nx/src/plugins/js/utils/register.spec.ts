@@ -765,4 +765,63 @@ describe('loadTsFile', () => {
       tempFs.cleanup();
     }
   });
+  it('should not suggest disabling type stripping when a package does not export the subpath', () => {
+    const tempFs = new TempFs('nx-load-ts-file-subpath', false);
+    try {
+      tempFs.createFilesSync({
+        'tsconfig.json': '{}',
+        'node_modules/removed-subpath/package.json': JSON.stringify({
+          name: 'removed-subpath',
+          exports: { '.': './index.js' },
+        }),
+        'node_modules/removed-subpath/index.js': 'module.exports = {};\n',
+        'rspack.config.ts':
+          "import { withModuleFederation } from 'removed-subpath/module-federation';\nexport default withModuleFederation;\n",
+      });
+
+      let error: any;
+      try {
+        loadTsFile(
+          join(tempFs.tempDir, 'rspack.config.ts'),
+          join(tempFs.tempDir, 'tsconfig.json')
+        );
+      } catch (e) {
+        error = e;
+      }
+      expect(error?.code).toBe('ERR_PACKAGE_PATH_NOT_EXPORTED');
+      expect(error.message).not.toContain('NX_PREFER_NODE_STRIP_TYPES');
+    } finally {
+      tempFs.cleanup();
+    }
+  });
+
+  it('should fall back to tsconfig paths when a linked package does not export the aliased subpath', () => {
+    const tempFs = new TempFs('nx-load-ts-file-shadowed-alias', false);
+    try {
+      tempFs.createFilesSync({
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: { '@org/lib/*': ['libs/lib/src/*.js'] },
+          },
+        }),
+        'node_modules/@org/lib/package.json': JSON.stringify({
+          name: '@org/lib',
+          exports: { '.': './index.js' },
+        }),
+        'node_modules/@org/lib/index.js': 'module.exports = {};\n',
+        'libs/lib/src/sub.js': 'exports.value = 42;\n',
+        'webpack.config.ts':
+          "import { value } from '@org/lib/sub';\nexport default value;\n",
+      });
+
+      const loaded = loadTsFile<{ default: number }>(
+        join(tempFs.tempDir, 'webpack.config.ts'),
+        join(tempFs.tempDir, 'tsconfig.json')
+      );
+      expect(loaded.default).toBe(42);
+    } finally {
+      tempFs.cleanup();
+    }
+  });
 });

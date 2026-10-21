@@ -75,19 +75,24 @@ describe('loadUltracacheConfigurationsForRun', () => {
     });
   });
 
-  // Connecting the workspace is not the opt-in: a run that says nothing
-  // never reaches Nx Cloud.
-  it('does nothing for a run that did not opt in', async () => {
-    for (const NX_CLOUD_USE_ULTRACACHE of [undefined, 'false']) {
-      expect(
-        await loadUltracacheConfigurationsForRun(
-          nxJson,
-          {},
-          optedIn({ NX_CLOUD_USE_ULTRACACHE })
-        )
-      ).toBeNull();
-    }
+  it('does nothing for a run that opted out', async () => {
+    expect(
+      await loadUltracacheConfigurationsForRun(
+        nxJson,
+        {},
+        optedIn({ NX_CLOUD_USE_ULTRACACHE: 'false' })
+      )
+    ).toBeNull();
     expect(cloud.fetchUltracacheConfigurations).not.toHaveBeenCalled();
+  });
+
+  it('fetches for a run that says nothing', async () => {
+    await loadUltracacheConfigurationsForRun(
+      nxJson,
+      {},
+      optedIn({ NX_CLOUD_USE_ULTRACACHE: undefined })
+    );
+    expect(cloud.fetchUltracacheConfigurations).toHaveBeenCalled();
   });
 
   it('serves the stored set without asking Nx Cloud', async () => {

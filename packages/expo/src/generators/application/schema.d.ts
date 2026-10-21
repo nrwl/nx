@@ -12,14 +12,9 @@ export interface Schema {
   js: boolean; // default is false
   linter?: LinterType;
   enableTypedLinting?: boolean; // default is false
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean; // default is false
   e2eTestRunner: 'cypress' | 'playwright' | 'detox' | 'none'; // default is none
   skipPackageJson?: boolean; // default is false
   // Internal options
-  addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'oxfmt' | 'none';

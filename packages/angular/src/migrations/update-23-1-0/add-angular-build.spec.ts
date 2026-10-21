@@ -4,11 +4,11 @@ import {
   readNxJson,
   updateJson,
   updateNxJson,
+  writeJson,
   type Tree,
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { angularDevkitVersion } from '../../utils/versions';
 import migration from './add-angular-build';
 
 const angularBuildExecutors = [
@@ -23,6 +23,10 @@ describe('add-angular-build migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { '@angular/core': '^22.1.0' },
+    }));
   });
 
   function getAngularBuildVersion(): string | undefined {
@@ -40,9 +44,29 @@ describe('add-angular-build migration', () => {
 
       await migration(tree);
 
-      expect(getAngularBuildVersion()).toBe(angularDevkitVersion);
+      expect(getAngularBuildVersion()).toBe('~22.1.0');
     }
   );
+
+  it('should add @angular/build at the installed @angular-devkit/build-angular version', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { '@angular-devkit/build-angular': '^22.1.0' },
+    }));
+    writeJson(tree, 'node_modules/@angular-devkit/build-angular/package.json', {
+      name: '@angular-devkit/build-angular',
+      version: '22.1.3',
+    });
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+      targets: { build: { executor: '@nx/angular:application', options: {} } },
+    });
+
+    await migration(tree);
+
+    expect(getAngularBuildVersion()).toBe('~22.1.3');
+  });
 
   it('should detect the executor in a library project (no projectType gate)', async () => {
     addProjectConfiguration(tree, 'lib1', {
@@ -53,7 +77,7 @@ describe('add-angular-build migration', () => {
 
     await migration(tree);
 
-    expect(getAngularBuildVersion()).toBe(angularDevkitVersion);
+    expect(getAngularBuildVersion()).toBe('~22.1.0');
   });
 
   it('should not add @angular/build when no target uses a relevant executor', async () => {
@@ -129,7 +153,7 @@ describe('add-angular-build migration', () => {
 
       await migration(tree);
 
-      expect(getAngularBuildVersion()).toBe(angularDevkitVersion);
+      expect(getAngularBuildVersion()).toBe('~22.1.0');
     });
 
     it('should detect a record-shaped targetDefault keyed by the executor', async () => {
@@ -141,7 +165,7 @@ describe('add-angular-build migration', () => {
 
       await migration(tree);
 
-      expect(getAngularBuildVersion()).toBe(angularDevkitVersion);
+      expect(getAngularBuildVersion()).toBe('~22.1.0');
     });
 
     it('should not add @angular/build when targetDefaults do not use a relevant executor', async () => {

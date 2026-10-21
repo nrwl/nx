@@ -55,26 +55,28 @@ describe('Rsbuild configuration generator', () => {
     expect(tree.exists('apps/myapp/rsbuild.config.ts')).toBeTruthy();
     expect(tree.read('apps/myapp/rsbuild.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from '@rsbuild/core';
+        "import { defineConfig } from '@rsbuild/core';
+        import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
-      export default defineConfig({
-          source: {
-              entry: {
-                  index: './src/index.ts'
-              },
-          },
-          server: {
-              port: 4200
-          },
-          output: {
-              target: 'web',
-              distPath: {
-                  root: 'dist',
-              },
-          }
-      });
-      "
-    `);
+        export default defineConfig({
+            source: {
+                entry: {
+                    index: './src/index.ts'
+                },
+            },
+            server: {
+                port: 4200
+            },
+            output: {
+                target: 'web',
+                distPath: {
+                    root: 'dist',
+                },
+            },
+            plugins: [pluginNxReadySignal()],
+        });
+        "
+      `);
   });
 
   it('should generate Rsbuild configuration with custom entry file', async () => {
@@ -91,26 +93,28 @@ describe('Rsbuild configuration generator', () => {
     expect(tree.exists('apps/myapp/rsbuild.config.ts')).toBeTruthy();
     expect(tree.read('apps/myapp/rsbuild.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from '@rsbuild/core';
+        "import { defineConfig } from '@rsbuild/core';
+        import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
-      export default defineConfig({
-          source: {
-              entry: {
-                  index: './src/main.ts'
-              },
-          },
-          server: {
-              port: 4200
-          },
-          output: {
-              target: 'web',
-              distPath: {
-                  root: 'dist',
-              },
-          }
-      });
-      "
-    `);
+        export default defineConfig({
+            source: {
+                entry: {
+                    index: './src/main.ts'
+                },
+            },
+            server: {
+                port: 4200
+            },
+            output: {
+                target: 'web',
+                distPath: {
+                    root: 'dist',
+                },
+            },
+            plugins: [pluginNxReadySignal()],
+        });
+        "
+      `);
   });
 
   it('should generate Rsbuild configuration with custom entry file with project root path', async () => {
@@ -127,26 +131,28 @@ describe('Rsbuild configuration generator', () => {
     expect(tree.exists('apps/myapp/rsbuild.config.ts')).toBeTruthy();
     expect(tree.read('apps/myapp/rsbuild.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from '@rsbuild/core';
+        "import { defineConfig } from '@rsbuild/core';
+        import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
-      export default defineConfig({
-          source: {
-              entry: {
-                  index: './src/main.ts'
-              },
-          },
-          server: {
-              port: 4200
-          },
-          output: {
-              target: 'web',
-              distPath: {
-                  root: 'dist',
-              },
-          }
-      });
-      "
-    `);
+        export default defineConfig({
+            source: {
+                entry: {
+                    index: './src/main.ts'
+                },
+            },
+            server: {
+                port: 4200
+            },
+            output: {
+                target: 'web',
+                distPath: {
+                    root: 'dist',
+                },
+            },
+            plugins: [pluginNxReadySignal()],
+        });
+        "
+      `);
   });
 
   it('should generate Rsbuild configuration with custom tsconfig file', async () => {
@@ -159,27 +165,29 @@ describe('Rsbuild configuration generator', () => {
     expect(tree.exists('apps/myapp/rsbuild.config.ts')).toBeTruthy();
     expect(tree.read('apps/myapp/rsbuild.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { defineConfig } from '@rsbuild/core';
+        "import { defineConfig } from '@rsbuild/core';
+        import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
-      export default defineConfig({
-          source: {
-              entry: {
-                  index: './src/index.ts'
-              },
-              tsconfigPath: './tsconfig.json',
-          },
-          server: {
-              port: 4200
-          },
-          output: {
-              target: 'web',
-              distPath: {
-                  root: 'dist',
-              },
-          }
-      });
-      "
-    `);
+        export default defineConfig({
+            source: {
+                entry: {
+                    index: './src/index.ts'
+                },
+                tsconfigPath: './tsconfig.json',
+            },
+            server: {
+                port: 4200
+            },
+            output: {
+                target: 'web',
+                distPath: {
+                    root: 'dist',
+                },
+            },
+            plugins: [pluginNxReadySignal()],
+        });
+        "
+      `);
   });
 
   it('should set "type": "module" on the project package.json when one exists', async () => {

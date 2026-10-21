@@ -68,7 +68,7 @@ Nx treats the project as Expo when the app configuration has an `expo` key or `p
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/expo configuration
 
@@ -100,19 +100,31 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 
 | Option                 | Default       | Inferred behavior                                     |
 | ---------------------- | ------------- | ----------------------------------------------------- |
-| `startTargetName`      | `start`       | Runs the `@nx/expo:start` executor continuously.      |
+| `startTargetName`      | `start`       | Runs `expo start` continuously.                       |
 | `serveTargetName`      | `serve`       | Runs `expo start --web` continuously.                 |
 | `runIosTargetName`     | `run-ios`     | Runs `expo run:ios` continuously.                     |
 | `runAndroidTargetName` | `run-android` | Runs `expo run:android` continuously.                 |
 | `exportTargetName`     | `export`      | Runs and caches `expo export`, including its outputs. |
-| `prebuildTargetName`   | `prebuild`    | Runs the `@nx/expo:prebuild` executor.                |
-| `installTargetName`    | `install`     | Runs the `@nx/expo:install` executor.                 |
-| `buildTargetName`      | `build`       | Runs the `@nx/expo:build` executor.                   |
+| `prebuildTargetName`   | `prebuild`    | Runs `expo prebuild`.                                 |
+| `installTargetName`    | `install`     | Runs `expo install`.                                  |
+| `buildTargetName`      | `build`       | Runs `eas build`.                                     |
 | `submitTargetName`     | `submit`      | Runs `eas submit`.                                    |
 | `buildDepsTargetName`  | none          | Name of an optional dependency build task.            |
 | `watchDepsTargetName`  | none          | Name of an optional dependency watch task.            |
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/expo/plugin`.
+
+### Wait for Metro to be ready
+
+The inferred `start` and `serve` targets come with a `readyWhen` check.
+With it, a task can wait until Metro accepts connections instead of only until it has started.
+The check runs when the task runs, with the task's environment and options, and waits for the Metro port.
+The port comes from the `--port` flag, then `RCT_METRO_PORT`, then 8081.
+It reads `RCT_METRO_PORT` from the environment first, then from the project's `.env` files, such as `.env.development`, the way `expo start` loads them.
+
+A dependent task waits for the check only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ### Creating applications
 
@@ -270,20 +282,14 @@ nx prebuild <app-name> --platform=android
 
 ### Install compatible npm packages
 
-To install packages that is compatible with current version of Expo, run:
+To install packages compatible with the current version of Expo, pass the package names after `--`:
 
 ```shell
-nx install <app-name>
+nx install <app-name> -- <package-name>
+nx install <app-name> -- <package-name-1> <package-name-2> <package-name-3>
 ```
 
-Unlike npm's `install` command, this `install` command will install the exact right version for currently installed copy of Expo.
-
-To install a specify NPM package, run:
-
-```shell
-nx install <app-name> --packages=<packpage-name>
-nx install <app-name> --packages=<packpage-name-1>,<packpage-name-2>,<packpage-name-3>
-```
+Unlike npm's `install` command, this `install` command installs the exact version that matches the installed copy of Expo.
 
 To check and fix package versions, run:
 
@@ -318,16 +324,12 @@ To run an EAS build:
 nx build <app-name>
 ```
 
+In a workspace without package manager workspaces, the app's `eas-build-pre-install` script copies the root dependencies and lock file into the app on the build machine, so EAS installs the versions pinned at the workspace root. The app generator adds this script.
+
 If you are not signed into an EAS account, run the following command to log in:
 
 ```shell
 npx eas login
-```
-
-To check the details of your build status, run:
-
-```shell
-nx build-list  <app-name>
 ```
 
 ### Submit an EAS build
@@ -338,18 +340,6 @@ To submit an EAS build:
 
 ```shell
 nx submit <app-name>
-```
-
-### Update an EAS build
-
-EAS Update is a hosted service that serves updates for projects using the `expo-updates` library.
-
-EAS Update makes fixing small bugs and pushing quick fixes a snap in between app store submissions. It accomplishes this by allowing an end-user's app to swap out the non-native parts of their app (for example, JS, styling, and image changes) with a new update that contains bug fixes and other updates.
-
-To update an EAS build:
-
-```shell
-nx update <app-name>
 ```
 
 ### Testing projects
@@ -373,8 +363,6 @@ Below table is a map between expo commands and Nx commands:
 | `expo prebuild`    | `nx prebuild <app-name>`    |
 | `expo install`     | `nx install <app-name>`     |
 | `eas build`        | `nx build <app-name>`       |
-| `eas build:list`   | `nx build-list <app-name>`  |
-| `eas update`       | `nx update <app-name>`      |
 | `eas submit`       | `nx submit <app-name>`      |
 
 ## More documentation

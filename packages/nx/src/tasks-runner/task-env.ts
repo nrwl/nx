@@ -1,3 +1,8 @@
+import {
+  READY_SIGNAL_SOCKET_ENV,
+  READY_SIGNAL_TASK_ENV,
+  READY_URL_ENV,
+} from './readiness/ready-signal';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { join } from 'node:path';
@@ -40,6 +45,11 @@ export function getEnvVariablesForBatchProcess(
   };
   // NX_ORIGINAL_FORCE_COLOR is an internal signal and should not leak into child processes
   delete res.NX_ORIGINAL_FORCE_COLOR;
+  // The orchestrator sets these for the one task they are meant for, so an
+  // Nx run inside that task must not pass them on
+  delete res[READY_SIGNAL_SOCKET_ENV];
+  delete res[READY_SIGNAL_TASK_ENV];
+  delete res[READY_URL_ENV];
   return res;
 }
 
@@ -159,6 +169,11 @@ export function getEnvVariablesForTask(
   // NX_ORIGINAL_FORCE_COLOR is an internal signal used by getForceColorForChild()
   // and should not leak into child processes
   delete res.NX_ORIGINAL_FORCE_COLOR;
+  // The orchestrator sets these for the one task they are meant for, so an
+  // Nx run inside that task must not pass them on
+  delete res[READY_SIGNAL_SOCKET_ENV];
+  delete res[READY_SIGNAL_TASK_ENV];
+  delete res[READY_URL_ENV];
   return res;
 }
 

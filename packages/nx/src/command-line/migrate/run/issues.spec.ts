@@ -256,6 +256,33 @@ describe('migrate run issues', () => {
       );
     });
 
+    it('accepts only "outcome" in a single run, which keeps no issue ledger', () => {
+      const steps = [step('step-1', '@nx/js:one', 'awaiting-prompt-outcome')];
+      const state = { ...stateWith(steps), singleMigration: true };
+
+      expect(
+        parseHandoffIssues(
+          {
+            issues: [
+              {
+                summary: 'The config still names the old option.',
+                applicableMigrations: 'unknown',
+              },
+            ],
+          },
+          state,
+          steps[0]
+        )
+      ).toEqual({
+        ok: false,
+        reason:
+          'the handoff has an unrecognized field "issues"; a --run-migration run accepts only "outcome" next to "status" and "summary", and its problems go in "summary"',
+      });
+      expect(
+        parseHandoffIssues({ outcome: 'skipped' }, state, steps[0])
+      ).toEqual({ ok: true, issues: [], updates: [] });
+    });
+
     it('rejects an update for an issue assigned to another step', () => {
       const steps = baseSteps();
       const result = parseHandoffIssues(

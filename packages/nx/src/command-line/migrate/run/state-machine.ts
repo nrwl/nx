@@ -299,9 +299,12 @@ function applyStepAction(
 }
 
 function workerDiedSummary(step: MigrateStep): string {
-  return `the worker process${
+  const worker = `the worker process${
     step.pid === undefined ? '' : ` (pid ${step.pid})`
-  } died before recording an outcome`;
+  }`;
+  return step.installFailed === true
+    ? `its dependency install did not complete, and ${worker} died`
+    : `${worker} died before recording an outcome`;
 }
 
 // Re-arms for a retry that resets the tree first. The reset target predates

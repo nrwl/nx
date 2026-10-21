@@ -278,13 +278,16 @@ fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
 }
 
-/// Files vite and vitest write and remove while they load a config. The
-/// watch never reports them, so a walk that feeds a hash skips them too.
+/// Files tools write and remove moments later. Vite and vitest write them
+/// while loading a config, and pnpm 12 writes `_tmp_<pid>_<hex>` on every
+/// command while it probes where to put its store. The watch never reports
+/// them, so a walk that feeds a hash skips them too.
 pub(crate) const TRANSIENT_FILE_GLOBS: &[&str] = &[
     "vitest.config.ts.timestamp*.mjs",
     "vite.config.ts.timestamp*.mjs",
     "vitest.config.mts.timestamp*.mjs",
     "vite.config.mts.timestamp*.mjs",
+    "_tmp_*_*",
 ];
 
 /// Directories the walker and the watcher never enter.
@@ -314,16 +317,18 @@ pub(crate) fn create_walker<P>(directory: P, use_ignores: bool) -> WalkBuilder
 where
     P: AsRef<Path>,
 {
-    create_walker_vetoing(directory, use_ignores, None)
+    create_walker_vetoing(directory, use_ignores, None, Vec::new())
 }
 
-/// `create_walker` with `extra` vetoed on top of the hardcoded ignores. The
-/// ignore crate keeps one filter predicate, so a caller that needs more has
-/// to have them composed here rather than add its own.
+/// `create_walker` with `extra` and the `skip` directories (absolute) vetoed
+/// on top of the hardcoded ignores. The ignore crate keeps one filter
+/// predicate, so a caller that needs more has to have them composed here
+/// rather than add its own.
 pub(crate) fn create_walker_vetoing<P>(
     directory: P,
     use_ignores: bool,
     extra: Option<Arc<NxGlobSet>>,
+    skip: Vec<PathBuf>,
 ) -> WalkBuilder
 where
     P: AsRef<Path>,
@@ -368,6 +373,7 @@ where
             && extra
                 .as_ref()
                 .is_none_or(|set| !set.is_match(path.as_ref()))
+            && !skip.iter().any(|dir| entry.path() == dir)
     });
     walker
 }
@@ -402,6 +408,7 @@ pub(crate) fn walk_files(
     start: &Path,
     workspace_root: &Path,
     accept: PathPredicate,
+    skip: &[String],
 ) -> Result<Vec<String>> {
     let relative_of = |path: &Path| -> Option<String> {
         Some(
@@ -429,7 +436,8 @@ pub(crate) fn walk_files(
     };
 
     let found = Mutex::new(Vec::new());
-    create_walker_vetoing(start, false, Some(transient_skips()?))
+    let skip = skip.iter().map(|dir| workspace_root.join(dir)).collect();
+    create_walker_vetoing(start, false, Some(transient_skips()?), skip)
         .follow_links(false)
         .build_parallel()
         .run(|| {
@@ -456,17 +464,18 @@ pub(crate) type PathPredicate<'a> = &'a (dyn Fn(&str) -> bool + Sync);
 /// ignored index caches on top of it, and everything else calls it directly.
 /// A path is read wherever it points, so an entry or a linked file may lead
 /// out of the workspace. `None` when `dir` cannot be read at all. The order
-/// is the walk's, not sorted.
+/// is the walk's, not sorted. Directories in `skip` are not entered.
 pub(crate) fn read_directory(
     workspace_root: &Path,
     dir: &str,
     accept: PathPredicate,
+    skip: &[String],
 ) -> Option<Vec<String>> {
     let start = workspace_root.join(dir);
     if !dunce::canonicalize(&start).ok()?.is_dir() {
         return Some(Vec::new());
     }
-    walk_files(&start, workspace_root, accept).ok()
+    walk_files(&start, workspace_root, accept, skip).ok()
 }
 
 /// Every file under `dir`, for the index adopting it as a listing. A
@@ -476,7 +485,7 @@ pub(crate) fn seed_walk(workspace_root: &Path, dir: &str) -> Option<Vec<String>>
     if std::fs::symlink_metadata(workspace_root.join(dir)).is_err() {
         return Some(Vec::new());
     }
-    read_directory(workspace_root, dir, &|_| true)
+    read_directory(workspace_root, dir, &|_| true, &[])
 }
 
 #[cfg(test)]
@@ -779,6 +788,19 @@ nested/child-two/
         );
     }
 
+    #[test]
+    fn read_directory_does_not_enter_a_skipped_directory() {
+        let temp = TempDir::new().unwrap();
+        for path in ["pkg/src/a.ts", "pkg/nested/src/b.ts", "pkg/nested-two/c.ts"] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let mut files =
+            read_directory(temp.path(), "pkg", &|_| true, &["pkg/nested".to_string()]).unwrap();
+        files.sort();
+        // Whole segments only: `nested-two` is not under `nested`.
+        assert_eq!(files, vec!["pkg/nested-two/c.ts", "pkg/src/a.ts"]);
+    }
+
     // The reference semantics the watch filterer's rank-before-depth sort
     // mirrors: the ignore crate keeps the deepest match per class and then
     // prefers the higher class, so a .nxignore wins over a .gitignore that
@@ -808,6 +830,25 @@ nested/child-two/
             "the shallower .nxignore should outrank the deeper .gitignore negation, got: {:?}",
             files
         );
+    }
+
+    #[test]
+    fn skips_transient_tool_files() {
+        let temp = TempDir::new().unwrap();
+        for file in [
+            "keep.ts",
+            "_tmp_notes.txt",
+            "apps/web/vite.config.ts.timestamp-1700000000000-abc.mjs",
+            "_tmp_216074_1a910ab3",
+            "apps/web/_tmp_38717_33967778",
+            "_tmp_38717_3397f260/_tmp_38717_3397f261",
+        ] {
+            temp.child(file).write_str("").unwrap();
+        }
+
+        let mut files = seed_walk(temp.path(), "").unwrap();
+        files.sort();
+        assert_eq!(files, vec!["_tmp_notes.txt", "keep.ts"]);
     }
 
     fn walk_fixture() -> TempDir {

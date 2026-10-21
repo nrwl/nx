@@ -487,7 +487,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
     await handleResult(
       socket,
       SELECT_AFFECTED_TASKS,
-      () => handleSelectAffectedTasks(payload.request),
+      () => handleSelectAffectedTasks(payload.request, socket),
       mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {

@@ -82,9 +82,9 @@ Nx stores nothing, and the Claude Agent SDK reads the variables at session start
 
 `fix-ci` runs in two places, so the variables have to be present in both.
 It runs on your main CI job for failures outside agents, meaning non-distributed commands, and on
-Nx Agents for distributed tasks that fail there.
+Workers for distributed tasks that fail there.
 On the main job, set the variables the way you manage any other CI secret.
-Nx Agents start clean, so
+Workers start clean, so
 [forward the variables to the agents](/docs/kb/launch-template-examples#pass-environment-variables).
 Forwarding covers Anthropic and Foundry outright.
 AWS and Vertex need more care on the agents, covered in their sections below.
@@ -128,7 +128,7 @@ On your own runners, the AWS SDK can use whatever the machine already carries, s
 instance or task profile, a `~/.aws` file, or credentials your CI injects through OIDC.
 Often you set only the region and the Bedrock flag, and the existing AWS identity does the rest.
 
-Nx Agents carry none of your AWS identity, so pass the credentials as environment variables.
+Workers carry none of your AWS identity, so pass the credentials as environment variables.
 A long-term Bedrock API key in `AWS_BEARER_TOKEN_BEDROCK` is the shortest path.
 For IAM or STS, mint short-lived credentials on your main job and forward
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_REGION` to the agents.
@@ -177,7 +177,7 @@ On your own runners, use Application Default Credentials through
 `gcloud auth application-default login`, or point `GOOGLE_APPLICATION_CREDENTIALS` at a key file
 already on the machine.
 
-Forwarding to Nx Agents passes values, not files, so carry the key file as a value and rebuild it
+Forwarding to Workers passes values, not files, so carry the key file as a value and rebuild it
 on the agent:
 
 1. Put the service account JSON into an environment variable.

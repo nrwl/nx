@@ -19,9 +19,12 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 
+import { loadConfigFile } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { existsSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import type { Compiler, Configuration } from 'webpack';
 
 type ViteDevServer = {
   framework: 'react';
@@ -73,9 +76,10 @@ export function nxComponentTestingPreset(
     return basePresetSettings as any;
   }
 
-  const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
-    pathToConfig.endsWith(ext)
-  )
+  pathToConfig = pathToConfig.startsWith('file://')
+    ? fileURLToPath(pathToConfig)
+    : pathToConfig;
+  const normalizedProjectRootPath = statSync(pathToConfig).isDirectory()
     ? pathToConfig
     : dirname(pathToConfig);
 
@@ -240,6 +244,40 @@ function buildTargetWebpack(
     `);
   }
 
+  const buildConfig = buildableProjectConfig.targets[parsed.target];
+  if (buildConfig.metadata?.technologies?.includes('webpack')) {
+    return async () => {
+      const configPath = ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts']
+        .map((ext) =>
+          join(
+            workspaceRoot,
+            buildableProjectConfig.root,
+            `webpack.config.${ext}`
+          )
+        )
+        .find((path) => existsSync(path));
+      if (!configPath)
+        throw new Error(`Cannot find webpack config for ${buildTarget}`);
+      const previousBuildTarget = process.env.NX_BUILD_TARGET;
+      process.env.NX_BUILD_TARGET = buildTarget;
+      try {
+        const exported = await loadConfigFile(configPath);
+        const config =
+          typeof exported === 'function'
+            ? await exported({}, { mode: 'development' })
+            : exported;
+        // Cypress runs its own dev server; the app's port and history
+        // fallback would collide with it and replace its spec page.
+        const { devServer: _devServer, ...ctConfig } = config;
+        return ctConfig;
+      } finally {
+        if (previousBuildTarget === undefined)
+          delete process.env.NX_BUILD_TARGET;
+        else process.env.NX_BUILD_TARGET = previousBuildTarget;
+      }
+    };
+  }
+
   if (
     buildableProjectConfig.targets[parsed.target].executor !==
       '@nx/webpack:webpack' &&
@@ -247,8 +285,8 @@ function buildTargetWebpack(
       '@nx/rspack:rspack'
   ) {
     throw new InvalidExecutorError(
-      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' or '@nx/rspack:rspack' executor. ` +
-        `Please make sure to use '@nx/webpack:webpack' or '@nx/rspack:rspack' executor in that target to use Cypress Component Testing.`
+      `The '${parsed.target}' target of the '${parsed.project}' project is not a Webpack build target. ` +
+        `Cypress Component Testing needs a build target inferred by '@nx/webpack/plugin'.`
     );
   }
 
@@ -257,16 +295,14 @@ function buildTargetWebpack(
     buildableProjectConfig.targets,
     parsed.project,
     parsed.target,
-    parsed.target
+    parsed.configuration
   );
 
-  const { resolveUserDefinedWebpackConfig } = require('@nx/webpack/internal');
   const {
-    normalizeOptions,
-    composePluginsSync,
-    withNx,
-    withWeb,
-  } = require('@nx/webpack');
+    resolveUserDefinedWebpackConfig,
+    webpackExecutorContext,
+  } = require('@nx/webpack/internal');
+  const { normalizeOptions } = require('@nx/webpack');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -275,51 +311,84 @@ function buildTargetWebpack(
     getProjectSourceRoot(buildableProjectConfig)
   );
 
-  let customWebpack: any;
-
-  if (options.webpackConfig) {
-    customWebpack = resolveUserDefinedWebpackConfig(
-      options.webpackConfig,
-      options.tsConfig.startsWith(context.root)
-        ? options.tsConfig
-        : join(context.root, options.tsConfig)
-    );
+  if (!options.webpackConfig) {
+    return null;
   }
 
-  return async () => {
-    customWebpack = await customWebpack;
-    // For legacy `composePlugins(...)` setup, we need change some options to make Cypress CT work properly.
-    if (
-      customWebpack &&
-      require('@nx/webpack').isNxWebpackComposablePlugin(customWebpack) // using inline since @nx/webpack may not be installed when using vite so top-level import would error
-    ) {
-      return await customWebpack(
-        {},
-        {
-          options: {
-            ...options,
-            // cypress will generate its own index.html from component-index.html
-            generateIndexHtml: false,
-            // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
-            extractLicenses: false,
-            root: workspaceRoot,
-            projectRoot: ctProjectConfig.root,
-            sourceRoot: getProjectSourceRoot(ctProjectConfig),
-          },
-          context,
-          configuration: parsed.configuration,
+  return () =>
+    webpackExecutorContext.run(
+      {
+        target: parsed,
+        options: {
+          ...options,
+          // Cypress supplies component-index.html and builds library sources.
+          generateIndexHtml: false,
+          extractLicenses: false,
+        },
+      },
+      async () => {
+        const customWebpack = await resolveUserDefinedWebpackConfig(
+          options.webpackConfig,
+          options.tsConfig.startsWith(context.root)
+            ? options.tsConfig
+            : join(context.root, options.tsConfig)
+        );
+        // Unmigrated `composePlugins(...)` configs are inert, so CT uses its fallback config.
+        if (
+          customWebpack &&
+          require('@nx/webpack').isNxWebpackComposablePlugin(customWebpack) // using inline since @nx/webpack may not be installed when using vite so top-level import would error
+        ) {
+          const { buildBaseWebpackConfig } = require('./webpack-fallback');
+          return buildBaseWebpackConfig({
+            tsConfigPath: findTsConfig(
+              join(workspaceRoot, ctProjectConfig.root)
+            ),
+            compiler: options.compiler || 'babel',
+          });
+        } else if (
+          typeof customWebpack === 'object' ||
+          typeof customWebpack === 'function'
+        ) {
+          const config: Configuration =
+            typeof customWebpack === 'function'
+              ? await customWebpack({}, { mode: 'development' })
+              : customWebpack;
+          const {
+            NxAppWebpackPlugin,
+          }: typeof import('@nx/webpack/app-plugin') = require('@nx/webpack/app-plugin');
+          config.plugins = config.plugins?.map((plugin) =>
+            plugin instanceof NxAppWebpackPlugin
+              ? {
+                  apply(compiler: Compiler) {
+                    // Cypress installs its harness after this config is returned.
+                    const entry = { ...compiler.options.entry };
+                    const output = { ...compiler.options.output };
+                    const devtool = compiler.options.devtool;
+                    const optimization = {
+                      ...compiler.options.optimization,
+                    };
+                    const mode = compiler.options.mode;
+                    const watchOptions = compiler.options.watchOptions;
+                    const context = compiler.options.context;
+                    plugin.apply(compiler);
+                    compiler.options.entry = entry;
+                    compiler.options.output = output;
+                    compiler.options.devtool = devtool;
+                    compiler.options.optimization = optimization;
+                    compiler.options.mode = mode;
+                    compiler.options.watchOptions = watchOptions;
+                    compiler.options.context = context;
+                    compiler.context = context;
+                  },
+                }
+              : plugin
+          );
+          return config;
         }
-      );
-    } else if (
-      typeof customWebpack === 'object' ||
-      typeof customWebpack === 'function'
-    ) {
-      // If this is a standard webpack config object or function, just return. it
-      return customWebpack;
-    }
 
-    return null; // return null to use fallback config
-  };
+        return null;
+      }
+    );
 }
 
 function findViteConfig(projectRootFullPath: string): string {
@@ -341,7 +410,7 @@ function findTsConfig(projectRoot: string) {
 
   for (const config of potentialConfigs) {
     if (existsSync(join(projectRoot, config))) {
-      return config;
+      return join(projectRoot, config);
     }
   }
 }

@@ -37,7 +37,6 @@ export type {
   AssetGlobPattern,
   FileReplacement,
 } from './src/executors/webpack/schema';
-export * from './src/executors/webpack/webpack.impl';
 export * from './src/utils/get-css-module-local-ident';
 export * from './src/utils/with-nx';
 export * from './src/utils/with-web';

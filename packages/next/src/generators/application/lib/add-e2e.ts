@@ -3,7 +3,6 @@ import {
   readTargetDefaultsForTarget,
   type PackageJson,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -31,8 +30,7 @@ export async function addE2e(
   const e2eWebServerInfo = await getNextE2EWebServerInfo(
     host,
     options.projectName,
-    joinPathFragments(options.appProjectRoot, 'next.config.js'),
-    options.addPlugin
+    joinPathFragments(options.appProjectRoot, 'next.config.js')
   );
 
   if (options.e2eTestRunner === 'cypress') {
@@ -86,7 +84,6 @@ export async function addE2e(
       devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       jsx: true,
-      enableTypedLinting: isTypedLintingEnabled(options),
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
       },
@@ -137,10 +134,11 @@ export async function addE2e(
       directory: 'src',
       js: false,
       linter: options.linter,
-      enableTypedLinting: isTypedLintingEnabled(options),
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+      enableTypedLinting: options.enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
-      addPlugin: options.addPlugin,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     return e2eTask;
@@ -151,13 +149,12 @@ export async function addE2e(
 async function getNextE2EWebServerInfo(
   tree: Tree,
   projectName: string,
-  configFilePath: string,
-  isPluginBeingAdded: boolean
+  configFilePath: string
 ) {
   const nxJson = readNxJson(tree);
-  let e2ePort = isPluginBeingAdded ? 3000 : 4200;
+  let e2ePort = 3000;
 
-  const defaultServeTarget = isPluginBeingAdded ? 'dev' : 'serve';
+  const defaultServeTarget = 'dev';
   const serveTargetOptions = readTargetDefaultsForTarget(
     defaultServeTarget,
     nxJson.targetDefaults
@@ -182,7 +179,6 @@ async function getNextE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://127.0.0.1:${e2ePort}`,
       defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
 }

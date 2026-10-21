@@ -10,7 +10,7 @@
     "executors.json",
     "generators.json"
   ],
-  "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
+  "description": "The Nx Plugin for Storybook infers tasks and provides generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -35,6 +35,9 @@
       ],
       "presets/cypress": [
         "dist/presets/cypress.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ],
       "src/*": [
         "dist/src/*.d.ts"
@@ -76,6 +79,11 @@
       "@nx/nx-source": "./presets/cypress.ts",
       "types": "./dist/presets/cypress.d.ts",
       "default": "./dist/presets/cypress.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",

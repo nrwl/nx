@@ -4,6 +4,7 @@ import type {
   NxAppRspackPluginOptions,
 } from '../utils/models';
 import { normalizeOptions } from '../utils/plugins/normalize-options';
+import { READY_SIGNAL_PLUGIN } from '../../utils/dev-server-ready-signal';
 import { applyBaseConfig } from '../utils/apply-base-config';
 import { applyWebConfig } from '../utils/apply-web-config';
 
@@ -18,6 +19,7 @@ import { applyWebConfig } from '../utils/apply-web-config';
  */
 export class NxAppRspackPlugin {
   private readonly options: NormalizedNxAppRspackPluginOptions;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(options: NxAppRspackPluginOptions = {}) {
     // If we're building inferred targets, skip normalizing the build options
@@ -27,6 +29,10 @@ export class NxAppRspackPlugin {
   }
 
   apply(compiler: Compiler) {
+    const { applyDevServerReadySignal } =
+      require('../../utils/dev-server-ready-signal') as typeof import('../../utils/dev-server-ready-signal');
+    applyDevServerReadySignal(compiler);
+
     // Default's to web
     const target = this.options.target ?? compiler.options.target;
     this.options.outputPath ??= compiler.options.output?.path;
@@ -47,12 +53,17 @@ export class NxAppRspackPlugin {
       useNormalizedEntry: true,
       compiler,
     });
+    compiler.context = compiler.options.context;
 
     if (compiler.options.target) {
       this.options.target = compiler.options.target;
     }
 
-    if (this.options.target === 'web' || this.options.target === 'webworker') {
+    if (
+      this.options.target === 'web' ||
+      this.options.target === 'webworker' ||
+      this.options.ssr
+    ) {
       applyWebConfig(this.options, compiler.options, {
         useNormalizedEntry: true,
         compiler,

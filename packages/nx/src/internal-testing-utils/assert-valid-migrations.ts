@@ -15,6 +15,18 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
     });
   });
 
+  it('should set requires on optional update migrations', () => {
+    const entries = { ...json.generators, ...(json.schematics ?? {}) };
+    const ungated = Object.entries(entries)
+      .filter(
+        ([, m]) =>
+          m.optionalUpdate === true && !Object.keys(m.requires ?? {}).length
+      )
+      .map(([name]) => name);
+
+    expect(ungated).toEqual([]);
+  });
+
   it('should contain all folders under ./src/migrations', () => {
     const migrationsPath = path.join(root, 'src/migrations');
     if (!fs.existsSync(migrationsPath)) return;

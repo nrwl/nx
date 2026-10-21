@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
 
 vi.mock('child_process', async () => {
@@ -220,6 +221,23 @@ describe('CI Workflow generator', () => {
           });
 
           expect(readNxJson(tree).defaultBase).toEqual('origin/my-branch');
+        });
+
+        it('should add an origin/ defaultBase when the affected block sets no defaultBase', async () => {
+          const nxJson = readNxJson(tree);
+          delete nxJson.defaultBase;
+          nxJson.affected = { legacy: true };
+          writeJson(tree, 'nx.json', nxJson);
+
+          await ciWorkflowGenerator(tree, {
+            ci: 'bitbucket-pipelines',
+            name: 'CI',
+          });
+
+          expect(readNxJson(tree).defaultBase).toEqual(
+            `origin/${deduceDefaultBase()}`
+          );
+          expect(readNxJson(tree).affected).toEqual({ legacy: true });
         });
 
         it('should generate gitlab config', async () => {

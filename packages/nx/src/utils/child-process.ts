@@ -155,6 +155,7 @@ export function runNxArgvSync(
       `Command failed: nx ${argv.join(' ')} (exit code ${result.status})`
     );
     (error as any).status = result.status ?? 1;
+    (error as any).signal = result.signal;
     throw error;
   }
 }

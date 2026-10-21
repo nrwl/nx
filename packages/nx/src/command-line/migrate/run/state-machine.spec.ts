@@ -1143,34 +1143,46 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it('unresolved from died keeps the attempt and records the death as the failure', () => {
-      // markDied records no outcome; the transition supplies the death detail.
-      const state = stateWithStep({
-        status: 'died',
-        attempt: 3,
-        pid: 4242,
-        gitRefBefore: 'abc123',
-      });
-
-      const result = applyStepEvent(state, {
-        type: 'stepAction',
-        stepId: 'step-1',
-        attempt: 3,
-        action: 'unresolved',
-      });
-
-      expect(result.kind).toBe('ok');
-      if (result.kind === 'ok') {
-        expect(result.state.steps[0]).toEqual({
-          ...state.steps[0],
-          status: 'unresolved',
-          outcome: {
-            summary:
-              'the worker process (pid 4242) died before recording an outcome',
-          },
+    it.each([
+      [
+        'the death',
+        {},
+        'the worker process (pid 4242) died before recording an outcome',
+      ],
+      [
+        'the install that did not complete',
+        { installFailed: true },
+        'its dependency install did not complete, and the worker process (pid 4242) died',
+      ],
+    ])(
+      'unresolved from died keeps the attempt and records %s as the failure',
+      (_, fields, summary) => {
+        // markDied records no outcome; the transition supplies the death detail.
+        const state = stateWithStep({
+          status: 'died',
+          attempt: 3,
+          pid: 4242,
+          gitRefBefore: 'abc123',
+          ...fields,
         });
+
+        const result = applyStepEvent(state, {
+          type: 'stepAction',
+          stepId: 'step-1',
+          attempt: 3,
+          action: 'unresolved',
+        });
+
+        expect(result.kind).toBe('ok');
+        if (result.kind === 'ok') {
+          expect(result.state.steps[0]).toEqual({
+            ...state.steps[0],
+            status: 'unresolved',
+            outcome: { summary },
+          });
+        }
       }
-    });
+    );
 
     it('adopt keeps the outcome the dead worker had already recorded', () => {
       const state = stateWithStep({

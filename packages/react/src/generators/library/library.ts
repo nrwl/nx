@@ -49,7 +49,6 @@ import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -60,7 +59,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     addTsPlugin,
@@ -143,7 +142,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       compiler: options.compiler,
       skipFormat: true,
       testEnvironment: 'jsdom',
-      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -219,7 +217,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
-      addPlugin: options.addPlugin,
       compiler: options.compiler,
     });
     tasks.push(vitestTask);

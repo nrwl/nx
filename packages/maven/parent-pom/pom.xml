@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.nx.maven</groupId>
     <artifactId>nx-parent</artifactId>
-    <version>0.0.17</version>
+    <version>0.0.18</version>
     <relativePath>../../../pom.xml</relativePath>
   </parent>
 
@@ -50,13 +50,6 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
         <version>${slf4j.version}</version>
-      </dependency>
-
-      <!-- JGit for gitignore parsing -->
-      <dependency>
-        <groupId>org.eclipse.jgit</groupId>
-        <artifactId>org.eclipse.jgit</artifactId>
-        <version>6.8.0.202311291450-r</version>
       </dependency>
 
       <!-- Plexus Utils for XML parsing -->

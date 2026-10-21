@@ -10,7 +10,7 @@ import {
   UltracacheConfigurationStore,
 } from '../native';
 import { join } from 'path';
-import { TaskGraph } from '../config/task-graph';
+import type { TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import {
   createTaskPlanningContext,
   TaskPlanningContext,
@@ -1962,6 +1962,120 @@ describe('native task hasher', () => {
     expect(planning.calls).toBe(2);
   });
 
+  it('hashes from the edges it is given, not the ones the up-front batch planned', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const tasks = Object.values(taskGraph.tasks);
+    await impl.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}]))
+    );
+    const served = await impl.hashTask(
+      taskGraph.tasks['e2e:e2e'],
+      taskGraph,
+      {}
+    );
+    const unserved: TaskGraph = {
+      ...taskGraph,
+      continuousDependencies: {
+        ...taskGraph.continuousDependencies,
+        'e2e:e2e': [],
+      },
+    };
+
+    const reused = await impl.hashTask(unserved.tasks['e2e:e2e'], unserved, {});
+
+    expect(reused.value).not.toEqual(served.value);
+    const { impl: fresh } = await upfrontFixture();
+    const planned = await fresh.hashTask(
+      unserved.tasks['e2e:e2e'],
+      unserved,
+      {}
+    );
+    expect(reused.value).toEqual(planned.value);
+  });
+
+  it('tells an edge without inputs apart from an edge to a task whose id says so', async () => {
+    await tempFs.createFiles({
+      'apps/app/project.json': JSON.stringify({ name: 'app' }),
+      'apps/app/main.ts': 'app',
+      'apps/bang/project.json': JSON.stringify({ name: '!app' }),
+      'apps/bang/main.ts': 'bang',
+      'apps/e2e/project.json': JSON.stringify({ name: 'e2e' }),
+      'apps/e2e/app.spec.ts': 'e2e',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'apps/app': 'app',
+      'apps/bang': '!app',
+      'apps/e2e': 'e2e',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    for (const [name, root] of [
+      ['app', 'apps/app'],
+      ['!app', 'apps/bang'],
+    ]) {
+      builder.addNode({
+        name,
+        type: 'app',
+        data: {
+          root,
+          targets: {
+            serve: {
+              executor: 'nx:run-commands',
+              continuous: true,
+              inputs: ['default'],
+            },
+          },
+        },
+      });
+    }
+    builder.addNode({
+      name: 'e2e',
+      type: 'app',
+      data: {
+        root: 'apps/e2e',
+        targets: { e2e: { executor: 'nx:run-commands', inputs: ['default'] } },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app', '!app', 'e2e'],
+      ['serve', 'e2e'],
+      undefined,
+      {}
+    );
+    const servedBy = (edges: TaskGraphEdge[]): TaskGraph => ({
+      ...taskGraph,
+      continuousDependencies: {
+        ...taskGraph.continuousDependencies,
+        'e2e:e2e': edges,
+      },
+    });
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const task = taskGraph.tasks['e2e:e2e'];
+
+    const withoutInputs = servedBy([{ id: 'app:serve', inputs: false }]);
+    const optedOut = (
+      await impl.hashTasksUpfront([task], withoutInputs, { [task.id]: {} })
+    )[task.id];
+    const byBang = servedBy([{ id: '!app:serve' }]);
+    const served = await impl.hashTask(task, byBang, {});
+
+    expect(optedOut.inputs.files).not.toContain('apps/app/main.ts');
+    expect(served.inputs.files).toContain('apps/bang/main.ts');
+  });
+
   it('hashes a disk-backed fileset up front unless it reaches a dependency output', async () => {
     await tempFs.createFiles({
       'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
@@ -2109,6 +2223,83 @@ describe('native task hasher', () => {
       'gen:compile'
     ].value;
     expect(again).toEqual(upfront);
+  });
+
+  it('hashes both disk-backed groups when a large group lists the same first globs as another', async () => {
+    const dirs = 'abcdefgh'.split('');
+    await tempFs.createFiles({
+      '.gitignore': 'gen/\n',
+      'libs/app/project.json': JSON.stringify({ name: 'app' }),
+      'libs/app/gen/a/output.map': 'map',
+      'libs/app/gen/a/output.snap': 'snap',
+      ...Object.fromEntries(
+        dirs.slice(1).map((dir) => [`libs/app/gen/${dir}/file.txt`, dir])
+      ),
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/app': 'app',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    // Eight shared globs plus a negation are too many entries for a label to list in full.
+    const shared = dirs.map((dir) => ({
+      fileset: `{projectRoot}/gen/${dir}/**/*`,
+      includeIgnored: true,
+    }));
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'libs/app',
+        targets: {
+          serve: {
+            executor: 'nx:run-commands',
+            continuous: true,
+            inputs: [
+              ...shared,
+              { fileset: '!{projectRoot}/gen/**/*.map', includeIgnored: true },
+            ],
+          },
+          e2e: {
+            executor: 'nx:run-commands',
+            dependsOn: ['serve'],
+            inputs: [
+              ...shared,
+              { fileset: '!{projectRoot}/gen/**/*.snap', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app'],
+      ['e2e'],
+      undefined,
+      {}
+    );
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const hashE2e = async () =>
+      (await impl.hashTask(taskGraph.tasks['app:e2e'], taskGraph, {})).value;
+
+    const initial = await hashE2e();
+    tempFs.writeFile('libs/app/gen/a/output.map', 'map-changed');
+    const afterMapChange = await hashE2e();
+    tempFs.writeFile('libs/app/gen/a/output.snap', 'snap-changed');
+    const afterSnapChange = await hashE2e();
+
+    expect(afterMapChange).not.toEqual(initial);
+    expect(afterSnapChange).not.toEqual(afterMapChange);
   });
 });
 

@@ -23,7 +23,6 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     strict: true,
     js: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {

@@ -48,8 +48,9 @@ const NX_WEBPACK_CT_PRESETS = [
   '@nx/react/plugins/component-testing',
 ];
 // Re-collects the Cypress 16 migrations: below their version, above every
-// 23.2.x. `--from` is exclusive.
-const REPLAN_COMMAND = `npx nx migrate @nx/cypress@${nxVersion} --from=@nx/cypress@23.3.0-beta.0`;
+// 23.2.x. `--from` is exclusive. `--include=all` overrides nx.json and the
+// prompt: `required` skips the upgrade and `optional` rejects `--from`.
+const REPLAN_COMMAND = `npx nx migrate @nx/cypress@${nxVersion} --from=@nx/cypress@23.3.0-beta.0 --include=all`;
 const RERUN_COMMAND = `${REPLAN_COMMAND} && npx nx migrate --run-migration=@nx/cypress:upgrade-to-cypress-16`;
 
 type ComponentTestingBundler = 'vite' | 'other' | 'unknown';

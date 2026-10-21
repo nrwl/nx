@@ -65,7 +65,7 @@ export function writeStreamingMessage(
 ) {
   try {
     serverLogger.log('Streaming message to client:', description);
-    sendMessage(socket, payload, undefined, (err) => {
+    sendMessage(socket, payload, (err) => {
       if (err) {
         console.log(
           `Streaming message write error (client likely disconnected): ${err.message}`

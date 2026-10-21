@@ -6,7 +6,7 @@ topics:
   - 'Troubleshooting'
 ---
 
-Nx comes with plugins that automatically [infer tasks](/docs/concepts/mental-model#inferred-tasks) for your
+Nx comes with plugins that automatically [infer tasks](/docs/features/run-tasks#inferred-tasks) for your
 projects based on the configuration of different tools. Inference plugins come with many benefits, such as reduced
 boilerplate and access to features such as [task splitting](/docs/kb/split-e2e-tasks). To make the transition easier
 for existing projects that are not yet using inference plugins, many plugins provide the `convert-to-inferred` generator
@@ -57,7 +57,7 @@ project structure.
 
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
-The [`outputPath`](/docs/technologies/react/next/executors#build) option from `@nx/next:build` is ignored because it
+The `outputPath` option from `@nx/next:build` is ignored because it
 conflicts with Next.js' requirement that [`distDir`](https://nextjs.org/docs/app/api-reference/next-config-js/distDir)
 remain inside the project directory. Previously, the `@nx/next:build` executor performed workarounds to bring it outside
 the project root, but those workarounds lead to other issues, such as Turbopack not working.
@@ -65,17 +65,13 @@ the project root, but those workarounds lead to other issues, such as Turbopack 
 To customize the output directory, set `distDir` in your Next.js config file.
 
 ```js
-const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
-// ...
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  nx: {
-    ...options,
-  },
-  // Differentiate production and development builds. You can also use the `configuration` variable that will match the `--configuration` option passed to Nx.
+  // Differentiate production and development builds. You can also use the `NX_TASK_TARGET_CONFIGURATION` variable that will match the `--configuration` option passed to Nx.
   distDir: process.env.NODE_ENV === 'production' ? 'dist' : 'dist-dev',
 };
-const plugins = [withNx];
-module.exports = composePlugins(...plugins)(nextConfig);
+
+module.exports = nextConfig;
 ```
 
 Since the output directory is now inside the project, we do not generate `package.json` since it is already present. The
@@ -148,7 +144,7 @@ export default config;
 
 ## Vite: unsupported `proxyConfig` option
 
-Projects that used the [`proxyConfig`](/docs/technologies/build-tools/vite/executors#dev-server) option of `@nx/vite:dev-server`
+Projects that used the `proxyConfig` option of `@nx/vite:dev-server`
 will need to inline the proxy configuration from the original file into `vite.config.ts`.
 
 For example, if you previously used this in `proxy.config.json`:
@@ -181,8 +177,8 @@ export default defineConfig({
 
 Projects that
 use [Nx-enhanced Webpack configuration](/docs/kb/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
-files cannot be migrated to use Webpack CLI. Nx-enhanced configuration files that contain `composePlugins` and `withNx`
-require the `@nx/webpack:webpack` executor to work.
+files cannot be migrated to use Webpack CLI. Those configuration files call `composePlugins` and `withNx`, which Nx v24
+removed.
 
 To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` first, and then try again.
 
