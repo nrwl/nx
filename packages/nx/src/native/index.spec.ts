@@ -10,10 +10,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Node evaluates a CommonJS file imported from ESM with its own internal
-// loader once a `module.registerHooks()` hook is installed, and the `require`
-// that loader hands the file has no `cache`. Playwright installs such a hook,
-// so this is the environment every ESM Playwright config loads nx in.
+// Node 22.15.0–22.22.2 and 24.0.0–24.11.0 (and 23.5–25.0) evaluate CommonJS
+// imported from ESM with their internal loader once a `module.registerHooks()`
+// load hook is installed, as Playwright 1.64 does. That loader's `require` has
+// `resolve` but no `cache`. Later versions route back through the real
+// `require` (nodejs/node#59929, #60380), so only the first test below fails on
+// the old code everywhere: it hands the loader such a `require` itself.
 const hasSyncHooks =
   typeof (require('node:module') as any).registerHooks === 'function';
 
@@ -42,6 +44,28 @@ describe('native loader', () => {
       join(dir, 'utils', 'versions.js'),
       "module.exports = { nxVersion: '0.0.0' };"
     );
+    // Evaluates the loader the way node's internal CommonJS loader does: a
+    // `require` with `resolve` but no `cache`. A child process keeps the
+    // loader's process.emit patch out of the test worker.
+    writeFileSync(
+      join(dir, 'runner.cjs'),
+      [
+        "const { readFileSync } = require('node:fs');",
+        "const { createRequire } = require('node:module');",
+        "const { dirname } = require('node:path');",
+        "const vm = require('node:vm');",
+        'const file = process.argv[2];',
+        'const real = createRequire(file);',
+        'const bare = Object.assign((id) => real(id), { resolve: real.resolve });',
+        'const mod = { exports: {} };',
+        'vm.compileFunction(',
+        "  readFileSync(file, 'utf8'),",
+        "  ['exports', 'require', 'module', '__filename', '__dirname'],",
+        '  { filename: file }',
+        ')(mod.exports, bare, mod, file, dirname(file));',
+        'console.log(JSON.stringify(mod.exports));',
+      ].join('\n')
+    );
     writeFileSync(
       join(dir, 'hook.mjs'),
       [
@@ -55,25 +79,32 @@ describe('native loader', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  function importUnderHook(): string {
-    const entry = pathToFileURL(join(dir, 'native', 'index.js')).href;
-    return execFileSync(
+  const entry = () => join(dir, 'native', 'index.js');
+
+  it('loads through a require that has no cache', () => {
+    const output = execFileSync(
       process.execPath,
-      [
-        '--import',
-        pathToFileURL(join(dir, 'hook.mjs')).href,
-        '--input-type=module',
-        '-e',
-        `import('${entry}').then((m) => console.log(JSON.stringify(m.default)))`,
-      ],
+      [join(dir, 'runner.cjs'), entry()],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
     );
-  }
+    expect(output.trim()).toBe('{"loaded":true}');
+  });
 
   (hasSyncHooks ? it : it.skip)(
     'loads when imported from ESM under a module.registerHooks() hook',
     () => {
-      expect(importUnderHook().trim()).toBe('{"loaded":true}');
+      const output = execFileSync(
+        process.execPath,
+        [
+          '--import',
+          pathToFileURL(join(dir, 'hook.mjs')).href,
+          '--input-type=module',
+          '-e',
+          `import('${pathToFileURL(entry()).href}').then((m) => console.log(JSON.stringify(m.default)))`,
+        ],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+      expect(output.trim()).toBe('{"loaded":true}');
     }
   );
 });
