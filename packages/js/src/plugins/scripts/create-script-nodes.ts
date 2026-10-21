@@ -1,7 +1,6 @@
 import {
   type CreateNodes,
   type CreateNodesResultArray,
-  type NxJsonConfiguration,
   readJsonFile,
   type TargetConfiguration,
 } from '@nx/devkit';
@@ -58,10 +57,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
     async (files, options, context) => {
       const scriptsByRoot = groupScriptsByProjectRoot(
         files,
-        isProjectPackageJson(
-          context.workspaceRoot,
-          context.nxJsonConfiguration
-        ),
+        context.workspaceRoot,
         !!definition.extraTargets
       );
       const projectRoots = [...scriptsByRoot.keys()];
@@ -131,7 +127,7 @@ interface ProjectScripts {
  */
 function groupScriptsByProjectRoot(
   files: readonly string[],
-  isProjectPackageJson: (packageJsonPath: string) => boolean,
+  workspaceRoot: string,
   includeAllRoots: boolean
 ): Map<string, ProjectScripts> {
   const handed = new Map<
@@ -150,13 +146,15 @@ function groupScriptsByProjectRoot(
     entry[name === 'project.json' ? 'projectJson' : 'packageJson'] = file;
     handed.set(dir, entry);
   }
-  // A package.json is a root only where nx makes a project of it; nothing
-  // names any other, and nx rejects a project without a name.
+  // A package.json is a project root only where core's default package-json
+  // plugin makes one: in the package manager workspaces, or beside a
+  // project.json. The opt-in `nx/plugins/package-json` is not consulted.
+  const inWorkspaces = isInPackageManagerWorkspaces(workspaceRoot);
   const markers = new Map<string, string>();
   for (const [dir, { packageJson, projectJson }] of handed) {
     if (projectJson) {
       markers.set(dir, projectJson);
-    } else if (isProjectPackageJson(packageJson)) {
+    } else if (inWorkspaces(packageJson)) {
       markers.set(dir, packageJson);
     }
   }
@@ -183,26 +181,14 @@ function groupScriptsByProjectRoot(
   return byRoot;
 }
 
-/**
- * Whether nx makes a project of a package.json: its default plugin does inside
- * the package manager workspaces (the root only with an `nx` key), and the
- * opt-in `nx/plugins/package-json` does for every nested one.
- */
-function isProjectPackageJson(
-  workspaceRoot: string,
-  nxJson: NxJsonConfiguration | undefined
+function isInPackageManagerWorkspaces(
+  workspaceRoot: string
 ): (packageJsonPath: string) => boolean {
-  const inWorkspaces = buildPackageJsonWorkspacesMatcher(
+  return buildPackageJsonWorkspacesMatcher(
     buildPackageJsonPatterns(workspaceRoot, (file) =>
       readJsonFile(join(workspaceRoot, file))
     )
   );
-  const everyNested = (nxJson?.plugins ?? []).some(
-    (p) => (typeof p === 'string' ? p : p.plugin) === 'nx/plugins/package-json'
-  );
-  return (packageJsonPath) =>
-    (everyNested && packageJsonPath !== 'package.json') ||
-    inWorkspaces(packageJsonPath);
 }
 
 interface ClaimedScript {

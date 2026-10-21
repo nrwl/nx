@@ -183,7 +183,7 @@ describe('createScriptNodes', () => {
     expect(Object.keys(after[0][1].projects['.'].targets)).toEqual(['reseed']);
   });
 
-  it('should treat a package.json as a project root only where nx does', async () => {
+  it("should treat a package.json as a project root only where core's default package-json plugin does", async () => {
     const results = await run({
       'package.json':
         '{ "name": "root", "nx": {}, "workspaces": ["tools/esm"] }',
@@ -211,31 +211,6 @@ describe('createScriptNodes', () => {
     ]);
     expect(Object.keys(results[2][1].projects['tools/esm'].targets)).toEqual([
       'run',
-    ]);
-  });
-
-  it('should treat every nested package.json as a project root with nx/plugins/package-json', async () => {
-    await tempFs.createFiles({
-      'package.json': '{ "name": "root", "nx": {} }',
-      'tools/scripts/package.json': '{ "type": "module" }',
-      'tools/scripts/release.js': '#!/usr/bin/env node\n',
-    });
-
-    const results = await createNodes(
-      [
-        'package.json',
-        'tools/scripts/package.json',
-        'tools/scripts/release.js',
-      ],
-      {},
-      {
-        ...context,
-        nxJsonConfiguration: { plugins: ['nx/plugins/package-json'] },
-      }
-    );
-
-    expect(results.map(([, r]) => Object.keys(r.projects))).toEqual([
-      ['tools/scripts'],
     ]);
   });
 
