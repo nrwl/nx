@@ -125,16 +125,17 @@ describe('nx release', () => {
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
 
     // Add an example feature so that we can generate a CHANGELOG.md for it
     createFile('an-awesome-new-thing.js', 'console.log("Hello world!");');
-    // A noreply email resolves the GitHub username offline; test@test.com needs a rate-limited ungh.cc lookup
     await runCommandAsync(
-      `git add --all && git commit -m "feat: an awesome new feature" --author="Test <test@users.noreply.github.com>"`
+      `git add --all && git commit -m "feat: an awesome new feature"`
     );
 
     // We need a valid git origin to exist for the commit references to work (and later the test for createRelease)
