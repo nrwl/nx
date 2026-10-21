@@ -132,8 +132,9 @@ describe('nx release', () => {
 
     // Add an example feature so that we can generate a CHANGELOG.md for it
     createFile('an-awesome-new-thing.js', 'console.log("Hello world!");');
+    // A noreply email resolves the GitHub username offline; test@test.com needs a rate-limited ungh.cc lookup
     await runCommandAsync(
-      `git add --all && git commit -m "feat: an awesome new feature"`
+      `git add --all && git commit -m "feat: an awesome new feature" --author="Test <test@users.noreply.github.com>"`
     );
 
     // We need a valid git origin to exist for the commit references to work (and later the test for createRelease)
