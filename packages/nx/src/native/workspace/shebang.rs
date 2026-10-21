@@ -18,18 +18,27 @@ pub struct ShebangFile {
 
 /// The `files` (workspace-relative) that start with `#!`, each with its header
 /// (see `read_shebang_header`), read in parallel and sorted by path. Files that
-/// cannot be read are left out.
+/// cannot be read are left out, as are entries that are absolute or climb out
+/// of the root with `..`.
 #[napi]
 pub fn read_shebang_headers(workspace_root: String, files: Vec<String>) -> Vec<ShebangFile> {
     let root = PathBuf::from(workspace_root);
     let mut found: Vec<ShebangFile> = files
         .into_par_iter()
+        .filter(|file| stays_inside_root(Path::new(file)))
         .filter_map(|file| {
             read_shebang_header(&root.join(&file)).map(|header| ShebangFile { file, header })
         })
         .collect();
     found.sort_by(|a, b| a.file.cmp(&b.file));
     found
+}
+
+fn stays_inside_root(file: &Path) -> bool {
+    !file.is_absolute()
+        && !file
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir))
 }
 
 /// `shebang_header` of a file on disk, reading no more than the cap. `None`
@@ -46,7 +55,8 @@ pub fn read_shebang_header(path: &Path) -> Option<String> {
 
 /// The opening text of a file that starts with `#!`, or `None` for any other
 /// file. Capped at `HEADER_BYTES`; when the cap falls inside a line that line
-/// is dropped, so a directive is never read truncated.
+/// is dropped, unless it is the only line, so a directive is never read
+/// truncated.
 pub fn shebang_header(content: &[u8]) -> Option<String> {
     let text = content.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(content);
     if !text.starts_with(b"#!") {
@@ -170,13 +180,46 @@ mod tests {
     #[test]
     fn drops_the_line_the_cap_cuts_behind_a_byte_order_mark() {
         let mut content = b"\xEF\xBB\xBF#!/usr/bin/env node\n// ".to_vec();
-        content.extend(std::iter::repeat_n(b'x', 500 - content.len() - 1));
+        content.extend(std::iter::repeat_n(b'x', 490 - content.len() - 1));
         content.push(b'\n');
         content.extend(b"// @nx-target-name: serve-all\n");
-        // What a capped read hands over: the directive straddles the cap.
+        // What a capped read hands over: the cap lands inside the target name,
+        // so keeping the line would yield a directive for `serve-a`.
         let header = shebang_header(&content[..HEADER_BYTES]).unwrap();
         assert!(header.ends_with('x'), "{header:?}");
         assert!(!header.contains("@nx-target-name"), "{header:?}");
+    }
+
+    #[test]
+    fn skips_entries_that_leave_the_workspace() {
+        let temp = TempDir::new().unwrap();
+        temp.child("tools/run.ts")
+            .write_str("#!/usr/bin/env node\n")
+            .unwrap();
+        let outside = TempDir::new().unwrap();
+        outside
+            .child("evil.ts")
+            .write_str("#!/usr/bin/env node\n")
+            .unwrap();
+        let absolute = outside
+            .path()
+            .join("evil.ts")
+            .to_string_lossy()
+            .into_owned();
+        let climbing = format!(
+            "../{}/evil.ts",
+            outside.path().file_name().unwrap().to_string_lossy()
+        );
+
+        let headers = read_shebang_headers(
+            temp.path().to_string_lossy().into_owned(),
+            vec!["tools/run.ts".into(), absolute, climbing],
+        );
+
+        assert_eq!(
+            headers.into_iter().map(|h| h.file).collect::<Vec<_>>(),
+            vec!["tools/run.ts".to_string()]
+        );
     }
 
     #[test]
