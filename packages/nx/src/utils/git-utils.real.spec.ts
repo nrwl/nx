@@ -153,6 +153,8 @@ describe('getPathHeadStatus', () => {
       const directory = join(repo, workspace);
       mkdirSync(directory, { recursive: true });
       writeFileSync(join(directory, 'migrations.json'), '{}');
+      // Keeps the workspace directory alive once `git rm` removes the plan.
+      writeFileSync(join(directory, 'package.json'), '{}');
       runGit(['add', '-A'], repo);
       runGit(['commit', '-m', 'plan'], repo);
       runGit(['rm', '-q', 'migrations.json'], directory);
