@@ -10,12 +10,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Node 22.15.0–22.22.2 and 24.0.0–24.11.0 (and 23.5–25.0) evaluate CommonJS
-// imported from ESM with their internal loader once a `module.registerHooks()`
-// load hook is installed, as Playwright 1.64 does. That loader's `require` has
-// `resolve` but no `cache`. Later versions route back through the real
-// `require` (nodejs/node#59929, #60380), so only the first test below fails on
-// the old code everywhere: it hands the loader such a `require` itself.
+// Node 22.15–22.22.2 and 24.0–24.11.0 hand CJS imported from ESM under a
+// registerHooks load hook a `require` without `cache` (fixed upstream in
+// nodejs/node#59929, #60380). Only the first test fails on old code on every Node.
 const hasSyncHooks =
   typeof (require('node:module') as any).registerHooks === 'function';
 
