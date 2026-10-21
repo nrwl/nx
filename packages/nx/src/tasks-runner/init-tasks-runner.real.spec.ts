@@ -46,7 +46,6 @@ vi.mock('./utils', async (importOriginal) => ({
   getCustomHasher: vi.fn(() => null),
   getExecutorForTask: vi.fn(() => ({ schema: { properties: {} } })),
 }));
-// A server that prints its output and runs until it is killed
 vi.mock('../executors/run-commands/run-commands.impl', () => ({
   runCommands: vi.fn(async (options: { command: string }) => {
     const outputListeners: ((output: string) => void)[] = [];
