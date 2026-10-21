@@ -85,11 +85,8 @@
       "parallelism": false
     },
     "lint": {
-      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
-      "cache": true,
-      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
-    },
-    "lint-pnpm-lock": {
+      "command": "eslint pnpm-lock.yaml",
+      "dependsOn": [],
       "cache": true,
       "inputs": [
         "{projectRoot}/pnpm-lock.yaml",
