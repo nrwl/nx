@@ -77,6 +77,9 @@ It runs scripts in watch mode by default, so the server restarts when its files 
 }
 ```
 
+To limit the plugin to one app, scope it with `include`, for example `apps/my-app/{package.json,project.json,server.ts}`.
+Keep the app's `package.json` or `project.json` in the pattern: the plugin finds projects through the markers that match.
+
 ## Build the browser bundle alongside
 
 In the project configuration, replace the `serve`, `serve-browser`, `server`, and `serve-server`
