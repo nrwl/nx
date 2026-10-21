@@ -776,6 +776,8 @@ export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
 // `excludePaths` are left out of the probe the way `tryCommitChanges` leaves
 // them out of the commit, so a tree dirty only under them reads as clean. An
 // exclude-only pathspec still covers the whole tree, matching `git add -A`.
+// The untracked mode is explicit because `status.showUntrackedFiles=no` would
+// hide new files that `git add -A` still stages.
 export function getWorkingTreeStatus(
   directory?: string,
   excludePaths: string[] = []
@@ -785,7 +787,7 @@ export function getWorkingTreeStatus(
     .join('');
   try {
     const out = execSync(
-      `git status --porcelain${pathspecs ? ` --${pathspecs}` : ''}`,
+      `git status --porcelain --untracked-files=normal${pathspecs ? ` --${pathspecs}` : ''}`,
       {
         encoding: 'utf8',
         cwd: directory,

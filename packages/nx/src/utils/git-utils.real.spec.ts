@@ -236,6 +236,13 @@ describe('getWorkingTreeStatus with excluded paths', () => {
     rmSync(join(repo, 'outside.txt'));
     expect(getWorkingTreeStatus(nested, ['.nx/migrate-runs'])).toBe('clean');
   });
+
+  it('sees a new file that status.showUntrackedFiles=no hides, as git add -A stages it', () => {
+    runGit(['config', 'status.showUntrackedFiles', 'no'], repo);
+    writeFileSync(join(repo, 'new.ts'), '');
+
+    expect(getWorkingTreeStatus(repo, ['.nx/migrate-runs'])).toBe('dirty');
+  });
 });
 
 describe('resetWorkingTree', () => {
