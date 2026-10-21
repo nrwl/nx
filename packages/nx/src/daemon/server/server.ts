@@ -66,7 +66,9 @@ import {
   GLOB,
   isHandleGlobMessage,
   isHandleMultiGlobMessage,
+  isHandleShebangFilesMessage,
   MULTI_GLOB,
+  SHEBANG_FILES,
 } from '../message-types/glob';
 import {
   HASH_GLOB,
@@ -124,7 +126,7 @@ import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-
 import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
 import { handleSelectAffectedTasks } from './handle-select-affected-tasks';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
-import { handleGlob, handleMultiGlob } from './handle-glob';
+import { handleGlob, handleMultiGlob, handleShebangFiles } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
 import { handleHashTasks, handleHashTasksUpfront } from './handle-hash-tasks';
 import {
@@ -382,6 +384,13 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       socket,
       MULTI_GLOB,
       () => handleMultiGlob(payload.globs, payload.exclude),
+      mode
+    );
+  } else if (isHandleShebangFilesMessage(payload)) {
+    await handleResult(
+      socket,
+      SHEBANG_FILES,
+      () => handleShebangFiles(payload.globs, payload.exclude),
       mode
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {

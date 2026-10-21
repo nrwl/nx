@@ -32,6 +32,7 @@ use crate::native::workspace::files_hashing::{full_files_hash, selective_files_h
 use crate::native::workspace::glob_hashing::{hash_glob_groups, needs_scan};
 use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
 use crate::native::workspace::outputs_tracking::{OutputRecords, TaskOutputs};
+use crate::native::workspace::shebang::{ShebangFile, shebang_header};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -86,6 +87,11 @@ pub struct WorkspaceContext {
 
 /// Sorted by path, which is the order every reader hands out.
 pub(super) type Files = BTreeMap<PathBuf, String>;
+
+/// The header of each file in `Files` that starts with `#!`, see
+/// `shebang_header`. Kept beside the hashes, which every file has, so the few
+/// files that have one cost the rest nothing.
+pub(super) type Headers = BTreeMap<PathBuf, String>;
 
 const NX_FILES_LOCK: &str = "nx_files.lock";
 
@@ -173,13 +179,18 @@ impl Task for FilesReady {
 
 /// Sorted first so the map is bulk-built from ordered input instead of
 /// re-sorting one path at a time.
-fn hashes_to_files(hashes: NxFileHashes) -> Files {
+fn hashes_to_files(hashes: NxFileHashes) -> (Files, Headers) {
+    let (hashes, headers) = hashes.into_parts();
     let mut files: Vec<(PathBuf, String)> = hashes
         .into_iter()
         .map(|(path, hashed)| (PathBuf::from(path), hashed.0))
         .collect();
     files.par_sort();
-    files.into_iter().collect()
+    let headers = headers
+        .into_iter()
+        .map(|(path, header)| (PathBuf::from(path), header))
+        .collect();
+    (files.into_iter().collect(), headers)
 }
 
 /// The workspace files, and the ignore files the walk applied gathering them.
@@ -187,25 +198,31 @@ fn hashes_to_files(hashes: NxFileHashes) -> Files {
 /// walk was not asked for them because nothing builds rules from them.
 struct GatheredFiles {
     files: Files,
+    headers: Headers,
     ignore_files: Option<Vec<PathBuf>>,
 }
 
-impl From<Files> for GatheredFiles {
-    fn from(files: Files) -> Self {
+impl From<(Files, Headers)> for GatheredFiles {
+    fn from((files, headers): (Files, Headers)) -> Self {
         GatheredFiles {
             files,
+            headers,
             ignore_files: None,
         }
     }
 }
 
-fn archive_to_files(archive: FilesArchive) -> Files {
+fn archive_to_files(archive: FilesArchive) -> (Files, Headers) {
     let mut files: Vec<(PathBuf, String)> = archive
         .iter()
         .map(|(path, hash, _)| (PathBuf::from(path), hash.to_owned()))
         .collect();
     files.par_sort();
-    files.into_iter().collect()
+    let headers = archive
+        .headers()
+        .map(|(path, header)| (PathBuf::from(path), header.to_owned()))
+        .collect();
+    (files.into_iter().collect(), headers)
 }
 
 /// Produces this process's view of the workspace files while letting the
@@ -479,11 +496,12 @@ fn gather_and_hash_files(
 
     // Drain the map rather than clone it: the path and hash strings move into
     // the map, so the list is never held twice.
-    let files = hashes_to_files(file_hashes);
+    let (files, headers) = hashes_to_files(file_hashes);
     trace!("hashed and sorted files in {:?}", now.elapsed());
 
     GatheredFiles {
         files,
+        headers,
         ignore_files,
     }
 }
@@ -515,6 +533,7 @@ struct State {
     ignored: Arc<IgnoredIndex>,
     /// Kept through a re-walk so its result can be diffed against it.
     files: Files,
+    headers: Headers,
     /// Changes reported during a walk, applied on top of its result. A file
     /// the walk also saw is re-hashed, which lands on the same answer.
     queued: Vec<Change>,
@@ -561,6 +580,7 @@ impl FileState {
                 policy: None,
                 ignored,
                 files: Files::new(),
+                headers: Headers::new(),
                 queued: Vec::new(),
                 delivered: Vec::new(),
                 change_seq: 0,
@@ -696,6 +716,7 @@ impl FileState {
                 outcomes.extend(diff_files(&state.files, &fresh.files));
             }
             state.files = fresh.files;
+            state.headers = fresh.headers;
             #[cfg(not(target_arch = "wasm32"))]
             if policy.is_some() {
                 state.policy = policy;
@@ -864,6 +885,14 @@ impl FileState {
     /// Runs `f` against the files under their lock, once a walk in progress
     /// has finished. `None` when the workspace root does not exist.
     fn with_files<R>(&self, f: impl FnOnce(&Files) -> R) -> Option<R> {
+        self.with_state(|state| f(&state.files))
+    }
+
+    fn with_headers<R>(&self, f: impl FnOnce(&Headers) -> R) -> Option<R> {
+        self.with_state(|state| f(&state.headers))
+    }
+
+    fn with_state<R>(&self, f: impl FnOnce(&State) -> R) -> Option<R> {
         let sync = self.0.as_ref()?;
         let (lock, cvar) = sync.deref();
         trace!("waiting for files to be available");
@@ -872,7 +901,7 @@ impl FileState {
             .wait(state, |s| s.phase == Phase::Scanning)
             .expect("Should be able to wait for files");
         trace!("files are available");
-        Some(f(&state.files))
+        Some(f(&state))
     }
 
     fn get_files(&self, directory: Option<&Path>) -> Vec<FileData> {
@@ -933,6 +962,7 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
 
     for change in changes.iter().filter(|c| c.kind == ChangeKind::Deleted) {
         let key = PathBuf::from(&change.path);
+        state.headers.remove(&key);
         if state.files.remove(&key).is_some() {
             outcomes.insert(change.path.clone(), Outcome::Deleted);
             continue;
@@ -942,12 +972,13 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
             .collect();
         for path in under {
             state.files.remove(&path);
+            state.headers.remove(&path);
             outcomes.insert(path.to_normalized_string(), Outcome::Deleted);
         }
     }
 
     let policy = state.policy.clone();
-    let hashed: Vec<(&Change, String)> = changes
+    let hashed: Vec<(&Change, String, Option<String>)> = changes
         .par_iter()
         .filter(|c| matches!(c.kind, ChangeKind::Created | ChangeKind::Updated))
         .filter(|c| policy.as_ref().is_none_or(|admits| admits(&c.path)))
@@ -957,11 +988,11 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
                 trace!("could not read file: {full_path:?}");
                 return None;
             };
-            Some((change, hash(&content)))
+            Some((change, hash(&content), shebang_header(&content)))
         })
         .collect();
 
-    for (change, new_hash) in hashed {
+    for (change, new_hash, header) in hashed {
         let key = PathBuf::from(&change.path);
         if state
             .files
@@ -970,6 +1001,10 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
         {
             continue;
         }
+        match header {
+            Some(header) => state.headers.insert(key.clone(), header),
+            None => state.headers.remove(&key),
+        };
         // Created means new to the files, whatever the reporter called it:
         // watchers and callers cannot always tell a creation from an update.
         let outcome = if state.files.insert(key, new_hash.clone()).is_none() {
@@ -1481,6 +1516,43 @@ impl WorkspaceContext {
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
+    /// The files that start with `#!`, matched like `glob`, each with the
+    /// header the walk kept for it (see `shebang_header`). Answered from the
+    /// table the walk built, so no file is opened.
+    #[napi]
+    pub fn shebang_files(
+        &self,
+        globs: Vec<String>,
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<Vec<ShebangFile>> {
+        self.apply_delivered();
+        self.files.wait_ready();
+        let matcher = build_glob_set(&globs)?;
+        let exclude = match exclude {
+            Some(exclude) if !exclude.is_empty() => Some(build_glob_set(&exclude)?),
+            _ => None,
+        };
+        Ok(self
+            .files
+            .with_headers(|headers| {
+                headers
+                    .iter()
+                    .map(|(path, header)| (path.to_normalized_string(), header))
+                    .filter(|(file, _)| {
+                        matcher.is_match(file)
+                            && exclude
+                                .as_ref()
+                                .is_none_or(|exclude| !exclude.is_match(file))
+                    })
+                    .map(|(file, header)| ShebangFile {
+                        file,
+                        header: header.clone(),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default())
+    }
+
     /// Performs multiple glob pattern matches against workspace files in parallel
     /// @returns An array of arrays, where each inner array contains the file paths
     /// that matched the corresponding glob pattern in the input. The outer array maintains the same order
@@ -1902,6 +1974,64 @@ mod tests {
     }
 
     #[test]
+    fn shebang_files_come_from_the_walk_the_archive_and_updates() {
+        let temp = TempDir::new().unwrap();
+        let run_header = "#!/usr/bin/env node\n// @nx-target-name: run\n";
+        temp.child("tools/run.ts")
+            .write_str(&format!("{run_header}console.log(1);\n"))
+            .unwrap();
+        temp.child("tools/lib.ts")
+            .write_str("export const a = 1;\n")
+            .unwrap();
+        temp.child("scripts/seed.mjs")
+            .write_str("#!/usr/bin/env tsx\n")
+            .unwrap();
+        let cache = TempDir::new().unwrap();
+        let shebangs = |ctx: &WorkspaceContext| -> Vec<(String, String)> {
+            ctx.shebang_files(
+                vec!["**/*.{ts,mjs}".into()],
+                Some(vec!["scripts/**".into()]),
+            )
+            .unwrap()
+            .into_iter()
+            .map(|s| (s.file, s.header))
+            .collect()
+        };
+
+        let ctx = context(&temp, &cache);
+        assert_eq!(
+            shebangs(&ctx),
+            vec![(
+                "tools/run.ts".to_string(),
+                format!("{run_header}console.log(1);\n")
+            )]
+        );
+
+        // A process that loads the archive instead of walking sees the same.
+        let from_archive =
+            WorkspaceContext::from_archive(as_string(&temp), as_string(&cache), None).unwrap();
+        assert_eq!(shebangs(&from_archive), shebangs(&ctx));
+
+        // Updates add, replace and drop headers along with the files.
+        temp.child("tools/lib.ts")
+            .write_str("#!/usr/bin/env node\n")
+            .unwrap();
+        temp.child("tools/run.ts")
+            .write_str("export {};\n")
+            .unwrap();
+        ctx.incremental_update(vec!["tools/lib.ts".into(), "tools/run.ts".into()], vec![]);
+        assert_eq!(
+            shebangs(&ctx),
+            vec![(
+                "tools/lib.ts".to_string(),
+                "#!/usr/bin/env node\n".to_string()
+            )]
+        );
+        ctx.incremental_update(vec![], vec!["tools/lib.ts".into()]);
+        assert!(shebangs(&ctx).is_empty());
+    }
+
+    #[test]
     fn glob_and_directory_reads_preserve_full_scan_results() {
         let temp = workspace_with(&[
             "e2e/react/x.spec.ts",
@@ -2100,7 +2230,7 @@ mod tests {
             .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
             .collect();
         entries.sort();
-        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v2.nxt"]);
+        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v3.nxt"]);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -3311,7 +3441,7 @@ mod tests {
         let batch = ctx.files.finish_walk(
             &ctx.workspace_root_path,
             &ctx.cache_dir,
-            walked.into(),
+            (walked, Headers::new()).into(),
             false,
         );
 

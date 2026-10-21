@@ -8,10 +8,11 @@ use std::time::{Duration, SystemTime};
 
 use tracing::trace;
 
-// v2 carries `gathered_at`. The filename is the format key: rkyv's layout check
-// does reject a v1 buffer, but relying on that makes the break implicit and
-// leaves "what if it validated anyway?" to be argued rather than answered.
-const NX_FILES_ARCHIVE: &str = "nx_files_v2.nxt";
+// v2 added `gathered_at`, v3 `headers`. The filename is the format key: rkyv's
+// layout check does reject an older buffer, but relying on that makes the break
+// implicit and leaves "what if it validated anyway?" to be argued rather than
+// answered.
+const NX_FILES_ARCHIVE: &str = "nx_files_v3.nxt";
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
 #[archive(check_bytes)]
@@ -26,6 +27,9 @@ pub struct NxFileHashes {
     /// workspace could still change within the same mtime tick, so its hash may
     /// already be stale and must not be reused. See `selective_files_hash`.
     gathered_at: i64,
+    /// The opening text of each file that starts with `#!`, keyed like
+    /// `files`. See `shebang_header`.
+    headers: HashMap<String, String>,
 }
 
 impl NxFileHashes {
@@ -36,6 +40,14 @@ impl NxFileHashes {
     pub fn with_gathered_at(mut self, gathered_at: i64) -> Self {
         self.gathered_at = gathered_at;
         self
+    }
+
+    pub fn insert_header(&mut self, path: String, header: String) {
+        self.headers.insert(path, header);
+    }
+
+    pub fn into_parts(self) -> (HashMap<String, NxFileHashed>, HashMap<String, String>) {
+        (self.files, self.headers)
     }
 }
 
@@ -71,6 +83,7 @@ impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
         NxFileHashes {
             files: map,
             gathered_at: 0,
+            headers: HashMap::with_hasher(Default::default()),
         }
     }
 }
@@ -134,6 +147,22 @@ impl FilesArchive {
             .files
             .iter()
             .map(|(path, hashed)| (path.as_str(), hashed.0.as_str(), hashed.1))
+    }
+
+    /// The recorded header of a workspace-relative path that starts with `#!`.
+    pub fn header(&self, path: &str) -> Option<&str> {
+        self.archived()
+            .headers
+            .get(path)
+            .map(|header| header.as_str())
+    }
+
+    /// Every recorded header as (path, header).
+    pub fn headers(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.archived()
+            .headers
+            .iter()
+            .map(|(path, header)| (path.as_str(), header.as_str()))
     }
 }
 
@@ -275,7 +304,7 @@ mod tests {
     #[test]
     fn a_write_sweeps_orphaned_staging_files_and_keeps_live_ones() {
         let cache = TempDir::new().unwrap();
-        let orphan = cache.child("nx_files_v2.nxt.1.deadbeef.tmp");
+        let orphan = cache.child("nx_files_v3.nxt.1.deadbeef.tmp");
         orphan.write_str("x").unwrap();
         std::fs::File::options()
             .write(true)
@@ -283,10 +312,10 @@ mod tests {
             .unwrap()
             .set_modified(SystemTime::now() - STAGING_ORPHAN_AGE * 2)
             .unwrap();
-        let live = cache.child("nx_files_v2.nxt.2.cafebabe.tmp");
+        let live = cache.child("nx_files_v3.nxt.2.cafebabe.tmp");
         live.write_str("x").unwrap();
         // Old neighbours that are not staging files stay, whatever their age.
-        for name in ["other.tmp", "nx_files_v2.nxt.bak"] {
+        for name in ["other.tmp", "nx_files_v3.nxt.bak"] {
             let neighbour = cache.child(name);
             neighbour.write_str("x").unwrap();
             std::fs::File::options()
@@ -302,9 +331,9 @@ mod tests {
         assert_eq!(
             names_in(cache.path()),
             vec![
-                "nx_files_v2.nxt",
-                "nx_files_v2.nxt.2.cafebabe.tmp",
-                "nx_files_v2.nxt.bak",
+                "nx_files_v3.nxt",
+                "nx_files_v3.nxt.2.cafebabe.tmp",
+                "nx_files_v3.nxt.bak",
                 "other.tmp"
             ]
         );
@@ -321,20 +350,20 @@ mod tests {
         .into_iter()
         .collect();
         write_files_archive(cache.path(), &two_files);
-        assert_eq!(names_in(cache.path()), vec!["nx_files_v2.nxt"]);
+        assert_eq!(names_in(cache.path()), vec!["nx_files_v3.nxt"]);
         assert_eq!(read_files_archive(cache.path()).unwrap().len(), 2);
     }
 
     #[test]
     fn staging_paths_differ_between_writes_of_one_process() {
-        let archive = Path::new("/cache/nx_files_v2.nxt");
+        let archive = Path::new("/cache/nx_files_v3.nxt");
         let first = staging_path(archive);
         let second = staging_path(archive);
         assert_ne!(first, second);
         for path in [&first, &second] {
             let name = path.file_name().unwrap().to_string_lossy();
             assert!(
-                name.starts_with("nx_files_v2.nxt.") && name.ends_with(".tmp"),
+                name.starts_with("nx_files_v3.nxt.") && name.ends_with(".tmp"),
                 "{name}"
             );
             assert_eq!(path.parent(), archive.parent());
@@ -345,7 +374,7 @@ mod tests {
     fn a_write_refuses_a_staging_path_something_already_occupies() {
         let cache = TempDir::new().unwrap();
         let archive = archive_path(cache.path());
-        let planted = cache.child("nx_files_v2.nxt.7.0000000000000001.tmp");
+        let planted = cache.child("nx_files_v3.nxt.7.0000000000000001.tmp");
         planted.write_str("planted").unwrap();
 
         let err = write_files_archive_at(&archive, planted.path(), &one_file()).unwrap_err();
@@ -394,5 +423,29 @@ mod tests {
         let read = read_files_archive(dir.path()).expect("current-format archive should read back");
         assert_eq!(read.gathered_at(), 9999);
         assert_eq!(read.get("a.ts").expect("entry").0, "hash-a");
+    }
+
+    #[test]
+    fn headers_round_trip_through_the_archive() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let mut hashes = one_file();
+        hashes.insert(
+            String::from("run.ts"),
+            NxFileHashed(String::from("hash-run"), 5),
+        );
+        hashes.insert_header(
+            String::from("run.ts"),
+            String::from("#!/usr/bin/env node\n"),
+        );
+
+        write_files_archive(dir.path(), &hashes);
+        let read = read_files_archive(dir.path()).expect("archive");
+
+        assert_eq!(read.header("run.ts"), Some("#!/usr/bin/env node\n"));
+        assert_eq!(read.header("a.ts"), None);
+        assert_eq!(
+            read.headers().collect::<Vec<_>>(),
+            vec![("run.ts", "#!/usr/bin/env node\n")]
+        );
     }
 }
