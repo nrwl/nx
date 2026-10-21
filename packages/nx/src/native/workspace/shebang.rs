@@ -18,8 +18,8 @@ pub struct ShebangFile {
 
 /// The `files` (workspace-relative) that start with `#!`, each with its header
 /// (see `read_shebang_header`), read in parallel and sorted by path. Files that
-/// cannot be read are left out, as are entries that are absolute or climb out
-/// of the root with `..`.
+/// cannot be read are left out, as are entries that are rooted or climb out of
+/// the root with `..`.
 #[napi]
 pub fn read_shebang_headers(workspace_root: String, files: Vec<String>) -> Vec<ShebangFile> {
     let root = PathBuf::from(workspace_root);
@@ -34,8 +34,10 @@ pub fn read_shebang_headers(workspace_root: String, files: Vec<String>) -> Vec<S
     found
 }
 
+// `has_root`, not `is_absolute`: on Windows `\evil.ts` is rooted without a
+// prefix, and `root.join` would still replace everything after the drive.
 fn stays_inside_root(file: &Path) -> bool {
-    !file.is_absolute()
+    !file.has_root()
         && !file
             .components()
             .any(|c| matches!(c, std::path::Component::ParentDir))
