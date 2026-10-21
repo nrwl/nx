@@ -1986,6 +1986,16 @@ mod tests {
         temp.child("scripts/seed.mjs")
             .write_str("#!/usr/bin/env tsx\n")
             .unwrap();
+        // Stamped in the past: the archive carry-over below needs the mtime
+        // older than the archive's `gathered_at`, which has whole-second resolution.
+        let run_path = temp.path().join("tools/run.ts");
+        let stamped = SystemTime::now() - Duration::from_secs(60);
+        std::fs::File::options()
+            .write(true)
+            .open(&run_path)
+            .unwrap()
+            .set_modified(stamped)
+            .unwrap();
         let cache = TempDir::new().unwrap();
         let shebangs = |ctx: &WorkspaceContext| -> Vec<(String, String)> {
             ctx.shebang_files(
@@ -2011,6 +2021,19 @@ mod tests {
         let from_archive =
             WorkspaceContext::from_archive(as_string(&temp), as_string(&cache), None).unwrap();
         assert_eq!(shebangs(&from_archive), shebangs(&ctx));
+
+        // A warm walk carries the header of a file whose mtime did not move
+        // over from the archive, along with its hash.
+        temp.child("tools/run.ts")
+            .write_str("#!/usr/bin/env node\n// @nx-target-name: fly\nconsole.log(2);\n")
+            .unwrap();
+        std::fs::File::options()
+            .write(true)
+            .open(&run_path)
+            .unwrap()
+            .set_modified(stamped)
+            .unwrap();
+        assert_eq!(shebangs(&context(&temp, &cache)), shebangs(&ctx));
 
         // Updates add, replace and drop headers along with the files.
         temp.child("tools/lib.ts")
