@@ -1,6 +1,6 @@
 import type { CreateNodesContext } from '@nx/devkit';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { minimatch } from 'minimatch';
 import { createNodes } from './node-plugin';
 
 describe('@nx/js/node', () => {
@@ -31,9 +31,9 @@ describe('@nx/js/node', () => {
   ) {
     await tempFs.createFiles(files);
     // What the host would hand over for the plugin's glob.
-    const matched = Object.keys(files).filter((f) =>
-      minimatch(f, createNodes[0], { dot: true })
-    );
+    const matched = await globWithWorkspaceContext(tempFs.tempDir, [
+      createNodes[0],
+    ]);
     const results = await createNodesFunction(matched, options, context);
     return results.find(([, r]) => r.projects?.[root])?.[1].projects[root]
       .targets;

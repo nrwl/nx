@@ -1,10 +1,10 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import {
   emitPluginWorkerLog,
+  globWithWorkspaceContext,
   resetWorkspaceContext,
 } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { minimatch } from 'minimatch';
 import { createScriptNodes } from './create-script-nodes';
 
 vi.mock('@nx/devkit/internal', async (importOriginal) => ({
@@ -42,9 +42,7 @@ describe('createScriptNodes', () => {
   async function run(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
     // What the host would hand over for the plugin's glob.
-    const matched = Object.keys(files).filter((f) =>
-      minimatch(f, glob, { dot: true })
-    );
+    const matched = await globWithWorkspaceContext(tempFs.tempDir, [glob]);
     return createNodes(matched, options, context);
   }
 
@@ -81,32 +79,6 @@ describe('createScriptNodes', () => {
     expect(results).toMatchInlineSnapshot(`
       [
         [
-          "tools/release/scripts/publish.ts",
-          {
-            "projects": {
-              "tools/release": {
-                "root": "tools/release",
-                "targets": {
-                  "publish": {
-                    "cache": false,
-                    "command": "node --watch --enable-source-maps scripts/publish.ts",
-                    "continuous": true,
-                    "metadata": {
-                      "description": "Runs scripts/publish.ts",
-                      "technologies": [
-                        "node",
-                      ],
-                    },
-                    "options": {
-                      "cwd": "tools/release",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-        [
           "scripts/seed.mjs",
           {
             "projects": {
@@ -125,6 +97,32 @@ describe('createScriptNodes', () => {
                     },
                     "options": {
                       "cwd": ".",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+        [
+          "tools/release/run.sh.js",
+          {
+            "projects": {
+              "tools/release": {
+                "root": "tools/release",
+                "targets": {
+                  "publish": {
+                    "cache": false,
+                    "command": "node --watch --enable-source-maps scripts/publish.ts",
+                    "continuous": true,
+                    "metadata": {
+                      "description": "Runs scripts/publish.ts",
+                      "technologies": [
+                        "node",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "tools/release",
                     },
                   },
                 },
@@ -199,18 +197,18 @@ describe('createScriptNodes', () => {
     });
 
     expect(results.map(([, r]) => Object.keys(r.projects))).toEqual([
-      ['.'],
-      ['tools/named'],
       ['tools/esm'],
+      ['tools/named'],
+      ['.'],
     ]);
-    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual([
-      'release',
+    expect(Object.keys(results[0][1].projects['tools/esm'].targets)).toEqual([
+      'run',
     ]);
     expect(Object.keys(results[1][1].projects['tools/named'].targets)).toEqual([
       'gen',
     ]);
-    expect(Object.keys(results[2][1].projects['tools/esm'].targets)).toEqual([
-      'run',
+    expect(Object.keys(results[2][1].projects['.'].targets)).toEqual([
+      'release',
     ]);
   });
 
