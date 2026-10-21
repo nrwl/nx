@@ -1,5 +1,6 @@
 import type { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { minimatch } from 'minimatch';
 import { createNodes } from './node-plugin';
 
 describe('@nx/js/node', () => {
@@ -29,8 +30,10 @@ describe('@nx/js/node', () => {
     options = {}
   ) {
     await tempFs.createFiles(files);
-    // Only what the plugin glob would hand over; markers are found on disk.
-    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    // What the host would hand over for the plugin's glob.
+    const matched = Object.keys(files).filter((f) =>
+      minimatch(f, createNodes[0], { dot: true })
+    );
     const results = await createNodesFunction(matched, options, context);
     return results.find(([, r]) => r.projects?.[root])?.[1].projects[root]
       .targets;
@@ -120,14 +123,13 @@ describe('@nx/js/node', () => {
     `);
   });
 
-  it('should infer a string bin named after the unscoped package', async () => {
+  it('should infer a string bin named after the unscoped package, with no scripts beside it', async () => {
     const targets = await targetsFor(
       {
         'packages/tool/package.json': JSON.stringify({
           name: '@proj/tool',
           bin: 'dist/index.js',
         }),
-        'packages/tool/src/index.ts': 'export {};\n',
       },
       'packages/tool',
       { binDependsOn: ['compile'] }

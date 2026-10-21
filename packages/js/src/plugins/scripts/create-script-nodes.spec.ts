@@ -1,6 +1,10 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { emitPluginWorkerLog } from '@nx/devkit/internal';
+import {
+  emitPluginWorkerLog,
+  resetWorkspaceContext,
+} from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { minimatch } from 'minimatch';
 import { createScriptNodes } from './create-script-nodes';
 
 vi.mock('@nx/devkit/internal', async (importOriginal) => ({
@@ -37,13 +41,30 @@ describe('createScriptNodes', () => {
 
   async function run(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-    // Only what the plugin glob would hand over; markers are found on disk.
-    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    // What the host would hand over for the plugin's glob.
+    const matched = Object.keys(files).filter((f) =>
+      minimatch(f, glob, { dot: true })
+    );
     return createNodes(matched, options, context);
   }
 
-  it('should only match script files', () => {
-    expect(glob).toBe('**/*.{js,cjs,mjs,ts,cts,mts}');
+  it('should match scripts and project markers', () => {
+    expect(glob).toBe(
+      '{**/!(*.spec|*.test|*.stories|*.d).{js,cjs,mjs,ts,cts,mts},**/package.json,**/project.json}'
+    );
+  });
+
+  it('should not treat specs, tests, stories or typings as scripts', async () => {
+    const results = await run({
+      'package.json': '{}',
+      'scripts/seed.ts': '#!/usr/bin/env node\n',
+      'scripts/seed.spec.ts': '#!/usr/bin/env node\n',
+      'scripts/seed.test.js': '#!/usr/bin/env node\n',
+      'scripts/seed.stories.ts': '#!/usr/bin/env node\n',
+      'scripts/seed.d.ts': '#!/usr/bin/env node\n',
+    });
+
+    expect(Object.keys(results[0][1].projects['.'].targets)).toEqual(['seed']);
   });
 
   it('should infer a target per claimed script in its nearest project', async () => {
@@ -125,14 +146,41 @@ describe('createScriptNodes', () => {
 
     // Same files on disk; a narrower include hands the plugin fewer scripts.
     const all = await createNodes(
-      ['scripts/a.js', 'scripts/b.js'],
+      ['package.json', 'scripts/a.js', 'scripts/b.js'],
       {},
       context
     );
-    const narrowed = await createNodes(['scripts/a.js'], {}, context);
+    const narrowed = await createNodes(
+      ['package.json', 'scripts/a.js'],
+      {},
+      context
+    );
 
     expect(Object.keys(all[0][1].projects['.'].targets)).toEqual(['a', 'b']);
     expect(Object.keys(narrowed[0][1].projects['.'].targets)).toEqual(['a']);
+  });
+
+  it('should not reuse cached targets when a script header changes', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    const before = await run({
+      'package.json': '{}',
+      'scripts/seed.js': '#!/usr/bin/env node\n// @nx-target-name: seed\n',
+    });
+
+    tempFs.createFileSync(
+      'scripts/seed.js',
+      '#!/usr/bin/env node\n// @nx-target-name: reseed\n'
+    );
+    // A graph build after an edit starts from a fresh walk.
+    resetWorkspaceContext();
+    const after = await createNodes(
+      ['package.json', 'scripts/seed.js'],
+      {},
+      context
+    );
+
+    expect(Object.keys(before[0][1].projects['.'].targets)).toEqual(['seed']);
+    expect(Object.keys(after[0][1].projects['.'].targets)).toEqual(['reseed']);
   });
 
   it('should disambiguate scripts that share a name', async () => {

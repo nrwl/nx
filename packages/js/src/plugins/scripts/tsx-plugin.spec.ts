@@ -1,5 +1,6 @@
 import type { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { minimatch } from 'minimatch';
 import { createNodes } from './tsx-plugin';
 
 describe('@nx/js/tsx', () => {
@@ -25,8 +26,10 @@ describe('@nx/js/tsx', () => {
 
   async function targetsFor(files: Record<string, string>, options = {}) {
     await tempFs.createFiles(files);
-    // Only what the plugin glob would hand over; markers are found on disk.
-    const matched = Object.keys(files).filter((f) => /\.[cm]?[jt]s$/.test(f));
+    // What the host would hand over for the plugin's glob.
+    const matched = Object.keys(files).filter((f) =>
+      minimatch(f, createNodes[0], { dot: true })
+    );
     const [[, result]] = await createNodesFunction(matched, options, context);
     return result.projects['.'].targets;
   }
