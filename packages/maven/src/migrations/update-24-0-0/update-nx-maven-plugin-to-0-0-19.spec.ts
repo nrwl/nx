@@ -1,6 +1,6 @@
 import { type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import migration from './update-nx-maven-plugin-to-0-0-18';
+import migration from './update-nx-maven-plugin-to-0-0-19';
 
 const pomWithPlugin = (groupId: string, version: string) => `<project>
   <build>
@@ -15,7 +15,7 @@ const pomWithPlugin = (groupId: string, version: string) => `<project>
 </project>
 `;
 
-describe('update-nx-maven-plugin-to-0-0-18 migration', () => {
+describe('update-nx-maven-plugin-to-0-0-19 migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
