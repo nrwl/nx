@@ -320,7 +320,7 @@ const learnGroups: SidebarItems = [
         link: 'features/ci-features/remote-cache',
       },
       {
-        label: 'Distributed task execution',
+        label: 'Distribute task execution (workers)',
         link: 'features/ci-features/distribute-task-execution',
       },
       {
