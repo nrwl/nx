@@ -464,7 +464,7 @@ This command tells Nx Cloud how many agents to use (and what launch templates to
 `npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"` will distribute CI using 8 agents that are initialized
 using the `linux-medium-js` launch template.
 
-You can also [define the configuration in a file](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size) and reference it as follows:
+You can also [define the configuration in a file](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size) and reference it as follows:
 `npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"`.
 
 ```yaml
