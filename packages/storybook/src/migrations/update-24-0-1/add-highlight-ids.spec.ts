@@ -277,6 +277,19 @@ export const play = async (send, args) => {
   send(HIGHLIGHT, { selectors: ['a'] });
   channel.emit(HIGHLIGHT, ...args);
 };
+export { HIGHLIGHT as ADD_HIGHLIGHT };
+`
+    );
+    tree.write(
+      'apps/app/src/namespace.stories.ts',
+      `import * as highlight from 'storybook/highlight';
+
+const { HIGHLIGHT } = highlight;
+export { highlight };
+export const play = (channel, key) => channel.emit(highlight[key], { selectors: ['a'] });
+export const render = (highlight) => highlight;
+export const run = (channel) => channel.emit(highlight['HIGHLIGHT'], { id: 'run', selectors: ['b'] });
+export type Options = highlight.HighlightOptions;
 `
     );
     tree.write(
@@ -304,11 +317,16 @@ export const play = async (send, args) => {
     expect(result.agentContext).toMatchInlineSnapshot(`
       [
         "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
+        "apps/app/src/menu.stories.ts:19 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
         "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
         "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
         "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
         "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
+        "apps/app/src/namespace.stories.ts:3 uses the "storybook/highlight" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
+        "apps/app/src/namespace.stories.ts:4 uses the "storybook/highlight" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
+        "apps/app/src/namespace.stories.ts:5 uses the "storybook/highlight" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
+        "apps/app/src/namespace.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
         "apps/app/src/broken.stories.ts uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",

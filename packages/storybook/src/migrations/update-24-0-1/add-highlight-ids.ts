@@ -139,6 +139,16 @@ function migrateFile(
         `${filePath}:${lineOf(node)} uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".`
       );
     } else if (
+      ts.isIdentifier(node) &&
+      imports.namespaces.has(node.text) &&
+      !isNamePosition(node) &&
+      !isStaticMemberObject(node) &&
+      isImportBinding(node)
+    ) {
+      notes.push(
+        `${filePath}:${lineOf(node)} uses the "${HIGHLIGHT_MODULE}" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".`
+      );
+    } else if (
       ts.isStringLiteralLike(node) &&
       node.text === HIGHLIGHT_MODULE &&
       !ts.isImportDeclaration(node.parent) &&
@@ -335,9 +345,15 @@ function createImportBindingCheck(
     importSymbols ??= new Set(
       bindings.map((binding) => checker.getSymbolAtLocation(binding))
     );
-    const symbol = ts.isShorthandPropertyAssignment(identifier.parent)
-      ? checker.getShorthandAssignmentValueSymbol(identifier.parent)
-      : checker.getSymbolAtLocation(identifier);
+    const parent = identifier.parent;
+    let symbol: TsSymbol | undefined;
+    if (ts.isShorthandPropertyAssignment(parent)) {
+      symbol = checker.getShorthandAssignmentValueSymbol(parent);
+    } else if (ts.isExportSpecifier(parent)) {
+      symbol = checker.getExportSpecifierLocalTargetSymbol(parent);
+    } else {
+      symbol = checker.getSymbolAtLocation(identifier);
+    }
     return symbol !== undefined && importSymbols.has(symbol);
   };
 }
@@ -375,8 +391,30 @@ function isNamePosition(node: Node): boolean {
   const parent = node.parent as Node & { name?: Node; propertyName?: Node };
   return (
     !ts.isShorthandPropertyAssignment(parent) &&
+    !isLocalExportReference(node) &&
     (parent.name === node || parent.propertyName === node)
   );
+}
+
+// `export { HIGHLIGHT }` and `export { HIGHLIGHT as ADD }` read the local binding.
+function isLocalExportReference(node: Node): boolean {
+  const parent = node.parent;
+  return (
+    ts.isExportSpecifier(parent) &&
+    !parent.parent.parent.moduleSpecifier &&
+    (parent.propertyName ?? parent.name) === node
+  );
+}
+
+function isStaticMemberObject(node: Node): boolean {
+  const parent = node.parent;
+  if (
+    ts.isPropertyAccessExpression(parent) ||
+    ts.isElementAccessExpression(parent)
+  ) {
+    return parent.expression === node && getStaticName(parent) !== undefined;
+  }
+  return ts.isQualifiedName(parent) && parent.left === node;
 }
 
 function isEventArgument(node: Node): boolean {

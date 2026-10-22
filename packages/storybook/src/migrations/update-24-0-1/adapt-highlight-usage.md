@@ -90,6 +90,7 @@ The other items list `HIGHLIGHT` usage the pre-pass could not check or change:
 - A payload whose `id` may not be a non-empty string: a variable, `undefined`, `''`, a number, or an `id` that a spread or a computed key can set.
 - A payload without an `id` in a scope where `Math` is a local binding, so the pre-pass couldn't use `Math.random()` there.
 - The event used outside an emit call, or passed to a function the pre-pass didn't recognize as an emit.
+- A namespace import of `storybook/highlight` used other than to read one export by name, such as destructured, read with a computed key or exported.
 - A payload passed through a spread argument.
 - `storybook/highlight` loaded with `require`, a dynamic import or a re-export, or a file the pre-pass couldn't parse.
 

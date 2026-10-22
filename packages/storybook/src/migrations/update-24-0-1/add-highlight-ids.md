@@ -22,6 +22,7 @@ The migration lists the Highlight usage it can't change, and in agentic runs an 
 - A payload that isn't an object literal, such as a variable.
 - A payload without an `id` in a scope where `Math` is a local binding, such as a parameter or an import named `Math`. The generated id calls `Math.random()`.
 - `HIGHLIGHT` used outside an emit call, or passed to a function the migration doesn't recognize as an emit.
+- A namespace import of `storybook/highlight` used other than to read one export by name, such as destructured, read with a computed key or exported.
 - A payload passed through a spread argument.
 - `storybook/highlight` loaded with `require`, a dynamic import or a re-export.
 - Files the migration can't parse, and MDX, Svelte and Vue files that use `storybook/highlight`.
