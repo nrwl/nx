@@ -47,15 +47,15 @@
       "implementation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when",
       "documentation": "./dist/src/migrations/update-24-0-0/add-start-storybook-ready-when.md"
     },
-    "update-23-3-1-add-highlight-ids": {
-      "version": "23.3.1-beta.0",
+    "update-24-0-1-add-highlight-ids": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "storybook": ">=9.1.21 <10.0.0 || >=10.6.2"
       },
       "description": "Adds an `id` to Storybook `HIGHLIGHT` payloads, which Storybook 9.1.21 and 10.6.2 ignore without one. An AI prompt then replaces `clickEvent` in Highlight menu items with `clickable` and a `HIGHLIGHT_MENU_CLICK` listener, which can live in any file, and finishes the Highlight usage the migration can't rewrite.",
-      "implementation": "./dist/src/migrations/update-23-3-1/add-highlight-ids",
-      "prompt": "./dist/src/migrations/update-23-3-1/adapt-highlight-usage.md",
-      "documentation": "./dist/src/migrations/update-23-3-1/add-highlight-ids.md"
+      "implementation": "./dist/src/migrations/update-24-0-1/add-highlight-ids",
+      "prompt": "./dist/src/migrations/update-24-0-1/adapt-highlight-usage.md",
+      "documentation": "./dist/src/migrations/update-24-0-1/add-highlight-ids.md"
     }
   },
   "packageJsonUpdates": {
@@ -472,8 +472,8 @@
         }
       }
     },
-    "23.3.1-storybook-8": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-8": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "storybook": ">=8.0.0 <8.6.19"
       },
@@ -588,8 +588,8 @@
         }
       }
     },
-    "23.3.1-storybook-9": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-9": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "storybook": ">=9.0.0 <9.1.21"
       },
@@ -700,8 +700,8 @@
         }
       }
     },
-    "23.3.1-storybook-10": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-10": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "storybook": ">=10.0.0 <10.6.2"
       },
@@ -816,8 +816,8 @@
         }
       }
     },
-    "23.3.1-storybook-core-8": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-core-8": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/core": ">=8.0.0 <8.6.19"
       },
@@ -828,8 +828,8 @@
         }
       }
     },
-    "23.3.1-storybook-core-server-8": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-core-server-8": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/core-server": ">=8.0.0 <8.6.19"
       },
@@ -840,8 +840,8 @@
         }
       }
     },
-    "23.3.1-storybook-experimental-addon-test-8": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-experimental-addon-test-8": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/experimental-addon-test": ">=8.0.0 <8.6.19"
       },
@@ -852,8 +852,8 @@
         }
       }
     },
-    "23.3.1-storybook-addon-vitest-9": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-addon-vitest-9": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/addon-vitest": ">=9.0.0 <9.1.21"
       },
@@ -864,8 +864,8 @@
         }
       }
     },
-    "23.3.1-storybook-addon-vitest-10": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-addon-vitest-10": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/addon-vitest": ">=10.0.0 <10.6.2"
       },
@@ -876,8 +876,8 @@
         }
       }
     },
-    "23.3.1-storybook-addon-mcp-10": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-storybook-addon-mcp-10": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@storybook/addon-mcp": ">=10.6.0 <10.6.2"
       },
@@ -888,8 +888,8 @@
         }
       }
     },
-    "23.3.1-chromatic-storybook-3": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-chromatic-storybook-3": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@chromatic-com/storybook": ">=3.0.0 <3.2.8"
       },
@@ -900,8 +900,8 @@
         }
       }
     },
-    "23.3.1-chromatic-storybook-4": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-chromatic-storybook-4": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@chromatic-com/storybook": ">=4.0.0 <4.1.4"
       },
@@ -912,8 +912,8 @@
         }
       }
     },
-    "23.3.1-chromatic-storybook-5": {
-      "version": "23.3.1-beta.0",
+    "24.0.1-chromatic-storybook-5": {
+      "version": "24.0.1-beta.0",
       "requires": {
         "@chromatic-com/storybook": ">=5.0.0 <5.5.1"
       },
