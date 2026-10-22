@@ -227,12 +227,14 @@ const run = { title: 'Run', clickEvent: () => 'ran' };
 const item = { id: 'details', title: 'Show details' };
 item.clickEvent = 'my-addon/show-details';
 
-export function highlight(channel, base, options, key) {
+export function highlight(channel, base, options, key, items, group) {
   channel.emit(HIGHLIGHT, { id: 'open', selectors: ['h1'], menu: [[{ id: 'open', title: 'Open', clickEvent: 'my-addon/open' }]] });
   channel.emit(HIGHLIGHT, { id: 'details', selectors: ['h2'], menu: [[item, { id: 'close', clickEvent: 'my-addon/close' }]] });
   channel.emit(HIGHLIGHT, { id: 'more', selectors: ['h3'], menu: [[{ ...base, title: 'More' }]] });
   channel.emit(HIGHLIGHT, { ...options, id: 'custom' });
   channel.emit(HIGHLIGHT, { [key]: undefined, id: 'late', selectors: ['h4'] });
+  channel.emit(HIGHLIGHT, { id: 'items', selectors: ['h5'], menu: items });
+  channel.emit(HIGHLIGHT, { id: 'group', selectors: ['h6'], menu: [group] });
 }
 `;
     tree.write('libs/ui/src/highlight.js', content);
@@ -246,6 +248,8 @@ export function highlight(channel, base, options, key) {
         "libs/ui/src/highlight.js:12 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "libs/ui/src/highlight.js:13 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js:15 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js:16 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "libs/ui/src/highlight.js has Highlight menu items that use "clickEvent" (lines 10, 11), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "libs/ui/src/highlight.js has objects with "title" and "clickEvent" (line 3) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
       ]
