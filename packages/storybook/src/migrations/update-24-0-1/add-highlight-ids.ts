@@ -23,9 +23,8 @@ const HIGHLIGHT_MODULE = 'storybook/highlight';
 // The value of the `HIGHLIGHT` constant.
 const HIGHLIGHT_EVENT = 'storybook/highlight/add';
 const HIGHLIGHT_DOCS =
-  'https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id';
+  'https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id';
 const SOURCE_FILE_PATTERN = /\.[cm]?[jt]sx?$/;
-const TS_FILE_PATTERN = /\.[cm]?tsx?$/;
 // Story and docs formats whose scripts can use Highlight but aren't parsed here.
 const UNPARSED_FILE_PATTERN = /\.(mdx|svelte|vue)$/;
 const LISTENER_METHODS = new Set([
@@ -38,7 +37,6 @@ const LISTENER_METHODS = new Set([
 ]);
 const CHANGED_TYPES = new Set(['HighlightOptions', 'ClickEventDetails']);
 const LEADING_NEWLINE = /[ \t]*(\r?\n[ \t]*)/y;
-const HASHBANG = /^#![^\n]*\n/;
 
 type HighlightImports = {
   events: Set<string>;
@@ -118,11 +116,12 @@ function migrateFile(
   }
 
   const imports = readHighlightImports(sourceFile);
+  let checker: TypeChecker | undefined;
+  const getChecker = () => (checker ??= createChecker(sourceFile));
   const isImportBinding = createImportBindingCheck(
-    sourceFile,
+    getChecker,
     imports.bindings
   );
-  const identifiers = new Set<string>();
   const emitters = new Set<string>();
   const eventCalls: CallExpression[] = [];
   const clickEventLines: number[] = [];
@@ -132,10 +131,6 @@ function migrateFile(
     1;
 
   const visit = (node: Node): void => {
-    if (ts.isIdentifier(node)) {
-      identifiers.add(node.text);
-    }
-
     if (
       ts.isCallExpression(node) &&
       node.arguments.length > 0 &&
@@ -224,7 +219,7 @@ function migrateFile(
   }
   if (imports.types.has('HighlightOptions')) {
     notes.push(
-      `${filePath} uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id", or type it as Omit<HighlightOptions, 'id'> when this migration added the "id" where the object is emitted.`
+      `${filePath} uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".`
     );
   }
   if (imports.types.has('ClickEventDetails')) {
@@ -233,83 +228,40 @@ function migrateFile(
     );
   }
 
-  const counter = uniqueName('highlightCount', identifiers);
-  const helper = uniqueName('withHighlightId', identifiers);
-  const id = `\`${escapeTemplateText(filePath)}:\${++${counter}}\``;
+  // A random suffix keeps every emit's highlight, as before ids were required.
+  // A fixed id would make a repeated emit replace the earlier highlight.
+  const id = `\`${escapeTemplateText(filePath)}-\${Math.random().toString(36).slice(2)}\``;
   const changes: StringChange[] = [];
-  let usesHelper = false;
   for (const payload of payloads) {
-    // An earlier run already wrapped it.
-    if (
-      ts.isCallExpression(payload) &&
-      payload.arguments.length === 2 &&
-      isGeneratedId(payload.arguments[1], filePath)
-    ) {
+    const literal = skipOuterExpressions(payload);
+    if (!ts.isObjectLiteralExpression(literal)) {
+      notes.push(
+        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`
+      );
       continue;
     }
-    const literal = skipOuterExpressions(payload);
-    if (ts.isObjectLiteralExpression(literal)) {
-      // Storybook still gives a legacy `elements` payload an id itself.
-      if (hasStaticKey(literal, 'elements')) {
-        continue;
-      }
-      const idSource = findIdSource(literal);
-      if (!idSource) {
-        changes.push(insertIdProperty(content, literal, id, sourceFile));
-        continue;
-      }
-      if (
-        ts.isPropertyAssignment(idSource) &&
-        getStaticName(idSource.name) === 'id'
-      ) {
-        const value = readIdValue(idSource.initializer);
-        if (value === 'present') {
-          continue;
-        }
-        if (value === 'unknown') {
-          changes.push(
-            ...appendIdFallback(idSource.initializer, id, sourceFile)
-          );
-          continue;
-        }
-      }
-      if (ts.isShorthandPropertyAssignment(idSource)) {
-        changes.push({
-          type: ChangeType.Insert,
-          index: idSource.getEnd(),
-          text: `: ${idSource.name.text} || ${id}`,
-        });
-        continue;
-      }
+    // Storybook still gives a legacy `elements` payload an id itself.
+    if (hasStaticKey(literal, 'elements')) {
+      continue;
     }
-    // The id comes from elsewhere at runtime, or is always empty. An empty id
-    // can have side effects or read a local `undefined`, so it isn't replaced.
-    changes.push(
-      {
-        type: ChangeType.Insert,
-        index: payload.getStart(sourceFile),
-        text: `${helper}(`,
-      },
-      { type: ChangeType.Insert, index: payload.getEnd(), text: `, ${id})` }
-    );
-    usesHelper = true;
+    const idSource = findIdSource(literal);
+    if (!idSource) {
+      if (hasLocalMath(getChecker(), literal)) {
+        notes.push(
+          `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".`
+        );
+      } else {
+        changes.push(insertIdProperty(content, literal, id, sourceFile));
+      }
+    } else if (!hasNonEmptyStringId(idSource)) {
+      notes.push(
+        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`
+      );
+    }
   }
   if (changes.length === 0) {
     return { content, notes };
   }
-  const declarations = [`let ${counter} = 0;`];
-  if (usesHelper) {
-    // Typed so a payload keeps its fields for a typed emitter. The copy reads
-    // an id getter once.
-    declarations.push(
-      TS_FILE_PATTERN.test(filePath)
-        ? `function ${helper}<T extends object | undefined>(payload: T, id: string) {\n  const copy: { id?: unknown } = { ...payload };\n  return { ...copy, id: copy.id || id } as T & { id: string };\n}`
-        : `function ${helper}(payload, id) {\n  const copy = { ...payload };\n  return { ...copy, id: copy.id || id };\n}`
-    );
-  }
-  changes.push(
-    insertDeclarations(sourceFile, content, declarations.join('\n\n'))
-  );
 
   return { content: applyChangesToString(content, changes), notes };
 }
@@ -383,41 +335,49 @@ function isHighlightEvent(
 // A local variable can reuse an imported name, so names are compared by the
 // symbol the checker binds them to.
 function createImportBindingCheck(
-  sourceFile: SourceFile,
+  getChecker: () => TypeChecker,
   bindings: Identifier[]
 ): (identifier: Identifier) => boolean {
-  let checker: TypeChecker | undefined;
-  let importSymbols: Set<TsSymbol | undefined>;
+  let importSymbols: Set<TsSymbol | undefined> | undefined;
   return (identifier) => {
-    if (!checker) {
-      const fileName = sourceFile.fileName;
-      checker = ts
-        .createProgram(
-          [fileName],
-          { noLib: true, noResolve: true, allowJs: true, types: [] },
-          {
-            getSourceFile: (name) =>
-              name === fileName ? sourceFile : undefined,
-            getDefaultLibFileName: () => 'lib.d.ts',
-            writeFile: () => {},
-            getCurrentDirectory: () => '',
-            getCanonicalFileName: (name) => name,
-            useCaseSensitiveFileNames: () => true,
-            getNewLine: () => '\n',
-            fileExists: (name) => name === fileName,
-            readFile: () => undefined,
-          }
-        )
-        .getTypeChecker();
-      importSymbols = new Set(
-        bindings.map((binding) => checker.getSymbolAtLocation(binding))
-      );
-    }
+    const checker = getChecker();
+    importSymbols ??= new Set(
+      bindings.map((binding) => checker.getSymbolAtLocation(binding))
+    );
     const symbol = ts.isShorthandPropertyAssignment(identifier.parent)
       ? checker.getShorthandAssignmentValueSymbol(identifier.parent)
       : checker.getSymbolAtLocation(identifier);
     return symbol !== undefined && importSymbols.has(symbol);
   };
+}
+
+function createChecker(sourceFile: SourceFile): TypeChecker {
+  const fileName = sourceFile.fileName;
+  return ts
+    .createProgram(
+      [fileName],
+      { noLib: true, noResolve: true, allowJs: true, types: [] },
+      {
+        getSourceFile: (name) => (name === fileName ? sourceFile : undefined),
+        getDefaultLibFileName: () => 'lib.d.ts',
+        writeFile: () => {},
+        getCurrentDirectory: () => '',
+        getCanonicalFileName: (name) => name,
+        useCaseSensitiveFileNames: () => true,
+        getNewLine: () => '\n',
+        fileExists: (name) => name === fileName,
+        readFile: () => undefined,
+      }
+    )
+    .getTypeChecker();
+}
+
+// Without lib files the global `Math` has no symbol, so any match is a local
+// binding. Type-only imports count: TypeScript rejects them in value position.
+function hasLocalMath(checker: TypeChecker, node: Node): boolean {
+  return checker
+    .getSymbolsInScope(node, ts.SymbolFlags.Value | ts.SymbolFlags.Alias)
+    .some((symbol) => symbol.name === 'Math');
 }
 
 function isNamePosition(node: Identifier): boolean {
@@ -473,24 +433,6 @@ function skipOuterExpressions(expression: Expression): Expression {
   return current;
 }
 
-// Matches `${filePath}:${++counter}`, the id an earlier run generated.
-function isGeneratedId(expression: Expression, filePath: string): boolean {
-  if (
-    !ts.isTemplateExpression(expression) ||
-    expression.head.text !== `${filePath}:` ||
-    expression.templateSpans.length !== 1
-  ) {
-    return false;
-  }
-  const [span] = expression.templateSpans;
-  return (
-    span.literal.text === '' &&
-    ts.isPrefixUnaryExpression(span.expression) &&
-    span.expression.operator === ts.SyntaxKind.PlusPlusToken &&
-    ts.isIdentifier(span.expression.operand)
-  );
-}
-
 // Returns the last property that can set the payload's id at runtime: a
 // spread, an `id` property or a computed key that isn't a string literal.
 function findIdSource(
@@ -513,57 +455,22 @@ function findIdSource(
   return source;
 }
 
-function appendIdFallback(
-  value: Expression,
-  id: string,
-  sourceFile: SourceFile
-): StringChange[] {
-  return ts.isLeftHandSideExpression(value)
-    ? [{ type: ChangeType.Insert, index: value.getEnd(), text: ` || ${id}` }]
-    : [
-        {
-          type: ChangeType.Insert,
-          index: value.getStart(sourceFile),
-          text: '(',
-        },
-        { type: ChangeType.Insert, index: value.getEnd(), text: `) || ${id}` },
-      ];
-}
-
-// Follows TypeScript's syntactic truthiness check, which rejects `value || id`
-// when `value` is always truthy or always falsy.
-function readIdValue(
-  expression: Expression
-): 'present' | 'missing' | 'unknown' {
-  const value = skipOuterExpressions(expression);
-  if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) {
-    return value.text ? 'present' : 'missing';
-  }
-  if (ts.isTemplateExpression(value)) {
-    return value.head.text ||
-      value.templateSpans.some((span) => span.literal.text)
-      ? 'present'
-      : 'unknown';
-  }
-  if (ts.isConditionalExpression(value)) {
-    const whenTrue = readIdValue(value.whenTrue);
-    return whenTrue === readIdValue(value.whenFalse) ? whenTrue : 'unknown';
-  }
+function hasNonEmptyStringId(property: ObjectLiteralElementLike): boolean {
   if (
-    ts.isBinaryExpression(value) &&
-    value.operatorToken.kind === ts.SyntaxKind.BarBarToken
+    !ts.isPropertyAssignment(property) ||
+    getStaticName(property.name) !== 'id'
   ) {
-    return readIdValue(value.right) === 'present' ? 'present' : 'unknown';
+    return false;
   }
-  if (
-    value.kind === ts.SyntaxKind.NullKeyword ||
-    ts.isVoidExpression(value) ||
-    (ts.isIdentifier(value) && value.text === 'undefined')
-  ) {
-    return 'missing';
+  const value = skipOuterExpressions(property.initializer);
+  if (ts.isStringLiteralLike(value)) {
+    return value.text !== '';
   }
-  // Storybook ignores a number id, but `2 || id` doesn't compile.
-  return ts.isNumericLiteral(value) ? 'present' : 'unknown';
+  return (
+    ts.isTemplateExpression(value) &&
+    (value.head.text !== '' ||
+      value.templateSpans.some((span) => span.literal.text !== ''))
+  );
 }
 
 function insertIdProperty(
@@ -579,49 +486,6 @@ function insertIdProperty(
     ? `${newline}id: ${id},`
     : ` id: ${id},${/\s/.test(content[index]) ? '' : ' '}`;
   return { type: ChangeType.Insert, index, text };
-}
-
-function insertDeclarations(
-  sourceFile: SourceFile,
-  content: string,
-  declaration: string
-): StringChange {
-  // Before the first statement that isn't an import or directive, so no code
-  // runs before the counter is declared.
-  let anchor: Node | undefined;
-  for (const statement of sourceFile.statements) {
-    if (
-      !ts.isImportDeclaration(statement) &&
-      !ts.isImportEqualsDeclaration(statement) &&
-      !(
-        ts.isExpressionStatement(statement) &&
-        ts.isStringLiteral(statement.expression)
-      )
-    ) {
-      break;
-    }
-    anchor = statement;
-  }
-  return anchor
-    ? {
-        type: ChangeType.Insert,
-        index: anchor.getEnd(),
-        text: `\n\n${declaration}`,
-      }
-    : {
-        type: ChangeType.Insert,
-        // A hashbang is only valid as the first line.
-        index: HASHBANG.exec(content)?.[0].length ?? 0,
-        text: `${declaration}\n\n`,
-      };
-}
-
-function uniqueName(base: string, taken: Set<string>): string {
-  let name = base;
-  for (let suffix = 2; taken.has(name); suffix++) {
-    name = `${base}${suffix}`;
-  }
-  return name;
 }
 
 function escapeTemplateText(text: string): string {

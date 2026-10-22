@@ -6,52 +6,25 @@ const PREVIEW = `import { addons, useChannel } from 'storybook/preview-api';
 import { HIGHLIGHT as ADD_HIGHLIGHT } from 'storybook/highlight';
 import * as highlight from 'storybook/highlight';
 
-const highlightCount = 'taken';
-const base = { selectors: ['h1'] };
-
 export const decorators = [
   (storyFn) => {
     const emitHighlight = useChannel({});
     emitHighlight(ADD_HIGHLIGHT, { selectors: ['h2'] });
-    emitHighlight(ADD_HIGHLIGHT, { ...base, priority: 1 });
-    emitHighlight(ADD_HIGHLIGHT, base);
     return storyFn();
   },
 ];
 
-export async function highlightAll() {
+export async function highlightLinks() {
   const channel = addons.getChannel();
-  for (const selector of ['a', 'button']) {
-    channel.emit(highlight.HIGHLIGHT, {
-      // the selector under test
-      selectors: [selector],
-    });
-  }
+  channel.emit(highlight.HIGHLIGHT, {
+    // the selector under test
+    selectors: ['a'],
+  });
 }
 `;
 
-const FALLBACKS = `import { useChannel } from 'storybook/preview-api';
-import { HIGHLIGHT } from 'storybook/highlight';
-
-function withHighlightId(payload, id) {
-  return id ? { ...payload, id } : payload;
-}
-
-const other = 'label';
-
-export function highlight(selectors, id, options, key) {
-  const emit = useChannel({});
-  emit(HIGHLIGHT, { id, selectors });
-  emit(HIGHLIGHT, { id: undefined, selectors });
-  emit(HIGHLIGHT, { id: '', selectors });
-  emit(HIGHLIGHT, { id: options.id, selectors });
-  emit(HIGHLIGHT, { id: options.id ?? id, selectors });
-  emit(HIGHLIGHT, { id: 'fixed', ...options, selectors });
-  emit(HIGHLIGHT, { selectors, [key]: undefined });
-  emit(HIGHLIGHT, { id: 'fixed', selectors, [key]: id });
-  emit(HIGHLIGHT, { selectors, [other]: 'x' });
-  emit(HIGHLIGHT, options);
-  emit(HIGHLIGHT, withHighlightId(options, id));
+const HIGHLIGHT_JS = `export function show(channel) {
+  channel.emit('storybook/highlight/add', { selectors: ['p'] });
 }
 `;
 
@@ -62,16 +35,9 @@ describe('add-highlight-ids migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should give each HIGHLIGHT payload without an id a counter-based id', async () => {
+  it('should give each HIGHLIGHT payload without an id a generated id', async () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
-    tree.write(
-      'libs/ui/src/highlight.js',
-      `#!/usr/bin/env node
-export function show(channel) {
-  channel.emit('storybook/highlight/add', { selectors: ['p'] });
-}
-`
-    );
+    tree.write('libs/ui/src/highlight.js', HIGHLIGHT_JS);
 
     const result = await addHighlightIds(tree);
 
@@ -81,58 +47,32 @@ export function show(channel) {
       import { HIGHLIGHT as ADD_HIGHLIGHT } from 'storybook/highlight';
       import * as highlight from 'storybook/highlight';
 
-      let highlightCount2 = 0;
-
-      function withHighlightId<T extends object | undefined>(payload: T, id: string) {
-        const copy: { id?: unknown } = { ...payload };
-        return { ...copy, id: copy.id || id } as T & { id: string };
-      }
-
-      const highlightCount = 'taken';
-      const base = { selectors: ['h1'] };
-
       export const decorators = [
         (storyFn) => {
           const emitHighlight = useChannel({});
           emitHighlight(ADD_HIGHLIGHT, {
-            id: \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
+            id: \`apps/app/.storybook/preview.ts-\${Math.random().toString(36).slice(2)}\`,
             selectors: ['h2'],
           });
-          emitHighlight(
-            ADD_HIGHLIGHT,
-            withHighlightId(
-              { ...base, priority: 1 },
-              \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
-            ),
-          );
-          emitHighlight(
-            ADD_HIGHLIGHT,
-            withHighlightId(base, \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`),
-          );
           return storyFn();
         },
       ];
 
-      export async function highlightAll() {
+      export async function highlightLinks() {
         const channel = addons.getChannel();
-        for (const selector of ['a', 'button']) {
-          channel.emit(highlight.HIGHLIGHT, {
-            id: \`apps/app/.storybook/preview.ts:\${++highlightCount2}\`,
-            // the selector under test
-            selectors: [selector],
-          });
-        }
+        channel.emit(highlight.HIGHLIGHT, {
+          id: \`apps/app/.storybook/preview.ts-\${Math.random().toString(36).slice(2)}\`,
+          // the selector under test
+          selectors: ['a'],
+        });
       }
       "
-      `);
+    `);
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "#!/usr/bin/env node
-      let highlightCount = 0;
-
-      export function show(channel) {
+      "export function show(channel) {
         channel.emit('storybook/highlight/add', {
-          id: \`libs/ui/src/highlight.js:\${++highlightCount}\`,
+          id: \`libs/ui/src/highlight.js-\${Math.random().toString(36).slice(2)}\`,
           selectors: ['p'],
         });
       }
@@ -141,82 +81,97 @@ export function show(channel) {
     expect(result).toEqual({ skipAgentic: true });
   });
 
-  it('should fall back to a generated id where the payload id can be missing or empty', async () => {
-    tree.write('libs/ui/src/highlight.js', FALLBACKS);
+  it('should give a call a different id each time it emits', async () => {
+    // The path must stay literal inside the generated template literal.
+    const filePath = 'libs/ui/src/`odd ${dir}`/highlight.js';
+    tree.write(
+      filePath,
+      `module.exports = function highlightAll(channel) {
+  for (const selector of ['a', 'button']) {
+    channel.emit('storybook/highlight/add', { selectors: [selector] });
+  }
+};
+`
+    );
+
+    await addHighlightIds(tree);
+
+    const cjsModule = { exports: undefined };
+    new Function('module', tree.read(filePath, 'utf-8'))(cjsModule);
+    const ids: string[] = [];
+    cjsModule.exports({ emit: (_event, payload) => ids.push(payload.id) });
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).not.toBe(ids[1]);
+    for (const id of ids) {
+      expect(id.startsWith(`${filePath}-`)).toBe(true);
+    }
+  });
+
+  it('should report payloads where Math is a local binding', async () => {
+    tree.write(
+      'libs/ui/src/highlight.js',
+      `export function shadowed(channel, Math) {
+  channel.emit('storybook/highlight/add', { selectors: ['p'] });
+}
+
+export function unshadowed(channel) {
+  channel.emit('storybook/highlight/add', { selectors: ['a'] });
+}
+`
+    );
+    const namespaceImport = `import * as Math from './math';
+import { HIGHLIGHT } from 'storybook/highlight';
+
+export const highlight = (emit) => emit(HIGHLIGHT, { selectors: ['h1'] });
+`;
+    tree.write('apps/app/.storybook/namespace.ts', namespaceImport);
+    // The import is erased at runtime, but TypeScript rejects Math.random() here.
+    const typeOnlyImport = `import type * as Math from './math';
+import { HIGHLIGHT } from 'storybook/highlight';
+
+export const highlight = (emit) => emit(HIGHLIGHT, { selectors: ['h2'] });
+`;
+    tree.write('apps/app/.storybook/type-only.ts', typeOnlyImport);
 
     const result = await addHighlightIds(tree);
 
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { useChannel } from 'storybook/preview-api';
-      import { HIGHLIGHT } from 'storybook/highlight';
-
-      let highlightCount = 0;
-
-      function withHighlightId2(payload, id) {
-        const copy = { ...payload };
-        return { ...copy, id: copy.id || id };
+      "export function shadowed(channel, Math) {
+        channel.emit('storybook/highlight/add', { selectors: ['p'] });
       }
 
-      function withHighlightId(payload, id) {
-        return id ? { ...payload, id } : payload;
-      }
-
-      const other = 'label';
-
-      export function highlight(selectors, id, options, key) {
-        const emit = useChannel({});
-        emit(HIGHLIGHT, { id: id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
-        emit(
-          HIGHLIGHT,
-          withHighlightId2({ id: undefined, selectors }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
-        );
-        emit(
-          HIGHLIGHT,
-          withHighlightId2({ id: '', selectors }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
-        );
-        emit(HIGHLIGHT, { id: options.id || \`libs/ui/src/highlight.js:\${++highlightCount}\`, selectors });
-        emit(HIGHLIGHT, {
-          id: (options.id ?? id) || \`libs/ui/src/highlight.js:\${++highlightCount}\`,
-          selectors,
+      export function unshadowed(channel) {
+        channel.emit('storybook/highlight/add', {
+          id: \`libs/ui/src/highlight.js-\${Math.random().toString(36).slice(2)}\`,
+          selectors: ['a'],
         });
-        emit(
-          HIGHLIGHT,
-          withHighlightId2(
-            { id: 'fixed', ...options, selectors },
-            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
-          ),
-        );
-        emit(
-          HIGHLIGHT,
-          withHighlightId2(
-            { selectors, [key]: undefined },
-            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
-          ),
-        );
-        emit(
-          HIGHLIGHT,
-          withHighlightId2(
-            { id: 'fixed', selectors, [key]: id },
-            \`libs/ui/src/highlight.js:\${++highlightCount}\`,
-          ),
-        );
-        emit(
-          HIGHLIGHT,
-          withHighlightId2({ selectors, [other]: 'x' }, \`libs/ui/src/highlight.js:\${++highlightCount}\`),
-        );
-        emit(HIGHLIGHT, withHighlightId2(options, \`libs/ui/src/highlight.js:\${++highlightCount}\`));
-        emit(
-          HIGHLIGHT,
-          withHighlightId2(withHighlightId(options, id), \`libs/ui/src/highlight.js:\${++highlightCount}\`),
-        );
       }
       "
-      `);
-    expect(result).toEqual({ skipAgentic: true });
+    `);
+    expect(tree.read('apps/app/.storybook/namespace.ts', 'utf-8')).toBe(
+      namespaceImport
+    );
+    expect(tree.read('apps/app/.storybook/type-only.ts', 'utf-8')).toBe(
+      typeOnlyImport
+    );
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "agentContext": [
+          "libs/ui/src/highlight.js:2 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+          "apps/app/.storybook/namespace.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+          "apps/app/.storybook/type-only.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+        ],
+        "nextSteps": [
+          "libs/ui/src/highlight.js:2 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+          "apps/app/.storybook/namespace.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+          "apps/app/.storybook/type-only.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+        ],
+      }
+    `);
   });
 
-  it('should not change payloads that have an id, legacy payloads or listeners', async () => {
+  it('should not change payloads with a string id, legacy payloads or listeners', async () => {
     const content = `import { addons, useChannel } from 'storybook/preview-api';
 import { HIGHLIGHT, RESET_HIGHLIGHT } from 'storybook/highlight';
 
@@ -225,8 +180,7 @@ export const decorators = [
     const emit = useChannel({ [HIGHLIGHT]: () => {} });
     emit(HIGHLIGHT, { id: 'headings', selectors: ['h2'] });
     emit(HIGHLIGHT, { id: \`row-\${args.row}\`, selectors: ['tr'] });
-    emit(HIGHLIGHT, { id: args.open ? 'open' : 'closed', selectors: ['p'] });
-    emit(HIGHLIGHT, { ...args.highlight, id: args.id || 'custom' });
+    emit(HIGHLIGHT, { ...args.highlight, id: 'custom' });
     emit(HIGHLIGHT, { [args.key]: undefined, id: 'late', selectors: ['h4'] });
     emit(HIGHLIGHT, { elements: ['h3'], color: 'red', style: 'solid' });
     emit(RESET_HIGHLIGHT);
@@ -255,19 +209,51 @@ export function relay(channel, event, payload) {
     expect(result).toEqual({ skipAgentic: true });
   });
 
+  it('should report payloads whose id may not be a non-empty string', async () => {
+    const content = `import { useChannel } from 'storybook/preview-api';
+import { HIGHLIGHT } from 'storybook/highlight';
+
+export function highlight(selectors, id, options, key) {
+  const emit = useChannel({});
+  emit(HIGHLIGHT, { id, selectors });
+  emit(HIGHLIGHT, { id: options.id, selectors });
+  emit(HIGHLIGHT, { id: undefined, selectors });
+  emit(HIGHLIGHT, { id: '', selectors });
+  emit(HIGHLIGHT, { id: \`\${id}\`, selectors });
+  emit(HIGHLIGHT, { id: 2, selectors });
+  emit(HIGHLIGHT, { id: 'fixed', ...options, selectors });
+  emit(HIGHLIGHT, { id: 'fixed', selectors, [key]: id });
+  emit(HIGHLIGHT, options);
+}
+`;
+    tree.write('libs/ui/src/highlight.js', content);
+
+    const result = await addHighlightIds(tree);
+
+    expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(content);
+    const notes = [6, 7, 8, 9, 10, 11, 12, 13].map(
+      (line) =>
+        `libs/ui/src/highlight.js:${line} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`
+    );
+    notes.push(
+      `libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`
+    );
+    expect(result).toEqual({ nextSteps: notes, agentContext: notes });
+  });
+
   it('should be a no-op when run twice', async () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
-    tree.write('libs/ui/src/highlight.js', FALLBACKS);
+    tree.write('libs/ui/src/highlight.js', HIGHLIGHT_JS);
     await addHighlightIds(tree);
     const preview = tree.read('apps/app/.storybook/preview.ts', 'utf-8');
-    const fallbacks = tree.read('libs/ui/src/highlight.js', 'utf-8');
+    const highlightJs = tree.read('libs/ui/src/highlight.js', 'utf-8');
     expect(preview).not.toBe(PREVIEW);
-    expect(fallbacks).not.toBe(FALLBACKS);
+    expect(highlightJs).not.toBe(HIGHLIGHT_JS);
 
     const result = await addHighlightIds(tree);
 
     expect(tree.read('apps/app/.storybook/preview.ts', 'utf-8')).toBe(preview);
-    expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(fallbacks);
+    expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(highlightJs);
     expect(result).toEqual({ skipAgentic: true });
   });
 
@@ -314,7 +300,7 @@ export const play = async (send, args) => {
     const result = await addHighlightIds(tree);
 
     expect(tree.read('apps/app/src/menu.stories.ts', 'utf-8')).toContain(
-      'id: `apps/app/src/menu.stories.ts:${++highlightCount}`'
+      'id: `apps/app/src/menu.stories.ts-${Math.random().toString(36).slice(2)}`'
     );
     expect(result).toMatchInlineSnapshot(`
       {
@@ -322,25 +308,25 @@ export const play = async (send, args) => {
           "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
           "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
           "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
-          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id", or type it as Omit<HighlightOptions, 'id'> when this migration added the "id" where the object is emitted.",
+          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
           "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
-          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
           "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
-          "libs/menus/src/items.js has Highlight menu items that use "clickEvent" (line 1), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "libs/menus/src/items.js has Highlight menu items that use "clickEvent" (line 1), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         ],
         "nextSteps": [
           "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
           "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
           "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
-          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id", or type it as Omit<HighlightOptions, 'id'> when this migration added the "id" where the object is emitted.",
+          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
           "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
-          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
           "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
-          "libs/menus/src/items.js has Highlight menu items that use "clickEvent" (line 1), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/v10.6.2/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+          "libs/menus/src/items.js has Highlight menu items that use "clickEvent" (line 1), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         ],
       }
     `);

@@ -8,7 +8,7 @@ Storybook 9.1.21 and 10.6.2 changed the Highlight channel API:
 - Menu items no longer accept `clickEvent`. They take `clickable: true`, and a click emits `HIGHLIGHT_MENU_CLICK` with `(highlightId, itemId, details)`.
 - `details.element` no longer has `outerHTML` or `attributes`. It keeps `tagName` and `localName`.
 
-A deterministic pre-pass already added an `id` to every `HIGHLIGHT` payload it could rewrite. `<advisory_context>` lists the remaining items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
+A deterministic pre-pass already added an `id` to every object literal `HIGHLIGHT` payload without one. `<advisory_context>` lists the remaining items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
 
 ## Pre-Migration Checklist
 
@@ -19,14 +19,14 @@ Confirm both conditions before changing anything. If either fails, make no chang
 
 ## Step 1: Verify the pre-pass
 
-Open each file the pre-pass changed, listed in `<files_changed>` or found through `<inspect_changes>`. The pre-pass declared a counter such as `let highlightCount = 0;` after the imports, numbered when the name is taken, and gave each payload an id like `` `apps/app/.storybook/preview.ts:${++highlightCount}` ``. A payload whose own `id` can be missing or empty got the generated id as a fallback, such as `` id: options.id || `...` ``. A payload whose `id` was always empty, that wasn't an object literal, or whose `id` could come from a spread or a computed key was wrapped in a `withHighlightId(payload, id)` function declared after the counter. The wrapper keeps the payload's own `id` unless it is missing or empty. Do not re-apply these edits. Keep the counter in the ids: it makes each emit add its own highlight, as Storybook did before the upgrade. Step 2 is the only reason to change a generated id.
+Open each file the pre-pass changed, listed in `<files_changed>` or found through `<inspect_changes>`. The pre-pass gave each payload an id made of the file path and a random suffix, such as `` `apps/app/.storybook/preview.ts-${Math.random().toString(36).slice(2)}` ``. Every emit gets a new id, so each one adds its own highlight, as Storybook did before the upgrade. Do not re-apply these edits. Step 2 is the only reason to change a generated id.
 
 ## Step 2: Replace `clickEvent` in menu items
 
 For each file listed with menu items that use `clickEvent`:
 
 1. Replace `clickEvent: '<event>'` with `clickable: true`.
-2. Give the `HIGHLIGHT` payload that carries the menu a fixed, descriptive `id`, replacing the generated one. With a fixed id, a later emit replaces the earlier highlight. If the call site emits several times between story renders and each highlight must stay visible, keep the counter after a fixed prefix and compare the prefix in the listener.
+2. Give the `HIGHLIGHT` payload that carries the menu a fixed, descriptive `id`, replacing the generated one. With a fixed id, a later emit replaces the earlier highlight. If the call emits several times between story renders and each highlight must stay visible, add a unique suffix after a fixed prefix and compare the prefix in the listener.
 3. Search the workspace, outside `node_modules`, for the listener of `<event>`. It can live in a preview file, a story, or a manager or addon file. Move it to `HIGHLIGHT_MENU_CLICK`, imported from `storybook/highlight`. The old listener received `(itemId, details)`. The new one receives `(highlightId, itemId, details)` and must return early when `highlightId` is not the payload's id.
 
 The menu can come from a variable or another module. Follow it to the items.
@@ -35,7 +35,7 @@ The menu can come from a variable or another module. Follow it to the items.
 
 ```ts
 emit(HIGHLIGHT, {
-  id: `apps/app/.storybook/preview.ts:${++highlightCount}`,
+  id: `apps/app/.storybook/preview.ts-${Math.random().toString(36).slice(2)}`,
   selectors: ['h2'],
   menu: [
     [
@@ -76,14 +76,20 @@ For each file listed with the `ClickEventDetails` type, and for each listener yo
 
 ## Step 4: Fix objects typed `HighlightOptions`
 
-`HighlightOptions.id` is now required. For each object of that type without an `id` in a listed file:
-
-- If the object reaches a payload the pre-pass wrapped in `withHighlightId`, type it as `Omit<HighlightOptions, 'id'>`.
-- Otherwise, give it a unique string `id`. If the object is emitted several times between story renders, add the id where it is emitted instead, with a module-level counter like the pre-pass.
+`HighlightOptions.id` is now required. Give each object of that type without an `id` in a listed file a unique string `id`. If one object is emitted several times between story renders and each highlight must stay visible, add a unique id where it is emitted instead, and type the object as `Omit<HighlightOptions, 'id'>`.
 
 ## Step 5: Give the remaining payloads an id
 
-The other items list `HIGHLIGHT` usage the pre-pass could not check: the event used outside an emit call, passed to a function it didn't recognize as an emit, a payload passed through a spread argument, `storybook/highlight` loaded with `require` or a dynamic import, or a file it couldn't parse. For each one, find the `HIGHLIGHT` payloads it emits. Give each payload that uses `selectors` and has no `id` an id with a module-level counter, like the pre-pass. Skip a listed function that doesn't emit `HIGHLIGHT`.
+The other items list `HIGHLIGHT` usage the pre-pass could not check or change:
+
+- A payload that isn't an object literal.
+- A payload whose `id` may not be a non-empty string: a variable, `undefined`, `''`, a number, or an `id` that a spread or a computed key can set.
+- A payload without an `id` in a scope where `Math` is a local binding, so the pre-pass couldn't use `Math.random()` there.
+- The event used outside an emit call, or passed to a function the pre-pass didn't recognize as an emit.
+- A payload passed through a spread argument.
+- `storybook/highlight` loaded with `require` or a dynamic import, or a file the pre-pass couldn't parse.
+
+For each one, find the `HIGHLIGHT` payloads it emits. Make sure each payload that uses `selectors` gets a unique, non-empty string `id`, such as the file path and a random suffix like the pre-pass. Where `Math` is a local binding, build the id without it, for example with `globalThis.Math.random()` or a fixed string. When the `id` comes from a variable or an argument, keep it and add a fallback only where it can be missing or empty. Skip a listed function that doesn't emit `HIGHLIGHT`.
 
 ## Post-Migration Validation
 
