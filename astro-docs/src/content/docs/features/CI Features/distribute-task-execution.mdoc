@@ -40,20 +40,9 @@ There's no `--parallel` value to tune and no mapping of projects to machines to 
 Other CI providers, such as GitHub Actions, schedule jobs rather than tasks.
 They support static partitioning, such as splitting a test suite into shards, but they can't see the task graph or how much CPU and memory each task uses, so they can't pack work across machines as it runs.
 
-## Split and cache e2e tests by file
+## Get started
 
-Nx Atomizer automatically creates one task per e2e test file.
-Workers can distribute those smaller tasks across machines and use dynamic task packing to run them alongside other tasks.
-
-Each test file is also cached separately. When you scope each file to the code it tests, Nx can reuse
-cached results for unaffected tests instead of rerunning the whole suite.
-For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its cached result.
-Workers then spend their time on the tests that need to run, reducing both CI time and compute costs.
-
-See [automatically split slow tasks by file](/docs/kb/split-e2e-tasks) to enable Atomizer,
-and [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests) to scope each test file to the code it exercises.
-
-## Set up Nx Cloud workers
+### Set up Nx Cloud workers
 
 Connect your workspace to Nx Cloud if you haven't already:
 
@@ -317,7 +306,7 @@ For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-work
 {% /tabitem %}
 {% /tabs %}
 
-## Turn on dynamic task packing
+### Turn on dynamic task packing
 
 Turn on dynamic task packing for every pipeline in your workspace:
 
@@ -327,18 +316,9 @@ Turn on dynamic task packing for every pipeline in your workspace:
 
 Pipelines that start after you save use the new setting. Pipelines already running keep the setting they started with.
 
-Once dynamic task packing is on, two budgets set how much of each worker packed tasks can use together:
+Environment variables set on a job, such as `NX_CLOUD_AUTO_TASK_PACKING`, take precedence over the workspace setting.
 
-- **CPU packing budget**: a multiple of the worker's cores, from 0.5× to 2×.
-- **Memory packing budget**: a multiple of the worker's memory, from 0.5× to 1.5×.
-
-Both budgets default to 1×.
-
-Environment variables set on a job, such as `NX_CLOUD_AUTO_TASK_PACKING`, take precedence over these settings.
-
-## Migrate existing workers to dynamic task packing
-
-[Turn on dynamic task packing](#turn-on-dynamic-task-packing) in your workspace settings first.
+### Migrate existing workers to dynamic task packing
 
 If you already use Nx Cloud workers, copy this prompt into your AI coding agent to update your existing configuration.
 It checks which tasks currently run one at a time, such as e2e tests, and preserves the scheduling constraints they need.
@@ -366,7 +346,9 @@ Read the distributed task execution guide at https://nx.dev/docs/features/ci-fea
 6. Validate the configuration and selectors against the resolved task names. For every task previously limited to parallelism 1, report the original setting, its reason, and the scheduling constraint or other mechanism that now preserves it. Run available validation and identify anything that still needs a trial CI run.
 {% /llm_copy_prompt %}
 
-## Scale workers with PR size
+## Tune distribution
+
+### Scale workers with PR size
 
 A small pull request doesn't need as many workers as a change that affects the whole workspace.
 Give `distribute-on` a map of changesets, ordered from smallest to largest, and Nx Cloud picks one based on the share of projects the pull request affects:
@@ -384,7 +366,7 @@ dte:
 Each changeset covers an equal share of that range, so their order matters.
 Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
 
-## Control where tasks run
+### Control where tasks run
 
 Dynamic task packing places tasks on its own.
 Two optional settings in `.nx/ci-config.yaml` add rules it follows:
@@ -405,6 +387,28 @@ dte:
 ```
 
 To give a task a worker to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
+
+### Split and cache e2e tests by file
+
+Nx Atomizer automatically creates one task per e2e test file.
+Workers can distribute those smaller tasks across machines and use dynamic task packing to run them alongside other tasks.
+
+Each test file is also cached separately. When you scope each file to the code it tests, Nx can reuse
+cached results for unaffected tests instead of rerunning the whole suite.
+For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its cached result.
+Workers then spend their time on the tests that need to run, reducing both CI time and compute costs.
+
+See [automatically split slow tasks by file](/docs/kb/split-e2e-tasks) to enable Atomizer,
+and [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests) to scope each test file to the code it exercises.
+
+### Packing budgets
+
+Once dynamic task packing is on, two budgets in your [workspace settings](https://cloud.nx.app/go/workspace/settings) set how much of each worker packed tasks can use together:
+
+- **CPU packing budget**: a multiple of the worker's cores, from 0.5× to 2×.
+- **Memory packing budget**: a multiple of the worker's memory, from 0.5× to 1.5×.
+
+Both budgets default to 1×.
 
 ## See it in action in Nx Cloud
 
