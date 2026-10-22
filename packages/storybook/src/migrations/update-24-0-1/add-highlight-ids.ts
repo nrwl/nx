@@ -1,12 +1,12 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   visitNotIgnoredFiles,
   type StringChange,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   CallExpression,
   Expression,
@@ -94,7 +94,7 @@ function migrateFile(
   filePath: string,
   content: string
 ): { content: string; notes: string[] } | undefined {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     filePath,
     content,
