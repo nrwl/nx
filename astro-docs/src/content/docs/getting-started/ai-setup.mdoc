@@ -12,11 +12,11 @@ filter: 'type:Features'
 Set up this Nx workspace to work with AI coding agents.
 
 1. Confirm the workspace has an `nx.json` and `nx` in `package.json`. If Nx is missing, stop and ask me before running `npx nx@latest init`.
-2. Ask me which agents to configure. The supported values are `claude`, `codex`, `copilot`, `cursor`, `gemini`, and `opencode`. Do not guess from what happens to be installed on my machine.
+2. Ask me which agents to configure. The supported values are `claude`, `codex`, `cursor`, and `opencode`. Do not guess from what happens to be installed on my machine.
 3. Run `npx nx configure-ai-agents --agents <agents> --no-interactive` with the values I gave you.
 4. Verify with `npx nx configure-ai-agents --check=all` and show me the output.
 
-The command writes agent rules (`AGENTS.md`, `CLAUDE.md`, and equivalents), MCP server config, and the Nx agent skills. Show me the diff and let me review it. Do not commit on my behalf.
+The command registers the Nx agent plugin (MCP server, skills and guidelines) in each agent's project config. Show me the diff and let me review it. Do not commit on my behalf.
 
 If a step fails, surface the error rather than retrying. For what the integration provides and how to configure agents by hand, follow {pageUrl}.
 
@@ -42,7 +42,20 @@ To automatically configure your Nx monorepo to work best with AI agents and assi
 npx nx configure-ai-agents
 ```
 
-This will prompt you for which AI agents/assistants to configure and set up the [Nx MCP server](/docs/reference/nx-mcp), AI agent configuration files (`AGENTS.md`, `CLAUDE.md`, etc.), and agent skills (for workspace exploration, code generation, and task execution). For Claude Code, skills are installed via a plugin; for other agents, they're copied into your workspace.
+This will prompt you for which AI agents/assistants to configure. For each one, Nx registers the Nx agent plugin, which ships the [Nx MCP server](/docs/reference/nx-mcp), agent skills (for workspace exploration, code generation, and task execution) and Nx guidelines, in the project's configuration:
+
+| Agent       | Configuration                                                                 |
+| ----------- | ----------------------------------------------------------------------------- |
+| Claude Code | `.claude/settings.json`                                                       |
+| Cursor      | `.cursor/settings.json`                                                       |
+| Codex       | `.codex/config.toml`, plus a one-time install of the plugin for your user     |
+| OpenCode    | `opencode.json`                                                               |
+
+Nx does not write to `AGENTS.md`, `CLAUDE.md` or other rules files, and removes the Nx guidelines block earlier versions added to them. GitHub Copilot and Gemini are no longer configured by `nx configure-ai-agents`; the MCP server entry and skills earlier versions set up for them are removed.
+
+Codex installs plugins per user, so each developer using Codex runs `nx configure-ai-agents` once on their machine. The plugin is only enabled in workspaces whose `.codex/config.toml` turns it on.
+
+Claude Code, Cursor and OpenCode pick up new releases of the Nx plugin on their own. Codex keeps the version it installed, so after a release `nx configure-ai-agents --check` reports it as outdated and running `nx configure-ai-agents` installs the new version. To hold a workspace on a specific plugin version, set it in that agent's entry: `"@nx/opencode-plugin@1.2.0"` in `opencode.json`, or the release tag `v1.2.0` as the `ref` of the `nx-claude-plugins` marketplace in `.claude/settings.json` or as `gitRef` in `.cursor/settings.json`. Nx keeps versions you set.
 
 Alternatively, you can install just the skills via:
 

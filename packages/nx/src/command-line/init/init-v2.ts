@@ -454,7 +454,6 @@ async function runInit(
       const tree = new FsTree(repoRoot, false);
       const aiAgentsCallback = await setupAiAgentsGenerator(tree, {
         directory: '.',
-        writeNxCloudRules: options.nxCloud !== false,
         packageVersion: 'latest',
         agents: [...selectedAgents],
       });

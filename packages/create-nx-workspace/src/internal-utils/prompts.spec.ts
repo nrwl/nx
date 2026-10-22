@@ -322,11 +322,23 @@ describe('determineAiAgents', () => {
   it('should not configure copilot-cli, which detection reports but the generator cannot set up', async () => {
     // Detection is broader than `supportedAgents`. Passing this through would
     // run setupAiAgentsGenerator with an agent no `hasAgent` branch matches:
-    // no rules file, but still the unconditional .claude/* .gitignore entries.
+    // no plugin or MCP setup, but still the unconditional .claude/* .gitignore entries.
     // Copilot CLI configuration is tracked separately (NXC-4622).
     mockDetect.mockReturnValue('copilot-cli');
 
     expect(await determineAiAgents({} as any)).toEqual([]);
+  });
+
+  it('should warn about and skip agents nx no longer configures', async () => {
+    expect(
+      await determineAiAgents({
+        aiAgents: ['claude', 'gemini', 'copilot'],
+      } as any)
+    ).toEqual(['claude']);
+    expect(output.warn).toHaveBeenCalledWith({
+      title:
+        'Nx no longer configures GitHub Copilot and Gemini. Continuing with the other agents.',
+    });
   });
 
   it('should return nothing when no agent is detected', async () => {

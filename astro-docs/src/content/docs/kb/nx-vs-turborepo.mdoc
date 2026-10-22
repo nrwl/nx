@@ -315,7 +315,7 @@ Turborepo can orchestrate any language by wrapping CLI commands in `package.json
 
 ## AI integration
 
-Nx actively embraces AI and autonomous agents across the entire development lifecycle, not only individual features. Running [`nx configure-ai-agents`](/blog/nx-ai-agent-skills) sets up everything your AI agent needs in one command: agent skills, an MCP server, and `CLAUDE.md` / `AGENTS.md` guidelines. It works across **Claude Code, Cursor, GitHub Copilot, Gemini, Codex, and OpenCode**.
+Nx actively embraces AI and autonomous agents across the entire development lifecycle, not only individual features. Running [`nx configure-ai-agents`](/blog/nx-ai-agent-skills) sets up everything your AI agent needs in one command: agent skills, an MCP server, and Nx guidelines, delivered as an agent plugin. It works across **Claude Code, Cursor, Codex, and OpenCode**.
 
 - **[Agent skills](/blog/why-we-deleted-most-of-our-mcp-tools)** teach agents _how_ to work in your monorepo: when to use generators, how to explore the project graph, how to run tasks efficiently. Skills are loaded incrementally, keeping context focused and token-efficient.
 - **[Self-healing CI](/docs/features/ci-features/self-healing-ci)** is a specialized AI agent that runs on CI, monitors runs, diagnoses broken tasks, provides verified fixes, and automatically identifies and [re-runs flaky tasks](/docs/kb/flaky-tasks).

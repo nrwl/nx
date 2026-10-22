@@ -1,13 +1,5 @@
 import { join } from 'path';
-import { major } from 'semver';
-import { readJsonFile } from '../utils/fileutils';
 import { NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
-import {
-  getAgentRules,
-  AgentRulesOptions,
-} from './set-up-ai-agents/get-agent-rules';
-
-export type { AgentRulesOptions };
 
 export function agentsMdPath(root: string): string {
   return join(root, 'AGENTS.md');
@@ -15,15 +7,6 @@ export function agentsMdPath(root: string): string {
 
 export function geminiMdPath(root: string): string {
   return join(root, 'GEMINI.md');
-}
-
-export function parseGeminiSettings(root: string): any | undefined {
-  const settingsPath = geminiSettingsPath(root);
-  try {
-    return readJsonFile(settingsPath);
-  } catch {
-    return undefined;
-  }
 }
 
 export function geminiSettingsPath(root: string): string {
@@ -46,47 +29,49 @@ export function codexConfigTomlPath(root: string): string {
   return join(root, '.codex', 'config.toml');
 }
 
+export function cursorSettingsPath(root: string): string {
+  return join(root, '.cursor', 'settings.json');
+}
+
+// Markers around the Nx guidelines block older versions wrote into rules
+// files, kept only to find and remove those blocks.
 export const nxRulesMarkerCommentStart = `<!-- nx configuration start-->`;
-export const nxRulesMarkerCommentDescription = `<!-- Leave the start & end comments to automatically receive updates. -->`;
 export const nxRulesMarkerCommentEnd = `<!-- nx configuration end-->`;
 export const rulesRegex = new RegExp(
   `${nxRulesMarkerCommentStart}[\\s\\S]*?${nxRulesMarkerCommentEnd}`,
   'm'
 );
 
-export interface AgentRulesWrappedOptions {
-  writeNxCloudRules: boolean;
-  useH1?: boolean;
-}
+// The Nx agent plugins are released from this repository in two channels,
+// `latest` and `next`. Each release publishes the npm packages below (they
+// share one version) under the channel's dist-tag, is tagged `v<version>`,
+// and moves the channel's `dist/<dist-tag>` branch.
+export const agentPluginsRepo = 'nrwl/nx-ai-agents-config';
+export const agentPluginsRepoUrl = `https://github.com/${agentPluginsRepo}.git`;
+export const agentPluginsDistTags = ['latest', 'next'] as const;
+/** The channel workspaces are set up to follow. */
+export const agentPluginsDistTag: (typeof agentPluginsDistTags)[number] =
+  'next';
+/** Branch Claude Code reads the marketplace from and Cursor the plugin. */
+export const agentPluginsGitRef = `dist/${agentPluginsDistTag}`;
+/** The package whose version on the channel the Codex install is compared against. */
+export const claudePluginPackage = '@nx/claude-plugin';
+export const codexPluginPackage = '@nx/codex-plugin';
+export const opencodePluginPackage = '@nx/opencode-plugin';
 
-export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
-  const { writeNxCloudRules, useH1 = true } = options;
-  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
-  return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
-};
+/** Claude Code plugin id, served by the marketplace in agentPluginsRepo. */
+export const claudePluginId = 'nx@nx-claude-plugins';
+/** Codex plugin id, from the marketplace the @nx/codex-plugin installer registers. */
+export const codexPluginId = 'nx@nx-agent-plugins';
+export const codexPluginMarketplace = 'nx-agent-plugins';
+/** Key of the project-scoped plugin entry in Cursor's .cursor/settings.json. */
+export const cursorPluginKey = 'nx-agent-plugins/nx';
 
 /**
  * Hostname Nx analytics events are sent to (GA4 Measurement Protocol).
  * Must stay in sync with GA_ENDPOINT in packages/nx/src/native/telemetry/constants.rs.
  */
 export const analyticsDomain = 'www.google-analytics.com';
-
-export const nxMcpTomlHeader = `[mcp_servers."nx-mcp"]`;
-
-/**
- * Get the MCP TOML configuration based on the Nx version.
- * For Nx 22+, uses 'nx mcp'
- * For Nx < 22, uses 'nx-mcp'
- */
-export function getNxMcpTomlConfig(nxVersion: string): string {
-  const majorVersion = major(nxVersion);
-  const args = majorVersion >= 22 ? '["nx", "mcp"]' : '["nx-mcp"]';
-  return `${nxMcpTomlHeader}
-type = "stdio"
-command = "npx"
-args = ${args}
-`;
-}
 
 /**
  * The Nx runtime roots as they belong in a *committed* sandbox allowlist.

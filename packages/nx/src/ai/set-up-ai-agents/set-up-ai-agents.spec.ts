@@ -5,21 +5,41 @@ import { Tree } from '../../generators/tree';
 import { setupAiAgentsGenerator } from './set-up-ai-agents';
 import { SetupAiAgentsGeneratorSchema } from './schema';
 import { readJson, updateJson } from '../../generators/utils/json';
-import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
-import * as installedNxVersionUtils from '../../utils/installed-nx-version';
-import * as cloneModule from '../clone-ai-config-repo';
-import * as fs from 'fs';
+import { NX_ALLOWLIST_ROOTS } from '../constants';
+import * as agentPluginVersion from './agent-plugin-version';
+import * as codexPluginModule from './codex-plugin';
+import { legacyAgentFiles } from './legacy-agent-files';
+import TOML from 'smol-toml';
 
-vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
+// Contents of the files earlier versions copied into workspaces, keyed by
+// their workspace path. The real list is generated from the history of
+// nrwl/nx-ai-agents-config; tests use a small stand-in with known contents.
+const shipped = vi.hoisted<Record<string, string>>(() => ({
+  '.agents/skills/nx-workspace/SKILL.md': 'shipped shared skill',
+  '.codex/agents/ci-monitor-subagent.toml': 'shipped codex agent',
+  '.cursor/agents/ci-monitor-subagent.md': 'shipped cursor agent',
+  '.cursor/commands/monitor-ci.md': 'shipped cursor command',
+  '.opencode/skills/nx-workspace/SKILL.md': 'shipped opencode skill',
+  '.github/skills/nx-workspace/SKILL.md': 'shipped copilot skill',
+  '.gemini/commands/monitor-ci.toml': 'shipped gemini command',
+}));
+
+vi.mock('./legacy-agent-files', async () => {
+  const { createHash } = await import('crypto');
+  // Same as fingerprintAgentFile, which can't be imported here because its
+  // module depends on this one.
+  const fingerprintAgentFile = (content: string) =>
+    createHash('sha256')
+      .update(content.toLowerCase().replace(/[^a-z0-9]/g, ''))
+      .digest('hex')
+      .slice(0, 16);
   return {
-    ...actual,
-    existsSync: vi
-      .fn()
-      .mockImplementation((...args: any[]) => actual.existsSync(...args)),
-    readFileSync: vi
-      .fn()
-      .mockImplementation((...args: any[]) => actual.readFileSync(...args)),
+    legacyAgentFiles: Object.fromEntries(
+      Object.entries(shipped).map(([path, content]) => [
+        path,
+        [fingerprintAgentFile(content)],
+      ])
+    ),
   };
 });
 
@@ -27,9 +47,19 @@ function setAnalytics(tree: Tree, analytics: boolean) {
   updateJson(tree, 'nx.json', (json) => ({ ...json, analytics }));
 }
 
+const nxRulesBlock =
+  '<!-- nx configuration start-->\n# General Guidelines for working with Nx\n<!-- nx configuration end-->\n';
+
+function shippedContent(path: string): string {
+  return shipped[path];
+}
+
 describe('setup-ai-agents generator', () => {
   let tree: Tree;
-  let getInstalledNxVersionSpy: MockInstance;
+  let latestPluginVersionSpy: MockInstance;
+  let isCodexAvailableSpy: MockInstance;
+  let isCodexPluginInstalledSpy: MockInstance;
+  let installCodexPluginSpy: MockInstance;
 
   beforeEach(() => {
     // No formatter: these assertions compare against the exact string the
@@ -38,31 +68,26 @@ describe('setup-ai-agents generator', () => {
     // Use local implementation instead of fetching from latest
     process.env.NX_AI_FILES_USE_LOCAL = 'true';
 
-    // Mock getInstalledNxVersion to return Nx 22+ by default
-    // This ensures existing tests pass by defaulting to the new format
-    getInstalledNxVersionSpy = vi
-      .spyOn(installedNxVersionUtils, 'getInstalledNxVersion')
-      .mockReturnValue('22.0.0');
+    latestPluginVersionSpy = vi
+      .spyOn(agentPluginVersion, 'getLatestAgentPluginVersion')
+      .mockResolvedValue('1.2.3');
+    isCodexAvailableSpy = vi
+      .spyOn(codexPluginModule, 'isCodexAvailable')
+      .mockReturnValue(false);
+    isCodexPluginInstalledSpy = vi
+      .spyOn(codexPluginModule, 'isCodexPluginInstalled')
+      .mockReturnValue(false);
+    installCodexPluginSpy = vi
+      .spyOn(codexPluginModule, 'installCodexPlugin')
+      .mockReturnValue({ ok: true });
   });
 
   afterEach(() => {
     delete process.env.NX_AI_FILES_USE_LOCAL;
-    if (getInstalledNxVersionSpy) {
-      getInstalledNxVersionSpy.mockRestore();
-    }
-  });
-
-  it('should respect writeNxCloudRules option', async () => {
-    const options: SetupAiAgentsGeneratorSchema = {
-      directory: '.',
-      writeNxCloudRules: true,
-    };
-
-    await setupAiAgentsGenerator(tree, options);
-
-    const claudeContent = tree.read('CLAUDE.md')?.toString();
-    // The template should include Nx guidelines
-    expect(claudeContent).toContain('# General Guidelines for working with Nx');
+    latestPluginVersionSpy.mockRestore();
+    isCodexAvailableSpy.mockRestore();
+    isCodexPluginInstalledSpy.mockRestore();
+    installCodexPluginSpy.mockRestore();
   });
 
   it('should use specified directory', async () => {
@@ -72,289 +97,20 @@ describe('setup-ai-agents generator', () => {
 
     await setupAiAgentsGenerator(tree, options);
 
-    expect(tree.exists('custom-dir/CLAUDE.md')).toBe(true);
-    expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
+    expect(tree.exists('custom-dir/CLAUDE.md')).toBe(false);
+    expect(tree.exists('custom-dir/AGENTS.md')).toBe(false);
+    expect(tree.exists('custom-dir/.cursor/settings.json')).toBe(true);
+    expect(tree.exists('custom-dir/.codex/config.toml')).toBe(true);
+    expect(tree.exists('custom-dir/opencode.json')).toBe(true);
     expect(tree.exists('custom-dir/.claude/settings.json')).toBe(true);
-    expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
-  });
-
-  describe('outdated rules update', () => {
-    it('should append to existing AGENTS.md when no nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = '# existing agents content';
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      // When appending to existing content with an h1 header, use h2 header
-      expect(content).toEqual(
-        existing +
-          '\n\n' +
-          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: false })
-      );
-    });
-
-    it('should use h1 when appending to AGENTS.md without existing h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // Content without an h1 header (just plain text)
-      const existing = 'Some existing content without a header';
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      // When appending to existing content without an h1, use h1 header
-      expect(content).toEqual(
-        existing +
-          '\n\n' +
-          getAgentRulesWrapped({ writeNxCloudRules: true, useH1: true })
-      );
-    });
-
-    it('should NOT modify AGENTS.md when up-to-date nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
-    });
-
-    it('should NOT modify AGENTS.md when up-to-date h2 nx rules exist alongside an external h1', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // h2 nx rules make sense when there's already an h1 in the document
-      const nxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: false,
-      });
-      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
-    });
-
-    it('should switch h1 to h2 when user adds their own h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      // Simulate: nx block was initially created with h1, then user added their own h1
-      const nxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = '# My Project\n\nSome content\n\n' + nxBlock;
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-
-      const content = tree.read('AGENTS.md')?.toString();
-      // Should have switched the nx block to h2
-      const expectedNxBlock = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: false,
-      });
-      expect(content).toEqual(
-        '# My Project\n\nSome content\n\n' + expectedNxBlock
-      );
-    });
-
-    it('should produce no changes when run twice on a fresh file', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should produce no changes when run twice on a file with existing h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = '# My Project Rules\n\nSome existing content';
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should produce no changes when run twice on a file without h1 header', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const existing = 'Some existing content without a header';
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const firstContent = tree.read('AGENTS.md')?.toString();
-
-      await setupAiAgentsGenerator(tree, options);
-      const secondContent = tree.read('AGENTS.md')?.toString();
-
-      expect(secondContent).toEqual(firstContent);
-    });
-
-    it('should update existing AGENTS.md when outdated nx rules exist', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const expected = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = expected.replace(
-        'nx_workspace',
-        'nx_workspace_outdated'
-      );
-
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(expected);
-    });
-
-    it('should NOT update existing AGENTS.md when they only diverge in whitespace', async () => {
-      const options: SetupAiAgentsGeneratorSchema = {
-        directory: '.',
-        writeNxCloudRules: true,
-        agents: ['codex'],
-      };
-
-      const expected = getAgentRulesWrapped({
-        writeNxCloudRules: true,
-        useH1: true,
-      });
-      const existing = expected.replace('#', '\n#');
-      tree.write('AGENTS.md', existing);
-
-      await setupAiAgentsGenerator(tree, options);
-      const content = tree.read('AGENTS.md')?.toString();
-      expect(content).toEqual(existing);
-    });
   });
 
   describe('agent-specific file generation', () => {
-    describe('copilot / cursor / codex', () => {
-      it('should generate AGENTS.md when it does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('AGENTS.md')).toBe(true);
-        const content = tree.read('AGENTS.md')?.toString();
-        expect(content).toContain('# General Guidelines for working with Nx');
-      });
-
-      it('should NOT overwrite AGENTS.md if it already exists', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        // Create existing file
-        tree.write('AGENTS.md', 'Existing agents content');
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('AGENTS.md')?.toString();
-        // The new implementation appends to existing content
-        expect(content).toContain('Existing agents content');
-      });
-    });
     describe('claude', () => {
-      it('should generate CLAUDE.md when it does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('CLAUDE.md')).toBe(true);
-        const content = tree.read('CLAUDE.md')?.toString();
-        expect(content).toContain('# General Guidelines for working with Nx');
-      });
-
-      it('should NOT overwrite CLAUDE.md if it already exists', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude'],
-        };
-
-        // Create existing file
-        tree.write('CLAUDE.md', 'Existing content');
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('CLAUDE.md')?.toString();
-        // The new implementation appends to existing content
-        expect(content).toContain('Existing content');
-      });
-
       it('should NOT generate CLAUDE.md when claude is not in agents array', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
-          agents: ['gemini'],
+          agents: ['codex'],
         };
 
         await setupAiAgentsGenerator(tree, options);
@@ -379,7 +135,9 @@ describe('setup-ai-agents generator', () => {
           source: {
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
+            ref: 'dist/next',
           },
+          autoUpdate: true,
         });
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
@@ -406,7 +164,9 @@ describe('setup-ai-agents generator', () => {
           source: {
             source: 'github',
             repo: 'nrwl/nx-ai-agents-config',
+            ref: 'dist/next',
           },
+          autoUpdate: true,
         });
         expect(config.enabledPlugins['nx@nx-claude-plugins']).toBe(true);
       });
@@ -701,6 +461,37 @@ describe('setup-ai-agents generator', () => {
         ]);
       });
 
+      it.each([undefined, 'dist/latest'])(
+        'should move a marketplace on ref %s to the channel branch',
+        async (ref) => {
+          tree.write(
+            '.claude/settings.json',
+            JSON.stringify({
+              extraKnownMarketplaces: {
+                'nx-claude-plugins': {
+                  source: {
+                    source: 'github',
+                    repo: 'nrwl/nx-ai-agents-config',
+                    ref,
+                  },
+                },
+              },
+            })
+          );
+
+          await setupAiAgentsGenerator(tree, {
+            directory: '.',
+            agents: ['claude'],
+          });
+
+          expect(
+            readJson(tree, '.claude/settings.json').extraKnownMarketplaces[
+              'nx-claude-plugins'
+            ].source.ref
+          ).toEqual('dist/next');
+        }
+      );
+
       it('should preserve existing ref in nx-claude-plugins source', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',
@@ -737,7 +528,32 @@ describe('setup-ai-agents generator', () => {
             repo: 'nrwl/nx-ai-agents-config',
             ref: 'experimental',
           },
+          autoUpdate: true,
         });
+      });
+
+      it('should keep auto-update off when the workspace turned it off', async () => {
+        tree.write(
+          '.claude/settings.json',
+          JSON.stringify({
+            extraKnownMarketplaces: {
+              'nx-claude-plugins': {
+                source: { source: 'github', repo: 'nrwl/nx-ai-agents-config' },
+                autoUpdate: false,
+              },
+            },
+          })
+        );
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['claude'],
+        });
+
+        const config = JSON.parse(tree.read('.claude/settings.json', 'utf-8'));
+        expect(
+          config.extraKnownMarketplaces['nx-claude-plugins'].autoUpdate
+        ).toBe(false);
       });
 
       it('should NOT write to .mcp.json for claude (MCP is provided by plugin)', async () => {
@@ -748,276 +564,6 @@ describe('setup-ai-agents generator', () => {
 
         await setupAiAgentsGenerator(tree, options);
 
-        expect(tree.exists('.mcp.json')).toBe(false);
-      });
-    });
-
-    describe('gemini', () => {
-      it('should generate .gemini/settings.json when gemini is specified', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('.gemini/settings.json')).toBe(true);
-        // Should also generate AGENTS.md by default
-        expect(tree.exists('AGENTS.md')).toBe(true);
-        // Should NOT generate claude files when only gemini is specified
-        expect(tree.exists('CLAUDE.md')).toBe(false);
-        expect(tree.exists('.mcp.json')).toBe(false);
-      });
-
-      it('should NOT generate .gemini/settings.json when gemini is not in agents array', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('.gemini/settings.json')).toBe(false);
-      });
-
-      it('should create .gemini/settings.json with nx-mcp server when file does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('.gemini/settings.json')).toBe(true);
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
-      });
-
-      it('should add nx-mcp server to existing .gemini/settings.json', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        // Create existing config
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify(
-            {
-              someConfig: 'value',
-              mcpServers: {
-                'existing-server': {
-                  type: 'stdio',
-                  command: 'existing',
-                  args: ['args'],
-                },
-              },
-            },
-            null,
-            2
-          )
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.someConfig).toBe('value');
-        expect(config.mcpServers['existing-server']).toBeDefined();
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
-      });
-
-      it('should NOT set contextFileName to AGENTS.md when GEMINI.md already exists', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        // Create existing GEMINI.md file
-        tree.write('GEMINI.md', '# Existing Gemini configuration');
-
-        // Create existing .gemini/settings.json with custom contextFileName
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify(
-            {
-              contextFileName: 'GEMINI.md',
-              mcpServers: {
-                'existing-server': {
-                  type: 'stdio',
-                  command: 'existing',
-                  args: ['args'],
-                },
-              },
-            },
-            null,
-            2
-          )
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        // Should preserve the existing contextFileName
-        expect(config.contextFileName).toBe('GEMINI.md');
-        // Should still add nx-mcp server
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
-      });
-
-      it('should set contextFileName to AGENTS.md when GEMINI.md does NOT exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        // Should set contextFileName to AGENTS.md when GEMINI.md doesn't exist
-        expect(config.contextFileName).toBe('AGENTS.md');
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
-      });
-
-      it('should respect existing contextFileName for rule generation', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        tree.write('CUSTOM-GEMINI.md', '# Custom Gemini configuration');
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            contextFileName: 'CUSTOM-GEMINI.md',
-          })
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const configAfter = readJson(tree, '.gemini/settings.json');
-
-        expect(configAfter.contextFileName).toBe('CUSTOM-GEMINI.md');
-        const content = tree.read('CUSTOM-GEMINI.md')?.toString();
-        expect(content).toContain('Custom Gemini configuration');
-        expect(content).toContain('Nx');
-      });
-
-      it('should delete .gemini/skills that also exist in .agents/skills', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        // Simulate shared .agents/skills (the new location)
-        tree.write(
-          '.agents/skills/nx-workspace/SKILL.md',
-          '# Nx Workspace Skill'
-        );
-        tree.write(
-          '.agents/skills/nx-generate/SKILL.md',
-          '# Nx Generate Skill'
-        );
-
-        // Simulate legacy .gemini/skills with matching + user-created skills
-        tree.write(
-          '.gemini/skills/nx-workspace/skill.md',
-          '# Legacy Nx Workspace'
-        );
-        tree.write(
-          '.gemini/skills/nx-generate/skill.md',
-          '# Legacy Nx Generate'
-        );
-        tree.write(
-          '.gemini/skills/my-custom-skill/skill.md',
-          '# My Custom Skill'
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        // Migrated skills should be deleted
-        expect(tree.exists('.gemini/skills/nx-workspace')).toBe(false);
-        expect(tree.exists('.gemini/skills/nx-generate')).toBe(false);
-        // User-created skill should be preserved
-        expect(tree.exists('.gemini/skills/my-custom-skill/skill.md')).toBe(
-          true
-        );
-        // Other .gemini files should still exist
-        expect(tree.exists('.gemini/settings.json')).toBe(true);
-      });
-
-      it('should not delete .gemini/skills when .agents/skills does not exist', async () => {
-        // Mock getAiConfigRepoPath to fail so .agents/skills is not created
-        const spy = vi
-          .spyOn(cloneModule, 'getAiConfigRepoPath')
-          .mockImplementation(() => {
-            throw new Error('no network');
-          });
-
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        // Only legacy skills, no shared .agents/skills
-        tree.write(
-          '.gemini/skills/nx-workspace/skill.md',
-          '# Legacy Nx Workspace'
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        // Should be preserved since there's no .agents/skills to compare against
-        expect(tree.exists('.gemini/skills/nx-workspace/skill.md')).toBe(true);
-
-        spy.mockRestore();
-      });
-
-      it('should not error when .gemini/skills does not exist', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('.gemini/skills')).toBe(false);
-        expect(tree.exists('.gemini/settings.json')).toBe(true);
-      });
-    });
-
-    describe('multiple agents', () => {
-      it('should generate files for both claude and gemini when both are specified', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['claude', 'gemini'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        expect(tree.exists('CLAUDE.md')).toBe(true);
-        expect(tree.exists('.claude/settings.json')).toBe(true);
-        expect(tree.exists('.gemini/settings.json')).toBe(true);
-        expect(tree.exists('AGENTS.md')).toBe(true);
-        // .mcp.json should NOT be created - Claude uses plugin, Gemini uses .gemini/settings.json
         expect(tree.exists('.mcp.json')).toBe(false);
       });
     });
@@ -1180,537 +726,655 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('.mcp.json')).toBe(false);
         expect(tree.exists('.gemini/settings.json')).toBe(false);
       });
+
+      it('should ignore agents nx no longer supports', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['copilot', 'gemini'] as any,
+        });
+
+        expect(tree.exists('.gemini')).toBe(false);
+        expect(tree.exists('.github/skills')).toBe(false);
+      });
+    });
+  });
+
+  describe('rules files', () => {
+    it('should not write AGENTS.md, CLAUDE.md or GEMINI.md', async () => {
+      await setupAiAgentsGenerator(tree, { directory: '.' });
+
+      expect(tree.exists('AGENTS.md')).toBe(false);
+      expect(tree.exists('CLAUDE.md')).toBe(false);
+      expect(tree.exists('GEMINI.md')).toBe(false);
+      expect(tree.exists('.gemini')).toBe(false);
     });
 
-    describe('MCP config extra args preservation', () => {
-      it('should preserve extra args in gemini MCP config', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+    it('should remove every Nx block whichever agents are selected', async () => {
+      tree.write('AGENTS.md', nxRulesBlock);
+      tree.write('GEMINI.md', `# Ours\n\n${nxRulesBlock}`);
+      tree.write('CLAUDE.md', nxRulesBlock);
+      tree.write(
+        '.gemini/settings.json',
+        JSON.stringify({ contextFileName: 'docs/AI.md' })
+      );
+      tree.write('docs/AI.md', `Ours.\n\n${nxRulesBlock}`);
 
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            mcpServers: {
-              'nx-mcp': {
-                type: 'stdio',
-                command: 'npx',
-                args: ['nx', 'mcp', '--transport', 'http'],
-              },
-            },
-          })
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp'].args).toEqual([
-          'nx',
-          'mcp',
-          '--transport',
-          'http',
-        ]);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
       });
 
-      it('should preserve multiple extra args in gemini MCP config', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+      expect(tree.exists('AGENTS.md')).toBe(false);
+      expect(tree.exists('CLAUDE.md')).toBe(false);
+      expect(tree.read('GEMINI.md', 'utf-8')).toEqual('# Ours\n');
+      expect(tree.read('docs/AI.md', 'utf-8')).toEqual('Ours.\n');
+    });
 
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            mcpServers: {
-              'nx-mcp': {
-                type: 'stdio',
-                command: 'npx',
-                args: [
-                  'nx',
-                  'mcp',
-                  '--experimental-polygraph',
-                  '--transport',
-                  'http',
-                ],
-              },
-            },
-          })
-        );
+    it('should remove the Nx blocks even when no agent can be set up', async () => {
+      latestPluginVersionSpy.mockResolvedValue(null);
+      tree.write('AGENTS.md', nxRulesBlock);
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp'].args).toEqual([
-          'nx',
-          'mcp',
-          '--experimental-polygraph',
-          '--transport',
-          'http',
-        ]);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
       });
 
-      it('should preserve extra args when upgrading from Nx 21 to 22 (gemini)', async () => {
-        getInstalledNxVersionSpy.mockReturnValue('22.0.0');
+      expect(tree.exists('AGENTS.md')).toBe(false);
+    });
 
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+    it('should delete a rules file that only held the Nx guidelines', async () => {
+      tree.write(
+        'AGENTS.md',
+        '<!-- nx configuration start-->\n<!-- Leave the start & end comments to automatically receive updates. -->\n\n# General Guidelines for working with Nx\n\n- use nx\n\n<!-- nx configuration end-->'
+      );
 
-        // Simulate old Nx 21 config with extra args
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            mcpServers: {
-              'nx-mcp': {
-                type: 'stdio',
-                command: 'npx',
-                args: ['nx-mcp', '--minimal', '--transport', 'http'],
-              },
-            },
-          })
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        // Should update base args to v22 format but preserve extras
-        expect(config.mcpServers['nx-mcp'].args).toEqual([
-          'nx',
-          'mcp',
-          '--minimal',
-          '--transport',
-          'http',
-        ]);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
 
-      it('should preserve extra args from versioned nx-mcp base command (gemini)', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+      expect(tree.exists('AGENTS.md')).toBe(false);
+    });
 
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            mcpServers: {
-              'nx-mcp': {
-                type: 'stdio',
-                command: 'npx',
-                args: ['nx-mcp@latest', '--experimental-polygraph'],
-              },
-            },
-          })
-        );
+    it('should remove only the Nx guidelines block from a rules file', async () => {
+      tree.write(
+        'CLAUDE.md',
+        '# My project\n\nOur conventions.\n\n<!-- nx configuration start-->\n## General Guidelines for working with Nx\n<!-- nx configuration end-->\n\n## More of ours\n\nKeep this.\n'
+      );
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp'].args).toEqual([
-          'nx',
-          'mcp',
-          '--experimental-polygraph',
-        ]);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
       });
 
-      it('should preserve extra args in opencode MCP command', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['opencode'],
-        };
+      expect(tree.read('CLAUDE.md', 'utf-8')).toEqual(
+        '# My project\n\nOur conventions.\n\n## More of ours\n\nKeep this.\n'
+      );
+    });
+  });
 
-        tree.write(
-          'opencode.json',
-          JSON.stringify({
-            mcp: {
-              'nx-mcp': {
-                type: 'local',
-                command: [
-                  'npx',
-                  'nx',
-                  'mcp',
-                  '--experimental-polygraph',
-                  '--transport',
-                  'http',
-                ],
-                enabled: true,
-              },
-            },
-          })
-        );
+  describe('cursor plugin', () => {
+    it('should register the Nx plugin on the branch of the release channel', async () => {
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({ other: true, plugins: { mine: { enabled: true } } })
+      );
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('opencode.json')?.toString() ?? '{}'
-        );
-        expect(config.mcp['nx-mcp'].command).toEqual([
-          'npx',
-          'nx',
-          'mcp',
-          '--experimental-polygraph',
-          '--transport',
-          'http',
-        ]);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
       });
 
-      it('should not add extra args when none exist in existing config', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+      expect(readJson(tree, '.cursor/settings.json')).toEqual({
+        other: true,
+        plugins: {
+          mine: { enabled: true },
+          'nx-agent-plugins/nx': {
+            enabled: true,
+            gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
+            gitRef: 'dist/next',
+          },
+        },
+      });
+      expect(latestPluginVersionSpy).not.toHaveBeenCalled();
+    });
 
-        tree.write(
-          '.gemini/settings.json',
-          JSON.stringify({
-            mcpServers: {
-              'nx-mcp': {
-                type: 'stdio',
-                command: 'npx',
-                args: ['nx', 'mcp'],
-              },
-            },
-          })
-        );
+    it('should keep keys users added to the Nx plugin entry', async () => {
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({
+          plugins: {
+            'nx-agent-plugins/nx': { custom: 'kept' },
+          },
+        })
+      );
 
-        await setupAiAgentsGenerator(tree, options);
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
 
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp'].args).toEqual(['nx', 'mcp']);
+      expect(
+        readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
+      ).toEqual({
+        custom: 'kept',
+        enabled: true,
+        gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
+        gitRef: 'dist/next',
       });
     });
 
-    describe('codex config from generated template', () => {
-      let getAiConfigRepoPathSpy: MockInstance;
-      let existsSyncSpy: MockInstance;
-      let readFileSyncSpy: MockInstance;
+    it('should move a channel branch to the channel nx follows', async () => {
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({
+          plugins: {
+            'nx-agent-plugins/nx': { enabled: true, gitRef: 'dist/latest' },
+          },
+        })
+      );
 
-      const generatedConfig = `[mcp_servers."nx-mcp"]
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
+
+      expect(
+        readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
+          .gitRef
+      ).toEqual('dist/next');
+    });
+
+    it('should keep a ref the workspace pinned', async () => {
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({
+          plugins: {
+            'nx-agent-plugins/nx': { enabled: true, gitRef: 'v2.0.0-beta.1' },
+          },
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
+
+      expect(
+        readJson(tree, '.cursor/settings.json').plugins['nx-agent-plugins/nx']
+          .gitRef
+      ).toEqual('v2.0.0-beta.1');
+    });
+
+    it('should remove copied files that were not edited and keep edited ones', async () => {
+      const unedited = '.cursor/agents/ci-monitor-subagent.md';
+      const edited = Object.keys(legacyAgentFiles).find(
+        (path) => path.startsWith('.cursor/') && path !== unedited
+      );
+      tree.write(unedited, shippedContent(unedited));
+      tree.write(edited, 'my own changes');
+      tree.write('.cursor/rules/mine.mdc', 'user rule');
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
+      const { messages } = await callback();
+
+      expect(tree.exists(unedited)).toBe(false);
+      expect(tree.exists('.cursor/agents')).toBe(false);
+      expect(tree.exists(edited)).toBe(true);
+      expect(tree.exists('.cursor/rules/mine.mdc')).toBe(true);
+      expect(
+        messages.find((m) => m.title.startsWith('Kept files'))?.bodyLines
+      ).toContain(`- ${edited}`);
+    });
+
+    it('should not report edited copies when only checking', async () => {
+      const edited = '.cursor/agents/ci-monitor-subagent.md';
+      tree.write(edited, 'my own changes');
+      tree.write(
+        '.cursor/settings.json',
+        JSON.stringify({
+          plugins: {
+            'nx-agent-plugins/nx': {
+              enabled: true,
+              gitUrl: 'https://github.com/nrwl/nx-ai-agents-config.git',
+              gitRef: 'v1.2.3',
+            },
+          },
+        })
+      );
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['cursor'],
+      });
+      const { messages } = await callback(true);
+
+      expect(messages.filter((m) => m.title.startsWith('Kept files'))).toEqual(
+        []
+      );
+    });
+  });
+
+  describe('codex plugin', () => {
+    it('should enable the Nx plugin for the project', async () => {
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+
+      expect(TOML.parse(tree.read('.codex/config.toml', 'utf-8'))).toEqual({
+        plugins: { 'nx@nx-agent-plugins': { enabled: true } },
+      });
+    });
+
+    it('should remove the nx-mcp server and copied subagents but keep user config', async () => {
+      const copiedAgent = '.codex/agents/ci-monitor-subagent.toml';
+      tree.write(copiedAgent, shippedContent(copiedAgent));
+      tree.write(
+        '.codex/config.toml',
+        `model = "o3"
+
+[mcp_servers."nx-mcp"]
 command = "npx"
-args = ["nx-mcp@latest", "--minimal"]
+args = ["nx", "mcp"]
+
+[mcp_servers.other]
+command = "other"
 
 [features]
 multi_agent = true
 
 [agents.ci-monitor-subagent]
 description = "Polls Nx Cloud CI pipeline."
-config_file = ".codex/agents/ci-monitor-subagent.toml"
-`;
+config_file = "agents/ci-monitor-subagent.toml"
 
-      beforeEach(() => {
-        getAiConfigRepoPathSpy = vi
-          .spyOn(cloneModule, 'getAiConfigRepoPath')
-          .mockReturnValue('/fake/repo');
-
-        const originalExistsSync = fs.existsSync;
-        existsSyncSpy = vi
-          .spyOn(fs, 'existsSync')
-          .mockImplementation((path: any) => {
-            if (
-              typeof path === 'string' &&
-              path.includes('/fake/repo/generated/.codex/config.toml')
-            ) {
-              return true;
-            }
-            if (
-              typeof path === 'string' &&
-              path.includes('/fake/repo/generated/.codex/agents')
-            ) {
-              return false; // No agent files to copy for simplicity
-            }
-            if (
-              typeof path === 'string' &&
-              path.includes('/fake/repo/generated/')
-            ) {
-              return false; // No other generated dirs
-            }
-            return originalExistsSync(path);
-          });
-
-        const originalReadFileSync = fs.readFileSync;
-        readFileSyncSpy = vi
-          .spyOn(fs, 'readFileSync')
-          .mockImplementation((path: any, ...args: any[]) => {
-            if (
-              typeof path === 'string' &&
-              path.includes('/fake/repo/generated/.codex/config.toml')
-            ) {
-              return generatedConfig;
-            }
-            return originalReadFileSync(path, ...args);
-          });
-      });
-
-      afterEach(() => {
-        getAiConfigRepoPathSpy.mockRestore();
-        existsSyncSpy.mockRestore();
-        readFileSyncSpy.mockRestore();
-      });
-
-      it('should write generated config.toml with adjusted MCP args for Nx 22+', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        expect(content).toContain('[agents.ci-monitor-subagent]');
-        expect(content).toContain('multi_agent = true');
-        // MCP args should be adjusted to Nx 22+ format
-        expect(content).toMatch(/"nx"/);
-        expect(content).toMatch(/"mcp"/);
-        // Should NOT contain the original nx-mcp@latest args
-        expect(content).not.toContain('nx-mcp@latest');
-      });
-
-      it('should write generated config.toml with adjusted MCP args for Nx < 22', async () => {
-        getInstalledNxVersionSpy.mockReturnValue('21.0.0');
-
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        expect(content).toMatch(/"nx-mcp"/);
-        expect(content).toContain('[agents.ci-monitor-subagent]');
-      });
-
-      it('should update existing sections and preserve user content', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        // Pre-existing config with user content and old MCP config
-        tree.write(
-          '.codex/config.toml',
-          `sandbox_mode = "read-only"
-
-[mcp_servers."nx-mcp"]
-command = "npx"
-args = ["nx-mcp"]
+[agents.mine]
+config_file = "agents/mine.toml"
 `
-        );
+      );
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        // User content preserved
-        expect(content).toContain('sandbox_mode');
-        expect(content).toContain('read-only');
-        // MCP args updated to Nx 22+ format
-        expect(content).toMatch(/"nx"/);
-        expect(content).toMatch(/"mcp"/);
-        // New sections added
-        expect(content).toContain('[agents.ci-monitor-subagent]');
-        expect(content).toContain('multi_agent = true');
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
 
-      it('should preserve extra MCP args from existing config', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        tree.write(
-          '.codex/config.toml',
-          `[mcp_servers."nx-mcp"]
-command = "npx"
-args = ["nx", "mcp", "--experimental-polygraph", "--transport", "http"]
-`
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        expect(content).toContain('--experimental-polygraph');
-        expect(content).toContain('--transport');
-        expect(content).toContain('http');
-      });
-
-      it('should not set multi_agent when user explicitly set it to false', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        tree.write(
-          '.codex/config.toml',
-          `[features]
-multi_agent = false
-`
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        // User's explicit false should be preserved
-        expect(content).toContain('multi_agent = false');
-        expect(content).not.toContain('multi_agent = true');
-        // Agent definitions should still be added
-        expect(content).toContain('[agents.ci-monitor-subagent]');
-      });
-
-      it('should append config to file with unrelated user content', async () => {
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        // User config with no nx content
-        tree.write(
-          '.codex/config.toml',
-          `model = "gpt-5-codex"
-sandbox_mode = "read-only"
-`
-        );
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        // User content preserved
-        expect(content).toContain('gpt-5-codex');
-        expect(content).toContain('read-only');
-        // Nx config added
-        expect(content).toContain('[agents.ci-monitor-subagent]');
-        expect(content).toContain('nx-mcp');
-      });
-
-      it('should fall back to hardcoded config when repo is unavailable', async () => {
-        getAiConfigRepoPathSpy.mockImplementation(() => {
-          throw new Error('Network error');
-        });
-
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['codex'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const content = tree.read('.codex/config.toml')?.toString();
-        // Should have basic MCP config (hardcoded fallback uses double quotes)
-        expect(content).toContain('[mcp_servers."nx-mcp"]');
-        expect(content).toContain('args = ["nx", "mcp"]');
-        // Should NOT have agents (fallback doesn't include them)
-        expect(content).not.toContain('[agents');
+      expect(tree.exists(copiedAgent)).toBe(false);
+      expect(TOML.parse(tree.read('.codex/config.toml', 'utf-8'))).toEqual({
+        model: 'o3',
+        mcp_servers: { other: { command: 'other' } },
+        features: { multi_agent: true },
+        agents: { mine: { config_file: 'agents/mine.toml' } },
+        plugins: { 'nx@nx-agent-plugins': { enabled: true } },
       });
     });
 
-    describe('Nx version-specific MCP configuration', () => {
-      it('should use "nx mcp" for Nx 22+ (gemini)', async () => {
-        getInstalledNxVersionSpy.mockReturnValue('22.0.0');
+    it('should keep the subagent entry when its copied file was edited', async () => {
+      tree.write('.codex/agents/ci-monitor-subagent.toml', 'edited = true');
+      tree.write(
+        '.codex/config.toml',
+        `[agents.ci-monitor-subagent]
+config_file = "agents/ci-monitor-subagent.toml"
+`
+      );
 
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
-
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
 
-      it('should use "nx-mcp" for Nx < 22 (gemini)', async () => {
-        getInstalledNxVersionSpy.mockReturnValue('21.0.0');
+      expect(
+        TOML.parse(tree.read('.codex/config.toml', 'utf-8')).agents
+      ).toEqual({
+        'ci-monitor-subagent': {
+          config_file: 'agents/ci-monitor-subagent.toml',
+        },
+      });
+    });
 
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+    it('should not rewrite a config that already enables the plugin', async () => {
+      const config = `# my comment
+[plugins."nx@nx-agent-plugins"]
+enabled = true
+`;
+      tree.write('.codex/config.toml', config);
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx-mcp'],
-        });
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
 
-      it('should use "nx mcp" as fallback when version cannot be determined (gemini)', async () => {
-        getInstalledNxVersionSpy.mockReturnValue(null);
+      expect(tree.read('.codex/config.toml', 'utf-8')).toEqual(config);
+    });
 
-        // Mock readFileSync to fail only for package.json so it falls back to default version
-        // but allow other file reads (needed for generateFiles)
-        const originalReadFileSync = fs.readFileSync;
-        const readFileSyncSpy = vi
-          .spyOn(fs, 'readFileSync')
-          .mockImplementation((path: any, ...args: any[]) => {
-            if (
-              typeof path === 'string' &&
-              path.endsWith('package.json') &&
-              !path.includes('node_modules')
-            ) {
-              throw new Error('File not found');
-            }
-            return originalReadFileSync(path, ...args);
-          });
+    it('should leave an unparseable config untouched and report it', async () => {
+      tree.write('.codex/config.toml', 'not [valid toml');
 
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { errors } = await callback(true);
 
-        await setupAiAgentsGenerator(tree, options);
+      expect(tree.read('.codex/config.toml', 'utf-8')).toEqual(
+        'not [valid toml'
+      );
+      expect(errors.map((e) => e.title)).toContain(
+        'Could not configure the Nx plugin for OpenAI Codex'
+      );
+    });
 
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
+    it('should keep copied subagents when the config cannot be parsed', async () => {
+      const copiedAgent = '.codex/agents/ci-monitor-subagent.toml';
+      tree.write(copiedAgent, shippedContent(copiedAgent));
+      tree.write('.codex/config.toml', 'not [valid toml');
 
-        readFileSyncSpy.mockRestore();
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
 
-      it('should use "nx mcp" for Nx 23+ (gemini)', async () => {
-        getInstalledNxVersionSpy.mockReturnValue('23.1.0');
+      expect(tree.exists(copiedAgent)).toBe(true);
+    });
 
-        const options: SetupAiAgentsGeneratorSchema = {
-          directory: '.',
-          agents: ['gemini'],
-        };
+    it('should install the plugin for the user when codex is available', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
 
-        await setupAiAgentsGenerator(tree, options);
-
-        const config = JSON.parse(
-          tree.read('.gemini/settings.json')?.toString() ?? '{}'
-        );
-        expect(config.mcpServers['nx-mcp']).toEqual({
-          type: 'stdio',
-          command: 'npx',
-          args: ['nx', 'mcp'],
-        });
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
       });
+      const { messages, errors } = await callback();
+
+      expect(installCodexPluginSpy).toHaveBeenCalledWith('1.2.3', tree.root);
+      expect(errors).toEqual([]);
+      expect(messages.map((m) => m.title)).toContain(
+        'Installed the Nx plugin for OpenAI Codex'
+      );
+    });
+
+    it('should report a failed install with the command to run', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
+      installCodexPluginSpy.mockReturnValue({ ok: false, error: 'boom' });
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { errors } = await callback();
+
+      expect(errors[0].bodyLines).toEqual([
+        'boom',
+        'Run: npx -y @nx/codex-plugin@1.2.3 install',
+      ]);
+    });
+
+    it('should explain the install step when codex is not available', async () => {
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { messages } = await callback();
+
+      expect(installCodexPluginSpy).not.toHaveBeenCalled();
+      expect(messages.map((m) => m.title)).toContain(
+        'Install the Nx plugin for OpenAI Codex once per machine'
+      );
+    });
+
+    it('should only report a missing user install when checking', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { messages } = await callback(true);
+
+      expect(installCodexPluginSpy).not.toHaveBeenCalled();
+      expect(messages.map((m) => m.title)).toEqual([
+        'The Nx plugin for OpenAI Codex is not installed for this user',
+      ]);
+    });
+
+    it('should not reinstall a plugin version that is already installed', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
+      isCodexPluginInstalledSpy.mockReturnValue(true);
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { messages, errors } = await callback();
+
+      expect(installCodexPluginSpy).not.toHaveBeenCalled();
+      expect(errors).toEqual([]);
+      expect(messages).toEqual([]);
+    });
+
+    it('should report nothing when checking an installed plugin', async () => {
+      isCodexAvailableSpy.mockReturnValue(true);
+      isCodexPluginInstalledSpy.mockReturnValue(true);
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['codex'],
+      });
+      const { messages } = await callback(true);
+
+      expect(isCodexPluginInstalledSpy).toHaveBeenCalledWith('1.2.3');
+      expect(messages).toEqual([]);
+    });
+  });
+
+  describe('opencode plugin', () => {
+    it('should add the Nx plugin on the channel dist-tag and remove the nx-mcp server', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          $schema: 'https://opencode.ai/config.json',
+          plugin: ['other-plugin'],
+          mcp: {
+            'nx-mcp': { type: 'local', command: ['npx', 'nx', 'mcp'] },
+          },
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json')).toEqual({
+        $schema: 'https://opencode.ai/config.json',
+        plugin: ['other-plugin', '@nx/opencode-plugin@next'],
+      });
+      expect(latestPluginVersionSpy).not.toHaveBeenCalled();
+    });
+
+    it('should move an entry on a dist-tag to the channel and keep its options', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          plugin: [
+            'other-plugin',
+            ['@nx/opencode-plugin@latest', { verbose: true }],
+          ],
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json').plugin).toEqual([
+        'other-plugin',
+        ['@nx/opencode-plugin@next', { verbose: true }],
+      ]);
+    });
+
+    it('should keep an entry pinned to a version and drop duplicates', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          plugin: [
+            ['@nx/opencode-plugin@0.9.0-beta.1', { verbose: true }],
+            'other-plugin',
+            '@nx/opencode-plugin',
+          ],
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json').plugin).toEqual([
+        ['@nx/opencode-plugin@0.9.0-beta.1', { verbose: true }],
+        'other-plugin',
+      ]);
+    });
+
+    it('should keep other MCP servers', async () => {
+      tree.write(
+        'opencode.json',
+        JSON.stringify({
+          mcp: {
+            'nx-mcp': { type: 'local', command: ['npx', 'nx', 'mcp'] },
+            mine: { type: 'local', command: ['mine'] },
+          },
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(readJson(tree, 'opencode.json')).toEqual({
+        mcp: { mine: { type: 'local', command: ['mine'] } },
+        plugin: ['@nx/opencode-plugin@next'],
+      });
+    });
+
+    it('should remove copied files', async () => {
+      const copied = Object.keys(legacyAgentFiles).find((path) =>
+        path.startsWith('.opencode/')
+      );
+      tree.write(copied, shippedContent(copied));
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['opencode'],
+      });
+
+      expect(tree.exists(copied)).toBe(false);
+      expect(tree.exists('.opencode')).toBe(false);
+    });
+  });
+
+  describe('Copilot and Gemini setups', () => {
+    it('should remove the Gemini MCP server and the settings file when nothing else is left', async () => {
+      tree.write(
+        '.gemini/settings.json',
+        JSON.stringify({
+          mcpServers: { 'nx-mcp': { command: 'npx', args: ['nx', 'mcp'] } },
+        })
+      );
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+
+      expect(tree.exists('.gemini')).toBe(false);
+    });
+
+    it('should keep other Gemini settings', async () => {
+      tree.write(
+        '.gemini/settings.json',
+        JSON.stringify({
+          theme: 'dark',
+          contextFileName: 'AGENTS.md',
+          mcpServers: {
+            'nx-mcp': { command: 'npx' },
+            mine: { command: 'mine' },
+          },
+        })
+      );
+      tree.write('AGENTS.md', `# Ours\n\n${nxRulesBlock}`);
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+
+      // AGENTS.md held Nx guidelines, so nx pointed Gemini at it
+      expect(readJson(tree, '.gemini/settings.json')).toEqual({
+        theme: 'dark',
+        mcpServers: { mine: { command: 'mine' } },
+      });
+      expect(tree.read('AGENTS.md', 'utf-8')).toEqual('# Ours\n');
+    });
+
+    it('should keep a contextFileName pointing at a user-written AGENTS.md', async () => {
+      tree.write(
+        '.gemini/settings.json',
+        JSON.stringify({ contextFileName: 'AGENTS.md' })
+      );
+      tree.write('AGENTS.md', '# Ours\n');
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+
+      expect(readJson(tree, '.gemini/settings.json')).toEqual({
+        contextFileName: 'AGENTS.md',
+      });
+    });
+
+    it('should remove copies for Copilot, Gemini and the shared skills on any run', async () => {
+      const copies = [
+        '.github/skills/nx-workspace/SKILL.md',
+        '.gemini/commands/monitor-ci.toml',
+        '.agents/skills/nx-workspace/SKILL.md',
+      ];
+      for (const copy of copies) {
+        tree.write(copy, shippedContent(copy));
+      }
+      tree.write('.github/workflows/ci.yml', 'on: push');
+
+      await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+
+      for (const copy of copies) {
+        expect(tree.exists(copy)).toBe(false);
+      }
+      expect(tree.exists('.gemini')).toBe(false);
+      expect(tree.exists('.agents')).toBe(false);
+      expect(tree.exists('.github/workflows/ci.yml')).toBe(true);
+    });
+
+    it('should keep and report edited copies', async () => {
+      tree.write('.github/skills/nx-workspace/SKILL.md', 'my own changes');
+
+      const callback = await setupAiAgentsGenerator(tree, {
+        directory: '.',
+        agents: ['claude'],
+      });
+      const { messages } = await callback();
+
+      expect(tree.exists('.github/skills/nx-workspace/SKILL.md')).toBe(true);
+      expect(
+        messages.find((m) => m.title.startsWith('Kept files'))?.bodyLines
+      ).toContain('- .github/skills/nx-workspace/SKILL.md');
     });
   });
 });

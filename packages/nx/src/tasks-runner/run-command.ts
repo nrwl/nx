@@ -696,9 +696,7 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
       return;
     }
     const { outdatedAgents } = await daemonClient.getConfigureAiAgentsStatus();
-    if (
-      !shouldPrintConfigureAiAgentsDisclaimer(outdatedAgents, workspaceRoot)
-    ) {
+    if (!shouldPrintConfigureAiAgentsDisclaimer(outdatedAgents)) {
       return;
     }
     output.logRawLine(

@@ -77,17 +77,15 @@ export interface CreateWorkspaceOptions {
 export const supportedAgents = [
   'claude',
   'codex',
-  'copilot',
   'cursor',
-  'gemini',
   'opencode',
 ] as const;
 export type Agent = (typeof supportedAgents)[number];
 export const agentDisplayMap: Record<Agent, string> = {
   claude: 'Claude Code',
-  gemini: 'Gemini',
   codex: 'OpenAI Codex',
-  copilot: 'GitHub Copilot for VSCode',
   cursor: 'Cursor',
   opencode: 'OpenCode',
 };
+/** No longer configured; accepted on the command line only to warn about them. */
+export const removedAgents = ['copilot', 'gemini'] as const;

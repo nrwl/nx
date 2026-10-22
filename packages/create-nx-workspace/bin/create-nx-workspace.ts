@@ -3,6 +3,7 @@ import chalk from 'chalk';
 
 import {
   CreateWorkspaceOptions,
+  removedAgents,
   supportedAgents,
 } from '../src/create-workspace-options';
 import {
@@ -316,7 +317,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('aiAgents', {
             describe: chalk.dim`List of AI agents to configure. Use "none" to skip.`,
             type: 'array',
-            choices: [...supportedAgents, 'none'],
+            choices: [...supportedAgents, ...removedAgents, 'none'],
           })
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
