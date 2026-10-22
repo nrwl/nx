@@ -643,6 +643,7 @@ function getDependencies(
                 isV5
               );
               const target =
+                keyMap.get(versionRange)?.values().next().value ||
                 ctx.externalNodes[`npm:${name}@${version}`] ||
                 ctx.externalNodes[`npm:${name}`];
               if (target) {
