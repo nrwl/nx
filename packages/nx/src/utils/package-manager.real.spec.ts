@@ -1,6 +1,7 @@
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   statSync,
   utimesSync,
@@ -8,8 +9,11 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { packageManager } from '../../../../package.json';
 import { getPackageManagerVersion } from './package-manager';
+
+const { packageManager } = JSON.parse(
+  readFileSync(join(__dirname, '../../../../package.json'), 'utf-8')
+) as { packageManager: string };
 
 it('detects the pnpm version without creating temporary workspace files', () => {
   const directory = mkdtempSync(join(tmpdir(), 'nx-pnpm-version-'));
