@@ -475,7 +475,7 @@
     "24.0.1-storybook-8": {
       "version": "24.0.1-beta.0",
       "requires": {
-        "storybook": ">=8.0.0 <8.6.19"
+        "storybook": "^8.0.0"
       },
       "packages": {
         "@storybook/angular": {
@@ -570,19 +570,7 @@
           "version": "^8.6.19",
           "alwaysAddToPackageJson": false
         },
-        "@storybook/core": {
-          "version": "^8.6.19",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/core-server": {
-          "version": "^8.6.19",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/experimental-addon-test": {
-          "version": "^8.6.19",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/builder-vite": {
+        "@storybook/addon-essentials": {
           "version": "^8.6.19",
           "alwaysAddToPackageJson": false
         }
@@ -591,7 +579,7 @@
     "24.0.1-storybook-9": {
       "version": "24.0.1-beta.0",
       "requires": {
-        "storybook": ">=9.0.0 <9.1.21"
+        "storybook": "^9.0.0"
       },
       "packages": {
         "@storybook/angular": {
@@ -691,10 +679,6 @@
           "alwaysAddToPackageJson": false
         },
         "@storybook/addon-vitest": {
-          "version": "^9.1.21",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/builder-vite": {
           "version": "^9.1.21",
           "alwaysAddToPackageJson": false
         }
@@ -703,7 +687,7 @@
     "24.0.1-storybook-10": {
       "version": "24.0.1-beta.0",
       "requires": {
-        "storybook": ">=10.0.0 <10.6.2"
+        "storybook": "^10.0.0"
       },
       "packages": {
         "@storybook/angular": {
@@ -802,15 +786,7 @@
           "version": "^10.6.2",
           "alwaysAddToPackageJson": false
         },
-        "@storybook/addon-mcp": {
-          "version": "^10.6.2",
-          "alwaysAddToPackageJson": false
-        },
         "@storybook/addon-vitest": {
-          "version": "^10.6.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@storybook/builder-vite": {
           "version": "^10.6.2",
           "alwaysAddToPackageJson": false
         }
@@ -848,30 +824,6 @@
       "packages": {
         "@storybook/experimental-addon-test": {
           "version": "^8.6.19",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "24.0.1-storybook-addon-vitest-9": {
-      "version": "24.0.1-beta.0",
-      "requires": {
-        "@storybook/addon-vitest": ">=9.0.0 <9.1.21"
-      },
-      "packages": {
-        "@storybook/addon-vitest": {
-          "version": "^9.1.21",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "24.0.1-storybook-addon-vitest-10": {
-      "version": "24.0.1-beta.0",
-      "requires": {
-        "@storybook/addon-vitest": ">=10.0.0 <10.6.2"
-      },
-      "packages": {
-        "@storybook/addon-vitest": {
-          "version": "^10.6.2",
           "alwaysAddToPackageJson": false
         }
       }
