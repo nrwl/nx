@@ -176,7 +176,6 @@ export async function configurationGeneratorInternal(
       }
     } else {
       tsconfig.compilerOptions.outDir = `${offsetFromProjectRoot}dist/out-tsc`;
-      tsconfig.compilerOptions.module = 'commonjs';
     }
 
     writeJson(tree, tsconfigPath, tsconfig);
