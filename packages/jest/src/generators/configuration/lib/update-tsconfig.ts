@@ -1,7 +1,6 @@
 import {
   joinPathFragments,
   logger,
-  readJson,
   readProjectConfiguration,
   updateJson,
   type Tree,
@@ -98,26 +97,20 @@ export function updateTsConfig(
     });
 
     // A composite spec config reaches runtime sources only through a project
-    // reference. Skip it when a runtime tsconfig.json references the spec config.
+    // reference. Skip it when the runtime config references the spec config.
+    const specTsconfigPath = joinPathFragments(root, 'tsconfig.spec.json');
     const runtimeReference = `./${posix.relative(root, runtimeTsconfigPath)}`;
     if (
       options.isTsSolutionSetup &&
-      !readJson(host, runtimeTsconfigPath).references?.some(
-        (r) => r.path === './tsconfig.spec.json'
-      ) &&
-      canBeReferenced(host, runtimeTsconfigPath)
+      canBeReferencedBy(host, runtimeTsconfigPath, specTsconfigPath)
     ) {
-      updateJson(
-        host,
-        joinPathFragments(root, 'tsconfig.spec.json'),
-        (json) => {
-          json.references ??= [];
-          if (!json.references.some((r) => r.path === runtimeReference)) {
-            json.references.push({ path: runtimeReference });
-          }
-          return json;
+      updateJson(host, specTsconfigPath, (json) => {
+        json.references ??= [];
+        if (!json.references.some((r) => r.path === runtimeReference)) {
+          json.references.push({ path: runtimeReference });
         }
-      );
+        return json;
+      });
     }
   } else {
     logger.warn(
@@ -127,13 +120,23 @@ export function updateTsConfig(
   }
 }
 
-function canBeReferenced(tree: Tree, tsconfigPath: string): boolean {
+function canBeReferencedBy(
+  tree: Tree,
+  tsconfigPath: string,
+  referrerPath: string
+): boolean {
   const ts = ensureTypescript();
   const host = createTreeParseConfigHost(tree);
-  const { options } = ts.parseJsonConfigFileContent(
+  const { options, projectReferences } = ts.parseJsonConfigFileContent(
     ts.readConfigFile(tsconfigPath, host.readFile).config,
     host,
     posix.dirname(tsconfigPath)
   );
-  return options.composite === true && !options.noEmit;
+  return (
+    options.composite === true &&
+    !options.noEmit &&
+    !projectReferences?.some(
+      (r) => ts.resolveProjectReferencePath(r) === referrerPath
+    )
+  );
 }
