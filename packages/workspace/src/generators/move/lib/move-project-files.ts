@@ -2,6 +2,8 @@ import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { dirname, join, relative, sep } from 'path';
 import { NormalizedSchema } from '../schema';
 
+export const MOVED_JEST_CONFIG_EXTENSIONS = ['js', 'ts', 'cts'].join('|');
+
 /**
  * Moves a project to the given destination path
  *
@@ -23,7 +25,9 @@ export function moveProjectFiles(
     '.eslintrc.json',
     'eslint.config.js',
     'eslint.config.cjs',
-    /^jest\.config\.((app|lib)\.)?(js|ts|cts)$/,
+    new RegExp(
+      `^jest\\.config\\.((app|lib)\\.)?(${MOVED_JEST_CONFIG_EXTENSIONS})$`
+    ),
     /^vite\.config\.m?[jt]s$/,
     /^webpack.*\.js$/,
     'index.html', // Vite
@@ -52,8 +56,9 @@ export function moveProjectFiles(
 
   // The workspace Jest config runs every project's config, so it stays
   const isWorkspaceJestConfig = (file: string) =>
-    /^jest\.config\.(js|ts|cts)$/.test(file) &&
-    tree.read(file, 'utf-8').includes('getJestProjectsAsync()');
+    new RegExp(`^jest\\.config\\.(${MOVED_JEST_CONFIG_EXTENSIONS})$`).test(
+      file
+    ) && tree.read(file, 'utf-8').includes('getJestProjectsAsync()');
 
   visitNotIgnoredFiles(tree, project.root, (file) => {
     if (
@@ -65,9 +70,11 @@ export function moveProjectFiles(
     // This is a rename but Angular Devkit isn't capable of writing to a file after it's renamed so this is a workaround
     let relativeFromOriginalSource = relative(project.root, file);
     if (project.root === '.') {
-      // @nx/jest/plugin infers `jest.config.app|lib` only at the workspace root
+      // Before Nx 24, @nx/jest:configuration renamed a root project's config to `jest.config.app|lib`
       relativeFromOriginalSource = relativeFromOriginalSource.replace(
-        /^jest\.config\.(app|lib)\./,
+        new RegExp(
+          `^jest\\.config\\.(app|lib)\\.(?=(${MOVED_JEST_CONFIG_EXTENSIONS})$)`
+        ),
         'jest.config.'
       );
     }

@@ -7,6 +7,7 @@ import {
 import * as path from 'path';
 import { extname, join } from 'path';
 import { NormalizedSchema } from '../schema';
+import { MOVED_JEST_CONFIG_EXTENSIONS } from './move-project-files';
 const allowedExt = ['.ts', '.js', '.json', '.cts', '.cjs'];
 
 /**
@@ -72,15 +73,23 @@ export function updateFilesForRootProjects(
     );
     let newContent = oldContent
       .replace(regex, newRelativeRoot)
-      // Restore the `jest` command the @nx/jest configuration generator rewrote,
-      // so the target keeps merging with the one @nx/jest/plugin infers
+      // The moved config is `jest.config.<ext>`, so plain `jest` merges with the
+      // target @nx/jest/plugin infers at the new root
       .replace(
-        /(["'`])jest --config jest\.config\.(?:app|lib)\.[cm]?[jt]s\1/g,
+        new RegExp(
+          `(["'\`])jest --config jest\\.config\\.(?:app|lib)\\.(?:${MOVED_JEST_CONFIG_EXTENSIONS})\\1`,
+          'g'
+        ),
         '$1jest$1'
       )
       // moveProjectFiles drops `.app`/`.lib` from the root-level Jest config only
-      .replace(/([^\s'"`=]*?)jest\.config\.(?:app|lib)\./g, (reference, dir) =>
-        rootDirPrefixes.includes(dir) ? `${dir}jest.config.` : reference
+      .replace(
+        new RegExp(
+          `([^\\s'"\`=]*?)jest\\.config\\.(?:app|lib)\\.(?=(?:${MOVED_JEST_CONFIG_EXTENSIONS})(?!\\w))`,
+          'g'
+        ),
+        (reference, dir) =>
+          rootDirPrefixes.includes(dir) ? `${dir}jest.config.` : reference
       );
     if (file === 'tsconfig.json') {
       // Since we skipped updating "extends" earlier, need to point to the base config.

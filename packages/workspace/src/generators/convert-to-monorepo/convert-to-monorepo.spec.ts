@@ -126,7 +126,18 @@ describe('monorepo generator', () => {
           command: 'jest --config jest.config.app.cts',
         };
         project.targets['test-coverage'] = {
-          command: 'jest --config ./jest.config.app.cts --coverage',
+          executor: 'nx:run-commands',
+          options: {
+            command: 'jest --config ./jest.config.app.cts --coverage',
+            cwd: '.',
+          },
+        };
+        project.targets['test-options'] = {
+          executor: 'nx:run-commands',
+          options: { command: 'jest --config jest.config.app.cts' },
+        };
+        project.targets['test-mjs'] = {
+          command: 'jest --config jest.config.app.mjs',
         };
         updateProjectConfiguration(tree, 'demo', project);
       } else {
@@ -139,9 +150,14 @@ describe('monorepo generator', () => {
       if (withWorkspaceConfig) {
         const { targets } = readProjectConfiguration(tree, 'demo');
         expect(targets.test.command).toBe('jest');
-        expect(targets['test-coverage'].command).toBe(
-          'jest --config apps/demo/jest.config.cts --coverage'
+        expect(targets['test-options'].options.command).toBe('jest');
+        expect(targets['test-mjs'].command).toBe(
+          'jest --config jest.config.app.mjs'
         );
+        expect(targets['test-coverage'].options).toEqual({
+          command: 'jest --config apps/demo/jest.config.cts --coverage',
+          cwd: '.',
+        });
         expect(
           readJson(tree, 'apps/demo/tsconfig.spec.json').include
         ).toContain('src/unit/jest.config.app.ts');
