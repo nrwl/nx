@@ -8,6 +8,7 @@ import {
   rmDist,
   runCLI,
   runCommandUntil,
+  shouldRunPlaywrightTests,
   tmpProjPath,
   uniq,
   updateFile,
@@ -101,6 +102,8 @@ describe('Angular Projects - SSR', () => {
       version: number;
     }[] = [];
     let browser: Browser | undefined;
+    const reloadScriptPattern =
+      /<script\b[^>]*\sid=(["'])nx-angular-ssr-reload\1[^>]*>/g;
 
     try {
       for (let index = 0; index < 2; index++) {
@@ -120,6 +123,20 @@ describe('Angular Projects - SSR', () => {
         runCLI(
           `generate @nx/angular:app ${name} --bundler=rspack --ssr --port=${application.devServerPort} --no-interactive`
         );
+        updateFile(`${name}/rspack.config.ts`, (source) => {
+          const indexOption = /index:\s*(['"])\.\/src\/index\.html\1/g;
+          expect(source.match(indexOption)).toHaveLength(1);
+          return source.replace(
+            indexOption,
+            () => `index: {
+      input: './src/index.html',
+      transformer: async (content) => content.replace(
+        /<body([^>]*)>/,
+        '<body$1><div id="index-transform-marker" hidden></div>'
+      ),
+    }`
+          );
+        });
         updateFile(`${name}/src/server.ts`, (source) => {
           expect(source).toContain('const app = express();');
           const listenStatement =
@@ -139,7 +156,9 @@ app.use((_req, res, next) => {
               )
               .replace(
                 listenStatement,
-                (statement) => `  appendFileSync(${JSON.stringify(application.startsFile)}, reloadVersion + ':' + process.pid + '\\n');
+                (
+                  statement
+                ) => `  appendFileSync(${JSON.stringify(application.startsFile)}, reloadVersion + ':' + process.pid + '\\n');
   const listen = () => {
     if (existsSync(${JSON.stringify(application.holdFile)})) {
       setTimeout(listen, 10);
@@ -171,6 +190,8 @@ ${statement.replace(/^/gm, '  ')}
       // "RenderMode.Prerender", which the generated server routes use
       const prerenderedPage = readFile(`dist/${app}/browser/index.html`);
       expect(prerenderedPage).toContain('ng-server-context');
+      expect(prerenderedPage).toContain('id="index-transform-marker"');
+      expect(prerenderedPage.match(reloadScriptPattern) ?? []).toHaveLength(0);
       expect(prerenderedPage).toMatch(/<style[^>]*>[^<]*\.page-only\{/);
       // critical CSS inlined twice defers the stylesheet to a print media query
       // that never switches back
@@ -230,6 +251,36 @@ ${statement.replace(/^/gm, '  ')}
       );
       expect(assetResponse.status).toBe(200);
 
+      const checkReloadDocuments = (name: string) => {
+        for (const output of [
+          `dist/${name}/browser/index.html`,
+          `dist/${name}/browser/index.original.html`,
+          `dist/${name}/server/index.server.html`,
+          `dist/${name}/server/index.csr.html`,
+        ]) {
+          const document = readFile(output);
+          const reloadScripts = [...document.matchAll(reloadScriptPattern)];
+          expect(reloadScripts).toHaveLength(1);
+          if (name === app) {
+            expect(document).toContain('id="index-transform-marker"');
+            expect(reloadScripts[0].index).toBeLessThan(
+              document.indexOf('id="index-transform-marker"')
+            );
+          }
+        }
+      };
+      for (const application of applications) {
+        checkReloadDocuments(application.name);
+        const browserResponse = await fetch(
+          `http://localhost:${application.devServerPort}/`,
+          { headers: { accept: 'text/html' } }
+        );
+        expect(browserResponse.status).toBe(200);
+        const browserHtml = await browserResponse.text();
+        expect(browserHtml).toContain('id="index-transform-marker"');
+        expect(browserHtml.match(reloadScriptPattern) ?? []).toHaveLength(0);
+      }
+
       for (const application of applications) {
         application.version = 1;
         updateFile(`${application.name}/src/server.ts`, (source) =>
@@ -255,6 +306,10 @@ ${statement.replace(/^/gm, '  ')}
           }
         }
         expect(servedVersion).toBe('1');
+      }
+
+      if (!(await shouldRunPlaywrightTests())) {
+        return;
       }
 
       browser = await chromium.launch();
@@ -343,6 +398,7 @@ ${statement.replace(/^/gm, '  ')}
         const [response] = await finished;
         expect(response.status()).toBe(200);
         await page.waitForLoadState('load');
+        checkReloadDocuments(application.name);
         for (const current of applications) {
           expect(current.navigations).toBe(
             navigationCounts.get(current)! + Number(current === application)

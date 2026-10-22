@@ -24,12 +24,15 @@ export class SsrReloadServer {
   }
 
   async close(): Promise<void> {
-    if (!this.#server) {
+    const server = this.#server;
+    if (!server) {
       return;
     }
-    this.#server.clients.forEach((client) => client.terminate());
+    this.#server = undefined;
+    this.#listening = undefined;
+    server.clients.forEach((client) => client.terminate());
     await new Promise<void>((resolve, reject) => {
-      this.#server.close((error) => (error ? reject(error) : resolve()));
+      server.close((error) => (error ? reject(error) : resolve()));
     });
   }
 }
