@@ -16,7 +16,8 @@ interface PostcssOptions {
 export function getCommonLoadersForCssModules(
   options: any,
   includePaths: string[],
-  cssExtractLoader: string
+  cssExtractLoader: string,
+  browserslistQueries?: string[]
 ) {
   // load component css as raw strings
   return [
@@ -54,6 +55,7 @@ export function getCommonLoadersForCssModules(
         postcssOptions: postcssOptionsCreator(options, {
           includePaths,
           forCssModules: true,
+          browserslistQueries,
         }),
       },
     },
@@ -151,9 +153,11 @@ function postcssOptionsCreator(
               publicPath: options.publicPath,
               rebaseRootRelative: options.rebaseRootRelative,
             }),
-            // Without the build's browsers, autoprefixer reads browserslist next to each file.
-            autoprefixer({ overrideBrowserslist: browserslistQueries }),
           ]),
+      // Without the build's browsers, autoprefixer reads browserslist next to each file.
+      ...(forCssModules && !browserslistQueries
+        ? []
+        : [autoprefixer({ overrideBrowserslist: browserslistQueries })]),
     ],
   });
 

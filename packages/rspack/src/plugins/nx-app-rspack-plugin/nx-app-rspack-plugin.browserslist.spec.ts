@@ -41,9 +41,12 @@ describe('NxAppRspackPlugin browserslist support', () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  async function build(target: Configuration['target']) {
+  async function build(
+    target: Configuration['target'],
+    mode: Configuration['mode'] = 'production'
+  ) {
     const compiler = rspack({
-      mode: 'production',
+      mode,
       target,
       output: { path: join(root, 'dist') },
       plugins: [
@@ -52,7 +55,7 @@ describe('NxAppRspackPlugin browserslist support', () => {
           projectRoot: '.',
           main: 'src/main.ts',
           index: 'src/index.html',
-          mode: 'production',
+          mode,
           optimization: true,
           outputHashing: 'none',
           externalDependencies: 'none',
@@ -153,6 +156,38 @@ describe('NxAppRspackPlugin browserslist support', () => {
 
     expect(readFileSync(join(root, 'dist/main.js'), 'utf8')).toContain(script);
   });
+
+  it.each([
+    {
+      name: 'the browsers in a browserslist config',
+      browserslist: 'ie 11',
+      style: /\{\s*-ms-user-select: none;\s*user-select: none;\s*\}/,
+    },
+    {
+      name: 'apps without a browserslist config',
+      browserslist: null,
+      style: /\{\s*user-select: none;\s*\}/,
+    },
+  ])(
+    'builds CSS modules in development for $name',
+    async ({ browserslist, style }) => {
+      writeFileSync(
+        join(root, 'src/main.ts'),
+        `import styles from './app.module.css';\nconsole.log(styles);\n`
+      );
+      writeFileSync(
+        join(root, 'src/app.module.css'),
+        '.a { user-select: none; }\n'
+      );
+      if (browserslist) {
+        writeFileSync(join(root, '.browserslistrc'), browserslist);
+      }
+
+      await build('web', 'development');
+
+      expect(readFileSync(join(root, 'dist/main.css'), 'utf8')).toMatch(style);
+    }
+  );
 
   it('builds web apps when rspack returns nothing from its defaults', async () => {
     const applyDefaults = rspack.config.applyRspackOptionsDefaults;

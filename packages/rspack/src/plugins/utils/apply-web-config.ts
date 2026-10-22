@@ -176,7 +176,8 @@ export function applyWebConfig(
       use: getCommonLoadersForCssModules(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -186,7 +187,8 @@ export function applyWebConfig(
         ...getCommonLoadersForCssModules(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -210,7 +212,8 @@ export function applyWebConfig(
         ...getCommonLoadersForCssModules(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
