@@ -7,6 +7,7 @@ import { RunningTasksService } from '../native';
 import { getLocalDbConnection } from '../utils/db-connection';
 import type { LifeCycle } from './life-cycle';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
+import { getExecutorForTask } from './utils';
 
 const { root } = vi.hoisted(() => {
   const { mkdtempSync, realpathSync, writeFileSync } = require('node:fs');
@@ -30,8 +31,9 @@ const hashTask = vi.hoisted(() =>
     details: { command: '', nodes: {}, implicitDeps: {}, runtime: {} },
   }))
 );
+const hashTasks = vi.hoisted(() => vi.fn());
 vi.mock('../hasher/create-task-hasher', () => ({
-  createTaskHasher: () => ({ hashTask }),
+  createTaskHasher: () => ({ hashTask, hashTasks }),
 }));
 vi.mock('../utils/dotenv', () => ({ loadRootEnvFiles: vi.fn() }));
 vi.mock('./run-command', () => ({
@@ -119,7 +121,20 @@ function createGraphs(
   return { projectGraph, fullTaskGraph, batch };
 }
 
+function listenerLimits() {
+  return [process, process.stdout, process.stderr].map((emitter) =>
+    emitter.getMaxListeners()
+  );
+}
+
+function processListenerCounts() {
+  return ['exit', 'message', 'SIGINT', 'SIGTERM', 'SIGHUP'].map((event) =>
+    process.listenerCount(event)
+  );
+}
+
 describe('agent entry points', () => {
+  const initialLimits = listenerLimits();
   afterAll(() => rmSync(root, { recursive: true, force: true }));
 
   it('hashes and starts a server held back for a server in the same batch', async () => {
@@ -219,5 +234,131 @@ describe('agent entry points', () => {
       ['a:build', 'a:build-hash', 'success'],
       ['b:build', 'b:build-hash', 'success'],
     ]);
+  });
+
+  it('runs more run-commands tasks at once than the default listener limit allows', async () => {
+    const tasks = Array.from({ length: 12 }, (_, i) =>
+      createTask(`p${i}:lint`)
+    );
+    const { projectGraph, fullTaskGraph, batch } = createGraphs(
+      Object.fromEntries(
+        tasks.map(({ target: { project } }) => [
+          project,
+          {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'node -e "setTimeout(() => {}, 500)"',
+              __unparsed__: [],
+            },
+          },
+        ])
+      ),
+      tasks
+    );
+    const actual = await vi.importActual<
+      typeof import('../executors/run-commands/run-commands.impl')
+    >('../executors/run-commands/run-commands.impl');
+    const mocked = vi.mocked(runCommands).getMockImplementation();
+    vi.mocked(runCommands).mockImplementation(actual.runCommands);
+    const warnings: Error[] = [];
+    const onWarning = (warning: Error) => warnings.push(warning);
+    process.on('warning', onWarning);
+
+    try {
+      const results = await runDiscreteTasks(
+        batch,
+        projectGraph,
+        fullTaskGraph,
+        {},
+        {} as LifeCycle
+      );
+      expect(
+        (await Promise.all(results)).flat().map(({ status }) => status)
+      ).toEqual(tasks.map(() => 'success'));
+      await vi.waitFor(() => expect(listenerLimits()).toEqual(initialLimits));
+    } finally {
+      process.off('warning', onWarning);
+      vi.mocked(runCommands).mockImplementation(mocked);
+    }
+    expect(warnings.map(({ name }) => name)).not.toContain(
+      'MaxListenersExceededWarning'
+    );
+  });
+
+  it('removes its listeners and gives their room back when a call fails before its tasks start', async () => {
+    const tasks = [createTask('a:build', { cache: true })];
+    const { projectGraph, fullTaskGraph, batch } = createGraphs(
+      { a: { executor: 'nx:noop' } },
+      tasks
+    );
+    // Earlier tests' calls give their room back once their tasks settle
+    await vi.waitFor(() => expect(listenerLimits()).toEqual(initialLimits));
+    const initialCounts = processListenerCounts();
+    hashTask.mockRejectedValueOnce(new Error('hashing failed'));
+
+    await expect(
+      runDiscreteTasks(batch, projectGraph, fullTaskGraph, {}, {} as LifeCycle)
+    ).rejects.toThrow('hashing failed');
+    await vi.waitFor(() => {
+      expect(processListenerCounts()).toEqual(initialCounts);
+      expect(listenerLimits()).toEqual(initialLimits);
+    });
+  });
+
+  it('keeps its listeners until the batches it started settle when a call fails', async () => {
+    const tasks = [
+      createTask('a:build', { cache: true }),
+      createTask('b:build'),
+    ];
+    const { projectGraph, fullTaskGraph, batch } = createGraphs(
+      { a: { executor: 'nx:noop' }, b: { executor: 'batched:build' } },
+      tasks
+    );
+    const executorForTask = vi.mocked(getExecutorForTask);
+    const defaultExecutor = executorForTask.getMockImplementation();
+    executorForTask.mockImplementation((task, projects) => {
+      const executor = defaultExecutor(task, projects);
+      return task.target.project === 'b'
+        ? {
+            ...executor,
+            batchImplementationFactory: () => vi.fn(),
+            preferBatch: true,
+          }
+        : executor;
+    });
+    await vi.waitFor(() => expect(listenerLimits()).toEqual(initialLimits));
+    const initialCounts = processListenerCounts();
+    let failBatchHashing: (error: Error) => void;
+    hashTasks.mockReturnValueOnce(
+      new Promise((_, reject) => (failBatchHashing = reject))
+    );
+    hashTask.mockRejectedValueOnce(new Error('hashing failed'));
+
+    try {
+      await expect(
+        runDiscreteTasks(
+          batch,
+          projectGraph,
+          fullTaskGraph,
+          {},
+          {} as LifeCycle
+        )
+      ).rejects.toThrow('hashing failed');
+      // Lets a disposal that does not wait for the batch finish first
+      await new Promise((resolve) => setImmediate(resolve));
+      // The orchestrator's listeners (one per event) and the call's room (2 tasks + 1)
+      expect(processListenerCounts()).toEqual(
+        initialCounts.map((count) => count + 1)
+      );
+      expect(listenerLimits()).toEqual(initialLimits.map((limit) => limit + 3));
+
+      failBatchHashing(new Error('batch hashing failed'));
+      await vi.waitFor(() => {
+        expect(processListenerCounts()).toEqual(initialCounts);
+        expect(listenerLimits()).toEqual(initialLimits);
+      });
+    } finally {
+      executorForTask.mockImplementation(defaultExecutor);
+    }
   });
 });
