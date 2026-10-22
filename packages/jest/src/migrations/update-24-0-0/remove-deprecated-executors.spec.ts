@@ -8,8 +8,10 @@ import {
   updateNxJson,
   writeJson,
   type ExpandedPluginConfiguration,
+  type NxJsonConfiguration,
   type ProjectConfiguration,
   type ProjectGraph,
+  type TargetConfiguration,
   type Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
@@ -173,6 +175,7 @@ function createTestProject(
   return project;
 }
 
+import { getJestProjectsAsync } from '../../utils/config/get-jest-projects';
 import update from './remove-deprecated-executors';
 
 describe('remove-deprecated-executors', () => {
@@ -265,7 +268,15 @@ describe('remove-deprecated-executors', () => {
       };
     }
 
-    it('converts the other projects when one uses a config file name the plugin does not detect', async () => {
+    const tsNodeEnv = {
+      TS_NODE_COMPILER_OPTIONS: JSON.stringify({
+        moduleResolution: 'node10',
+        module: 'commonjs',
+        customConditions: null,
+      }),
+    };
+
+    it('runs Jest with a config file name the plugin does not detect', async () => {
       createTestProject(tree);
       addApp2('jest.app.config.js');
 
@@ -274,21 +285,105 @@ describe('remove-deprecated-executors', () => {
           "app1": {},
           "app2": {
             "test": {
-              "executor": "@nx/jest:jest",
+              "executor": "nx:run-commands",
               "options": {
-                "jestConfig": "apps/app2/jest.app.config.js",
+                "command": "jest --config ./apps/app2/jest.app.config.js",
+                "cwd": ".",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"node10","module":"commonjs","customConditions":null}",
+                },
               },
             },
           },
-          "nextSteps": [
-            "These targets still use removed executors: app2:test (@nx/jest:jest). Replace each one before running them.",
-          ],
-          "warnings": [
-            "convert-to-inferred left target "test" in project "app2" on its executor because the plugin found no config file it detects in apps/app2. Rename the config file to one the plugin detects, then rerun the migration to convert it.",
-          ],
+          "nextSteps": undefined,
+          "warnings": [],
         }
       `);
     });
+
+    it.each<{
+      shape: string;
+      targetDefaults?: NxJsonConfiguration['targetDefaults'];
+      target: TargetConfiguration;
+      expected?: Partial<TargetConfiguration>;
+    }>([
+      {
+        shape: 'with its test settings in target defaults',
+        targetDefaults: {
+          '@nx/jest:jest': {
+            cache: true,
+            inputs: [
+              'default',
+              '^production',
+              '{workspaceRoot}/jest.preset.js',
+            ],
+            options: { passWithNoTests: true },
+            configurations: { ci: { ci: true, codeCoverage: true } },
+          },
+        },
+        target: {
+          executor: '@nx/jest:jest',
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+          options: { jestConfig: 'jest.config.app.ts' },
+        },
+        expected: {
+          cache: true,
+          inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
+        },
+      },
+      {
+        shape: 'with its test settings and an Angular tsConfig on the target',
+        target: {
+          executor: '@nx/jest:jest',
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+          options: {
+            jestConfig: 'jest.config.app.ts',
+            passWithNoTests: true,
+            tsConfig: 'tsconfig.spec.json',
+          },
+          configurations: { ci: { ci: true, codeCoverage: true } },
+        },
+      },
+    ])(
+      'runs Jest with the renamed config of a root project $shape',
+      async ({ targetDefaults, target, expected }) => {
+        if (targetDefaults) {
+          updateNxJson(tree, { ...readNxJson(tree), targetDefaults });
+        }
+        const workspaceConfig = `import { getJestProjectsAsync } from '@nx/jest';\n\nexport default async () => ({ projects: await getJestProjectsAsync() });\n`;
+        tree.write('jest.config.ts', workspaceConfig);
+        fs.createFileSync('jest.config.ts', workspaceConfig);
+        writeJestConfig(tree, '.', undefined, 'jest.config.app.ts');
+        const rootProject: ProjectConfiguration = {
+          name: 'my-app',
+          root: '.',
+          projectType: 'application',
+          targets: { test: target },
+        };
+        addProject(tree, 'my-app', rootProject);
+        fs.createFileSync('project.json', JSON.stringify(rootProject));
+        createTestProject(tree, { appName: 'lib1', appRoot: 'libs/lib1' });
+
+        const result = await update(tree);
+
+        expect(readProjectConfiguration(tree, 'my-app').targets.test).toEqual({
+          ...expected,
+          executor: 'nx:run-commands',
+          outputs: ['{workspaceRoot}/coverage/{projectName}'],
+          options: {
+            command: 'jest --config ./jest.config.app.ts',
+            cwd: '.',
+            env: tsNodeEnv,
+            passWithNoTests: true,
+          },
+          configurations: { ci: { ci: true, coverage: true } },
+        });
+        expect(
+          readProjectConfiguration(tree, 'lib1').targets.test?.executor
+        ).toBeUndefined();
+        expect(result.nextSteps).toBeUndefined();
+      }
+    );
 
     it('converts the other projects when one config file fails to load', async () => {
       createTestProject(tree);
@@ -314,6 +409,181 @@ describe('remove-deprecated-executors', () => {
         }
       `);
     });
+
+    it('applies the executor defaults filtered to the project', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        targetDefaults: {
+          '@nx/jest:jest': [
+            {
+              filter: { projects: ['app2'] },
+              options: { maxWorkers: 1 },
+              configurations: { ci: { ci: true } },
+            },
+            { filter: { projects: ['app1'] }, options: { silent: true } },
+          ],
+        },
+      });
+      createTestProject(tree);
+      addApp2('jest.app.config.js');
+
+      const { app2 } = await runUpdate();
+
+      expect(app2.test.options).toMatchObject({ maxWorkers: 1 });
+      expect(app2.test.options).not.toHaveProperty('silent');
+      expect(app2.test.configurations).toEqual({ ci: { ci: true } });
+    });
+
+    it('applies the target-name defaults the executor received', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        targetDefaults: {
+          test: {
+            options: { codeCoverage: true },
+            configurations: {
+              ci: { jestConfig: 'apps/app2/jest.ci.config.js' },
+            },
+          },
+        },
+      });
+      createTestProject(tree);
+      addApp2('jest.app.config.js');
+
+      const { app2 } = await runUpdate();
+
+      expect(app2.test.options).toMatchObject({ coverage: true });
+      expect(app2.test.configurations).toEqual({
+        ci: { command: 'jest --config ./apps/app2/jest.ci.config.js' },
+      });
+      expect(await getJestProjectsAsync()).toEqual([
+        '<rootDir>/apps/app2/jest.app.config.js',
+        '<rootDir>/apps/app2/jest.ci.config.js',
+      ]);
+    });
+
+    it('passes every accepted flag to Jest when nx:run-commands defaults leave the target unchanged', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        targetDefaults: { 'nx:run-commands': { options: { cwd: 'tools' } } },
+      });
+      createTestProject(tree);
+      addApp2('jest.app.config.js');
+      const flags = {
+        bail: true,
+        ci: true,
+        detectOpenHandles: true,
+        forceExit: true,
+        logHeapUsage: true,
+        passWithNoTests: true,
+        runInBand: false,
+        silent: true,
+        maxWorkers: 2,
+        testTimeout: 10000,
+      };
+      const project = readProjectConfiguration(tree, 'app2');
+      project.targets.test.outputs = ['{workspaceRoot}/coverage/{projectRoot}'];
+      Object.assign(project.targets.test.options, flags);
+      updateProjectConfiguration(tree, 'app2', project);
+
+      const { app2 } = await runUpdate();
+
+      expect(app2.test).toEqual({
+        executor: 'nx:run-commands',
+        outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
+        options: {
+          command: 'jest --config ./apps/app2/jest.app.config.js',
+          cwd: '.',
+          env: tsNodeEnv,
+          ...flags,
+        },
+      });
+    });
+
+    it.each<{
+      reason: string;
+      targetDefaults?: NxJsonConfiguration['targetDefaults'];
+      configFileName?: string;
+      target?: Partial<TargetConfiguration>;
+    }>([
+      {
+        reason: 'target defaults would add an option',
+        targetDefaults: {
+          '@nx/jest:jest': { options: { runInBand: true } },
+          test: { options: { silent: true } },
+        },
+      },
+      {
+        reason: 'target defaults would fill a spread',
+        targetDefaults: { 'nx:run-commands': { inputs: ['default'] } },
+        target: { inputs: ['...', '{projectRoot}/jest.app.config.js'] },
+      },
+      {
+        reason: 'it sets an option the rewrite does not accept',
+        target: { options: { outputFile: 'results.json' } },
+      },
+      {
+        reason: 'an accepted option has a value of another type',
+        target: { options: { maxWorkers: '50%' } },
+      },
+      {
+        reason: 'a configuration sets an option the rewrite does not accept',
+        target: { configurations: { ci: { testNamePattern: 'adds' } } },
+      },
+      {
+        reason: 'its options pass Jest runInBand with maxWorkers',
+        target: { options: { runInBand: true, maxWorkers: 2 } },
+      },
+      {
+        reason: 'a configuration adds maxWorkers to runInBand',
+        target: {
+          options: { runInBand: true },
+          configurations: { ci: { maxWorkers: 2 } },
+        },
+      },
+      {
+        reason: 'its config path has a shell character',
+        configFileName: 'jest$[1+2].config.js',
+      },
+      {
+        reason: 'a configuration runs an absolute config path',
+        target: {
+          configurations: {
+            e2e: { jestConfig: '/configs/jest.e2e.config.js' },
+          },
+        },
+      },
+      {
+        reason: 'an output reads an option the rewrite removes',
+        target: {
+          outputs: ['{options.tsConfig}'],
+          options: { tsConfig: 'apps/app2/tsconfig.spec.json' },
+        },
+      },
+    ])(
+      'keeps a target on its executor next to a standard config when $reason',
+      async ({ targetDefaults, configFileName, target: overrides }) => {
+        if (targetDefaults) {
+          updateNxJson(tree, { ...readNxJson(tree), targetDefaults });
+        }
+        createTestProject(tree);
+        // The plugin infers from this file, so the converter would switch to it
+        writeJestConfig(tree, 'apps/app2', undefined);
+        addApp2(configFileName ?? 'jest.app.config.js');
+        const project = readProjectConfiguration(tree, 'app2');
+        const { options, ...fields } = overrides ?? {};
+        Object.assign(project.targets.test, fields);
+        Object.assign(project.targets.test.options, options);
+        updateProjectConfiguration(tree, 'app2', project);
+        const target = structuredClone(project.targets.test);
+
+        const { app2, nextSteps } = await runUpdate();
+
+        expect(app2.test).toEqual(target);
+        expect(nextSteps).toContain(
+          'These targets still use removed executors: app2:test (@nx/jest:jest). Replace each one before running them.'
+        );
+      }
+    );
   });
 
   it('skips the prompt when no project uses the removed executors', async () => {

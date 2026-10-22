@@ -85,7 +85,9 @@ function collectJestConfigFromRunCommandsExecutor(
       if (configurationObject.command) {
         collectJestConfigFromCommand(
           configurationObject.command,
-          configurationObject.cwd ?? projectRoot,
+          configurationObject.cwd ??
+            targetConfiguration.options?.cwd ??
+            projectRoot,
           jestConfigurations
         );
       } else if (configurationObject.commands) {
@@ -94,7 +96,9 @@ function collectJestConfigFromRunCommandsExecutor(
             typeof command === 'string' ? command : command.command;
           collectJestConfigFromCommand(
             commandScript,
-            configurationObject.cwd ?? projectRoot,
+            configurationObject.cwd ??
+              targetConfiguration.options?.cwd ??
+              projectRoot,
             jestConfigurations
           );
         }
