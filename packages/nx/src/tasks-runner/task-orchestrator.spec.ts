@@ -2606,7 +2606,6 @@ describe('TaskOrchestrator', () => {
       });
     });
 
-    // proxy:serve waits for app:serve to be ready, and e2e:e2e for proxy:serve
     function addChainedProducer(orchestrator: any, readyWhen: unknown): Task {
       const proxy = createTask('proxy:serve', true);
       orchestrator.projectGraph.nodes.proxy = {
@@ -2672,7 +2671,7 @@ describe('TaskOrchestrator', () => {
     });
 
     it('waits for its own producer before it fails a probe that only a reported url breaks', async () => {
-      const { orchestrator, serve, runningTask } = createOrchestrator({
+      const { orchestrator, serve, settled } = createOrchestrator({
         readyWhen: { signal: true },
       });
       const proxy = addChainedProducer(orchestrator, {
@@ -2683,19 +2682,19 @@ describe('TaskOrchestrator', () => {
       const envs = new Map<string, NodeJS.ProcessEnv>();
       orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
         envs.set(task.id, env);
-        return task.id === 'proxy:serve'
-          ? Object.assign(runningTask, { onExit: vi.fn() })
-          : { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+        return { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
       });
       orchestrator.options.skipNxCache = false;
       orchestrator.continuousTaskExitHandled = new Map();
       orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
       orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
-      const startReadinessProbe = vi.spyOn(orchestrator, 'startReadinessProbe');
       onTestFinished(() => orchestrator.readySignal?.close());
 
       await orchestrator.startContinuousTask(serve, 1);
       const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      await expect(settled(proxyStarted)).resolves.toBe('pending');
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+
       const client = new PseudoIPCClient(
         envs.get('app:serve').NX_READY_SIGNAL_SOCKET
       );
@@ -2703,15 +2702,20 @@ describe('TaskOrchestrator', () => {
       client.sendMessageToParent({
         type: 'nx-ready-signal:ready',
         taskId: 'app:serve',
+        url: 'http://localhost:4300/',
       });
       await proxyStarted;
 
-      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
-      expect(startReadinessProbe).toHaveBeenCalledWith(
+      expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+        false,
         proxy,
-        expect.objectContaining({ kind: 'port', port: 4310 }),
-        expect.anything()
+        1,
+        expect.objectContaining({
+          message:
+            'Task "proxy:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+        })
       );
+      expect([...envs.keys()]).toEqual(['app:serve']);
     });
 
     it.each([
