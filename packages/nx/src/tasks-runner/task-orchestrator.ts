@@ -63,13 +63,16 @@ import {
   getReadyProducerIds,
   getReadyWhen,
   getReadyWhenConfig,
+  getReadyWhenInputs,
   getReadyWhenWait,
   InvalidReadyWhenError,
+  mayReportReadyUrl,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
+  type ReadyWhenInputs,
   type ReadyWhenWait,
 } from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
@@ -1970,16 +1973,23 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
+      const readyWhenInputs = getReadyWhenInputs(
+        task,
+        this.projectGraph,
+        this.projects,
+        workspaceRoot
+      );
+      this.checkReadyWhenBeforeWait(task, env, readyWhenInputs);
+      await this.waitForReadyDependencies(task);
+      Object.assign(env, this.getReadyUrlEnv(task));
       ({ readyWhen, uncheckedReason, readyOnStart } = this.getReadinessCheck(
         task,
-        () => this.getReadyWhen(task, env)
+        () => this.getReadyWhen(task, env, readyWhenInputs)
       ));
       if (readyWhen?.kind === 'signal') {
         this.readySignal ??= new ReadySignalServer();
         Object.assign(env, await this.readySignal.env(task.id));
       }
-      await this.waitForReadyDependencies(task);
-      Object.assign(env, this.getReadyUrlEnv(task));
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
       if (e instanceof ProducerFailedError) {
@@ -2056,15 +2066,51 @@ export class TaskOrchestrator {
   // region Readiness
   private getReadyWhen(
     task: Task,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    inputs?: ReadyWhenInputs
   ): NormalizedReadyWhen | null {
     return getReadyWhen(
       task,
       this.projectGraph,
       this.projects,
       workspaceRoot,
-      env
+      env,
+      inputs
     );
+  }
+
+  // NX_READY_URL is known only after the wait, so fail now only when the
+  // check fails without it and, if a producer may report one, with a URL too
+  private checkReadyWhenBeforeWait(
+    task: Task,
+    env: NodeJS.ProcessEnv,
+    inputs: ReadyWhenInputs
+  ) {
+    const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
+    if (!inputs || !producerIds.length) {
+      return;
+    }
+    const envs = [env];
+    if (
+      producerIds.some((id) =>
+        mayReportReadyUrl(this.fullTaskGraph.tasks[id], this.projectGraph)
+      )
+    ) {
+      envs.push({ ...env, [READY_URL_ENV]: 'http://localhost/' });
+    }
+    const errors = envs.map((checkEnv) => {
+      try {
+        this.getReadyWhen(task, checkEnv, inputs);
+        return null;
+      } catch (e) {
+        return e;
+      }
+    });
+    if (errors.every(Boolean)) {
+      this.getReadinessCheck(task, () => {
+        throw errors[errors.length - 1];
+      });
+    }
   }
 
   // Only the process that runs a producer knows the env its probe reads
