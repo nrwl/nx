@@ -1,5 +1,6 @@
 import * as path from 'path';
-import { type ExecutorContext } from '@nx/devkit';
+import { type ExecutorContext, readJsonFile } from '@nx/devkit';
+import { existsSync } from 'fs';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import type {
   Compiler,
@@ -400,6 +401,7 @@ function applyNxDependentConfig(
   }
 
   if (options.extractLicenses) {
+    const projectPackageName = readProjectPackageName(options);
     plugins.push(
       new LicenseWebpackPlugin({
         stats: {
@@ -408,6 +410,10 @@ function applyNxDependentConfig(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
+        // Loader-prefixed `data:` modules (the Module Federation runtime) resolve
+        // to the package.json in the cwd, which is the project root.
+        excludedPackageTest: (packageName: string) =>
+          !!projectPackageName && packageName === projectPackageName,
       }) as unknown as RspackPluginInstance
     );
   }
@@ -570,4 +576,18 @@ function applyNxDependentConfig(
 
   config.plugins ??= [];
   config.plugins.push(...plugins);
+}
+
+function readProjectPackageName(
+  options: NormalizedNxAppRspackPluginOptions
+): string | undefined {
+  const packageJsonPath = path.join(
+    options.root,
+    options.projectRoot,
+    'package.json'
+  );
+  if (!existsSync(packageJsonPath)) {
+    return undefined;
+  }
+  return readJsonFile(packageJsonPath).name;
 }
