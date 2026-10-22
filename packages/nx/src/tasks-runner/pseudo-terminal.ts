@@ -90,14 +90,12 @@ export class PseudoTerminal {
       jsEnv,
       quiet,
       tty,
-      omitCommandHeader,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       tty?: boolean;
-      omitCommandHeader?: boolean;
     } = {}
   ) {
     const cp = new PseudoTtyProcess(
@@ -108,9 +106,7 @@ export class PseudoTerminal {
         jsEnv,
         execArgv,
         quiet,
-        tty,
-        undefined,
-        omitCommandHeader
+        tty
       ),
       quiet
     );

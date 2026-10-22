@@ -675,8 +675,11 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   The order doesn't matter.
   A `prefix` set on an `nx:run-commands` command is part of the matched text.
   Color codes and other terminal control sequences are removed before matching.
-  The command lines Nx prints before running a command don't count.
-  Lines the task's tools print do count, such as the script a package manager echoes.
+  The line Nx prints before a task, such as `> nx run app:serve`, doesn't count.
+  When Nx runs an `nx:run-commands` target itself, as it does by default,
+  the line it prints before each command doesn't count either.
+  Other lines in the task output do count,
+  such as the `> npm run serve` line of `nx:run-script` or the script a package manager echoes.
   Pick a string the task prints only once it's ready.
 - `signal`: ready when the task itself reports that it's ready.
   Set it to `true`.

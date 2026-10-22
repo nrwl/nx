@@ -86,8 +86,7 @@ export class ParallelRunningTasks implements RunningTask {
           options.streamOutput,
           options.envFile,
           task,
-          baseEnv,
-          options.omitCommandHeader
+          baseEnv
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -337,8 +336,7 @@ export class SeriallyRunningTasks implements RunningTask {
         options.streamOutput,
         options.tty,
         options.envFile,
-        this.baseEnv,
-        options.omitCommandHeader
+        this.baseEnv
       );
       this.currentProcess = childProcess;
 
@@ -372,8 +370,7 @@ export class SeriallyRunningTasks implements RunningTask {
     streamOutput: boolean = true,
     tty: boolean,
     envFile?: string,
-    baseEnv?: NodeJS.ProcessEnv,
-    omitCommandHeader?: boolean
+    baseEnv?: NodeJS.ProcessEnv
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
@@ -395,8 +392,7 @@ export class SeriallyRunningTasks implements RunningTask {
         streamOutput,
         tty,
         envFile,
-        baseEnv,
-        omitCommandHeader
+        baseEnv
       );
 
       // Register process for metrics collection (direct run-commands execution)
@@ -418,8 +414,7 @@ export class SeriallyRunningTasks implements RunningTask {
       streamOutput,
       envFile,
       task,
-      baseEnv,
-      omitCommandHeader
+      baseEnv
     );
   }
 }
@@ -453,16 +448,13 @@ class RunningNodeProcess implements RunningTask {
     private readonly streamOutput = true,
     envFile: string,
     private task: Pick<Task, 'id' | 'ultracache'>,
-    baseEnv?: NodeJS.ProcessEnv,
-    omitCommandHeader?: boolean
+    baseEnv?: NodeJS.ProcessEnv
   ) {
     env = processEnv(color, cwd, env, envFile, baseEnv);
     this.command = commandConfig.command;
-    if (!omitCommandHeader) {
-      const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
-      this.terminalOutputChunks.push(header);
-      this.stream(header);
-    }
+    const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
+    this.terminalOutputChunks.push(header);
+    this.stream(header);
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
@@ -668,8 +660,7 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile,
-    baseEnv,
-    normalized.omitCommandHeader
+    baseEnv
   );
 
   // Register process for metrics collection (direct run-commands execution)
@@ -692,15 +683,13 @@ async function createProcessWithPseudoTty(
   streamOutput: boolean = true,
   tty: boolean,
   envFile?: string,
-  baseEnv?: NodeJS.ProcessEnv,
-  omitCommandHeader?: boolean
+  baseEnv?: NodeJS.ProcessEnv
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
     jsEnv: processEnv(color, cwd, env, envFile, baseEnv),
     quiet: !streamOutput,
     tty,
-    omitCommandHeader,
   });
 }
 

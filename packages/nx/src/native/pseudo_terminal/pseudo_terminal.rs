@@ -271,7 +271,6 @@ impl PseudoTerminal {
         quiet: Option<bool>,
         tty: Option<bool>,
         command_label: Option<String>,
-        omit_command_header: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
 
@@ -296,20 +295,18 @@ impl PseudoTerminal {
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
 
         let command_clone = command.clone();
-        if !omit_command_header.unwrap_or(false) {
-            let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
-            self.stdout_tx
-                .send(PtyOutput::CommandHeader(command_info.clone()))
-                .ok();
+        let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
+        self.stdout_tx
+            .send(PtyOutput::CommandHeader(command_info.clone()))
+            .ok();
 
-            if self.is_within_nx_tui {
-                // within the tui, update the parser directly so it is displayed in the tui
-                self.parser.write().process(command_info.as_bytes());
-            } else if !quiet {
-                // outside the tui, just print to stdout so the user can see it
-                if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
-                    debug!("Failed to write command info to stdout: {}", e);
-                }
+        if self.is_within_nx_tui {
+            // within the tui, update the parser directly so it is displayed in the tui
+            self.parser.write().process(command_info.as_bytes());
+        } else if !quiet {
+            // outside the tui, just print to stdout so the user can see it
+            if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
+                debug!("Failed to write command info to stdout: {}", e);
             }
         }
 
@@ -426,16 +423,7 @@ mod tests {
         while i < 10 {
             println!("Running {}", i);
             let cp1 = pseudo_terminal
-                .run_command(
-                    String::from("whoami"),
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                )
+                .run_command(String::from("whoami"), None, None, None, None, None, None)
                 .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;

@@ -3,7 +3,6 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import type { Task } from '../../config/task-graph';
 import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
-import { isForkedLogMatchesTask } from '../../tasks-runner/readiness/ready-when';
 import { resolveTokens } from '../../tasks-runner/tokens';
 import { createTaskId } from '../../tasks-runner/utils';
 import { NoopChildProcess } from '../../tasks-runner/running-tasks/noop-child-process';
@@ -85,7 +84,6 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   };
   args?: string;
   readyWhenStatus: { stringToMatch: string; found: boolean }[];
-  omitCommandHeader?: boolean;
 }
 
 export default async function (
@@ -181,7 +179,6 @@ export async function runCommands(
                 .targets?.[context.targetName]?.ultracache
             : undefined,
       };
-    normalized.omitCommandHeader = isForkedLogMatchesTask(context);
     const runningTask = isSingleCommandAndCanUsePseudoTerminal
       ? await runSingleCommandWithPseudoTerminal(
           normalized,

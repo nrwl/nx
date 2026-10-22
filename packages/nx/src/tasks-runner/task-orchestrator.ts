@@ -64,7 +64,6 @@ import {
   getReadyWhen,
   getReadyWhenConfig,
   getReadyWhenWait,
-  hasLogMatchesReadyWhen,
   InvalidReadyWhenError,
   NotReadyError,
   notReadyError,
@@ -2728,7 +2727,12 @@ export class TaskOrchestrator {
 
       // The log probe reads the captured output. Read from the config, because
       // the probe resolves against the env that depends on this
-      if (hasLogMatchesReadyWhen(task, this.projectGraph)) {
+      const readyWhen = getReadyWhenConfig(task, this.projectGraph);
+      if (
+        typeof readyWhen === 'object' &&
+        readyWhen &&
+        'logMatches' in readyWhen
+      ) {
         return true;
       }
 

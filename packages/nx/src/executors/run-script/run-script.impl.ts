@@ -6,7 +6,6 @@ import {
   createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
-import { isForkedLogMatchesTask } from '../../tasks-runner/readiness/ready-when';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 
 export interface RunScriptOptions {
@@ -37,7 +36,7 @@ export default async function (
     env.PATH = filteredPath;
 
     if (PseudoTerminal.isSupported()) {
-      await ptyProcess(command, cwd, env, isForkedLogMatchesTask(context));
+      await ptyProcess(command, cwd, env);
     } else {
       await nodeProcess(command, cwd, env);
     }
@@ -93,18 +92,13 @@ function nodeProcess(
 async function ptyProcess(
   command: string,
   cwd: string,
-  env: Record<string, string>,
-  omitCommandHeader: boolean
+  env: Record<string, string>
 ) {
   const terminal = createPseudoTerminal();
   await terminal.init();
 
   return new Promise<void>((res, rej) => {
-    let cp = terminal.runCommand(command, {
-      cwd,
-      jsEnv: env,
-      omitCommandHeader,
-    });
+    let cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();
