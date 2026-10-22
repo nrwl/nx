@@ -17,6 +17,10 @@ import { GeneratePackageJsonPlugin } from './plugins/generate-package-json-plugi
 import { getOutputHashFormat } from './hash-format';
 import { NxTsconfigPathsRspackPlugin } from './plugins/nx-tsconfig-paths-rspack-plugin';
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
+import {
+  getBrowserslistTargets,
+  getUnsupportedEnvironmentFeatures,
+} from './get-browserslist-targets';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
@@ -507,6 +511,25 @@ function applyNxDependentConfig(
         cache,
       }).cache
     : cache;
+  const projectRoot = path.join(options.root, options.projectRoot);
+  const browserslistTargets = getBrowserslistTargets(
+    config.target,
+    projectRoot
+  );
+  if (browserslistTargets) {
+    // For `web`, rspack writes its runtime code with arrow functions and other modern syntax.
+    config.output = {
+      ...config.output,
+      environment: {
+        ...getUnsupportedEnvironmentFeatures(
+          rspackCore,
+          projectRoot,
+          browserslistTargets.queries
+        ),
+        ...config.output?.environment,
+      },
+    };
+  }
   config.module = {
     ...config.module,
     rules: [
@@ -542,6 +565,9 @@ function applyNxDependentConfig(
 
         type: 'javascript/auto',
         options: {
+          ...(browserslistTargets
+            ? { env: { targets: browserslistTargets.swc } }
+            : {}),
           jsc: {
             parser: {
               syntax: 'typescript',

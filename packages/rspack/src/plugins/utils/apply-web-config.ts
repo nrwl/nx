@@ -8,6 +8,7 @@ import type {
 } from '@rspack/core';
 import { join, resolve } from 'path';
 import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
+import { getBrowserslistTargets } from './get-browserslist-targets';
 import { getOutputHashFormat } from './hash-format';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import {
@@ -112,11 +113,17 @@ export function applyWebConfig(
     }
   }
 
+  const browserslistQueries = getBrowserslistTargets(
+    config.target,
+    join(options.root, options.projectRoot)
+  )?.queries;
+
   const minimizer: RspackPluginInstance[] = [];
   if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
         test: /\.(?:css|scss|sass|less)$/,
+        minimizerOptions: { targets: browserslistQueries },
       })
     );
   }
@@ -225,7 +232,8 @@ export function applyWebConfig(
       use: getCommonLoadersForGlobalCss(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -235,7 +243,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalCss(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -261,7 +270,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalCss(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
@@ -285,7 +295,8 @@ export function applyWebConfig(
       use: getCommonLoadersForGlobalStyle(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -295,7 +306,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalStyle(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -321,7 +333,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalStyle(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
