@@ -50,13 +50,15 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
 
    It can be difficult to know which files are root-level config files and which files are project-specific config files. Here is a non-exhaustive list of config files to help distinguish between the two.
 
-   | Type of Config  | Files                                                                                                                                                                                                           |
-   | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.config.ts`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`) |
-   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.app.ts`, `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js`                                         |
+   | Type of Config  | Files                                                                                                                                                                                                   |
+   | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | _Root-level_    | `.eslintignore`, `.eslintrc.base.json`, `.gitignore`, `jest.preset.js`, `nx.json`, `package.json`, `tsconfig.base.json`, and any formatter config files (e.g. `.prettierrc`, `.oxfmtrc.json`)           |
+   | _Project-level_ | `.eslintrc.json`, `index.html`, `project.json`, `jest.config.ts` (`jest.config.app.ts` before Nx 24), `tsconfig.app.json`, `tsconfig.json`, `tsconfig.spec.json`, `vite.config.ts`, `webpack.config.js` |
 
-   {% aside title="jest.config.app" type="note" %}
-   Check the root for a `jest.config.app` file with any extension, such as `jest.config.app.cts`. If it exists, the root `jest.config.ts` (or `jest.config.js`) file is the workspace Jest config. Leave it in the root. Remove `.app` from the file name when you move it to `apps/temp`. Update every reference to it the same way, such as the `include` list in `tsconfig.spec.json` and any `--config` flag in `project.json`. Without a `jest.config.app` file, the root Jest config file belongs to the app, so move it to `apps/temp`.
+   {% aside title="Jest configuration" type="note" %}
+   In a new workspace, the root project's Jest config is `jest.config.ts`, so copy it to `apps/temp`.
+
+   A workspace created before Nx 24 can have `jest.config.app.ts` (any extension) in the root next to a workspace `jest.config.ts` that lists the projects. Leave `jest.config.ts` in the root. Copy `jest.config.app.ts` to `apps/temp` as `jest.config.ts`, and update the references to it, such as the `include` list in `tsconfig.spec.json` and the `--config` flag of the project's `test` target in `project.json`.
    {% /aside %}
 
 5. Update the paths of the project-specific config files that were copied into `apps/temp`.

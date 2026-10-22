@@ -150,9 +150,9 @@ The `@nx/jest` plugin infers tasks for any project with a Jest configuration fil
 
 The configuration directory must also contain a `project.json` or a workspace-package `package.json`. Root Jest configurations that only aggregate projects with `getJestProjectsAsync()` are not registered as projects.
 
-If your root configuration is such an aggregator, name the root project's own configuration `jest.config.app.<ext>` or `jest.config.lib.<ext>`.
-The plugin infers the root project's tasks from that file and runs Jest with `--config`.
-The `@nx/jest:configuration` generator renames the file this way when it creates the aggregator.
+A root project with its own `jest.config.<ext>` keeps that file when you add Jest to another project. The `@nx/jest:configuration` generator does not create a workspace-level Jest configuration in that case. Run `nx run-many -t test` to run the tests of every project.
+
+Workspaces created before Nx 24 can keep a root project configuration named `jest.config.app.<ext>` or `jest.config.lib.<ext>` next to a workspace `jest.config.<ext>`. The plugin doesn't infer tasks from those file names, so the Nx 24 migration gives that root project an explicit `jest --config` target. When the migration can't carry a target over unchanged, the target keeps the removed executor and the migration lists it for you to replace.
 
 ### Plugin options
 
