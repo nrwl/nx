@@ -144,6 +144,7 @@ import { HIGHLIGHT } from 'storybook/highlight';
 export const decorators = [
   (storyFn, { args }) => {
     const emit = useChannel({ [HIGHLIGHT]: () => {} });
+    useChannel({ 'storybook/highlight/add': () => {} });
     emit(HIGHLIGHT, { id: 'headings', selectors: ['h2'] });
     emit(HIGHLIGHT, { id: \`row-\${args.row}\`, selectors: ['tr'] });
     emit(HIGHLIGHT, { elements: ['h3'], color: 'red', style: 'solid' });

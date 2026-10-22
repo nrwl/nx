@@ -307,7 +307,7 @@ function isHighlightEvent(
     );
   }
   if (ts.isStringLiteralLike(node)) {
-    return node.text === HIGHLIGHT_EVENT;
+    return node.text === HIGHLIGHT_EVENT && !isNamePosition(node);
   }
   if (
     ts.isPropertyAccessExpression(node) ||
@@ -371,7 +371,7 @@ function hasLocalMath(checker: TypeChecker, node: Node): boolean {
     .some((symbol) => symbol.name === 'Math');
 }
 
-function isNamePosition(node: Identifier): boolean {
+function isNamePosition(node: Node): boolean {
   const parent = node.parent as Node & { name?: Node; propertyName?: Node };
   return (
     !ts.isShorthandPropertyAssignment(parent) &&
