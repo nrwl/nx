@@ -23,13 +23,17 @@ Open each file the pre-pass changed, listed in `<files_changed>` or found throug
 
 ## Step 2: Replace `clickEvent` in menu items
 
-For each file listed with menu items that use `clickEvent`:
+Three kinds of items lead here:
 
-1. Replace `clickEvent: '<event>'` with `clickable: true`.
+- Menu items that use `clickEvent` inside a `HIGHLIGHT` payload. Change each one.
+- A payload whose menu items come from code the pre-pass doesn't follow, such as a variable, a function call, another module or a spread. Follow the `menu` value to its items and open each one. Change every item that sets `clickEvent`, including through an assignment such as `item.clickEvent = '<event>'` or a spread.
+- Objects with `title` and `clickEvent` that may be menu items. Change one only after you follow it to the `menu` of a `HIGHLIGHT` payload. Leave the others unchanged.
+
+For each menu item you change:
+
+1. Replace `clickEvent: '<event>'` with `clickable: true`. Replace a `clickEvent` assignment the same way.
 2. Give the `HIGHLIGHT` payload that carries the menu a fixed, descriptive `id`, replacing the generated one. With a fixed id, a later emit replaces the earlier highlight. If the call emits several times between story renders and each highlight must stay visible, add a unique suffix after a fixed prefix and compare the prefix in the listener.
 3. Search the workspace, outside `node_modules`, for the listener of `<event>`. It can live in a preview file, a story, or a manager or addon file. Move it to `HIGHLIGHT_MENU_CLICK`, imported from `storybook/highlight`. The old listener received `(itemId, details)`. The new one receives `(highlightId, itemId, details)` and must return early when `highlightId` is not the payload's id.
-
-The menu can come from a variable or another module. Follow it to the items.
 
 **Before:**
 

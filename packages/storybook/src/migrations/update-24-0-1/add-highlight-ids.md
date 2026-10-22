@@ -13,7 +13,9 @@ A payload whose `id` is always a non-empty string, such as `'headings'` or `` `r
 
 The migration lists the Highlight usage it can't change, and in agentic runs an AI agent finishes it:
 
-- Menu items that use `clickEvent`. Storybook no longer emits that event. Menu items now use `clickable: true`, and a click emits `HIGHLIGHT_MENU_CLICK` with the highlight id, the menu item id and the click details.
+- Menu items that use `clickEvent` in a `HIGHLIGHT` payload. Storybook no longer emits that event. Menu items now use `clickable: true`, and a click emits `HIGHLIGHT_MENU_CLICK` with the highlight id, the menu item id and the click details.
+- A payload whose menu items come from code the migration doesn't follow, such as a variable, a function call or a spread. Their `clickEvent` wasn't checked.
+- Objects outside a payload that have `title` and a `clickEvent` that isn't a function. They may be menu items defined elsewhere, and only the ones that reach a payload's menu need changes.
 - Code that uses the `ClickEventDetails` type. Its `element` no longer has `outerHTML` or `attributes`.
 - Code that uses the `HighlightOptions` type, which now requires `id`.
 - A payload whose `id` may not be a non-empty string, such as a variable, `undefined`, `''` or a number, or whose `id` can come from a spread or a computed key.

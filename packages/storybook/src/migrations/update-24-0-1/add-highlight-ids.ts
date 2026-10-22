@@ -124,7 +124,7 @@ function migrateFile(
   );
   const emitters = new Set<string>();
   const eventCalls: CallExpression[] = [];
-  const clickEventLines: number[] = [];
+  const possibleMenuItems: ObjectLiteralExpression[] = [];
   const notes: string[] = [];
   const lineOf = (node: Node) =>
     sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line +
@@ -155,13 +155,8 @@ function migrateFile(
       notes.push(
         `${filePath}:${lineOf(node)} loads "${HIGHLIGHT_MODULE}" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".`
       );
-    } else if (
-      ts.isObjectLiteralExpression(node) &&
-      hasStaticKey(node, 'clickEvent') &&
-      // Outside Highlight files, only the menu item shape counts.
-      (referencesHighlight || hasStaticKey(node, 'title'))
-    ) {
-      clickEventLines.push(lineOf(node));
+    } else if (ts.isObjectLiteralExpression(node) && isPossibleMenuItem(node)) {
+      possibleMenuItems.push(node);
     } else if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
@@ -212,9 +207,29 @@ function migrateFile(
     payloads.push(payload);
   }
 
-  if (clickEventLines.length > 0) {
+  const menuItems = new Set<ObjectLiteralExpression>();
+  for (const payload of payloads) {
+    const literal = skipOuterExpressions(payload);
+    if (!ts.isObjectLiteralExpression(literal)) {
+      continue;
+    }
+    const { clickEventItems, complete } = readMenu(literal);
+    clickEventItems.forEach((item) => menuItems.add(item));
+    if (!complete) {
+      notes.push(
+        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in ${HIGHLIGHT_DOCS}.`
+      );
+    }
+  }
+  if (menuItems.size > 0) {
     notes.push(
-      `${filePath} has Highlight menu items that use "clickEvent" (line${clickEventLines.length > 1 ? 's' : ''} ${clickEventLines.join(', ')}), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See ${HIGHLIGHT_DOCS}.`
+      `${filePath} has Highlight menu items that use "clickEvent" (${formatLines([...menuItems].map(lineOf))}), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See ${HIGHLIGHT_DOCS}.`
+    );
+  }
+  const otherItems = possibleMenuItems.filter((item) => !menuItems.has(item));
+  if (otherItems.length > 0) {
+    notes.push(
+      `${filePath} has objects with "title" and "clickEvent" (${formatLines(otherItems.map(lineOf))}) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See ${HIGHLIGHT_DOCS}.`
     );
   }
   if (imports.types.has('HighlightOptions')) {
@@ -244,7 +259,7 @@ function migrateFile(
     if (hasStaticKey(literal, 'elements')) {
       continue;
     }
-    const idSource = findIdSource(literal);
+    const idSource = findKeySource(literal, 'id');
     if (!idSource) {
       if (hasLocalMath(getChecker(), literal)) {
         notes.push(
@@ -433,10 +448,11 @@ function skipOuterExpressions(expression: Expression): Expression {
   return current;
 }
 
-// Returns the last property that can set the payload's id at runtime: a
-// spread, an `id` property or a computed key that isn't a string literal.
-function findIdSource(
-  literal: ObjectLiteralExpression
+// Returns the last property that can set `key` at runtime: a spread, a `key`
+// property or a computed key that isn't a string literal.
+function findKeySource(
+  literal: ObjectLiteralExpression,
+  key: string
 ): ObjectLiteralElementLike | undefined {
   let source: ObjectLiteralElementLike | undefined;
   for (const property of literal.properties) {
@@ -446,13 +462,89 @@ function findIdSource(
     }
     const name = getStaticName(property.name);
     if (
-      name === 'id' ||
+      name === key ||
       (name === undefined && ts.isComputedPropertyName(property.name))
     ) {
       source = property;
     }
   }
   return source;
+}
+
+// `complete` is false when a menu item, or the `clickEvent` it sets, can come
+// from code other than the literals in the payload.
+function readMenu(payload: ObjectLiteralExpression): {
+  clickEventItems: ObjectLiteralExpression[];
+  complete: boolean;
+} {
+  const clickEventItems: ObjectLiteralExpression[] = [];
+  const menuSource = findKeySource(payload, 'menu');
+  if (!menuSource) {
+    return { clickEventItems, complete: true };
+  }
+  if (
+    !ts.isPropertyAssignment(menuSource) ||
+    getStaticName(menuSource.name) !== 'menu'
+  ) {
+    return { clickEventItems, complete: false };
+  }
+  const menu = skipOuterExpressions(menuSource.initializer);
+  if (!ts.isArrayLiteralExpression(menu)) {
+    return { clickEventItems, complete: false };
+  }
+  let complete = true;
+  for (const group of menu.elements) {
+    const groupLiteral = skipOuterExpressions(group);
+    if (!ts.isArrayLiteralExpression(groupLiteral)) {
+      complete = false;
+      continue;
+    }
+    for (const item of groupLiteral.elements) {
+      const itemLiteral = skipOuterExpressions(item);
+      if (!ts.isObjectLiteralExpression(itemLiteral)) {
+        complete = false;
+        continue;
+      }
+      if (hasStaticKey(itemLiteral, 'clickEvent')) {
+        clickEventItems.push(itemLiteral);
+      }
+      const clickEventSource = findKeySource(itemLiteral, 'clickEvent');
+      if (
+        clickEventSource &&
+        (ts.isSpreadAssignment(clickEventSource) ||
+          getStaticName(clickEventSource.name) !== 'clickEvent')
+      ) {
+        complete = false;
+      }
+    }
+  }
+  return { clickEventItems, complete };
+}
+
+// Storybook types `clickEvent` as an event name, so a function value rules out
+// a menu item.
+function isPossibleMenuItem(literal: ObjectLiteralExpression): boolean {
+  const clickEvent = literal.properties.find(
+    (property) =>
+      property.name !== undefined &&
+      getStaticName(property.name) === 'clickEvent'
+  );
+  if (
+    !clickEvent ||
+    !hasStaticKey(literal, 'title') ||
+    ts.isMethodDeclaration(clickEvent)
+  ) {
+    return false;
+  }
+  if (!ts.isPropertyAssignment(clickEvent)) {
+    return true;
+  }
+  const value = skipOuterExpressions(clickEvent.initializer);
+  return !ts.isArrowFunction(value) && !ts.isFunctionExpression(value);
+}
+
+function formatLines(lines: number[]): string {
+  return `line${lines.length > 1 ? 's' : ''} ${lines.join(', ')}`;
 }
 
 function hasNonEmptyStringId(property: ObjectLiteralElementLike): boolean {
