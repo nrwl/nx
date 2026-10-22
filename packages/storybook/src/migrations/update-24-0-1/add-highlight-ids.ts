@@ -139,7 +139,7 @@ function migrateFile(
         `${filePath}:${lineOf(node)} uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".`
       );
     } else if (
-      ts.isStringLiteral(node) &&
+      ts.isStringLiteralLike(node) &&
       node.text === HIGHLIGHT_MODULE &&
       !ts.isImportDeclaration(node.parent) &&
       !ts.isModuleDeclaration(node.parent)
