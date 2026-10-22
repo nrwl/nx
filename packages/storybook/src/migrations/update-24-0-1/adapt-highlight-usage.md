@@ -8,7 +8,7 @@ Storybook 9.1.21 and 10.6.2 changed the Highlight channel API:
 - Menu items no longer accept `clickEvent`. They take `clickable: true`, and a click emits `HIGHLIGHT_MENU_CLICK` with `(highlightId, itemId, details)`.
 - `details.element` no longer has `outerHTML` or `attributes`. It keeps `tagName` and `localName`.
 
-A deterministic pre-pass already added an `id` to every object literal `HIGHLIGHT` payload without one. `impl.agentContext` in the step's `nx_migrate_prompt` block lists the remaining items. When you apply these instructions by hand, the next steps the migration printed list the same items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
+A deterministic pre-pass already added an `id` to the object literal `HIGHLIGHT` payloads it could change. `impl.agentContext` in the step's `nx_migrate_prompt` block lists the remaining items. When you apply these instructions by hand, the next steps the migration printed list the same items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
 
 ## Pre-Migration Checklist
 
@@ -91,7 +91,7 @@ The other items list `HIGHLIGHT` usage the pre-pass could not check or change:
 - A payload without an `id` in a scope where `Math` is a local binding, so the pre-pass couldn't use `Math.random()` there.
 - The event used outside an emit call, or passed to a function the pre-pass didn't recognize as an emit.
 - A payload passed through a spread argument.
-- `storybook/highlight` loaded with `require` or a dynamic import, or a file the pre-pass couldn't parse.
+- `storybook/highlight` loaded with `require`, a dynamic import or a re-export, or a file the pre-pass couldn't parse.
 
 For each one, find the `HIGHLIGHT` payloads it emits. Make sure each payload that uses `selectors` gets a unique, non-empty string `id`, such as the file path and a random suffix like the pre-pass. Where `Math` is a local binding, build the id without it, for example with `globalThis.Math.random()` or a fixed string. When the `id` comes from a variable or an argument, keep it and add a fallback only where it can be missing or empty. Skip a listed function that doesn't emit `HIGHLIGHT`.
 

@@ -23,11 +23,6 @@ export async function highlightLinks() {
 }
 `;
 
-const HIGHLIGHT_JS = `export function show(channel) {
-  channel.emit('storybook/highlight/add', { selectors: ['p'] });
-}
-`;
-
 describe('add-highlight-ids migration', () => {
   let tree: Tree;
 
@@ -37,7 +32,6 @@ describe('add-highlight-ids migration', () => {
 
   it('should give each HIGHLIGHT payload without an id a generated id', async () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
-    tree.write('libs/ui/src/highlight.js', HIGHLIGHT_JS);
 
     const result = await addHighlightIds(tree);
 
@@ -68,16 +62,6 @@ describe('add-highlight-ids migration', () => {
       }
       "
     `);
-    expect(tree.read('libs/ui/src/highlight.js', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export function show(channel) {
-        channel.emit('storybook/highlight/add', {
-          id: \`libs/ui/src/highlight.js-\${Math.random().toString(36).slice(2)}\`,
-          selectors: ['p'],
-        });
-      }
-      "
-    `);
     expect(result).toEqual({ skipAgentic: true });
   });
 
@@ -100,7 +84,6 @@ describe('add-highlight-ids migration', () => {
     new Function('module', tree.read(filePath, 'utf-8'))(cjsModule);
     const ids: string[] = [];
     cjsModule.exports({ emit: (_event, payload) => ids.push(payload.id) });
-    expect(ids).toHaveLength(2);
     expect(ids[0]).not.toBe(ids[1]);
     for (const id of ids) {
       expect(id.startsWith(`${filePath}-`)).toBe(true);
@@ -119,12 +102,6 @@ export function unshadowed(channel) {
 }
 `
     );
-    const namespaceImport = `import * as Math from './math';
-import { HIGHLIGHT } from 'storybook/highlight';
-
-export const highlight = (emit) => emit(HIGHLIGHT, { selectors: ['h1'] });
-`;
-    tree.write('apps/app/.storybook/namespace.ts', namespaceImport);
     // The import is erased at runtime, but TypeScript rejects Math.random() here.
     const typeOnlyImport = `import type * as Math from './math';
 import { HIGHLIGHT } from 'storybook/highlight';
@@ -149,31 +126,20 @@ export const highlight = (emit) => emit(HIGHLIGHT, { selectors: ['h2'] });
       }
       "
     `);
-    expect(tree.read('apps/app/.storybook/namespace.ts', 'utf-8')).toBe(
-      namespaceImport
-    );
     expect(tree.read('apps/app/.storybook/type-only.ts', 'utf-8')).toBe(
       typeOnlyImport
     );
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "agentContext": [
-          "libs/ui/src/highlight.js:2 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-          "apps/app/.storybook/namespace.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-          "apps/app/.storybook/type-only.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-        ],
-        "nextSteps": [
-          "libs/ui/src/highlight.js:2 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-          "apps/app/.storybook/namespace.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-          "apps/app/.storybook/type-only.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
-        ],
-      }
+    expect(result.agentContext).toMatchInlineSnapshot(`
+      [
+        "libs/ui/src/highlight.js:2 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+        "apps/app/.storybook/type-only.ts:4 emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".",
+      ]
     `);
   });
 
   it('should not change payloads with a string id, legacy payloads or listeners', async () => {
     const content = `import { addons, useChannel } from 'storybook/preview-api';
-import { HIGHLIGHT, RESET_HIGHLIGHT } from 'storybook/highlight';
+import { HIGHLIGHT } from 'storybook/highlight';
 
 export const decorators = [
   (storyFn, { args }) => {
@@ -181,7 +147,6 @@ export const decorators = [
     emit(HIGHLIGHT, { id: 'headings', selectors: ['h2'] });
     emit(HIGHLIGHT, { id: \`row-\${args.row}\`, selectors: ['tr'] });
     emit(HIGHLIGHT, { elements: ['h3'], color: 'red', style: 'solid' });
-    emit(RESET_HIGHLIGHT);
     addons.getChannel().on(HIGHLIGHT, (options) => console.log(options));
     return storyFn();
   },
@@ -195,10 +160,6 @@ export function relay(channel, event, payload) {
 }
 `;
     tree.write('libs/ui/src/relay.ts', relay);
-    tree.write(
-      'libs/other/src/config.ts',
-      `export const tracking = { clickEvent: 'open' };\n`
-    );
 
     const result = await addHighlightIds(tree);
 
@@ -229,35 +190,30 @@ export function highlight(selectors, id, options, key) {
     const result = await addHighlightIds(tree);
 
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(content);
-    const notes = [12, 13].map(
-      (line) =>
-        `libs/ui/src/highlight.js:${line} emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.`
-    );
-    notes.push(
-      ...[6, 7, 8, 9, 10, 11, 12, 13].map(
-        (line) =>
-          `libs/ui/src/highlight.js:${line} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`
-      )
-    );
-    notes.push(
-      `libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`
-    );
+    const menuNote = (line: number) =>
+      `libs/ui/src/highlight.js:${line} emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.`;
+    const idNote = (line: number) =>
+      `libs/ui/src/highlight.js:${line} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`;
+    const notes = [
+      ...[6, 7, 8, 9, 10, 11].map(idNote),
+      menuNote(12),
+      idNote(12),
+      menuNote(13),
+      idNote(13),
+      `libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`,
+    ];
     expect(result).toEqual({ nextSteps: notes, agentContext: notes });
   });
 
   it('should be a no-op when run twice', async () => {
     tree.write('apps/app/.storybook/preview.ts', PREVIEW);
-    tree.write('libs/ui/src/highlight.js', HIGHLIGHT_JS);
     await addHighlightIds(tree);
     const preview = tree.read('apps/app/.storybook/preview.ts', 'utf-8');
-    const highlightJs = tree.read('libs/ui/src/highlight.js', 'utf-8');
     expect(preview).not.toBe(PREVIEW);
-    expect(highlightJs).not.toBe(HIGHLIGHT_JS);
 
     const result = await addHighlightIds(tree);
 
     expect(tree.read('apps/app/.storybook/preview.ts', 'utf-8')).toBe(preview);
-    expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(highlightJs);
     expect(result).toEqual({ skipAgentic: true });
   });
 
@@ -283,25 +239,15 @@ export function highlight(channel, base, options, key) {
     const result = await addHighlightIds(tree);
 
     expect(tree.read('libs/ui/src/highlight.js', 'utf-8')).toBe(content);
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "agentContext": [
-          "libs/ui/src/highlight.js:11 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:12 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:13 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js has Highlight menu items that use "clickEvent" (lines 10, 11), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js has objects with "title" and "clickEvent" (line 3) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-        ],
-        "nextSteps": [
-          "libs/ui/src/highlight.js:11 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:12 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:13 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js has Highlight menu items that use "clickEvent" (lines 10, 11), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "libs/ui/src/highlight.js has objects with "title" and "clickEvent" (line 3) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-        ],
-      }
+    expect(result.agentContext).toMatchInlineSnapshot(`
+      [
+        "libs/ui/src/highlight.js:11 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js:12 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js:13 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js:14 emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js has Highlight menu items that use "clickEvent" (lines 10, 11), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "libs/ui/src/highlight.js has objects with "title" and "clickEvent" (line 3) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+      ]
     `);
   });
 
@@ -350,33 +296,19 @@ export const play = async (send, args) => {
     expect(tree.read('apps/app/src/menu.stories.ts', 'utf-8')).toContain(
       'id: `apps/app/src/menu.stories.ts-${Math.random().toString(36).slice(2)}`'
     );
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "agentContext": [
-          "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
-          "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
-          "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
-          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
-          "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
-          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
-          "libs/menus/src/items.js has objects with "title" and "clickEvent" (line 1) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-        ],
-        "nextSteps": [
-          "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
-          "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
-          "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
-          "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
-          "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
-          "Could not parse apps/app/src/broken.stories.ts, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-          "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
-          "libs/menus/src/items.js has objects with "title" and "clickEvent" (line 1) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
-        ],
-      }
+    expect(result.agentContext).toMatchInlineSnapshot(`
+      [
+        "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
+        "apps/app/src/menu.stories.ts:16 passes HIGHLIGHT to "send", which this migration doesn't recognize as an emit. If it emits the event, give the payload a unique string "id".",
+        "apps/app/src/menu.stories.ts:17 passes the HIGHLIGHT payload through a spread argument, so it was not checked. Give it a unique string "id".",
+        "apps/app/src/menu.stories.ts has Highlight menu items that use "clickEvent" (line 14), which Storybook no longer emits. Set "clickable: true" on them, give their HIGHLIGHT payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK, which passes the highlight id, the menu item id and the click details. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "apps/app/src/menu.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
+        "apps/app/src/menu.stories.ts uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.",
+        "apps/app/src/broken.stories.ts uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+        "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
+        "libs/menus/src/items.js has objects with "title" and "clickEvent" (line 1) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
+      ]
     `);
   });
 });

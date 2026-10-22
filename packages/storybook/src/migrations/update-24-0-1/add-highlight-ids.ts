@@ -60,7 +60,12 @@ export default async function addHighlightIds(tree: Tree) {
     }
     const content = tree.read(filePath, 'utf-8');
     const referencesHighlight = content.includes(HIGHLIGHT_MODULE);
-    if (!parsable) {
+    if (!referencesHighlight && !content.includes('clickEvent')) {
+      return;
+    }
+
+    const result = parsable ? migrateFile(filePath, content) : undefined;
+    if (!result) {
       if (referencesHighlight) {
         pending.push(
           `${filePath} uses "${HIGHLIGHT_MODULE}" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in ${HIGHLIGHT_DOCS}.`
@@ -68,11 +73,6 @@ export default async function addHighlightIds(tree: Tree) {
       }
       return;
     }
-    if (!referencesHighlight && !content.includes('clickEvent')) {
-      return;
-    }
-
-    const result = migrateFile(filePath, content, referencesHighlight);
     if (result.content !== content) {
       tree.write(filePath, result.content);
       rewritten = true;
@@ -92,9 +92,8 @@ export default async function addHighlightIds(tree: Tree) {
 
 function migrateFile(
   filePath: string,
-  content: string,
-  referencesHighlight: boolean
-): { content: string; notes: string[] } {
+  content: string
+): { content: string; notes: string[] } | undefined {
   ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
   const sourceFile = ts.createSourceFile(
     filePath,
@@ -105,14 +104,7 @@ function migrateFile(
   if (
     (sourceFile as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length
   ) {
-    return {
-      content,
-      notes: referencesHighlight
-        ? [
-            `Could not parse ${filePath}, so its HIGHLIGHT payloads and menu items were not checked. Give each HIGHLIGHT payload a unique string "id", and replace "clickEvent" in its menu items as described in ${HIGHLIGHT_DOCS}.`,
-          ]
-        : [],
-    };
+    return undefined;
   }
 
   const imports = readHighlightImports(sourceFile);
@@ -178,7 +170,10 @@ function migrateFile(
   };
   visit(sourceFile);
 
-  const payloads: Expression[] = [];
+  // A fixed id would make a repeated emit replace the earlier highlight.
+  const id = `\`${escapeTemplateText(filePath)}-\${Math.random().toString(36).slice(2)}\``;
+  const changes: StringChange[] = [];
+  const menuItems = new Set<ObjectLiteralExpression>();
   for (const call of eventCalls) {
     const callee = call.expression;
     const calleeName = getStaticName(callee);
@@ -204,13 +199,11 @@ function migrateFile(
       );
       continue;
     }
-    payloads.push(payload);
-  }
-
-  const menuItems = new Set<ObjectLiteralExpression>();
-  for (const payload of payloads) {
     const literal = skipOuterExpressions(payload);
     if (!ts.isObjectLiteralExpression(literal)) {
+      notes.push(
+        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`
+      );
       continue;
     }
     const { clickEventItems, complete } = readMenu(literal);
@@ -218,6 +211,24 @@ function migrateFile(
     if (!complete) {
       notes.push(
         `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose menu items come from code this migration doesn't follow, so they were not checked for "clickEvent". Follow the menu to its items and replace "clickEvent" on any that use it, as described in ${HIGHLIGHT_DOCS}.`
+      );
+    }
+    // Storybook still gives a legacy `elements` payload an id itself.
+    if (findStaticKey(literal, 'elements')) {
+      continue;
+    }
+    const idSource = findKeySource(literal, 'id');
+    if (!idSource) {
+      if (hasLocalMath(getChecker(), literal)) {
+        notes.push(
+          `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".`
+        );
+      } else {
+        changes.push(insertIdProperty(literal, id, sourceFile));
+      }
+    } else if (!hasNonEmptyStringId(idSource)) {
+      notes.push(
+        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`
       );
     }
   }
@@ -241,41 +252,6 @@ function migrateFile(
     notes.push(
       `${filePath} uses the ClickEventDetails type, whose "element" no longer has "outerHTML" or "attributes". Read "tagName", "localName" or the matching "selectors" instead.`
     );
-  }
-
-  // A random suffix keeps every emit's highlight, as before ids were required.
-  // A fixed id would make a repeated emit replace the earlier highlight.
-  const id = `\`${escapeTemplateText(filePath)}-\${Math.random().toString(36).slice(2)}\``;
-  const changes: StringChange[] = [];
-  for (const payload of payloads) {
-    const literal = skipOuterExpressions(payload);
-    if (!ts.isObjectLiteralExpression(literal)) {
-      notes.push(
-        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload that isn't an object literal, so it was not checked. Make sure it has a unique string "id".`
-      );
-      continue;
-    }
-    // Storybook still gives a legacy `elements` payload an id itself.
-    if (hasStaticKey(literal, 'elements')) {
-      continue;
-    }
-    const idSource = findKeySource(literal, 'id');
-    if (!idSource) {
-      if (hasLocalMath(getChecker(), literal)) {
-        notes.push(
-          `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".`
-        );
-      } else {
-        changes.push(insertIdProperty(content, literal, id, sourceFile));
-      }
-    } else if (!hasNonEmptyStringId(idSource)) {
-      notes.push(
-        `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose "id" may not be a non-empty string, so it was not changed. Make sure it has a unique, non-empty string "id".`
-      );
-    }
-  }
-  if (changes.length === 0) {
-    return { content, notes };
   }
 
   return { content: applyChangesToString(content, changes), notes };
@@ -427,8 +403,11 @@ function getStaticName(node: Node): string | undefined {
   return undefined;
 }
 
-function hasStaticKey(literal: ObjectLiteralExpression, key: string): boolean {
-  return literal.properties.some(
+function findStaticKey(
+  literal: ObjectLiteralExpression,
+  key: string
+): ObjectLiteralElementLike | undefined {
+  return literal.properties.find(
     (property) =>
       property.name !== undefined && getStaticName(property.name) === key
   );
@@ -505,7 +484,7 @@ function readMenu(payload: ObjectLiteralExpression): {
         complete = false;
         continue;
       }
-      if (hasStaticKey(itemLiteral, 'clickEvent')) {
+      if (findStaticKey(itemLiteral, 'clickEvent')) {
         clickEventItems.push(itemLiteral);
       }
       const clickEventSource = findKeySource(itemLiteral, 'clickEvent');
@@ -524,14 +503,10 @@ function readMenu(payload: ObjectLiteralExpression): {
 // Storybook types `clickEvent` as an event name, so a function value rules out
 // a menu item.
 function isPossibleMenuItem(literal: ObjectLiteralExpression): boolean {
-  const clickEvent = literal.properties.find(
-    (property) =>
-      property.name !== undefined &&
-      getStaticName(property.name) === 'clickEvent'
-  );
+  const clickEvent = findStaticKey(literal, 'clickEvent');
   if (
     !clickEvent ||
-    !hasStaticKey(literal, 'title') ||
+    !findStaticKey(literal, 'title') ||
     ts.isMethodDeclaration(clickEvent)
   ) {
     return false;
@@ -566,11 +541,11 @@ function hasNonEmptyStringId(property: ObjectLiteralElementLike): boolean {
 }
 
 function insertIdProperty(
-  content: string,
   literal: ObjectLiteralExpression,
   id: string,
   sourceFile: SourceFile
 ): StringChange {
+  const content = sourceFile.text;
   const index = literal.getStart(sourceFile) + 1;
   LEADING_NEWLINE.lastIndex = index;
   const newline = LEADING_NEWLINE.exec(content)?.[1];
