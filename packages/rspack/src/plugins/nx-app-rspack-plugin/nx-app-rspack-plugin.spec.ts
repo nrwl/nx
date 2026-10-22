@@ -38,4 +38,20 @@ describe('NxAppRspackPlugin', () => {
       compiler.close((error) => (error ? reject(error) : resolve()))
     );
   });
+
+  it('keeps the user optimization for web targets outside production', async () => {
+    const compiler = rspack({
+      mode: 'development',
+      target: 'web',
+      optimization: { runtimeChunk: { name: 'runtime' } },
+      plugins: [new NxAppRspackPlugin({ target: 'web', index: 'index.html' })],
+    });
+
+    expect(compiler.options.optimization.runtimeChunk).toEqual({
+      name: 'runtime',
+    });
+    await new Promise<void>((resolve, reject) =>
+      compiler.close((error) => (error ? reject(error) : resolve()))
+    );
+  });
 });
