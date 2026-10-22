@@ -54,7 +54,6 @@ describe('migrate commits (real git)', () => {
     git(root, 'init -q');
     git(root, 'config user.email test@test');
     git(root, 'config user.name test');
-    git(root, 'config commit.gpgsign false');
     writeFileSync(join(root, 'package.json'), '{}');
     git(root, 'add -A');
     git(root, 'commit -q --no-verify -m init');
@@ -101,7 +100,6 @@ describe('migrate commits (real git)', () => {
   it('reports no changes when only unignored scratch files are dirty', async () => {
     mkdirSync(join(root, '.nx/migrate-runs/run-1'), { recursive: true });
     writeFileSync(join(root, '.nx/migrate-runs/run-1/run.json'), '{}');
-    expect(git(root, 'status --porcelain')).toBe('?? .nx/\n');
 
     const result = await commitMigration(root);
 

@@ -2283,8 +2283,8 @@ process.exit(status ?? 1);
         expect.stringContaining('deps-mig'),
         expect.stringContaining('prompt-mig'),
       ]);
-      // Only harness files: the agent and git logs keep growing after a commit
-      // took them, and the exit code lands last.
+      // Besides the untracked plan, only harness files: the agent and git logs
+      // keep growing after a commit took them, and the exit code lands last.
       expect(
         runCommand(
           'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'

@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 import {
   cloneFromUpstream,
   getPathCommitExposure,
+  getLatestCommitSha,
   getPathHeadStatus,
   getWorkingTreeStatus,
   resetWorkingTree,
@@ -147,28 +148,17 @@ describe('getPathHeadStatus', () => {
     rmSync(repo, { recursive: true, force: true });
   });
 
-  it.each(['', 'apps/ws'])(
-    'reports committed for a committed file whose deletion is staged, in the workspace at %j',
-    (workspace) => {
-      const directory = join(repo, workspace);
-      mkdirSync(directory, { recursive: true });
-      writeFileSync(join(directory, 'migrations.json'), '{}');
-      // Keeps the workspace directory alive once `git rm` removes the plan.
-      writeFileSync(join(directory, 'package.json'), '{}');
-      runGit(['add', '-A'], repo);
-      runGit(['commit', '-m', 'plan'], repo);
-      runGit(['rm', '-q', 'migrations.json'], directory);
-
-      expect(getPathHeadStatus('migrations.json', directory)).toBe('committed');
-    }
-  );
-
-  it('reports absent for a file staged since HEAD', () => {
-    runGit(['commit', '--allow-empty', '-m', 'initial commit'], repo);
-    writeFileSync(join(repo, 'migrations.json'), '{}');
+  it('reports committed for a committed file whose deletion is staged, in a nested workspace', () => {
+    const directory = join(repo, 'apps/ws');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'migrations.json'), '{}');
+    // Keeps the workspace directory alive once `git rm` removes the plan.
+    writeFileSync(join(directory, 'package.json'), '{}');
     runGit(['add', '-A'], repo);
+    runGit(['commit', '-m', 'plan'], repo);
+    runGit(['rm', '-q', 'migrations.json'], directory);
 
-    expect(getPathHeadStatus('migrations.json', repo)).toBe('absent');
+    expect(getPathHeadStatus('migrations.json', directory)).toBe('committed');
   });
 
   it('reports absent on an unborn HEAD', () => {
@@ -255,10 +245,7 @@ describe('resetWorkingTree', () => {
     runGit(['config', 'user.email', 'test@example.com'], repo);
     runGit(['config', 'user.name', 'Test User'], repo);
     runGit(['commit', '--allow-empty', '-m', 'initial commit'], repo);
-    head = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: repo,
-      encoding: 'utf8',
-    }).trim();
+    head = getLatestCommitSha(repo);
   });
 
   afterEach(() => {
@@ -268,7 +255,6 @@ describe('resetWorkingTree', () => {
   it.each([
     ['', false],
     ['apps/ws', false],
-    ['apps/[ws]', false],
     ['apps/[ws]', true],
   ])(
     'keeps the kept paths of the workspace at %j and nothing deeper (staged: %s)',

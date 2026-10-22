@@ -1,7 +1,6 @@
 import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
   getPathHeadStatus: vi.fn(),
-  getWorkingTreeStatus: vi.fn(),
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
   tryCommitChangesAsync: vi.fn(),
@@ -26,7 +25,6 @@ import {
   getGitCurrentBranch,
   getGitRemoteNames,
   getPathHeadStatus,
-  getWorkingTreeStatus,
   hasUncommittedChanges,
   tryCommitChanges,
   tryCommitChangesAsync,
@@ -43,7 +41,6 @@ import {
 import { migrateConfirm } from './safe-prompt';
 
 const mockHeadStatus = getPathHeadStatus as Mock;
-const mockTreeStatus = getWorkingTreeStatus as Mock;
 const mockHas = hasUncommittedChanges as Mock;
 const mockTry = tryCommitChanges as Mock;
 const mockTryAsync = tryCommitChangesAsync as Mock;
@@ -67,7 +64,6 @@ const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 
 beforeEach(() => {
   mockHeadStatus.mockReset().mockReturnValue('committed');
-  mockTreeStatus.mockReset();
   mockHas.mockReset();
   mockTry.mockReset();
   mockTryAsync.mockReset();

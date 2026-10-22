@@ -28,11 +28,8 @@ export const MIGRATE_OWNED_PATHS = [
 ];
 
 /**
- * The owned paths migrate's commits and clean-tree checks leave out. The
- * scratch state is always among them, since its ignore rule can go missing
- * mid-run. The plan and prompt files are among them only while HEAD lacks
- * them, whatever is staged, so changes to a committed copy, a deletion
- * included, still commit.
+ * The scratch state is excluded even when git ignores it, since its ignore
+ * rule can go missing mid-run.
  */
 export function migrateCommitExcludes(root: string): string[] {
   return [
@@ -58,10 +55,6 @@ function isUncommitted(path: string, root: string): boolean {
   }
 }
 
-/**
- * The working tree's state as migrate's commits see it: 'clean' when only
- * the paths they leave out are dirty.
- */
 export function migrateTreeStatus(root: string): WorkingTreeStatus {
   return getWorkingTreeStatus(root, migrateCommitExcludes(root));
 }

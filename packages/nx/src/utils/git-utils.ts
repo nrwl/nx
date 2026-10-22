@@ -863,9 +863,8 @@ export function getPathCommitExposure(
 
 export type PathHeadStatus = 'committed' | 'absent' | 'unknown';
 
-// Whether HEAD's tree has an entry at the `directory`-relative `path`. It reads
-// the commit, not the index, so staging a copy or a deletion does not change
-// the answer. An unborn HEAD has no entries; 'unknown' means git failed.
+// Whether HEAD's tree, not the index, has an entry at the `directory`-relative
+// `path`. An unborn HEAD has none; 'unknown' means git failed.
 export function getPathHeadStatus(
   path: string,
   directory: string

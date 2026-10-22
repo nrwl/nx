@@ -7,8 +7,7 @@ vi.mock('child_process', async () => ({
 
 const mockCommitMigrationIfRequested = vi.fn();
 const mockCommitCheckpointBeforeMigrations = vi.fn();
-vi.mock('./migrate-commits', async () => ({
-  ...(await vi.importActual('./migrate-commits')),
+vi.mock('./migrate-commits', () => ({
   commitMigrationIfRequested: (...args: unknown[]) =>
     mockCommitMigrationIfRequested(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
