@@ -597,7 +597,7 @@ class RunningNodeProcess implements RunningTask {
 
       if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
         for (const cb of this.exitCallbacks) {
-          cb(1, this.terminalOutputChunks.join(''));
+          cb(0, this.terminalOutputChunks.join(''));
         }
       }
     });
@@ -770,7 +770,6 @@ function isReady(
     for (const readyWhenElement of readyWhenStatus) {
       if (data.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
         readyWhenElement.found = true;
-        break;
       }
     }
   }

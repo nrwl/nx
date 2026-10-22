@@ -382,6 +382,18 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
       });
+
+      it('should return success true when the string specified as ready condition is found on stderr', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo READY >&2',
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+      });
     });
 
     describe('array of strings', () => {
@@ -399,6 +411,18 @@ describe('Run Commands', () => {
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
+      });
+
+      it('should return success true when one output chunk holds every string specified as ready condition', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo "READY foo"',
+            readyWhen: ['READY', 'foo'],
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
       });
 
       it('should keep waiting when not all strings specified as ready condition were found', async () => {
