@@ -72,7 +72,7 @@ export default defineConfig({
     '/guides/nx-cloud/encryption': '/docs/kb/encryption',
     '/guides/nx-cloud/google-auth': '/docs/kb/google-auth',
     '/features/ci-features/dynamic-agents':
-      '/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size',
+      '/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size',
     '/getting-started/nx-cloud': '/docs/features/ci-features',
     '/concepts/ci-concepts/parallelization-distribution':
       '/docs/features/ci-features#building-blocks-of-fast-ci',

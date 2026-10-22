@@ -90,7 +90,7 @@ Once feedback and context switching are handled, compress the compute side.
 **Agents are idle, or queue time is high**
 
 - Increase or right-size distributed capacity and parallelism with [Workers](/docs/features/ci-features/distribute-task-execution).
-- Use [Dynamic Agents](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size) to scale based on PR size.
+- Use [Dynamic Agents](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size) to scale based on PR size.
 - Remove unnecessary serialization (global locks, [overly strict `dependsOn`](/docs/kb/defining-task-pipeline)).
 
 **E2E suites take too long**
