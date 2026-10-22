@@ -1309,7 +1309,7 @@ to = "/docs/kb/google-auth"
 
 [[redirects]]
 from = "/docs/features/ci-features/dynamic-agents"
-to = "/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size"
+to = "/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size"
 
 [[redirects]]
 from = "/docs/getting-started/nx-cloud"
