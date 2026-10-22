@@ -52,7 +52,7 @@
       "requires": {
         "storybook": ">=9.1.21 <10.0.0 || >=10.6.2"
       },
-      "description": "Adds an `id` to Storybook `HIGHLIGHT` payloads, which Storybook 9.1.21 and 10.6.2 ignore without one. An AI prompt then replaces `clickEvent` in Highlight menu items with `clickable` and a `HIGHLIGHT_MENU_CLICK` listener, which can live in any file, and finishes the Highlight usage the migration can't rewrite.",
+      "description": "Adds an `id` to Storybook `HIGHLIGHT` payloads emitted through `useChannel`, which Storybook 9.1.21 and 10.6.2 ignore without one. An AI prompt then finishes the Highlight changes in every file that uses `storybook/highlight` or `clickEvent`, including menu items that must replace `clickEvent` with `clickable` and a `HIGHLIGHT_MENU_CLICK` listener.",
       "implementation": "./dist/src/migrations/update-24-0-1/add-highlight-ids",
       "prompt": "./dist/src/migrations/update-24-0-1/adapt-highlight-usage.md",
       "documentation": "./dist/src/migrations/update-24-0-1/add-highlight-ids.md"
