@@ -30,6 +30,7 @@ impl RustPseudoTerminal {
         quiet: Option<bool>,
         tty: Option<bool>,
         command_label: Option<String>,
+        omit_command_header: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         self.pseudo_terminal.run_command(
             command,
@@ -39,6 +40,7 @@ impl RustPseudoTerminal {
             quiet,
             tty,
             command_label,
+            omit_command_header,
         )
     }
 
@@ -72,6 +74,7 @@ impl RustPseudoTerminal {
             Some(quiet),
             Some(true),
             command_label,
+            None,
         )
     }
 }

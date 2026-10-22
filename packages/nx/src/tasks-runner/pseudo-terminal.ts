@@ -90,12 +90,14 @@ export class PseudoTerminal {
       jsEnv,
       quiet,
       tty,
+      omitCommandHeader,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
       tty?: boolean;
+      omitCommandHeader?: boolean;
     } = {}
   ) {
     const cp = new PseudoTtyProcess(
@@ -106,7 +108,9 @@ export class PseudoTerminal {
         jsEnv,
         execArgv,
         quiet,
-        tty
+        tty,
+        undefined,
+        omitCommandHeader
       ),
       quiet
     );
@@ -173,7 +177,9 @@ export class PseudoTtyProcess implements RunningTask {
 
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
-  private outputCallbacks: Array<(output: string) => void> = [];
+  private outputCallbacks: Array<
+    (output: string, isCommandHeader: boolean) => void
+  > = [];
 
   private terminalOutputChunks: string[] = [];
 
@@ -188,12 +194,12 @@ export class PseudoTtyProcess implements RunningTask {
      */
     private readonly quiet: boolean = false
   ) {
-    childProcess.onOutput((chunk) => {
+    childProcess.onOutput((chunk, isCommandHeader) => {
       if (!this.quiet) {
         output.noteExternalWrite(chunk);
       }
       this.terminalOutputChunks.push(chunk);
-      this.outputCallbacks.forEach((cb) => cb(chunk));
+      this.outputCallbacks.forEach((cb) => cb(chunk, isCommandHeader));
     });
 
     childProcess.onExit((message) => {
@@ -220,7 +226,9 @@ export class PseudoTtyProcess implements RunningTask {
     this.exitCallbacks.push(callback);
   }
 
-  onOutput(callback: (message: string) => void): void {
+  onOutput(
+    callback: (message: string, isCommandHeader: boolean) => void
+  ): void {
     this.outputCallbacks.push(callback);
   }
 

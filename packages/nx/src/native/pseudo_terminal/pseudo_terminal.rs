@@ -27,13 +27,18 @@ use vt100_ctt::Parser;
 use super::os;
 use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
 
+pub enum PtyOutput {
+    CommandHeader(String),
+    Process(String),
+}
+
 pub struct PseudoTerminal {
     // slave is listed before master so that it is dropped first, matching the
     // drop order PtyPair documents and relies on.
     pub slave: Box<dyn SlavePty + Send>,
     pub master: MasterArc,
-    pub stdout_tx: Sender<String>,
-    pub stdout_rx: Receiver<String>,
+    pub stdout_tx: Sender<PtyOutput>,
+    pub stdout_rx: Receiver<PtyOutput>,
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
@@ -161,13 +166,13 @@ impl PseudoTerminal {
                         let mut held = capture_decoder.feed(&capture_filter.flush());
                         held.push_str(&capture_decoder.flush());
                         if !held.is_empty() {
-                            stdout_tx_clone.send(held).ok();
+                            stdout_tx_clone.send(PtyOutput::Process(held)).ok();
                         }
                         break;
                     }
                     let captured = capture_decoder.feed(&capture_filter.feed(&buf[0..len]));
                     if !captured.is_empty() {
-                        stdout_tx_clone.send(captured).ok();
+                        stdout_tx_clone.send(PtyOutput::Process(captured)).ok();
                     }
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
@@ -266,6 +271,7 @@ impl PseudoTerminal {
         quiet: Option<bool>,
         tty: Option<bool>,
         command_label: Option<String>,
+        omit_command_header: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
 
@@ -290,16 +296,20 @@ impl PseudoTerminal {
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
 
         let command_clone = command.clone();
-        let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
-        self.stdout_tx.send(command_info.clone()).ok();
+        if !omit_command_header.unwrap_or(false) {
+            let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
+            self.stdout_tx
+                .send(PtyOutput::CommandHeader(command_info.clone()))
+                .ok();
 
-        if self.is_within_nx_tui {
-            // within the tui, update the parser directly so it is displayed in the tui
-            self.parser.write().process(command_info.as_bytes());
-        } else if !quiet {
-            // outside the tui, just print to stdout so the user can see it
-            if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
-                debug!("Failed to write command info to stdout: {}", e);
+            if self.is_within_nx_tui {
+                // within the tui, update the parser directly so it is displayed in the tui
+                self.parser.write().process(command_info.as_bytes());
+            } else if !quiet {
+                // outside the tui, just print to stdout so the user can see it
+                if let Err(e) = std::io::stdout().write_all(command_info.as_bytes()) {
+                    debug!("Failed to write command info to stdout: {}", e);
+                }
             }
         }
 
@@ -416,7 +426,16 @@ mod tests {
         while i < 10 {
             println!("Running {}", i);
             let cp1 = pseudo_terminal
-                .run_command(String::from("whoami"), None, None, None, None, None, None)
+                .run_command(
+                    String::from("whoami"),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
                 .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;

@@ -65,7 +65,7 @@ export declare class ChildProcess {
   getPid(): number
   kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
-  onOutput(callback: (message: string) => void): void
+  onOutput(callback: (message: string, isCommandHeader: boolean) => void): void
   cleanup(): void
 }
 
@@ -278,7 +278,7 @@ export declare class RunningTasksService {
 
 export declare class RustPseudoTerminal {
   constructor()
-  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null, commandLabel?: string | undefined | null): ChildProcess
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null, commandLabel?: string | undefined | null, omitCommandHeader?: boolean | undefined | null): ChildProcess
   /**
    * This allows us to run a pseudoterminal with a fake node ipc channel
    * this makes it possible to be backwards compatible with the old implementation

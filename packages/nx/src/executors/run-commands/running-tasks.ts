@@ -86,7 +86,8 @@ export class ParallelRunningTasks implements RunningTask {
           options.streamOutput,
           options.envFile,
           task,
-          baseEnv
+          baseEnv,
+          options.omitCommandHeader
         )
     );
     this.readyWhenStatus = options.readyWhenStatus;
@@ -245,7 +246,9 @@ export class SeriallyRunningTasks implements RunningTask {
     [];
   private code: number | null = 0;
   private error: any;
-  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private outputCallbacks: Array<
+    (terminalOutput: string, isCommandHeader?: boolean) => void
+  > = [];
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -307,7 +310,7 @@ export class SeriallyRunningTasks implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
-  onOutput(cb: (terminalOutput: string) => void) {
+  onOutput(cb: (terminalOutput: string, isCommandHeader?: boolean) => void) {
     this.outputCallbacks.push(cb);
   }
 
@@ -334,13 +337,14 @@ export class SeriallyRunningTasks implements RunningTask {
         options.streamOutput,
         options.tty,
         options.envFile,
-        this.baseEnv
+        this.baseEnv,
+        options.omitCommandHeader
       );
       this.currentProcess = childProcess;
 
-      childProcess.onOutput((output) => {
+      childProcess.onOutput((output: string, isCommandHeader?: boolean) => {
         for (const cb of this.outputCallbacks) {
-          cb(output);
+          cb(output, isCommandHeader);
         }
       });
 
@@ -368,7 +372,8 @@ export class SeriallyRunningTasks implements RunningTask {
     streamOutput: boolean = true,
     tty: boolean,
     envFile?: string,
-    baseEnv?: NodeJS.ProcessEnv
+    baseEnv?: NodeJS.ProcessEnv,
+    omitCommandHeader?: boolean
   ): Promise<PseudoTtyProcess | RunningNodeProcess> {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
@@ -390,7 +395,8 @@ export class SeriallyRunningTasks implements RunningTask {
         streamOutput,
         tty,
         envFile,
-        baseEnv
+        baseEnv,
+        omitCommandHeader
       );
 
       // Register process for metrics collection (direct run-commands execution)
@@ -412,7 +418,8 @@ export class SeriallyRunningTasks implements RunningTask {
       streamOutput,
       envFile,
       task,
-      baseEnv
+      baseEnv,
+      omitCommandHeader
     );
   }
 }
@@ -446,13 +453,16 @@ class RunningNodeProcess implements RunningTask {
     private readonly streamOutput = true,
     envFile: string,
     private task: Pick<Task, 'id' | 'ultracache'>,
-    baseEnv?: NodeJS.ProcessEnv
+    baseEnv?: NodeJS.ProcessEnv,
+    omitCommandHeader?: boolean
   ) {
     env = processEnv(color, cwd, env, envFile, baseEnv);
     this.command = commandConfig.command;
-    const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
-    this.terminalOutputChunks.push(header);
-    this.stream(header);
+    if (!omitCommandHeader) {
+      const header = pc.dim('> ') + commandConfig.command + '\r\n\r\n';
+      this.terminalOutputChunks.push(header);
+      this.stream(header);
+    }
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
       detached: process.platform !== 'win32',
@@ -658,7 +668,8 @@ export async function runSingleCommandWithPseudoTerminal(
     normalized.streamOutput,
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile,
-    baseEnv
+    baseEnv,
+    normalized.omitCommandHeader
   );
 
   // Register process for metrics collection (direct run-commands execution)
@@ -681,13 +692,15 @@ async function createProcessWithPseudoTty(
   streamOutput: boolean = true,
   tty: boolean,
   envFile?: string,
-  baseEnv?: NodeJS.ProcessEnv
+  baseEnv?: NodeJS.ProcessEnv,
+  omitCommandHeader?: boolean
 ) {
   return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
     jsEnv: processEnv(color, cwd, env, envFile, baseEnv),
     quiet: !streamOutput,
     tty,
+    omitCommandHeader,
   });
 }
 

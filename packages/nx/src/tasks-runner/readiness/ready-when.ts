@@ -14,7 +14,7 @@ import {
   type TokenNode,
   type TokenScope,
 } from '../tokens';
-import { getExecutorForTask } from '../utils';
+import { createTaskId, getExecutorForTask } from '../utils';
 import { formatDuration } from '../../native';
 
 export const DEFAULT_READY_TIMEOUT = 600_000;
@@ -362,6 +362,40 @@ export function getReadyWhenConfig(
   return projectGraph.nodes[task.target.project]?.data?.targets?.[
     task.target.target
   ]?.readyWhen;
+}
+
+export function hasLogMatchesReadyWhen(
+  task: Task | undefined,
+  projectGraph: ProjectGraph | null | undefined
+): boolean {
+  if (!task || !projectGraph) {
+    return false;
+  }
+  const readyWhen = getReadyWhenConfig(task, projectGraph);
+  return (
+    typeof readyWhen === 'object' &&
+    readyWhen !== null &&
+    'logMatches' in readyWhen
+  );
+}
+
+// The parent's logMatches check reads a forked task's output, so it would
+// match the command lines executors print. Read the task from the env, since
+// an executor can run another target with its own context
+export function isForkedLogMatchesTask(context: ExecutorContext): boolean {
+  return (
+    !!process.env.NX_FORKED_TASK_EXECUTOR &&
+    hasLogMatchesReadyWhen(
+      context.taskGraph?.tasks?.[
+        createTaskId(
+          process.env.NX_TASK_TARGET_PROJECT,
+          process.env.NX_TASK_TARGET_TARGET,
+          process.env.NX_TASK_TARGET_CONFIGURATION
+        )
+      ],
+      context.projectGraph
+    )
+  );
 }
 
 /**
