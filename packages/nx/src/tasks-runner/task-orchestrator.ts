@@ -1891,7 +1891,10 @@ export class TaskOrchestrator {
       }
       if (readyWhen) {
         const state = this.armReadiness(task.id);
-        this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
+        this.pollReadinessRow(task, readyWhen, {
+          signal: state.abort.signal,
+          ownerObserved: true,
+        }).then(
           () => {
             if (!state.abort.signal.aborted) state.resolve();
           },
@@ -2134,11 +2137,11 @@ export class TaskOrchestrator {
         ) {
           throw e;
         }
-        this.onReadinessHold(producerId);
-        const owned = await this.pollReadinessRow(producer, {
-          timeout: DEFAULT_READY_TIMEOUT,
-          description: 'invalid',
-        });
+        const owned = await this.pollReadinessRow(
+          producer,
+          { timeout: DEFAULT_READY_TIMEOUT, description: 'invalid' },
+          { onPending: () => this.onReadinessHold(producerId) }
+        );
         if (!owned) {
           throw e;
         }
@@ -2157,8 +2160,9 @@ export class TaskOrchestrator {
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
-        this.onReadinessHold(producerId);
-        await this.pollReadinessRow(producer, readyWhen);
+        await this.pollReadinessRow(producer, readyWhen, {
+          onPending: () => this.onReadinessHold(producerId),
+        });
       }
     }
   }
@@ -2188,8 +2192,15 @@ export class TaskOrchestrator {
   private async pollReadinessRow(
     producer: Task,
     readyWhen: ReadyWhenWait,
-    signal?: AbortSignal,
-    ownerObserved = false
+    {
+      signal,
+      ownerObserved = false,
+      onPending,
+    }: {
+      signal?: AbortSignal;
+      ownerObserved?: boolean;
+      onPending?: () => void;
+    } = {}
   ): Promise<boolean> {
     const deadline = Date.now() + readyWhen.timeout;
     let lastStatus: TaskReadiness | null = null;
@@ -2222,6 +2233,7 @@ export class TaskOrchestrator {
       if (Date.now() >= deadline) {
         throw readinessTimeoutError(producer.id, readyWhen);
       }
+      onPending?.();
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
