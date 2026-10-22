@@ -899,7 +899,7 @@
 /ci/features/remote-cache /docs/features/ci-features/remote-cache 301
 /ci/features/distribute-task-execution /docs/features/ci-features/distribute-task-execution 301
 /ci/features/affected /docs/features/ci-features/affected 301
-/ci/features/dynamic-agents /docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size 301
+/ci/features/dynamic-agents /docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size 301
 /ci/features/split-e2e-tasks /docs/kb/split-e2e-tasks 301
 /ci/features/flaky-tasks /docs/kb/flaky-tasks 301
 /ci/features/explain-with-ai /docs/features/ci-features/self-healing-ci 301
