@@ -8,18 +8,18 @@ Storybook 9.1.21 and 10.6.2 changed the Highlight channel API:
 - Menu items no longer accept `clickEvent`. They take `clickable: true`, and a click emits `HIGHLIGHT_MENU_CLICK` with `(highlightId, itemId, details)`.
 - `details.element` no longer has `outerHTML` or `attributes`. It keeps `tagName` and `localName`.
 
-A deterministic pre-pass already added an `id` to every object literal `HIGHLIGHT` payload without one. `<advisory_context>` lists the remaining items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
+A deterministic pre-pass already added an `id` to every object literal `HIGHLIGHT` payload without one. `impl.agentContext` in the step's `nx_migrate_prompt` block lists the remaining items. When you apply these instructions by hand, the next steps the migration printed list the same items. Finish those items and nothing else. Do not change Highlight code in `node_modules`, payloads that use `elements`, or Storybook and Nx configuration.
 
 ## Pre-Migration Checklist
 
 Confirm both conditions before changing anything. If either fails, make no changes and stop.
 
-1. `<advisory_context>` lists at least one item.
+1. `impl.agentContext` lists at least one item. If that field is absent, use the next steps the migration printed. If you have neither, search the workspace outside `node_modules` for `storybook/highlight` and `clickEvent`, and treat each match as an item.
 2. The workspace is on `storybook` 9.1.21 or later in the 9.x line, or on 10.6.2 or later (`storybook` in `package.json`).
 
 ## Step 1: Verify the pre-pass
 
-Open each file the pre-pass changed, listed in `<files_changed>` or found through `<inspect_changes>`. The pre-pass gave each payload an id made of the file path and a random suffix, such as `` `apps/app/.storybook/preview.ts-${Math.random().toString(36).slice(2)}` ``. Every emit gets a new id, so each one adds its own highlight, as Storybook did before the upgrade. Do not re-apply these edits. Step 2 is the only reason to change a generated id.
+Open each file the pre-pass changed, listed in `impl.changes`. If that field is absent, search the workspace outside `node_modules` for `Math.random().toString(36).slice(2)`. The pre-pass gave each payload an id made of the file path and a random suffix, such as `` `apps/app/.storybook/preview.ts-${Math.random().toString(36).slice(2)}` ``. Every emit gets a new id, so each one adds its own highlight, as Storybook did before the upgrade. Do not re-apply these edits. Step 2 is the only reason to change a generated id.
 
 ## Step 2: Replace `clickEvent` in menu items
 
