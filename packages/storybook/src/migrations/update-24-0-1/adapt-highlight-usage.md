@@ -89,12 +89,13 @@ The other items list `HIGHLIGHT` usage the pre-pass could not check or change:
 - A payload that isn't an object literal.
 - A payload whose `id` may not be a non-empty string: a variable, `undefined`, `''`, a number, or an `id` that a spread or a computed key can set.
 - A payload without an `id` in a scope where `Math` is a local binding, so the pre-pass couldn't use `Math.random()` there.
+- A payload without an `id` under `satisfies` with a type other than `HighlightOptions`, or under a JSDoc `@satisfies` in a JavaScript file.
 - The event used outside an emit call, or passed to a function the pre-pass didn't recognize as an emit.
 - A namespace import of `storybook/highlight` used other than to read one export by name, such as destructured, read with a computed key or exported.
 - A payload passed through a spread argument.
 - `storybook/highlight` loaded with `require`, a dynamic import or a re-export, or a file the pre-pass couldn't parse.
 
-For each one, find the `HIGHLIGHT` payloads it emits. Make sure each payload that uses `selectors` gets a unique, non-empty string `id`, such as the file path and a random suffix like the pre-pass. Where `Math` is a local binding, build the id without it, for example with `globalThis.Math.random()` or a fixed string. When the `id` comes from a variable or an argument, keep it and add a fallback only where it can be missing or empty. Skip a listed function that doesn't emit `HIGHLIGHT`.
+For each one, find the `HIGHLIGHT` payloads it emits. Make sure each payload that uses `selectors` gets a unique, non-empty string `id`, such as the file path and a random suffix like the pre-pass. Where `Math` is a local binding, build the id without it, for example with `globalThis.Math.random()` or a fixed string. When the payload's `satisfies` type doesn't allow `id`, add `id` to that type. When the `id` comes from a variable or an argument, keep it and add a fallback only where it can be missing or empty. Skip a listed function that doesn't emit `HIGHLIGHT`.
 
 ## Post-Migration Validation
 

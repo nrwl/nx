@@ -292,6 +292,42 @@ export const run = (channel) => channel.emit(highlight['HIGHLIGHT'], { id: 'run'
 export type Options = highlight.HighlightOptions;
 `
     );
+    const constrained = `import { HIGHLIGHT, type HighlightOptions } from 'storybook/highlight';
+
+type Closed = { selectors: string[] };
+
+export const play = (channel) => {
+  channel.emit(HIGHLIGHT, { selectors: ['a'] } satisfies { selectors: string[] });
+  channel.emit(HIGHLIGHT, { selectors: ['b'] } satisfies Closed as unknown);
+  channel.emit(HIGHLIGHT, { selectors: ['c'] } satisfies Closed satisfies HighlightOptions);
+  channel.emit(HIGHLIGHT, { selectors: ['d'] } satisfies HighlightOptions satisfies Closed);
+};
+export function local(channel) {
+  interface HighlightOptions {
+    selectors: string[];
+  }
+  channel.emit(HIGHLIGHT, { selectors: ['e'] } satisfies HighlightOptions);
+}
+`;
+    tree.write('apps/app/src/constrained.stories.ts', constrained);
+    const checkedJs = `/** @typedef {{ selectors: string[] }} Closed */
+
+export const highlight = (channel) =>
+  channel.emit('storybook/highlight/add', /** @satisfies {Closed} */ ({ selectors: ['a'] }));
+`;
+    tree.write('libs/ui/src/checked.js', checkedJs);
+    tree.write(
+      'apps/app/src/typed.stories.ts',
+      `import { HIGHLIGHT, type HighlightOptions as Options } from 'storybook/highlight';
+import * as highlight from 'storybook/highlight';
+
+export const play = (channel) => {
+  channel.emit(HIGHLIGHT, { selectors: ['a'] } satisfies Options);
+  channel.emit(HIGHLIGHT, { selectors: ['b'] } satisfies highlight.HighlightOptions);
+  channel.emit(HIGHLIGHT, /** @satisfies {{ selectors: string[] }} */ ({ selectors: ['c'] }));
+};
+`
+    );
     tree.write(
       'libs/menus/src/items.js',
       `export const items = [{ id: 'more', title: 'More', clickEvent: 'my-addon/more' }];\n`
@@ -314,6 +350,34 @@ export type Options = highlight.HighlightOptions;
     expect(tree.read('apps/app/src/menu.stories.ts', 'utf-8')).toContain(
       'id: `apps/app/src/menu.stories.ts-${Math.random().toString(36).slice(2)}`'
     );
+    expect(tree.read('apps/app/src/constrained.stories.ts', 'utf-8')).toBe(
+      constrained
+    );
+    expect(tree.read('libs/ui/src/checked.js', 'utf-8')).toBe(checkedJs);
+    expect(tree.read('apps/app/src/typed.stories.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { HIGHLIGHT, type HighlightOptions as Options } from 'storybook/highlight';
+      import * as highlight from 'storybook/highlight';
+
+      export const play = (channel) => {
+        channel.emit(HIGHLIGHT, {
+          id: \`apps/app/src/typed.stories.ts-\${Math.random().toString(36).slice(2)}\`,
+          selectors: ['a'],
+        } satisfies Options);
+        channel.emit(HIGHLIGHT, {
+          id: \`apps/app/src/typed.stories.ts-\${Math.random().toString(36).slice(2)}\`,
+          selectors: ['b'],
+        } satisfies highlight.HighlightOptions);
+        channel.emit(
+          HIGHLIGHT,
+          /** @satisfies {{ selectors: string[] }} */ ({
+            id: \`apps/app/src/typed.stories.ts-\${Math.random().toString(36).slice(2)}\`,
+            selectors: ['c'],
+          }),
+        );
+      };
+      "
+    `);
     expect(result.agentContext).toMatchInlineSnapshot(`
       [
         "apps/app/src/menu.stories.ts:9 uses HIGHLIGHT outside an emit call, so the payloads emitted through it were not checked. Give each one a unique string "id".",
@@ -327,10 +391,18 @@ export type Options = highlight.HighlightOptions;
         "apps/app/src/namespace.stories.ts:4 uses the "storybook/highlight" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
         "apps/app/src/namespace.stories.ts:5 uses the "storybook/highlight" namespace in a way this migration doesn't read, such as destructuring, a computed key or an export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
         "apps/app/src/namespace.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
+        "apps/app/src/constrained.stories.ts:6 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
+        "apps/app/src/constrained.stories.ts:7 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
+        "apps/app/src/constrained.stories.ts:8 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
+        "apps/app/src/constrained.stories.ts:9 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
+        "apps/app/src/constrained.stories.ts:15 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
+        "apps/app/src/constrained.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
+        "apps/app/src/typed.stories.ts uses the HighlightOptions type, which now requires "id". Give each object of that type a unique string "id".",
         "apps/app/src/broken.stories.ts uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "apps/app/src/intro.mdx uses "storybook/highlight" in a file this migration can't parse. Give each HIGHLIGHT payload it emits a unique string "id", and replace "clickEvent" in its menu items as described in https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
         "apps/app/.storybook/preview.cjs:1 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
         "apps/app/.storybook/preview.cjs:2 loads "storybook/highlight" in a way this migration doesn't read, such as a require, a dynamic import or a re-export. Give each HIGHLIGHT payload emitted through it a unique string "id".",
+        "libs/ui/src/checked.js:4 emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.",
         "libs/menus/src/items.js has objects with "title" and "clickEvent" (line 1) that may be Highlight menu items. Change only the ones that reach the menu of a HIGHLIGHT payload: set "clickable: true", give that payload a fixed "id", and move the "clickEvent" listener to HIGHLIGHT_MENU_CLICK. Leave the others unchanged. See https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id.",
       ]
     `);

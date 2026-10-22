@@ -21,6 +21,7 @@ The migration lists the Highlight usage it can't change, and in agentic runs an 
 - A payload whose `id` may not be a non-empty string, such as a variable, `undefined`, `''` or a number, or whose `id` can come from a spread or a computed key.
 - A payload that isn't an object literal, such as a variable.
 - A payload without an `id` in a scope where `Math` is a local binding, such as a parameter or an import named `Math`. The generated id calls `Math.random()`.
+- A payload without an `id` under `satisfies` with a type other than `HighlightOptions`, or under a JSDoc `@satisfies` in a JavaScript file. That type may not allow the added `id`.
 - `HIGHLIGHT` used outside an emit call, or passed to a function the migration doesn't recognize as an emit.
 - A namespace import of `storybook/highlight` used other than to read one export by name, such as destructured, read with a computed key or exported.
 - A payload passed through a spread argument.

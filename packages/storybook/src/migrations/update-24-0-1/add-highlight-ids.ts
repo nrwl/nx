@@ -17,6 +17,7 @@ import type {
   SourceFile,
   Symbol as TsSymbol,
   TypeChecker,
+  TypeNode,
 } from 'typescript';
 
 const HIGHLIGHT_MODULE = 'storybook/highlight';
@@ -25,6 +26,7 @@ const HIGHLIGHT_EVENT = 'storybook/highlight/add';
 const HIGHLIGHT_DOCS =
   'https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#highlight-menu-items-emit-a-fixed-highlight_menu_click-event-with-a-mandatory-id';
 const SOURCE_FILE_PATTERN = /\.[cm]?[jt]sx?$/;
+const JS_FILE_PATTERN = /\.[cm]?jsx?$/;
 // Story and docs formats whose scripts can use Highlight but aren't parsed here.
 const UNPARSED_FILE_PATTERN = /\.(mdx|svelte|vue)$/;
 const LISTENER_METHODS = new Set([
@@ -43,6 +45,7 @@ type HighlightImports = {
   namespaces: Set<string>;
   types: Set<string>;
   bindings: Identifier[];
+  highlightOptions: Identifier[];
 };
 
 let ts: typeof import('typescript') | undefined;
@@ -114,6 +117,27 @@ function migrateFile(
     getChecker,
     imports.bindings
   );
+  const isHighlightOptionsBinding = createImportBindingCheck(
+    getChecker,
+    imports.highlightOptions
+  );
+  // Patched Storybook's HighlightOptions requires `id`.
+  const allowsId = (type: TypeNode): boolean => {
+    if (!ts.isTypeReferenceNode(type)) {
+      return false;
+    }
+    const name = type.typeName;
+    if (ts.isIdentifier(name)) {
+      return isHighlightOptionsBinding(name);
+    }
+    return (
+      ts.isIdentifier(name.left) &&
+      name.right.text === 'HighlightOptions' &&
+      imports.namespaces.has(name.left.text) &&
+      isImportBinding(name.left)
+    );
+  };
+  const checksJsDoc = JS_FILE_PATTERN.test(filePath);
   const emitters = new Set<string>();
   const eventCalls: CallExpression[] = [];
   const possibleMenuItems: ObjectLiteralExpression[] = [];
@@ -233,6 +257,10 @@ function migrateFile(
         notes.push(
           `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload where "Math" is a local binding, so the generated id, which calls Math.random(), was not added. Give it a unique string "id".`
         );
+      } else if (hasClosedConstraint(literal, payload, allowsId, checksJsDoc)) {
+        notes.push(
+          `${filePath}:${lineOf(payload)} emits a HIGHLIGHT payload whose "satisfies" type may not allow "id", so the generated id was not added. Give it a unique string "id" and make sure that type allows it.`
+        );
       } else {
         changes.push(insertIdProperty(literal, id, sourceFile));
       }
@@ -273,6 +301,7 @@ function readHighlightImports(sourceFile: SourceFile): HighlightImports {
     namespaces: new Set(),
     types: new Set(),
     bindings: [],
+    highlightOptions: [],
   };
   for (const statement of sourceFile.statements) {
     if (
@@ -298,6 +327,9 @@ function readHighlightImports(sourceFile: SourceFile): HighlightImports {
         imports.bindings.push(element.name);
       } else if (CHANGED_TYPES.has(imported)) {
         imports.types.add(imported);
+        if (imported === 'HighlightOptions') {
+          imports.highlightOptions.push(element.name);
+        }
       }
     }
   }
@@ -463,6 +495,31 @@ function skipOuterExpressions(expression: Expression): Expression {
     current = current.expression;
   }
   return current;
+}
+
+// `satisfies` rejects an `id` its type doesn't declare. TypeScript applies a
+// JSDoc `@satisfies` only in JavaScript files.
+function hasClosedConstraint(
+  literal: ObjectLiteralExpression,
+  payload: Expression,
+  allowsId: (type: TypeNode) => boolean,
+  checksJsDoc: boolean
+): boolean {
+  let node: Node = literal;
+  while (node !== payload) {
+    node = node.parent;
+    if (ts.isSatisfiesExpression(node) && !allowsId(node.type)) {
+      return true;
+    }
+    if (
+      checksJsDoc &&
+      ts.isParenthesizedExpression(node) &&
+      ts.getJSDocSatisfiesTag(node)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Returns the last property that can set `key` at runtime: a spread, a `key`
