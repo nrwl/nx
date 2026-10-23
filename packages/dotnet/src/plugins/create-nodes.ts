@@ -19,7 +19,14 @@ const executionOptions = new Set([
   'verbose',
   'no-color',
   'no-parallel',
+  'usePty',
+  'streamOutput',
 ]);
+const loggingSwitch = String.raw`(?:--nologo|(?:--verbosity(?:=|\s+)|-v(?:[:=]|\s+))(?:quiet|minimal|normal|detailed|diagnostic|q|m|n|d|diag))`;
+const loggingArguments = new RegExp(
+  String.raw`^\s*(?:${loggingSwitch}(?:\s+${loggingSwitch})*)?\s*$`,
+  'i'
+);
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**
@@ -46,7 +53,7 @@ export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
  *           },
  *           "configurations": {
  *             "release": {
- *               "args": ["-p:Optimize=true"]
+ *               "args": ["--nologo"]
  *             }
  *           }
  *         },
@@ -357,17 +364,13 @@ function mergeVariantTarget(
       .filter(Boolean)
       .join(' ');
     if (
-      /--(?:nx-*Args|nx-*Outputs|forward-*All-*Args|__unparsed__)(?:["'=.\s:]|$)|(?:^|\s)@|(?:^|\s)(?:--(?:framework|runtime|configuration|output|artifacts-path|no-dependencies|os|arch)|-[frcoa])(?:[=\s:]|$)|(?:^|\s)(?:[-/](?:p|property):|--property[=:\s])[^\s]*(?:TargetFrameworks?|RuntimeIdentifiers?|Configuration|OutputPath|OutDir|PublishDir|IntermediateOutputPath|ArtifactsPath|UseArtifactsOutput|BaseOutputPath|BaseIntermediateOutputPath|AppendTargetFrameworkToOutputPath|AppendRuntimeIdentifierToOutputPath)\s*=/i.test(
-        args
-      ) ||
+      !loggingArguments.test(args) ||
       Object.keys(options ?? {}).some((key) =>
-        /^(?:nxArgs|nxOutputs|__unparsed__|framework|runtime|configuration|output|artifacts-path|commands?|cwd|forwardAllArgs|os|arch)$/i.test(
-          key
-        )
+        /^(?:commands?|cwd|forwardAllArgs|__unparsed__|env|envFile)$/i.test(key)
       )
     ) {
       throw new Error(
-        `Cannot override framework, runtime, configuration, command, or output ownership of .NET variant '${name}'. Use its Nx configuration, or set tfmVariants: false.`
+        `Cannot override evaluated .NET variant '${name}' with evaluation-changing arguments or target environment. Only --verbosity/-v and --nologo are supported as additional switches. Other arguments or environment can change evaluated inputs or output paths. Set tfmVariants: false to preserve a custom build.`
       );
     }
     return args;

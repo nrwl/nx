@@ -19,25 +19,53 @@ function object(value: unknown): value is JsonObject {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-// Frozen from create-nodes.ts at 5254b70529; migration behavior must not float.
-const protectedArgs =
-  /--(?:nx-*Args|nx-*Outputs|forward-*All-*Args|__unparsed__)(?:["'=.\s:]|$)|(?:^|\s)@|(?:^|\s)(?:--(?:framework|runtime|configuration|output|artifacts-path|no-dependencies|os|arch)|-[frcoa])(?:[=\s:]|$)|(?:^|\s)(?:[-/](?:p|property):|--property[=:\s])[^\s]*(?:TargetFrameworks?|RuntimeIdentifiers?|Configuration|OutputPath|OutDir|PublishDir|IntermediateOutputPath|ArtifactsPath|UseArtifactsOutput|BaseOutputPath|BaseIntermediateOutputPath|AppendTargetFrameworkToOutputPath|AppendRuntimeIdentifierToOutputPath)\s*=/i;
-const protectedOptions =
-  /^(?:nx-*Args|nx-*Outputs|__unparsed__|framework|runtime|configuration|output|artifacts-path|commands?|cwd|forward-*All-*Args|no-dependencies|os|arch|[frcoa])$/i;
+// Freeze the 24.1 argument contract instead of importing a moving runtime validator.
+const loggingSwitch = String.raw`(?:--nologo|(?:--verbosity(?:=|\s+)|-v(?:[:=]|\s+))(?:quiet|minimal|normal|detailed|diagnostic|q|m|n|d|diag))`;
+const loggingArguments = new RegExp(
+  String.raw`^\s*(?:${loggingSwitch}(?:\s+${loggingSwitch})*)?\s*$`,
+  'i'
+);
+const executionOptions = new Set([
+  'args',
+  'parallel',
+  'readyWhen',
+  'color',
+  'tty',
+  'verbose',
+  'no-color',
+  'no-parallel',
+  'usePty',
+  'streamOutput',
+]);
 
 function unsafeOptions(value: unknown): boolean {
   if (!object(value)) return value !== undefined;
-  if (Object.keys(value).some((key) => protectedOptions.test(key))) return true;
+  for (const [key, option] of Object.entries(value)) {
+    if (executionOptions.has(key)) continue;
+    const values = Array.isArray(option) ? option : [option];
+    if (
+      /^verbosity$/i.test(key) &&
+      values.every(
+        (entry) =>
+          typeof entry === 'string' &&
+          loggingArguments.test(`--verbosity=${entry}`)
+      )
+    )
+      continue;
+    if (/^nologo$/i.test(key) && values.every((entry) => entry === true))
+      continue;
+    return true;
+  }
   const args = value.args;
   if (args === undefined) return false;
-  if (typeof args === 'string') return protectedArgs.test(args);
+  if (typeof args === 'string') return !loggingArguments.test(args);
   if (Array.isArray(args) && args.every((arg) => typeof arg === 'string')) {
-    return protectedArgs.test(args.join(' '));
+    return !loggingArguments.test(args.join(' '));
   }
   return true;
 }
 
-function requiresLegacyBuild(value: unknown): boolean {
+function requiresLegacyBuild(value: unknown, publish = false): boolean {
   if (!object(value)) return false;
   if (
     value.outputs !== undefined ||
@@ -47,8 +75,10 @@ function requiresLegacyBuild(value: unknown): boolean {
     (typeof value.executor === 'string' &&
       value.executor !== 'nx:run-commands') ||
     (value.defaultConfiguration !== undefined &&
-      value.defaultConfiguration !== 'debug' &&
-      value.defaultConfiguration !== 'release') ||
+      (publish
+        ? value.defaultConfiguration !== 'release'
+        : value.defaultConfiguration !== 'debug' &&
+          value.defaultConfiguration !== 'release')) ||
     unsafeOptions(value.options)
   ) {
     return true;
@@ -123,11 +153,19 @@ export default async function update(tree: Tree) {
     );
     if (projects.length === 0) continue;
 
-    const buildName =
-      object(options.build) && typeof options.build.targetName === 'string'
-        ? options.build.targetName
-        : 'build';
-    let affected = requiresLegacyBuild(options.build);
+    const targets = ['build', 'pack', 'publish']
+      .filter((kind) => options[kind] !== false)
+      .map((kind) => {
+        const configuration = options[kind];
+        const name =
+          object(configuration) && typeof configuration.targetName === 'string'
+            ? configuration.targetName
+            : kind;
+        return { kind, name, configuration };
+      });
+    let affected = targets.some(({ kind, configuration }) =>
+      requiresLegacyBuild(configuration, kind === 'publish')
+    );
     const unresolvedSelectors = new Set<string>();
     for (const file of projects) {
       const root = posix.dirname(file);
@@ -175,42 +213,47 @@ export default async function update(tree: Tree) {
           `${file} has no statically declared Nx project name and nx.json contains project-filtered targetDefaults. Resolve its evaluated name before deciding whether plugins[${index}] needs tfmVariants:false.`
         );
       }
-      for (const target of [buildName, `${buildName}:release`]) {
-        const defaults = unknownFilteredIdentity
-          ? null
-          : readTargetDefaultsForTarget(
-              target,
-              nx.targetDefaults,
-              'nx:run-commands',
-              {
-                sourcePlugin: plugin,
-                command: 'dotnet build',
-                ...(name && {
-                  projectName: name,
-                  projectNode: {
-                    name,
-                    type: 'lib',
-                    data: {
-                      root,
+      for (const { kind, name: targetName } of targets) {
+        for (const target of kind === 'build'
+          ? [targetName, `${targetName}:release`]
+          : [targetName]) {
+          const defaults = unknownFilteredIdentity
+            ? null
+            : readTargetDefaultsForTarget(
+                target,
+                nx.targetDefaults,
+                'nx:run-commands',
+                {
+                  sourcePlugin: plugin,
+                  command: `dotnet ${kind}`,
+                  ...(name && {
+                    projectName: name,
+                    projectNode: {
                       name,
-                      tags: tags.filter(
-                        (tag): tag is string => typeof tag === 'string'
-                      ),
+                      type: 'lib',
+                      data: {
+                        root,
+                        name,
+                        tags: tags.filter(
+                          (tag): tag is string => typeof tag === 'string'
+                        ),
+                      },
                     },
-                  },
-                }),
-              }
+                  }),
+                }
+              );
+          const fromPackage = packageTargets[target];
+          const fromProject = projectTargets[target];
+          affected ||=
+            requiresLegacyBuild(defaults, kind === 'publish') ||
+            requiresLegacyBuild(fromPackage, kind === 'publish') ||
+            requiresLegacyBuild(fromProject, kind === 'publish');
+          if (object(fromPackage) && object(fromProject)) {
+            affected ||= requiresLegacyBuild(
+              mergeTargetConfigurations(fromProject, fromPackage),
+              kind === 'publish'
             );
-        const fromPackage = packageTargets[target];
-        const fromProject = projectTargets[target];
-        affected ||=
-          requiresLegacyBuild(defaults) ||
-          requiresLegacyBuild(fromPackage) ||
-          requiresLegacyBuild(fromProject);
-        if (object(fromPackage) && object(fromProject)) {
-          affected ||= requiresLegacyBuild(
-            mergeTargetConfigurations(fromProject, fromPackage)
-          );
+          }
         }
       }
     }

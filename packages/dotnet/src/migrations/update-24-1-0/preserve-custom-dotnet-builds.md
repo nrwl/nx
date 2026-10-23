@@ -4,7 +4,7 @@ Adds `tfmVariants: false` to existing `@nx/dotnet` registrations whose customize
 previous all-framework inference contract.
 Standard registrations keep the new default, and explicit `tfmVariants` choices are preserved.
 
-The migration checks plugin build options, applicable `targetDefaults`, and sibling `project.json`
+The migration checks plugin build, pack, and publish options, applicable `targetDefaults`, and sibling `project.json`
 or `package.json` target overrides for the registration's matching .NET projects.
 It preserves registration order, include/exclude scope, target names, and the original customization.
 It doesn't rewrite project targets or dependency versions.
@@ -55,6 +55,11 @@ After:
 Custom commands/executors, output ownership, custom configuration names, conflicting CLI arguments,
 explicit parallelism, and explicit caching contracts can require this preservation.
 Renaming alone, verbosity arguments, additional inputs, and codegen prerequisites don't.
+Only additional verbosity/nologo logging arguments remain enabled automatically.
+Other switches, custom MSBuild properties, and target-specific environment settings are preserved
+through opt-out because the variant analyzer doesn't evaluate their changed inputs or paths.
+Pack uses the same evaluated-output contract, and publish variants require a Release default,
+so those existing customizations are checked by the same shared migration.
 Explicit caching is preserved conservatively because a Tree-only migration can't evaluate whether
 MSBuild output guards will disable caching for a particular project.
 

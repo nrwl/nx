@@ -1,6 +1,7 @@
 import { formatFiles, readNxJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './preserve-custom-dotnet-builds';
+import { mergeUserTargetConfigurations } from '../../plugins/create-nodes';
 
 describe('preserve custom .NET build inference', () => {
   let tree: Tree;
@@ -20,8 +21,13 @@ describe('preserve custom .NET build inference', () => {
     { defaultConfiguration: '' },
     { options: { args: '--framework net8.0' } },
     { options: { args: ['-p:Configuration=Production'] } },
+    { options: { args: ['-p:DefineConstants=CUSTOM_INPUTS'] } },
+    { options: { property: 'CustomEvaluation=true' } },
+    { options: { 'p:EnableExtra': 'true' } },
     { options: { args: '@build.rsp' } },
     { options: { cwd: 'somewhere' } },
+    { options: { env: { EnableExtra: 'true' } } },
+    { options: { envFile: 'custom.env' } },
     { parallelism: true },
     { cache: true },
   ])('preserves a previously permitted custom build: %j', async (build) => {
@@ -43,7 +49,7 @@ describe('preserve custom .NET build inference', () => {
         options: {
           build: {
             targetName: 'compile',
-            options: { args: '--verbosity quiet', env: { CUSTOM: 'yes' } },
+            options: { args: '--verbosity quiet', color: true },
             inputs: ['extra'],
             dependsOn: ['codegen'],
           },
@@ -54,6 +60,79 @@ describe('preserve custom .NET build inference', () => {
     const original = tree.read('nx.json', 'utf8');
     await update(tree);
     expect(tree.read('nx.json', 'utf8')).toBe(original);
+  });
+
+  it.each([
+    { args: '--verbosity quiet --nologo' },
+    { args: '-v:diag' },
+    { verbosity: 'minimal', nologo: true },
+    { args: '--self-contained true' },
+    { args: '--use-current-runtime' },
+    { args: '--version-suffix custom' },
+    { args: '--unknown-switch' },
+    { args: '-p:EnableExtra=true' },
+    { env: { EnableExtra: 'true' } },
+    { envFile: 'custom.env' },
+  ])(
+    'uses the same frozen argument boundary as the runtime: %j',
+    async (options) => {
+      let rejected = false;
+      try {
+        mergeUserTargetConfigurations(
+          {
+            root: 'apps/app',
+            targets: {
+              build: { executor: 'nx:noop' },
+              'build:net8.0': {
+                command: 'dotnet build {args.nxArgs}',
+                options: { forwardAllArgs: false },
+                configurations: {
+                  debug: { nxArgs: '--framework net8.0 --configuration Debug' },
+                },
+                metadata: { variantOf: 'build' },
+              },
+            },
+          },
+          { build: { options } }
+        );
+      } catch {
+        rejected = true;
+      }
+      write([{ plugin: '@nx/dotnet', options: { build: { options } } }]);
+      await update(tree);
+      const registration = readNxJson(tree)?.plugins?.[0];
+      expect(
+        typeof registration === 'object' &&
+          registration.options?.tfmVariants === false
+      ).toBe(rejected);
+    }
+  );
+
+  it.each([
+    { pack: { command: 'custom-pack' } },
+    { pack: { options: { args: '-p:PackageVersion=1.2.3' } } },
+    { publish: { defaultConfiguration: 'debug' } },
+    { publish: { options: { args: '--property:PublishMode=custom' } } },
+  ])(
+    'preserves existing pack/publish contracts affected by the shared variant layer: %j',
+    async (options) => {
+      write([{ plugin: '@nx/dotnet', options }]);
+      await update(tree);
+      expect(readNxJson(tree)?.plugins?.[0]).toMatchObject({
+        options: { ...options, tfmVariants: false },
+      });
+    }
+  );
+
+  it('does not select explicit project targets when their inferred target is disabled', async () => {
+    tree.write(
+      'apps/app/project.json',
+      '{"name":"app","targets":{"publish":{"command":"custom-publish"}}}'
+    );
+    write([{ plugin: '@nx/dotnet', options: { publish: false } }]);
+    const before = tree.read('nx.json', 'utf8');
+    await update(tree);
+    expect(tree.read('nx.json', 'utf8')).toBe(before);
   });
 
   it.each([true, false])(

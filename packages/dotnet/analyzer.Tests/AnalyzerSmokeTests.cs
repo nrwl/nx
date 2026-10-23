@@ -186,6 +186,42 @@ public class AnalyzerSmokeTests : IDisposable
             reference => reference.GetString() == "apps/Common");
     }
 
+    [Fact]
+    public void UserGlobalProperty_CanReintroduceAnExcludedConditionalSource()
+    {
+        var projectFile = WriteProject("Conditional", "");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(projectFile)!, "Conditional.cs"), "public class Conditional {}");
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
+                <EnableExtra>false</EnableExtra>
+              </PropertyGroup>
+              <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' And '$(EnableExtra)' != 'true'">
+                <Compile Remove="Conditional.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        Assert.Contains("!{projectRoot}/Conditional.cs", StringInputs(Analyze(projectFile), "build:net8.0"));
+
+        var info = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        foreach (var argument in new[] { "msbuild", projectFile, "-nologo", "-p:TargetFramework=net8.0", "-p:EnableExtra=true", "-getItem:Compile" })
+        {
+            info.ArgumentList.Add(argument);
+        }
+        using var process = Process.Start(info)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        Assert.True(process.WaitForExit(180_000));
+        Assert.True(process.ExitCode == 0, stderr);
+        var compiled = JsonDocument.Parse(stdout).RootElement.GetProperty("Items").GetProperty("Compile");
+        Assert.Contains(compiled.EnumerateArray(), item => item.GetProperty("Identity").GetString() == "Conditional.cs");
+    }
+
     private static string[] StringInputs(Dictionary<string, JsonElement> targets, string targetName) =>
         [.. targets[targetName].GetProperty("inputs").EnumerateArray()
             .Where(i => i.ValueKind == JsonValueKind.String)
