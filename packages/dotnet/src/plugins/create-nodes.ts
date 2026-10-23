@@ -347,7 +347,7 @@ function mergeVariantTarget(
       .filter(Boolean)
       .join(' ');
     if (
-      /--(?:nxArgs|nxOutputs|forwardAllArgs|__unparsed__)(?:["'=.\s:]|$)|(?:^|\s)@|(?:^|\s)(?:--(?:framework|runtime|configuration|output|artifacts-path|no-dependencies|os|arch)|-[frcoa])(?:[=\s:]|$)|(?:^|\s)(?:[-/](?:p|property):|--property[=:\s])[^\s]*(?:TargetFrameworks?|RuntimeIdentifiers?|Configuration|OutputPath|OutDir|PublishDir|IntermediateOutputPath|ArtifactsPath|UseArtifactsOutput|BaseOutputPath|BaseIntermediateOutputPath|AppendTargetFrameworkToOutputPath|AppendRuntimeIdentifierToOutputPath)\s*=/i.test(
+      /--(?:nx-*Args|nx-*Outputs|forward-*All-*Args|__unparsed__)(?:["'=.\s:]|$)|(?:^|\s)@|(?:^|\s)(?:--(?:framework|runtime|configuration|output|artifacts-path|no-dependencies|os|arch)|-[frcoa])(?:[=\s:]|$)|(?:^|\s)(?:[-/](?:p|property):|--property[=:\s])[^\s]*(?:TargetFrameworks?|RuntimeIdentifiers?|Configuration|OutputPath|OutDir|PublishDir|IntermediateOutputPath|ArtifactsPath|UseArtifactsOutput|BaseOutputPath|BaseIntermediateOutputPath|AppendTargetFrameworkToOutputPath|AppendRuntimeIdentifierToOutputPath)\s*=/i.test(
         args
       ) ||
       Object.keys(options ?? {}).some((key) =>
