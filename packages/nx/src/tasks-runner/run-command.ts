@@ -110,7 +110,7 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
-import { signalToCode } from '../utils/exit-codes';
+import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
@@ -552,7 +552,7 @@ export async function runCommand(
       });
 
       const startTime = Date.now();
-      const { taskResults, completed } = await runTasksForCommand(
+      const { taskResults, taskStatuses, completed } = await runTasksForCommand(
         taskSelection,
         currentProjectGraph,
         { nxJson },
@@ -570,15 +570,7 @@ export async function runCommand(
       );
       const endTime = Date.now();
 
-      const exitCode = !completed
-        ? signalToCode('SIGINT')
-        : Object.values(taskResults).some(
-              (taskResult) =>
-                taskResult.status === 'failure' ||
-                taskResult.status === 'skipped'
-            )
-          ? 1
-          : 0;
+      const exitCode = getRunExitCode(completed, taskResults, taskStatuses);
 
       await runPostTasksExecution({
         id,
@@ -606,7 +598,11 @@ export async function runTasksForCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<{ taskResults: TaskResults; completed: boolean }> {
+): Promise<{
+  taskResults: TaskResults;
+  taskStatuses?: Record<string, TaskStatus>;
+  completed: boolean;
+}> {
   // Kick off the license lookup in the background so it overlaps with task
   // execution. The log itself is deferred to the print site below so it
   // never lands in the middle of task output.
@@ -646,7 +642,7 @@ export async function runTasksForCommand(
     );
 
   try {
-    const taskResults = await invokeTasksRunner({
+    const { taskResults, taskStatuses } = await invokeTasksRunner({
       tasks,
       projectGraph,
       taskGraph,
@@ -674,7 +670,8 @@ export async function runTasksForCommand(
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskResults),
+      taskStatuses,
+      completed: didCommandComplete(tasks, taskResults, taskStatuses),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -709,20 +706,6 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   } catch {
     // Silently ignore errors
   }
-}
-
-function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
-  if (tasks.length === 0) return true;
-
-  for (const task of tasks) {
-    if (!task.continuous) {
-      // Discrete task must have a result (was started and finished)
-      if (!taskResults[task.id]) return false;
-    }
-  }
-
-  // Any stopped task means the run was interrupted
-  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -1063,7 +1046,10 @@ export async function invokeTasksRunner({
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
-}): Promise<{ [id: string]: TaskResult }> {
+}): Promise<{
+  taskResults: { [id: string]: TaskResult };
+  taskStatuses?: Record<string, TaskStatus>;
+}> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
   // this needs to be done before we start to run the tasks
@@ -1205,10 +1191,17 @@ export async function invokeTasksRunner({
     );
   }
 
-  await (promiseOrObservable as Promise<{
+  const taskStatuses = await (promiseOrObservable as Promise<{
     [id: string]: TaskStatus;
   }>);
-  return taskResultsLifecycle.getTaskResults();
+  return {
+    taskResults: taskResultsLifecycle.getTaskResults(),
+    // Custom runners are not guaranteed to resolve to a status map.
+    taskStatuses:
+      taskStatuses && typeof taskStatuses === 'object'
+        ? taskStatuses
+        : undefined,
+  };
 }
 
 export function constructLifeCycles(
