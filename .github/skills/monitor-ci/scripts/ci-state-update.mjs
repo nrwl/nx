@@ -26,6 +26,17 @@ function getArg(name) {
   return idx !== -1 && idx + 1 < args.length ? args[idx + 1] : null;
 }
 
+function getCount(name, fallback) {
+  const raw = getArg(name);
+  if (raw === null) return fallback;
+  return /^\d+$/.test(raw) ? Number(raw) : NaN;
+}
+
+// `<` is false for NaN, so an invalid counter or maximum fails closed.
+function budgetExhausted(count, max) {
+  return !(count < max);
+}
+
 function output(result) {
   console.log(JSON.stringify(result));
 }
@@ -38,9 +49,9 @@ function gate() {
   const gateType = getArg('--gate-type');
 
   if (gateType === 'local-fix') {
-    const count = parseInt(getArg('--local-verify-count') || '0', 10);
-    const max = parseInt(getArg('--local-verify-attempts') || '3', 10);
-    if (count >= max) {
+    const count = getCount('--local-verify-count', 0);
+    const max = getCount('--local-verify-attempts', 3);
+    if (budgetExhausted(count, max)) {
       return output({
         allowed: false,
         localVerifyCount: count,
@@ -55,8 +66,8 @@ function gate() {
   }
 
   if (gateType === 'env-rerun') {
-    const count = parseInt(getArg('--env-rerun-count') || '0', 10);
-    if (count >= 2) {
+    const count = getCount('--env-rerun-count', 0);
+    if (budgetExhausted(count, 2)) {
       return output({
         allowed: false,
         envRerunCount: count,
@@ -119,9 +130,9 @@ function postAction() {
 function cycleCheck() {
   const status = getArg('--code');
   const wasAgentTriggered = getFlag('--agent-triggered');
-  let cycleCount = parseInt(getArg('--cycle-count') || '0', 10);
-  const maxCycles = parseInt(getArg('--max-cycles') || '10', 10);
-  let envRerunCount = parseInt(getArg('--env-rerun-count') || '0', 10);
+  let cycleCount = getCount('--cycle-count', 0);
+  const maxCycles = getCount('--max-cycles', 10);
+  let envRerunCount = getCount('--env-rerun-count', 0);
 
   // Cycle classification: if previous cycle was agent-triggered, count it
   if (wasAgentTriggered) cycleCount++;
@@ -131,8 +142,8 @@ function cycleCheck() {
 
   // Cycle limit gates. limitReached is a terminal stop; approachingLimit is an
   // advisory warning emitted in the two cycles before the cap.
-  const limitReached = cycleCount >= maxCycles;
-  const approachingLimit = cycleCount >= maxCycles - 2;
+  const limitReached = budgetExhausted(cycleCount, maxCycles);
+  const approachingLimit = budgetExhausted(cycleCount, maxCycles - 2);
 
   output({
     cycleCount,
