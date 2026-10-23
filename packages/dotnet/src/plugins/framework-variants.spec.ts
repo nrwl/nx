@@ -123,9 +123,9 @@ describe('TFM variant integration with Nx', () => {
   it('preserves required arguments and user args through actual command interpolation', () => {
     const result = mergeUserTargetConfigurations(project(), {
       build: {
-        options: { args: ['--verbosity', 'quiet'], env: { CUSTOM: 'yes' } },
+        options: { args: ['--verbosity', 'quiet'], color: true },
         configurations: {
-          release: { args: '-p:DefineConstants=RELEASE_BUILD' },
+          release: { args: '--nologo' },
         },
       },
     });
@@ -137,10 +137,10 @@ describe('TFM variant integration with Nx', () => {
       false
     );
     expect(command).toBe(
-      'dotnet build --no-restore --framework net10.0 --configuration release --verbosity quiet -p:DefineConstants=RELEASE_BUILD'
+      'dotnet build --no-restore --framework net10.0 --configuration release --verbosity quiet --nologo'
     );
     expect(command).not.toContain('nxOutputs');
-    expect(leaf.options.env).toEqual({ CUSTOM: 'yes' });
+    expect(leaf.options.color).toBe(true);
     expect(result.targets!.build.executor).toBe('nx:noop');
   });
 
@@ -166,6 +166,10 @@ describe('TFM variant integration with Nx', () => {
     '--nx-outputs=somewhere',
     '--forwardAllArgs',
     '--forward-all-args',
+    '-p:EnableExtra=true',
+    '--property:Optimize=true',
+    '"--property" "EnableExtra=true"',
+    '--p:EnableExtra=true',
   ])('rejects contradictory user arguments: %s', (args) => {
     expect(() =>
       mergeUserTargetConfigurations(project(), {
@@ -174,17 +178,35 @@ describe('TFM variant integration with Nx', () => {
     ).toThrow(/Cannot override/);
   });
 
+  it('rejects properties that could reintroduce an excluded conditional source', () => {
+    const data = project();
+    data.targets!['build:net10.0'].inputs = [
+      'default',
+      '!{projectRoot}/Conditional.cs',
+    ];
+    expect(() =>
+      mergeUserTargetConfigurations(data, {
+        build: { options: { args: ['-p:EnableExtra=true'] } },
+      })
+    ).toThrow(/Only --verbosity/);
+    expect(() =>
+      mergeUserTargetConfigurations(data, {
+        build: { options: { property: 'EnableExtra=true' } },
+      })
+    ).toThrow(/Only --verbosity/);
+  });
+
   it('keeps user execution options, additional CLI options, inputs, and non-build prerequisites', () => {
     const result = mergeUserTargetConfigurations(project(), {
       build: {
-        options: { verbosity: 'quiet', env: { CUSTOM: 'yes' } },
+        options: { verbosity: 'quiet', color: true },
         inputs: ['{workspaceRoot}/custom-input.txt'],
         dependsOn: ['codegen', '^build'],
       },
     });
     const leaf = result.targets!['build:net10.0'];
     expect(leaf.configurations!.debug.nxArgs).toContain('--verbosity=quiet');
-    expect(leaf.options.env).toEqual({ CUSTOM: 'yes' });
+    expect(leaf.options.color).toBe(true);
     expect(leaf.inputs).toEqual([
       'default',
       '{workspaceRoot}/custom-input.txt',
@@ -192,6 +214,28 @@ describe('TFM variant integration with Nx', () => {
     expect(leaf.dependsOn).toEqual(['codegen']);
     expect(leaf.parallelism).toBe(false);
   });
+
+  it.each([
+    '--self-contained true',
+    '--no-self-contained',
+    '--use-current-runtime',
+    '--ucr',
+    '--version-suffix custom',
+    '--unknown-switch',
+  ])('rejects non-logging SDK or unknown arguments: %s', (args) => {
+    expect(() =>
+      mergeUserTargetConfigurations(project(), { build: { options: { args } } })
+    ).toThrow(/Only --verbosity/);
+  });
+
+  it.each([{ env: { EnableExtra: 'true' } }, { envFile: 'conditional.env' }])(
+    'rejects target environments that were not evaluated: %j',
+    (options) => {
+      expect(() =>
+        mergeUserTargetConfigurations(project(), { build: { options } })
+      ).toThrow(/target environment/);
+    }
+  );
 
   it.each([{ parallelism: true }, { outputs: ['{projectRoot}/bin'] }])(
     'rejects unsafe ownership overrides %j',

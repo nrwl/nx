@@ -217,8 +217,12 @@ custom MSBuild configurations or a replacement build command:
 
 Build target renaming applies to the aggregate and its leaves.
 Disabling `build` suppresses both.
-Additional `build.options.args` are appended to each leaf's required arguments.
-Arguments overriding its framework, runtime, configuration, or output paths are rejected.
+Additional `build.options.args` support only logging switches: `--verbosity` or `-v` with a
+verbosity level, and `--nologo`.
+They are appended without replacing the required framework and configuration arguments.
+Other switches, MSBuild properties, and target-specific `env` or `envFile` settings can change
+evaluated items or paths and are rejected rather than guessed.
+Use `tfmVariants: false` for those customizations.
 Select `debug` or `release` through Nx rather than passing `--configuration` in those arguments.
 Source items outside the workspace or overlapping framework outputs disable leaf caching with a warning.
 The base multi-targeted `publish` command is also uncached because its selected framework isn't
@@ -313,7 +317,7 @@ For example:
           "targetName": "compile",
           "configurations": {
             "release": {
-              "args": ["-p:Optimize=true"]
+              "args": ["--nologo"]
             }
           }
         },
