@@ -17,6 +17,7 @@ describe('preserve custom .NET build inference', () => {
     { outputs: ['{projectRoot}/custom'] },
     { configurations: { production: { optimization: true } } },
     { defaultConfiguration: 'staging' },
+    { defaultConfiguration: '' },
     { options: { args: '--framework net8.0' } },
     { options: { args: ['-p:Configuration=Production'] } },
     { options: { args: '@build.rsp' } },

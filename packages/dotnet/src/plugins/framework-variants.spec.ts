@@ -68,6 +68,14 @@ function project(): ProjectConfiguration {
 }
 
 describe('TFM variant integration with Nx', () => {
+  it('rejects an empty unevaluated default configuration instead of losing required arguments', () => {
+    expect(() =>
+      mergeUserTargetConfigurations(project(), {
+        build: { defaultConfiguration: '' },
+      })
+    ).toThrow(/Unsupported default configuration/);
+  });
+
   it.each([undefined, 'debug', 'release'])(
     'schedules the aggregate and every matching %s leaf configuration',
     (configuration) => {
