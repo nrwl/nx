@@ -17,6 +17,8 @@ public record NxProjectGraphNode
 
     public List<string>? Tags { get; init; }
 
+    public string? ProjectType { get; init; }
+
     /// <summary>
     /// Nx targets available for this project.
     /// </summary>
