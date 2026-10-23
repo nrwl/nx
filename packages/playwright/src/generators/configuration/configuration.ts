@@ -29,6 +29,7 @@ import {
   getProjectPackageManagerWorkspaceStateWarningTask,
   ensureTypescript,
   isUsingTsSolutionSetup,
+  typesNodeVersion,
 } from '@nx/js/internal';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -99,6 +100,7 @@ export async function configurationGeneratorInternal(
           allowJs: true,
           outDir: 'out-tsc/playwright',
           sourceMap: false,
+          types: ['node'],
         },
         include: [
           joinPathFragments(options.directory, '**/*.ts'),
@@ -137,6 +139,7 @@ export async function configurationGeneratorInternal(
         allowJs: true,
         outDir: `${offsetFromProjectRoot}dist/out-tsc`,
         sourceMap: false,
+        types: ['node'],
       },
       include: [
         '**/*.ts',
@@ -173,7 +176,6 @@ export async function configurationGeneratorInternal(
       }
     } else {
       tsconfig.compilerOptions.outDir = `${offsetFromProjectRoot}dist/out-tsc`;
-      tsconfig.compilerOptions.module = 'commonjs';
     }
 
     writeJson(tree, tsconfigPath, tsconfig);
@@ -233,6 +235,14 @@ export async function configurationGeneratorInternal(
           // required since used in playwright config
           '@nx/devkit': nxVersion,
         }
+      ),
+      // The e2e tsconfig loads Node types. Keep an installed version.
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@types/node': typesNodeVersion },
+        undefined,
+        true
       )
     );
   }
