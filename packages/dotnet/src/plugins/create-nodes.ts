@@ -228,7 +228,9 @@ export function mergeUserTargetConfigurations(
             generatedTarget,
             actualTargetName
           )
-        : mergeCommandTarget(userSpecifiedConfig, generatedTarget);
+        : pluginOptions.tfmVariants === false || pluginOptions.build === false
+          ? mergeTargetConfigurations(userSpecifiedConfig, generatedTarget)
+          : mergeCommandTarget(userSpecifiedConfig, generatedTarget);
       if (defaultTargetName === 'publish' && generatedTarget.cache === false) {
         mergedTargets[actualTargetName].cache = false;
         mergedTargets[actualTargetName].outputs = generatedTarget.outputs;
@@ -276,6 +278,14 @@ function mergeCommandTarget(
   generated: TargetConfiguration
 ): TargetConfiguration {
   const result = mergeTargetConfigurations(user, generated);
+  if (
+    (user.command && user.command !== generated.command) ||
+    (user.executor && user.executor !== generated.executor) ||
+    user.options?.command !== undefined ||
+    user.options?.commands !== undefined
+  ) {
+    return result;
+  }
   const baseArgs = argsText(user.options?.args, generated.command ?? '');
   if (
     generated.options?.args !== undefined &&
