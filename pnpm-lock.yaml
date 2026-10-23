@@ -3434,8 +3434,8 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
       undici:
-        specifier: ^7.29.0
-        version: 7.29.0
+        specifier: ^7.29.1
+        version: 7.30.1
       which:
         specifier: 'catalog:'
         version: 3.0.1
@@ -25909,6 +25909,10 @@ packages:
 
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.30.1:
+    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
     engines: {node: '>=20.18.1'}
 
   undici@8.10.2:
@@ -58333,6 +58337,8 @@ snapshots:
   undici@7.24.7: {}
 
   undici@7.29.0: {}
+
+  undici@7.30.1: {}
 
   undici@8.10.2: {}
 
