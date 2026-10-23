@@ -325,9 +325,13 @@ export class ProjectGraphBuilder {
         fileData.deps = [];
       }
 
+      // A non-project file is shared, so its deps also record the source.
       if (
         !fileData.deps.find(
-          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
+          (t) =>
+            fileDataDepTarget(t) === target &&
+            fileDataDepType(t) === type &&
+            (isProjectFileData || t[0] === source)
         )
       ) {
         const dep: FileDataDependency = isProjectFileData
