@@ -208,6 +208,34 @@ The value is relative to the project directory, the same way `dotnet test` reads
 }
 ```
 
+## Define Nx project tags in MSBuild
+
+Use the evaluated `NxTags` property or `NxTag` items to add tags to a .NET project.
+Define values in the project file or import them from `Directory.Build.props`.
+
+```xml
+<PropertyGroup>
+  <NxTags>scope:client;owner:devflow</NxTags>
+</PropertyGroup>
+
+<ItemGroup>
+  <NxTag Include="requires:emulator" />
+</ItemGroup>
+```
+
+The plugin adds a tag only when it applies to every evaluated inner build of a multi-target project.
+If an `NxTags` value or `NxTag` item applies to only some target frameworks, the plugin omits that tag
+and warns with the project path and omitted tags.
+Define shared tags without a target-framework condition to include them in the Nx project.
+
+Nx project tags have no configuration-specific scope.
+Tags conditioned on `Configuration` reflect the configuration selected for the project graph.
+
+Use these tags for architecture and policy rules.
+The plugin doesn't infer tags from project type, language, target framework, runtime identifier, or
+build host.
+Tags emitted by `@nx/dotnet` merge with tags from `project.json` and other create-nodes plugins.
+
 ## View inferred tasks
 
 To view inferred tasks for a project, open the [project details view](/docs/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
