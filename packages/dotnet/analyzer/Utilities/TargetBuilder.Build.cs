@@ -60,7 +60,7 @@ public static partial class TargetBuilder
                 productionInput,
                 $"^{productionInput}",
                 new { workingDirectory = "absolute" },
-                new { dependentTasksOutputFiles = "**/*" },
+                new { dependentTasksOutputFiles = "**/*", transitive = true },
                 new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
