@@ -6,6 +6,7 @@ import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
   getTranspiler,
   loadTsFile,
+  mergeResolveConditions,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -486,6 +487,50 @@ describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
         makeNextResolve([])
       )
     ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
+  });
+});
+
+describe('mergeResolveConditions', () => {
+  it('returns the injected conditions when Node passed none', () => {
+    expect(mergeResolveConditions(undefined, ['development'])).toEqual([
+      'development',
+    ]);
+  });
+
+  it('appends to an array of conditions and returns an array', () => {
+    const merged = mergeResolveConditions(['require', 'node'], ['development']);
+    expect(Array.isArray(merged)).toBe(true);
+    expect(merged).toEqual(['require', 'node', 'development']);
+  });
+
+  // Node 22.18's CJS resolver hands the hook a Set and calls `.has()` on the
+  // conditions it gets back (#37502).
+  it('returns a Set when Node passed a Set', () => {
+    const merged = mergeResolveConditions(new Set(['require', 'node']), [
+      'development',
+    ]);
+    expect(merged).toBeInstanceOf(Set);
+    expect([...merged]).toEqual(['require', 'node', 'development']);
+  });
+
+  it('returns a Set for Set-like containers that are not instanceof Set', () => {
+    class SafeSetLike {
+      private readonly values: Set<string>;
+      constructor(values: string[]) {
+        this.values = new Set(values);
+      }
+      has(value: string) {
+        return this.values.has(value);
+      }
+      [Symbol.iterator]() {
+        return this.values[Symbol.iterator]();
+      }
+    }
+    const merged = mergeResolveConditions(new SafeSetLike(['require']), [
+      'development',
+    ]);
+    expect(merged).toBeInstanceOf(Set);
+    expect((merged as Set<string>).has('development')).toBe(true);
   });
 });
 
