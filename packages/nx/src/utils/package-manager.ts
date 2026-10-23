@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
@@ -455,6 +456,11 @@ export function getPackageManagerVersion(
         cwd,
         encoding: 'utf-8',
         windowsHide: true,
+        // Store discovery creates temporary workspace files even for --version.
+        env:
+          packageManager === 'pnpm'
+            ? { ...process.env, PNPM_CONFIG_STORE_DIR: tmpdir() }
+            : undefined,
       }).trim();
     } catch {}
   }

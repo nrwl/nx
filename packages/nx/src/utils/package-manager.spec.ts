@@ -342,11 +342,11 @@ describe('package-manager', () => {
       expect(getPackageManagerVersion('pnpm', '/workspace')).toEqual('11.2.2');
       expect(execSync).toHaveBeenCalledWith(
         'pnpm --ignore-workspace --version',
-        {
+        expect.objectContaining({
           cwd: '/workspace',
           encoding: 'utf-8',
           windowsHide: true,
-        }
+        })
       );
     });
 
