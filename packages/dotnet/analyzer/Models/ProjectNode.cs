@@ -15,6 +15,8 @@ public record NxProjectGraphNode
     /// </summary>
     public string Root { get; init; } = string.Empty;
 
+    public string? ProjectType { get; init; }
+
     /// <summary>
     /// Nx targets available for this project.
     /// </summary>

@@ -41,6 +41,8 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyApp --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('application');
+      expect(details.metadata.technologies).toEqual(['dotnet', 'C#']);
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
 
@@ -58,6 +60,7 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyLibrary --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBe('library');
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('clean');
       expect(details.targets).not.toHaveProperty('restore');
@@ -69,6 +72,7 @@ describe('.NET Plugin', () => {
       const projectDetails = runCLI(`show project MyApp.Tests --json`);
       const details = JSON.parse(projectDetails);
 
+      expect(details.projectType).toBeUndefined();
       expect(details.targets).toHaveProperty('build');
       expect(details.targets).toHaveProperty('test');
     });
