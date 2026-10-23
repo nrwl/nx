@@ -3,9 +3,24 @@ import {
   cleanupProject,
   newProject,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e-utils';
+import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
+import { join } from 'node:path';
+import { promisify, stripVTControlCharacters } from 'node:util';
 import { createMavenProject } from './utils/create-maven-project';
 
 describe('Maven 4 Batch Mode', () => {
@@ -65,6 +80,192 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
     expect(output).toContain('after:resources');
     expect(output).not.toContain('context.terminal');
     expect(output).not.toContain('Terminal.writer()');
+  });
+
+  it('should suppress HTTP payloads in verbose batches unless wire logging is requested', async () => {
+    const version = await promisify(execFile)(
+      process.platform === 'win32' ? 'cmd.exe' : './mvnw',
+      process.platform === 'win32'
+        ? ['/d', '/s', '/c', 'mvnw.cmd --version']
+        : ['--version'],
+      {
+        cwd: tmpProjPath(),
+        env: { ...process.env, MAVEN_HOME: '' },
+        timeout: 60000,
+        killSignal: 'SIGKILL',
+      }
+    );
+    const versionOutput = stripVTControlCharacters(version.stdout);
+    expect(versionOutput).toContain('Apache Maven 4.');
+    const mavenHome = versionOutput.match(/^Maven home:\s*(.+)$/m)?.[1].trim();
+    expect(mavenHome).toBeDefined();
+    const runner = tmpProjPath('node_modules/@nx/maven/dist/batch-runner.jar');
+    mkdirSync(tmpProjPath('.nx'), { recursive: true });
+    const fixture = mkdtempSync(tmpProjPath('.nx/maven-logging-'));
+    const bodyMarker = 'NX_HTTP_BODY_ONLY_7f65e2';
+    const parentPath = '/test/nx/logging-parent/1.0/logging-parent-1.0.pom';
+    const parent = `<project xmlns="http://maven.apache.org/POM/4.0.0">
+      <modelVersion>4.0.0</modelVersion><groupId>test.nx</groupId>
+      <artifactId>logging-parent</artifactId><version>1.0</version><packaging>pom</packaging>
+      <!-- ${bodyMarker} -->
+    </project>`;
+    const requests: string[] = [];
+    let responseStatus = 200;
+    const server = createServer((request, response) => {
+      const body =
+        request.url === parentPath
+          ? parent
+          : request.url === `${parentPath}.sha1`
+            ? createHash('sha1').update(parent).digest('hex')
+            : undefined;
+      if (request.method !== 'GET' || body === undefined) {
+        response.writeHead(404).end();
+        return;
+      }
+      requests.push(request.url);
+      if (responseStatus === 401)
+        response.setHeader('WWW-Authenticate', 'Basic realm="logging-test"');
+      response
+        .writeHead(responseStatus, { Connection: 'close' })
+        .end(responseStatus === 200 ? body : bodyMarker);
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', resolve);
+      });
+      const port = (server.address() as AddressInfo).port;
+      for (const { name, wireLogging, status } of [
+        { name: 'default', wireLogging: false, status: 200 },
+        { name: 'wire-enabled', wireLogging: true, status: 200 },
+        { name: 'missing-parent', wireLogging: false, status: 404 },
+        { name: 'unauthorized-parent', wireLogging: false, status: 401 },
+      ]) {
+        responseStatus = status;
+        requests.length = 0;
+        const workspace = join(fixture, name);
+        mkdirSync(join(workspace, '.mvn'), { recursive: true });
+        const repository = join(workspace, 'repository');
+        const settings = join(workspace, 'settings.xml');
+        writeFileSync(
+          settings,
+          `<settings><mirrors><mirror>
+          <id>logging-test</id><mirrorOf>*</mirrorOf><url>http://127.0.0.1:${port}/</url>
+        </mirror></mirrors></settings>`
+        );
+        writeFileSync(
+          join(workspace, 'pom.xml'),
+          `<project xmlns="http://maven.apache.org/POM/4.0.0">
+          <modelVersion>4.0.0</modelVersion><parent><groupId>test.nx</groupId>
+          <artifactId>logging-parent</artifactId><version>1.0</version><relativePath/></parent>
+          <artifactId>logging-consumer</artifactId><packaging>pom</packaging>
+        </project>`
+        );
+        const project = 'test.nx:logging-consumer';
+        const taskId = `${project}:validate`;
+        const payload = {
+          tasks: {
+            [taskId]: {
+              project,
+              goals: ['validate'],
+              args: [
+                '-s',
+                settings,
+                '-gs',
+                settings,
+                `-Dmaven.repo.local=${repository}`,
+              ],
+            },
+          },
+          taskGraph: {
+            roots: [taskId],
+            tasks: {
+              [taskId]: {
+                id: taskId,
+                target: { project, target: 'validate' },
+                overrides: {},
+                outputs: [],
+                projectRoot: '.',
+                parallelism: true,
+              },
+            },
+            dependencies: { [taskId]: [] },
+            continuousDependencies: { [taskId]: [] },
+          },
+        };
+        const javaArgs = [
+          `-Dmaven.home=${mavenHome}`,
+          `-Duser.home=${workspace}`,
+        ];
+        if (wireLogging)
+          javaArgs.push('-Dmaven.logger.log.org.apache.http.wire=debug');
+        javaArgs.push(
+          '-jar',
+          runner,
+          '--workspaceRoot',
+          workspace,
+          '--verbose'
+        );
+        let output = '';
+        try {
+          const exitCode = await new Promise<number>((resolve, reject) => {
+            const child = execFile(
+              process.env.JAVA_HOME
+                ? join(process.env.JAVA_HOME, 'bin/java')
+                : 'java',
+              javaArgs,
+              {
+                cwd: workspace,
+                timeout: 60000,
+                killSignal: 'SIGKILL',
+                maxBuffer: 1024 * 1024,
+              },
+              (error, stdout, stderr) => {
+                output = stripVTControlCharacters(stdout + stderr);
+                if (error && (error.code !== 1 || error.signal || error.killed))
+                  reject(error);
+                else resolve(error ? 1 : 0);
+              }
+            );
+            child.stdin.on('error', (error) => {
+              child.kill('SIGKILL');
+              reject(error);
+            });
+            child.stdin.end(JSON.stringify(payload));
+          });
+          expect(exitCode).toBe(status === 200 ? 0 : 1);
+          const results = output
+            .split('\n')
+            .filter((line) => line.startsWith('NX_RESULT:'));
+          expect(results).toHaveLength(1);
+          const result = JSON.parse(results[0].slice('NX_RESULT:'.length));
+          expect(result).toMatchObject({
+            task: taskId,
+            result: { success: status === 200 },
+          });
+          expect(requests).toContain(parentPath);
+          const downloadedParent = join(repository, parentPath.slice(1));
+          if (status === 200) {
+            expect(readFileSync(downloadedParent, 'utf8')).toBe(parent);
+          } else {
+            expect(existsSync(downloadedParent)).toBe(false);
+            expect(result.result.terminalOutput).toMatch(
+              status === 404
+                ? /\b404\b.*\bNot Found\b/
+                : /\b401\b.*\bUnauthorized\b/
+            );
+          }
+          expect(output).toContain('Reading installation settings from');
+          expect(output.includes(bodyMarker)).toBe(wireLogging);
+        } catch (error) {
+          throw new Error(`${name}: ${error}\n${output}`);
+        }
+      }
+    } finally {
+      server.closeAllConnections();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      rmSync(fixture, { recursive: true, force: true });
+    }
   });
 
   it('should install successfully after restoring cached package outputs', () => {
