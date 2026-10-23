@@ -327,6 +327,27 @@ describe('preserve custom .NET build inference', () => {
     expect(tree.read('nx.json', 'utf8')).toBe(before);
   });
 
+  it.each([null, 42])(
+    'reports a malformed registration %j without aborting independent upgrade protection',
+    async (registration) => {
+      write([
+        registration,
+        { plugin: '@nx/dotnet', options: { build: { outputs: [] } } },
+      ]);
+      const result = await update(tree);
+
+      expect(result).toMatchObject({
+        nextSteps: [expect.stringContaining('plugins[0]')],
+        agentContext: [expect.stringContaining('plugins[0]')],
+      });
+      expect(result.skipAgentic).not.toBe(true);
+      expect(readNxJson(tree)?.plugins?.[0]).toBe(registration);
+      expect(readNxJson(tree)?.plugins?.[1]).toMatchObject({
+        options: { tfmVariants: false },
+      });
+    }
+  );
+
   it('reports malformed scoped project config and still migrates an independent recognized override', async () => {
     tree.write('apps/app/project.json', '{"targets":');
     write([{ plugin: '@nx/dotnet', options: { build: { outputs: [] } } }]);
