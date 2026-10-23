@@ -1,13 +1,89 @@
 import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
 import { minimatch } from 'minimatch';
+import { analyzeProjects } from '../analyzer/analyzer-client';
 import {
   createNodes,
   DotNetPluginOptions,
   mergeUserTargetConfigurations,
 } from './create-nodes';
 
+vi.mock('../analyzer/analyzer-client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../analyzer/analyzer-client')>()),
+  analyzeProjects: vi.fn(),
+}));
+
 describe('@nx/dotnet - createNodes', () => {
+  describe('analyzer metadata', () => {
+    it.each([undefined, { build: { cache: false } }])(
+      'should preserve named target groups and member order with options %j',
+      async (options) => {
+        const node: ProjectConfiguration = {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: { command: 'dotnet build' },
+            'build:release': {
+              command: 'dotnet build --configuration Release',
+            },
+            test: { command: 'dotnet test' },
+            'test--second': { command: 'dotnet test --filter Second' },
+            'test--first': { command: 'dotnet test --filter First' },
+          },
+          metadata: {
+            technologies: ['dotnet', 'C#'],
+            targetGroups: {
+              Build: ['build', 'build:release'],
+              Test: ['test', 'test--second', 'test--first'],
+            },
+          },
+        };
+        vi.mocked(analyzeProjects).mockResolvedValue({
+          nodesByFile: { 'apps/my-app/MyApp.csproj': node },
+          referencesByRoot: {},
+        });
+
+        const results = await createNodes[1](
+          ['apps/my-app/MyApp.csproj'],
+          options,
+          { workspaceRoot: '/workspace', nxJsonConfiguration: {} }
+        );
+        const project = results[0][1].projects['apps/my-app'];
+
+        expect(project.metadata).toEqual(node.metadata);
+        expect(Object.keys(project.targets)).toEqual(Object.keys(node.targets));
+        expect(project.targets.build).toEqual({
+          command: 'dotnet build',
+          ...(options?.build ?? {}),
+        });
+      }
+    );
+
+    it('should leave projects without target groups unchanged', async () => {
+      const node: ProjectConfiguration = {
+        root: 'apps/my-app',
+        name: 'my-app',
+        targets: { build: { command: 'dotnet build' } },
+        metadata: { technologies: ['dotnet', 'C#'] },
+      };
+      vi.mocked(analyzeProjects).mockResolvedValue({
+        nodesByFile: { 'apps/my-app/MyApp.csproj': node },
+        referencesByRoot: {},
+      });
+
+      const results = await createNodes[1](
+        ['apps/my-app/MyApp.csproj'],
+        undefined,
+        { workspaceRoot: '/workspace', nxJsonConfiguration: {} }
+      );
+
+      expect(results[0][1].projects['apps/my-app']).toEqual(node);
+      expect(results[0][1].projects['apps/my-app'].metadata).not.toHaveProperty(
+        'targetGroups'
+      );
+    });
+  });
+
   describe('mergeUserTargetConfigurations', () => {
     it('should return node unchanged when no options provided', () => {
       const node: ProjectConfiguration = {
