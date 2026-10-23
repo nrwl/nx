@@ -122,9 +122,12 @@ public class AnalyzerSmokeTests : IDisposable
     [Fact]
     public void DefaultProject_DeclaresBinAndObj()
     {
-        var targets = Analyze(WriteProject("MyLib", ""));
+        var result = AnalyzeWorkspace(WriteProject("MyLib", ""));
+        var project = result.GetProperty("nodesByFile").GetProperty("apps/MyLib/MyLib.csproj");
+        var targets = project.GetProperty("targets").EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
 
         Assert.Equal(new[] { "{projectRoot}/bin", "{projectRoot}/obj" }, Outputs(targets, "build"));
+        Assert.Equal("""{"technologies":["dotnet","C#"]}""", project.GetProperty("metadata").GetRawText());
     }
 
     [Fact]
