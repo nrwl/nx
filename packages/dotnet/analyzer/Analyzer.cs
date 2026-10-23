@@ -222,7 +222,7 @@ public static class Analyzer
                     evaluationInputs.Add(relativeProjectFile);
                     evaluationInputs.UnionWith(ProjectUtilities.GetWorkspaceRelativePaths(workspaceRoot, importPaths));
 
-                    var targets = TargetBuilder.BuildTargets(
+                    var buildResult = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
                         isTest,
@@ -241,10 +241,11 @@ public static class Analyzer
                         Name = projectName,
                         Root = projectRoot,
                         Tags = tags,
-                        Targets = targets,
+                        Targets = buildResult.Targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath),
+                            TargetGroups = buildResult.TargetGroups
                         }
                     };
 
