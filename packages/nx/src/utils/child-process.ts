@@ -235,7 +235,7 @@ export class PseudoTtyProcess {
   }
 
   onOutput(callback: (message: string) => void): void {
-    this.childProcess.onOutput(callback);
+    this.childProcess.onOutput((message) => callback(message));
   }
 
   kill(): void {
