@@ -110,11 +110,7 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
-import {
-  didCommandComplete,
-  getRunExitCode,
-  type TaskStatuses,
-} from './run-outcome';
+import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
@@ -604,7 +600,7 @@ export async function runTasksForCommand(
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ): Promise<{
   taskResults: TaskResults;
-  taskStatuses?: TaskStatuses;
+  taskStatuses?: Record<string, TaskStatus>;
   completed: boolean;
 }> {
   // Kick off the license lookup in the background so it overlaps with task
@@ -646,7 +642,7 @@ export async function runTasksForCommand(
     );
 
   try {
-    const { taskResults, taskStatuses } = await invokeTasksRunnerForStatuses({
+    const { taskResults, taskStatuses } = await invokeTasksRunner({
       tasks,
       projectGraph,
       taskGraph,
@@ -1025,13 +1021,7 @@ export function setEnvVarsBasedOnArgs(
   }
 }
 
-export async function invokeTasksRunner(
-  options: Parameters<typeof invokeTasksRunnerForStatuses>[0]
-): Promise<{ [id: string]: TaskResult }> {
-  return (await invokeTasksRunnerForStatuses(options)).taskResults;
-}
-
-async function invokeTasksRunnerForStatuses({
+export async function invokeTasksRunner({
   tasks,
   projectGraph,
   taskGraph,
@@ -1058,7 +1048,7 @@ async function invokeTasksRunnerForStatuses({
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
 }): Promise<{
   taskResults: { [id: string]: TaskResult };
-  taskStatuses?: TaskStatuses;
+  taskStatuses?: Record<string, TaskStatus>;
 }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 

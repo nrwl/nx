@@ -4,13 +4,6 @@ import type { TaskResults } from './life-cycle';
 import type { TaskStatus } from './tasks-runner';
 
 /**
- * Final status of every task the runner settled, keyed by task id. The default
- * runner resolves to this. It includes tasks skipped because a dependency
- * failed, which never reach `endTasks` and so are missing from `TaskResults`.
- */
-export type TaskStatuses = Record<string, TaskStatus>;
-
-/**
  * Whether the run got to the end, as opposed to being interrupted.
  *
  * A discrete task skipped because a dependency failed has no `TaskResult`,
@@ -20,7 +13,7 @@ export type TaskStatuses = Record<string, TaskStatus>;
 export function didCommandComplete(
   tasks: Task[],
   taskResults: TaskResults,
-  taskStatuses?: TaskStatuses
+  taskStatuses?: Record<string, TaskStatus>
 ): boolean {
   if (tasks.length === 0) return true;
 
@@ -45,7 +38,7 @@ export function didCommandComplete(
 export function getRunExitCode(
   completed: boolean,
   taskResults: TaskResults,
-  taskStatuses?: TaskStatuses
+  taskStatuses?: Record<string, TaskStatus>
 ): number {
   if (!completed) return signalToCode('SIGINT');
   const failedOrSkipped = (status: TaskStatus) =>
