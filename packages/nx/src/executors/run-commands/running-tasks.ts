@@ -245,7 +245,9 @@ export class SeriallyRunningTasks implements RunningTask {
     [];
   private code: number | null = 0;
   private error: any;
-  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private outputCallbacks: Array<
+    (terminalOutput: string, isCommandHeader?: boolean) => void
+  > = [];
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -307,7 +309,7 @@ export class SeriallyRunningTasks implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
-  onOutput(cb: (terminalOutput: string) => void) {
+  onOutput(cb: (terminalOutput: string, isCommandHeader?: boolean) => void) {
     this.outputCallbacks.push(cb);
   }
 
@@ -338,9 +340,9 @@ export class SeriallyRunningTasks implements RunningTask {
       );
       this.currentProcess = childProcess;
 
-      childProcess.onOutput((output) => {
+      childProcess.onOutput((output: string, isCommandHeader?: boolean) => {
         for (const cb of this.outputCallbacks) {
-          cb(output);
+          cb(output, isCommandHeader);
         }
       });
 

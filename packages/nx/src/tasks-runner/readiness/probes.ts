@@ -138,8 +138,8 @@ function waitForLogMatch(
     );
     timer.unref();
     context.signal.addEventListener('abort', onAbort);
-    context.runningTask.onOutput((chunk) => {
-      if (!settled && matcher.feed(chunk)) {
+    context.runningTask.onOutput((chunk, isCommandHeader) => {
+      if (!settled && !isCommandHeader && matcher.feed(chunk)) {
         settle();
       }
     });
