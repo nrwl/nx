@@ -1,5 +1,6 @@
 const mockCommit = vi.fn();
-vi.mock('../migrate-commits', () => ({
+vi.mock('../migrate-commits', async () => ({
+  ...(await vi.importActual('../migrate-commits')),
   commitMigrationIfRequested: (...args: unknown[]) => mockCommit(...args),
 }));
 
@@ -786,7 +787,7 @@ describe('migrate commit broker', () => {
       expect(inProcess).not.toHaveBeenCalled();
       expect(mockResetWorkingTree).toHaveBeenCalledWith(
         ref,
-        ['.nx/migrate-runs'],
+        ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations'],
         root
       );
       const state = readRunState(dir);
