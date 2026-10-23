@@ -783,6 +783,7 @@ describe('@nx/dotnet - createNodes', () => {
       'build/Common.Build.props',
       'eng/Versions.targets',
       'global.json',
+      'apps/api/Program.cs',
       'nuget.config',
       'NuGet.Config',
       '.editorconfig',
@@ -791,12 +792,11 @@ describe('@nx/dotnet - createNodes', () => {
       expect(matches(path)).toBe(true);
     });
 
-    it.each([
-      'apps/api/Program.cs',
-      'package.json',
-      'apps/api/appsettings.json',
-    ])('should not match %s', (path) => {
-      expect(matches(path)).toBe(false);
-    });
+    it.each(['package.json', 'apps/api/appsettings.json'])(
+      'should not match %s',
+      (path) => {
+        expect(matches(path)).toBe(false);
+      }
+    );
   });
 });
