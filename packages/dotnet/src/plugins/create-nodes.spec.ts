@@ -85,6 +85,62 @@ describe('@nx/dotnet - createNodes', () => {
   });
 
   describe('mergeUserTargetConfigurations', () => {
+    it.each([
+      { command: 'node custom-build.js', options: { args: ['--custom'] } },
+      { executor: '@custom/build:run', options: { args: ['--custom'] } },
+      { options: { command: 'node custom-build.js', args: ['--custom'] } },
+    ])(
+      'preserves ordinary custom commands without injecting dotnet arguments: %j',
+      (build) => {
+        const generated: TargetConfiguration = {
+          command: 'dotnet build',
+          options: { args: ['--no-restore', '--no-dependencies'] },
+        };
+        const result = mergeUserTargetConfigurations(
+          {
+            root: 'single-tfm',
+            targets: { build: generated },
+          },
+          { build }
+        );
+        expect(result.targets!.build).toEqual(
+          mergeTargetConfigurations(build, generated)
+        );
+      }
+    );
+
+    it.each([
+      { command: 'node custom-build.js', options: { args: ['--custom'] } },
+      { executor: '@custom/build:run', options: { args: ['--custom'] } },
+      { options: { args: ['--framework', 'net8.0'], cwd: 'custom' } },
+      {
+        configurations: {
+          production: { args: ['--configuration', 'Production'] },
+        },
+        defaultConfiguration: 'production',
+      },
+      { outputs: ['{projectRoot}/custom-output'] },
+    ])(
+      'preserves the shipped merge contract under explicit opt-out: %j',
+      (build) => {
+        const generated: TargetConfiguration = {
+          command: 'dotnet build',
+          options: { args: ['--no-restore', '--no-dependencies'] },
+          configurations: { release: { args: ['--configuration', 'Release'] } },
+        };
+        const result = mergeUserTargetConfigurations(
+          {
+            root: 'app',
+            targets: { build: generated },
+          },
+          { tfmVariants: false, build }
+        );
+        expect(result.targets!.build).toEqual(
+          mergeTargetConfigurations(build, generated)
+        );
+      }
+    );
+
     it('should return node unchanged when no options provided', () => {
       const node: ProjectConfiguration = {
         root: 'apps/my-app',
