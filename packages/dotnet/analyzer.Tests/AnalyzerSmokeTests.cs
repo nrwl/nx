@@ -203,6 +203,102 @@ public class AnalyzerSmokeTests : IDisposable
         Assert.Contains("run", targets.Keys);
     }
 
+    [Theory]
+    [InlineData("Exe", null, "application", true)]
+    [InlineData("WinExe", null, "application", true)]
+    [InlineData("winexe", null, "application", true)]
+    [InlineData("Library", null, "library", false)]
+    [InlineData("library", "IsTestProject", "library", false)]
+    [InlineData("Exe", "IsTestProject", null, true)]
+    [InlineData("WinExe", "IsTestProject", null, true)]
+    [InlineData("Exe", "IsTestingPlatformApplication", null, true)]
+    [InlineData("AppContainerExe", null, null, false)]
+    public void Classification_PreservesTestAndExecutableTargets(
+        string outputType, string? testProperty, string? expectedType, bool isExecutable)
+    {
+        var marker = testProperty is null ? "" : $"<{testProperty}>True</{testProperty}>";
+        var node = AnalyzeNode(WriteProject("Classified", $"<OutputType>{outputType}</OutputType>{marker}"));
+        var targets = node.GetProperty("targets");
+
+        Assert.Equal(expectedType is not null, node.TryGetProperty("projectType", out var type));
+        if (expectedType is not null)
+            Assert.Equal(expectedType, type.GetString());
+        Assert.Equal(isExecutable, targets.TryGetProperty("run", out _));
+        Assert.Equal(isExecutable, targets.TryGetProperty("publish", out _));
+        Assert.Equal(testProperty is not null, targets.TryGetProperty("test", out _));
+        Assert.Equal(new[] { "dotnet", "C#" },
+            node.GetProperty("metadata").GetProperty("technologies").EnumerateArray().Select(t => t.GetString()));
+    }
+
+    [Theory]
+    [InlineData("Exe", "WinExe", null, "application")]
+    [InlineData("Library", "library", null, "library")]
+    [InlineData("Exe", "Library", null, null)]
+    [InlineData("Library", "Exe", null, null)]
+    [InlineData("Exe", "AppContainerExe", null, null)]
+    [InlineData("Exe", "Exe", "IsTestProject", null)]
+    [InlineData("Exe", "Exe", "IsTestingPlatformApplication", null)]
+    [InlineData("Library", "Library", "IsTestProject", "library")]
+    public void Classification_RequiresInnerBuildConsensus(
+        string firstOutput, string secondOutput, string? testProperty, string? expectedType)
+    {
+        var marker = testProperty is null ? "" :
+            $"<{testProperty} Condition=\"'$(TargetFramework)' == 'net9.0'\">true</{testProperty}>";
+        var projectFile = WriteProject("MultiTarget", "");
+        File.WriteAllText(projectFile, $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+                <OutputType>AppContainerExe</OutputType>
+                <OutputType Condition="'$(TargetFramework)' == 'net8.0'">{firstOutput}</OutputType>
+                <OutputType Condition="'$(TargetFramework)' == 'net9.0'">{secondOutput}</OutputType>
+                {marker}
+              </PropertyGroup>
+            </Project>
+            """);
+
+        var node = AnalyzeNode(projectFile);
+
+        Assert.Equal(expectedType is not null, node.TryGetProperty("projectType", out var type));
+        if (expectedType is not null)
+            Assert.Equal(expectedType, type.GetString());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("AppContainerExe")]
+    public void Classification_LeavesMissingAndUnknownOutputUnset(string? outputType)
+    {
+        var values = new Dictionary<string, string>();
+        if (outputType is not null)
+            values["OutputType"] = outputType;
+        var unknown = new Models.EvaluatedProperties(values);
+        var executable = new Models.EvaluatedProperties(new Dictionary<string, string> { ["OutputType"] = "Exe" });
+
+        Assert.Null(Utilities.ProjectUtilities.InferProjectType([], false));
+        Assert.Null(Utilities.ProjectUtilities.InferProjectType([unknown], false));
+        Assert.Null(Utilities.ProjectUtilities.InferProjectType(
+            [executable, unknown], false));
+    }
+
+    [Fact]
+    public void WebSdkClassification_KeepsBaselineTechnologies()
+    {
+        var projectFile = WriteProject("WebApp", "");
+        File.WriteAllText(projectFile, File.ReadAllText(projectFile)
+            .Replace("Microsoft.NET.Sdk\"", "Microsoft.NET.Sdk.Web\""));
+        var node = AnalyzeNode(projectFile);
+
+        Assert.Equal("application", node.GetProperty("projectType").GetString());
+        Assert.Equal(new[] { "dotnet", "C#" },
+            node.GetProperty("metadata").GetProperty("technologies").EnumerateArray().Select(t => t.GetString()));
+    }
+
+    private JsonElement AnalyzeNode(string projectFile) =>
+        AnalyzeWorkspace(projectFile).GetProperty("nodesByFile")
+            .GetProperty(Path.GetRelativePath(_workspaceRoot, projectFile).Replace('\\', '/'));
+
     [Fact]
     public void LibraryReferencingATestFramework_KeepsPackAndGetsNoTestTarget()
     {
