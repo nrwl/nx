@@ -39,13 +39,14 @@ export function usesLeadingDash(data: { lockfileVersion: number | string }) {
   }
 }
 
-export function loadPnpmHoistedDepsDefinition() {
+// The parser no longer reads hoisted versions from this file, but a pnpm
+// install always writes it, so its absence still means node_modules was
+// installed with another package manager.
+export function assertPnpmModulesManifest() {
   const fullPath = `${workspaceRoot}/node_modules/.modules.yaml`;
 
   if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    const { load } = require('@zkochan/js-yaml');
-    return load(content)?.hoistedDependencies ?? {};
+    return;
   }
 
   throw new Error(

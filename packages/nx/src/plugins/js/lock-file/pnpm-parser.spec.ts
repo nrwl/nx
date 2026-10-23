@@ -443,14 +443,16 @@ describe('pnpm LockFile utility', () => {
 
       expect(Object.keys(graph.externalNodes).length).toEqual(214);
 
-      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
+      // The root does not declare minimatch, so neither version is bare.
+      expect(graph.externalNodes['npm:minimatch']).toBeUndefined();
+      expect(graph.externalNodes['npm:minimatch@3.1.2']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
             "packageName": "minimatch",
             "version": "3.1.2",
           },
-          "name": "npm:minimatch",
+          "name": "npm:minimatch@3.1.2",
           "type": "npm",
         }
       `);
@@ -885,18 +887,11 @@ describe('pnpm LockFile utility', () => {
         graph = builder.getUpdatedProjectGraph();
       });
 
-      it('should parse hoisted versions', () => {
-        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
-          {
-            "data": {
-              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
-              "packageName": "tslib",
-              "version": "2.5.0",
-            },
-            "name": "npm:tslib",
-            "type": "npm",
-          }
-        `);
+      it('should not name the bare node after the hoisted version', () => {
+        // .modules.yaml hoists tslib@2.5.0, but the root declares neither version.
+        expect(graph.externalNodes['npm:tslib']).toBeUndefined();
+        expect(graph.externalNodes['npm:tslib@1.14.1']).toBeDefined();
+        expect(graph.externalNodes['npm:tslib@2.5.0']).toBeDefined();
       });
 
       it('should prune single package', () => {
@@ -997,18 +992,11 @@ describe('pnpm LockFile utility', () => {
         graph = builder.getUpdatedProjectGraph();
       });
 
-      it('should parse hoisted versions', () => {
-        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
-          {
-            "data": {
-              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
-              "packageName": "tslib",
-              "version": "2.5.0",
-            },
-            "name": "npm:tslib",
-            "type": "npm",
-          }
-        `);
+      it('should not name the bare node after the hoisted version', () => {
+        // .modules.yaml hoists tslib@2.5.0, but the root declares neither version.
+        expect(graph.externalNodes['npm:tslib']).toBeUndefined();
+        expect(graph.externalNodes['npm:tslib@1.14.1']).toBeDefined();
+        expect(graph.externalNodes['npm:tslib@2.5.0']).toBeDefined();
       });
 
       it('should prune single package', () => {
@@ -1109,18 +1097,11 @@ describe('pnpm LockFile utility', () => {
         graph = builder.getUpdatedProjectGraph();
       });
 
-      it('should parse hoisted versions', () => {
-        expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
-          {
-            "data": {
-              "hash": "sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==",
-              "packageName": "tslib",
-              "version": "2.5.0",
-            },
-            "name": "npm:tslib",
-            "type": "npm",
-          }
-        `);
+      it('should not name the bare node after the hoisted version', () => {
+        // .modules.yaml hoists tslib@2.5.0, but the root declares neither version.
+        expect(graph.externalNodes['npm:tslib']).toBeUndefined();
+        expect(graph.externalNodes['npm:tslib@1.14.1']).toBeDefined();
+        expect(graph.externalNodes['npm:tslib@2.5.0']).toBeDefined();
       });
 
       it('should prune single package', () => {
@@ -1570,13 +1551,13 @@ importers:
             "name": "npm:@isaacs/cliui",
             "type": "npm",
           },
-          "npm:ansi-regex": {
+          "npm:ansi-regex@5.0.1": {
             "data": {
               "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
               "packageName": "ansi-regex",
               "version": "5.0.1",
             },
-            "name": "npm:ansi-regex",
+            "name": "npm:ansi-regex@5.0.1",
             "type": "npm",
           },
           "npm:ansi-regex@6.0.1": {
@@ -1588,13 +1569,13 @@ importers:
             "name": "npm:ansi-regex@6.0.1",
             "type": "npm",
           },
-          "npm:ansi-styles": {
+          "npm:ansi-styles@4.3.0": {
             "data": {
               "hash": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
               "packageName": "ansi-styles",
               "version": "4.3.0",
             },
-            "name": "npm:ansi-styles",
+            "name": "npm:ansi-styles@4.3.0",
             "type": "npm",
           },
           "npm:ansi-styles@6.2.1": {
@@ -1642,13 +1623,13 @@ importers:
             "name": "npm:eastasianwidth",
             "type": "npm",
           },
-          "npm:emoji-regex": {
+          "npm:emoji-regex@8.0.0": {
             "data": {
               "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
               "packageName": "emoji-regex",
               "version": "8.0.0",
             },
-            "name": "npm:emoji-regex",
+            "name": "npm:emoji-regex@8.0.0",
             "type": "npm",
           },
           "npm:emoji-regex@9.2.2": {
@@ -1669,15 +1650,6 @@ importers:
             "name": "npm:is-fullwidth-code-point",
             "type": "npm",
           },
-          "npm:string-width": {
-            "data": {
-              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
-              "packageName": "string-width",
-              "version": "5.1.2",
-            },
-            "name": "npm:string-width",
-            "type": "npm",
-          },
           "npm:string-width-cjs": {
             "data": {
               "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
@@ -1696,13 +1668,13 @@ importers:
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
-          "npm:strip-ansi": {
+          "npm:string-width@5.1.2": {
             "data": {
-              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
-              "packageName": "strip-ansi",
-              "version": "7.1.0",
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "string-width",
+              "version": "5.1.2",
             },
-            "name": "npm:strip-ansi",
+            "name": "npm:string-width@5.1.2",
             "type": "npm",
           },
           "npm:strip-ansi-cjs": {
@@ -1723,13 +1695,13 @@ importers:
             "name": "npm:strip-ansi@6.0.1",
             "type": "npm",
           },
-          "npm:wrap-ansi": {
+          "npm:strip-ansi@7.1.0": {
             "data": {
-              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
-              "packageName": "wrap-ansi",
-              "version": "8.1.0",
+              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
             },
-            "name": "npm:wrap-ansi",
+            "name": "npm:strip-ansi@7.1.0",
             "type": "npm",
           },
           "npm:wrap-ansi-cjs": {
@@ -1748,6 +1720,15 @@ importers:
               "version": "7.0.0",
             },
             "name": "npm:wrap-ansi@7.0.0",
+            "type": "npm",
+          },
+          "npm:wrap-ansi@8.1.0": {
+            "data": {
+              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+              "packageName": "wrap-ansi",
+              "version": "8.1.0",
+            },
+            "name": "npm:wrap-ansi@8.1.0",
             "type": "npm",
           },
         }
@@ -1831,13 +1812,13 @@ importers:
             "name": "npm:@isaacs/cliui",
             "type": "npm",
           },
-          "npm:ansi-regex": {
+          "npm:ansi-regex@5.0.1": {
             "data": {
               "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
               "packageName": "ansi-regex",
               "version": "5.0.1",
             },
-            "name": "npm:ansi-regex",
+            "name": "npm:ansi-regex@5.0.1",
             "type": "npm",
           },
           "npm:ansi-regex@6.0.1": {
@@ -1849,13 +1830,13 @@ importers:
             "name": "npm:ansi-regex@6.0.1",
             "type": "npm",
           },
-          "npm:ansi-styles": {
+          "npm:ansi-styles@4.3.0": {
             "data": {
               "hash": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
               "packageName": "ansi-styles",
               "version": "4.3.0",
             },
-            "name": "npm:ansi-styles",
+            "name": "npm:ansi-styles@4.3.0",
             "type": "npm",
           },
           "npm:ansi-styles@6.2.1": {
@@ -1903,13 +1884,13 @@ importers:
             "name": "npm:eastasianwidth",
             "type": "npm",
           },
-          "npm:emoji-regex": {
+          "npm:emoji-regex@8.0.0": {
             "data": {
               "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
               "packageName": "emoji-regex",
               "version": "8.0.0",
             },
-            "name": "npm:emoji-regex",
+            "name": "npm:emoji-regex@8.0.0",
             "type": "npm",
           },
           "npm:emoji-regex@9.2.2": {
@@ -1930,15 +1911,6 @@ importers:
             "name": "npm:is-fullwidth-code-point",
             "type": "npm",
           },
-          "npm:string-width": {
-            "data": {
-              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
-              "packageName": "string-width",
-              "version": "5.1.2",
-            },
-            "name": "npm:string-width",
-            "type": "npm",
-          },
           "npm:string-width-cjs": {
             "data": {
               "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
@@ -1957,13 +1929,13 @@ importers:
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
-          "npm:strip-ansi": {
+          "npm:string-width@5.1.2": {
             "data": {
-              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
-              "packageName": "strip-ansi",
-              "version": "7.1.0",
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "string-width",
+              "version": "5.1.2",
             },
-            "name": "npm:strip-ansi",
+            "name": "npm:string-width@5.1.2",
             "type": "npm",
           },
           "npm:strip-ansi-cjs": {
@@ -1984,13 +1956,13 @@ importers:
             "name": "npm:strip-ansi@6.0.1",
             "type": "npm",
           },
-          "npm:wrap-ansi": {
+          "npm:strip-ansi@7.1.0": {
             "data": {
-              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
-              "packageName": "wrap-ansi",
-              "version": "8.1.0",
+              "hash": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
             },
-            "name": "npm:wrap-ansi",
+            "name": "npm:strip-ansi@7.1.0",
             "type": "npm",
           },
           "npm:wrap-ansi-cjs": {
@@ -2009,6 +1981,15 @@ importers:
               "version": "7.0.0",
             },
             "name": "npm:wrap-ansi@7.0.0",
+            "type": "npm",
+          },
+          "npm:wrap-ansi@8.1.0": {
+            "data": {
+              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+              "packageName": "wrap-ansi",
+              "version": "8.1.0",
+            },
+            "name": "npm:wrap-ansi@8.1.0",
             "type": "npm",
           },
         }
@@ -5335,7 +5316,7 @@ snapshots:
     it('should link a package to the snapshot its alias points at', () => {
       expect(buildGraph().dependencies).toEqual([
         {
-          source: 'npm:auth0@7.4.0',
+          source: 'npm:auth0',
           target: 'npm:auth0@4.37.1',
           type: 'static',
         },
