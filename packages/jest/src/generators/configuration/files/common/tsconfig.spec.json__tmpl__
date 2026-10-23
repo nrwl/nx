@@ -1,7 +1,8 @@
 {
   "extends": "<%= extendedConfig %>",
   "compilerOptions": {
-    "outDir": "<%= outDir %>",<% if (module) { %>
+    "outDir": "<%= outDir %>",<% if (rootDir) { %>
+    "rootDir": "<%= rootDir %>",<% } if (module) { %>
     "module": "<%= module %>",<% } if (module === 'commonjs') { %>
     "moduleResolution": "<%= moduleResolution %>",<% } if (isolatedModules) { %>
     "isolatedModules": true,<% } if (supportTsx) { %>
