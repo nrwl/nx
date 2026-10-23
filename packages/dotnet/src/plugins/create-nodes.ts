@@ -375,7 +375,7 @@ function mergeVariantTarget(
   const baseArgs = validate(user.options);
   const generatedConfigurations = variant.configurations ?? {};
   if (
-    user.defaultConfiguration &&
+    user.defaultConfiguration !== undefined &&
     !generatedConfigurations[user.defaultConfiguration]
   ) {
     throw new Error(
