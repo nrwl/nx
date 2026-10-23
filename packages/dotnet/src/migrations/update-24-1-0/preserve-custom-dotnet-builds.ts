@@ -126,6 +126,12 @@ export default async function update(tree: Tree) {
   let changed = false;
   for (let index = 0; index < nx.plugins.length; index++) {
     const registration = nx.plugins[index];
+    if (typeof registration !== 'string' && !object(registration)) {
+      report(
+        `nx.json plugins[${index}] is not a valid plugin registration. Recover its intended configuration before upgrading.`
+      );
+      continue;
+    }
     const plugin =
       typeof registration === 'string' ? registration : registration.plugin;
     if (plugin !== '@nx/dotnet' && plugin !== '@nx/dotnet/plugin') continue;
