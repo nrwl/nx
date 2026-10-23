@@ -17,7 +17,7 @@ import { RunningTask } from './running-tasks/running-task';
 import { SharedRunningTask } from './running-tasks/shared-running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
-async function createOrchestrator(
+function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
   fullTaskGraph: TaskGraph,
@@ -74,7 +74,7 @@ async function createOrchestrator(
   };
   setEnvVarsBasedOnArgs(nxArgs, true);
 
-  const orchestrator = new TaskOrchestrator(
+  return new TaskOrchestrator(
     hasher,
     null,
     tasks,
@@ -91,10 +91,6 @@ async function createOrchestrator(
     nxArgs.resolvedOutputStyle ?? 'static-failures-only',
     fullTaskGraph
   );
-
-  await orchestrator.init();
-
-  return orchestrator;
 }
 
 // A client bundle built before edges became objects hands plain task ids
@@ -121,6 +117,24 @@ function logDisposeFailure(e: unknown) {
   console.error('Failed to dispose the task orchestrator:', e);
 }
 
+// Agents never call `TaskOrchestrator.run()`, which sizes these limits for a CLI
+// run. A call starts all its tasks at once while other calls' orchestrators stay
+// alive, so each adds room for its tasks and its own orchestrator until disposed.
+function reserveProcessListeners(tasks: Task[]): () => void {
+  const room = tasks.length + 1;
+  const adjust = (delta: number) => {
+    for (const emitter of [process, process.stdout, process.stderr]) {
+      const limit = emitter.getMaxListeners();
+      // 0 is unlimited
+      if (limit !== 0) {
+        emitter.setMaxListeners(limit + delta);
+      }
+    }
+  };
+  adjust(room);
+  return () => adjust(-room);
+}
+
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
@@ -130,7 +144,7 @@ export async function runDiscreteTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ): Promise<Array<Promise<TaskResult[]>>> {
-  const orchestrator = await createOrchestrator(
+  const orchestrator = createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
@@ -138,58 +152,71 @@ export async function runDiscreteTasks(
     lifeCycle,
     ultracacheConfigurations
   );
-
-  let groupId = 0;
-  let nextBatch = orchestrator.nextBatch();
+  const releaseProcessListeners = reserveProcessListeners(tasks);
   const batchResults: Array<Promise<TaskResult[]>> = [];
-  /**
-   * Set of task ids that were part of batches
-   */
-  const batchTasks = new Set<string>();
+  try {
+    await orchestrator.init();
 
-  while (nextBatch) {
-    for (const task in nextBatch.taskGraph.tasks) {
-      batchTasks.add(task);
+    let groupId = 0;
+    let nextBatch = orchestrator.nextBatch();
+    /**
+     * Set of task ids that were part of batches
+     */
+    const batchTasks = new Set<string>();
+
+    while (nextBatch) {
+      for (const task in nextBatch.taskGraph.tasks) {
+        batchTasks.add(task);
+      }
+
+      batchResults.push(
+        orchestrator.applyFromCacheOrRunBatch(true, nextBatch, groupId++)
+      );
+      nextBatch = orchestrator.nextBatch();
     }
 
-    batchResults.push(
-      orchestrator.applyFromCacheOrRunBatch(true, nextBatch, groupId++)
+    const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
+    // Every task here starts directly, but the schedule hashes only the tasks it admits
+    orchestrator.processTasks(discreteTasks.map((task) => task.id));
+
+    // Bulk-resolve every discrete task's cache state in one shot —
+    // single SQL call plus parallel remote retrievals. Batches kicked
+    // off above continue running concurrently while we await this.
+    const cacheHits = await orchestrator.resolveCachedTasks(
+      true,
+      discreteTasks,
+      groupId++
     );
-    nextBatch = orchestrator.nextBatch();
+    const cacheHitsById = new Map(cacheHits.map((h) => [h.task.id, h]));
+
+    const taskResults: Array<Promise<TaskResult[]>> = discreteTasks.map(
+      async (task) => {
+        const hit = cacheHitsById.get(task.id);
+        if (hit) return [hit];
+        return [await orchestrator.runTaskDirectly(true, task, groupId++)];
+      }
+    );
+
+    const results = [...batchResults, ...taskResults];
+    // Callers like Nx Cloud agents create an orchestrator per invocation in a
+    // long-lived process; release its process-level listeners once all tasks
+    // settle, otherwise every invocation's orchestrator stays reachable forever.
+    // Not awaited, so callers keep consuming handles as they settle; the forked
+    // runner's exit handler still reaps children until dispose() runs.
+    Promise.allSettled(results)
+      .then(() => orchestrator.dispose())
+      .finally(releaseProcessListeners)
+      .catch(logDisposeFailure);
+    return results;
+  } catch (e) {
+    // A batch started before the failure can still fork a child, which only
+    // the orchestrator's exit handler reaps, so dispose once batches settle
+    Promise.allSettled(batchResults)
+      .then(() => orchestrator.dispose())
+      .finally(releaseProcessListeners)
+      .catch(logDisposeFailure);
+    throw e;
   }
-
-  const discreteTasks = tasks.filter((task) => !batchTasks.has(task.id));
-  // Every task here starts directly, but the schedule hashes only the tasks it admits
-  orchestrator.processTasks(discreteTasks.map((task) => task.id));
-
-  // Bulk-resolve every discrete task's cache state in one shot —
-  // single SQL call plus parallel remote retrievals. Batches kicked
-  // off above continue running concurrently while we await this.
-  const cacheHits = await orchestrator.resolveCachedTasks(
-    true,
-    discreteTasks,
-    groupId++
-  );
-  const cacheHitsById = new Map(cacheHits.map((h) => [h.task.id, h]));
-
-  const taskResults: Array<Promise<TaskResult[]>> = discreteTasks.map(
-    async (task) => {
-      const hit = cacheHitsById.get(task.id);
-      if (hit) return [hit];
-      return [await orchestrator.runTaskDirectly(true, task, groupId++)];
-    }
-  );
-
-  const results = [...batchResults, ...taskResults];
-  // Callers like Nx Cloud agents create an orchestrator per invocation in a
-  // long-lived process; release its process-level listeners once all tasks
-  // settle, otherwise every invocation's orchestrator stays reachable forever.
-  // Not awaited, so callers keep consuming handles as they settle; the forked
-  // runner's exit handler still reaps children until dispose() runs.
-  Promise.allSettled(results)
-    .then(() => orchestrator.dispose())
-    .catch(logDisposeFailure);
-  return results;
 }
 
 export async function runContinuousTasks(
@@ -201,7 +228,7 @@ export async function runContinuousTasks(
   /** The set to hash from, e.g. from `importUltracacheConfigurations`; omitted hashes natively. */
   ultracacheConfigurations?: UltracacheConfigurations
 ) {
-  const orchestrator = await createOrchestrator(
+  const orchestrator = createOrchestrator(
     tasks,
     projectGraph,
     fullTaskGraph,
@@ -209,29 +236,41 @@ export async function runContinuousTasks(
     lifeCycle,
     ultracacheConfigurations
   );
-  orchestrator.processTasks(tasks.map((task) => task.id));
-  const runningTasks = tasks.reduce(
-    (current, task, index) => {
-      current[task.id] = orchestrator.startContinuousTask(task, index);
-      return current;
-    },
-    {} as Record<string, Promise<RunningTask>>
-  );
-  // Unlike runDiscreteTasks, this must resolve at task start: callers keep
-  // the RunningTask handles to kill later, so disposal has to be deferred
-  // until every task actually exits.
-  Promise.allSettled(
-    Object.entries(runningTasks).map(async ([taskId, promise]) => {
-      const runningTask = await promise;
-      // A shared task is owned by another nx process; this orchestrator has
-      // no child to protect for it, so disposal does not wait on it.
-      if (runningTask instanceof SharedRunningTask) {
-        return;
-      }
-      await orchestrator.waitForContinuousTaskExit(taskId);
-    })
-  )
-    .then(() => orchestrator.dispose())
-    .catch(logDisposeFailure);
-  return runningTasks;
+  const releaseProcessListeners = reserveProcessListeners(tasks);
+  try {
+    await orchestrator.init();
+    orchestrator.processTasks(tasks.map((task) => task.id));
+    const runningTasks = tasks.reduce(
+      (current, task, index) => {
+        current[task.id] = orchestrator.startContinuousTask(task, index);
+        return current;
+      },
+      {} as Record<string, Promise<RunningTask>>
+    );
+    // Unlike runDiscreteTasks, this must resolve at task start: callers keep
+    // the RunningTask handles to kill later, so disposal has to be deferred
+    // until every task actually exits.
+    Promise.allSettled(
+      Object.entries(runningTasks).map(async ([taskId, promise]) => {
+        const runningTask = await promise;
+        // A shared task is owned by another nx process; this orchestrator has
+        // no child to protect for it, so disposal does not wait on it.
+        if (runningTask instanceof SharedRunningTask) {
+          return;
+        }
+        await orchestrator.waitForContinuousTaskExit(taskId);
+      })
+    )
+      .then(() => orchestrator.dispose())
+      .finally(releaseProcessListeners)
+      .catch(logDisposeFailure);
+    return runningTasks;
+  } catch (e) {
+    // A failure before the disposal chain above never reaches it
+    orchestrator
+      .dispose()
+      .finally(releaseProcessListeners)
+      .catch(logDisposeFailure);
+    throw e;
+  }
 }
