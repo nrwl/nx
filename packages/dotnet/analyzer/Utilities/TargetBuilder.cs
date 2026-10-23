@@ -10,7 +10,7 @@ public static partial class TargetBuilder
     /// <summary>
     /// Builds all applicable targets for a .NET project.
     /// </summary>
-    public static Dictionary<string, Target> BuildTargets(
+    public static BuildTargetsResult BuildTargets(
         string projectName,
         string fileName,
         bool isTest,
@@ -54,7 +54,7 @@ public static partial class TargetBuilder
             AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
-        return targets;
+        return new BuildTargetsResult { Targets = targets };
     }
 
     /// <summary>
