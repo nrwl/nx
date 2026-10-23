@@ -2354,6 +2354,25 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it.each([
+      ['ready', 1],
+      ['absent', null],
+    ])(
+      'does not report a producer in another process whose row is %s',
+      async (_, row) => {
+        const { orchestrator, e2e } = createOrchestrator({ flat: true });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(row);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).not.toHaveBeenCalled();
+        } finally {
+          log.mockRestore();
+        }
+      }
+    );
+
     it('fails the waiter when the producer row disappears mid-wait', async () => {
       const { orchestrator, e2e } = createOrchestrator({ flat: true });
       orchestrator.runningTasksService.getTaskReadiness
