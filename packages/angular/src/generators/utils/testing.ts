@@ -271,6 +271,32 @@ export class StaticMemberDeclarationsModule {
   return tree;
 }
 
+export async function generateTestInlineScam(
+  tree: Tree,
+  options: { name: string; path: string }
+): Promise<void> {
+  await componentGenerator(tree, {
+    ...options,
+    standalone: false,
+    skipImport: true,
+    skipFormat: true,
+  });
+
+  const { className } = names(options.name);
+  const componentFilePath = `${options.path}.ts`;
+  tree.write(
+    componentFilePath,
+    `import { NgModule } from '@angular/core';
+${tree.read(componentFilePath, 'utf-8')}
+@NgModule({
+  declarations: [${className}],
+  exports: [${className}],
+})
+export class ${className}Module {}
+`
+  );
+}
+
 function generateModule(
   tree: Tree,
   options: { name: string; project: string; path?: string }

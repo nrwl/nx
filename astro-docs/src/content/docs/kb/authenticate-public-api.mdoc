@@ -48,7 +48,7 @@ CIPES_PATH=$(jq -r '.paths | keys[] | select(endswith("/cipes"))' openapi.json)
 
 ## Use a CI access token
 
-Create a CI access token in your Nx Cloud workspace settings, under **Access Control**.
+Create a CI access token in your [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/settings/access), under **Access Control**.
 See [CI access tokens](/docs/kb/access-tokens) for token management.
 
 Store the token in your secret manager.

@@ -181,6 +181,20 @@ Configure `@nx/next/plugin` in the `plugins` array in `nx.json`:
 
 The build task is cached, with outputs based on your Next.js configuration, and depends on builds of project dependencies. The start task depends on the build task.
 
+### Wait for the server to be ready
+
+The inferred `dev` and `start` targets come with a `readyWhen` check.
+With it, a task can wait until the server accepts connections instead of only until it has started.
+The check runs when the task runs, with the task's environment and options, and waits for the server's port.
+The port comes from the `-p` or `--port` flag, then the `PORT` environment variable, then 3000.
+With a `-H` or `--hostname` flag, it connects to that host.
+A port of `0` leaves no fixed port to wait for, so the target counts as ready once it has started.
+If nothing sets the port and another process holds 3000, `next dev` moves to the next free port, and this check can pass before the server is up.
+
+A dependent task waits for the check only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+
 ### Exclude or include specific projects
 
 Use `include`/`exclude` glob patterns in the plugin configuration to scope which projects the plugin applies to:

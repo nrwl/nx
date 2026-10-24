@@ -1,2 +1,2 @@
 export const nxVersion = require('../../package.json').version;
-export const mavenPluginVersion = '0.0.18';
+export const mavenPluginVersion = '0.0.19';

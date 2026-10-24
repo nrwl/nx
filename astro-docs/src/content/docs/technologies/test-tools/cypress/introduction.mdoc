@@ -47,7 +47,7 @@ This will install the correct version of `@nx/cypress`.
 ### How @nx/cypress infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/mental-model#inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/features/run-tasks#inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -61,7 +61,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/cypress configuration
 
@@ -104,16 +104,14 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 ### Wait for the dev server to be ready
 
-The `waitForServerReady` option defaults to `true`.
-With it on, the e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#signal-readiness-from-the-task) before Cypress starts.
+The e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) before Cypress starts.
 `nxE2EPreset` then takes the protocol and port from the address the server reported in `NX_READY_URL`, and keeps the path and query of `baseUrl`.
 A `localhost` host stays as it is when the server listens on a loopback address.
 Any other host moves to the one the server reported.
-`nxE2EPreset` keeps a `baseUrl` set with `--config` or `CYPRESS_BASE_URL`.
+`nxE2EPreset` keeps a `baseUrl` set with `CYPRESS_BASE_URL`, or a `--config` value other than the one Cypress would use anyway: the config file's `baseUrl`, or `ciBaseUrl` in `e2e-ci` tasks.
 Nx still starts the dev server.
 The preset waits up to `webServerConfig.timeout` (60 seconds by default) for that `baseUrl` to respond, then Cypress tests against it.
-A migration sets the option to `false` in existing workspaces.
-To opt in, set it back to `true`:
+To start Cypress as soon as the dev server task starts instead, set the `waitForServerReady` plugin option to `false`:
 
 ```json
 // nx.json
@@ -122,12 +120,14 @@ To opt in, set it back to `true`:
     {
       "plugin": "@nx/cypress/plugin",
       "options": {
-        "waitForServerReady": true
+        "waitForServerReady": false
       }
     }
   ]
 }
 ```
+
+The option is deprecated and will be removed in Nx 25, when the e2e tasks always wait.
 
 The plugin infers the dependency on the dev server from `webServerCommands` in `nxE2EPreset`.
 In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself:
@@ -185,15 +185,13 @@ export default defineConfig({
 });
 ```
 
-To stop an atomized task from rerunning for every library the app bundles, scope it to the projects its test file exercises.
-See [scope a test file to its projects](/docs/kb/split-e2e-tasks#scope-a-test-file-to-its-projects).
-
 {% aside type="note" title="Using setupNodeEvents function" %}
 If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset` and return `config` from yours. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
 {% /aside %}
 
-To have an atomized task hash from the app code its test file imports instead of the whole app,
-see [hash e2e tests from their imports](/docs/kb/hash-e2e-tests-from-imports).
+An atomized task reruns when the app, any project the app depends on, or any test file changes.
+To scope it to the code its test file exercises, see
+[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
 
 ### Splitting component testing tasks by file
 
@@ -250,6 +248,56 @@ The `@nx/cypress:configuration` generator is not a project generator. It won't g
 
 To set up a separate project, you can generate a separate project with a project generator like `@nx/js:library` first and then run the `@nx/cypress:configuration` generator.
 {% /aside %}
+
+### Choosing the web server per environment
+
+Most application generators pass two servers to the Cypress configuration: the dev server for local
+runs and a production build for CI.
+When the two differ, the generated config reads the `CI` environment variable and picks between them.
+
+```ts
+// apps/<your-app-name>-e2e/cypress.config.ts
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(import.meta.url, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: process.env['CI']
+          ? 'npx nx run <your-app-name>:preview'
+          : 'npx nx run <your-app-name>:dev',
+        production: 'npx nx run <your-app-name>:preview',
+      },
+      ciWebServerCommand: 'npx nx run <your-app-name>:preview',
+      ciBaseUrl: 'http://localhost:4300',
+    }),
+    baseUrl: process.env['CI']
+      ? 'http://localhost:4300'
+      : 'http://localhost:4200',
+  },
+});
+```
+
+`nx e2e` runs against the dev server locally, which avoids a rebuild on every change, and against a
+production build in CI.
+The `e2e-ci` tasks always run against `ciWebServerCommand`.
+
+These applications run against the dev server in CI as well:
+
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
+
+The inferred `e2e` task includes the `CI` environment variable in its inputs, so local and CI runs
+don't share cached results.
+An `inputs` list you set for this task in `targetDefaults` or in a project configuration replaces
+the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
 
 ### Testing applications
 

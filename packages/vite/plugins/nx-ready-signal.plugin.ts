@@ -28,25 +28,11 @@ function report(httpServer: HttpServer | null, https: boolean) {
   if (!httpServer || !process.env.NX_READY_SIGNAL_SOCKET) {
     return;
   }
-  const { signalTaskReady } =
+  const { emitReadySignal } =
     require('@nx/devkit') as typeof import('@nx/devkit');
+  const { getListeningUrl } =
+    require('@nx/devkit/internal') as typeof import('@nx/devkit/internal');
   httpServer.once('listening', () => {
-    signalTaskReady({ url: getServerUrl(httpServer.address(), https) });
+    emitReadySignal(getListeningUrl(httpServer.address(), https));
   });
-}
-
-export function getServerUrl(
-  address: AddressInfo | string | null,
-  https: boolean
-): string | undefined {
-  if (!address || typeof address === 'string') {
-    return undefined;
-  }
-  const host =
-    address.address === '::' || address.address === '0.0.0.0'
-      ? 'localhost'
-      : address.family === 'IPv6'
-        ? `[${address.address}]`
-        : address.address;
-  return `${https ? 'https' : 'http'}://${host}:${address.port}/`;
 }

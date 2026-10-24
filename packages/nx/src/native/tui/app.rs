@@ -643,10 +643,8 @@ impl App {
         self.dispatch_action(Action::StartCommand(thread_count));
     }
 
-    pub fn start_tasks(&mut self, tasks: Vec<Task>) {
-        // Use TuiCore to record timing and update status
-        // This ensures task_start_times are recorded properly
-        self.core.start_tasks(&tasks);
+    pub fn start_tasks(&mut self, mut tasks: Vec<Task>) {
+        self.core.start_tasks(&mut tasks);
         self.dispatch_action(Action::StartTasks(tasks));
     }
 
@@ -4112,7 +4110,12 @@ mod tests {
     use std::collections::HashMap;
 
     fn create_test_app() -> App {
-        let tasks = vec![Task::new("app1:build", "build").with_project_root("/tmp/app1")];
+        create_test_app_with_tasks(vec![
+            Task::new("app1:build", "build").with_project_root("/tmp/app1"),
+        ])
+    }
+
+    fn create_test_app_with_tasks(tasks: Vec<Task>) -> App {
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -4137,6 +4140,102 @@ mod tests {
         )));
 
         App::with_state(state, TuiMode::FullScreen).unwrap()
+    }
+
+    #[test]
+    fn started_task_timing_survives_mode_switch() {
+        let mut app =
+            create_test_app_with_tasks(vec![Task::new("z", "build"), Task::new("a", "build")]);
+        let start_time = crate::native::utils::time::current_timestamp_millis() - 10_000;
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+
+        for (finished_project, starts, expected) in [
+            (
+                None,
+                vec![("z", start_time), ("a", start_time)],
+                [("a", start_time), ("z", start_time)],
+            ),
+            (
+                None,
+                vec![("a", start_time)],
+                [("a", start_time), ("z", start_time)],
+            ),
+            (
+                None,
+                vec![("a", start_time + 50)],
+                [("z", start_time), ("a", start_time + 50)],
+            ),
+            (
+                Some("z"),
+                vec![("z", start_time + 75)],
+                [("a", start_time + 50), ("z", start_time + 75)],
+            ),
+        ] {
+            app.register_action_handler(tx.clone()).unwrap();
+            if let Some(project) = finished_project {
+                let mut task = Task::new(project, "build");
+                task.start_time = Some(start_time);
+                task.end_time = Some(start_time + 60);
+                TuiApp::end_tasks(
+                    &mut app,
+                    vec![TaskResult {
+                        task,
+                        status: String::from("success"),
+                        code: 0,
+                        terminal_output: None,
+                    }],
+                );
+            }
+            let tasks = starts
+                .into_iter()
+                .map(|(project, time)| {
+                    let mut task = Task::new(project, "build");
+                    task.start_time = Some(time);
+                    task
+                })
+                .collect();
+            TuiApp::start_tasks(&mut app, tasks);
+            while let Ok(action) = rx.try_recv() {
+                for component in &mut app.components {
+                    if let Some(action) = component.update(action.clone()).unwrap() {
+                        tx.send(action).unwrap();
+                    }
+                }
+            }
+
+            for restore in [false, true] {
+                if restore {
+                    app = App::with_state(app.get_state(), TuiMode::FullScreen).unwrap();
+                }
+                for (project, time) in expected {
+                    assert_eq!(
+                        app.get_task_timing(&format!("{project}:build")),
+                        (Some(time), None),
+                        "timing for {project} after restore={restore}"
+                    );
+                }
+                let mut terminal =
+                    ratatui::Terminal::new(ratatui::backend::TestBackend::new(120, 10)).unwrap();
+                terminal
+                    .draw(|frame| {
+                        let area = frame.area();
+                        app.components
+                            .iter_mut()
+                            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+                            .unwrap()
+                            .draw(frame, area)
+                            .unwrap();
+                    })
+                    .unwrap();
+                let output = terminal.backend().to_string();
+                let first = format!("{}:build", expected[0].0);
+                let second = format!("{}:build", expected[1].0);
+                assert!(
+                    output.find(&first).unwrap() < output.find(&second).unwrap(),
+                    "{first} must precede {second} after restore={restore}:\n{output}"
+                );
+            }
+        }
     }
 
     /// Clicks on the cloud link resolve through `link_at`, which chains the

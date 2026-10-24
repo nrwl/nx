@@ -1,0 +1,42 @@
+---
+title: Ultracache and Nx versions
+description: Which Nx versions use Ultracache by default, how to opt in on Nx 23 or outside CI, and how to opt a run out with NX_CLOUD_USE_ULTRACACHE.
+sidebar:
+  label: Ultracache and Nx versions
+filter: 'type:Guides'
+topics:
+  - 'Continuous integration'
+  - 'Tasks & caching'
+---
+
+[Ultracache](/docs/features/ci-features/remote-cache#ultracache) is supported on Nx 24.0.0 and later.
+On those versions, CI runs use it by default once [Ultracache is on](/docs/features/ci-features/remote-cache#turn-on-ultracache) for your workspace in Nx Cloud.
+
+[`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) changes the default for a run, and Nx 23 can opt in with it:
+
+| Nx version       | In CI, unset | `NX_CLOUD_USE_ULTRACACHE=true` | `NX_CLOUD_USE_ULTRACACHE=false` |
+| ---------------- | ------------ | ------------------------------ | ------------------------------- |
+| 24.0.0 and later | On           | On                             | Off                             |
+| 23.x             | Off          | On                             | Off                             |
+| Before 23.0.0    | Off          | The run fails                  | Off                             |
+
+Outside CI, every version hashes from declared `inputs` unless the run sets `NX_CLOUD_USE_ULTRACACHE` to `true`.
+If the workspace's Ultracache setting is off, every run hashes from declared `inputs`, whatever the variable says.
+
+## Opt in on Nx 23
+
+Set the variable in your CI environment:
+
+```yaml
+# .github/workflows/ci.yml
+env:
+  NX_CLOUD_USE_ULTRACACHE: 'true'
+```
+
+With the variable set to `true`, a run fails if Nx Cloud can't return the task's recording or a recording report is incomplete.
+Without it, Nx makes one attempt to read the recordings, waits up to 10 seconds, and falls back to declared `inputs` if the read fails.
+
+## Opt a run out
+
+Set `NX_CLOUD_USE_ULTRACACHE` to `false` to hash every task in that run from its declared `inputs`.
+To turn Ultracache off for a single target instead, set [`ultracache.mode`](/docs/reference/project-configuration#ultracache) to `off`.

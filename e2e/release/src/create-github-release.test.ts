@@ -99,7 +99,9 @@ describe('nx release create github release', () => {
     });
 
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
 
     // update my-pkg-1 with a fix commit

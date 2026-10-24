@@ -1,4 +1,5 @@
 import type { CreateNodesContext } from '@nx/devkit';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes } from './node-plugin';
 
@@ -29,11 +30,11 @@ describe('@nx/js/node', () => {
     options = {}
   ) {
     await tempFs.createFiles(files);
-    const results = await createNodesFunction(
-      Object.keys(files),
-      options,
-      context
-    );
+    // What the host would hand over for the plugin's glob.
+    const matched = await globWithWorkspaceContext(tempFs.tempDir, [
+      createNodes[0],
+    ]);
+    const results = await createNodesFunction(matched, options, context);
     return results.find(([, r]) => r.projects?.[root])?.[1].projects[root]
       .targets;
   }
@@ -41,7 +42,7 @@ describe('@nx/js/node', () => {
   it('should only claim node shebangs', async () => {
     const targets = await targetsFor(
       {
-        'package.json': '{}',
+        'package.json': '{ "name": "root", "nx": {} }',
         'scripts/a.js': '#!/usr/bin/env node\n',
         'scripts/b.ts': '#!/usr/bin/env -S npx tsx\n',
       },
@@ -49,18 +50,19 @@ describe('@nx/js/node', () => {
     );
 
     expect(Object.keys(targets)).toEqual(['a']);
-    expect(targets.a.command).toBe('node scripts/a.js');
+    expect(targets.a.command).toBe('node --watch scripts/a.js');
   });
 
   it('should infer serve from the header @nx/node:application writes', async () => {
     const targets = await targetsFor(
       {
-        'apps/api/package.json': '{}',
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["apps/*"] }',
+        'apps/api/package.json': '{ "name": "api" }',
         'apps/api/src/main.ts':
           '#!/usr/bin/env node\n// @nx-target-name: serve\nconsole.log("hi");\n',
       },
-      'apps/api',
-      { watch: true }
+      'apps/api'
     );
 
     expect(targets).toEqual({
@@ -75,6 +77,8 @@ describe('@nx/js/node', () => {
   it('should infer bin targets', async () => {
     const targets = await targetsFor(
       {
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["packages/*"] }',
         'packages/cli/package.json': JSON.stringify({
           name: '@proj/cli',
           bin: { cli: './bin/cli.js', 'cli-dist': './dist/cli.js' },
@@ -123,9 +127,11 @@ describe('@nx/js/node', () => {
     `);
   });
 
-  it('should infer a string bin named after the unscoped package', async () => {
+  it('should infer a string bin named after the unscoped package, with no scripts beside it', async () => {
     const targets = await targetsFor(
       {
+        'package.json':
+          '{ "name": "root", "nx": {}, "workspaces": ["packages/*"] }',
         'packages/tool/package.json': JSON.stringify({
           name: '@proj/tool',
           bin: 'dist/index.js',
@@ -142,12 +148,16 @@ describe('@nx/js/node', () => {
   it('should prefer a script target over a bin with the same name', async () => {
     const targets = await targetsFor(
       {
-        'package.json': JSON.stringify({ bin: { release: './dist/r.js' } }),
+        'package.json': JSON.stringify({
+          name: 'root',
+          nx: {},
+          bin: { release: './dist/r.js' },
+        }),
         'scripts/release.mjs': '#!/usr/bin/env node\n',
       },
       '.'
     );
 
-    expect(targets.release.command).toBe('node scripts/release.mjs');
+    expect(targets.release.command).toBe('node --watch scripts/release.mjs');
   });
 });

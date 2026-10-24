@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { transpileModule } from 'typescript';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -46,6 +47,10 @@ describe('app', () => {
 
     const mainFile = appTree.read('my-node-app/src/main.ts').toString();
     expect(mainFile).toContain(`import express from 'express';`);
+    expect(mainFile).toContain("load('@nx/js/ready-signal')");
+    expect(mainFile).toContain('emitReadySignal(server)');
+    expect(mainFile).toContain('app.listen(port, async (error?: Error) =>');
+    expect(mainFile).toContain('process.exit(1)');
 
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
@@ -163,9 +168,14 @@ describe('app', () => {
       } as Schema);
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
-      expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`
-      );
+      const mainFile = appTree.read('my-node-app/src/main.js').toString();
+      expect(mainFile).toContain(`import express from 'express';`);
+      expect(mainFile).toContain("load('@nx/js/ready-signal')");
+      const { diagnostics } = transpileModule(mainFile, {
+        fileName: 'main.js',
+        reportDiagnostics: true,
+      });
+      expect(diagnostics).toEqual([]);
 
       const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
@@ -296,6 +306,9 @@ describe('app', () => {
                 "options": {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
+                },
+                "readyWhen": {
+                  "signal": true,
                 },
               },
               "test": {
@@ -478,6 +491,9 @@ describe('app', () => {
               "options": {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "test": {

@@ -278,6 +278,10 @@ Nx understands the projects in your workspace as a graph and uses this understan
 Exploring this graph visually is vital to understanding how your code is structured and how Nx behaves.
 It always stays up to date without having to actively maintain a document as it is calculated by analyzing your source code.
 
+Nx detects a project from a `project.json` file, or from a `package.json` file included in your package manager's workspaces configuration. Plugins can add other ways to detect projects.
+Nx works out most dependencies between projects from source code, installed dependencies, and TypeScript configuration, so you rarely declare them by hand.
+It caches the graph and reanalyzes only the files that changed.
+
 ### Launching the project graph
 
 To launch the project graph visualization for your workspace, use [Nx Console](/docs/getting-started/editor-setup) or run:

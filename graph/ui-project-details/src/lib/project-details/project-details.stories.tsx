@@ -123,6 +123,13 @@ export const Primary = {
               technologies: ['docker'],
             },
           },
+          serve: {
+            executor: 'nx:run-commands',
+            options: { command: 'webpack-cli serve' },
+            continuous: true,
+            readyWhen: { port: '{options.port}', timeout: 120000 },
+            configurations: {},
+          },
         },
         $schema: '../../node_modules/nx/schemas/project-schema.json',
         sourceRoot: 'packages/jest',
@@ -142,6 +149,14 @@ export const Primary = {
       targets: [
         'packages/jest/project.json',
         'nx-core-build-project-json-nodes',
+      ],
+      'targets.serve': [
+        'packages/jest/webpack.config.js',
+        '@nx/webpack/plugin',
+      ],
+      'targets.serve.readyWhen': [
+        'packages/jest/webpack.config.js',
+        '@nx/webpack/plugin',
       ],
       'targets.nx-release-publish': [
         'packages/jest/project.json',

@@ -111,6 +111,7 @@ describe('new', () => {
 
   describe('--preset', () => {
     it('should generate necessary npm dependencies for empty preset', async () => {
+      vi.spyOn(devkit, 'getPackageManagerVersion').mockReturnValue('10.0.0');
       await newGenerator(tree, {
         ...defaultOptions,
         name: 'my-workspace',
@@ -241,27 +242,32 @@ describe('new', () => {
       });
     });
 
-    it('should generate necessary npm dependencies for angular preset', async () => {
-      await newGenerator(tree, {
-        ...defaultOptions,
-        name: 'my-workspace',
-        directory: 'my-workspace',
-        appName: 'app',
-        preset: Preset.AngularMonorepo,
-      });
+    it.each([
+      ['webpack', {}],
+      ['rspack', { '@nx/rspack': nxVersion }],
+    ] as const)(
+      'should generate bootstrap dependencies for angular preset with %s',
+      async (bundler, expectedBundlerDependencies) => {
+        await newGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-workspace',
+          directory: 'my-workspace',
+          appName: 'app',
+          preset: Preset.AngularMonorepo,
+          bundler,
+        });
 
-      const { devDependencies, dependencies } = readJson(
-        tree,
-        'my-workspace/package.json'
-      );
-      expect(devDependencies).toStrictEqual({
-        '@angular-devkit/core': angularCliVersion,
-        '@nx/angular': nxVersion,
-        '@nx/workspace': nxVersion,
-        nx: nxVersion,
-        typescript: typescriptVersion,
-      });
-    });
+        const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+        expect(devDependencies).toStrictEqual({
+          ...expectedBundlerDependencies,
+          '@angular-devkit/core': angularCliVersion,
+          '@nx/angular': nxVersion,
+          '@nx/workspace': nxVersion,
+          nx: nxVersion,
+          typescript: typescriptVersion,
+        });
+      }
+    );
 
     describe('custom presets', () => {
       let originalValue;

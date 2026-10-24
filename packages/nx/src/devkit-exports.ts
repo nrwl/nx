@@ -258,5 +258,5 @@ export { isDaemonEnabled } from './daemon/client/client';
  */
 export {
   getReadyUrl,
-  signalTaskReady,
+  emitReadySignal,
 } from './tasks-runner/readiness/ready-signal';

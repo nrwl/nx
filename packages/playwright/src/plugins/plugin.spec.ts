@@ -140,6 +140,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
@@ -176,6 +179,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
@@ -209,6 +215,9 @@ describe('@nx/playwright/plugin', () => {
                         "externalDependencies": [
                           "@playwright/test",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -282,6 +291,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests",
@@ -320,6 +332,9 @@ describe('@nx/playwright/plugin', () => {
                           "@playwright/test",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Playwright Tests in CI",
@@ -355,6 +370,9 @@ describe('@nx/playwright/plugin', () => {
                         "externalDependencies": [
                           "@playwright/test",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -446,6 +464,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
@@ -482,6 +503,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -526,6 +550,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -625,6 +652,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in CI",
@@ -662,6 +692,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -709,6 +742,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
@@ -755,6 +791,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -820,6 +859,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests",
@@ -867,6 +909,9 @@ describe('@nx/playwright/plugin', () => {
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -921,6 +966,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
@@ -967,6 +1015,9 @@ describe('@nx/playwright/plugin', () => {
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me-2.spec.ts in CI",
@@ -1010,6 +1061,7 @@ describe('@nx/playwright/plugin', () => {
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -1063,7 +1115,12 @@ describe('@nx/playwright/plugin', () => {
 
     const results = await createNodesFunction(
       ['playwright.config.js'],
-      { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForServerReady: false },
+      {
+        waitForWebServer: true,
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+        waitForServerReady: false,
+      },
       context
     );
     const { targets } = results[0][1].projects['.'];
@@ -1199,6 +1256,44 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     );
   });
 
+  it('does not infer a wait-for-webserver task by default', async () => {
+    await mockPlaywrightConfig(tempFs, {
+      testDir: 'tests',
+      webServer: {
+        command: 'npx nx run app1:serve',
+        port: 4200,
+        reuseExistingServer: true,
+      },
+    });
+    await tempFs.createFiles({
+      'tests/run-me.spec.ts': '',
+    });
+
+    const results = await createNodesFunction(
+      ['playwright.config.js'],
+      {
+        targetName: 'e2e',
+        ciTargetName: 'e2e-ci',
+      },
+      context
+    );
+    const project = results[0][1].projects['.'];
+    const { targets } = project;
+
+    // No gate is inferred; the serve dependency stays so the tests still start
+    // the server, but readiness falls back to Playwright's own probe.
+    expect(targets['e2e--wait-for-webserver']).toBeUndefined();
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+    ]);
+    expect(targets['e2e-ci--tests/run-me.spec.ts'].dependsOn).toEqual([
+      { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+    ]);
+    expect(project.metadata.targetGroups['E2E (CI)']).not.toContain(
+      'e2e--wait-for-webserver'
+    );
+  });
+
   describe('a test file with an @nx-depends-on directive', () => {
     const scopedInputs = [
       'default',
@@ -1214,12 +1309,13 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         always: true,
       },
       { externalDependencies: ['@playwright/test'] },
+      { env: 'CI' },
     ];
 
     async function atomizedTargets() {
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForWebServer: true },
         context
       );
       return results[0][1].projects['.'].targets;
@@ -1526,6 +1622,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -1572,6 +1669,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -1645,7 +1743,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e' },
+        { waitForWebServer: true, targetName: 'e2e' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -1704,6 +1802,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -1771,6 +1870,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -1843,6 +1943,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -1913,6 +2014,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -1959,6 +2061,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -2010,7 +2113,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
 
       const results = await createNodesFunction(
         ['apps/e2e/playwright.config.js'],
-        { targetName: 'e2e' },
+        { waitForWebServer: true, targetName: 'e2e' },
         context
       );
       const { targets } = results[0][1].projects['apps/e2e'];
@@ -2058,7 +2161,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         (
           await createNodesFunction(
             ['apps/e2e/playwright.config.js'],
-            { targetName: 'e2e' },
+            { waitForWebServer: true, targetName: 'e2e' },
             context
           )
         )[0][1].projects['apps/e2e'].targets;
@@ -2109,7 +2212,7 @@ module.exports = { testDir: 'tests', testMatch, testIgnore };`
         (
           await createNodesFunction(
             ['apps/e2e/playwright.config.js'],
-            { targetName: 'e2e' },
+            { waitForWebServer: true, targetName: 'e2e' },
             context
           )
         )[0][1].projects['apps/e2e'].targets;
@@ -2167,7 +2270,7 @@ module.exports = {
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -2215,7 +2318,7 @@ module.exports = {
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -2268,7 +2371,7 @@ module.exports = {
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -2334,7 +2437,7 @@ module.exports = {
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -2394,7 +2497,7 @@ module.exports = {
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -2449,6 +2552,7 @@ module.exports = {
       const results = await createNodesFunction(
         ['playwright.config.js'],
         {
+          waitForWebServer: true,
           targetName: 'e2e',
           ciTargetName: 'e2e-ci',
         },
@@ -2510,7 +2614,11 @@ module.exports = {
         (
           await createNodesFunction(
             ['apps/e2e/playwright.config.js'],
-            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            {
+              waitForWebServer: true,
+              targetName: 'e2e',
+              ciTargetName: 'e2e-ci',
+            },
             context
           )
         )[0][1].projects['apps/e2e'].targets;
@@ -2585,7 +2693,11 @@ module.exports = {
         (
           await createNodesFunction(
             ['apps/e2e/playwright.config.js'],
-            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            {
+              waitForWebServer: true,
+              targetName: 'e2e',
+              ciTargetName: 'e2e-ci',
+            },
             context
           )
         )[0][1].projects['apps/e2e'].targets;
@@ -2835,7 +2947,7 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3003,7 +3115,11 @@ module.exports = {};`,
         (
           await createNodesFunction(
             ['playwright.config.js'],
-            { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+            {
+              waitForWebServer: true,
+              targetName: 'e2e',
+              ciTargetName: 'e2e-ci',
+            },
             context
           )
         )[0][1].projects['.'].targets;
@@ -3071,7 +3187,7 @@ module.exports = {};`,
 
       const results = await createNodesFunction(
         ['playwright.config.js'],
-        { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+        { waitForWebServer: true, targetName: 'e2e', ciTargetName: 'e2e-ci' },
         context
       );
       const { targets } = results[0][1].projects['.'];
@@ -3202,6 +3318,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3237,6 +3354,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3268,6 +3386,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
         webServerTimeout: 300000,
@@ -3302,6 +3421,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3329,6 +3449,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3512,6 +3633,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3594,6 +3716,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3633,6 +3756,7 @@ module.exports = {};`,
     const results = await createNodesFunction(
       ['playwright.config.js'],
       {
+        waitForWebServer: true,
         targetName: 'e2e',
         ciTargetName: 'e2e-ci',
       },
@@ -3706,6 +3830,9 @@ module.exports = {};`,
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests",
@@ -3753,6 +3880,9 @@ module.exports = {};`,
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {
@@ -3815,6 +3945,9 @@ module.exports = {};`,
               "@playwright/test",
             ],
           },
+          {
+            "env": "CI",
+          },
         ],
         "metadata": {
           "description": "Runs Playwright Tests in tests/run-me.spec.ts in CI",
@@ -3868,6 +4001,9 @@ module.exports = {};`,
             "externalDependencies": [
               "@playwright/test",
             ],
+          },
+          {
+            "env": "CI",
           },
         ],
         "metadata": {

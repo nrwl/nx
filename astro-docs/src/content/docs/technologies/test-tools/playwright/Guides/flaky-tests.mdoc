@@ -137,7 +137,7 @@ target in CI to use this [automated task splitting](/docs/kb/split-e2e-tasks).
 A failed spec can then retry without running the complete Playwright suite.
 
 Nx Cloud detects a flaky task when the same task hash has both a failed and a successful execution.
-With distributed task execution through Nx Agents, it can retry a known flaky task on a different
+With distributed task execution through Workers, it can retry a known flaky task on a different
 agent. This helps separate a test problem from an agent problem. See [flaky test detection and
 automatic retries](/docs/kb/flaky-tasks).
 

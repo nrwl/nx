@@ -22,6 +22,9 @@ exports[`@nx/react:provider > generates a provider for the rsbuild bundler > pro
         "command": "rsbuild dev",
         "cwd": "apps/my-provider",
       },
+      "readyWhen": {
+        "signal": true,
+      },
     },
   },
 }
@@ -57,6 +60,7 @@ exports[`@nx/react:provider > generates a provider for the rsbuild bundler > rsb
   },
   "devDependencies": {
     "@module-federation/rsbuild-plugin": "^2.5.0",
+    "@nx/rsbuild": "0.0.1",
     "@rsbuild/core": "^1.4.0",
     "@rsbuild/plugin-react": "^1.3.0",
     "@types/react": "^19.0.0",
@@ -77,6 +81,9 @@ exports[`@nx/react:provider > generates a provider for the rsbuild bundler > rsb
       "options": {
         "command": "rsbuild dev",
         "cwd": "apps/my-provider"
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "build": {
@@ -92,6 +99,7 @@ exports[`@nx/react:provider > generates a provider for the rsbuild bundler > rsb
   "apps/my-provider/rsbuild.config.ts": "import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
 const PORT = 3101;
 const NAME = 'my_provider';
@@ -118,6 +126,7 @@ export default defineConfig({
       },
       shared: ['react', 'react-dom'],
     }),
+    pluginNxReadySignal(),
   ],
 });
 ",
@@ -195,6 +204,9 @@ exports[`@nx/react:provider > generates a provider for the rspack bundler > proj
         "command": "rspack serve --mode=development",
         "cwd": "apps/my-provider",
       },
+      "readyWhen": {
+        "signal": true,
+      },
     },
   },
 }
@@ -229,6 +241,7 @@ exports[`@nx/react:provider > generates a provider for the rspack bundler > rspa
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@nx/rspack": "0.0.1",
     "@rspack/cli": "^2.0.3",
     "@rspack/core": "^2.0.3",
     "@rspack/dev-server": "2.0.1",
@@ -252,6 +265,9 @@ exports[`@nx/react:provider > generates a provider for the rspack bundler > rspa
       "options": {
         "command": "rspack serve --mode=development",
         "cwd": "apps/my-provider"
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "build": {
@@ -267,6 +283,7 @@ exports[`@nx/react:provider > generates a provider for the rspack bundler > rspa
   "apps/my-provider/rspack.config.ts": "import { defineConfig } from '@rspack/cli';
 import { rspack } from '@rspack/core';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { NxReadySignalPlugin } from '@nx/rspack/ready-signal';
 import { ReactRefreshRspackPlugin } from '@rspack/plugin-react-refresh';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -334,6 +351,7 @@ export default defineConfig((_env, argv) => {
         },
         shared: ['react', 'react-dom'],
       }),
+      new NxReadySignalPlugin(),
     ].filter(Boolean),
   };
 });
@@ -412,6 +430,9 @@ exports[`@nx/react:provider > generates a provider for the vite bundler > projec
         "command": "vite",
         "cwd": "apps/my-provider",
       },
+      "readyWhen": {
+        "signal": true,
+      },
     },
   },
 }
@@ -448,6 +469,7 @@ exports[`@nx/react:provider > generates a provider for the vite bundler > vite t
   },
   "devDependencies": {
     "@module-federation/vite": "^1.15.5",
+    "@nx/vite": "0.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.2",
@@ -468,6 +490,9 @@ exports[`@nx/react:provider > generates a provider for the vite bundler > vite t
       "options": {
         "command": "vite",
         "cwd": "apps/my-provider"
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "build": {
@@ -532,6 +557,7 @@ export {};
   "apps/my-provider/vite.config.mts": "import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { federation } from '@module-federation/vite';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 // Port deliberately avoids 5000 (macOS AirTunes binds it on 0.0.0.0, leading
 // to silent EADDRINUSE on 127.0.0.1). Override \`--port\` only if 5000+ is free.
@@ -564,6 +590,7 @@ export default defineConfig({
       },
     }),
     react(),
+    nxReadySignal(),
   ],
 });
 ",

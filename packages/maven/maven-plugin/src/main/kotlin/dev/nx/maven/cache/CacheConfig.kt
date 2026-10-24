@@ -230,7 +230,8 @@ data class CacheConfig(
                 "maven-site-plugin:site",
                 "maven-install-plugin:install",
                 "bb-sdk-codegen:deploy-local",
-                "spring-boot-maven-plugin:run"
+                "spring-boot-maven-plugin:run",
+                "exec-maven-plugin:java"
             ),
             continuous = setOf(
                 "spring-boot-maven-plugin:run",

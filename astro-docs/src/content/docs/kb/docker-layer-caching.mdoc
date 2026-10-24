@@ -1,6 +1,6 @@
 ---
 title: 'Docker Layer Caching'
-description: 'Cache Docker build layers across CI runs on Nx Agents to speed up image builds.'
+description: 'Cache Docker build layers across CI runs on Workers to speed up image builds.'
 keywords: [docker, layer caching, buildkit, nx agents, nx cloud, add-on]
 filter: 'type:Guides'
 topics:
@@ -11,7 +11,7 @@ topics:
 Docker layer caching reuses the intermediate layers produced by `docker build` (the result of each
 `RUN`, `COPY`, and `ADD` instruction) across CI runs. When a layer's inputs haven't changed, the
 build pulls it from a registry cache instead of rebuilding it, cutting image build times on
-[Nx Agents](/docs/features/ci-features/distribute-task-execution).
+[Workers](/docs/features/ci-features/distribute-task-execution).
 
 ## How to enable it
 
@@ -77,8 +77,8 @@ overwrite each other's layers.
 {% /aside %}
 
 See the [Docker registry cache docs](https://docs.docker.com/build/cache/backends/registry) for more details.
-For branch-cache setup and a complete Nx Agents example, see
-[Use the Docker layer cache with Nx Agents](/docs/kb/docker-layer-cache-with-nx-agents).
+For branch-cache setup and a complete Workers example, see
+[Use the Docker layer cache with Workers](/docs/kb/docker-layer-cache-with-nx-agents).
 
 ### 3. Verify it's working
 

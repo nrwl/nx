@@ -7,7 +7,9 @@ export abstract class RunningTask {
 
   abstract kill(signal?: NodeJS.Signals): Promise<void> | void;
 
-  abstract onOutput?(cb: (output: string) => void): void;
+  abstract onOutput?(
+    cb: (output: string, isCommandHeader?: boolean) => void
+  ): void;
 
   abstract send?(message: Serializable): void;
 }

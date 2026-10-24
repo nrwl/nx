@@ -63,13 +63,16 @@ import {
   getReadyProducerIds,
   getReadyWhen,
   getReadyWhenConfig,
+  getReadyWhenInputs,
   getReadyWhenWait,
   InvalidReadyWhenError,
+  mayReportReadyUrl,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
+  type ReadyWhenInputs,
   type ReadyWhenWait,
 } from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
@@ -579,7 +582,11 @@ export class TaskOrchestrator {
 
   public processAllScheduledTasks() {
     const { scheduledTasks } = this.tasksSchedule.getAllScheduledTasks();
-    for (const taskId of scheduledTasks) {
+    this.processTasks(scheduledTasks);
+  }
+
+  public processTasks(taskIds: string[]) {
+    for (const taskId of taskIds) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
         this.processedTasks.set(taskId, this.processTask(taskId));
@@ -1427,8 +1434,8 @@ export class TaskOrchestrator {
    * for running those via {@link runTaskDirectly}.
    *
    * Fires scheduleTask lifecycle for hits that haven't been through
-   * processAllScheduledTasks yet. That's a coordinator gap-filler and
-   * a no-op for callers that pre-process the schedule.
+   * processTasks yet. That's a coordinator gap-filler and a no-op for
+   * callers that process their tasks first.
    *
    * The caller provides `groupId` — cache hits share one slot since they
    * don't actually compete for parallelism.
@@ -1452,7 +1459,7 @@ export class TaskOrchestrator {
 
     // scheduleTask lifecycle for hits the coordinator resolved before
     // processAllScheduledTasks could fire it. No-op for callers that
-    // already ran processAllScheduledTasks (every hit is in processedTasks).
+    // already ran processTasks (every hit is in processedTasks).
     await Promise.all(
       cacheHits
         .filter(({ task }) => !this.processedTasks.has(task.id))
@@ -1861,6 +1868,8 @@ export class TaskOrchestrator {
       this.runningTasksService &&
       this.runningTasksService.getRunningTasks([task.id]).length
     ) {
+      // This branch never reads the hash, so a failure to compute it is dropped
+      void this.processedTasks.get(task.id)?.catch(() => {});
       let readyWhen: ReadyWhenWait | null;
       let uncheckedReason: string | undefined;
       try {
@@ -1885,7 +1894,10 @@ export class TaskOrchestrator {
       }
       if (readyWhen) {
         const state = this.armReadiness(task.id);
-        this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
+        this.pollReadinessRow(task, readyWhen, {
+          signal: state.abort.signal,
+          ownerObserved: true,
+        }).then(
           () => {
             if (!state.abort.signal.aborted) state.resolve();
           },
@@ -1964,16 +1976,23 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
+      const readyWhenInputs = getReadyWhenInputs(
+        task,
+        this.projectGraph,
+        this.projects,
+        workspaceRoot
+      );
+      this.checkReadyWhenBeforeWait(task, env, readyWhenInputs);
+      await this.waitForReadyDependencies(task);
+      Object.assign(env, this.getReadyUrlEnv(task));
       ({ readyWhen, uncheckedReason, readyOnStart } = this.getReadinessCheck(
         task,
-        () => this.getReadyWhen(task, env)
+        () => this.getReadyWhen(task, env, readyWhenInputs)
       ));
       if (readyWhen?.kind === 'signal') {
         this.readySignal ??= new ReadySignalServer();
         Object.assign(env, await this.readySignal.env(task.id));
       }
-      await this.waitForReadyDependencies(task);
-      Object.assign(env, this.getReadyUrlEnv(task));
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
       if (e instanceof ProducerFailedError) {
@@ -2050,15 +2069,51 @@ export class TaskOrchestrator {
   // region Readiness
   private getReadyWhen(
     task: Task,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    inputs?: ReadyWhenInputs
   ): NormalizedReadyWhen | null {
     return getReadyWhen(
       task,
       this.projectGraph,
       this.projects,
       workspaceRoot,
-      env
+      env,
+      inputs
     );
+  }
+
+  // NX_READY_URL is known only after the wait, so fail now only when the
+  // check fails without it and, if a producer may report one, with a URL too
+  private checkReadyWhenBeforeWait(
+    task: Task,
+    env: NodeJS.ProcessEnv,
+    inputs: ReadyWhenInputs
+  ) {
+    const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
+    if (!inputs || !producerIds.length) {
+      return;
+    }
+    const envs = [env];
+    if (
+      producerIds.some((id) =>
+        mayReportReadyUrl(this.fullTaskGraph.tasks[id], this.projectGraph)
+      )
+    ) {
+      envs.push({ ...env, [READY_URL_ENV]: 'http://localhost/' });
+    }
+    const errors = envs.map((checkEnv) => {
+      try {
+        this.getReadyWhen(task, checkEnv, inputs);
+        return null;
+      } catch (e) {
+        return e;
+      }
+    });
+    if (errors.every(Boolean)) {
+      this.getReadinessCheck(task, () => {
+        throw errors[errors.length - 1];
+      });
+    }
   }
 
   // Only the process that runs a producer knows the env its probe reads
@@ -2128,11 +2183,11 @@ export class TaskOrchestrator {
         ) {
           throw e;
         }
-        this.onReadinessHold(producerId);
-        const owned = await this.pollReadinessRow(producer, {
-          timeout: DEFAULT_READY_TIMEOUT,
-          description: 'invalid',
-        });
+        const owned = await this.pollReadinessRow(
+          producer,
+          { timeout: DEFAULT_READY_TIMEOUT, description: 'invalid' },
+          { onPending: () => this.onReadinessHold(producerId) }
+        );
         if (!owned) {
           throw e;
         }
@@ -2151,8 +2206,9 @@ export class TaskOrchestrator {
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
-        this.onReadinessHold(producerId);
-        await this.pollReadinessRow(producer, readyWhen);
+        await this.pollReadinessRow(producer, readyWhen, {
+          onPending: () => this.onReadinessHold(producerId),
+        });
       }
     }
   }
@@ -2182,8 +2238,15 @@ export class TaskOrchestrator {
   private async pollReadinessRow(
     producer: Task,
     readyWhen: ReadyWhenWait,
-    signal?: AbortSignal,
-    ownerObserved = false
+    {
+      signal,
+      ownerObserved = false,
+      onPending,
+    }: {
+      signal?: AbortSignal;
+      ownerObserved?: boolean;
+      onPending?: () => void;
+    } = {}
   ): Promise<boolean> {
     const deadline = Date.now() + readyWhen.timeout;
     let lastStatus: TaskReadiness | null = null;
@@ -2216,6 +2279,7 @@ export class TaskOrchestrator {
       if (Date.now() >= deadline) {
         throw readinessTimeoutError(producer.id, readyWhen);
       }
+      onPending?.();
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }

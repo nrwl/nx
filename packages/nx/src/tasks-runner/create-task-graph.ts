@@ -442,9 +442,15 @@ export class ProcessTasks {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
-    return projectHasTargetAndConfiguration(project, target, configuration)
+    const resolved = projectHasTargetAndConfiguration(
+      project,
+      target,
+      configuration
+    )
       ? configuration
       : defaultConfiguration;
+    // `createTaskId` drops an empty configuration, so the target must too.
+    return resolved || undefined;
   }
 }
 

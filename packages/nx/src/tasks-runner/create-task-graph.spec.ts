@@ -454,6 +454,49 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should not set an empty default configuration on the task target', () => {
+    const projectGraph = {
+      nodes: {
+        app1: {
+          name: 'app1',
+          type: 'app',
+          data: {
+            root: 'app1-root',
+            files: [],
+            targets: {
+              build: {
+                executor: 'my-executor',
+                defaultConfiguration: '',
+                configurations: {
+                  production: {},
+                },
+              },
+            },
+          },
+        },
+      },
+      dependencies: {
+        app1: [],
+      },
+    } as any;
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['build'],
+      'ci',
+      {}
+    );
+
+    expect(Object.keys(taskGraph.tasks)).toEqual(['app1:build']);
+    expect(taskGraph.tasks['app1:build'].target).toStrictEqual({
+      project: 'app1',
+      target: 'build',
+      configuration: undefined,
+    });
+  });
+
   it('should not duplicate dependencies', () => {
     const projectGraph = {
       nodes: {

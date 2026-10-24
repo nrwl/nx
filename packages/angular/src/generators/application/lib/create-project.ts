@@ -95,6 +95,7 @@ function createProjectForEsbuild(tree: Tree, options: NormalizedSchema) {
       },
       serve: {
         continuous: true,
+        readyWhen: { signal: true },
         executor: '@angular/build:dev-server',
         options: options.port ? { port: options.port } : undefined,
         configurations: {
@@ -198,6 +199,7 @@ function createProjectForWebpack(tree: Tree, options: NormalizedSchema) {
       },
       serve: {
         continuous: true,
+        readyWhen: { signal: true },
         executor: '@angular-devkit/build-angular:dev-server',
         options: options.port ? { port: options.port } : undefined,
         configurations: {

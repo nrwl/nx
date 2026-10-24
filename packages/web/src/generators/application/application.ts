@@ -298,10 +298,9 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
     const {
-      isTypedLintingEnabled,
       addIgnoresToLintConfig,
     }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
-    enableTypedLinting = isTypedLintingEnabled(options);
+    enableTypedLinting = options.enableTypedLinting;
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -423,16 +422,18 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
+  // Only a --bundler=none app keeps these defaults. It has no `serve` target,
+  // so `serve-static` serves local runs too.
   let e2eWebServerInfo: E2EWebServerDetails = {
     e2eWebServerAddress: `http://localhost:${options.port ?? 4200}`,
     e2eWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
-    }:serve`,
+    }:serve-static`,
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
     e2eCiBaseUrl: `http://localhost:${options.port ?? 4200}`,
-    e2eDevServerTarget: `${options.projectName}:serve`,
+    e2eDevServerTarget: `${options.projectName}:serve-static`,
   };
 
   if (options.bundler === 'webpack') {
@@ -553,8 +554,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       enableTypedLinting,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     tasks.push(playwrightTask);

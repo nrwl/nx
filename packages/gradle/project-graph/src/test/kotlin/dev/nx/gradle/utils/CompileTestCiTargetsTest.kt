@@ -64,7 +64,7 @@ class CompileTestCiTargetsTest {
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
     val ciTestTargetName = "ci"
-    val gitIgnoreClassifier = GitIgnoreClassifier(workspaceRoot)
+    val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
     addTestCiTargets(
         testFiles = testFiles,
@@ -75,7 +75,7 @@ class CompileTestCiTargetsTest {
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
         ciTestTargetName = ciTestTargetName,
-        gitIgnoreClassifier = gitIgnoreClassifier)
+        buildOutputClassifier = buildOutputClassifier)
 
     // Should generate targets based on JUnit discovery and AST parsing
     assertTrue(targets.containsKey("ci--UserServiceTest"))

@@ -7,3 +7,4 @@ swap:
   '(?:nx console|NX Console|Nx console|NX console)': Nx Console
   '(?:nx agents|NX Agents|Nx agents|NX agents)': Nx Agents
   '(?:nx replay|NX Replay|Nx replay|NX replay)': Nx Replay
+  '(?:UltraCache|Ultra Cache|Ultra cache)': Ultracache

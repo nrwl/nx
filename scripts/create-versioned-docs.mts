@@ -240,11 +240,16 @@ function writeSharedScaffolding(
 
   // Generate a real pnpm-lock.yaml from the stub package.json.
   // Must use --no-frozen-lockfile since there's no existing lockfile yet.
+  // --ignore-workspace: tmpDir sits inside the repo, so pnpm would otherwise
+  // write the lockfile to the repo root.
   console.log('Generating pnpm-lock.yaml for versioned branch...');
-  execSync('pnpm install --lockfile-only --no-frozen-lockfile', {
-    cwd: tmpDir,
-    stdio: 'inherit',
-  });
+  execSync(
+    'pnpm install --lockfile-only --no-frozen-lockfile --ignore-workspace',
+    {
+      cwd: tmpDir,
+      stdio: 'inherit',
+    }
+  );
 
   // Project named "nx-dev" at nx-dev/nx-dev/ to match the Netlify build command:
   // npx nx run nx-dev:deploy-build:netlify --skip-nx-cache
