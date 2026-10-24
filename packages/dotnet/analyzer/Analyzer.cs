@@ -211,9 +211,15 @@ public static partial class Analyzer
                     var frameworkVariants = pluginOptions.TfmVariants
                         ? CollectFrameworkVariants(nodes, projectPath, workspaceRoot, nxJson, directoryFilesByDir, evaluationInputs)
                         : null;
+                    if (pluginOptions.RidVariants && frameworkVariants is not null)
+                    {
+                        frameworkVariants = CollectRidVariants(nodes, frameworkVariants, projectPath, workspaceRoot,
+                            nxJson, directoryFilesByDir, evaluationInputs);
+                    }
                     if (frameworkVariants is not null)
                     {
-                        projectRefs = projectRefs.Concat(frameworkVariants.SelectMany(variant => variant.References.Values)
+                        projectRefs = projectRefs.Concat(frameworkVariants.SelectMany(variant =>
+                                variant.References.Values.Concat(variant.RidVariants.SelectMany(runtime => runtime.References.Values)))
                             .SelectMany(references => references)
                             .Select(reference => ProjectUtilities.GetRelativeProjectRoot(reference.ProjectFile, workspaceRoot)))
                             .Distinct().ToList();

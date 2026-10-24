@@ -5,6 +5,8 @@ namespace MsbuildAnalyzer.Models;
 /// </summary>
 public record TargetMetadata
 {
+    public string? RuntimeIdentifier { get; init; }
+
     public string? TargetFramework { get; init; }
 
     public string? VariantOf { get; init; }
