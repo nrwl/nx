@@ -432,6 +432,12 @@ export declare class WorkspaceContext {
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   /**
+   * The files that start with `#!`, matched like `glob`, each with the
+   * header the walk kept for it (see `shebang_header`). Answered from the
+   * table the walk built, so no file is opened.
+   */
+  shebangFiles(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<ShebangFile>
+  /**
    * Performs multiple glob pattern matches against workspace files in parallel
    * @returns An array of arrays, where each inner array contains the file paths
    * that matched the corresponding glob pattern in the input. The outer array maintains the same order

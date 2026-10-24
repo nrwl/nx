@@ -4,13 +4,18 @@ use std::thread::available_parallelism;
 use rayon::prelude::*;
 use tracing::trace;
 
-use crate::native::hasher::hash_file_path;
+use crate::native::hasher::hash;
 use crate::native::walker::NxFile;
 use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
+use crate::native::workspace::shebang::shebang_header;
+
+/// A hashed file: its path, hash and mtime, and its header when it starts
+/// with `#!`.
+type HashedFile = (String, NxFileHashed, Option<String>);
 
 pub fn full_files_hash(files: Vec<NxFile>) -> NxFileHashes {
     trace!("Found {} files", files.len());
-    hash_files(files).into_iter().collect()
+    collect_hashes(hash_files(files))
 }
 
 pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -> NxFileHashes {
@@ -29,9 +34,13 @@ pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -
     for file in files {
         if let Some((hash, mod_time)) = archived_files.get(&file.normalized_path) {
             if mod_time == file.mod_time && file.mod_time < gathered_at {
+                let header = archived_files
+                    .header(&file.normalized_path)
+                    .map(str::to_owned);
                 archived.push((
                     file.normalized_path,
                     NxFileHashed(hash.to_owned(), mod_time),
+                    header,
                 ));
                 continue;
             }
@@ -42,16 +51,33 @@ pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -
 
     if not_archived.is_empty() {
         trace!("no additional files to hash");
-        return archived.into_iter().collect();
+        return collect_hashes(archived);
     }
 
-    archived
-        .into_iter()
-        .chain(hash_files(not_archived))
-        .collect()
+    collect_hashes(archived.into_iter().chain(hash_files(not_archived)))
 }
 
-fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
+fn collect_hashes(entries: impl IntoIterator<Item = HashedFile>) -> NxFileHashes {
+    let mut hashes: NxFileHashes = std::iter::empty().collect();
+    for (path, hashed, header) in entries {
+        if let Some(header) = header {
+            hashes.insert_header(path.clone(), header);
+        }
+        hashes.insert(path, hashed);
+    }
+    hashes
+}
+
+/// Reads a file once for its hash and, when it starts with `#!`, its header.
+fn hash_content(file: &NxFile) -> Option<(String, Option<String>)> {
+    let Ok(content) = std::fs::read(&file.full_path) else {
+        trace!("Failed to read file: {:?}", file.full_path);
+        return None;
+    };
+    Some((hash(&content), shebang_header(&content)))
+}
+
+fn hash_files(files: Vec<NxFile>) -> Vec<HashedFile> {
     let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
     let chunks = files.len() / num_parallelism;
 
@@ -61,8 +87,13 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
         files
             .into_par_iter()
             .filter_map(|file| {
-                hash_file_path(&file.full_path)
-                    .map(|hash| (file.normalized_path, NxFileHashed(hash, file.mod_time)))
+                hash_content(&file).map(|(hash, header)| {
+                    (
+                        file.normalized_path,
+                        NxFileHashed(hash, file.mod_time),
+                        header,
+                    )
+                })
             })
             .collect::<Vec<_>>()
     } else {
@@ -74,10 +105,11 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {
                 chunks.iter().filter_map(|file| {
-                    hash_file_path(&file.full_path).map(|hash| {
+                    hash_content(file).map(|(hash, header)| {
                         (
                             file.normalized_path.clone(),
                             NxFileHashed(hash, file.mod_time),
+                            header,
                         )
                     })
                 })
