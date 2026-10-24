@@ -12,5 +12,7 @@ public sealed record FrameworkVariant
 
     public Dictionary<string, List<VariantReference>> References { get; init; } = new();
 
+    public List<RidVariant> RidVariants { get; init; } = new();
+
     public EvaluatedProperties Properties => Configurations["debug"];
 }

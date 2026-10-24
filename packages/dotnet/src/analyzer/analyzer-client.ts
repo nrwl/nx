@@ -74,6 +74,7 @@ export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
  * These are the target names that the analyzer will use to generate targets.
  */
 export interface DotNetAnalyzerOptions {
+  ridVariants?: boolean;
   tfmVariants?: boolean;
   buildTargetName?: string;
   testTargetName?: string;

@@ -58,6 +58,19 @@ public static partial class TargetBuilder
         var groups = options.TfmVariants && frameworkVariants is { Count: > 1 }
             ? AddFrameworkVariantTargets(targets, projectName, fileName, frameworkVariants, projectDirectory, workspaceRoot, options)
             : null;
+        if (options.TfmVariants && options.RidVariants && frameworkVariants is { Count: > 1 })
+        {
+            var ridGroups = AddRidVariantTargets(
+                targets, fileName, frameworkVariants, projectDirectory, workspaceRoot, options);
+            if (ridGroups.Count > 0)
+            {
+                groups ??= new();
+                foreach (var group in ridGroups)
+                {
+                    groups.Add(group.Key, group.Value);
+                }
+            }
+        }
 
         return new BuildTargetsResult { Targets = targets, TargetGroups = groups };
     }
