@@ -11,7 +11,6 @@ public static partial class TargetBuilder
         Dictionary<string, Target> targets,
         string projectName,
         string fileName,
-        bool isTest,
         EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
