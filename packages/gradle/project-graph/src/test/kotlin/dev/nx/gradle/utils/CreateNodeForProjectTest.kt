@@ -104,7 +104,7 @@ class CreateNodeForProjectTest {
     // Output always uses `/` separators, regardless of platform
     assertEquals("apps/app", relativizeToWorkspaceRoot(File(root, "apps/app").path, root))
     assertEquals(
-        File("/tmp/other/project").invariantSeparatorsPath,
+        File("/tmp/other/project").canonicalFile.invariantSeparatorsPath,
         relativizeToWorkspaceRoot(File("/tmp/other/project").path, root))
   }
 }
