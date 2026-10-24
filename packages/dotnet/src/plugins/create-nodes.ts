@@ -10,6 +10,24 @@ import {
   isAnalysisErrorResult,
 } from '../analyzer/analyzer-client';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import runCommandsSchema from 'nx/src/executors/run-commands/schema.json';
+import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+
+const executionOptions = new Set([
+  ...Object.keys(runCommandsSchema.properties),
+  '__unparsed__',
+  'verbose',
+  'no-color',
+  'no-parallel',
+  'usePty',
+  'streamOutput',
+]);
+const ridPublishDirectoryVariable = 'NX_DOTNET_PUBLISH_DIRECTORY';
+const loggingSwitch = String.raw`(?:--nologo|(?:--verbosity(?:=|\s+)|-v(?:[:=]|\s+))(?:quiet|minimal|normal|detailed|diagnostic|q|m|n|d|diag))`;
+const loggingArguments = new RegExp(
+  String.raw`^\s*(?:${loggingSwitch}(?:\s+${loggingSwitch})*)?\s*$`,
+  'i'
+);
 
 export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
   /**
@@ -32,11 +50,11 @@ export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
  *         "build": {
  *           "targetName": "compile",
  *           "options": {
- *             "additionalOption": "value"
+ *             "args": ["--verbosity", "quiet"]
  *           },
  *           "configurations": {
- *             "production": {
- *               "optimization": true
+ *             "release": {
+ *               "args": ["--nologo"]
  *             }
  *           }
  *         },
@@ -51,6 +69,11 @@ export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
  * ```
  */
 export interface DotNetPluginOptions {
+  ridVariants?: boolean;
+  /**
+   * Infer per-TFM build targets for multi-targeted projects. Defaults to true.
+   */
+  tfmVariants?: boolean;
   /**
    * Configuration for the build target.
    * Use `targetName` to rename the target, and provide additional options/configurations to merge with the generated target.
@@ -104,7 +127,7 @@ export interface DotNetPluginOptions {
 // reports them back as evaluationInputs, which covers imports with other extensions.
 // The analyzer partitions matched paths by filename, so nothing is classified here.
 const dotnetProjectGlob =
-  '**/{*.{csproj,fsproj,vbproj,props,targets},Directory.Build.rsp,global.json,nuget.config,NuGet.config,NuGet.Config,.editorconfig}';
+  '**/{*.{csproj,fsproj,vbproj,props,targets,cs,fs,vb,resx},Directory.Build.rsp,global.json,nuget.config,NuGet.config,NuGet.Config,.editorconfig}';
 
 /**
  * Merge user-specified target configurations with the generated targets from the analyzer
@@ -138,11 +161,31 @@ export function mergeUserTargetConfigurations(
   ];
 
   const mergedTargets = { ...node.targets };
+  if (
+    pluginOptions.build === false ||
+    pluginOptions.tfmVariants === false ||
+    pluginOptions.ridVariants === false
+  ) {
+    for (const [name, target] of Object.entries(mergedTargets)) {
+      if (target.metadata?.runtimeIdentifier && target.metadata?.variantOf) {
+        delete mergedTargets[name];
+        removeFromDependsOn(mergedTargets, name);
+      }
+    }
+  }
 
   for (const { targetOption, defaultTargetName, optIn } of targetMappings) {
     if (targetOption === false || (optIn && targetOption === undefined)) {
-      delete mergedTargets[defaultTargetName];
-      removeFromDependsOn(mergedTargets, defaultTargetName);
+      for (const [name, target] of Object.entries(mergedTargets)) {
+        if (
+          name === defaultTargetName ||
+          name === `${defaultTargetName}:release` ||
+          target.metadata?.variantOf === defaultTargetName
+        ) {
+          delete mergedTargets[name];
+          removeFromDependsOn(mergedTargets, name);
+        }
+      }
       continue;
     }
 
@@ -155,6 +198,21 @@ export function mergeUserTargetConfigurations(
     const generatedTarget =
       mergedTargets[actualTargetName] ?? mergedTargets[defaultTargetName];
 
+    const variants = Object.entries(mergedTargets).filter(
+      ([, target]) =>
+        target.metadata?.variantOf === actualTargetName ||
+        target.metadata?.variantOf === defaultTargetName
+    );
+    if (variants.length > 0) {
+      for (const [name, variant] of variants) {
+        mergedTargets[name] = mergeVariantTarget(
+          userSpecifiedConfig,
+          variant,
+          name
+        );
+      }
+    }
+
     if (!generatedTarget) {
       continue;
     }
@@ -163,11 +221,41 @@ export function mergeUserTargetConfigurations(
     const isRenamed = actualTargetName !== defaultTargetName;
 
     // Merge user config with generated target if user config is provided
-    if (hasUserConfig) {
-      mergedTargets[actualTargetName] = mergeTargetConfigurations(
-        userSpecifiedConfig as TargetConfiguration,
-        generatedTarget
-      );
+    if (
+      hasUserConfig &&
+      generatedTarget.executor === 'nx:noop' &&
+      variants.length > 0
+    ) {
+      mergedTargets[actualTargetName] = {
+        ...generatedTarget,
+        metadata: {
+          ...generatedTarget.metadata,
+          ...userSpecifiedConfig.metadata,
+        },
+        dependsOn: [
+          ...(generatedTarget.dependsOn ?? []),
+          ...(userSpecifiedConfig.dependsOn ?? []),
+        ],
+        defaultConfiguration:
+          userSpecifiedConfig.defaultConfiguration ??
+          generatedTarget.defaultConfiguration,
+      };
+    } else if (hasUserConfig) {
+      mergedTargets[actualTargetName] = generatedTarget.command?.includes(
+        '{args.nxArgs}'
+      )
+        ? mergeVariantTarget(
+            userSpecifiedConfig,
+            generatedTarget,
+            actualTargetName
+          )
+        : pluginOptions.tfmVariants === false || pluginOptions.build === false
+          ? mergeTargetConfigurations(userSpecifiedConfig, generatedTarget)
+          : mergeCommandTarget(userSpecifiedConfig, generatedTarget);
+      if (defaultTargetName === 'publish' && generatedTarget.cache === false) {
+        mergedTargets[actualTargetName].cache = false;
+        mergedTargets[actualTargetName].outputs = generatedTarget.outputs;
+      }
     } else if (isRenamed) {
       // If only renaming (no config to merge), just copy the target to the new name
       mergedTargets[actualTargetName] = { ...generatedTarget };
@@ -182,7 +270,241 @@ export function mergeUserTargetConfigurations(
   return {
     ...node,
     targets: mergedTargets,
+    ...(node.metadata?.targetGroups && {
+      metadata: {
+        ...node.metadata,
+        targetGroups: Object.fromEntries(
+          Object.entries(node.metadata.targetGroups).map(([group, names]) => [
+            group,
+            names.filter((name) => mergedTargets[name]),
+          ])
+        ),
+      },
+    }),
   };
+}
+
+function argsText(args: unknown, name: string): string {
+  if (args === undefined) return '';
+  if (typeof args === 'string') return args;
+  if (Array.isArray(args) && args.every((arg) => typeof arg === 'string'))
+    return args.join(' ');
+  throw new Error(
+    `Expected options.args for .NET target '${name}' to be a string or string array.`
+  );
+}
+
+function mergeCommandTarget(
+  user: Partial<TargetConfiguration>,
+  generated: TargetConfiguration
+): TargetConfiguration {
+  const result = mergeTargetConfigurations(user, generated);
+  if (
+    (user.command && user.command !== generated.command) ||
+    (user.executor && user.executor !== generated.executor) ||
+    user.options?.command !== undefined ||
+    user.options?.commands !== undefined
+  ) {
+    return result;
+  }
+  const baseArgs = argsText(user.options?.args, generated.command ?? '');
+  if (
+    generated.options?.args !== undefined &&
+    user.options?.args !== undefined
+  ) {
+    result.options = {
+      ...result.options,
+      args: [
+        argsText(generated.options.args, generated.command ?? ''),
+        baseArgs,
+      ].filter(Boolean),
+    };
+  }
+  for (const [name, configuration] of Object.entries(
+    generated.configurations ?? {}
+  )) {
+    if (
+      configuration.args !== undefined &&
+      (baseArgs || user.configurations?.[name]?.args !== undefined)
+    ) {
+      result.configurations = {
+        ...result.configurations,
+        [name]: {
+          ...result.configurations?.[name],
+          args: [
+            argsText(configuration.args, name),
+            baseArgs,
+            argsText(user.configurations?.[name]?.args, name),
+          ].filter(Boolean),
+        },
+      };
+    }
+  }
+  return result;
+}
+
+function mergeVariantTarget(
+  user: Partial<TargetConfiguration>,
+  variant: TargetConfiguration,
+  name: string
+): TargetConfiguration {
+  if (
+    variant.metadata?.runtimeIdentifier &&
+    user.defaultConfiguration !== undefined &&
+    user.defaultConfiguration !== 'release'
+  ) {
+    throw new Error(
+      `RID variant '${name}' must default to release so publish and its build resolve the same configuration. Select debug explicitly, or set ridVariants: false to customize defaults.`
+    );
+  }
+  if (
+    user.outputs !== undefined ||
+    (variant.parallelism === false && user.parallelism === true) ||
+    (variant.cache === false && user.cache === true)
+  ) {
+    throw new Error(
+      `Cannot override evaluated output ownership or execution/cache safety of .NET variant '${name}'. Set tfmVariants: false for a custom build target.`
+    );
+  }
+  if (
+    (user.command && user.command !== variant.command) ||
+    (user.executor && user.executor !== 'nx:run-commands')
+  ) {
+    throw new Error(
+      `Cannot replace the command or executor of .NET variant '${name}'. Set tfmVariants: false to use a custom build command.`
+    );
+  }
+  const validate = (options: Record<string, unknown> | undefined): string => {
+    if (
+      Object.keys(variantEnvironment(options?.env, name)).some(
+        (key) => key.toUpperCase() === ridPublishDirectoryVariable
+      )
+    ) {
+      throw new Error(
+        `Cannot override the evaluated RID publish directory for .NET variant '${name}'.`
+      );
+    }
+    const extraOptions = Object.fromEntries(
+      Object.entries(options ?? {}).filter(
+        ([key]) => !executionOptions.has(key)
+      )
+    );
+    const args = [
+      argsText(options?.args, name),
+      ...serializeOverridesIntoCommandLine(extraOptions),
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (
+      !loggingArguments.test(args) ||
+      Object.keys(options ?? {}).some((key) =>
+        /^(?:commands?|cwd|forwardAllArgs|__unparsed__|env|envFile)$/i.test(key)
+      )
+    ) {
+      throw new Error(
+        `Cannot override evaluated .NET variant '${name}' with evaluation-changing arguments or target environment. Only --verbosity/-v and --nologo are supported as additional switches. Other arguments or environment can change evaluated inputs or output paths. Set tfmVariants: false to preserve a custom build.`
+      );
+    }
+    return args;
+  };
+  const baseArgs = validate(user.options);
+  const generatedConfigurations = variant.configurations ?? {};
+  if (
+    user.defaultConfiguration !== undefined &&
+    !generatedConfigurations[user.defaultConfiguration]
+  ) {
+    throw new Error(
+      `Unsupported default configuration '${user.defaultConfiguration}' for .NET variant '${name}'. Only evaluated debug/release configurations are supported.`
+    );
+  }
+  const configurations: NonNullable<TargetConfiguration['configurations']> = {};
+  for (const [configuration, config] of Object.entries(
+    user.configurations ?? {}
+  )) {
+    if (!generatedConfigurations[configuration]) {
+      throw new Error(
+        `Unsupported configuration '${configuration}' for .NET variant '${name}'. Only evaluated debug/release configurations are supported; set tfmVariants: false for custom configurations.`
+      );
+    }
+    validate(config);
+  }
+  for (const [configuration, generated] of Object.entries(
+    generatedConfigurations
+  )) {
+    const custom = user.configurations?.[configuration] ?? {};
+    const customArgs = validate(custom);
+    const env = {
+      ...variantEnvironment(user.options?.env, name),
+      ...variantEnvironment(custom.env, name),
+      ...variantEnvironment(variant.options?.env, name),
+      ...variantEnvironment(generated.env, name),
+    };
+    configurations[configuration] = {
+      ...custom,
+      ...generated,
+      args: [...(generated.args ?? []), baseArgs, customArgs].filter(Boolean),
+      nxArgs: [generated.nxArgs, baseArgs, customArgs]
+        .filter(Boolean)
+        .join(' '),
+      ...(Object.keys(env).length > 0 && { env }),
+    };
+  }
+  return {
+    ...mergeTargetConfigurations(user, variant),
+    command: variant.command,
+    executor: variant.executor,
+    dependsOn: [
+      ...(variant.dependsOn ?? []),
+      ...(user.dependsOn ?? []).filter((dependency) => {
+        const owner: unknown = variant.metadata?.variantOf;
+        if (typeof owner !== 'string') return true;
+        return typeof dependency === 'string'
+          ? dependency !== `^${owner}` && dependency !== '^build'
+          : !(
+              dependency.dependencies &&
+              (dependency.target === owner || dependency.target === 'build')
+            );
+      }),
+    ],
+    inputs: [...(variant.inputs ?? []), ...(user.inputs ?? [])],
+    outputs: variant.outputs,
+    parallelism: variant.parallelism,
+    cache: variant.cache === false ? false : (user.cache ?? variant.cache),
+    options: {
+      ...user.options,
+      ...variant.options,
+      ...((user.options?.env || variant.options?.env) && {
+        env: {
+          ...variantEnvironment(user.options?.env, name),
+          ...variantEnvironment(variant.options?.env, name),
+        },
+      }),
+    },
+    configurations,
+    metadata: { ...user.metadata, ...variant.metadata },
+  };
+}
+
+function variantEnvironment(
+  value: unknown,
+  name: string
+): Record<string, string> {
+  if (value === undefined) return {};
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(
+      `Expected an environment object for .NET variant '${name}'.`
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (typeof entry !== 'string') {
+        throw new Error(
+          `Expected a string for environment variable '${key}' on .NET variant '${name}'.`
+        );
+      }
+      return [key, entry] as const;
+    })
+  );
 }
 
 /**
@@ -219,6 +541,13 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
 
       // Extract target names from new format and create options for analyzer
       const analyzerOptions = {
+        ridVariants:
+          normalizedOptions.build !== false &&
+          normalizedOptions.tfmVariants !== false &&
+          normalizedOptions.ridVariants !== false,
+        tfmVariants:
+          normalizedOptions.build !== false &&
+          normalizedOptions.tfmVariants !== false,
         buildTargetName:
           (normalizedOptions.build && normalizedOptions.build.targetName) ||
           'build',

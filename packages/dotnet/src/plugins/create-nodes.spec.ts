@@ -1,14 +1,146 @@
 import { ProjectConfiguration, TargetConfiguration } from '@nx/devkit';
 import { mergeTargetConfigurations } from '@nx/devkit/internal';
 import { minimatch } from 'minimatch';
+import { analyzeProjects } from '../analyzer/analyzer-client';
 import {
   createNodes,
   DotNetPluginOptions,
   mergeUserTargetConfigurations,
 } from './create-nodes';
 
+vi.mock('../analyzer/analyzer-client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../analyzer/analyzer-client')>()),
+  analyzeProjects: vi.fn(),
+}));
+
 describe('@nx/dotnet - createNodes', () => {
+  describe('analyzer metadata', () => {
+    it.each([undefined, { build: { cache: false } }])(
+      'should preserve named target groups and member order with options %j',
+      async (options) => {
+        const node: ProjectConfiguration = {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            build: { command: 'dotnet build' },
+            'build:release': {
+              command: 'dotnet build --configuration Release',
+            },
+            test: { command: 'dotnet test' },
+            'test--second': { command: 'dotnet test --filter Second' },
+            'test--first': { command: 'dotnet test --filter First' },
+          },
+          metadata: {
+            technologies: ['dotnet', 'C#'],
+            targetGroups: {
+              Build: ['build', 'build:release'],
+              Test: ['test', 'test--second', 'test--first'],
+            },
+          },
+        };
+        vi.mocked(analyzeProjects).mockResolvedValue({
+          nodesByFile: { 'apps/my-app/MyApp.csproj': node },
+          referencesByRoot: {},
+        });
+
+        const results = await createNodes[1](
+          ['apps/my-app/MyApp.csproj'],
+          options,
+          { workspaceRoot: '/workspace', nxJsonConfiguration: {} }
+        );
+        const project = results[0][1].projects['apps/my-app'];
+
+        expect(project.metadata).toEqual(node.metadata);
+        expect(Object.keys(project.targets)).toEqual(Object.keys(node.targets));
+        expect(project.targets.build).toEqual({
+          command: 'dotnet build',
+          ...(options?.build ?? {}),
+        });
+      }
+    );
+
+    it('should leave projects without target groups unchanged', async () => {
+      const node: ProjectConfiguration = {
+        root: 'apps/my-app',
+        name: 'my-app',
+        targets: { build: { command: 'dotnet build' } },
+        metadata: { technologies: ['dotnet', 'C#'] },
+      };
+      vi.mocked(analyzeProjects).mockResolvedValue({
+        nodesByFile: { 'apps/my-app/MyApp.csproj': node },
+        referencesByRoot: {},
+      });
+
+      const results = await createNodes[1](
+        ['apps/my-app/MyApp.csproj'],
+        undefined,
+        { workspaceRoot: '/workspace', nxJsonConfiguration: {} }
+      );
+
+      expect(results[0][1].projects['apps/my-app']).toEqual(node);
+      expect(results[0][1].projects['apps/my-app'].metadata).not.toHaveProperty(
+        'targetGroups'
+      );
+    });
+  });
+
   describe('mergeUserTargetConfigurations', () => {
+    it.each([
+      { command: 'node custom-build.js', options: { args: ['--custom'] } },
+      { executor: '@custom/build:run', options: { args: ['--custom'] } },
+      { options: { command: 'node custom-build.js', args: ['--custom'] } },
+    ])(
+      'preserves ordinary custom commands without injecting dotnet arguments: %j',
+      (build) => {
+        const generated: TargetConfiguration = {
+          command: 'dotnet build',
+          options: { args: ['--no-restore', '--no-dependencies'] },
+        };
+        const result = mergeUserTargetConfigurations(
+          {
+            root: 'single-tfm',
+            targets: { build: generated },
+          },
+          { build }
+        );
+        expect(result.targets!.build).toEqual(
+          mergeTargetConfigurations(build, generated)
+        );
+      }
+    );
+
+    it.each([
+      { command: 'node custom-build.js', options: { args: ['--custom'] } },
+      { executor: '@custom/build:run', options: { args: ['--custom'] } },
+      { options: { args: ['--framework', 'net8.0'], cwd: 'custom' } },
+      {
+        configurations: {
+          production: { args: ['--configuration', 'Production'] },
+        },
+        defaultConfiguration: 'production',
+      },
+      { outputs: ['{projectRoot}/custom-output'] },
+    ])(
+      'preserves the shipped merge contract under explicit opt-out: %j',
+      (build) => {
+        const generated: TargetConfiguration = {
+          command: 'dotnet build',
+          options: { args: ['--no-restore', '--no-dependencies'] },
+          configurations: { release: { args: ['--configuration', 'Release'] } },
+        };
+        const result = mergeUserTargetConfigurations(
+          {
+            root: 'app',
+            targets: { build: generated },
+          },
+          { tfmVariants: false, build }
+        );
+        expect(result.targets!.build).toEqual(
+          mergeTargetConfigurations(build, generated)
+        );
+      }
+    );
+
     it('should return node unchanged when no options provided', () => {
       const node: ProjectConfiguration = {
         root: 'apps/my-app',
@@ -634,6 +766,7 @@ describe('@nx/dotnet - createNodes', () => {
       'build/Common.Build.props',
       'eng/Versions.targets',
       'global.json',
+      'apps/api/Program.cs',
       'nuget.config',
       'NuGet.Config',
       '.editorconfig',
@@ -642,12 +775,11 @@ describe('@nx/dotnet - createNodes', () => {
       expect(matches(path)).toBe(true);
     });
 
-    it.each([
-      'apps/api/Program.cs',
-      'package.json',
-      'apps/api/appsettings.json',
-    ])('should not match %s', (path) => {
-      expect(matches(path)).toBe(false);
-    });
+    it.each(['package.json', 'apps/api/appsettings.json'])(
+      'should not match %s',
+      (path) => {
+        expect(matches(path)).toBe(false);
+      }
+    );
   });
 });
