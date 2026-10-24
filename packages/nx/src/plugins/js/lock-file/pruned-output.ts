@@ -330,9 +330,21 @@ function filterAllowBuildsToLockfile(
     return allowBuilds;
   }
   const filtered: Record<string, boolean> = {};
-  for (const [name, allowed] of Object.entries(allowBuilds)) {
+  for (const [selector, allowed] of Object.entries(allowBuilds)) {
+    // Skip a scoped package's leading @ and retain version constraints verbatim.
+    const separator = selector.indexOf('@', 1);
+    const name = separator === -1 ? selector : selector.slice(0, separator);
     if (present.has(name)) {
-      filtered[name] = allowed;
+      const relocation =
+        separator === -1
+          ? null
+          : relocatePrunedLocalPathSpec(selector.slice(separator + 1), '', '');
+      const outputSelector =
+        relocation && !relocation.reason
+          ? `${name}@${relocation.spec}`
+          : selector;
+      // Equivalent local paths can collapse to one selector. Preserve denials.
+      filtered[outputSelector] = filtered[outputSelector] !== false && allowed;
     }
   }
   return filtered;
