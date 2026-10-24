@@ -18,22 +18,19 @@ export const serverProcessJsonPath = join(
 );
 
 export function readDaemonProcessJsonCache(): DaemonProcessJson | null {
-  try {
-    const daemonJson = readJsonFile(serverProcessJsonPath);
-    // If the daemon version doesn't match the client version, throw error
-    if (daemonJson.nxVersion !== nxVersion) {
-      clientLogger.log(
-        `[Cache] Version mismatch: daemon=${daemonJson.nxVersion}, client=${nxVersion}`
-      );
-      throw new VersionMismatchError();
-    }
-    return daemonJson;
-  } catch (e) {
-    if (e instanceof VersionMismatchError) {
-      throw e; // Let version mismatch bubble up
-    }
+  const daemonJson = readDaemonRegistrationSync();
+  if (!daemonJson) {
     return null;
   }
+  // A daemon on another version cannot serve this client, and the caller has to
+  // hear about it rather than read it as "no daemon registered".
+  if (daemonJson.nxVersion !== nxVersion) {
+    clientLogger.log(
+      `[Cache] Version mismatch: daemon=${daemonJson.nxVersion}, client=${nxVersion}`
+    );
+    throw new VersionMismatchError();
+  }
+  return daemonJson;
 }
 
 export function deleteDaemonJsonProcessCache(): void {
@@ -52,15 +49,19 @@ export async function writeDaemonJsonProcessCache(
   });
 }
 
-// Must be sync for the help output use case
-export function getDaemonProcessIdSync(): number | null {
+/** The registration as written, with no version check and no throw. */
+export function readDaemonRegistrationSync(): DaemonProcessJson | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
   try {
-    const daemonProcessJson = readJsonFile(serverProcessJsonPath);
-    return daemonProcessJson.processId;
+    return readJsonFile(serverProcessJsonPath);
   } catch {
     return null;
   }
+}
+
+// Must be sync for the help output use case
+export function getDaemonProcessIdSync(): number | null {
+  return readDaemonRegistrationSync()?.processId ?? null;
 }
