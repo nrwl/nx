@@ -5,6 +5,13 @@
       "version": "23.0.0-beta.24",
       "description": "Update `nx.json` plugin registrations that use the removed `@nx/dotnet/plugin` subpath to the bare `@nx/dotnet` specifier.",
       "implementation": "./dist/migrations/update-23-0-0/update-plugin-path"
+    },
+    "update-24-1-0-preserve-custom-dotnet-builds": {
+      "version": "24.1.0-beta.0",
+      "description": "Preserve customized .NET builds with tfmVariants:false. Inherited or project-filtered cases need review when their evaluated identity is unavailable to the Tree-only transform.",
+      "implementation": "./dist/migrations/update-24-1-0/preserve-custom-dotnet-builds",
+      "documentation": "./dist/migrations/update-24-1-0/preserve-custom-dotnet-builds.md",
+      "prompt": "./dist/migrations/update-24-1-0/verify-custom-dotnet-builds.md"
     }
   },
   "packageJsonUpdates": {}
