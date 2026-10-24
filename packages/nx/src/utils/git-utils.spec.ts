@@ -591,7 +591,7 @@ describe('git utils tests', () => {
       getWorkingTreeStatus('/repo');
 
       expect(execSync).toHaveBeenCalledWith(
-        'git status --porcelain',
+        'git status --porcelain --untracked-files=normal',
         expect.objectContaining({ cwd: '/repo' })
       );
     });
@@ -602,7 +602,7 @@ describe('git utils tests', () => {
       getWorkingTreeStatus('/repo', ['.nx/migrate-runs', 'tmp']);
 
       expect(execSync).toHaveBeenCalledWith(
-        'git status --porcelain -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
+        'git status --porcelain --untracked-files=normal -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
         expect.objectContaining({ cwd: '/repo' })
       );
     });

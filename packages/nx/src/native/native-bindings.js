@@ -642,6 +642,7 @@ module.exports.matchGlobPaths = nativeBinding.matchGlobPaths
 module.exports.matchOutputPaths = nativeBinding.matchOutputPaths
 module.exports.openUrl = nativeBinding.openUrl
 module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
+module.exports.readShebangHeaders = nativeBinding.readShebangHeaders
 module.exports.remove = nativeBinding.remove
 module.exports.resolveDaemonSocketPath = nativeBinding.resolveDaemonSocketPath
 module.exports.resolveForkedProcessSocketPath = nativeBinding.resolveForkedProcessSocketPath

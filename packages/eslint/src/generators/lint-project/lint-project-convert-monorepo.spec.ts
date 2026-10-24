@@ -77,7 +77,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, 'package.json')).toMatchObject({
@@ -103,7 +103,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(true);
@@ -149,7 +149,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(true);
@@ -174,7 +174,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(tree.exists('.eslintrc.base.json')).toBe(false);
@@ -192,7 +192,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
       ...defaultOptions,
       linter: 'eslint',
       project: 'nestedpkg',
-      setParserOptionsProject: false,
+      enableTypedLinting: false,
     });
 
     expect(readJson(tree, '.eslintrc.base.json')).toEqual({});

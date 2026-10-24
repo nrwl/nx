@@ -38,23 +38,52 @@ function connect(): { client: PseudoIPCClient; taskId: string } | null {
   return { client, taskId };
 }
 
+// What `emitReadySignal` reads a server's address from
+type ListeningServer = {
+  address(): { address: string; family: string; port: number } | string | null;
+};
+
 /**
  * Tells Nx that the task running this process is ready, for a target whose
- * readyWhen is `signal`. Only the first call counts. `url` is passed on to the
- * tasks that waited, as NX_READY_URL.
+ * readyWhen is `signal`. Only the first call counts, so call it once the server
+ * listens. A server that isn't listening reports nothing. Pass the listening
+ * server or its url to have it passed on to the tasks that waited, as
+ * NX_READY_URL.
  */
-export function signalTaskReady(details: { url?: string } = {}): boolean {
+export function emitReadySignal(server?: ListeningServer | string): boolean {
   const connection = connect();
   if (!connection || readySent) {
     return false;
   }
+  // Express 5 calls the listen callback with the error when listening fails
+  if (server && typeof server !== 'string' && !server.address()) {
+    return false;
+  }
   readySent = true;
+  const url = typeof server === 'string' ? server : getServerUrl(server);
   connection.client.sendMessageToParent({
     type: 'nx-ready-signal:ready',
     taskId: connection.taskId,
-    ...(details.url ? { url: details.url } : {}),
+    ...(url ? { url } : {}),
   } satisfies ReadySignalMessage);
   return true;
+}
+
+// Mirrors getListeningUrl in @nx/devkit/internal, which nx can't import
+function getServerUrl(server: ListeningServer | undefined): string | undefined {
+  const address = server?.address();
+  if (!address || typeof address === 'string') {
+    return undefined;
+  }
+  const { Server: TlsServer } = require('tls') as typeof import('tls');
+  const host =
+    address.address === '::' || address.address === '0.0.0.0'
+      ? 'localhost'
+      : address.family === 'IPv6'
+        ? `[${address.address}]`
+        : address.address;
+  const protocol = server instanceof TlsServer ? 'https' : 'http';
+  return `${protocol}://${host}:${address.port}/`;
 }
 
 /**

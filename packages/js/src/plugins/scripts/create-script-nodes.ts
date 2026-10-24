@@ -1,27 +1,26 @@
 import {
   type CreateNodes,
   type CreateNodesResultArray,
+  readJsonFile,
   type TargetConfiguration,
 } from '@nx/devkit';
 import {
+  buildPackageJsonPatterns,
+  buildPackageJsonWorkspacesMatcher,
   calculateHashesForCreateNodes,
   combineGlobPatterns,
   emitPluginWorkerLog,
   hashObject,
   PluginCache,
+  readShebangHeaders,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import { basename, dirname, extname, join, posix } from 'node:path';
-import {
-  getShebangLine,
-  parseShebang,
-  readScriptHeader,
-  type Shebang,
-} from './shebang';
+import { getShebangLine, parseShebang, type Shebang } from './shebang';
 import { parseTargetName } from './target-name';
 
 export interface ScriptPluginOptions {
-  /** Runs claimed scripts in watch mode as continuous targets. */
+  /** Runs claimed scripts in watch mode as continuous targets. Defaults to `true`. */
   watch?: boolean;
 }
 
@@ -43,7 +42,8 @@ export interface ScriptPluginDefinition<T extends ScriptPluginOptions> {
 
 export type ScriptTargets = Record<string, TargetConfiguration>;
 
-const SCRIPT_GLOB = '**/*.{js,cjs,mjs,ts,cts,mts}';
+/** Specs, tests, stories and typings are never scripts. */
+const SCRIPT_GLOB = '**/!(*.spec|*.test|*.stories|*.d).{js,cjs,mjs,ts,cts,mts}';
 const PROJECT_MARKERS = ['package.json', 'project.json'];
 
 export function createScriptNodes<T extends ScriptPluginOptions>(
@@ -57,6 +57,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
     async (files, options, context) => {
       const scriptsByRoot = groupScriptsByProjectRoot(
         files,
+        context.workspaceRoot,
         !!definition.extraTargets
       );
       const projectRoots = [...scriptsByRoot.keys()];
@@ -94,7 +95,7 @@ export function createScriptNodes<T extends ScriptPluginOptions>(
                 context.workspaceRoot,
                 projectRoot,
                 scripts,
-                options?.watch === true
+                options?.watch !== false
               ),
             });
           }
@@ -120,20 +121,41 @@ interface ProjectScripts {
 }
 
 /**
- * Assigns each script to its nearest enclosing project root. Roots without
- * scripts are kept only when `includeAllRoots` is set.
+ * Assigns each script to its nearest enclosing project root among the
+ * markers the plugin was handed, so `include`/`exclude` scope projects as well
+ * as scripts. Roots without scripts are kept only when `includeAllRoots` is set.
  */
 function groupScriptsByProjectRoot(
   files: readonly string[],
+  workspaceRoot: string,
   includeAllRoots: boolean
 ): Map<string, ProjectScripts> {
-  const markers = new Map<string, string>();
+  const handed = new Map<
+    string,
+    { packageJson?: string; projectJson?: string }
+  >();
   const scripts: string[] = [];
   for (const file of files) {
-    if (PROJECT_MARKERS.includes(basename(file))) {
-      markers.set(dirname(file), file);
-    } else {
+    const name = basename(file);
+    if (!PROJECT_MARKERS.includes(name)) {
       scripts.push(file);
+      continue;
+    }
+    const dir = dirname(file);
+    const entry = handed.get(dir) ?? {};
+    entry[name === 'project.json' ? 'projectJson' : 'packageJson'] = file;
+    handed.set(dir, entry);
+  }
+  // A package.json is a project root only where core's default package-json
+  // plugin makes one: in the package manager workspaces, or beside a
+  // project.json. The opt-in `nx/plugins/package-json` is not consulted.
+  const inWorkspaces = isInPackageManagerWorkspaces(workspaceRoot);
+  const markers = new Map<string, string>();
+  for (const [dir, { packageJson, projectJson }] of handed) {
+    if (projectJson) {
+      markers.set(dir, projectJson);
+    } else if (inWorkspaces(packageJson)) {
+      markers.set(dir, packageJson);
     }
   }
 
@@ -159,6 +181,16 @@ function groupScriptsByProjectRoot(
   return byRoot;
 }
 
+function isInPackageManagerWorkspaces(
+  workspaceRoot: string
+): (packageJsonPath: string) => boolean {
+  return buildPackageJsonWorkspacesMatcher(
+    buildPackageJsonPatterns(workspaceRoot, (file) =>
+      readJsonFile(join(workspaceRoot, file))
+    )
+  );
+}
+
 interface ClaimedScript {
   path: string;
   relativePath: string;
@@ -174,20 +206,18 @@ function createTargets<T extends ScriptPluginOptions>(
   watch: boolean
 ): ScriptTargets {
   const claimed: ClaimedScript[] = [];
-  for (const script of scripts) {
-    const header = readScriptHeader(join(workspaceRoot, script));
-    const shebang =
-      header === null ? null : parseShebang(getShebangLine(header));
+  for (const { file, header } of readShebangHeaders(workspaceRoot, scripts)) {
+    const shebang = parseShebang(getShebangLine(header));
     if (!shebang || !definition.claims(shebang)) {
       continue;
     }
     const { name, warnings } = parseTargetName(header);
     for (const warning of warnings) {
-      emitPluginWorkerLog('warn', `${script}: ${warning}.`);
+      emitPluginWorkerLog('warn', `${file}: ${warning}.`);
     }
     claimed.push({
-      path: script,
-      relativePath: posix.relative(projectRoot, script),
+      path: file,
+      relativePath: posix.relative(projectRoot, file),
       shebang,
       targetName: name,
     });

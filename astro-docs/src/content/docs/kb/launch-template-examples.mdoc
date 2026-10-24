@@ -1,6 +1,6 @@
 ---
 title: 'Launch Template Examples'
-description: 'Common configuration examples for Nx Agents launch templates'
+description: 'Common configuration examples for Worker launch templates'
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
@@ -108,22 +108,22 @@ dte:
   distribute-on: 4 my-linux-medium-js
 ```
 
-Your main CI job then starts the agents with [`nx start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
+Your main CI job then starts the agents with [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
 The command takes no configuration flags, since all configuration lives in the file.
 
 ```shell
-npx nx start-nx-agents
+npx nx-cloud start-workers
 ```
 
 ## Pass environment variables
 
-If you need to send environment variables to agents, list them under [`nx-agents.with-env-vars`](/docs/reference/nx-cloud/ci-config#nx-agentswith-env-vars). You can pass a specific list of environment variables like this:
+If you need to send environment variables to agents, list them under [`workers.with-env-vars`](/docs/reference/nx-cloud/ci-config#workerswith-env-vars). You can pass a specific list of environment variables like this:
 
 ```yaml
 # .nx/ci-config.yaml
 dte:
   distribute-on: 8 linux-medium-js
-nx-agents:
+workers:
   with-env-vars:
     - VAR1
     - VAR2
@@ -178,21 +178,21 @@ launch-templates:
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
 
-Pass `SOME_AUTH_TOKEN` via `nx-agents.with-env-vars`
+Pass `SOME_AUTH_TOKEN` via `workers.with-env-vars`
 
 ```yaml
 # .nx/ci-config.yaml
 # this assumes SOME_AUTH_TOKEN is already defined on the main agent
 dte:
   distribute-on: 5 my-linux-medium-js
-nx-agents:
+workers:
   with-env-vars:
     - SOME_AUTH_TOKEN
 ```
 
 ## Custom node version
 
-Nx Agents come with node LTS installed. If you want to enforce a different version, add a step to install the desired node version. To keep local development, CI, and Nx Agents on the same version, commit the version to your repository and let the install step read it, rather than hardcoding a version in the launch template.
+Workers come with node LTS installed. If you want to enforce a different version, add a step to install the desired node version. To keep local development, CI, and Workers on the same version, commit the version to your repository and let the install step read it, rather than hardcoding a version in the launch template.
 
 Which file the step reads depends on which step you use:
 
@@ -299,7 +299,7 @@ launch-templates:
 
 ## Specific package manager version
 
-Nx Agents have [corepack enabled](https://nodejs.org/api/corepack.html#corepack) by default, allowing you to define the yarn or pnpm version via the `package.json`.
+Workers have [corepack enabled](https://nodejs.org/api/corepack.html#corepack) by default, allowing you to define the yarn or pnpm version via the `package.json`.
 
 ```json
 // package.json
@@ -396,7 +396,7 @@ Defining tools inline overrides any `mise.toml` in your repo. This can cause dif
 
 ## AWS CLI
 
-First, define the environment variables on your main agent, where you call `nx start-nx-agents`. Pass the same environment variables to your agents by listing them under `nx-agents.with-env-vars`.
+First, define the environment variables on your main agent, where you call `nx-cloud start-workers`. Pass the same environment variables to your agents by listing them under `workers.with-env-vars`.
 
 Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
 
@@ -421,7 +421,7 @@ launch-templates:
     init-steps:
       - name: Install AWS CLI
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-aws-cli/main.yaml'
-        # no additional inputs required, as all configuration is via environment variables via nx-agents.with-env-vars
+        # no additional inputs required, as all configuration is via environment variables via workers.with-env-vars
 ```
 
 {% /tabitem %}
@@ -438,7 +438,7 @@ launch-templates:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
     init-steps:
-      # step assumes you've passed all required AWS_* environment variables from the main agent via nx-agents.with-env-vars
+      # step assumes you've passed all required AWS_* environment variables from the main agent via workers.with-env-vars
       - name: Install AWS CLI
         script: |
           # unzip is required to unzip the AWS CLI installer
@@ -460,7 +460,7 @@ launch-templates:
 
 ## Dynamic changesets
 
-NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Nx Agents to dynamically use a different number of agents based on your changeset size.
+NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Workers to dynamically use a different number of agents based on your changeset size.
 
 Here we define a `small`, `medium` and `large` distribution strategy:
 

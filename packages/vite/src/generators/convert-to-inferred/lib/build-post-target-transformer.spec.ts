@@ -163,6 +163,101 @@ describe('buildPostTargetTransformer', () => {
       }
     `);
   });
+
+  it('should not add configValues to a vite config file twice when rerun', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'libs/ui/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+}));
+`
+    );
+    const createTarget = () => ({
+      outputs: ['{options.outputPath}'],
+      options: { outputPath: 'dist/libs/ui' },
+      configurations: {
+        development: { mode: 'development' },
+        production: { mode: 'production' },
+      },
+    });
+    const inferredTargetConfiguration = {
+      outputs: ['{projectRoot}/{options.outDir}'],
+    };
+    const projectDetails = { projectName: 'ui', root: 'libs/ui' };
+
+    // A package.json script with the same name keeps the target, so a rerun
+    // transforms it again.
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
+    buildPostTargetTransformer(
+      createTarget(),
+      tree,
+      projectDetails,
+      inferredTargetConfiguration
+    );
+
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vite';
+          
+          // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
+          const configValues = {"default":{},"development":{},"production":{}};
+          
+          // Determine the correct configValue to use based on the configuration
+          const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+          
+          const options = {
+            ...configValues.default,
+            ...(configValues[nxConfiguration] ?? {})
+          }
+          
+
+        export default defineConfig(() => ({
+          root: import.meta.dirname,
+        }));
+        "
+      `);
+  });
+
+  it('should add configValues when the vite config declares its own configValues', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'libs/ui/vite.config.mts',
+      `import { defineConfig } from 'vite';
+
+function getDefines() {
+  const configValues = { DEBUG: false };
+  return configValues;
+}
+
+export default defineConfig(() => ({
+  root: import.meta.dirname,
+  define: getDefines(),
+}));
+`
+    );
+
+    buildPostTargetTransformer(
+      {
+        options: { outputPath: 'dist/libs/ui' },
+        configurations: { production: { mode: 'production' } },
+      },
+      tree,
+      { projectName: 'ui', root: 'libs/ui' },
+      { outputs: ['{projectRoot}/{options.outDir}'] }
+    );
+
+    expect(tree.read('libs/ui/vite.config.mts', 'utf-8')).toContain(
+      'These options were migrated by @nx/vite:convert-to-inferred'
+    );
+  });
 });
 
 const viteConfigFileV17 = `/// <reference types='vitest' />

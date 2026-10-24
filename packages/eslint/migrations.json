@@ -41,6 +41,12 @@
       "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
       "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
       "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-replace-set-parser-options-project": {
+      "version": "24.0.0-beta.5",
+      "description": "Replaces the removed `setParserOptionsProject` generator option with `enableTypedLinting` in the generator defaults of `nx.json` and project configuration, so generators resolve typed linting as before.",
+      "implementation": "./dist/src/migrations/update-24-0-0/replace-set-parser-options-project",
+      "documentation": "./dist/src/migrations/update-24-0-0/replace-set-parser-options-project.md"
     }
   },
   "packageJsonUpdates": {

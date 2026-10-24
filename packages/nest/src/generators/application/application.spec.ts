@@ -105,6 +105,9 @@ describe('application generator', () => {
               "buildTarget": "my-node-app:build",
               "runBuildTargetDependencies": false,
             },
+            "readyWhen": {
+              "signal": true,
+            },
           },
           "test": {
             "options": {
@@ -139,7 +142,9 @@ describe('application generator', () => {
       directory: appDirectory,
     });
 
-    expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
+    const main = tree.read(`${appDirectory}/src/main.ts`, 'utf-8');
+    expect(main).toContain("load('@nx/js/ready-signal')");
+    expect(main).toContain('emitReadySignal(app.getHttpServer())');
 
     expect(
       tree.exists(`${appDirectory}/src/app/app.controller.ts`)
@@ -443,6 +448,9 @@ describe('application generator', () => {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
+                "readyWhen": {
+                  "signal": true,
+                },
               },
               "test": {
                 "options": {
@@ -629,6 +637,9 @@ describe('application generator', () => {
               "options": {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "test": {

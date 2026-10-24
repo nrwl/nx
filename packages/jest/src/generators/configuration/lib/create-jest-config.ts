@@ -1,19 +1,9 @@
-import {
-  createProjectGraphAsync,
-  readNxJson,
-  readProjectConfiguration,
-  stripIndents,
-  updateProjectConfiguration,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   findRootJestConfig,
   type JestPresetExtension,
 } from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
-import { getProjectType } from '@nx/js/internal';
-import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 
 export function writeRootJestPreset(
   tree: Tree,
@@ -50,104 +40,8 @@ export async function createJestConfig(
     // will copy the template config file
     return;
   }
-  const rootJestPath = findRootJestConfig(tree);
-  if (!rootJestPath) {
-    // if there's not root jest config, we will create one and return
-    // this can happen when:
-    // - root jest config was renamed => in which case there is migration needed
-    // - root project didn't have jest setup => again, no migration is needed
+  if (!findRootJestConfig(tree)) {
     generateGlobalConfig(tree, options.js);
-    return;
-  }
-
-  if (tree.exists(rootJestPath)) {
-    // moving from root project config to monorepo-style config
-    const { nodes: projects } = await createProjectGraphAsync();
-    const projectConfigurations = Object.values(projects);
-    const rootProject = projectConfigurations.find(
-      (projectNode) => projectNode.data?.root === '.'
-    );
-    // root project might have been removed,
-    // if it's missing there's nothing to migrate
-    if (rootProject) {
-      const jestTarget = Object.entries(rootProject.data?.targets ?? {}).find(
-        ([_, t]) =>
-          ((t?.executor === '@nx/jest:jest' ||
-            t?.executor === '@nrwl/jest:jest') &&
-            t?.options?.jestConfig === rootJestPath) ||
-          (t?.executor === 'nx:run-commands' && t?.options?.command === 'jest')
-      );
-      if (!jestTarget) {
-        return;
-      }
-
-      const [jestTargetName, jestTargetConfigInGraph] = jestTarget;
-      // if root project doesn't have jest target, there's nothing to migrate
-      const rootProjectConfig = readProjectConfiguration(
-        tree,
-        rootProject.name
-      );
-
-      if (
-        rootProjectConfig.targets?.['test']?.executor === 'nx:run-commands'
-          ? rootProjectConfig.targets?.['test']?.command !== 'jest'
-          : rootProjectConfig.targets?.['test']?.options?.jestConfig !==
-            rootJestPath
-      ) {
-        // Jest target has already been updated
-        return;
-      }
-
-      const jestProjectConfig = `jest.config.${
-        getProjectType(
-          tree,
-          rootProjectConfig.root,
-          rootProjectConfig.projectType
-        ) === 'application'
-          ? 'app'
-          : 'lib'
-      }.${options.js ? 'js' : 'ts'}`;
-
-      tree.rename(rootJestPath, jestProjectConfig);
-
-      const nxJson = readNxJson(tree);
-      const targetDefaults = readTargetDefaultsForTarget(
-        jestTargetName,
-        nxJson.targetDefaults,
-        jestTargetConfigInGraph.executor
-      );
-
-      const target: TargetConfiguration = (rootProjectConfig.targets[
-        jestTargetName
-      ] ??=
-        jestTargetConfigInGraph.executor === 'nx:run-commands'
-          ? { command: `jest --config ${jestProjectConfig}` }
-          : {
-              executor: jestTargetConfigInGraph.executor,
-              options: {},
-            });
-
-      if (target.executor === '@nx/jest:jest') {
-        target.options.jestConfig = jestProjectConfig;
-      }
-
-      if (targetDefaults?.cache === undefined) {
-        target.cache = jestTargetConfigInGraph.cache;
-      }
-      if (targetDefaults?.inputs === undefined) {
-        target.inputs = jestTargetConfigInGraph.inputs;
-      }
-      if (targetDefaults?.outputs === undefined) {
-        target.outputs = jestTargetConfigInGraph.outputs;
-      }
-      if (targetDefaults?.dependsOn === undefined) {
-        target.dependsOn = jestTargetConfigInGraph.dependsOn;
-      }
-
-      updateProjectConfiguration(tree, rootProject.name, rootProjectConfig);
-      // generate new global config as it was move to project config or is missing
-      generateGlobalConfig(tree, options.js);
-    }
   }
 }
 

@@ -19,7 +19,7 @@ Nx speeds up GitHub Actions in three layers:
 
 - `nx affected` runs lint, test, and build only for projects impacted by a pull request.
 - Nx Cloud restores results that were already computed from a remote cache.
-- Nx Agents distribute what's left across multiple machines.
+- Workers distribute what's left across multiple machines.
 
 Affected runs work without an Nx Cloud account, so you can adopt each layer separately.
 
@@ -97,10 +97,10 @@ Or follow the [Nx Cloud getting started guide](/docs/features/ci-features).
 Once connected, a `.nx/ci-config.yaml` file and one extra step
 [distribute tasks across multiple machines](/docs/features/ci-features/distribute-task-execution).
 `npx nx fix-ci` lets self-healing CI propose fixes when tasks fail.
-Run `start-nx-agents` at the beginning of the main job, after checkout,
+Run `start-workers` at the beginning of the main job, after checkout,
 so the agents boot while the main job installs dependencies.
 If your pipeline still passes `start-ci-run` flags, see
-[Migrate from start-ci-run to start-nx-agents](/docs/kb/migrate-to-ci-config).
+[Migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config).
 
 ```yaml
 # .nx/ci-config.yaml
@@ -112,7 +112,7 @@ dte:
 # .github/workflows/ci.yml
 # ... checkout step as above
 
-- run: npx nx start-nx-agents
+- run: npx nx-cloud start-workers
 
 # ... install and nx-set-shas steps as above
 
@@ -121,8 +121,8 @@ dte:
   if: always()
 ```
 
-You can also enable [task sandboxing](/docs/kb/sandboxing) to run each
-distributed task in an isolated sandbox, and track per-agent CPU and memory with
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes each distributed task from the files
+it actually reads, and you can track per-agent CPU and memory with
 [resource usage](/docs/kb/resource-usage) to right-size your agents.
 
 ## What Nx adds to your GitHub PRs

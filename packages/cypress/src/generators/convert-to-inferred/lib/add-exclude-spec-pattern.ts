@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
+import { parseSourceFile } from '../../../utils/migrations';
 export function addExcludeSpecPattern(
   tree: Tree,
   configFilePath: string,
@@ -7,7 +8,7 @@ export function addExcludeSpecPattern(
 ) {
   let configFileContents = tree.read(configFilePath, 'utf-8');
 
-  let sourceFile = ast(configFileContents);
+  let sourceFile = parseSourceFile(configFilePath, configFileContents);
 
   const E2E_CONFIG_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) > ObjectLiteralExpression';

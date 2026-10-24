@@ -2192,8 +2192,7 @@ describe('TaskOrchestrator', () => {
         runningTask
       );
       await expect(waiting).rejects.toThrow('did not become ready within 20ms');
-      const message =
-        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never"). To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.';
+      const message = `Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never"). If it needs longer, set "timeout": 40 in the target's "readyWhen", as { "...": true, "timeout": 40 } to keep an inferred check. To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.`;
       expect(orchestrator.complete).toHaveBeenCalledWith(
         [{ task: serve, status: 'failure', terminalOutput: message }],
         1
@@ -2349,6 +2348,25 @@ describe('TaskOrchestrator', () => {
           expect(log).toHaveBeenCalledWith(
             'Waiting for "app:serve" to be ready...'
           );
+        } finally {
+          log.mockRestore();
+        }
+      }
+    );
+
+    it.each([
+      ['ready', 1],
+      ['absent', null],
+    ])(
+      'does not report a producer in another process whose row is %s',
+      async (_, row) => {
+        const { orchestrator, e2e } = createOrchestrator({ flat: true });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(row);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).not.toHaveBeenCalled();
         } finally {
           log.mockRestore();
         }
@@ -2606,6 +2624,162 @@ describe('TaskOrchestrator', () => {
         NX_READY_URL: 'http://localhost:4300/',
       });
     });
+
+    function addChainedProducer(orchestrator: any, readyWhen: unknown): Task {
+      const proxy = createTask('proxy:serve', true);
+      orchestrator.projectGraph.nodes.proxy = {
+        name: 'proxy',
+        type: 'app',
+        data: {
+          root: 'proxy',
+          targets: { serve: { continuous: true, readyWhen } },
+        },
+      };
+      const graph: TaskGraph = orchestrator.fullTaskGraph;
+      graph.tasks['proxy:serve'] = proxy;
+      graph.dependencies['proxy:serve'] = [];
+      graph.continuousDependencies['proxy:serve'] = [
+        { id: 'app:serve', waitFor: 'ready' },
+      ];
+      graph.continuousDependencies['e2e:e2e'] = [
+        { id: 'proxy:serve', waitFor: 'ready' },
+      ];
+      orchestrator.processedTasks.set('proxy:serve', Promise.resolve({}));
+      return proxy;
+    }
+
+    it('resolves the probe of a producer against the url its own producer reported', async () => {
+      const { orchestrator, serve, runningTask, emit, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      const proxy = addChainedProducer(orchestrator, {
+        logMatches: 'proxying {env.NX_READY_URL}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return task.id === 'proxy:serve'
+          ? Object.assign(runningTask, { onExit: vi.fn() })
+          : { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+      emit('proxying http://localhost:4300/');
+      await expect(
+        settled(orchestrator.readinessOf('proxy:serve').promise)
+      ).resolves.toBe('resolved');
+    });
+
+    it('waits for its own producer before it fails a probe that only a reported url breaks', async () => {
+      const { orchestrator, serve, settled } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      const proxy = addChainedProducer(orchestrator, {
+        port: '{env.NX_READY_URL ?? 4310}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      await expect(settled(proxyStarted)).resolves.toBe('pending');
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+        false,
+        proxy,
+        1,
+        expect.objectContaining({
+          message:
+            'Task "proxy:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+        })
+      );
+      expect([...envs.keys()]).toEqual(['app:serve']);
+    });
+
+    it.each([
+      [
+        'an invalid port',
+        { logMatches: 'listening' },
+        { port: 70000 },
+        '"port" must be an integer from 0 to 65535, or "auto"',
+      ],
+      [
+        'a url its own producer cannot report',
+        { url: 'http://localhost:4300' },
+        { url: '{env.NX_READY_URL}' },
+        '"{env.NX_READY_URL}" has no value',
+      ],
+      [
+        'an unset env var, whatever url its own producer reports',
+        { signal: true },
+        { url: '{env.PROXY_URL}/health' },
+        '"{env.PROXY_URL}" has no value',
+      ],
+    ])(
+      'fails a producer with %s before it waits for its own producer',
+      async (_, producerReadyWhen, readyWhen, reason) => {
+        const { orchestrator, settled } = createOrchestrator({
+          readyWhen: producerReadyWhen,
+        });
+        const proxy = addChainedProducer(orchestrator, readyWhen);
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+        orchestrator.runTask = vi.fn();
+
+        const starting = orchestrator.startContinuousTask(proxy, 1);
+
+        await expect(settled(starting)).resolves.toBe('resolved');
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          proxy,
+          1,
+          expect.objectContaining({
+            message: `Task "proxy:serve" has an invalid "readyWhen": ${reason}.`,
+          })
+        );
+        expect(orchestrator.runTask).not.toHaveBeenCalled();
+      }
+    );
 
     it('fails the waiter when the row is still pending at its own deadline', async () => {
       const { orchestrator, e2e } = createOrchestrator({

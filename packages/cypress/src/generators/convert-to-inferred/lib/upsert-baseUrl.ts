@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { query } from '@phenomnomnominal/tsquery';
+import { parseSourceFile } from '../../../utils/migrations';
 
 export function upsertBaseUrl(
   tree: Tree,
@@ -9,7 +10,7 @@ export function upsertBaseUrl(
 ) {
   const configFileContents = tree.read(configFilePath, 'utf-8');
 
-  const sourceFile = ast(configFileContents);
+  const sourceFile = parseSourceFile(configFilePath, configFileContents);
   const BASE_URL_SELECTOR =
     'PropertyAssignment:has(Identifier[name=e2e]) PropertyAssignment:has(Identifier[name="baseUrl"])';
 

@@ -676,6 +676,9 @@ describe('@nx/vite/plugin', () => {
                     },
                     "serve-static": {
                       "continuous": true,
+                      "dependsOn": [
+                        "build",
+                      ],
                       "executor": "@nx/web:file-server",
                       "inputs": [
                         "production",
@@ -691,8 +694,7 @@ describe('@nx/vite/plugin', () => {
                         "spa": true,
                       },
                       "readyWhen": {
-                        "host": "{options.host ?? localhost}",
-                        "port": "{options.port}",
+                        "signal": true,
                       },
                     },
                     "watch-deps": {

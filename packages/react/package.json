@@ -36,11 +36,17 @@
       "tailwind": [
         "dist/tailwind.d.ts"
       ],
+      "module-federation": [
+        "dist/module-federation.d.ts"
+      ],
       "webpack-plugin": [
         "dist/webpack-plugin.d.ts"
       ],
       "router-plugin": [
         "dist/router-plugin.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
       ],
       "ast-utils": [
         "dist/ast-utils.d.ts"
@@ -143,6 +149,11 @@
       "types": "./dist/tailwind.d.ts",
       "default": "./dist/tailwind.js"
     },
+    "./module-federation": {
+      "@nx/nx-source": "./module-federation.ts",
+      "types": "./dist/module-federation.d.ts",
+      "default": "./dist/module-federation.js"
+    },
     "./webpack-plugin": {
       "@nx/nx-source": "./webpack-plugin.ts",
       "types": "./dist/webpack-plugin.d.ts",
@@ -152,6 +163,11 @@
       "@nx/nx-source": "./router-plugin.ts",
       "types": "./dist/router-plugin.d.ts",
       "default": "./dist/router-plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
     },
     "./ast-utils": {
       "@nx/nx-source": "./ast-utils.ts",

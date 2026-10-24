@@ -13,7 +13,7 @@ import * as ts from 'typescript';
 import type { RspackOptionsNormalized } from '@rspack/core';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { DevServerExecutorSchema as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function servePostTargetTransformerFactory(
@@ -201,6 +201,12 @@ function updateRspackConfig(
     sourceFile = ast(rspackConfigText);
   };
   updateSources();
+
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (hasMigratedConfigValues(sourceFile, 'serve')) {
+    return;
+  }
 
   setOptionsInRspackConfig(
     tree,

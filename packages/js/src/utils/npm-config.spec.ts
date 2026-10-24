@@ -1,71 +1,55 @@
-import { ExecException } from 'child_process';
 import { join } from 'path';
 import { detectPackageManager } from '@nx/devkit';
 import { getNpmRegistry, getNpmTag, parseRegistryOptions } from './npm-config';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { PackageJson } from '@nx/devkit/internal';
+import { PackageJson, safeSpawn } from '@nx/devkit/internal';
 
 vi.mock('@nx/devkit', async () => ({
   ...(await vi.importActual<any>('@nx/devkit')),
   detectPackageManager: vi.fn(() => 'npm'),
 }));
 
-vi.mock('child_process', async () => {
-  const original = await vi.importActual<any>('child_process');
+vi.mock('@nx/devkit/internal', async () => {
+  const { EventEmitter } = await vi.importActual<any>('events');
+  const { PassThrough } = await vi.importActual<any>('stream');
+  const CONFIG_VALUES: Record<string, Record<string, string>> = {
+    npm: {
+      '@scope:registry': 'https://scoped-registry.com',
+      '@missing:registry': 'undefined',
+      registry: 'https://custom-registry.com',
+      tag: 'next',
+    },
+    pnpm: {
+      '@pnpm-scope:registry': 'https://pnpm-scoped-registry.com/',
+      '@empty:registry': '',
+      '@nullish:registry': 'null',
+      '@missing:registry': 'undefined',
+      registry: 'https://pnpm-registry.com/',
+      tag: 'undefined',
+    },
+  };
+
   return {
-    ...original,
-    exec: vi
-      .fn()
-      .mockImplementation(
-        (
-          command: string,
-          _: unknown,
-          callback: (
-            error: ExecException,
-            stdout: string,
-            stderr: string
-          ) => void
-        ) => {
-          switch (command) {
-            case 'npm config get @scope:registry':
-              callback(null, 'https://scoped-registry.com', null);
-              break;
-            case 'npm config get @missing:registry':
-              callback(null, 'undefined', null);
-              break;
-            case 'npm config get registry':
-              callback(null, 'https://custom-registry.com', null);
-              break;
-            case 'npm config get tag':
-              callback(null, 'next', null);
-              break;
-            case 'pnpm config get @pnpm-scope:registry':
-              callback(null, 'https://pnpm-scoped-registry.com/', null);
-              break;
-            case 'pnpm config get @empty:registry':
-              callback(null, '', null);
-              break;
-            case 'pnpm config get @nullish:registry':
-              callback(null, 'null', null);
-              break;
-            case 'pnpm config get @missing:registry':
-              callback(null, 'undefined', null);
-              break;
-            case 'pnpm config get registry':
-              callback(null, 'https://pnpm-registry.com/', null);
-              break;
-            case 'pnpm config get tag':
-              callback(null, 'undefined', null);
-              break;
-            default:
-              callback(
-                new Error(`unexpected command: ${command}`),
-                null,
-                'ERROR'
-              );
-          }
-        }
-      ),
+    ...(await vi.importActual<any>('@nx/devkit/internal')),
+    safeSpawn: vi.fn((binary: string, args: string[]) => {
+      const child: any = new EventEmitter();
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+
+      const [subcommand, action, key] = args;
+      const value =
+        subcommand === 'config' && action === 'get'
+          ? CONFIG_VALUES[binary]?.[key]
+          : undefined;
+
+      process.nextTick(() => {
+        child.stdout.end(value === undefined ? '' : `${value}\n`);
+        child.stderr.end(value === undefined ? 'ERROR' : '');
+        setImmediate(() => child.emit('close', value === undefined ? 1 : 0));
+      });
+
+      return child;
+    }),
   };
 });
 
@@ -91,6 +75,19 @@ describe('npm-config', () => {
     it('should return registry if package is not scoped', async () => {
       const registry = await getNpmRegistry(tempFs.tempDir);
       expect(registry).toEqual('https://custom-registry.com');
+    });
+
+    it('should pass a scope carrying shell syntax to npm as a single argv element', async () => {
+      // the scope comes from the package's own manifest name
+      const scope = '@evil$(touch NX_PWNED)';
+
+      await getNpmRegistry(tempFs.tempDir, scope);
+
+      expect(safeSpawn).toHaveBeenCalledWith(
+        'npm',
+        ['config', 'get', `${scope}:registry`],
+        expect.anything()
+      );
     });
   });
 

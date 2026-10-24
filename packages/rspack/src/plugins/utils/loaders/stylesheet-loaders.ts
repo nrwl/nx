@@ -16,7 +16,8 @@ interface PostcssOptions {
 export function getCommonLoadersForCssModules(
   options: any,
   includePaths: string[],
-  cssExtractLoader: string
+  cssExtractLoader: string,
+  browserslistQueries?: string[]
 ) {
   // load component css as raw strings
   return [
@@ -54,6 +55,7 @@ export function getCommonLoadersForCssModules(
         postcssOptions: postcssOptionsCreator(options, {
           includePaths,
           forCssModules: true,
+          browserslistQueries,
         }),
       },
     },
@@ -63,7 +65,8 @@ export function getCommonLoadersForCssModules(
 export function getCommonLoadersForGlobalCss(
   options: any,
   includePaths: string[],
-  cssExtractLoader: string
+  cssExtractLoader: string,
+  browserslistQueries?: string[]
 ) {
   return [
     {
@@ -78,6 +81,7 @@ export function getCommonLoadersForGlobalCss(
         implementation: require('postcss'),
         postcssOptions: postcssOptionsCreator(options, {
           includePaths,
+          browserslistQueries,
         }),
       },
     },
@@ -87,7 +91,8 @@ export function getCommonLoadersForGlobalCss(
 export function getCommonLoadersForGlobalStyle(
   options: any,
   includePaths: string[],
-  cssExtractLoader: string
+  cssExtractLoader: string,
+  browserslistQueries?: string[]
 ) {
   return [
     {
@@ -103,6 +108,7 @@ export function getCommonLoadersForGlobalStyle(
         implementation: require('postcss'),
         postcssOptions: postcssOptionsCreator(options, {
           includePaths,
+          browserslistQueries,
         }),
       },
     },
@@ -114,9 +120,11 @@ function postcssOptionsCreator(
   {
     includePaths,
     forCssModules = false,
+    browserslistQueries,
   }: {
     includePaths: string[];
     forCssModules?: boolean;
+    browserslistQueries?: string[];
   }
 ) {
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
@@ -145,8 +153,11 @@ function postcssOptionsCreator(
               publicPath: options.publicPath,
               rebaseRootRelative: options.rebaseRootRelative,
             }),
-            autoprefixer(),
           ]),
+      // Without the build's browsers, autoprefixer reads browserslist next to each file.
+      ...(forCssModules && !browserslistQueries
+        ? []
+        : [autoprefixer({ overrideBrowserslist: browserslistQueries })]),
     ],
   });
 

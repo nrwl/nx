@@ -3,7 +3,6 @@ import {
   readTargetDefaultsForTarget,
   type PackageJson,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -119,9 +118,11 @@ export async function addE2e(
       directory: 'src',
       js: false,
       linter: options.linter,
-      enableTypedLinting: isTypedLintingEnabled(options),
-      webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
-      webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      enableTypedLinting: options.enableTypedLinting,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciWebServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
     });
 
     return e2eTask;

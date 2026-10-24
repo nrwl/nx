@@ -17,7 +17,7 @@ Whether you have one project or hundreds in a monorepo, Nx provides a task runne
 
 ## Define tasks
 
-Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/docs/concepts/mental-model#inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project. Whichever source a project uses, Nx reads it as it stands, so a workspace can run through Nx without adding task configuration.
+Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](#inferred-tasks), or defined in a `project.json` file. Nx combines these three sources to determine the tasks for a particular project. Whichever source a project uses, Nx reads it as it stands, so a workspace can run through Nx without adding task configuration.
 
 {% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
@@ -55,7 +55,7 @@ Nx tasks can be created from existing `package.json` scripts, [inferred from too
 {% /tabitem %}
 {% tabitem label="Inferred by Nx Plugins" %}
 
-[Nx plugins](/docs/concepts/nx-plugins) can detect your tooling configuration files (e.g. `vite.config.ts` or `.eslintrc.json`) and automatically configure runnable tasks including [Nx cache](/docs/features/cache-task-results). For example, the `@nx/jest` plugin will automatically create a `test` task for a project that uses Jest. The names can be configured in the `nx.json` file:
+[Nx plugins](/docs/plugin-registry) can detect your tooling configuration files (e.g. `vite.config.ts` or `.eslintrc.json`) and automatically configure runnable tasks including [Nx cache](/docs/features/cache-task-results). For example, the `@nx/jest` plugin will automatically create a `test` task for a project that uses Jest. The names can be configured in the `nx.json` file:
 
 ```json
 // nx.json
@@ -89,12 +89,32 @@ Nx tasks can be created from existing `package.json` scripts, [inferred from too
 }
 ```
 
-Learn more about [inferred tasks here](/docs/concepts/mental-model#inferred-tasks).
-
 {% /tabitem %}
 {% /tabs %}
 
 The [project configuration docs](/docs/reference/project-configuration) has the details for all the available configuration options.
+
+## Inferred tasks
+
+Your tools already describe how they run.
+A `vite.config.ts` file defines where the build output goes.
+Rather than asking you to repeat that information, Nx plugins read the tool configuration and create tasks for you.
+The `@nx/vite` plugin, for example, detects `vite.config.ts` files and infers tasks such as `build`, `dev`, and `preview` with the correct command, cache settings, [inputs](/docs/kb/configure-inputs), [outputs](/docs/kb/configure-outputs), and task dependencies.
+
+To see every task Nx detected for a project, and where each setting came from, show the project details:
+
+```shell
+nx show project my-project
+```
+
+When a plugin infers settings you want to change, override them.
+Nx merges task configuration from three sources, from lowest to highest precedence:
+
+1. Task configuration inferred by plugins registered in `nx.json`.
+2. `targetDefaults` in `nx.json`.
+3. The project's own configuration in `package.json` or `project.json`.
+
+To move an older workspace onto inferred tasks, follow the [Migrate to Inferred Tasks](/docs/kb/convert-to-inferred) guide.
 
 ## Run tasks
 
@@ -138,7 +158,7 @@ Run the `build`, `lint`, and `test` tasks only on the `header` and `footer` proj
 npx nx run-many -t build lint test -p header footer
 ```
 
-Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](/docs/concepts/task-pipeline-configuration). You can also [control how many tasks run in parallel at once](/docs/kb/run-tasks-in-parallel).
+Nx parallelizes these tasks, ensuring they **run in the correct order based on their dependencies** and [task pipeline configuration](#defining-a-task-pipeline). You can also [control how many tasks run in parallel at once](/docs/kb/run-tasks-in-parallel).
 
 Learn more about the [run-many](/docs/reference/nx-commands#nx-run-many) command.
 
@@ -151,6 +171,143 @@ npx nx affected -t test
 ```
 
 Learn more about the [affected command here](/docs/features/ci-features/affected).
+
+## The task graph
+
+Nx creates a task graph whenever you run tasks.
+Each node is a task, which is a specific target invoked for a project, such as `myapp:build`.
+Edges represent the dependencies between tasks.
+
+Nx uses the [project graph](/docs/features/explore-graph) to figure out which tasks exist, but the task graph isn't a mirror of the project graph.
+In this workspace, `app1` and `app2` depend on `lib`:
+
+{% graph height="200px" type="project" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "app1": [{ "source": "app1", "target": "lib", "type": "static" }],
+    "app2": [{ "source": "app2", "target": "lib", "type": "static" }],
+    "lib": []
+  },
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false
+}
+```
+
+{% /graph %}
+
+Running `nx run-many -t test -p app1 app2 lib` creates a task graph with three disconnected nodes:
+
+{% graph height="200px" type="task" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "app1",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "app2",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    },
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskIds": ["app1:test", "app2:test", "lib:test"],
+  "taskGraph": {
+    "roots": ["app1:test", "app2:test", "lib:test"],
+    "tasks": {
+      "app1:test": {
+        "id": "app1:test",
+        "target": {
+          "project": "app1",
+          "target": "test"
+        },
+        "projectRoot": "apps/app1",
+        "overrides": {}
+      },
+      "app2:test": {
+        "id": "app2:test",
+        "target": {
+          "project": "app2",
+          "target": "test"
+        },
+        "projectRoot": "apps/app2",
+        "overrides": {}
+      },
+      "lib:test": {
+        "id": "lib:test",
+        "target": {
+          "project": "lib",
+          "target": "test"
+        },
+        "projectRoot": "libs/lib",
+        "overrides": {}
+      }
+    },
+    "dependencies": {
+      "app1:test": [],
+      "app2:test": [],
+      "lib:test": []
+    }
+  }
+}
+```
+
+{% /graph %}
+
+Even though the apps depend on `lib`, testing `app1` doesn't depend on testing `lib`, so the three tasks run in parallel.
+A task pipeline adds the edges when order matters, such as building `lib` before `app1`.
+Nx then runs each task once its dependencies finish, and runs independent tasks, even different targets, at the same time:
+
+![Tasks running in dependency order and in parallel](../../../assets/concepts/mental-model/task-graph-execution.svg)
 
 ## Defining a task pipeline
 
@@ -223,12 +380,33 @@ However, you need to specify for which targets this ordering is important. In th
 
 This means that if we run `nx build myreactapp`, Nx will first execute `build` on `shared-ui` and `feat-products` before running `build` on `myreactapp`.
 
-You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `project.json` file.
+The caret in `^build` means "run the target on project dependencies."
+Without the caret, a target name refers to a target on the same project:
 
-Learn more about:
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build", "prebuild"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    }
+  }
+}
+```
 
-- [What a task pipeline is all about](/docs/concepts/task-pipeline-configuration)
-- [How to configure a task pipeline](/docs/kb/defining-task-pipeline)
+With this configuration, `nx test myproj` builds the task graph like this:
+
+1. Nx adds `myproj:test`.
+1. Because `test` depends on `build`, Nx adds `myproj:build`.
+1. Because `build` depends on `prebuild`, Nx adds `myproj:prebuild`.
+1. The `^build` entry adds `build` tasks for the projects `myproj` depends on.
+1. Nx runs each task as soon as its dependencies complete, not after every build finishes.
+
+You can define these task dependencies globally for your workspace in `nx.json` or individually in each project's `package.json` or `project.json` file.
+For all `dependsOn` forms and project-specific examples, see [how to configure a task pipeline](/docs/kb/defining-task-pipeline).
 
 ## Reduce repetitive configuration
 

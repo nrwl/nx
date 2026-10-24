@@ -1,6 +1,6 @@
 ---
 title: Set Up Bun with Mise on CI
-description: Learn how to use bun as your package manager with Nx Cloud and Nx Agents using mise for toolchain management
+description: Learn how to use bun as your package manager with Nx Cloud and Workers using mise for toolchain management
 sidebar:
   label: Set Up CI with Bun
 filter: 'type:Guides'
@@ -10,13 +10,13 @@ topics:
 
 Bun works as a drop-in package manager for Nx workspaces.
 You can use it to install dependencies and run Nx commands via `bunx`.
-To use bun with [Nx Agents](/docs/features/ci-features/distribute-task-execution),
+To use bun with [Workers](/docs/features/ci-features/distribute-task-execution),
 you need a custom launch template because the default templates only support npm, yarn, and pnpm.
 
 Using [mise](https://mise.jdx.dev/) to manage your toolchain isn't strictly required,
 but Nx Cloud launch templates have built-in support for it.
 Pinning tool versions in a single `mise.toml` gives you a predictable,
-reproducible setup across local development, CI, and Nx Agents.
+reproducible setup across local development, CI, and Workers.
 
 ## Configure your workspace
 
@@ -85,7 +85,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - name: Setup toolchains with mise
         uses: jdx/mise-action@v3
@@ -108,15 +108,15 @@ The `jdx/mise-action` reads your `mise.toml` and installs both Node and bun
 at the pinned versions.
 No separate `setup-node` or `setup-bun` action is needed.
 
-The `nx start-nx-agents` command runs before dependencies are installed,
+The `nx-cloud start-workers` command runs before dependencies are installed,
 so it uses `npx` instead of `bunx`.
 All of its configuration comes from `.nx/ci-config.yaml`, which you create in
-[Configure Nx Agents](#configure-nx-agents).
+[Configure Workers](#configure-workers).
 
-## Configure Nx Agents
+## Configure Workers
 
 {% aside type="note" title="Nx Cloud required" %}
-Nx Agents are part of [Nx Cloud](/docs/features/ci-features).
+Workers are part of [Nx Cloud](/docs/features/ci-features).
 If you haven't set up Nx Cloud yet, see the [getting started guide](/docs/features/ci-features).
 {% /aside %}
 

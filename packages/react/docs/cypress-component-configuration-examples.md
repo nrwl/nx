@@ -66,7 +66,7 @@ You can manually set the bundler by passing `--bundler=webpack` or `--bundler=vi
 
 ## Specifying a Build Target
 
-Component testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/concepts/mental-model#the-project-graph) if one isn't provided.
+Component testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/docs/features/explore-graph#explore-the-project-graph) if one isn't provided.
 
 For React projects, `@nx/vite/plugin` or `@nx/webpack/plugin` must infer the build target from a
 Vite or webpack config file at the project root.

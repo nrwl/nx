@@ -1,8 +1,7 @@
-import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import { detectPackageManager } from '@nx/devkit';
-import { PackageJson } from '@nx/devkit/internal';
+import { PackageJson, safeSpawn } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
   cwd: string,
@@ -98,14 +97,12 @@ export async function getNpmTag(cwd: string): Promise<string> {
 }
 
 async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
-  const commands =
-    detectPackageManager(cwd) === 'pnpm'
-      ? [`pnpm config get ${key}`, `npm config get ${key}`]
-      : [`npm config get ${key}`];
+  const binaries =
+    detectPackageManager(cwd) === 'pnpm' ? ['pnpm', 'npm'] : ['npm'];
 
-  for (const command of commands) {
+  for (const binary of binaries) {
     try {
-      const result = await execAsync(command, cwd);
+      const result = await configGet(binary, key, cwd);
       if (result && result !== 'undefined' && result !== 'null') {
         return result;
       }
@@ -116,12 +113,30 @@ async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
   return undefined;
 }
 
-async function execAsync(command: string, cwd: string): Promise<string> {
+// `key` carries the package's own scope, so it goes to npm as an argument
+// rather than through a shell.
+async function configGet(
+  binary: string,
+  key: string,
+  cwd: string
+): Promise<string> {
   // Must be non-blocking async to allow spinner to render
   return new Promise<string>((resolve, reject) => {
-    exec(command, { cwd, windowsHide: true }, (error, stdout, stderr) => {
-      if (error) {
-        return reject((stderr ? `${stderr}\n` : '') + error);
+    const child = safeSpawn(binary, ['config', 'get', key], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf-8').on('data', (chunk) => (stdout += chunk));
+    child.stderr.setEncoding('utf-8').on('data', (chunk) => (stderr += chunk));
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code !== 0) {
+        return reject(
+          (stderr ? `${stderr}\n` : '') +
+            `${binary} config get ${key} exited with code ${code}`
+        );
       }
       return resolve(stdout.trim());
     });

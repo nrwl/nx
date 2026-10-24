@@ -47,14 +47,7 @@ The migration lists the targets the converter cannot convert safely. In agentic 
       "options": {
         "config-dir": ".storybook",
         "output-dir": "../../dist/storybook/apps/app1"
-      },
-      "outputs": [
-        "{projectRoot}/{options.output-dir}",
-        "{projectRoot}/storybook-static",
-        "{options.output-dir}",
-        "{options.outputDir}",
-        "{options.o}"
-      ]
+      }
     },
     "storybook": {
       "configurations": {

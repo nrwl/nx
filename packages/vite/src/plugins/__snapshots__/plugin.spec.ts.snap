@@ -229,6 +229,9 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
             },
             "serve-static": {
               "continuous": true,
+              "dependsOn": [
+                "build-something",
+              ],
               "executor": "@nx/web:file-server",
               "inputs": [
                 "production",
@@ -244,8 +247,7 @@ exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
                 "spa": true,
               },
               "readyWhen": {
-                "host": "{options.host ?? localhost}",
-                "port": "{options.port}",
+                "signal": true,
               },
             },
             "watch-deps": {
@@ -419,6 +421,9 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
             },
             "serve-static": {
               "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/web:file-server",
               "inputs": [
                 "production",
@@ -434,8 +439,7 @@ exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
                 "spa": true,
               },
               "readyWhen": {
-                "host": "{options.host ?? localhost}",
-                "port": "{options.port}",
+                "signal": true,
               },
             },
           },

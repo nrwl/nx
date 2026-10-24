@@ -15,10 +15,6 @@ export interface Schema {
   linter?: LinterType;
   formatter?: 'none' | 'prettier' | 'oxfmt';
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   strict?: boolean;
   useProjectJson?: boolean;
   port?: number;

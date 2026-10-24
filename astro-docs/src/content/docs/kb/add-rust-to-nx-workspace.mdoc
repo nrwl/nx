@@ -168,7 +168,7 @@ toolchain and lockfiles as a [named input](/docs/reference/inputs), then apply i
 ```
 
 Miss the toolchain file in that list and a Rust version bump replays stale artifacts.
-[How caching works](/docs/concepts/how-caching-works) covers the hashing rules in full.
+[How caching works](/docs/features/cache-task-results#how-caching-works) covers the hashing rules in full.
 
 ## Run both stacks from one command
 
@@ -196,7 +196,7 @@ what it shells out to. Starting a JavaScript dev server can start the Rust servi
 ```
 
 `nx dev web` now builds the crate's dependencies, starts `api:run`, and starts the web dev server.
-[Task pipeline configuration](/docs/concepts/task-pipeline-configuration) has the rest of the syntax.
+[Defining a task pipeline](/docs/features/run-tasks#defining-a-task-pipeline) has the rest of the syntax.
 
 ## Run Rust tasks in CI
 
@@ -218,7 +218,7 @@ CI needs the Rust toolchain before it can run a Cargo task, and the same mise pi
 to `packages/domain` schedules the crates that depend on it and skips the rest of the repository.
 
 To spread those tasks across machines with
-[Nx Agents](/docs/features/ci-features/distribute-task-execution), install the toolchain on the
+[Workers](/docs/features/ci-features/distribute-task-execution), install the toolchain on the
 agents as well. A [launch template](/docs/kb/launch-templates) caches the Cargo registry and warms
 the dependency download:
 

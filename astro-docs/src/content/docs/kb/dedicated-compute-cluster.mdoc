@@ -17,7 +17,7 @@ topics:
 ---
 
 A **dedicated compute cluster** reserves an isolated Nx Cloud compute environment for your
-organization, so your [Nx Agents](/docs/features/ci-features/distribute-task-execution) run in a
+organization, so your [Workers](/docs/features/ci-features/distribute-task-execution) run in a
 cluster provisioned just for your org instead of on the shared multi-tenant pool.
 
 The dedicated cluster lets agents run Docker-in-Docker (DinD) and unlocks additional Nx Cloud
@@ -35,7 +35,7 @@ environment and get these capabilities through their deployment.
 A dedicated compute cluster unlocks the following:
 
 - [**Docker-in-Docker**](#docker-in-docker-on-agents) - build and push container images, run
-  Testcontainers, and run any task that needs a Docker daemon, directly on Nx Agents.
+  Testcontainers, and run any task that needs a Docker daemon, directly on Workers.
 - [**Sandboxing**](/docs/kb/sandboxing) - confine each task to its declared
   [`inputs`](/docs/reference/project-configuration#inputs-and-named-inputs) and [`outputs`](/docs/reference/project-configuration#outputs), and catch any read or write outside them.
 - [**Docker layer caching**](/docs/kb/docker-layer-caching) - reuse Docker build
@@ -53,7 +53,7 @@ cluster.
 
 Every agent in a dedicated compute cluster can run DinD. This lets your tasks build and push
 container images, run [Testcontainers](https://testcontainers.com), and execute any workflow that
-needs a Docker daemon, directly on Nx Agents.
+needs a Docker daemon, directly on Workers.
 
 On the shared multi-tenant pool, agents run a fixed set of approved images and cannot run privileged
 containers. The dedicated cluster lifts that restriction for your organization, so you can run

@@ -3,7 +3,6 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   getNpmScope,
   isUsingTsSolutionSetup,
@@ -82,7 +81,7 @@ export function toJsLibraryGeneratorOptions(
     // `deleteFiles` drops the generated spec, and a library without a
     // controller or service is left with none at all.
     passWithNoTests: true,
-    enableTypedLinting: isTypedLintingEnabled(options),
+    enableTypedLinting: options.enableTypedLinting,
     useProjectJson: options.useProjectJson,
   };
 }
