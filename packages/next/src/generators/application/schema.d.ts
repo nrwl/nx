@@ -12,18 +12,14 @@ export interface Schema {
   linter?: LinterType;
   js?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   swc?: boolean;
+  /** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;
   src?: boolean;
   // Internal options
   rootProject?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'oxfmt' | 'none';
   useProjectJson?: boolean;

@@ -30,8 +30,8 @@
 /using-nx/nx-cli /docs/getting-started/intro 301
 /using-nx/console /docs/getting-started/editor-setup 301
 /features/integrate-with-editors /docs/getting-started/editor-setup 301
-/using-nx/mental-model /docs/concepts/mental-model 301
-/using-nx/caching /docs/concepts/how-caching-works 301
+/using-nx/mental-model /docs/getting-started/how-nx-works 301
+/using-nx/caching /docs/features/cache-task-results#how-caching-works 301
 /using-nx/dte /docs/features/ci-features/distribute-task-execution 301
 /using-nx/affected /docs/features/ci-features/affected 301
 /using-nx/ci-overview /docs/getting-started/setup-ci 301
@@ -71,7 +71,7 @@
 /ci/monorepo-ci-jenkins /docs/kb/ci-workflow-examples 301
 /ci/monorepo-ci-gitlab /docs/kb/ci-workflow-examples 301
 /ci/monorepo-ci-bitbucket-pipelines /docs/kb/ci-workflow-examples 301
-/ci/distributed-builds /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/ci/distributed-builds /docs/features/ci-features#building-blocks-of-fast-ci 301
 /ci/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
 /guides/turbo-and-nx /docs/kb/from-turborepo 301
 /guides/why-monorepos /docs/concepts/decisions/what-is-a-monorepo 301
@@ -104,13 +104,13 @@
 
 # --- guideUrls ---
 /core-concepts/configuration /docs/reference/project-configuration 301
-/core-concepts/mental-model /docs/concepts/mental-model 301
+/core-concepts/mental-model /docs/getting-started/how-nx-works 301
 /core-concepts/updating-nx /docs/features/automate-updating-dependencies 301
 /core-concepts/ci-overview /docs/getting-started/setup-ci 301
 /getting-started/nx-cli /docs/getting-started/intro 301
 /getting-started/console /docs/getting-started/editor-setup 301
 /core-extended/affected /docs/features/ci-features/affected 301
-/core-extended/computation-caching /docs/concepts/how-caching-works 301
+/core-extended/computation-caching /docs/features/cache-task-results#how-caching-works 301
 /guides/nextjs /packages/next 301
 /using-nx/nx-devkit /docs/extending-nx/intro 301
 /guides/lerna-and-nx https://lerna.js.org 301
@@ -183,8 +183,8 @@
 /nx-cloud/private-cloud/* https://github.com/nrwl/nx-cloud-helm 301
 /ci/recipes/on-premise/* https://github.com/nrwl/nx-cloud-helm 301
 /ci/recipes/enterprise/on-premise/* https://github.com/nrwl/nx-cloud-helm 301
-/concepts/dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
-/nx-cloud/concepts/dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/concepts/dte /docs/features/ci-features#building-blocks-of-fast-ci 301
+/nx-cloud/concepts/dte /docs/features/ci-features#building-blocks-of-fast-ci 301
 /nx-cloud/intro/nx-cloud-workflows /ci/features/nx-cloud-workflows 301
 /nx-cloud/account /docs/guides/nx-cloud 301
 /nx-cloud/account/google-auth /docs/kb/google-auth 301
@@ -195,7 +195,7 @@
 /nx-cloud/concepts/encryption /docs/kb/encryption 301
 /nx-cloud/features/nx-cloud-workflows /docs/features/ci-features/distribute-task-execution 301
 /ci/features/nx-agents /docs/features/ci-features/distribute-task-execution 301
-/concepts/more-concepts/illustrated-dte /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/concepts/more-concepts/illustrated-dte /docs/features/ci-features#building-blocks-of-fast-ci 301
 /core-features/* /features/:splat 301
 /ci/recipes/set-up/connect-to-cloud /docs/getting-started/setup-ci 301
 /ci/intro/connect-to-cloud /docs/getting-started/setup-ci 301
@@ -348,6 +348,8 @@
 # --- makeMoreConceptsSubmenu ---
 # Must precede the wildcard: /concepts/more-concepts/monorepo-nx-enterprise has no rule.
 /more-concepts/monorepo-nx-enterprise /docs/kb/folder-structure 301
+# Printed by the outdated global install warning before nx 23.2.
+/more-concepts/global-nx /docs/getting-started/installation#global-installation 301
 /more-concepts /concepts/more-concepts 301
 /more-concepts/* /concepts/more-concepts/:splat 301
 
@@ -533,7 +535,6 @@
 /ci/enterprise/conformance/configure-conformance-rules-in-nx-cloud /docs/enterprise/configure-conformance-rules-in-nx-cloud 301
 /ci/features/polygraph /docs/enterprise/polygraph 301
 /code-owners /docs/enterprise/owners 301
-/more-concepts/global-nx /docs/getting-started/installation 301
 /nx-api/powerpack-shared-fs-cache /docs/reference/remote-cache-plugins/shared-fs-cache 301
 /nx-api/powerpack-s3-cache /docs/reference/remote-cache-plugins/s3-cache 301
 /nx-api/powerpack-gcs-cache /docs/reference/remote-cache-plugins/gcs-cache 301
@@ -844,7 +845,7 @@
 /technologies/react/api/executors/* /docs/technologies/react/executors 301
 /technologies/test-tools/detox/api/executors/* /docs/technologies/test-tools/detox/executors 301
 /technologies/react/next/api/executors/* /docs/technologies/react/next/executors 301
-/technologies/react/remix/api/executors/* /docs/technologies/react/remix/executors 301
+/technologies/react/remix/api/executors/* /docs/technologies/react/remix/introduction 301
 /technologies/test-tools/storybook/api/executors/* /docs/technologies/test-tools/storybook/executors 301
 /technologies/test-tools/cypress/api/executors/* /docs/technologies/test-tools/cypress/executors 301
 /technologies/test-tools/jest/api/executors/* /docs/technologies/test-tools/jest/executors 301
@@ -898,15 +899,15 @@
 /ci/features/remote-cache /docs/features/ci-features/remote-cache 301
 /ci/features/distribute-task-execution /docs/features/ci-features/distribute-task-execution 301
 /ci/features/affected /docs/features/ci-features/affected 301
-/ci/features/dynamic-agents /docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size 301
+/ci/features/dynamic-agents /docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size 301
 /ci/features/split-e2e-tasks /docs/kb/split-e2e-tasks 301
 /ci/features/flaky-tasks /docs/kb/flaky-tasks 301
 /ci/features/explain-with-ai /docs/features/ci-features/self-healing-ci 301
 /ci/features/github-integration /docs/kb/github-integration 301
-/ci/concepts /docs/concepts/ci-concepts 301
-/ci/concepts/building-blocks-fast-ci /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/ci/concepts /docs/features/ci-features 301
+/ci/concepts/building-blocks-fast-ci /docs/features/ci-features#building-blocks-of-fast-ci 301
 /ci/concepts/reduce-waste /docs/concepts/ci-concepts/reduce-waste 301
-/ci/concepts/parallelization-distribution /docs/concepts/ci-concepts/building-blocks-fast-ci 301
+/ci/concepts/parallelization-distribution /docs/features/ci-features#building-blocks-of-fast-ci 301
 /ci/concepts/cache-security /docs/concepts/ci-concepts/cache-security 301
 /ci/concepts/heartbeat /docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling 301
 /ci/recipes/security/google-auth /docs/kb/google-auth 301
@@ -1252,7 +1253,7 @@
 /technologies/react/react-native/api/executors /docs/technologies/react/react-native/executors 301
 /technologies/react/react-native/api/generators /docs/technologies/react/react-native/generators 301
 /technologies/react/react-native/api/migrations /docs/technologies/react/react-native/migrations 301
-/technologies/react/remix/api/executors /docs/technologies/react/remix/executors 301
+/technologies/react/remix/api/executors /docs/technologies/react/remix/introduction 301
 /technologies/react/remix/api/generators /docs/technologies/react/remix/generators 301
 /technologies/react/remix/api/migrations /docs/technologies/react/remix/migrations 301
 /technologies/build-tools/rollup/api/executors /docs/technologies/build-tools/rollup/executors 301

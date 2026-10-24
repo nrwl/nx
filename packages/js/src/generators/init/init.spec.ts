@@ -200,6 +200,27 @@ describe('js init generator', () => {
     expect(prettierignore).toContain('# custom ignore file');
   });
 
+  it.each([
+    ['prettier', '^2.6.2'],
+    ['oxfmt', '^0.60.0'],
+  ] as const)(
+    'should not overwrite the installed %s version',
+    async (formatter, version) => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          [formatter]: version,
+        };
+        return json;
+      });
+
+      await init(tree, { formatter });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.devDependencies[formatter]).toBe(version);
+    }
+  );
+
   it('should not write .prettierrc next to a prettier.config.ts', async () => {
     // The setup list is shared with detection now; it previously omitted the
     // .ts/.mts/.cts forms, so a workspace using one got a second config.

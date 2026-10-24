@@ -6,7 +6,7 @@ import {
   SpawnOptions,
 } from 'child_process';
 import { win32 } from 'path';
-import { quoteShellArg } from './shell-quoting';
+import { LINE_BREAK, quoteShellArg } from './shell-quoting';
 
 // Node refuses to launch a Windows `.cmd`/`.bat` shim without a shell
 // (CVE-2024-27980). A bare name takes the shell for the same reason, one step
@@ -29,9 +29,6 @@ function needsShell(binary: string): boolean {
   return ext === '' || ext === '.cmd' || ext === '.bat';
 }
 
-// A line break ends the command line whatever the quoting, so nothing can carry
-// one.
-//
 // `%` is deliberately NOT refused, and this is a known gap rather than a safe
 // case. cmd.exe expands `%VAR%` whether or not the value is quoted — see
 // `quoteShellArg`'s own docstring in ./shell-quoting, which says so and pins it
@@ -46,7 +43,6 @@ function needsShell(binary: string): boolean {
 // is bounded by the argument that bounds this whole class: a repo that can reach
 // here already has `mvnw` / `pom.xml` executing on its behalf. Closing it
 // properly is tracked as NXC-4798.
-const LINE_BREAK = /[\r\n]/;
 
 /**
  * Spawn a binary that may be a Windows `.cmd`/`.bat` shim, without letting its

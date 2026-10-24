@@ -6,7 +6,8 @@
 export type {
   Task,
   TaskGraph,
+  TaskGraphEdge,
   TaskTarget,
   TaskHashDetails,
-  TaskUltracacheConfiguration,
+  TaskUltracacheSettings,
 } from '../native';

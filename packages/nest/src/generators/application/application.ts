@@ -19,7 +19,6 @@ export async function applicationGenerator(
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });

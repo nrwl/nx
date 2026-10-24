@@ -4,7 +4,6 @@ import {
   GeneratorCallback,
   joinPathFragments,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -24,14 +23,7 @@ import {
 import { join } from 'node:path/posix';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
-import { warnViteExecutorGenerating } from '../../utils/deprecation';
-import {
-  addBuildTarget,
-  addPreviewTarget,
-  addServeTarget,
-  createOrEditViteConfig,
-  TargetFlags,
-} from '../../utils/generator-utils';
+import { createOrEditViteConfig } from '../../utils/generator-utils';
 import { nxVersion } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { convertNonVite } from './lib/convert-non-vite';
@@ -42,10 +34,7 @@ export function viteConfigurationGenerator(
   host: Tree,
   schema: ViteConfigurationGeneratorSchema
 ) {
-  return viteConfigurationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return viteConfigurationGeneratorInternal(host, schema);
 }
 
 export async function viteConfigurationGeneratorInternal(
@@ -71,12 +60,6 @@ export async function viteConfigurationGeneratorInternal(
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
 
-  /**
-   * This is for when we are converting an existing project
-   * to use the vite executors.
-   */
-  let projectAlreadyHasViteTargets: TargetFlags = {};
-
   if (!schema.newProject) {
     await convertNonVite(tree, schema, projectRoot, projectType, targets);
   }
@@ -95,41 +78,6 @@ export async function viteConfigurationGeneratorInternal(
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
-
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
-  );
-
-  if (!hasPlugin) {
-    const willScaffoldExecutorTargets =
-      !projectAlreadyHasViteTargets.build ||
-      (!schema.includeLib &&
-        (!projectAlreadyHasViteTargets.serve ||
-          !projectAlreadyHasViteTargets.preview));
-    if (willScaffoldExecutorTargets) {
-      warnViteExecutorGenerating();
-    }
-
-    if (!projectAlreadyHasViteTargets.build) {
-      addBuildTarget(tree, schema, 'build');
-    }
-
-    if (!schema.includeLib) {
-      if (!projectAlreadyHasViteTargets.serve) {
-        addServeTarget(tree, schema, 'serve');
-      }
-      if (!projectAlreadyHasViteTargets.preview) {
-        addPreviewTarget(tree, schema, 'preview');
-      }
-    }
-  }
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
     updateJson(
@@ -174,12 +122,7 @@ export async function viteConfigurationGeneratorInternal(
         undefined
       );
     } else {
-      createOrEditViteConfig(
-        tree,
-        { ...schema, useEsmExtension: true },
-        false,
-        projectAlreadyHasViteTargets
-      );
+      createOrEditViteConfig(tree, { ...schema, useEsmExtension: true }, false);
     }
   }
 
@@ -198,7 +141,6 @@ export async function viteConfigurationGeneratorInternal(
       skipViteConfig: true,
       testTarget: 'test',
       skipFormat: true,
-      addPlugin: schema.addPlugin,
       compiler: schema.compiler,
       projectType,
       testEnvironment: schema.testEnvironment,

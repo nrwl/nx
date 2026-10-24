@@ -64,6 +64,47 @@ describe('app', () => {
     }
   });
 
+  describe('ready signal', () => {
+    it.each([
+      ['express', 'emitReadySignal(server)'],
+      ['fastify', 'emitReadySignal(server.server)'],
+      ['koa', 'emitReadySignal(server)'],
+    ] as const)(
+      'should report readiness from a %s server',
+      async (framework, call) => {
+        await applicationGenerator(tree, {
+          directory: 'my-node-app',
+          framework,
+          bundler: 'webpack',
+          skipFormat: true,
+        });
+
+        expect(
+          readProjectConfiguration(tree, 'my-node-app').targets.serve.readyWhen
+        ).toEqual({ signal: true });
+        const main = tree.read('my-node-app/src/main.ts', 'utf-8');
+        expect(main).toContain("load('@nx/js/ready-signal')");
+        expect(main).toContain(call);
+        expect(
+          readJson(tree, 'package.json').devDependencies['@nx/js']
+        ).toBeDefined();
+      }
+    );
+
+    it('should not wait for an app without a server', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        framework: 'none',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'my-node-app').targets.serve.readyWhen
+      ).toBeUndefined();
+    });
+  });
+
   describe('pnpm 11 build scripts', () => {
     beforeEach(() => {
       (detectPackageManager as Mock).mockReturnValue('pnpm');
@@ -78,7 +119,6 @@ describe('app', () => {
           unitTestRunner: 'none',
           e2eTestRunner: 'none',
           linter: 'none',
-          addPlugin: true,
         } as Schema)
       );
 
@@ -96,7 +136,6 @@ describe('app', () => {
           unitTestRunner: 'none',
           e2eTestRunner: 'none',
           linter: 'none',
-          addPlugin: true,
         } as Schema)
       );
 
@@ -111,7 +150,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         bundler: 'webpack',
-        addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project).toMatchInlineSnapshot(`
@@ -223,7 +261,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         tags: 'one,two',
-        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -237,7 +274,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         linter: 'eslint',
         directory: 'my-node-app',
-        addPlugin: true,
       });
       expect(tree.exists(`my-node-app/jest.config.cts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
@@ -279,7 +315,6 @@ describe('app', () => {
 
       await applicationGenerator(tree, {
         directory: 'my-node-app',
-        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -291,7 +326,7 @@ describe('app', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
         directory: 'my-dir/my-node-app',
-        addPlugin: true,
+        bundler: 'esbuild',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
 
@@ -377,24 +412,10 @@ describe('app', () => {
               ],
             },
             "serve": {
-              "configurations": {
-                "development": {
-                  "buildTarget": "my-node-app:build:development",
-                },
-                "production": {
-                  "buildTarget": "my-node-app:build:production",
-                },
-              },
               "continuous": true,
-              "defaultConfiguration": "development",
               "dependsOn": [
-                "build",
+                "^build",
               ],
-              "executor": "@nx/js:node",
-              "options": {
-                "buildTarget": "my-node-app:build",
-                "runBuildTargetDependencies": false,
-              },
             },
             "test": {
               "options": {
@@ -415,7 +436,6 @@ describe('app', () => {
         name: 'my-node-app',
         directory: 'myDir',
         tags: 'one,two',
-        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -435,7 +455,6 @@ describe('app', () => {
         linter: 'eslint',
         name: 'my-node-app',
         directory: 'my-dir/my-node-app/',
-        addPlugin: true,
       });
 
       // Make sure these exist
@@ -478,7 +497,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         unitTestRunner: 'none',
-        addPlugin: true,
       });
       expect(tree.exists('jest.config.cts')).toBeFalsy();
       expect(tree.exists('my-node-app/src/test-setup.ts')).toBeFalsy();
@@ -494,7 +512,6 @@ describe('app', () => {
         directory: 'my-node-app',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       expect(tree.exists('my-node-app/vitest.config.mts')).toBeTruthy();
@@ -502,13 +519,13 @@ describe('app', () => {
       expect(tree.read('my-node-app/vitest.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { defineConfig } from 'vitest/config';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
           cacheDir: '../node_modules/.vite/my-node-app',
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
           test: {
             name: 'my-node-app',
             watch: false,
@@ -532,7 +549,6 @@ describe('app', () => {
         directory: 'my-node-app',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       const tsConfig = readJson(tree, 'my-node-app/tsconfig.spec.json');
@@ -545,7 +561,6 @@ describe('app', () => {
         framework: 'fastify',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       expect(tree.exists('api/src/app/app.spec.ts')).toBeTruthy();
@@ -557,7 +572,6 @@ describe('app', () => {
         unitTestRunner: 'vitest',
         e2eTestRunner: 'none',
         skipPackageJson: true,
-        addPlugin: true,
       });
 
       const { devDependencies } = readJson(tree, 'package.json');
@@ -576,7 +590,6 @@ describe('app', () => {
         linter: 'oxlint',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       const { devDependencies } = readJson(tree, 'package.json');
@@ -591,7 +604,6 @@ describe('app', () => {
         linter: 'none',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       const { devDependencies = {} } = readJson(tree, 'package.json');
@@ -609,7 +621,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         frontendProject: 'my-frontend',
-        addPlugin: true,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -626,13 +637,11 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'cart',
         frontendProject: 'my-frontend',
-        addPlugin: true,
       });
 
       await applicationGenerator(tree, {
         directory: 'billing',
         frontendProject: 'my-frontend',
-        addPlugin: true,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -650,7 +659,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         linter: 'eslint',
         directory: 'my-node-app',
-        addPlugin: true,
       });
       const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
       expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
@@ -663,7 +671,6 @@ describe('app', () => {
         directory: 'my-node-app',
         tags: 'one,two',
         swcJest: true,
-        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
@@ -689,7 +696,6 @@ describe('app', () => {
         directory: 'my-node-app',
         tags: 'one,two',
         babelJest: true,
-        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-node-app/jest.config.cts`, 'utf-8'))
@@ -714,7 +720,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         js: true,
-        addPlugin: true,
       } as Schema);
 
       expect(tree.exists(`my-node-app/jest.config.js`)).toBeTruthy();
@@ -741,7 +746,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         js: true,
-        addPlugin: true,
+        bundler: 'esbuild',
       } as Schema);
       const project = readProjectConfiguration(tree, 'my-node-app');
       const buildTarget = project.targets.build;
@@ -754,7 +759,6 @@ describe('app', () => {
         name: 'my-node-app',
         directory: 'my-dir/my-node-app/',
         js: true,
-        addPlugin: true,
       } as Schema);
       expect(tree.exists(`my-dir/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('my-dir/my-node-app/src/main.js')).toBeTruthy();
@@ -777,7 +781,6 @@ describe('app', () => {
     it('should format files by default', async () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
-        addPlugin: true,
       });
 
       expect(formatFilesSpy).toHaveBeenCalled();
@@ -787,7 +790,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'my-node-app',
         skipFormat: true,
-        addPlugin: true,
       });
 
       expect(formatFilesSpy).not.toHaveBeenCalled();
@@ -804,7 +806,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'api',
         framework,
-        addPlugin: true,
       });
 
       expect(tree.exists(`api/jest.config.cts`)).toBeTruthy();
@@ -825,11 +826,145 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: `api-${framework}`,
         framework,
-        addPlugin: true,
       });
       const debugConfig = readJson(tree, '.vscode/launch.json');
       expect(debugConfig).toBeDefined();
       expect(debugConfig.configurations).toMatchSnapshot();
+    });
+  });
+
+  describe('tsx serve', () => {
+    it('should infer serve with tsx outside a TS solution workspace', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        framework: 'express',
+        skipFormat: true,
+      });
+
+      expect(readProjectConfiguration(tree, 'myapp').targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+        readyWhen: { signal: true },
+      });
+      expect(tree.read('myapp/src/main.ts', 'utf-8').split('\n').slice(0, 3))
+        .toMatchInlineSnapshot(`
+        [
+          "#!/usr/bin/env tsx",
+          "// @nx-target-name: serve",
+          "import express from 'express';",
+        ]
+      `);
+      expect(readNxJson(tree).plugins).toContain('@nx/js/tsx');
+      expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+        'tsx'
+      );
+    });
+
+    it('should leave an existing @nx/js/tsx registration alone, however scoped', async () => {
+      const scoped = {
+        plugin: '@nx/js/tsx',
+        include: ['tools/**/*'],
+        options: { watch: false },
+      };
+      updateNxJson(tree, { ...readNxJson(tree), plugins: [scoped] });
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'none',
+        skipFormat: true,
+      });
+
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
+        )
+      ).toEqual([scoped]);
+    });
+
+    it('should reuse an unscoped @nx/js/tsx', async () => {
+      updateNxJson(tree, { ...readNxJson(tree), plugins: ['@nx/js/tsx'] });
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        skipFormat: true,
+      });
+
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
+        )
+      ).toEqual(['@nx/js/tsx']);
+    });
+
+    it('should keep the @nx/js:node serve target for webpack', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'myapp').targets.serve.executor
+      ).toBe('@nx/js:node');
+      expect(tree.read('myapp/src/main.ts', 'utf-8')).not.toContain('#!');
+      expect(
+        (readNxJson(tree).plugins ?? []).some(
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/tsx'
+        )
+      ).toBe(false);
+    });
+  });
+
+  describe('bundler outside a TS solution workspace', () => {
+    it('should default to rolldown', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/rolldown.config.ts')).toBe(true);
+      expect(
+        readProjectConfiguration(tree, 'myapp').targets.build
+      ).toBeUndefined();
+    });
+
+    it('should write a project package.json for the prune targets', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        framework: 'express',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'myapp/package.json')).toEqual(
+        expect.objectContaining({
+          private: true,
+          dependencies: expect.objectContaining({
+            express: expect.any(String),
+          }),
+        })
+      );
+      expect(tree.read('myapp/rolldown.config.ts', 'utf-8')).toContain(
+        `import packageJson from './package.json' with { type: 'json' };`
+      );
+    });
+
+    it('should default to esbuild for fastify', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        framework: 'fastify',
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'myapp').targets.build.executor
+      ).toBe('@nx/esbuild:esbuild');
+    });
+
+    it('should throw for tsc', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: 'myapp',
+          bundler: 'tsc',
+        })
+      ).rejects.toThrow(/requires a TypeScript solution workspace/);
     });
   });
 
@@ -859,7 +994,6 @@ describe('app', () => {
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1035,7 +1169,6 @@ describe('app', () => {
         name: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1058,6 +1191,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
         swcJest: true,
+        unitTestRunner: 'jest',
         useProjectJson: false,
       } as Schema);
 
@@ -1116,7 +1250,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
         bundler: 'webpack',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1152,11 +1285,10 @@ describe('app', () => {
       `);
     });
 
-    it('should configure webpack build task correctly with the output contained within the project root', async () => {
+    it('should configure esbuild build task correctly with the output contained within the project root', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
-        bundler: 'webpack',
-        addPlugin: false,
+        bundler: 'esbuild',
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1167,19 +1299,512 @@ describe('app', () => {
       ).toBe('apps/my-app/dist');
     });
 
-    it('should configure esbuild build task correctly with the output contained within the project root', async () => {
+    it('should default to an inferred tsc build', async () => {
+      // Matches the TS solution base template.
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        json.compilerOptions.emitDeclarationOnly = true;
+        return json;
+      });
       await applicationGenerator(tree, {
-        directory: 'apps/my-app',
-        bundler: 'esbuild',
-        addPlugin: false,
+        directory: 'apps/api',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+      await applicationGenerator(tree, {
+        directory: 'apps/worker',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const project = readProjectConfiguration(tree, '@proj/api');
+      expect(project.targets.build).toBeUndefined();
+      expect(project.targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+      });
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) =>
+            typeof p !== 'string' &&
+            p.plugin === '@nx/js/typescript' &&
+            p.options?.['build']?.configName === 'tsconfig.app.json'
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "include": [
+              "apps/api/*",
+              "apps/worker/*",
+            ],
+            "options": {
+              "build": {
+                "buildDepsName": "build-deps",
+                "configName": "tsconfig.app.json",
+                "skipBuildCheck": true,
+                "targetName": "build",
+                "watchDepsName": "watch-deps",
+              },
+              "typecheck": false,
+            },
+            "plugin": "@nx/js/typescript",
+          },
+        ]
+      `);
+      expect(
+        readJson(tree, 'apps/api/tsconfig.app.json').compilerOptions
+      ).toMatchObject({
+        outDir: 'dist',
+        rootDir: 'src',
+        emitDeclarationOnly: false,
+      });
+    });
+
+    it('should use the target name of an existing rolldown registration', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [
+          {
+            plugin: '@nx/rolldown/plugin',
+            options: { buildTargetName: 'bundle' },
+          },
+        ],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'rolldown',
+        docker: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const targets = readProjectConfiguration(tree, '@proj/api').targets;
+      expect(targets['prune-lockfile'].dependsOn).toEqual(['bundle']);
+      expect(targets['prune-lockfile'].options.buildTarget).toBe('bundle');
+      expect(targets['copy-workspace-modules'].options.buildTarget).toBe(
+        'bundle'
+      );
+      expect(targets['docker:build'].dependsOn).toContain('bundle');
+      const e2e = [...getProjects(tree).values()].find(
+        (p) => p.root === 'apps/api-e2e'
+      );
+      expect(e2e.targets.e2e.dependsOn).toContain('@proj/api:bundle');
+    });
+
+    it('should throw for rolldown with fastify', async () => {
+      await expect(
+        applicationGenerator(tree, {
+          directory: 'apps/api',
+          bundler: 'rolldown',
+          framework: 'fastify',
+          useProjectJson: false,
+          skipFormat: true,
+        })
+      ).rejects.toThrow(/does not support the "fastify" framework/);
+    });
+
+    it('should infer serve with node', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env node\n\/\/ @nx-target-name: serve\n/
+      );
+      expect(readNxJson(tree).plugins).toContain('@nx/js/node');
+      expect(readJson(tree, 'package.json').devDependencies).not.toHaveProperty(
+        'tsx'
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBe('module');
+      expect(
+        readJson(tree, 'apps/api/tsconfig.app.json').compilerOptions
+          .rewriteRelativeImportExtensions
+      ).toBe(true);
+    });
+
+    it.each([
+      ['--js', { js: true }],
+      ['esbuild', { bundler: 'esbuild' as const }],
+    ])('should keep tsx serve and CommonJS for %s', async (_, extra) => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        useProjectJson: false,
+        skipFormat: true,
+        ...extra,
+      });
+
+      const main = tree.exists('apps/api/src/main.js')
+        ? 'apps/api/src/main.js'
+        : 'apps/api/src/main.ts';
+      expect(tree.read(main, 'utf-8')).toMatch(/^#!\/usr\/bin\/env tsx\n/);
+      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+    });
+
+    it('should leave an existing @nx/js/node registration alone when it excludes the app', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [{ plugin: '@nx/js/node', exclude: ['apps/**'] }],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
         useProjectJson: false,
         skipFormat: true,
       });
 
       expect(
-        readProjectConfiguration(tree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+        readNxJson(tree).plugins.filter(
+          (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/node'
+        )
+      ).toEqual([{ plugin: '@nx/js/node', exclude: ['apps/**'] }]);
+    });
+
+    it('should use the target name of the rolldown registration that matches the app', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [
+          {
+            plugin: '@nx/rolldown/plugin',
+            include: ['lambda/**/*'],
+            options: { buildTargetName: 'bundle' },
+          },
+          {
+            plugin: '@nx/rolldown/plugin',
+            exclude: ['lambda/**/*'],
+            options: { buildTargetName: 'rolldown:build' },
+          },
+        ],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'rolldown',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, '@proj/api').targets['prune-lockfile']
+          .options.buildTarget
+      ).toBe('rolldown:build');
+    });
+
+    it('should register rolldown for the app when an existing one excludes it', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [
+          {
+            plugin: '@nx/rolldown/plugin',
+            exclude: ['apps/**'],
+            options: { buildTargetName: 'bundle' },
+          },
+        ],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'rolldown',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readNxJson(tree).plugins).toContainEqual({
+        plugin: '@nx/rolldown/plugin',
+        include: ['apps/api/rolldown.config.ts'],
+        options: { buildTargetName: 'build' },
+      });
+      expect(
+        readProjectConfiguration(tree, '@proj/api').targets['prune-lockfile']
+          .options.buildTarget
+      ).toBe('build');
+    });
+
+    it('should let the tsc build compile a --js app', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        js: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const tsconfigApp = readJson(tree, 'apps/api/tsconfig.app.json');
+      expect(tsconfigApp.include).toEqual(
+        expect.arrayContaining([expect.stringMatching(/\.js$/)])
+      );
+      expect(tsconfigApp.compilerOptions.allowJs).toBe(true);
+    });
+
+    it('should serve fastify as ESM with node and test it with vitest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'fastify',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env node\n[\s\S]*from '\.\/app\/app\.ts';/
+      );
+      expect(tree.read('apps/api/src/app/app.ts', 'utf-8')).toContain(
+        "path.join(import.meta.dirname, 'routes')"
+      );
+      expect(tree.read('apps/api/src/app/app.spec.ts', 'utf-8')).toContain(
+        "from './app.ts';"
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBe('module');
+      expect(tree.exists('apps/api/vitest.config.mts')).toBe(true);
+      expect(readJson(tree, 'apps/api/tsconfig.spec.json').compilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "allowImportingTsExtensions": true,
+          "module": "nodenext",
+          "moduleResolution": "nodenext",
+          "outDir": "./out-tsc/vitest",
+          "types": [
+            "vitest/globals",
+            "vitest/importMeta",
+            "vite/client",
+            "node",
+            "vitest",
+          ],
+        }
+      `);
+    });
+
+    it('should serve jest apps as CommonJS with tsx', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'fastify',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'jest',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env tsx\n[\s\S]*from '\.\/app\/app';/
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+      expect(tree.exists('apps/api/jest.config.cts')).toBe(true);
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(true);
+    });
+
+    it('should default e2e tests to the vitest unit test runner', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api-e2e/jest.config.ts')).toBe(false);
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(false);
+      expect(tree.exists('apps/api-e2e/src/support/global-teardown.ts')).toBe(
+        false
+      );
+      expect(tree.read('apps/api-e2e/vitest.config.mts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { defineConfig } from 'vitest/config';
+
+        export default defineConfig({
+          test: {
+            name: '@proj/api-e2e',
+            globals: true,
+            environment: 'node',
+            include: ['src/**/*.spec.ts'],
+            globalSetup: ['src/support/global-setup.ts'],
+            setupFiles: ['src/support/test-setup.ts'],
+          },
+        });
+        "
+      `);
+      expect(readJson(tree, 'apps/api-e2e/package.json').nx.targets)
+        .toMatchInlineSnapshot(`
+        {
+          "e2e": {
+            "dependsOn": [
+              "@proj/api:build",
+              "@proj/api:serve",
+            ],
+          },
+        }
+      `);
+      expect(
+        readNxJson(tree).plugins.filter(
+          (p) => typeof p !== 'string' && p.plugin === '@nx/vitest'
+        )
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "exclude": [
+              "apps/api-e2e/**/*",
+            ],
+            "options": {
+              "ciTargetName": "test-ci",
+              "testMode": "watch",
+              "testTargetName": "test",
+            },
+            "plugin": "@nx/vitest",
+          },
+          {
+            "include": [
+              "apps/api-e2e/**/*",
+            ],
+            "options": {
+              "ciTargetName": "e2e-ci",
+              "testMode": "run",
+              "testTargetName": "e2e",
+            },
+            "plugin": "@nx/vitest",
+          },
+        ]
+      `);
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "dependsOn": [
+              "@proj/api:build",
+              "@proj/api:serve",
+            ],
+            "filter": {
+              "projects": [
+                "@proj/api-e2e",
+              ],
+            },
+          },
+        ]
+      `);
+    });
+
+    it('should set up jest for explicit jest e2e tests alongside vitest unit tests', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'express',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'jest',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api-e2e/jest.config.cts')).toBe(true);
+      expect(tree.read('jest.preset.js', 'utf-8')).toContain('@nx/jest/preset');
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies).toEqual(
+        expect.objectContaining({
+          '@nx/jest': expect.any(String),
+          jest: expect.any(String),
+          '@swc/jest': expect.any(String),
+          '@swc/core': expect.any(String),
+        })
+      );
+    });
+
+    it('should serve with tsx on node versions without native typescript', async () => {
+      const nodeVersion = process.versions.node;
+      Object.defineProperty(process.versions, 'node', { value: '22.17.0' });
+      try {
+        await applicationGenerator(tree, {
+          directory: 'apps/api',
+          framework: 'express',
+          useProjectJson: false,
+          skipFormat: true,
+        });
+      } finally {
+        Object.defineProperty(process.versions, 'node', { value: nodeVersion });
+      }
+
+      expect(tree.read('apps/api/src/main.ts', 'utf-8')).toMatch(
+        /^#!\/usr\/bin\/env tsx/
+      );
+      expect(readJson(tree, 'apps/api/package.json').type).toBeUndefined();
+    });
+
+    it('should use the target name of a reused tsc app build registration', async () => {
+      updateNxJson(tree, {
+        ...readNxJson(tree),
+        plugins: [
+          {
+            plugin: '@nx/js/typescript',
+            include: ['apps/other/*'],
+            options: {
+              typecheck: false,
+              build: {
+                targetName: 'compile',
+                configName: 'tsconfig.app.json',
+                skipBuildCheck: true,
+              },
+            },
+          },
+        ],
+      });
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const targets = readProjectConfiguration(tree, '@proj/api').targets;
+      expect(targets['prune-lockfile'].options.buildTarget).toBe('compile');
+      expect(
+        readNxJson(tree).plugins.find(
+          (p) => typeof p !== 'string' && p.plugin === '@nx/js/typescript'
+        )
+      ).toMatchObject({ include: ['apps/other/*', 'apps/api/*'] });
+    });
+
+    it('should configure an inferred rolldown build', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        bundler: 'rolldown',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/api/rolldown.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "import { defineConfig } from 'rolldown';
+          import packageJson from './package.json' with { type: 'json' };
+
+          // Installed at runtime instead of bundled (native addons, dynamic requires).
+          const dependencies = Object.keys(packageJson.dependencies);
+
+          export default defineConfig([
+            {
+              input: 'src/main.ts',
+              platform: 'node',
+              tsconfig: 'tsconfig.app.json',
+              external: (id) =>
+                dependencies.some((dep) => id === dep || id.startsWith(\`\${dep}/\`)),
+              output: {
+                dir: 'dist',
+                cleanDir: true,
+                format: 'esm',
+                sourcemap: true,
+              },
+            },
+          ]);
+          "
+        `);
+      const project = readProjectConfiguration(tree, '@proj/api');
+      expect(project.targets.build).toBeUndefined();
+      expect(project.targets.serve).toEqual({
+        continuous: true,
+        dependsOn: ['^build'],
+      });
+      expect(
+        readNxJson(tree).plugins.some(
+          (p) => typeof p !== 'string' && p.plugin === '@nx/rolldown/plugin'
+        )
+      ).toBe(true);
+      expect(readJson(tree, 'package.json').devDependencies).toHaveProperty(
+        'rolldown'
+      );
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
@@ -1188,7 +1813,6 @@ describe('app', () => {
         directory: 'myapp',
         bundler: 'webpack',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -1280,14 +1904,13 @@ describe('app', () => {
           "root": "myapp-e2e",
           "targets": {
             "e2e": {
+              "command": "jest --passWithNoTests",
               "dependsOn": [
                 "@proj/myapp:build",
                 "@proj/myapp:serve",
               ],
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.cts",
-                "passWithNoTests": true,
+                "cwd": "myapp-e2e",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{e2eProjectRoot}",
@@ -1306,7 +1929,6 @@ describe('app', () => {
         directory: 'my-nest-app',
         bundler: 'webpack',
         framework: 'nest',
-        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, 'my-nest-app');
@@ -1319,7 +1941,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         directory: '.',
-        addPlugin: true,
       });
 
       const { compilerOptions } = readJson(tree, 'tsconfig.json');
@@ -1342,7 +1963,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         directory: '.',
-        addPlugin: true,
       });
 
       const { compilerOptions } = readJson(tree, 'tsconfig.json');
@@ -1363,7 +1983,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       expect(
@@ -1386,7 +2005,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       expect(
@@ -1404,7 +2022,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       expect(
@@ -1428,7 +2045,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       // The filtered entry supplies some other project's array; appending
@@ -1457,7 +2073,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       expect(
@@ -1476,7 +2091,6 @@ describe('app', () => {
       await applicationGenerator(tree, {
         directory: 'app1',
         bundler: 'esbuild',
-        addPlugin: true,
       });
 
       expect(

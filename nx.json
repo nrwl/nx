@@ -1,5 +1,10 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -154,7 +159,19 @@
     },
     "test": [
       {
-        "dependsOn": ["test-native", "build-native", "^build-native"]
+        "dependsOn": ["test-native", "build-native", "^build-native"],
+        "inputs": [
+          "...",
+          {
+            "fileset": "{workspaceRoot}/packages/nx/src/native/*.node",
+            "includeIgnored": true,
+            "always": true
+          }
+        ],
+        "ultracache": {
+          "...": true,
+          "ignoreReads": ["packages/nx/src/native/*.node"]
+        }
       },
       {
         "filter": {
@@ -202,7 +219,7 @@
       ]
     },
     "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["...", "e2eInputs", "^production"]
     },
     "e2e-macos-local": {
       "cache": true,
@@ -217,7 +234,7 @@
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--**/**": {
-      "inputs": ["e2eInputs", "^production"],
+      "inputs": ["...", "e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:populate-e2e-base-workspace",
@@ -237,16 +254,6 @@
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
-    },
-    "build-storybook": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/.storybook/**/*",
-        "{projectRoot}/.storybook/**/*",
-        "{projectRoot}/tsconfig.storybook.json"
-      ],
-      "cache": true
     },
     "build-ng": {
       "cache": true
@@ -394,12 +401,18 @@
       "options": {
         "targetName": "oxlint"
       }
+    },
+    {
+      "plugin": "@nx/maven",
+      "options": {
+        "targetNamePrefix": "mvn:"
+      }
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3239,
+  "bust": 3243,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true
@@ -548,7 +561,6 @@
             "NX_AI_FILES_USE_LOCAL",
             "NX_WINDOWS_PTY_SUPPORT",
             "NX_ORIGINAL_FORCE_COLOR",
-            "NX_MIGRATE_ORCHESTRATOR",
             "NX_MIGRATE_BROKER",
             "NX_CSS_MODULE_HASH_FUNCTION",
             "NX_BUILDABLE_LIBRARIES_TASK_GRAPH",

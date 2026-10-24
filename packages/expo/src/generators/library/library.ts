@@ -48,7 +48,6 @@ export async function expoLibraryGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -62,7 +61,7 @@ export async function expoLibraryGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     ...schema,
     addTsPlugin,
@@ -149,8 +148,7 @@ export async function expoLibraryGeneratorInternal(
       options.projectName,
       options.projectRoot,
       options.js,
-      options.skipPackageJson,
-      options.addPlugin
+      options.skipPackageJson
     );
     tasks.push(jestTask);
   }

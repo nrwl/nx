@@ -1,7 +1,8 @@
+# The noreply GIT_*_EMAIL lets nx release resolve GitHub usernames without a network lookup
 common-env-vars: &common-env-vars
-  GIT_AUTHOR_EMAIL: test@test.com
+  GIT_AUTHOR_EMAIL: test@users.noreply.github.com
   GIT_AUTHOR_NAME: Test
-  GIT_COMMITTER_EMAIL: test@test.com
+  GIT_COMMITTER_EMAIL: test@users.noreply.github.com
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
@@ -20,8 +21,8 @@ common-env-vars: &common-env-vars
   NX_DEV_URL: 'https://canary.nx.dev'
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
-  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
-  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
@@ -88,7 +89,7 @@ common-init-steps: &common-init-steps
 
   - name: Install hyperfine
     script: |
-      cargo install hyperfine
+      cargo install hyperfine --locked
 
   - name: Setup gradle
     script: |
@@ -101,7 +102,7 @@ common-init-steps: &common-init-steps
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
-      git config --global user.email test@test.com
+      git config --global user.email test@users.noreply.github.com
       git config --global user.name "Test Test"
 
 launch-templates:

@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
+use crate::native::tasks::running_tasks_service::TaskReadiness;
 use crate::native::tasks::types::{Task, TaskGraph};
 use crate::native::utils::time::current_timestamp_millis;
 
@@ -52,7 +53,11 @@ pub struct TuiState {
     // === Core Task Data ===
     tasks: Vec<Task>,
     task_status_map: HashMap<String, TaskStatus>,
+    /// Verdicts of the continuous tasks that declare a `readyWhen` probe
+    task_readiness_map: HashMap<String, TaskReadiness>,
     task_graph: TaskGraph,
+    /// Probed producers each task waits on with `waitFor: 'ready'`
+    ready_dependencies: HashMap<String, Vec<String>>,
     initiating_tasks: HashSet<String>,
 
     // === PTY Management ===
@@ -145,7 +150,9 @@ impl TuiState {
         Self {
             tasks,
             task_status_map,
+            task_readiness_map: HashMap::new(),
             task_graph,
+            ready_dependencies: HashMap::new(),
             initiating_tasks,
             pty_instances: HashMap::new(),
             task_start_times: HashMap::new(),
@@ -199,6 +206,23 @@ impl TuiState {
     /// Get a reference to the entire task status map
     pub fn get_task_status_map(&self) -> &HashMap<String, TaskStatus> {
         &self.task_status_map
+    }
+
+    pub fn update_task_readiness(&mut self, task_id: &str, readiness: TaskReadiness) {
+        self.task_readiness_map
+            .insert(task_id.to_owned(), readiness);
+    }
+
+    pub fn get_task_readiness_map(&self) -> &HashMap<String, TaskReadiness> {
+        &self.task_readiness_map
+    }
+
+    pub fn set_ready_dependencies(&mut self, ready_dependencies: HashMap<String, Vec<String>>) {
+        self.ready_dependencies = ready_dependencies;
+    }
+
+    pub fn ready_dependencies(&self) -> &HashMap<String, Vec<String>> {
+        &self.ready_dependencies
     }
 
     /// Whether the task is `Shared` or `Stopped` with no local pty.
@@ -344,9 +368,12 @@ impl TuiState {
     // === Task Timing Methods ===
 
     /// Record the start time of a task (in milliseconds since epoch)
-    pub fn record_task_start(&mut self, task_id: &str) {
-        self.task_start_times
-            .insert(task_id.to_owned(), current_timestamp_millis());
+    pub fn record_task_start(&mut self, task_id: &str, start_time: Option<i64>) {
+        self.task_start_times.insert(
+            task_id.to_owned(),
+            start_time.unwrap_or_else(current_timestamp_millis),
+        );
+        self.task_end_times.remove(task_id);
     }
 
     /// Record the end time of a task (in milliseconds since epoch)
@@ -1023,7 +1050,7 @@ mod tests {
 
         // Record start
         let before_start = current_timestamp_millis();
-        state.record_task_start("app1:build");
+        state.record_task_start("app1:build", None);
         let after_start = current_timestamp_millis();
 
         // Small delay
@@ -1064,7 +1091,7 @@ mod tests {
     fn test_get_task_start_and_end_times() {
         let mut state = create_test_state();
 
-        state.record_task_start("app1:build");
+        state.record_task_start("app1:build", None);
         state.record_task_end("app1:build");
 
         let start_times = state.get_task_start_times();

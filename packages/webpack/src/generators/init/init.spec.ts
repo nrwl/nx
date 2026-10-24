@@ -14,9 +14,7 @@ describe('webpackInitGenerator', () => {
   });
 
   it('should deny the @parcel/watcher build script pulled in by sass', async () => {
-    await withPnpm(tree, '11.2.2', () =>
-      webpackInitGenerator(tree, { addPlugin: true })
-    );
+    await withPnpm(tree, '11.2.2', () => webpackInitGenerator(tree, {}));
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
       /['"]@parcel\/watcher['"]: false/
@@ -24,9 +22,7 @@ describe('webpackInitGenerator', () => {
   });
 
   it('should install plugin, webpack, webpack-dev-server, and webpack-cli', async () => {
-    await webpackInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await webpackInitGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
@@ -51,9 +47,7 @@ describe('webpackInitGenerator', () => {
       return json;
     });
 
-    await webpackInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await webpackInitGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['webpack']).toBe('5.50.0');

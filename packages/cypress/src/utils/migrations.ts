@@ -24,7 +24,7 @@ import type {
   SourceFile,
   StringLiteralLike,
 } from 'typescript';
-import type { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
+import type { CypressExecutorOptions } from '../executors/cypress/schema';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
 
 let ts: typeof import('typescript');

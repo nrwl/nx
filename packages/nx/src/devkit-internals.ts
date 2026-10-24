@@ -31,6 +31,7 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export {
   mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
 } from './project-graph/utils/project-configuration/target-merging';
 export {
   findMatchingTargetNames,
@@ -104,6 +105,8 @@ export {
   applyDaemonEnvFromClient,
 } from './daemon/client/daemon-environment';
 export { isCI } from './utils/is-ci';
+export { createCliOptions } from './utils/create-cli-options';
+export { createOverrides } from './utils/command-line-utils';
 export {
   isUsingPrettierInTree,
   prettierConfigFiles,
@@ -138,7 +141,10 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
+export {
+  acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+} from './utils/acknowledge-build-scripts';
 
 // Exposed for first-party plugins in this repo (imported via @nx/devkit/internal).
 export { default as runCommandsExecutor } from './executors/run-commands/run-commands.impl';
@@ -168,13 +174,21 @@ export type { InputDefinition } from './config/workspace-json-project-json';
 export type { ChangedFile, UnregisterCallback } from './daemon/client/client';
 export { daemonClient } from './daemon/client/client';
 export type { RunCommandsOptions } from './executors/run-commands/run-commands.impl';
-export { LARGE_BUFFER } from './executors/run-commands/run-commands.impl';
+export {
+  LARGE_BUFFER,
+  interpolateArgsIntoCommand,
+  normalizeArgs as normalizeRunCommandsArgs,
+} from './executors/run-commands/run-commands.impl';
 export { FsTree } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
 export type { JsonInput } from './native';
-export { killProcessTreeGraceful } from './native';
+export {
+  isAiAgent,
+  killProcessTreeGraceful,
+  readShebangHeaders,
+} from './native';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';
@@ -240,10 +254,7 @@ export type { LifeCycle, TaskMetadata } from './tasks-runner/life-cycle';
 export { CompositeLifeCycle } from './tasks-runner/life-cycle';
 export { createRunManyDynamicOutputRenderer } from './tasks-runner/life-cycles/dynamic-run-many-terminal-output-life-cycle';
 export type { TaskStatus, TasksRunner } from './tasks-runner/tasks-runner';
-export type {
-  DependsOnEntryLocation,
-  NormalizedTargetDependencyConfig,
-} from './tasks-runner/utils';
+export type { NormalizedTargetDependencyConfig } from './tasks-runner/utils';
 export {
   calculateReverseDeps,
   createTaskId,
@@ -251,6 +262,7 @@ export {
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getCliPath,
+  // TODO(v25): remove custom hasher support.
   getCustomHasher,
   getDependencyConfigs,
   getExecutorForTask,
@@ -328,3 +340,4 @@ export {
 } from './utils/workspace-context';
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
+export { resolveStartupHost } from './tasks-runner/readiness/startup-host';

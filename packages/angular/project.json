@@ -7,6 +7,7 @@
     "build-ng": {
       "dependsOn": ["build-base", "typecheck"],
       "executor": "@nx/angular:package",
+      "inputs": ["production", "^production"],
       "options": {
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"

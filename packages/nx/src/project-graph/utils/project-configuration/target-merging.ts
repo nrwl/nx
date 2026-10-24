@@ -4,7 +4,7 @@ import {
   ProjectMetadata,
   TargetConfiguration,
   TargetMetadata,
-  TargetUltracacheConfiguration,
+  TargetUltracacheSettings,
 } from '../../../config/workspace-json-project-json';
 import {
   recordSourceMapKeysByIndex,
@@ -234,17 +234,17 @@ function mergeConfigurationValue(
 
 // `ultracache` keeps replace-unless-`'...'` semantics at the object level, but its
 // values still have to be merged per key: neither the wholesale replace nor
-// `mergeObjectWithSpread` recurses, so an `ignoredReads: ['...', 'tmp/**']`
+// `mergeObjectWithSpread` recurses, so an `ignoreReads: ['...', 'tmp/**']`
 // would otherwise reach the task graph with `'...'` intact — a glob matching
 // nothing, silently dropping the inherited patterns.
 function mergeUltracache(
-  newUltracache: TargetUltracacheConfiguration | undefined,
-  baseUltracache: TargetUltracacheConfiguration | undefined,
+  newUltracache: TargetUltracacheSettings | undefined,
+  baseUltracache: TargetUltracacheSettings | undefined,
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
   targetIdentifier?: string,
   deferSpreadsWithoutBase?: boolean
-): TargetUltracacheConfiguration | undefined {
+): TargetUltracacheSettings | undefined {
   if (newUltracache === undefined) {
     return baseUltracache;
   }

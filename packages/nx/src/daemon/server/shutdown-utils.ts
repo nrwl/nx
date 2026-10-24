@@ -3,7 +3,6 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from '../logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
-import { stopWatchingWorkspaceContext } from '../../utils/workspace-context';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -105,9 +104,6 @@ async function performShutdown(
         socket.destroy();
       }
     });
-
-    stopWatchingWorkspaceContext();
-    serverLogger.watcherLog(`Stopping the watch for ${workspaceRoot}`);
 
     deleteDaemonJsonProcessCache();
     cleanupPlugins();

@@ -10,7 +10,7 @@ import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
 import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
@@ -32,8 +32,8 @@ export type DependencyOverrides = Record<
 export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
-  readonly dependencies: { [k: string]: string[] } = {};
-  readonly continuousDependencies: { [k: string]: string[] } = {};
+  readonly dependencies: { [k: string]: TaskGraphEdge[] } = {};
+  readonly continuousDependencies: { [k: string]: TaskGraphEdge[] } = {};
   readonly dependencyOverrides: DependencyOverrides = {};
   private readonly allTargetNames: string[];
 
@@ -101,39 +101,18 @@ export class ProcessTasks {
       }
       for (let d of Object.keys(this.dependencies)) {
         this.dependencies[d] = this.dependencies[d].filter(
-          (dd) => !!initialTasks[dd]
+          (dd) => !!initialTasks[dd.id]
         );
       }
       for (let d of Object.keys(this.continuousDependencies)) {
         this.continuousDependencies[d] = this.continuousDependencies[d].filter(
-          (dd) => !!initialTasks[dd]
+          (dd) => !!initialTasks[dd.id]
         );
       }
     }
 
     filterDummyTasks(this.dependencies);
-
-    for (const taskId of Object.keys(this.dependencies)) {
-      if (this.dependencies[taskId].length > 0) {
-        this.dependencies[taskId] = [
-          ...new Set(
-            this.dependencies[taskId].filter((d) => d !== taskId)
-          ).values(),
-        ];
-      }
-    }
-
     filterDummyTasks(this.continuousDependencies);
-
-    for (const taskId of Object.keys(this.continuousDependencies)) {
-      if (this.continuousDependencies[taskId].length > 0) {
-        this.continuousDependencies[taskId] = [
-          ...new Set(
-            this.continuousDependencies[taskId].filter((d) => d !== taskId)
-          ).values(),
-        ];
-      }
-    }
 
     return Object.keys(this.tasks).filter(
       (d) =>
@@ -272,9 +251,9 @@ export class ProcessTasks {
       if (task.id !== selfTaskId) {
         this.recordEdge(task, selfTaskId, taskOverrides);
         if (this.tasks[selfTaskId].continuous) {
-          this.continuousDependencies[task.id].push(selfTaskId);
+          this.addContinuousEdge(task, selfTaskId, dependencyConfig);
         } else {
-          this.dependencies[task.id].push(selfTaskId);
+          this.dependencies[task.id].push({ id: selfTaskId });
         }
       }
     }
@@ -328,9 +307,9 @@ export class ProcessTasks {
         if (task.id !== depTargetId) {
           this.recordEdge(task, depTargetId, taskOverrides);
           if (depTargetConfiguration.continuous) {
-            this.continuousDependencies[task.id].push(depTargetId);
+            this.addContinuousEdge(task, depTargetId, dependencyConfig);
           } else {
-            this.dependencies[task.id].push(depTargetId);
+            this.dependencies[task.id].push({ id: depTargetId });
           }
         }
         if (!this.tasks[depTargetId]) {
@@ -363,14 +342,24 @@ export class ProcessTasks {
             DUMMY_TASK_TARGET,
           undefined
         );
-        this.dependencies[task.id].push(dummyId);
-        this.continuousDependencies[task.id].push(dummyId);
+        this.dependencies[task.id].push({ id: dummyId });
+        this.continuousDependencies[task.id].push({ id: dummyId });
         this.dependencies[dummyId] ??= [];
         this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private addContinuousEdge(
+    task: Task,
+    dependencyId: string,
+    dependencyConfig: TargetDependencyConfig
+  ) {
+    this.continuousDependencies[task.id].push(
+      continuousEdge(dependencyId, dependencyConfig)
+    );
   }
 
   private recordEdge(
@@ -453,9 +442,15 @@ export class ProcessTasks {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
-    return projectHasTargetAndConfiguration(project, target, configuration)
+    const resolved = projectHasTargetAndConfiguration(
+      project,
+      target,
+      configuration
+    )
       ? configuration
       : defaultConfiguration;
+    // `createTaskId` drops an empty configuration, so the target must too.
+    return resolved || undefined;
   }
 }
 
@@ -589,11 +584,49 @@ function interpolateOverrides<T = any>(
   return interpolatedArgs;
 }
 
+function continuousEdge(
+  id: string,
+  dependencyConfig: TargetDependencyConfig
+): TaskGraphEdge {
+  const edge: TaskGraphEdge = { id };
+  if (dependencyConfig.waitFor === 'ready') {
+    edge.waitFor = 'ready';
+  }
+  if (dependencyConfig.inputs === false) {
+    edge.inputs = false;
+  }
+  return edge;
+}
+
+// A task reached by several edges waits for ready when any of them does, and
+// keeps its inputs unless all of them opt out
+function mergeEdges(edges: TaskGraphEdge[]): TaskGraphEdge[] {
+  const byId = new Map<string, TaskGraphEdge>();
+  for (const edge of edges) {
+    const seen = byId.get(edge.id);
+    if (!seen) {
+      byId.set(edge.id, edge);
+      continue;
+    }
+    const merged: TaskGraphEdge = { id: edge.id };
+    if (seen.waitFor === 'ready' || edge.waitFor === 'ready') {
+      merged.waitFor = 'ready';
+    }
+    if (seen.inputs === false && edge.inputs === false) {
+      merged.inputs = false;
+    }
+    byId.set(edge.id, merged);
+  }
+  return [...byId.values()];
+}
+
 /**
  * This function is used to filter out the dummy tasks from the dependencies
  * It will manipulate the dependencies object in place
  */
-export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
+export function filterDummyTasks(dependencies: {
+  [k: string]: TaskGraphEdge[];
+}) {
   const cycles = findCycles({ dependencies });
   for (const [key, deps] of Object.entries(dependencies)) {
     if (!key.endsWith(DUMMY_TASK_TARGET)) {
@@ -604,7 +637,7 @@ export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
         );
       }
 
-      dependencies[key] = normalizedDeps;
+      dependencies[key] = mergeEdges(normalizedDeps);
     }
   }
 
@@ -619,16 +652,17 @@ export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
  * this function is used to get the non dummy dependencies of a task recursively
  */
 export function getNonDummyDeps(
-  currentTask: string,
-  dependencies: { [k: string]: string[] },
+  currentEdge: TaskGraphEdge,
+  dependencies: { [k: string]: TaskGraphEdge[] },
   cycles?: Set<string>,
   seen: Set<string> = new Set()
-): string[] {
+): TaskGraphEdge[] {
+  const currentTask = currentEdge.id;
   if (seen.has(currentTask)) {
     return [];
   }
-  seen.add(currentTask);
   if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    seen.add(currentTask);
     if (cycles?.has(currentTask)) {
       return [];
     }
@@ -643,7 +677,7 @@ export function getNonDummyDeps(
       getNonDummyDeps(dep, dependencies, cycles, seen)
     );
   } else {
-    return [currentTask];
+    return [currentEdge];
   }
 }
 

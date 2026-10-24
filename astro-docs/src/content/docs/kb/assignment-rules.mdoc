@@ -1,6 +1,6 @@
 ---
 title: Assignment Rules
-description: Control which tasks run on which agents using assignment rules with Nx Agents
+description: Control which tasks run on which agents using assignment rules with Workers
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
@@ -9,7 +9,7 @@ topics:
 Use assignment rules to control which agent types a task can run on.
 For example, send resource-intensive targets like `e2e-ci` and `build` to larger agents and keep lighter tasks like `lint` and `test` on smaller ones.
 
-On Nx Agents, you don't need assignment rules to size how many tasks run at once.
+On Workers, you don't need assignment rules to size how many tasks run at once.
 [_Dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works) fills each agent by the CPU and memory its tasks use.
 To keep tasks that share a resource, such as a port, off the same agent at the same time, use [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
 
@@ -40,7 +40,7 @@ dte:
 Each assignment rule has one of the following properties that it matches against tasks: `projects`, `targets`, and/or `configurations`. You can provide a list of globs to match against the tasks in your workspace. It also has a list of possible [agent types](/docs/kb/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:
 
 {% tabs syncKey="dte-kind" %}
-{% tabitem label="Assignment rules with Nx Agents" %}
+{% tabitem label="Assignment rules with Workers" %}
 
 ```yaml
 // .nx/workflows/distribution-config.yaml
@@ -96,7 +96,7 @@ You can mix and match any of the criteria in an assignment rule provided that yo
 
 - At least one of the following properties is defined: `projects`, `targets`, `configurations`.
 - There is at least one [agent type](/docs/kb/launch-templates) specified in the `run-on` field. If no parallelism is specified, the parallelism of the executed command will be used instead. If that is not specified, then the parallelism will default to `1`
-- For assignment rules with Nx Agents, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
+- For assignment rules with Workers, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
 {% aside type="note" title="If you bring your own compute, you must define your own agent types" %}
 You must define your own agent types and attach them to your agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `run-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
@@ -202,7 +202,7 @@ The following rule will match the following tasks:
 
 ### Configuring parallelism through assignment rules
 
-Nx Agents pack tasks by CPU and memory use, so this section applies when you [bring your own compute](#using-assignment-rules-when-you-bring-your-own-compute).
+Workers pack tasks by CPU and memory use, so this section applies when you [bring your own compute](#using-assignment-rules-when-you-bring-your-own-compute).
 
 You can specify how many tasks of a certain type can run in parallel on a particular agent. Each agent object within the `run-on` list can have the `parallelism` property. Configuring parallelism through your assignment rules will override the other parallelism configurations in your workspace. For a given command run with DTE, parallelism is determined by in the following order:
 
@@ -279,12 +279,12 @@ If two rules have the same priority based on the below chart, the rule that appe
 
 | Priority | Configuration | Target | Project |
 | :------: | :-----------: | :----: | :-----: |
-|    1     |      ✅︎       |   ✅︎   |   ✅︎    |
-|    2     |      ✅︎       |   ✅︎   |         |
-|    3     |      ✅︎       |        |   ✅︎    |
-|    4     |               |   ✅︎   |   ✅︎    |
-|    5     |      ✅︎       |        |         |
-|    6     |               |   ✅︎   |         |
+|    1     |       ✅︎       |   ✅︎    |    ✅︎    |
+|    2     |       ✅︎       |   ✅︎    |         |
+|    3     |       ✅︎       |        |    ✅︎    |
+|    4     |               |   ✅︎    |    ✅︎    |
+|    5     |       ✅︎       |        |         |
+|    6     |               |   ✅︎    |         |
 |    7     |               |        |   ✅    |
 
 ### Rule precedence example
@@ -326,7 +326,7 @@ assignment-rules:
 ## Using assignment rules when you bring your own compute
 
 {% aside type="note" title="Enterprise Feature" %}
-Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Nx Agents](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
+Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
 {% /aside %}
 
 A typical `assignment-rules.yaml` file might look like this:
@@ -384,7 +384,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - ... # Nx commands you want to distribute
 
@@ -410,7 +410,7 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx start-agent
+        run: npx nx-cloud start-worker
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-medium' # This value needs to match one of the 'run-on' values defined in the assignment rules
@@ -438,13 +438,13 @@ jobs:
         run: npm ci
 
       - name: Start Agent ${{ matrix.agent }}
-        run: npx nx start-agent
+        run: npx nx-cloud start-worker
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
           NX_AGENT_LAUNCH_TEMPLATE: 'linux-large' # This value needs to match one of the 'run-on' values defined in the assignment rules
 ```
 
-## Using assignment rules with dynamic Nx Agents
+## Using assignment rules with dynamic Workers
 
 A typical `distribution-config.yaml` file might look like this:
 
@@ -498,7 +498,7 @@ jobs:
     ...
     steps:
       ...
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
       - ..
 ```
 

@@ -43,6 +43,7 @@ describe('migrate run issues', () => {
   ): MigrateStep => ({
     id,
     roundIndex: 0,
+    kind: 'migration',
     migrationId,
     status,
     attempt: 1,
@@ -255,6 +256,33 @@ describe('migrate run issues', () => {
       );
     });
 
+    it('accepts only "outcome" in a single run, which keeps no issue ledger', () => {
+      const steps = [step('step-1', '@nx/js:one', 'awaiting-prompt-outcome')];
+      const state = { ...stateWith(steps), singleMigration: true };
+
+      expect(
+        parseHandoffIssues(
+          {
+            issues: [
+              {
+                summary: 'The config still names the old option.',
+                applicableMigrations: 'unknown',
+              },
+            ],
+          },
+          state,
+          steps[0]
+        )
+      ).toEqual({
+        ok: false,
+        reason:
+          'the handoff has an unrecognized field "issues"; a --run-migration run accepts only "outcome" next to "status" and "summary", and its problems go in "summary"',
+      });
+      expect(
+        parseHandoffIssues({ outcome: 'skipped' }, state, steps[0])
+      ).toEqual({ ok: true, issues: [], updates: [] });
+    });
+
     it('rejects an update for an issue assigned to another step', () => {
       const steps = baseSteps();
       const result = parseHandoffIssues(
@@ -265,6 +293,47 @@ describe('migrate run issues', () => {
       expect(result.ok).toBe(false);
       expect((result as { ok: false; reason: string }).reason).toContain(
         'not assigned to this step'
+      );
+    });
+
+    it('lets the final validation pass update any open issue, deferred ones included', () => {
+      const pass: MigrateStep = {
+        id: 'step-4',
+        roundIndex: 0,
+        kind: 'final-validation',
+        status: 'awaiting-prompt-outcome',
+        attempt: 1,
+        dispenseCount: 1,
+      };
+      const steps = [...baseSteps(), pass];
+      const ledger = [
+        issue('issue-1', { disposition: 'deferred-final' }),
+        issue('issue-2', { claimedByStepId: 'step-2' }),
+        issue('issue-3', {
+          disposition: 'resolved',
+          resolvedByStepId: 'step-1',
+        }),
+      ];
+      const accepted = parseHandoffIssues(
+        {
+          issueUpdates: [
+            { id: 'issue-1', disposition: 'resolved' },
+            { id: 'issue-2', disposition: 'deferred-final' },
+          ],
+        },
+        stateWith(steps, ledger),
+        pass
+      );
+      expect(accepted.ok).toBe(true);
+
+      const resolvedAgain = parseHandoffIssues(
+        { issueUpdates: [{ id: 'issue-3', disposition: 'resolved' }] },
+        stateWith(steps, ledger),
+        pass
+      );
+      expect(resolvedAgain.ok).toBe(false);
+      expect((resolvedAgain as { ok: false; reason: string }).reason).toContain(
+        'already resolved'
       );
     });
 
@@ -1773,6 +1842,36 @@ describe('migrate run issues', () => {
   });
 
   describe('renderIssueDigestLines', () => {
+    it('hands every open issue to the final validation pass, deferred ones labeled as its own', () => {
+      const pass: MigrateStep = {
+        id: 'step-4',
+        roundIndex: 0,
+        kind: 'final-validation',
+        status: 'awaiting-prompt-outcome',
+        attempt: 1,
+        dispenseCount: 1,
+      };
+      const lines = renderIssueDigestLines(
+        stateWith(
+          [...baseSteps(), pass],
+          [
+            issue('issue-1', {
+              disposition: 'deferred-final',
+              summary: 'deferred one',
+            }),
+            issue('issue-2', { fingerprint: 'fp-b', summary: 'stray one' }),
+          ]
+        ),
+        'step-4',
+        'run-1'
+      );
+      expect(lines.slice(2, 4)).toEqual([
+        '  - issue-1 (deferred to this step): deferred one',
+        '  - issue-2 (assigned to this step): stray one',
+      ]);
+      expect(lines[4]).toContain('"issueUpdates"');
+    });
+
     it('is empty when the ledger holds nothing unresolved', () => {
       expect(
         renderIssueDigestLines(stateWith(baseSteps()), 'step-2', 'run-1')

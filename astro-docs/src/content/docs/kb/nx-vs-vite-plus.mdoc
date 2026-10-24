@@ -23,7 +23,7 @@ Nx is a build system that orchestrates the tools you already use. Plugins config
 Nx and Vite+ share the basics: task running, local caching, and package filtering. They differ on non-local runs, like CI:
 
 - **Vite+ is roadmap or absent there.** A shared cache, task distribution, and cross-language support are missing or unshipped.
-- **Nx has run these in production for years.** Remote caching, Nx Agents distribution, and affected detection across languages.
+- **Nx has run these in production for years.** Remote caching, distribution across Workers, and affected detection across languages.
 
 Because the [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugin runs the Vite toolchain rather than replacing it, choosing Nx keeps Vite and Vitest. Nx fits a small workspace as well as a large one, and holds up as the monorepo scales.
 
@@ -31,28 +31,28 @@ Because the [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugi
 Vite+ reached beta in July 2026 and is evolving quickly. The capabilities below reflect the [Vite+ beta announcement](https://voidzero.dev/posts/announcing-vite-plus-beta) and its published roadmap.
 {% /aside %}
 
-| Topic                                                 | Nx                                                              | Vite+                                                  |
-| ----------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------ |
-| [Toolchain](#toolchain)                               | Plugin-configured tasks for Vite, Vitest, and dozens of tools   | Unified `vp` CLI for Vite, Vitest, Oxlint              |
-| [Task running and caching](#task-running-and-caching) | Opt-in caching with composable `namedInputs`                    | Cached config tasks, automatic input tracking          |
-| [Sharing the cache](#sharing-the-cache)               | Nx Cloud remote caching, shared across developers and CI        | Local only, remote caching on the roadmap              |
-| [Affected detection](#affected-detection)             | `nx affected` runs only tasks impacted by your changes          | Not available, `--filter` selects by name or directory |
-| [Running on CI](#running-on-ci)                       | Nx Agents distribution, Atomizer, self-healing, flaky detection | Runs the same commands as local, no CI features        |
-| [Polyglot support](#polyglot-support)                 | Native plugins for Java, .NET, Python, Rust                     | JS/TS only, graph from `package.json` workspaces       |
-| [Module boundary rules](#module-boundary-rules)       | Tag-based lint rule + conformance rules                         | Not available                                          |
-| [Release management](#release-management)             | Built-in versioning, changelogs, and publishing                 | `vp pm stage` publishing workflow                      |
+| Topic                                                 | Nx                                                                   | Vite+                                                  |
+| ----------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ |
+| [Toolchain](#toolchain)                               | Plugin-configured tasks for Vite, Vitest, and dozens of tools        | Unified `vp` CLI for Vite, Vitest, Oxlint              |
+| [Task running and caching](#task-running-and-caching) | Opt-in caching with composable `namedInputs`                         | Cached config tasks, automatic input tracking          |
+| [Sharing the cache](#sharing-the-cache)               | Nx Cloud remote caching, shared across developers and CI             | Local only, remote caching on the roadmap              |
+| [Affected detection](#affected-detection)             | `nx affected` runs only tasks impacted by your changes               | Not available, `--filter` selects by name or directory |
+| [Running on CI](#running-on-ci)                       | Distribution across Workers, Atomizer, self-healing, flaky detection | Runs the same commands as local, no CI features        |
+| [Polyglot support](#polyglot-support)                 | Native plugins for Java, .NET, Python, Rust                          | JS/TS only, graph from `package.json` workspaces       |
+| [Module boundary rules](#module-boundary-rules)       | Tag-based lint rule + conformance rules                              | Not available                                          |
+| [Release management](#release-management)             | Built-in versioning, changelogs, and publishing                      | `vp pm stage` publishing workflow                      |
 
 ## Toolchain
 
 Vite+ bundles the toolchain into one CLI: `vp check` runs linting, formatting, and type checking in a single pass, `vp test` runs Vitest, and `vp build` runs Vite 8 on Rolldown. One consistent entry point for the whole JS stack is convenient.
 
-Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing `vite.config` and `vitest.config` files and [automatically configure tasks](/docs/concepts/mental-model#inferred-tasks) with correct cache inputs and outputs, so the same Vite 8 builds and Vitest runs execute under Nx orchestration. Tools Nx doesn't have a plugin for, including `vp` subcommands, run as regular `package.json` scripts.
+Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing `vite.config` and `vitest.config` files and [automatically configure tasks](/docs/features/run-tasks#inferred-tasks) with correct cache inputs and outputs, so the same Vite 8 builds and Vitest runs execute under Nx orchestration. Tools Nx doesn't have a plugin for, including `vp` subcommands, run as regular `package.json` scripts.
 
 ## Task running and caching
 
 Both tools run your `package.json` scripts with `dependsOn` ordering across the workspace. Vite+ derives cache inputs automatically by recording file reads and writes during execution, a good default that avoids manual configuration. Its cache is content-based, stored in `node_modules/.vite/task-cache`, and replays terminal output on a hit.
 
-Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/kb/sandboxing) runs each task in a sandbox that surfaces undeclared reads or writes, with an opt-in strict mode that fails the task, protecting cache integrity.
+Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/features/cache-task-results#how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task reads as its inputs and surfaces the undeclared reads and writes it can't record, protecting cache integrity.
 
 ## Sharing the cache
 
@@ -72,7 +72,7 @@ Vite+ has no affected command. Its `--filter` flag selects packages by name, glo
 
 The Vite+ CI story is that CI runs the same commands developers run locally, with the `setup-vp` action installing the toolchain. There is no task distribution, test splitting, or flaky test handling.
 
-Nx works the same way on any CI provider, and [Nx Cloud](/docs/features/ci-features) layers on what single-machine execution can't provide: [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute tasks across machines based on historical timings, [Atomizer](/docs/kb/split-e2e-tasks) splits slow e2e suites into per-file tasks, [flaky task detection](/docs/kb/flaky-tasks) retries flaky tests in isolation, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for failures.
+Nx works the same way on any CI provider, and [Nx Cloud](/docs/features/ci-features) layers on what single-machine execution can't provide: [Workers](/docs/features/ci-features/distribute-task-execution) distribute tasks across machines based on historical timings, [Atomizer](/docs/kb/split-e2e-tasks) splits slow e2e suites into per-file tasks, [flaky task detection](/docs/kb/flaky-tasks) retries flaky tests in isolation, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for failures.
 
 ## Polyglot support
 

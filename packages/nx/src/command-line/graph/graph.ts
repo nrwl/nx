@@ -54,7 +54,7 @@ import type { NxArgs } from '../../utils/command-line-utils';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
-import { expandFilesInput, HashPlanner } from '../../native';
+import { expandFilesInput, HashPlanner, openUrl } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
@@ -66,6 +66,11 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  isUltracacheOnInCI,
+  ultracacheModeInCI,
+} from '../../ultracache/ci-status';
+import { hasCustomHasher } from '../show/show-target/utils';
 import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
@@ -604,15 +609,9 @@ export async function generateGraph(
     });
 
     if (args.open) {
-      (
-        new Function('return import("open")')() as Promise<
-          typeof import('open')
-        >
-      )
-        .then((m) => m.default(url.toString()))
-        .catch(() => {
-          // Ignore errors when opening browser (e.g. no browser available)
-        });
+      // Best-effort: openUrl never throws, returning false if no opener could be
+      // spawned. The URL is printed above, so a failure is silent.
+      openUrl(url.toString());
     }
 
     return new Promise((res) => {
@@ -935,7 +934,8 @@ function createProjectGraphListener() {
             errors,
             currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
-            isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
+            isFilteredGraph ? currentProjectGraphClientResponse.exclude : [],
+            await isUltracacheOnInCI(readNxJson())
           );
 
         if (
@@ -972,13 +972,49 @@ function createProjectGraphListener() {
   );
 }
 
+/** The graph's nodes, with `ultracacheInCI` set to each target's Ultracache mode in CI. */
+function markTargetsHashedFromUltracacheInCI(
+  graph: ProjectGraph
+): ProjectGraphProjectNode[] {
+  return Object.values(graph.nodes).map((node) => {
+    const targets = Object.entries(node.data.targets ?? {});
+    const modes = new Map(
+      targets.flatMap(([name, target]) => {
+        const mode = ultracacheModeInCI(
+          target,
+          hasCustomHasher(node.name, name, graph)
+        );
+        return mode ? [[name, mode] as const] : [];
+      })
+    );
+    if (!modes.size) {
+      return node;
+    }
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        targets: Object.fromEntries(
+          targets.map(([name, target]) => [
+            name,
+            modes.has(name)
+              ? { ...target, ultracacheInCI: modes.get(name) }
+              : target,
+          ])
+        ),
+      },
+    };
+  });
+}
+
 function transformProjectGraphToClientResponse(
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: GraphError[] | null,
   affected: string[] = [],
   focus: string = null,
-  exclude: string[] = []
+  exclude: string[] = [],
+  ultracacheOnInCI = false
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -994,7 +1030,9 @@ function transformProjectGraphToClientResponse(
     readFileMapCache()?.fileMap.projectFileMap || {};
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
+  const projects: ProjectGraphProjectNode[] = ultracacheOnInCI
+    ? markTargetsHashedFromUltracacheInCI(graph)
+    : Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const nxJson = readNxJson();
@@ -1088,7 +1126,8 @@ async function createProjectGraphAndSourceMapClientResponse(
       errors,
       affected,
       focus,
-      exclude
+      exclude,
+      await isUltracacheOnInCI(readNxJson())
     );
 
   performance.mark('project graph response generation:end');
@@ -1518,8 +1557,9 @@ function expandInputs(
     workspaceRootInputs,
     allWorkspaceFiles
   );
+  const projectRoots = depGraphClientResponse.projects.map((p) => p.data.root);
   const filesExpanded = filesInputs.flatMap((globs) =>
-    expandFilesInput(workspaceRoot, globs)
+    expandFilesInput(workspaceRoot, globs, projectRoots)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {

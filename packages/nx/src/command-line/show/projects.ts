@@ -8,7 +8,13 @@ import { filterAffected } from '../../project-graph/affected/affected-project-gr
 import {
   computeAffectedTasks,
   selectsAffectedTasks,
+  taskGranularityRequirement,
 } from '../../project-graph/affected/affected-tasks';
+import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
+import {
+  explainUnavailable,
+  isExplaining,
+} from '../../project-graph/affected/affected-reasons';
 import {
   FileChange,
   calculateFileChanges,
@@ -40,12 +46,34 @@ export async function showProjectsHandler(
     nxJson
   );
 
+  const explainsTasks =
+    args.affected &&
+    selectsAffectedTasks(nxJson) &&
+    !!args.withTarget?.length &&
+    !args.projects;
+  if (isExplaining(nxArgs.explain) && !explainsTasks) {
+    throw new Error(
+      explainUnavailable(
+        [
+          !selectsAffectedTasks(nxJson) && taskGranularityRequirement(),
+          !args.affected && '--affected',
+          !args.withTarget?.length && 'targets passed with --withTarget (-t)',
+        ].filter(Boolean),
+        args.projects ? ['--projects'] : []
+      )
+    );
+  }
+
   // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
     const touchedFiles = await getTouchedFiles(nxArgs);
 
     // With a target, list projects owning an affected task for it, matching `affected -t`.
-    if (selectsAffectedTasks() && args.withTarget?.length && !args.projects) {
+    if (
+      selectsAffectedTasks(nxJson) &&
+      args.withTarget?.length &&
+      !args.projects
+    ) {
       const affectedTasks = await computeAffectedTasks({
         projectGraph: graph,
         nxJson,
@@ -56,8 +84,21 @@ export async function showProjectsHandler(
           head: nxArgs.head,
           files: nxArgs.files,
         },
+        explain: isExplaining(nxArgs.explain),
         ...(await runCommandModule().runnerInputsForSelection(nxArgs, nxJson)),
       });
+      if (isExplaining(nxArgs.explain)) {
+        printAffectedExplanation(
+          affectedTasks.explanation,
+          'Affected tasks',
+          // show projects declares its own --json, which has no executor to
+          // pass through to.
+          args.json ? 'stdout' : nxArgs.explain,
+          { verbose: args.verbose }
+        );
+        await output.drain();
+        return;
+      }
       const { taskGraph, initiatingTaskIds } = affectedTasks.taskSelection;
       const owning = new Set(
         initiatingTaskIds.map((id) => taskGraph.tasks[id].target.project)

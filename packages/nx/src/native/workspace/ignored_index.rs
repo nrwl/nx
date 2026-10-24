@@ -41,8 +41,8 @@ pub struct IgnoredIndex {
     tracked: RwLock<BTreeSet<String>>,
     /// The tracked directories that have been walked. Only under one of these
     /// is there a listing to answer from, or a hash that may be served
-    /// without a stat. A declared output is tracked and never listed, since
-    /// nothing asks one for its files.
+    /// without a stat. A declared output is listed once the outputs check
+    /// first asks for its files.
     listed: RwLock<BTreeSet<String>>,
     /// Every file under a listed directory, sorted, workspace-relative.
     members: RwLock<BTreeSet<String>>,
@@ -91,7 +91,7 @@ impl Content {
     }
 }
 
-fn now_secs() -> u64 {
+pub(crate) fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -307,13 +307,15 @@ impl IgnoredIndex {
     /// `cached`, a tracked directory answers from its listing, walking the
     /// first time and keeping it current from events after. Otherwise, and
     /// for a directory nothing tracks, the disk is read and not remembered.
-    /// `None` only when `dir` cannot be read at all.
+    /// `None` only when `dir` cannot be read at all. A disk read does not
+    /// enter the directories in `skip`.
     pub(crate) fn files_under(
         &self,
         workspace_root: &Path,
         dir: &str,
         cached: bool,
         accept: PathPredicate,
+        skip: &[String],
     ) -> Option<Vec<String>> {
         if cached && self.is_tracked(dir) {
             // A listing that cannot settle, because the disk kept moving
@@ -324,7 +326,7 @@ impl IgnoredIndex {
             }
             trace!("no listing for {dir:?}; reading it from disk instead");
         }
-        read_directory(workspace_root, dir, accept)
+        read_directory(workspace_root, dir, accept, skip)
     }
 
     /// A reported write or creation. Under a listed prefix a file becomes a
@@ -581,6 +583,12 @@ impl IgnoredIndexReader {
         &self.index
     }
 
+    /// Applies what the watch delivered, for a caller about to read `index`
+    /// many times in a row. See `files_under`.
+    pub(crate) fn catch_up(&self) {
+        (self.catch_up)();
+    }
+
     /// See `IgnoredIndex::track`.
     pub(crate) fn track(&self, workspace_root: &Path, dir: &str) -> bool {
         self.index.track(workspace_root, dir)
@@ -595,9 +603,11 @@ impl IgnoredIndexReader {
         dir: &str,
         cached: bool,
         accept: PathPredicate,
+        skip: &[String],
     ) -> Option<Vec<String>> {
         (self.catch_up)();
-        self.index.files_under(workspace_root, dir, cached, accept)
+        self.index
+            .files_under(workspace_root, dir, cached, accept, skip)
     }
 }
 
@@ -749,7 +759,13 @@ mod tests {
         assert_eq!(
             {
                 let mut found = index
-                    .files_under(temp.path(), "dist", true, &|path| path.ends_with(".js"))
+                    .files_under(
+                        temp.path(),
+                        "dist",
+                        true,
+                        &|path| path.ends_with(".js"),
+                        &[],
+                    )
                     .unwrap();
                 found.sort();
                 found
@@ -1148,8 +1164,9 @@ mod tests {
         let temp = workspace();
         let index = watched();
         assert!(index.track(temp.path(), "dist/other"));
-        // Tracked but never listed, as a declared output is: its hashes are
-        // kept, and nothing is trusted, because no walk vouched for it.
+        // Tracked but not listed yet, as a declared output is until its first
+        // check: its hashes are kept, and nothing is trusted, because no walk
+        // vouched for it.
         assert!(!index.is_listed("dist/other/c.js"));
         index.hash_file(
             temp.path(),

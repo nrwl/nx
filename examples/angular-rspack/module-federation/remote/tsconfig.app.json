@@ -24,9 +24,6 @@
   "references": [
     {
       "path": "../../../../packages/angular-rspack/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../../packages/module-federation/tsconfig.lib.json"
     }
   ]
 }

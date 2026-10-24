@@ -1,3 +1,4 @@
+import { warnRemixDeprecation } from '../../utils/deprecation';
 import { createProjectGraphAsync, formatFiles, type Tree } from '@nx/devkit';
 import {
   AggregatedLog,
@@ -15,6 +16,7 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  warnRemixDeprecation();
   assertSupportedRemixVersion(tree);
 
   const projectGraph = await createProjectGraphAsync();
@@ -29,7 +31,6 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       devTargetName: 'dev',
       startTargetName: 'start',
       serveStaticTargetName: 'serve-static',
-      typecheckTargetName: 'typecheck',
     },
     [
       {

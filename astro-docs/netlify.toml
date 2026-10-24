@@ -451,7 +451,11 @@ to = "/docs/kb/bring-your-own-compute"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/fix-sandbox-violations"
-to = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
+
+[[redirects]]
+from = "/docs/kb/fix-sandbox-violations"
+to = "/docs/kb/improve-cache-inputs-outputs"
 
 [[redirects]]
 from = "/docs/guides/nx-cloud/personal-access-tokens"
@@ -699,11 +703,11 @@ to = "/docs/kb/angular-nx-version-matrix"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
-to = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/module-federation-with-ssr"
-to = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/angular/guides/nx-and-angular"
@@ -771,7 +775,7 @@ to = "/docs/kb/flat-config"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/faster-builds-with-module-federation"
-to = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation"
@@ -787,7 +791,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/consumer-and-provider"
@@ -807,11 +811,11 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
@@ -932,6 +936,26 @@ to = "/docs/kb/overview-angular"
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/overview-react"
 to = "/docs/kb/storybook-for-react"
+
+[[redirects]]
+from = "/docs/kb/angular-micro-frontends"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/angular-module-federation-with-ssr"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/dynamic-module-federation-with-angular"
+to = "/docs/kb/migrate-angular-module-federation"
+
+[[redirects]]
+from = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
+
+[[redirects]]
+from = "/docs/kb/faster-builds-with-module-federation"
+to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/overview-react"
@@ -1136,7 +1160,7 @@ to = "/docs/technologies/module-federation/introduction"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-technical-overview"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/create-a-host"
@@ -1152,7 +1176,7 @@ to = "/docs/kb/consumer-and-provider"
 
 [[redirects]]
 from = "/docs/kb/nx-module-federation-dev-server-plugin"
-to = "/docs/kb/nx-module-federation-plugin"
+to = "/docs/kb/migrate-from-nx-module-federation"
 
 [[redirects]]
 from = "/docs/kb/react-module-federation-with-ssr"
@@ -1184,6 +1208,47 @@ to = "/docs/kb/angular-nx-version-matrix"
 [[redirects]]
 from = "/docs/guides/nx-cloud/enable-ai-features"
 to = "/docs/kb/enable-ai-features"
+# Executor reference pages removed in Nx 24 along with the executors they documented
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/executors"
+to = "/docs/technologies/test-tools/cypress/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/detox/executors"
+to = "/docs/technologies/test-tools/detox/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/jest/executors"
+to = "/docs/technologies/test-tools/jest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/playwright/executors"
+to = "/docs/technologies/test-tools/playwright/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/executors"
+to = "/docs/technologies/test-tools/storybook/introduction"
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/executors"
+to = "/docs/technologies/test-tools/vitest/introduction"
+
+[[redirects]]
+from = "/docs/technologies/eslint/executors"
+to = "/docs/technologies/eslint/introduction"
+
+[[redirects]]
+from = "/docs/technologies/react/next/executors"
+to = "/docs/technologies/react/next/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/rollup/executors"
+to = "/docs/technologies/build-tools/rollup/introduction"
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/executors"
+to = "/docs/technologies/build-tools/vite/introduction"
 
 # DOC-713/DOC-714: secondary CI pages moved to the Knowledge Base, CI group renamed
 [[redirects]]
@@ -1244,7 +1309,7 @@ to = "/docs/kb/google-auth"
 
 [[redirects]]
 from = "/docs/features/ci-features/dynamic-agents"
-to = "/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size"
+to = "/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size"
 
 [[redirects]]
 from = "/docs/getting-started/nx-cloud"
@@ -1252,15 +1317,101 @@ to = "/docs/features/ci-features"
 
 [[redirects]]
 from = "/docs/concepts/ci-concepts/parallelization-distribution"
-to = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
+to = "/docs/features/ci-features#building-blocks-of-fast-ci"
 
 [[redirects]]
 from = "/docs/platform-features/orchestration-ci"
-to = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+# DOC-715: How Nx works pages folded into getting-started/how-nx-works and feature pages.
+[[redirects]]
+from = "/docs/concepts/mental-model"
+to = "/docs/getting-started/how-nx-works"
+
+[[redirects]]
+from = "/docs/concepts/how-caching-works"
+to = "/docs/features/cache-task-results#how-caching-works"
+
+[[redirects]]
+from = "/docs/concepts/task-pipeline-configuration"
+to = "/docs/features/run-tasks#defining-a-task-pipeline"
+
+[[redirects]]
+from = "/docs/concepts/types-of-configuration"
+to = "/docs/reference/project-configuration"
+
+[[redirects]]
+from = "/docs/concepts/nx-plugins"
+to = "/docs/plugin-registry"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/building-blocks-fast-ci"
+to = "/docs/features/ci-features#building-blocks-of-fast-ci"
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/concepts"
+to = "/docs/getting-started/how-nx-works"
+
+[[redirects]]
+from = "/docs/how-nx-works"
+to = "/docs/getting-started/how-nx-works"
+
+# DOC-715: hidden sidebar hub pages removed with the Core features / CI features split.
+[[redirects]]
+from = "/docs/platform-features"
+to = "/docs/features/run-tasks"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization"
+to = "/docs/features/explore-graph"
+
+[[redirects]]
+from = "/docs/platform-features/code-organization/enforce-module-boundaries"
+to = "/docs/features/enforce-module-boundaries"
+
+[[redirects]]
+from = "/docs/platform-features/continuous-integration-ci"
+to = "/docs/features/ci-features"
+
+[[redirects]]
+from = "/docs/platform-features/release-publishing"
+to = "/docs/features/manage-releases"
+
+[[redirects]]
+from = "/docs/platform-features/maintenance"
+to = "/docs/features/automate-updating-dependencies"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise"
+to = "/docs/enterprise"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/single-tenant"
+to = "/docs/enterprise/single-tenant/overview"
+
+[[redirects]]
+from = "/docs/platform-features/enterprise/conformance-reference"
+to = "/docs/reference/conformance/overview"
 
 [[redirects]]
 from = "/docs/kb/setup-ci"
 to = "/docs/getting-started/setup-ci"
+
+# NXC-4289: Remix executors were removed in Nx 24.
+[[redirects]]
+from = "/docs/technologies/react/remix/executors"
+to = "/docs/technologies/react/remix/introduction"
+status = 301
+
+# NXC-5093: e2e import-hashing guide merged into the skip unaffected e2e tests guide
+[[redirects]]
+from = "/docs/kb/hash-e2e-tests-from-imports"
+to = "/docs/kb/skip-unaffected-e2e-tests"
+status = 301
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

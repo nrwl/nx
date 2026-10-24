@@ -26,14 +26,17 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
 }
 
-/**
- * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead
- */
 export interface NxAffectedConfig {
   /**
    * Default based branch used by affected commands.
+   * @deprecated Use {@link NxJsonConfiguration#defaultBase } instead. This will be removed in Nx 25.
    */
   defaultBase?: string;
+  /**
+   * Select every task of each affected project, instead of only the tasks
+   * whose inputs a change reaches. Defaults to `false`.
+   */
+  legacy?: boolean;
 }
 
 /**
@@ -775,7 +778,9 @@ export interface NxSyncConfiguration {
 export interface NxMigrateConfiguration {
   /**
    * Whether to automatically create a git commit after each migration runs.
-   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   * Equivalent to the `--create-commits` flag. Defaults to `true` when the
+   * agentic flow runs the migrations in a Git repository, and `false`
+   * otherwise.
    */
   createCommits?: boolean;
 
@@ -807,8 +812,7 @@ export interface NxMigrateConfiguration {
   /**
    * Whether `nx migrate` resolves package versions via the npm registry
    * (faster) instead of a package-manager install. The
-   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
-   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` env var takes precedence over this.
    * Defaults to `true`.
    */
   useRegistryResolution?: boolean;
@@ -823,11 +827,19 @@ export interface NxMigrateConfiguration {
   agentic?: boolean | AgentId;
 
   /**
-   * Whether to run agent-driven validation after generator-only migrations when
-   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
-   * to `true` when the agentic flow is enabled.
+   * Whether the AI agent driving a migrate run reviews the changes of
+   * generator-only migrations. Equivalent to the `--validate` flag. Defaults to
+   * `true`.
    */
   validate?: boolean;
+
+  /**
+   * Whether a migrate run an AI agent drives ends with a final check, where the
+   * agent makes sure the projects the run touched still lint, build, and pass
+   * their unit tests. Equivalent to the `--final-validation` flag. Defaults to
+   * `true`.
+   */
+  finalValidation?: boolean;
 }
 
 /**
@@ -858,7 +870,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   targetDefaults?: TargetDefaults;
   /**
    * Default options for `nx affected`
-   * @deprecated use {@link defaultBase} instead. For more information see https://nx.dev/docs/reference/nx-json#default-base
    */
   affected?: NxAffectedConfig;
 
@@ -984,7 +995,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 
   /**
-   * Set this to false to disable adding inference plugins when generating new projects
+   * When false, `nx add` does not update package.json scripts by default and
+   * `nx init` uses its legacy setup. Generators always add their inference plugin.
    */
   useInferencePlugins?: boolean;
 

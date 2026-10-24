@@ -125,6 +125,27 @@ Omit `targetNamePrefix` to keep the target names from `angular.json`. Use `inclu
 
 A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/angular/plugin`.
 
+## Wait for the dev server to be ready
+
+A task that depends on a dev server target starts once the server task has started.
+To make it wait until the server accepts connections, set `waitFor` to `ready` on its `dependsOn` entry.
+It then waits for the target's `readyWhen` check, which depends on how the target runs the server:
+
+- `angular.json` targets that use a dev server or SSR dev server builder get a check from `@nx/angular/plugin`.
+  It runs when the task runs, reads the target from `angular.json`, and waits for the port.
+  The port comes from the `--port` flag, then the target's `port` option, which a configuration can override, then 4200.
+  For `@angular/build:dev-server` 22 or later, a set `PORT` environment variable replaces it, as it does in the builder.
+- `project.json` targets that run a dev server builder as their executor, such as `@angular/build:dev-server` or `@nx/angular:dev-server`, need `"readyWhen": { "signal": true }`.
+  Nx then reports the `baseUrl` that the builder returns.
+  Generated targets include the setting, and a migration adds it to existing ones.
+- Rspack applications get `"readyWhen": { "signal": true }` from `@nx/rspack/plugin`, and `NgRspackPlugin` reports the dev server's address once it listens.
+  With SSR, the server in `server.ts` reports its own address instead, when it calls `emitReadySignal` from `@nx/js/ready-signal`, as generated SSR servers do.
+- The `serve-static` target runs the `@nx/web:file-server` executor, which reports its address once it listens.
+
+With the last three, the waiting task gets the reported address in the `NX_READY_URL` environment variable.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the details, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
+
 ## Local development
 
 ### Generate an Angular application
@@ -180,7 +201,7 @@ nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 
 ### Set up micro frontends
 
-As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), with Nx orchestrating, caching, and scoping CI to the affected apps. See [Micro Frontends with Angular](/docs/kb/angular-micro-frontends) for the setup path.
+Nx v24 removed the `@nx/angular` `host` and `remote` generators. For Angular micro frontends, use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation), and keep Nx for caching and affected runs in CI. To move an existing Nx Module Federation setup, see [migrate Angular Module Federation](/docs/kb/migrate-angular-module-federation).
 
 ## Structure your Angular monorepo
 
@@ -193,7 +214,7 @@ To decide how to split projects, see [folder structure](/docs/kb/folder-structur
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches. Connecting your workspace to Nx Cloud adds:
 
 - [Remote caching](/docs/features/ci-features/remote-cache) to share build and test results across your team and CI machines
-- [Nx Agents](/docs/features/ci-features/distribute-task-execution) to distribute your Angular builds, tests, and lint tasks across machines
+- [Workers](/docs/features/ci-features/distribute-task-execution) to distribute your Angular builds, tests, and lint tasks across machines
 - [Self-healing CI](/docs/features/ci-features/self-healing-ci) to propose fixes for failed tasks directly in your editor or PR
 
 Connect your workspace:
@@ -207,10 +228,9 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 ## What's next
 
 {% cardgrid %}
-{% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
+{% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Workers, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
 {% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/kb/migrate-angular-cli-to-nx" /%}
-{% linkcard title="Micro Frontends with Angular" description="Build Angular micro frontends with Native Federation." href="/docs/kb/angular-micro-frontends" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="/docs/kb/using-tailwind-css-with-angular-projects" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}

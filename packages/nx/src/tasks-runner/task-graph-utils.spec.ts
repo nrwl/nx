@@ -53,11 +53,11 @@ describe('task graph utils', () => {
             q: [],
           },
           continuousDependencies: {
-            a: ['b', 'c'],
-            b: ['d'],
-            c: ['e'],
+            a: [{ id: 'b' }, { id: 'c' }],
+            b: [{ id: 'd' }],
+            c: [{ id: 'e' }],
             d: [],
-            e: ['q', 'a'],
+            e: [{ id: 'q' }, { id: 'a' }],
             q: [],
           },
         })
@@ -66,7 +66,7 @@ describe('task graph utils', () => {
       expect(
         findCycle({
           dependencies: {
-            a: ['b'],
+            a: [{ id: 'b' }],
             b: [],
             c: [],
             d: [],
@@ -76,7 +76,7 @@ describe('task graph utils', () => {
           },
           continuousDependencies: {
             a: [],
-            b: ['a'],
+            b: [{ id: 'a' }],
             c: [],
             d: [],
             e: [],
@@ -167,19 +167,19 @@ describe('task graph utils', () => {
       const graph = {
         roots: ['d'],
         dependencies: {
-          a: ['b', 'c'],
-          b: ['d'],
-          c: ['e'],
+          a: [{ id: 'b' }, { id: 'c' }],
+          b: [{ id: 'd' }],
+          c: [{ id: 'e' }],
           d: [],
-          e: ['a'],
+          e: [{ id: 'a' }],
         },
       };
       makeAcyclic(graph);
 
       expect(graph.dependencies).toEqual({
-        a: ['b', 'c'],
-        b: ['d'],
-        c: ['e'],
+        a: [{ id: 'b' }, { id: 'c' }],
+        b: [{ id: 'd' }],
+        c: [{ id: 'e' }],
         d: [],
         e: [],
       });
@@ -190,36 +190,36 @@ describe('task graph utils', () => {
       const graph = {
         roots: ['d'],
         dependencies: {
-          a: ['b', 'c'],
-          b: ['d'],
-          c: ['e'],
+          a: [{ id: 'b' }, { id: 'c' }],
+          b: [{ id: 'd' }],
+          c: [{ id: 'e' }],
           d: [],
-          e: ['a'],
+          e: [{ id: 'a' }],
         },
         continuousDependencies: {
-          a: ['b'],
+          a: [{ id: 'b' }],
           b: [],
           c: [],
           d: [],
-          e: ['b'],
+          e: [{ id: 'b' }],
         },
       };
 
       makeAcyclic(graph);
 
       expect(graph.dependencies).toEqual({
-        a: ['b', 'c'],
-        b: ['d'],
-        c: ['e'],
+        a: [{ id: 'b' }, { id: 'c' }],
+        b: [{ id: 'd' }],
+        c: [{ id: 'e' }],
         d: [],
         e: [],
       });
       expect(graph.continuousDependencies).toEqual({
-        a: ['b'],
+        a: [{ id: 'b' }],
         b: [],
         c: [],
         d: [],
-        e: ['b'],
+        e: [{ id: 'b' }],
       });
     });
   });
@@ -371,7 +371,7 @@ describe('task graph utils', () => {
           },
         },
         continuousDependencies: {
-          'a:build': ['b:watch'],
+          'a:build': [{ id: 'b:watch' }],
           'b:watch': [],
         },
         roots: ['a:build'],
@@ -406,7 +406,10 @@ describe('task graph utils', () => {
             outputs: [],
           },
         },
-        continuousDependencies: { 'a:build': ['b:watch'], 'b:watch': [] },
+        continuousDependencies: {
+          'a:build': [{ id: 'b:watch' }],
+          'b:watch': [],
+        },
         dependencies: { 'a:build': [], 'b:watch': [] },
         roots: ['a:build'],
       };

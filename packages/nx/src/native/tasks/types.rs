@@ -38,11 +38,11 @@ pub struct Task {
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously
     pub continuous: Option<bool>,
-    /// The target's ultracache configuration, if declared
-    pub ultracache: Option<TaskUltracacheConfiguration>,
+    /// The target's Ultracache settings, if declared
+    pub ultracache: Option<TaskUltracacheSettings>,
 }
 
-/// How a target's tasks participate in ultracache. Nx Cloud only: nothing in
+/// How a target's tasks participate in Ultracache. Nx Cloud only: nothing in
 /// the OSS runner records or applies IO, so every mode behaves as `Off` without
 /// it.
 #[napi(string_enum = "lowercase")]
@@ -62,23 +62,26 @@ pub enum UltracacheMode {
     Off,
 }
 
-/// Ultracache configuration of a task's target
+/// Ultracache settings of a task's target
 #[napi(object)]
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct TaskUltracacheConfiguration {
+pub struct TaskUltracacheSettings {
     /// How this target's tasks participate. Defaults to `on`.
     #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
     pub mode: Option<UltracacheMode>,
+    /// Collect successful stat metadata accesses as inputs. Defaults to `false`.
+    /// Missing-path probes are tracked independently of this setting.
+    pub collect_stats: Option<bool>,
     /// Workspace-relative glob patterns for reads that should be excluded
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_reads: Option<Vec<String>>,
+    pub ignore_reads: Option<Vec<String>>,
     /// Workspace-relative glob patterns for writes that should be excluded
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_writes: Option<Vec<String>>,
+    pub ignore_writes: Option<Vec<String>>,
 }
 
 impl Task {
@@ -163,6 +166,22 @@ pub struct TaskResult {
     pub terminal_output: Option<String>,
 }
 
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
+/// An edge from a task to one of the tasks it depends on
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskGraphEdge {
+    /// ID of the task depended on
+    pub id: String,
+    /// What the dependent waits for on a continuous dependency. Defaults to `started`.
+    #[napi(ts_type = "'started' | 'ready'")]
+    pub wait_for: Option<String>,
+    /// `false` on a continuous dependency whose inputs the dependent does not hash
+    #[napi(ts_type = "false")]
+    pub inputs: Option<bool>,
+}
+
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
 /// Graph of Tasks to be executed
 #[napi(object)]
 pub struct TaskGraph {
@@ -170,9 +189,9 @@ pub struct TaskGraph {
     pub roots: Vec<String>,
     /// Map of Task IDs to Tasks
     pub tasks: HashMap<String, Task>,
-    /// Map of Task IDs to IDs of tasks which the task depends on
-    pub dependencies: HashMap<String, Vec<String>>,
-    pub continuous_dependencies: HashMap<String, Vec<String>>,
+    /// Map of Task IDs to the edges to tasks which the task depends on
+    pub dependencies: HashMap<String, Vec<TaskGraphEdge>>,
+    pub continuous_dependencies: HashMap<String, Vec<TaskGraphEdge>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
@@ -201,20 +220,25 @@ pub enum HashInstruction {
     /// Globs filtered against one project's tracked files.
     ProjectFileSet(String, Vec<String>),
     /// Workspace-relative globs expanded against the disk, so gitignored and
-    /// generated files count: a project's `includeIgnored` globs, or a
-    /// snapshot's observed reads. The project is not part of it: the same globs
-    /// read the same files wherever they were declared.
-    IgnoredFileSet(Vec<String>),
+    /// generated files count: a project's `includeIgnored` globs, or the
+    /// reads in a task's Ultracache configuration. The project is not part of
+    /// it: the same globs read the same files wherever they were declared.
+    /// `project_roots` keep each glob out of projects nested below the one it
+    /// reads from; they follow from the globs, see `scope_roots`.
+    IgnoredFileSet {
+        globs: Vec<String>,
+        project_roots: Vec<String>,
+    },
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
-    /// Digest of the I/O snapshot entry a task's plan was built from, so its
+    /// Digest of the Ultracache configuration a task's plan was built from, so its
     /// hash moves when its own observations do. Hashed as the text `Display`
     /// renders, which also keeps it from colliding with a native key.
-    IoSnapshot(String),
+    UltracacheConfiguration(String),
 }
 
 /// Hashed into every task regardless of its inputs (see `HashPlanner::get_plans_internal`).
@@ -264,20 +288,20 @@ impl InstructionPool {
         }
     }
 
-    /// Whether an I/O snapshot replaces this instruction: every declared
+    /// Whether an Ultracache configuration replaces this instruction: every declared
     /// fileset (`includeIgnored` ones too), TsConfiguration unless the root
     /// tsconfig was read, and a JSON input unless `read` says its file was.
-    pub fn replaced_by_snapshot(
+    pub fn replaced_by_configuration(
         &self,
         id: u32,
         keep_tsconfig: bool,
         read: impl Fn(&str) -> bool,
     ) -> bool {
-        // The snapshot's own reads are disk-backed groups too; the caller keeps those.
+        // The configuration's own reads are disk-backed groups too; the caller keeps those.
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::IgnoredFileSet(_) => true,
+            | HashInstruction::IgnoredFileSet { .. } => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
             HashInstruction::JsonFileSet(json) => !read(&json.json_path),
             _ => false,
@@ -324,18 +348,43 @@ pub struct HashPlans {
     pub deferred: std::collections::HashSet<String>,
 }
 
-/// Entries above which a disk-backed group's label carries a count and a
-/// digest instead of every path. A snapshot group can run to thousands.
+/// Entries above which a disk-backed group's label lists only its first
+/// positives and counts the rest. An Ultracache group can run to thousands.
 pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 
 impl HashInstruction {
+    /// An `IgnoredFileSet` that no project scopes.
+    pub fn ignored_files(globs: Vec<String>) -> Self {
+        HashInstruction::IgnoredFileSet {
+            globs,
+            project_roots: Vec::new(),
+        }
+    }
+
     /// What hash details name this instruction: its Display, except that a
-    /// large disk-backed group folds to a count and a digest of its paths.
+    /// large disk-backed group lists its first positives and counts the rest.
+    /// Not unique, even within a task: a task hash folds instructions that
+    /// share a label into one entry.
     pub fn label(&self) -> String {
         match self {
-            HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
-                let digest = crate::native::hasher::hash(globs.join(",").as_bytes());
-                format!("files:[{} paths #{digest}]", globs.len())
+            HashInstruction::IgnoredFileSet { globs, .. }
+                if globs.len() > COMPACT_FILES_LABEL_ABOVE =>
+            {
+                let (negations, positives): (Vec<&String>, Vec<&String>) =
+                    globs.iter().partition(|glob| glob.starts_with('!'));
+                let shown = positives.len().min(COMPACT_FILES_LABEL_ABOVE);
+                let mut counts = Vec::new();
+                if positives.len() > shown {
+                    counts.push(format!("+{} more", positives.len() - shown));
+                }
+                if !negations.is_empty() {
+                    counts.push(format!("+{} excluded", negations.len()));
+                }
+                let listed: Vec<&str> = positives[..shown].iter().map(|g| g.as_str()).collect();
+                match counts.is_empty() {
+                    true => format!("files:[{}]", listed.join(",")),
+                    false => format!("files:[{} ({})]", listed.join(","), counts.join(", ")),
+                }
             }
             _ => self.to_string(),
         }
@@ -386,7 +435,8 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
-                HashInstruction::IgnoredFileSet(globs) => format!("files:[{}]", globs.join(",")),
+                HashInstruction::IgnoredFileSet { globs, .. } =>
+                    format!("files:[{}]", globs.join(",")),
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
@@ -397,7 +447,7 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
-                HashInstruction::IoSnapshot(digest) => {
+                HashInstruction::UltracacheConfiguration(digest) => {
                     format!("io-snapshot:{digest}")
                 }
                 HashInstruction::ProjectConfiguration(project_name) => {
@@ -435,16 +485,18 @@ mod tests {
 
     #[test]
     fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
-        let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
+        let small = HashInstruction::ignored_files(vec!["a".into(), "!b".into()]);
         assert_eq!(small.label(), small.to_string());
+        let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
+        globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
+        assert_eq!(
+            HashInstruction::ignored_files(globs).label(),
+            "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
+        );
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
-        let big = HashInstruction::IgnoredFileSet(globs.clone());
+        let big = HashInstruction::ignored_files(globs.clone());
         let label = big.label();
-        assert!(label.starts_with("files:[20 paths #"), "{label}");
-        let mut changed = globs.clone();
-        changed[3] = "libs/p/other.ts".into();
-        let relabeled = HashInstruction::IgnoredFileSet(changed).label();
-        assert_ne!(label, relabeled);
+        assert!(label.ends_with("libs/p/f7.ts (+12 more)]"), "{label}");
         let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
         assert_eq!(tracked.label(), tracked.to_string());
         let pool = InstructionPool::new();
@@ -454,39 +506,39 @@ mod tests {
     }
 
     #[test]
-    fn the_snapshot_digest_renders_with_its_prefix_and_interns_by_value() {
+    fn the_configuration_digest_renders_with_its_prefix_and_interns_by_value() {
         let pool = InstructionPool::new();
-        let a = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let b = pool.intern(HashInstruction::IoSnapshot("abc".into()));
-        let c = pool.intern(HashInstruction::IoSnapshot("def".into()));
+        let a = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let b = pool.intern(HashInstruction::UltracacheConfiguration("abc".into()));
+        let c = pool.intern(HashInstruction::UltracacheConfiguration("def".into()));
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert_eq!(&*pool.key(a), "io-snapshot:abc");
-        // Filesets, disk-backed ones included, are replaced by a snapshot; the
+        // Filesets, disk-backed ones included, are replaced by a configuration; the
         // digest is not.
         let fileset = pool.intern(HashInstruction::ProjectFileSet(
             "p".into(),
             vec!["p/**/*".into()],
         ));
-        let group = pool.intern(HashInstruction::IgnoredFileSet(vec![
+        let group = pool.intern(HashInstruction::ignored_files(vec![
             "p/a.ts".into(),
             "!p/**/*.spec.ts".into(),
         ]));
         let unread = |_: &str| false;
-        assert!(pool.replaced_by_snapshot(fileset, true, unread));
-        assert!(pool.replaced_by_snapshot(group, true, unread));
-        assert!(!pool.replaced_by_snapshot(a, true, unread));
+        assert!(pool.replaced_by_configuration(fileset, true, unread));
+        assert!(pool.replaced_by_configuration(group, true, unread));
+        assert!(!pool.replaced_by_configuration(a, true, unread));
         let ts = pool.intern(HashInstruction::TsConfiguration("p".into()));
-        assert!(pool.replaced_by_snapshot(ts, false, unread));
-        assert!(!pool.replaced_by_snapshot(ts, true, unread));
+        assert!(pool.replaced_by_configuration(ts, false, unread));
+        assert!(!pool.replaced_by_configuration(ts, true, unread));
         let json = pool.intern(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
             project_name: None,
             json_path: "p/package.json".into(),
             fields: Some(vec!["version".into()]),
             exclude_fields: None,
         })));
-        assert!(pool.replaced_by_snapshot(json, true, unread));
-        assert!(!pool.replaced_by_snapshot(json, true, |path| path == "p/package.json"));
+        assert!(pool.replaced_by_configuration(json, true, unread));
+        assert!(!pool.replaced_by_configuration(json, true, |path| path == "p/package.json"));
     }
 
     #[test]
@@ -503,7 +555,7 @@ mod tests {
 
     #[test]
     fn disk_backed_display_lists_globs_in_declared_order() {
-        let instruction = HashInstruction::IgnoredFileSet(vec![
+        let instruction = HashInstruction::ignored_files(vec![
             "libs/ui/dist/**/*.js".into(),
             "!libs/ui/dist/**/*.map".into(),
         ]);
@@ -518,11 +570,11 @@ mod tests {
         let globs = vec!["libs/ui/**/*.ts".to_string()];
         assert_ne!(
             HashInstruction::ProjectFileSet("ui".into(), globs.clone()).to_string(),
-            HashInstruction::IgnoredFileSet(globs.clone()).to_string()
+            HashInstruction::ignored_files(globs.clone()).to_string()
         );
         assert_ne!(
             HashInstruction::WorkspaceFileSet(globs.clone()).to_string(),
-            HashInstruction::IgnoredFileSet(globs).to_string()
+            HashInstruction::ignored_files(globs).to_string()
         );
     }
 

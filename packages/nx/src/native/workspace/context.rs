@@ -31,6 +31,7 @@ use crate::native::workspace::files_archive::{
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::glob_hashing::{hash_glob_groups, needs_scan};
 use crate::native::workspace::ignored_index::{IgnoredIndex, IgnoredIndexReader};
+use crate::native::workspace::outputs_tracking::{OutputRecords, TaskOutputs};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
@@ -72,6 +73,8 @@ pub struct WorkspaceContext {
     files: FileState,
     /// The directories the hasher reads from disk, kept current by the watch.
     ignored: Arc<IgnoredIndex>,
+    /// What the daemon recorded of each task's outputs, read through `ignored`.
+    outputs: OutputRecords,
     batches: Publisher<PendingChanges>,
     #[cfg(not(target_arch = "wasm32"))]
     events: Publisher<Vec<WatchEvent>>,
@@ -1210,6 +1213,7 @@ impl WorkspaceContext {
         Ok(WorkspaceContext {
             files,
             ignored,
+            outputs: OutputRecords::default(),
             batches,
             #[cfg(not(target_arch = "wasm32"))]
             events,
@@ -1711,6 +1715,21 @@ impl WorkspaceContext {
             }
         }
         self.files.holds(paths)
+    }
+
+    /// Remembers each task's outputs, as given or else as they are on disk
+    /// now, so `outputs_unchanged` can tell whether they still are.
+    #[napi]
+    pub fn record_outputs(&self, entries: Vec<TaskOutputs>) {
+        self.outputs
+            .record(&self.workspace_root_path, &self.reader(), entries);
+    }
+
+    /// Whether each task's outputs are still as last recorded for its hash.
+    #[napi]
+    pub fn outputs_unchanged(&self, entries: Vec<TaskOutputs>) -> Vec<bool> {
+        self.outputs
+            .unchanged(&self.workspace_root_path, &self.reader(), entries)
     }
 
     #[napi]
@@ -2803,7 +2822,10 @@ mod tests {
         // so the write shows up within the kernel's hop, not the idle flush.
         temp.child("dist/out.js").write_str("x").unwrap();
         wait_until("a listing never saw the write", || {
-            reader.files_under(&root, "dist", true, &|_| true).unwrap() == vec!["dist/out.js"]
+            reader
+                .files_under(&root, "dist", true, &|_| true, &[])
+                .unwrap()
+                == vec!["dist/out.js"]
         });
     }
 
@@ -2833,8 +2855,12 @@ mod tests {
 
         let (tx, rx) = std::sync::mpsc::channel();
         let listing = std::thread::spawn(move || {
-            tx.send(reader.files_under(&root, "dist", true, &|_| true).unwrap())
-                .unwrap();
+            tx.send(
+                reader
+                    .files_under(&root, "dist", true, &|_| true, &[])
+                    .unwrap(),
+            )
+            .unwrap();
         });
         assert!(
             rx.recv_timeout(Duration::from_millis(300)).is_err(),
@@ -2866,7 +2892,9 @@ mod tests {
         let reader = ctx.reader();
         assert!(reader.track(&root, "dist"));
         assert_eq!(
-            reader.files_under(&root, "dist", true, &|_| true).unwrap(),
+            reader
+                .files_under(&root, "dist", true, &|_| true, &[])
+                .unwrap(),
             vec!["dist/gen/x.js"]
         );
         // The file map still applies the rule: it is an input, not a source.

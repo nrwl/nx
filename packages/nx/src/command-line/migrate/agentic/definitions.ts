@@ -3,10 +3,7 @@ import { join } from 'path';
 import { parse as parseToml } from 'smol-toml';
 import {
   AgentDefinition,
-  AgentId,
   HANDOFFS_DIR_NAME,
-  InvocationContext,
-  InvocationSpec,
   MIGRATE_RUNS_RELATIVE_DIR,
 } from './types';
 
@@ -24,10 +21,8 @@ function claudeCodeWellKnownPaths(): string[] {
  * The run directory names Nx will interpolate into a permission rule. A rule
  * is a gitignore pattern, which reads `*?[]\` as syntax, and `--allowedTools`
  * splits its value on commas and spaces, so a name carrying any of those
- * would change what the rule authorizes rather than what it names. Run
- * directory names derive from a migration's own version string, which nothing
- * upstream constrains to this alphabet. The leading character rejects `.`
- * and `..`.
+ * would change what the rule authorizes rather than what it names. The
+ * leading character rejects `.` and `..`.
  */
 const RULE_SAFE_RUN_DIR_NAME = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
 
@@ -57,52 +52,17 @@ export function claudeCodeHandoffAllowedTools(
   return `Edit(${MIGRATE_RUNS_RELATIVE_DIR}/${runDirName}/${HANDOFFS_DIR_NAME}/**)`;
 }
 
-function claudeCodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
-  const allowedTools = claudeCodeHandoffAllowedTools(ctx.runDirName);
-  return {
-    // `--allowedTools` is variadic, so a positional right after it is read as
-    // another rule: keep the rules in one comma-joined element and a flag
-    // between them and the instructions pointer.
-    args: [
-      ...(allowedTools ? ['--allowedTools', allowedTools] : []),
-      '--system-prompt-file',
-      ctx.systemPromptFilePath,
-      ctx.instructionsPointer,
-    ],
-    cwd: ctx.workspaceRoot,
-  };
-}
-
 export const claudeCodeDefinition: AgentDefinition = {
   id: 'claude-code',
   displayName: 'Claude Code',
   binaryNames: ['claude'],
   wellKnownPaths: claudeCodeWellKnownPaths,
-  buildInteractive: claudeCodeBuildInteractive,
 };
 
 // --- OpenAI Codex --------------------------------------------------------
 
 function codexWellKnownPaths(): string[] {
   return [];
-}
-
-// No handoff permission flag: codex's default sandbox already allows writes
-// inside the cwd tree (`.git` excepted), and a user-hardened read-only config
-// is theirs to keep.
-//
-// `-c model_instructions_file` replaces codex's built-in instructions rather
-// than adding this context to them, so the context stays on the command line,
-// reduced rather than the full prompt.
-function codexBuildInteractive(ctx: InvocationContext): InvocationSpec {
-  return {
-    args: [
-      '-c',
-      `developer_instructions=${encodeTomlString(ctx.inlineSystemContext)}`,
-      ctx.instructionsPointer,
-    ],
-    cwd: ctx.workspaceRoot,
-  };
 }
 
 /**
@@ -132,17 +92,14 @@ export function encodeTomlString(value: string): string {
   return encoded;
 }
 
-export const codexDefinition: AgentDefinition = {
+const codexDefinition: AgentDefinition = {
   id: 'codex',
   displayName: 'OpenAI Codex',
   binaryNames: ['codex'],
   wellKnownPaths: codexWellKnownPaths,
-  buildInteractive: codexBuildInteractive,
 };
 
 // --- OpenCode ------------------------------------------------------------
-
-const OPENCODE_TRANSIENT_AGENT_NAME = 'nx-migrate';
 
 function opencodeWellKnownPaths(): string[] {
   if (process.platform === 'win32') {
@@ -163,69 +120,11 @@ function opencodeWellKnownPaths(): string[] {
   return candidates;
 }
 
-// No handoff permission config: opencode's `edit` permission defaults to
-// allow, and injecting one would clobber a user's own patterns rather than
-// merge with them.
-//
-// The config travels through OPENCODE_CONFIG_CONTENT rather than
-// OPENCODE_CONFIG. Both merge with the user's own config, but the runner
-// spreads `env` over `process.env`, so the latter would overwrite a value the
-// user had set.
-function opencodeBuildInteractive(ctx: InvocationContext): InvocationSpec {
-  return {
-    args: [
-      '--agent',
-      OPENCODE_TRANSIENT_AGENT_NAME,
-      '--prompt',
-      ctx.instructionsPointer,
-    ],
-    env: { OPENCODE_CONFIG_CONTENT: opencodeConfigContent(ctx) },
-    cwd: ctx.workspaceRoot,
-  };
-}
-
-/**
- * Escapes inline prompt patterns before opencode's pre-JSON substitution pass.
- * Excludes generator instructions from the config; cmd.exe drops inherited
- * variables longer than 8191 characters.
- */
-function opencodeConfigContent(ctx: InvocationContext): string {
-  // Windows separators become `/`, which its APIs accept just as well.
-  // Elsewhere a `\` belongs to the file name.
-  const filePath =
-    process.platform === 'win32'
-      ? ctx.systemPromptFilePath.replace(/\\/g, '/')
-      : ctx.systemPromptFilePath;
-  const prompt = isSubstitutionSafePath(filePath)
-    ? JSON.stringify(`{file:${filePath}}`)
-    : // `\u007b` starts no pattern and JSON decodes it back to `{`, so the
-      // prompt survives expansion whatever the workspace path put in it.
-      JSON.stringify(ctx.systemPrompt).replace(/\{/g, '\\u007b');
-  // Assembled rather than serialized whole: `JSON.stringify` over the object
-  // would re-escape the backslashes the `\u007b` encoding introduced.
-  return `{"agent":{${JSON.stringify(
-    OPENCODE_TRANSIENT_AGENT_NAME
-  )}:{"prompt":${prompt}}}}`;
-}
-
-/**
- * Whether opencode would read back the path nx wrote. A `}` closes the
- * reference early, and a character JSON escapes arrives escaped. Braces are
- * rejected wholesale rather than matched against `{env:` and `{file:`, since a
- * pattern opening inside the path swallows the reference's closing brace.
- */
-function isSubstitutionSafePath(filePath: string): boolean {
-  return (
-    !/[{}]/.test(filePath) && JSON.stringify(filePath).slice(1, -1) === filePath
-  );
-}
-
 export const opencodeDefinition: AgentDefinition = {
   id: 'opencode',
   displayName: 'OpenCode',
   binaryNames: ['opencode'],
   wellKnownPaths: opencodeWellKnownPaths,
-  buildInteractive: opencodeBuildInteractive,
 };
 
 // --- Registry ------------------------------------------------------------
@@ -235,11 +134,3 @@ export const AGENT_DEFINITIONS: readonly AgentDefinition[] = [
   codexDefinition,
   opencodeDefinition,
 ];
-
-const byId = new Map<AgentId, AgentDefinition>(
-  AGENT_DEFINITIONS.map((definition) => [definition.id, definition])
-);
-
-export function getAgentDefinition(id: AgentId): AgentDefinition | undefined {
-  return byId.get(id);
-}

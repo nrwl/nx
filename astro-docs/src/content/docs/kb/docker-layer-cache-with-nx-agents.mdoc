@@ -1,13 +1,13 @@
 ---
-title: Use the Docker layer cache with Nx Agents
-description: Configure Docker Buildx to reuse image layers across Nx Agent runs.
+title: Use the Docker layer cache with Workers
+description: Configure Docker Buildx to reuse image layers across Worker runs.
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
   - 'Nx Cloud'
 ---
 
-The Docker layer cache stores BuildKit cache layers in a registry near your Nx Agents.
+The Docker layer cache stores BuildKit cache layers in a registry near your Workers.
 A later build can pull unchanged layers from this registry instead of building them again.
 
 {% aside type="note" title="Requires a dedicated compute cluster" %}
@@ -25,7 +25,7 @@ company registry.
 
 Layer caching uses the registry backend from Docker BuildKit.
 Add the Buildx setup step before your build tasks in the
-[Nx Agents launch template](/docs/kb/launch-templates):
+[Worker launch template](/docs/kb/launch-templates):
 
 ```yaml
 # .nx/workflows/agents.yaml

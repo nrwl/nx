@@ -16,7 +16,6 @@ import {
   addTypedLintingToFlatConfig,
   findEslintFile,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 import { eslintPluginPlaywrightVersion } from './versions';
@@ -26,10 +25,6 @@ export interface PlaywrightLinterOptions {
   project: string;
   linter: LinterType;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipPackageJson: boolean;
   rootProject: boolean;
   js?: boolean;
@@ -37,7 +32,6 @@ export interface PlaywrightLinterOptions {
    * Directory from the project root, where the playwright files will be located.
    **/
   directory: string;
-  addPlugin?: boolean;
 }
 
 export async function addLinterToPlaywrightProject(
@@ -52,7 +46,7 @@ export async function addLinterToPlaywrightProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  const enableTypedLinting = isTypedLintingEnabled(options);
+  const { enableTypedLinting } = options;
 
   // An existing ESLint config means the project is already registered, so skip
   // straight to the Playwright-specific shaping below.
@@ -65,7 +59,6 @@ export async function addLinterToPlaywrightProject(
         enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
       })
     );
   }

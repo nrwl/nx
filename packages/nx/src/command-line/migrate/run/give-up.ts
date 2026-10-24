@@ -5,6 +5,7 @@
 
 import {
   commitMigrationIfRequested,
+  type CommitFailureRecovery,
   type CommitResult,
 } from '../migrate-commits';
 import type { MigrateOutputSink } from '../deferred-output';
@@ -31,10 +32,12 @@ import {
   markCommitStarted,
   markInstallFailed,
   stepsToPendingMigrations,
+  stepLabel,
   uncoveredFailedStepIds,
   unresolvedCommitName,
 } from './state-machine';
 import {
+  commitFailureRecovery,
   installDepsChangedSinceDispense,
   summarizeError,
   warnCommitFailed,
@@ -107,7 +110,7 @@ export async function giveUpWithCommit(
           input.output
         ),
       stepsToPendingMigrations(state, absorbedStepIds),
-      undefined,
+      commitFailureRecovery(state),
       input.output
     );
     commit = result;
@@ -172,7 +175,8 @@ export async function giveUpWithCommit(
 
 /**
  * Mints the issue that carries a given-up step's failure and points the step
- * at it, on state where the step is already unresolved. The archive file is
+ * at it, on state where the step is already unresolved. A single run keeps no
+ * issue ledger, so its state comes back unchanged. The archive file is
  * best-effort: run.json is authoritative, and undoing the transition for a
  * lost detail file would make the agent re-issue an action the run already
  * took.
@@ -182,6 +186,7 @@ export function recordUnresolvedIssue(
   state: MigrateRunState,
   stepId: string
 ): { state: MigrateRunState; archiveError?: string } {
+  if (state.singleMigration === true) return { state };
   // Minted from the transitioned step: a died one only gains its failure in
   // the transition.
   const minted = mintUnresolvedIssue(
@@ -206,11 +211,11 @@ export function recordUnresolvedIssue(
 }
 
 export function warnUnresolvedNotArchived(
-  migrationId: string,
+  label: string,
   archiveError: string
 ): void {
   warnToAgent({
-    title: `The issue recording that ${migrationId} was left unresolved could not be archived (${archiveError}).`,
+    title: `The issue recording that ${label} was left unresolved could not be archived (${archiveError}).`,
     bodyLines: [
       `run.json stays authoritative: the step is unresolved and the issue is in its ledger; only the archived file under the run's issues directory is missing.`,
     ],
@@ -220,15 +225,16 @@ export function warnUnresolvedNotArchived(
 /** What the reconcile owes the agent for a give-up that went through. */
 export function warnAboutGiveUp(
   step: MigrateStep,
-  outcome: Extract<GiveUpOutcome, { kind: 'given-up' }>
+  outcome: Extract<GiveUpOutcome, { kind: 'given-up' }>,
+  recovery: CommitFailureRecovery
 ): void {
   const name = unresolvedCommitName(step);
   switch (outcome.commit.status) {
     case 'install-failed':
-      warnCommitFailed(name, outcome.commit.reason);
+      warnCommitFailed(name, recovery, outcome.commit.reason);
       break;
     case 'failed':
-      warnCommitFailed(name);
+      warnCommitFailed(name, recovery);
       break;
     case 'committed':
     case 'no-changes':
@@ -240,6 +246,6 @@ export function warnAboutGiveUp(
     }
   }
   if (outcome.archiveError !== undefined) {
-    warnUnresolvedNotArchived(step.migrationId, outcome.archiveError);
+    warnUnresolvedNotArchived(stepLabel(step), outcome.archiveError);
   }
 }

@@ -209,7 +209,12 @@ Module._load = function (request, parent, isMain) {
 };
 
 const indexModulePath = require.resolve('./native-bindings.js');
-delete require.cache[indexModulePath];
+// Absent on Node 22.15–22.22.2 and 24.0–24.11.0 under a `module.registerHooks()`
+// load hook (Playwright 1.64): node evaluates CJS imported from ESM with its
+// internal loader there.
+if (require.cache) {
+  delete require.cache[indexModulePath];
+}
 // A direct re-export: node's CommonJS export lexer follows this form, so ESM
 // importers see the named exports. Assigning via a variable hides them.
 module.exports = require('./native-bindings.js');

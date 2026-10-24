@@ -37,6 +37,8 @@ impl Positive {
 pub(crate) struct Negation {
     root: String,
     remainder: Option<Arc<NxGlobSet>>,
+    /// Excludes `root` and everything under it.
+    whole: bool,
 }
 
 impl Negation {
@@ -47,8 +49,14 @@ impl Negation {
         if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
         }
+        // `**` and `**/*` match every path below, dotfiles included.
+        let whole = matches!(remainder.as_deref(), None | Some("**") | Some("**/*"));
         let remainder = remainder.map(|rest| build_glob_set(&[rest])).transpose()?;
-        Ok(Self { root, remainder })
+        Ok(Self {
+            root,
+            remainder,
+            whole,
+        })
     }
 
     /// Excludes `path` as written: a file, or a directory and everything under it.
@@ -56,7 +64,13 @@ impl Negation {
         Self {
             root: path.to_string(),
             remainder: None,
+            whole: true,
         }
+    }
+
+    /// The directory this excludes entirely, so a walk need not enter it.
+    pub(crate) fn whole_directory(&self) -> Option<&str> {
+        (self.whole && !self.root.is_empty()).then_some(self.root.as_str())
     }
 
     pub(super) fn excludes(&self, path: &str) -> bool {

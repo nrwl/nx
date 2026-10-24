@@ -118,16 +118,17 @@ async function forceKillWindowsTree(
   await raceWithTimeout(exitPromise, forceKillWaitMs);
 }
 
+// True when `promise` resolves before the timeout.
 export async function raceWithTimeout(
   promise: Promise<unknown>,
   timeoutMs: number
-): Promise<void> {
+): Promise<boolean> {
   let timer: NodeJS.Timeout | undefined;
   try {
-    await Promise.race([
-      promise,
-      new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, timeoutMs);
+    return await Promise.race([
+      promise.then(() => true),
+      new Promise<boolean>((resolve) => {
+        timer = setTimeout(() => resolve(false), timeoutMs);
       }),
     ]);
   } finally {

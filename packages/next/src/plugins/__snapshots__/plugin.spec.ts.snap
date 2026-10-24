@@ -64,6 +64,10 @@ exports[`@nx/next/plugin > integrated projects > should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
               "syncGenerators": [
                 "@nx/js:typescript-sync",
               ],
@@ -90,6 +94,10 @@ exports[`@nx/next/plugin > integrated projects > should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
             },
             "my-start": {
               "command": "next start",
@@ -112,6 +120,10 @@ exports[`@nx/next/plugin > integrated projects > should create nodes 1`] = `
               ],
               "options": {
                 "cwd": "my-app",
+              },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
               },
             },
             "watch-deps": {
@@ -193,6 +205,10 @@ exports[`@nx/next/plugin > root projects > should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
               "syncGenerators": [
                 "@nx/js:typescript-sync",
               ],
@@ -219,6 +235,10 @@ exports[`@nx/next/plugin > root projects > should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
             },
             "start": {
               "command": "next start",
@@ -241,6 +261,10 @@ exports[`@nx/next/plugin > root projects > should create nodes 1`] = `
               ],
               "options": {
                 "cwd": ".",
+              },
+              "readyWhen": {
+                "command": "node -e "require('@nx/next/ready-check').waitForDevServer()"",
+                "interval": 1000,
               },
             },
             "watch-deps": {

@@ -22,6 +22,30 @@ export const RUN_STATE_FILE_NAME = 'run.json';
  * with fails closed as corrupt instead of being dispensed.
  */
 export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
+
+export type MigrationIdProblem = 'not-shell-safe' | 'duplicate';
+
+/**
+ * The ids of `migrations` that no orchestrated run can take, each once, in the
+ * order found. A worker finds its step by migration id, so an id the plan
+ * lists twice can't name one step.
+ */
+export function migrationIdProblems(
+  migrations: ReadonlyArray<{ package: string; name: string }>
+): { id: string; problem: MigrationIdProblem }[] {
+  const seen = new Set<string>();
+  const problems = new Map<string, MigrationIdProblem>();
+  for (const m of migrations) {
+    const id = `${m.package}:${m.name}`;
+    if (!SHELL_SAFE_VALUE.test(id)) {
+      problems.set(id, 'not-shell-safe');
+    } else if (seen.has(id) && !problems.has(id)) {
+      problems.set(id, 'duplicate');
+    }
+    seen.add(id);
+  }
+  return [...problems].map(([id, problem]) => ({ id, problem }));
+}
 // `new Date().toISOString()`, the only shape Nx writes. Retention and active-run
 // selection compare these lexicographically, and the value is rendered into the
 // stdout the agent scans for blocks, so neither a different notation nor an
@@ -97,9 +121,14 @@ export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
 const MIGRATE_STEP_AWAITING_KINDS = [
   'migration-prompt',
   'generator-validation',
+  'final-validation',
 ] as const;
 export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
+
+// What a step does when dispensed: 'migration' runs one planned migration,
+// 'final-validation' checks the whole workspace once every migration has run.
+const MIGRATE_STEP_KINDS = ['migration', 'final-validation'] as const;
 
 export interface MigrateStepOutcome {
   fileChanges?: string[];
@@ -113,11 +142,19 @@ export interface MigrateStepPromptOutcome {
   summary?: string;
 }
 
-export interface MigrateStep {
+export type MigrateStepKindFields =
+  | {
+      kind: 'migration';
+      // `<package>:<name>`.
+      migrationId: string;
+    }
+  | { kind: 'final-validation' };
+
+export type MigrateStep = MigrateStepBase & MigrateStepKindFields;
+
+export interface MigrateStepBase {
   id: string;
   roundIndex: number;
-  // `<package>:<name>`.
-  migrationId: string;
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
@@ -276,6 +313,11 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
+  // HEAD when the run started, before the checkpoint commit when one landed:
+  // the base every whole-run diff is taken against, so the dependency changes
+  // the checkpoint captured are inside it. Absent when the probe failed, or
+  // on a run created before the field existed.
+  gitRefAtInit?: string;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
   // The branch checked out when the run started; absent on a detached HEAD or
@@ -298,7 +340,27 @@ export interface MigrateRunState {
   // the working tree. Set before the operation and cleared by its owner after
   // the state that records it is written; a dead owner pid voids it.
   treeOperation?: MigrateTreeOperation;
+  // Set on the record of a `--run-migration` run, which active-run discovery
+  // skips.
+  singleMigration?: boolean;
   analytics: MigrateRunAnalytics;
+}
+
+// A `--run-migration` record is 'single' whatever its status.
+export function runKind(
+  state: MigrateRunState
+): 'single' | 'active' | 'finished' {
+  if (state.singleMigration === true) return 'single';
+  switch (state.status) {
+    case 'active':
+      return 'active';
+    case 'completed':
+      return 'finished';
+    default: {
+      const unhandled: never = state.status;
+      throw new Error(`Unhandled migrate run status: ${unhandled}`);
+    }
+  }
 }
 
 export const TREE_OPERATION_KINDS = [
@@ -447,14 +509,31 @@ function isPromptOutcomeShape(value: unknown): boolean {
   );
 }
 
+function isStepKindShape(value: Record<string, unknown>): boolean {
+  const kind = value.kind === undefined ? 'migration' : value.kind;
+  if (!isOneOf(MIGRATE_STEP_KINDS, kind)) return false;
+  switch (kind) {
+    case 'migration':
+      return (
+        typeof value.migrationId === 'string' &&
+        SHELL_SAFE_VALUE.test(value.migrationId)
+      );
+    case 'final-validation':
+      return value.migrationId === undefined;
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
 function isStepShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     STEP_ID.test(value.id) &&
     typeof value.roundIndex === 'number' &&
-    typeof value.migrationId === 'string' &&
-    SHELL_SAFE_VALUE.test(value.migrationId) &&
+    isStepKindShape(value) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     // The attempt is interpolated into the stored-payload file name and
     // range-compared against it (agent-work-payload.ts), so a fractional or
@@ -673,6 +752,8 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
+    isOptionalBoolean(parsed.singleMigration) &&
+    isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
     isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
@@ -802,7 +883,12 @@ export function readRunState(runDirPath: string): MigrateRunState {
       )}.`
     );
   }
-  return parsed as unknown as MigrateRunState;
+  // Steps written before they had a kind each ran a migration; naming it here
+  // keeps every reader on one shape.
+  const steps = (parsed.steps as Record<string, unknown>[]).map((s) =>
+    s.kind === undefined ? { ...s, kind: 'migration' } : s
+  );
+  return { ...parsed, steps } as unknown as MigrateRunState;
 }
 
 /**
@@ -868,7 +954,8 @@ export interface UninterpretableRunDir {
  *
  * A dir that reads cleanly as a finished run is skipped whatever its name is:
  * it competes with nothing, and reporting it would block every future run
- * with no way for retention to ever clear it.
+ * with no way for retention to ever clear it. A `--run-migration` run's record
+ * is skipped too: nothing continues it, and a leftover must not block a run.
  *
  * Throws {@link NewerRunStateFormatError} when any run dir holds a
  * newer-format run.json: whether that run is active can't be determined
@@ -901,7 +988,7 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
-    if (state.status !== 'active') continue;
+    if (runKind(state) !== 'active') continue;
     // Run ids are joined into paths and interpolated into dispensed commands,
     // so a dir whose name fails the gate is never trusted as a resumable run.
     if (!RUN_ID_SAFE.test(entry.name)) {

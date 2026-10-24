@@ -20,7 +20,6 @@ import { assertSupportedDetoxVersion } from '../../utils/versions';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -32,7 +31,7 @@ export async function detoxApplicationGeneratorInternal(
 ) {
   assertSupportedDetoxVersion(host);
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     addTsPlugin,
     skipFormat: true,

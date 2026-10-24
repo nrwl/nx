@@ -1,5 +1,9 @@
 import { appendFileSync } from 'node:fs';
-import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
+import {
+  TaskReadiness,
+  type BatchInfo,
+  type PerformanceSummaryPayload,
+} from '../../native';
 import { TaskGraph } from '../../config/task-graph';
 import {
   buildExitSummaryPayload,
@@ -27,8 +31,8 @@ import {
  * coordinator time (hashing, scheduling, continuous-dep waits).
  *
  * Scope: discrete tasks only. Continuous tasks (no end time) are excluded; a
- * discrete task's wait for a continuous dependency to start is eligibility, not
- * contention.
+ * discrete task's wait for a continuous dependency to start, or to be ready, is
+ * eligibility, not contention.
  */
 export class PerformanceLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
@@ -64,6 +68,14 @@ export class PerformanceLifeCycle implements LifeCycle {
         id,
         batchInfo.taskIds.filter((other) => other !== id)
       );
+    }
+  }
+
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void {
+    const entry = this.entry(taskId);
+    // Each waiter polling a shared producer reports Ready; the first one counts.
+    if (readiness === TaskReadiness.Ready && entry.readyTime == null) {
+      entry.readyTime = Date.now();
     }
   }
 

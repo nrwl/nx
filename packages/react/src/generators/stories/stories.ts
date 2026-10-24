@@ -159,17 +159,6 @@ export async function storiesGenerator(
 }
 
 async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {
-  const {
-    findStorybookAndBuildTargetsAndCompiler,
-  }: typeof import('@nx/storybook/src/utils/utilities') = require('@nx/storybook/src/utils/utilities');
-
-  const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
-    config.targets
-  );
-  if (nextBuildTarget) {
-    return true;
-  }
-
   for (const configFile of ['next.config.js', 'next.config.ts']) {
     if (tree.exists(join(config.root, configFile))) {
       return true;

@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::disk_expansion::{
-    FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
+    FilesExpansion, FilesExpansionCache, Negation, Positive, ProjectScope, Source, expand_cached,
+    expand_entries,
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, partition_glob};
@@ -29,10 +30,12 @@ pub fn expand_task_outputs(
     let key = format!("outputs:[{}]", outputs.join("\n"));
     let expansion = expand_cached(&key, cache, || {
         let (positives, negations) = output_entries(workspace_root, outputs)?;
+        // Declared outputs are read wherever they point, nested projects included.
         expand_entries(
             workspace_root,
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::declared_outputs(workspace_root),
         )
     })?;

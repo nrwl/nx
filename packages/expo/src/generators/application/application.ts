@@ -31,7 +31,6 @@ export async function expoApplicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...schema,
   });
@@ -46,7 +45,6 @@ export async function expoApplicationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,
-    schema.addPlugin,
     schema.useTsSolution
   );
   const jsInitTask = await jsInitGenerator(host, {
@@ -90,8 +88,7 @@ export async function expoApplicationGeneratorInternal(
     options.projectName,
     options.appProjectRoot,
     options.js,
-    options.skipPackageJson,
-    options.addPlugin
+    options.skipPackageJson
   );
   tasks.push(jestTask);
   const e2eTask = await addE2e(host, options);

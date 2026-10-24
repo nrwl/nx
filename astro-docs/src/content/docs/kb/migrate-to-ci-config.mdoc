@@ -1,14 +1,14 @@
 ---
-title: 'Migrate from start-ci-run to start-nx-agents'
-description: 'Move your start-ci-run CLI flags into a .nx/ci-config.yaml file and switch to start-nx-agents'
+title: 'Migrate from start-ci-run to start-workers'
+description: 'Move your start-ci-run CLI flags into a .nx/ci-config.yaml file and switch to start-workers'
 sidebar:
-  label: Migrate to start-nx-agents
+  label: Migrate to start-workers
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
 ---
 
-`nx-cloud start-nx-agents` reads its CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead of from `start-ci-run` CLI flags.
+`nx-cloud start-workers` reads its CI configuration from a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file instead of from `start-ci-run` CLI flags.
 This guide moves an existing `start-ci-run` setup to the config file.
 
 ## Why migrate
@@ -23,11 +23,11 @@ With `start-ci-run`, distribution, stop conditions, assignment rules, and self-h
 ### Configuration that does not depend on command order
 
 Every Nx Cloud command reads `.nx/ci-config.yaml` when it runs, so your configuration applies to the CI Pipeline Execution no matter which command starts it.
-`start-nx-agents` provisions the agents your job needs. It is not a special command that has to run first to lock in the configuration.
+`start-workers` provisions the agents your job needs. It is not a special command that has to run first to lock in the configuration.
 With `start-ci-run`, configuration instead came from that command's flags, so it had to run before any other `nx` command for its settings to apply.
 
 {% aside type="caution" title="The two commands cannot be combined" %}
-`start-ci-run` does not read `.nx/ci-config.yaml`. Once the file exists, `start-ci-run` exits with an error and points you to `start-nx-agents`.
+`start-ci-run` does not read `.nx/ci-config.yaml`. Once the file exists, `start-ci-run` exits with an error and points you to `start-workers`.
 Move your CLI flags into the corresponding `.nx/ci-config.yaml` keys and change the command in the same step. Do not leave both in place.
 {% /aside %}
 
@@ -37,7 +37,7 @@ Find the `start-ci-run` line in your CI workflow. It usually sits near the top o
 
 ```yaml
 # .github/workflows/ci.yml
-- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+- run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-workers-after="build"
 ```
 
 ## Step 1: Create the config file
@@ -61,28 +61,28 @@ Use this table to translate each flag. For the full schema, see the [CI configur
 | `--distribute-on`               | `dte.distribute-on`              |
 | `--assignment-rules`            | `dte.assignment-rules`           |
 | `--use-dte-by-default`          | `dte.enabled-by-default`         |
-| `--stop-agents-after`           | `lifecycle.stop-after`           |
-| `--stop-agents-on-failure`      | `lifecycle.fail-after`           |
+| `--stop-workers-after`          | `lifecycle.stop-after`           |
+| `--stop-workers-on-failure`     | `lifecycle.fail-after`           |
 | `--require-explicit-completion` | `lifecycle.heartbeat` (inverted) |
-| `--with-env-vars`               | `nx-agents.with-env-vars`        |
+| `--with-env-vars`               | `workers.with-env-vars`          |
 | `--fix-tasks`                   | `ai.fix-tasks-patterns`          |
 | `--auto-apply-fixes`            | `ai.auto-apply-patterns`         |
 
 Three flags need a closer look as you translate them:
 
-- `--stop-agents-after` takes a comma-separated list. In the file it becomes a YAML array under `lifecycle.stop-after`, with one target per line.
-- `--stop-agents-on-failure` is a boolean. `true` becomes `fail-after: 1`, and `false` becomes `fail-after: 0`. The file also accepts higher counts, so `fail-after: 3` stops after three failures, which the flag could not express.
+- `--stop-workers-after` takes a comma-separated list. In the file it becomes a YAML array under `lifecycle.stop-after`, with one target per line.
+- `--stop-workers-on-failure` is a boolean. `true` becomes `fail-after: 1`, and `false` becomes `fail-after: 0`. The file also accepts higher counts, so `fail-after: 3` stops after three failures, which the flag could not express.
 - `--require-explicit-completion` maps to `lifecycle.heartbeat` inverted. If you passed the flag, set `heartbeat: false`. If you did not, leave `heartbeat` at its default of `true`.
 
-`--force` has no counterpart. It is a guard against running `start-ci-run` locally, and `start-nx-agents` does not need it.
+`--force` has no counterpart. It is a guard against running `start-ci-run` locally, and `start-workers` does not need it.
 
 ## Step 2: Swap the command
 
-Replace the `start-ci-run` invocation with `start-nx-agents`. The command takes no flags, since the configuration now lives in the file.
+Replace the `start-ci-run` invocation with `start-workers`. The command takes no flags, since the configuration now lives in the file.
 
 ```yaml
 # .github/workflows/ci.yml
-- run: npx nx-cloud start-nx-agents
+- run: npx nx-cloud start-workers
 ```
 
 ## Step 3: Verify

@@ -1,11 +1,15 @@
+// Loaded on first use; a top-level import breaks unit tests in the Nx repo.
+// Cached because each `require` call re-resolves the module.
+let native: typeof import('../native') | undefined;
+function getNative(): typeof import('../native') {
+  return (native ??= require('../native'));
+}
+
 export function hashArray(content: string[]): string {
-  // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-  const { hashArray } = require('../native');
-  return hashArray(content);
+  return getNative().hashArray(content);
 }
 
 export function hashObject(obj: object): string {
-  const { hashArray } = require('../native');
   const parts: string[] = [];
 
   for (const key of Object.keys(obj ?? {}).sort()) {
@@ -13,11 +17,9 @@ export function hashObject(obj: object): string {
     parts.push(JSON.stringify(obj[key]));
   }
 
-  return hashArray(parts);
+  return getNative().hashArray(parts);
 }
 
 export function hashFile(filePath: string): string {
-  const { hashFile } = require('../native');
-
-  return hashFile(filePath);
+  return getNative().hashFile(filePath);
 }

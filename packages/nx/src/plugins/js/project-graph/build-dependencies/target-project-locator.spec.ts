@@ -34,6 +34,10 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage === '@json2csv/plainjs/package.json') {
       return '/root/node_modules/@json2csv/plainjs/dist/cjs/package.json';
     }
+    // Resolve package.json to the nested module-format stub used by this test.
+    if (pathOrPackage === '@rerouted/pkg/package.json') {
+      return '/root/node_modules/@rerouted/pkg/dist/cjs/package.json';
+    }
     return join(
       '/root',
       'node_modules',
@@ -768,6 +772,13 @@ describe('TargetProjectLocator', () => {
           JSON.stringify({
             type: 'commonjs',
           }),
+        './node_modules/@rerouted/pkg/package.json': JSON.stringify({
+          name: '@rerouted/pkg',
+          version: '2.0.0',
+        }),
+        './node_modules/@rerouted/pkg/dist/cjs/package.json': JSON.stringify({
+          type: 'commonjs',
+        }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -972,6 +983,16 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
+        // Keep this versioned-only so resolution cannot use the unversioned fallback.
+        'npm:@rerouted/pkg@2.0.0': {
+          type: 'npm',
+          name: 'npm:@rerouted/pkg@2.0.0',
+          data: {
+            version: '2.0.0',
+            packageName: '@rerouted/pkg',
+            hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
+          },
+        },
       };
 
       targetProjectLocator = new TargetProjectLocator(projects, npmProjects);
@@ -1138,6 +1159,14 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:@json2csv/plainjs');
+    });
+
+    it('should resolve a rerouted package.json to its versioned node when no root-level node exists', () => {
+      const result = targetProjectLocator.findProjectFromImport(
+        '@rerouted/pkg/some/subpath',
+        'libs/proj/index.ts'
+      );
+      expect(result).toEqual('npm:@rerouted/pkg@2.0.0');
     });
   });
 

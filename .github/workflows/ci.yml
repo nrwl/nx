@@ -9,9 +9,13 @@ on:
     branches:
       - "**"
 
+permissions:
+  contents: read
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  NX_CLOUD_TASK_GRAPH_STORAGE_VERSION: '2'
   PNPM_HOME: ~/.pnpm
   # See the root Cargo.toml: the release profile is incremental for local dev.
   # CI builds cold, so incremental only inflates the cargo cache.
@@ -21,8 +25,7 @@ env:
   # falls back to "latest" in directories that have no packageManager field
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
-  # Record and hash tasks with Nx Cloud I/O snapshots (ultracache).
-  NX_CLOUD_USE_IO_SNAPSHOTS: 'true'
+  NX_CLOUD_USE_ULTRACACHE: 'true'
 
 jobs:
   main-linux:
@@ -43,6 +46,10 @@ jobs:
       NX_FIX_CI_EXPERIMENTAL: 'true'
       NX_FIX_CI_TRACING: 'true'
       NX_FIX_CI_STABLE_OUTPUT_SCHEMA: 'true'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
+      NX_CLOUD_AGENT_TASK_QUEUE: 'true'
+      NX_CLOUD_AUTO_TASK_PACKING: 'true'
+      NX_CLOUD_BUFFER_TASK_COMPLETIONS: 'true'
 
     steps:
       - name: Checkout
@@ -116,7 +123,7 @@ jobs:
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,run,validate-example &
+          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,validate-links,format,run,validate-example &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
@@ -162,14 +169,6 @@ jobs:
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
 
-      - name: Setup dev tools with mise
-        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
-
-      - name: Enable corepack and install pnpm
-        run: |
-          corepack enable
-          corepack prepare --activate
-
       - name: Set SHAs
         uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
         with:
@@ -186,6 +185,16 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No React Native projects affected, skipping macOS tests"
           fi
+
+      - name: Setup dev tools with mise
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          corepack enable
+          corepack prepare --activate
 
       - name: Configure Detox Environment, Install applesimutils
         if: steps.check-changes.outputs.has_changes == 'true'

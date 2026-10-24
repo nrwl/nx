@@ -11,6 +11,7 @@ import {
   deriveGroupNameFromTarget,
   globWithWorkspaceContext,
   workspaceDataDirectory,
+  applyTestFileDirectives,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -151,26 +152,32 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
           clearRequireCache();
           requireCacheCleared = true;
         }
-        const rawConfig = await loadConfigFile(absConfigFilePath, [
-          'tsconfig.spec.json',
-          'tsconfig.test.json',
-          'tsconfig.jest.json',
-          'tsconfig.json',
-        ]);
-        const { externalFiles, needsDtsInputs } =
-          await collectExternalFileReferences(
-            rawConfig,
-            absConfigFilePath,
-            projectRoot,
-            context.workspaceRoot,
-            {
-              presetCache,
-              tsconfigJsonCache,
-              tsconfigExistsCache,
-              isolatedModulesCache,
-            }
-          );
-        return { rawConfig, externalFiles, needsDtsInputs };
+        // Rethrown per file below, so one config that fails to load does not
+        // drop every other project's inferred targets.
+        try {
+          const rawConfig = await loadConfigFile(absConfigFilePath, [
+            'tsconfig.spec.json',
+            'tsconfig.test.json',
+            'tsconfig.jest.json',
+            'tsconfig.json',
+          ]);
+          const { externalFiles, needsDtsInputs } =
+            await collectExternalFileReferences(
+              rawConfig,
+              absConfigFilePath,
+              projectRoot,
+              context.workspaceRoot,
+              {
+                presetCache,
+                tsconfigJsonCache,
+                tsconfigExistsCache,
+                isolatedModulesCache,
+              }
+            );
+          return { rawConfig, externalFiles, needsDtsInputs };
+        } catch (error) {
+          return { error, externalFiles: [] as string[] };
+        }
       })
     );
 
@@ -189,7 +196,11 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
         async (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
-          const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
+          const loadedConfig = loadedConfigs[idx];
+          if ('error' in loadedConfig) {
+            throw loadedConfig.error;
+          }
+          const { rawConfig, needsDtsInputs } = loadedConfig;
 
           if (!targetsCache.has(hash)) {
             targetsCache.set(
@@ -428,28 +439,33 @@ async function buildJestTargets(
           options: 'forward',
         });
 
-        targets[targetName] = {
-          command: `jest ${relativePath}`,
-          cache,
-          inputs,
-          outputs,
-          options: {
-            cwd: projectRoot,
-            env,
-          },
-          metadata: {
-            technologies: ['jest'],
-            description: `Run Jest Tests in ${relativePath}`,
-            help: {
-              command: `${pmc.exec} jest --help`,
-              example: {
-                options: {
-                  coverage: true,
+        targets[targetName] = applyTestFileDirectives(
+          {
+            command: `jest ${relativePath}`,
+            cache,
+            inputs,
+            outputs,
+            options: {
+              cwd: projectRoot,
+              env,
+            },
+            metadata: {
+              technologies: ['jest'],
+              description: `Run Jest Tests in ${relativePath}`,
+              help: {
+                command: `${pmc.exec} jest --help`,
+                example: {
+                  options: {
+                    coverage: true,
+                  },
                 },
               },
             },
           },
-        };
+          context.workspaceRoot,
+          joinPathFragments(projectRoot, relativePath),
+          { ignoreServerInputs: false }
+        );
         targetGroup.push(targetName);
       }
 
@@ -573,28 +589,33 @@ async function buildJestTargets(
             params: 'forward',
             options: 'forward',
           });
-          targets[targetName] = {
-            command: `jest ${relativePath}`,
-            cache,
-            inputs,
-            outputs,
-            options: {
-              cwd: projectRoot,
-              env,
-            },
-            metadata: {
-              technologies: ['jest'],
-              description: `Run Jest Tests in ${relativePath}`,
-              help: {
-                command: `${pmc.exec} jest --help`,
-                example: {
-                  options: {
-                    coverage: true,
+          targets[targetName] = applyTestFileDirectives(
+            {
+              command: `jest ${relativePath}`,
+              cache,
+              inputs,
+              outputs,
+              options: {
+                cwd: projectRoot,
+                env,
+              },
+              metadata: {
+                technologies: ['jest'],
+                description: `Run Jest Tests in ${relativePath}`,
+                help: {
+                  command: `${pmc.exec} jest --help`,
+                  example: {
+                    options: {
+                      coverage: true,
+                    },
                   },
                 },
               },
             },
-          };
+            context.workspaceRoot,
+            joinPathFragments(projectRoot, relativePath),
+            { ignoreServerInputs: false }
+          );
           targetGroup.push(targetName);
         }
         targets[options.ciTargetName] = {

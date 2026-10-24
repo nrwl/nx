@@ -172,6 +172,7 @@ mod tests {
                     fileset: (*fileset).to_string(),
                     dependencies: None,
                     include_ignored: Some(*include_ignored),
+                    always: None,
                 })
             })
             .collect()

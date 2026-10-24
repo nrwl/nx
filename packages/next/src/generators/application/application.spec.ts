@@ -15,6 +15,21 @@ import { applicationGenerator } from './application';
 import { join } from 'path';
 
 describe('app', () => {
+  it('declares Node types without a unit test runner or linter', async () => {
+    const workspace = createTreeWithEmptyWorkspace();
+    await applicationGenerator(workspace, {
+      directory: 'app',
+      style: 'css',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      linter: 'none',
+      skipFormat: true,
+    });
+    expect(
+      readJson(workspace, 'package.json').devDependencies['@types/node']
+    ).toBeDefined();
+  });
+
   let tree: Tree;
   let envBackup: string | undefined;
 
@@ -329,65 +344,27 @@ describe('app', () => {
     );
   });
 
-  it('should set up the nx next build builder', async () => {
-    const name = uniq();
-
-    // addPlugin: false -> legacy @nx/next:build executor, which relies on
-    // withNx to redirect the build output to --outputPath.
-    await applicationGenerator(tree, {
-      directory: name,
-      style: 'css',
-      addPlugin: false,
-    });
-
-    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "//@ts-check
-
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
-
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
-      const nextConfig = {
-        // Use this to set Nx-specific options
-        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
-        nx: {},
-      };
-
-      const plugins = [
-        // Add more Next.js plugins to this list if needed.
-        withNx,
-      ];
-
-      module.exports = composePlugins(...plugins)(nextConfig);
-      "
-    `);
-  });
-
   it('should generate a plain next.config.js for the inferred plugin', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
-      addPlugin: true,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
       .toMatchInlineSnapshot(`
-      "//@ts-check
+        "//@ts-check
 
-      /** @type {import('next').NextConfig} */
-      const nextConfig = {
-        // Next.js options go here
-        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
-      };
+        /** @type {import('next').NextConfig} */
+        const nextConfig = {
+          // Next.js options go here
+          // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+        };
 
-      module.exports = nextConfig;
-      "
-    `);
+        module.exports = nextConfig;
+        "
+      `);
   });
 
   describe('--unit-test-runner none', () => {
@@ -414,6 +391,24 @@ describe('app', () => {
       });
       expect(tree.exists(`${name}-e2e`)).toBeFalsy();
     });
+  });
+
+  it('should run playwright against the dev server locally and the production server in ci', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      e2eTestRunner: 'playwright',
+    });
+
+    const config = tree.read(`${name}-e2e/playwright.config.mts`, 'utf-8');
+    expect(config).toContain(
+      `getReadyUrl(isCI ? 'http://localhost:3000' : 'http://127.0.0.1:3000')`
+    );
+    expect(config).toContain(
+      `command: isCI ? 'npx nx run ${name}:start' : 'npx nx run ${name}:dev'`
+    );
   });
 
   it('should generate functional components by default', async () => {
@@ -946,7 +941,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1045,6 +1039,7 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "./out-tsc/jest",
+            "rootDir": ".",
             "types": [
               "jest",
               "node",
@@ -1113,7 +1108,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -1141,7 +1135,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'cypress',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });
@@ -1186,7 +1179,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: true,
         src: false,
         skipFormat: true,
@@ -1206,7 +1198,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -1224,7 +1215,6 @@ describe('app', () => {
         unitTestRunner: 'jest',
         style: 'css',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         src: false,
         skipFormat: true,
@@ -1509,7 +1499,7 @@ describe('app (legacy)', () => {
     }
   });
 
-  it('should generate build and serve targets', async () => {
+  it('should infer build and serve targets even for legacy callers', async () => {
     const name = uniq();
 
     await applicationGenerator(tree, {
@@ -1518,8 +1508,8 @@ describe('app (legacy)', () => {
     });
 
     const projectConfiguration = readProjectConfiguration(tree, name);
-    expect(projectConfiguration.targets.build).toBeDefined();
-    expect(projectConfiguration.targets.serve).toBeDefined();
+    expect(projectConfiguration.targets.build).toBeUndefined();
+    expect(projectConfiguration.targets.serve).toBeUndefined();
   });
 
   describe('--unit-test-runner jest', () => {

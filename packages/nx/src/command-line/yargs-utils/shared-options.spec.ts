@@ -11,6 +11,7 @@ vi.mock('../../native', async () => ({
 import {
   readParallelFromArgsAndEnv,
   withAffectedOptions,
+  withExplainOption,
   withOutputStyleOption,
   withRunManyOptions,
   withRunOptions,
@@ -22,6 +23,40 @@ import { isAiAgent } from '../../native';
 const argv = yargs.default([]);
 
 describe('shared-options', () => {
+  describe('withExplainOption', () => {
+    // yargs runs `coerce` only on an instance's first parse.
+    const explain = async (...flags: string[]) =>
+      (
+        await withExplainOption(yargs.default([])).parseAsync([
+          'affected',
+          ...flags,
+        ])
+      ).explain;
+
+    it('reads a bare flag as the human form', async () => {
+      expect(await explain('--explain')).toBe(true);
+    });
+
+    it('keeps a value as the destination', async () => {
+      expect(await explain('--explain=stdout')).toBe('stdout');
+      expect(await explain('--explain', 'reasons.json')).toBe('reasons.json');
+    });
+
+    it('reads false as off', async () => {
+      expect(await explain('--explain=false')).toBe(false);
+    });
+
+    // format, graph and release take the affected options too, and run
+    // anyway; a declared --explain would promise otherwise.
+    it('is not one of the shared affected options', async () => {
+      const result = await withAffectedOptions(yargs.default([])).parseAsync([
+        'format:write',
+        '--explain',
+      ]);
+      expect(result.explain).toBeUndefined();
+    });
+  });
+
   describe('withAffectedOptions', () => {
     const command = withAffectedOptions(argv);
 

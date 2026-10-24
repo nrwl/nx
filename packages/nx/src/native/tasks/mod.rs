@@ -4,13 +4,15 @@ pub(crate) mod hash_planner;
 pub mod hashers;
 mod inputs;
 mod plan_memo;
-pub(crate) mod snapshot_eligibility;
 pub mod task_hasher;
 pub mod types;
+pub(crate) mod ultracache_eligibility;
 mod utils;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod details;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod readiness;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod running_tasks_service;
 #[cfg(not(target_arch = "wasm32"))]

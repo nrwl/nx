@@ -4,7 +4,7 @@
  */
 import { relative } from 'node:path';
 import { coerce as semverCoerce, gte as semverGte } from 'semver';
-import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from './interpolate-release-config';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 import type { CheckAllBranchesWhen, RepoGitTags } from './repository-git-tags';
@@ -147,19 +147,20 @@ export async function getLatestGitTagForPattern(
 ): Promise<GitTagAndVersion | null> {
   const { requireSemver, strictPreid, preid, checkAllBranchesWhen } = options;
 
+  // Outside the try: an invalid pattern must fail, not read as "no tags"
+  const interpolatedTagPattern = interpolateReleaseConfig(releaseTagPattern, {
+    version: '%v%',
+    projectName: '%p%',
+    releaseGroupName: '%rg%',
+    ...additionalInterpolationData,
+  });
+
   try {
     let tags: string[] = await resolveTags(checkAllBranchesWhen);
 
     if (!tags.length) {
       return null;
     }
-
-    const interpolatedTagPattern = interpolate(releaseTagPattern, {
-      version: '%v%',
-      projectName: '%p%',
-      releaseGroupName: '%rg%',
-      ...additionalInterpolationData,
-    });
 
     const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
       .replace('%v%', '(.+)')

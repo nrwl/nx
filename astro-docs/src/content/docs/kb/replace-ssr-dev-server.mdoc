@@ -1,0 +1,126 @@
+---
+title: Replace the ssr-dev-server executor
+description: Serve a server-side rendered app with the @nx/js/tsx plugin instead of the deprecated @nx/webpack:ssr-dev-server and @nx/rspack:ssr-dev-server executors.
+sidebar:
+  label: Replace ssr-dev-server
+filter: 'type:Guides'
+topics:
+  - 'React'
+  - 'Webpack'
+---
+
+The `@nx/webpack:ssr-dev-server` and `@nx/rspack:ssr-dev-server` executors are deprecated and will
+be removed in Nx 25.
+They built the browser bundle and the server bundle in watch mode, started the server, and waited
+for its port.
+Nx can do each of those with continuous tasks.
+The `@nx/js/tsx` plugin runs `server.ts` from source with [`tsx`](https://tsx.is/), so the server
+needs no build of its own.
+
+## Run the server from source
+
+`@nx/js` doesn't install `tsx`, so add it to the workspace's dev dependencies:
+
+```shell
+npm install -D tsx@^4.21.1
+```
+
+`tsx` 4.21.0 and several earlier versions don't restart a CommonJS server when a file it imports
+changes.
+This happens on some Node.js 24 and 26 releases.
+
+Add a shebang and a target name to the top of `server.ts`.
+Resolve the browser bundle from the project folder, and report readiness once the server listens:
+
+```ts {% title="apps/my-app/server.ts" %}
+#!/usr/bin/env -S tsx --tsconfig tsconfig.app.json
+// @nx-target-name: serve-ssr
+
+// ...the rest of the server
+
+const browserDist = path.join(process.cwd(), '../../dist/apps/my-app/browser');
+
+const server = app.listen(port, async () => {
+  console.log(`Listening on http://localhost:${port}`);
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (
+        s: string
+      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
+});
+```
+
+`--tsconfig` gives `tsx` the JSX settings of `tsconfig.app.json`.
+`tsx` applies a tsconfig only to the files it includes, and the app's `tsconfig.json` includes
+none.
+Without the flag, the server fails to render with `React is not defined`.
+`tsx` runs the server from the project folder, so the browser bundle path is relative to it.
+The server imports `@nx/js`, so the root `package.json` has to list it.
+To add it, see [waiting for the server to be ready](/docs/technologies/node/introduction#waiting-for-the-server-to-be-ready).
+
+The name `serve-ssr` keeps the target apart from the `serve` target that `@nx/webpack/plugin` and
+`@nx/rspack/plugin` infer for the browser dev server.
+
+Register the plugin in `nx.json`.
+It runs scripts in watch mode by default, so the server restarts when its files change:
+
+```json {% title="nx.json" %}
+{
+  "plugins": ["@nx/js/tsx"]
+}
+```
+
+## Build the browser bundle alongside
+
+In the project configuration, replace the `serve`, `serve-browser`, `server`, and `serve-server`
+targets that used the executors.
+Add a continuous target that rebuilds the browser bundle, and make `serve-ssr` wait for its first
+build:
+
+```json {% title="apps/my-app/project.json" %}
+{
+  "targets": {
+    "build-watch": {
+      "continuous": true,
+      "command": "webpack-cli build --watch",
+      "options": {
+        "cwd": "{projectRoot}",
+        "env": { "NODE_ENV": "development" }
+      },
+      "readyWhen": { "logMatches": "compiled" }
+    },
+    "serve-ssr": {
+      "dependsOn": [{ "target": "build-watch", "waitFor": "ready" }],
+      "readyWhen": { "signal": true }
+    }
+  }
+}
+```
+
+With Rspack, the command is `rspack build --watch --node-env=development`, and `env` isn't needed.
+webpack-cli 7 doesn't accept `--node-env`, so the webpack target sets `NODE_ENV` through `env`.
+`readyWhen` marks `build-watch` ready at the first line with `compiled`, which webpack and Rspack
+print when a build finishes, with or without errors.
+`serve-ssr` starts after that first build, so the browser bundle exists when the server reads it.
+If the first build takes longer than a minute, raise `timeout` in `readyWhen`, in milliseconds.
+`readyWhen` on `serve-ssr` makes tasks that wait for it, such as e2e tasks, start once the server
+calls `emitReadySignal`.
+They get its address in `NX_READY_URL`.
+
+Run `nx serve-ssr my-app` to start everything.
+
+## Limits
+
+`tsx` compiles TypeScript and JSX, but not the CSS, CSS module, and image imports that only the
+bundler handles.
+If the server renders components that import those, it can't run from source.
+
+For new server-side rendered apps, use a framework with its own Nx plugin, such as
+[Next.js](/docs/technologies/react/next/introduction) or [React Router](/docs/kb/react-router).
