@@ -83,7 +83,7 @@ You can also use `npx nx run shop:serve` as an alternative syntax. The `<project
 
 ### Inferred tasks
 
-By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/concepts/mental-model#inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
+By default Nx simply runs your `package.json` scripts. However, you can also adopt [Nx technology plugins](/docs/technologies) that help abstract away some of the lower-level config and have Nx manage that. One such thing is to automatically identify tasks that can be run for your project from [tooling configuration files](/docs/features/run-tasks#inferred-tasks) such as `package.json` scripts and `vite.config.ts`.
 
 In `nx.json` there's already the `@nx/vite` plugin registered which automatically identifies `build`, `serve`, and other Vite-related tasks.
 
@@ -480,7 +480,7 @@ Not all tasks might be cacheable though. You can configure the `cache` settings 
 Here are some things you can dive into next:
 
 - [Set up CI](/docs/getting-started/setup-ci) with remote caching and self-healing
-- Learn more about the [underlying mental model of Nx](/docs/concepts/mental-model)
+- Learn [how Nx works](/docs/getting-started/how-nx-works)
 - Learn how to [migrate your existing project to Nx](/docs/kb/adding-to-existing-project)
 - [Setup Storybook for our shared UI library](/docs/kb/storybook-for-react)
 - [Learn how to setup Tailwind](/docs/kb/using-tailwind-css-in-react)

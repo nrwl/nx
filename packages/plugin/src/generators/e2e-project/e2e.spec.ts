@@ -41,7 +41,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-plugin',
         pluginOutputPath: `dist/libs/my-plugin`,
         npmPackageName: '@proj/my-plugin',
-        addPlugin: true,
       })
     ).resolves.toBeDefined();
 
@@ -50,7 +49,6 @@ describe('NxPlugin e2e-project Generator', () => {
         pluginName: 'my-nonexistentplugin',
         pluginOutputPath: `dist/libs/my-nonexistentplugin`,
         npmPackageName: '@proj/my-nonexistentplugin',
-        addPlugin: true,
       })
     ).rejects.toThrow();
   });
@@ -60,41 +58,49 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
   });
 
-  it('should create the test workspace with the requested package manager', async () => {
-    // An explicit non-npm choice with a literal expectation. Detection in this
-    // suite resolves to npm, so a template that hardcodes npm would pass an
-    // assertion written against the detected value.
-    await e2eProjectGenerator(tree, {
-      pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
-      packageManager: 'pnpm',
-      addPlugin: true,
-    });
+  it.each([
+    {
+      packageManager: 'npm' as const,
+      dlxCommand: 'npx --workspaces=false',
+      addCommand: /npm install -D .*my-plugin@e2e/,
+      listCommand: /npm ls .*my-plugin/,
+    },
+    {
+      packageManager: 'pnpm' as const,
+      dlxCommand: 'pnpm dlx',
+      addCommand: /pnpm add .*my-plugin@e2e/,
+      listCommand: /pnpm ls .*my-plugin/,
+    },
+  ])(
+    'should create the test workspace with $packageManager',
+    async ({ packageManager, dlxCommand, addCommand, listCommand }) => {
+      await e2eProjectGenerator(tree, {
+        pluginName: 'my-plugin',
+        pluginOutputPath: `dist/libs/my-plugin`,
+        npmPackageName: '@proj/my-plugin',
+        packageManager,
+      });
 
-    const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
+      const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
 
-    expect(spec).toContain('--packageManager=pnpm');
-
-    // Creation, install and checks all have to run under that same manager.
-    expect(spec).toContain('pnpm dlx create-nx-workspace@latest');
-    expect(spec).toMatch(/pnpm add .*my-plugin@e2e/);
-    expect(spec).toMatch(/pnpm ls .*my-plugin/);
-  });
+      expect(spec).toContain(`--packageManager=${packageManager}`);
+      expect(spec).toContain(`${dlxCommand} create-nx-workspace@latest`);
+      expect(spec).toMatch(addCommand);
+      expect(spec).toMatch(listCommand);
+    }
+  );
 
   it('should budget the setup hook for a cold package manager cache', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     // The hook shells out synchronously, which jest cannot interrupt but vitest
@@ -112,7 +118,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
@@ -126,7 +131,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, 'my-plugin-e2e/tsconfig.json');
@@ -139,7 +143,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/namespace/my-plugin`,
       npmPackageName: '@proj/namespace-my-plugin',
       projectDirectory: 'namespace/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -151,7 +154,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
     const projects = Object.fromEntries(getProjects(tree));
     expect(projects).toMatchObject({
@@ -166,7 +168,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
@@ -179,19 +180,30 @@ describe('NxPlugin e2e-project Generator', () => {
         "dependsOn": [
           "^build",
         ],
-        "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "my-plugin-e2e/jest.config.cts",
           "runInBand": true,
         },
-        "outputs": [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
       }
     `);
   });
 
-  it('should not update create e2e target if target covered by existing plugin', async () => {
+  it('should register the jest plugin for the e2e target', async () => {
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+    });
+
+    expect(readJson(tree, 'nx.json').plugins).toContainEqual({
+      plugin: '@nx/jest/plugin',
+      include: ['my-plugin-e2e/**/*'],
+      options: { targetName: 'e2e' },
+    });
+  });
+
+  // The e2e target itself is inferred; the generator only contributes the
+  // `^build` dependency and serialized run that the inferred target lacks.
+  it('only contributes the e2e overrides when a plugin already covers the target', async () => {
     updateJson(tree, 'nx.json', (json) => {
       return {
         ...(json ?? {}),
@@ -213,14 +225,16 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project).toBeTruthy();
     expect(project.root).toEqual('my-plugin-e2e');
-    expect(project.targets.e2e).toBeFalsy();
+    expect(project.targets.e2e).toEqual({
+      dependsOn: ['^build'],
+      options: { runInBand: true },
+    });
   });
 
   it('should add jest support', async () => {
@@ -228,15 +242,12 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project.targets.e2e).toMatchObject({
-      options: expect.objectContaining({
-        jestConfig: 'my-plugin-e2e/jest.config.cts',
-      }),
+      options: expect.objectContaining({ runInBand: true }),
     });
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
@@ -265,12 +276,10 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       testRunner: 'vitest',
-      addPlugin: false,
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
-    expect(project.targets.e2e.executor).toBe('@nx/vitest:test');
     // The suites share a tmp/test-project directory, so they must not run in
     // parallel. These have to stay scalar: vitest 4 removed `poolOptions`, and
     // the executor serializes nested options into a string vitest cannot read.
@@ -281,6 +290,13 @@ describe('NxPlugin e2e-project Generator', () => {
         isolate: false,
       }),
     });
+    expect(readJson(tree, 'nx.json').plugins).toContainEqual(
+      expect.objectContaining({
+        plugin: '@nx/vitest',
+        include: ['my-plugin-e2e/**/*'],
+        options: expect.objectContaining({ testTargetName: 'e2e' }),
+      })
+    );
 
     expect(tree.exists('my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
     const vitestConfigExists =
@@ -317,7 +333,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
       testRunner: 'vitest',
-      addPlugin: true,
     });
 
     // `@nx/vitest` only infers `test`, so without an explicit target `nx e2e`
@@ -326,7 +341,6 @@ describe('NxPlugin e2e-project Generator', () => {
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project.targets.e2e).toMatchObject({
-      executor: '@nx/vitest:test',
       dependsOn: ['^build'],
       options: expect.objectContaining({
         maxWorkers: 1,
@@ -341,7 +355,6 @@ describe('NxPlugin e2e-project Generator', () => {
       pluginName: 'my-plugin',
       pluginOutputPath: `dist/libs/my-plugin`,
       npmPackageName: '@proj/my-plugin',
-      addPlugin: true,
     });
 
     expect(tree.exists('my-plugin-e2e/eslint.config.mjs')).toBeTruthy();
@@ -393,9 +406,7 @@ describe('NxPlugin e2e-project Generator', () => {
       const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
       expect(project.targets.e2e).toMatchObject({
-        options: expect.objectContaining({
-          jestConfig: 'packages/my-plugin-e2e/jest.config.cts',
-        }),
+        options: expect.objectContaining({ runInBand: true }),
       });
 
       expect(

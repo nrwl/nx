@@ -1,4 +1,4 @@
-import { joinPathFragments, logger, names, readNxJson, Tree } from '@nx/devkit';
+import { joinPathFragments, logger, names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
@@ -29,12 +29,6 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const nxJson = readNxJson(host);
-  const addPlugin =
-    options.addPlugin ??
-    (process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   // Legacy workspaces resolve imports through tsconfig paths, which tsc does not
   // rewrite in emitted JS; rolldown bundles them instead. Fastify autoloads
@@ -57,11 +51,7 @@ export async function normalizeOptions(
     );
   }
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
-  const serveRuntime = getServeRuntime(
-    options,
-    addPlugin,
-    isUsingTsSolutionConfig
-  );
+  const serveRuntime = getServeRuntime(options, isUsingTsSolutionConfig);
 
   // Jest loads the app's ESM sources as CommonJS.
   const unitTestRunner =
@@ -73,7 +63,6 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    addPlugin,
     name: appProjectName,
     frontendProject: options.frontendProject
       ? names(options.frontendProject).fileName
@@ -104,11 +93,10 @@ export async function normalizeOptions(
 
 function getServeRuntime(
   options: Schema,
-  addPlugin: boolean,
   isUsingTsSolutionConfig: boolean
 ): NormalizedSchema['serveRuntime'] {
   // Webpack apps keep the explicit @nx/js:node serve.
-  if (!addPlugin || options.bundler === 'webpack') {
+  if (options.bundler === 'webpack') {
     return undefined;
   }
   // Node runs TypeScript natively but does not resolve tsconfig path aliases.

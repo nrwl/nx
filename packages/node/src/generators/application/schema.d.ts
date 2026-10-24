@@ -16,10 +16,6 @@ export interface Schema {
   babelJest?: boolean;
   js?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   bundler?: 'tsc' | 'rolldown' | 'esbuild' | 'webpack';
   framework?: NodeJsFrameWorks;
   port?: number;
@@ -27,7 +23,6 @@ export interface Schema {
   docker?: boolean;
   skipDockerPlugin?: boolean;
   isNest?: boolean;
-  addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
   keepExistingVersions?: boolean;

@@ -1,10 +1,4 @@
-import {
-  installPackagesTask,
-  logger,
-  names,
-  readNxJson,
-  Tree,
-} from '@nx/devkit';
+import { installPackagesTask, logger, names, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';
@@ -22,11 +16,6 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   if (options.preset === Preset.Apps || options.preset === Preset.NPM) {
     // These presets generate no project, so nothing downstream would set the
     // formatter up and the choice would be dropped. Only the formatter is
@@ -127,7 +116,6 @@ async function createPreset(tree: Tree, options: Schema) {
       unitTestRunner:
         options.unitTestRunner ??
         (options.bundler === 'vite' ? 'vitest' : 'jest'),
-      addPlugin,
       routing: options.routing,
       useReactRouter: options.useReactRouter,
       nxCloudToken: options.nxCloudToken,
@@ -154,7 +142,6 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner:
         options.unitTestRunner ?? (bundler === 'vite' ? 'vitest' : 'jest'),
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       formatter: options.formatter,
     });
@@ -170,7 +157,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
@@ -189,7 +175,6 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner ?? 'vitest',
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       formatter: options.formatter,
     });
@@ -205,7 +190,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
@@ -224,7 +208,6 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner ?? 'vitest',
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       formatter: options.formatter,
     });
@@ -242,7 +225,6 @@ async function createPreset(tree: Tree, options: Schema) {
       src: options.nextSrcDir,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
       useProjectJson: options.useProjectJson,
@@ -261,7 +243,6 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner: options.unitTestRunner,
       rootProject: true,
-      addPlugin,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.WebComponents) {
@@ -276,7 +257,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       bundler: 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       formatter: options.formatter,
     });
@@ -291,7 +271,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
       useProjectJson: options.useProjectJson,
@@ -306,7 +285,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
       useProjectJson: options.useProjectJson,
@@ -321,7 +299,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       bundler: options.bundler ?? 'webpack',
       useTsSolution: options.workspaces,
@@ -336,7 +313,6 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
@@ -369,7 +345,6 @@ async function createPreset(tree: Tree, options: Schema) {
       testEnvironment: 'node',
       js: options.js,
       rootProject: true,
-      addPlugin,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeStandalone) {
@@ -389,7 +364,6 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       e2eTestRunner: options.e2eTestRunner,
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       formatter: options.formatter,
     });
   } else if (options.preset === Preset.NodeMonorepo) {
@@ -409,7 +383,6 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: false,
       e2eTestRunner: options.e2eTestRunner,
       unitTestRunner: options.unitTestRunner,
-      addPlugin,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
       useProjectJson: options.useProjectJson,

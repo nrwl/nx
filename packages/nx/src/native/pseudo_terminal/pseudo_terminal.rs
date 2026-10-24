@@ -27,13 +27,18 @@ use vt100_ctt::Parser;
 use super::os;
 use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
 
+pub enum PtyOutput {
+    CommandHeader(String),
+    Process(String),
+}
+
 pub struct PseudoTerminal {
     // slave is listed before master so that it is dropped first, matching the
     // drop order PtyPair documents and relies on.
     pub slave: Box<dyn SlavePty + Send>,
     pub master: MasterArc,
-    pub stdout_tx: Sender<String>,
-    pub stdout_rx: Receiver<String>,
+    pub stdout_tx: Sender<PtyOutput>,
+    pub stdout_rx: Receiver<PtyOutput>,
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
@@ -161,13 +166,13 @@ impl PseudoTerminal {
                         let mut held = capture_decoder.feed(&capture_filter.flush());
                         held.push_str(&capture_decoder.flush());
                         if !held.is_empty() {
-                            stdout_tx_clone.send(held).ok();
+                            stdout_tx_clone.send(PtyOutput::Process(held)).ok();
                         }
                         break;
                     }
                     let captured = capture_decoder.feed(&capture_filter.feed(&buf[0..len]));
                     if !captured.is_empty() {
-                        stdout_tx_clone.send(captured).ok();
+                        stdout_tx_clone.send(PtyOutput::Process(captured)).ok();
                     }
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
@@ -291,7 +296,9 @@ impl PseudoTerminal {
 
         let command_clone = command.clone();
         let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
-        self.stdout_tx.send(command_info.clone()).ok();
+        self.stdout_tx
+            .send(PtyOutput::CommandHeader(command_info.clone()))
+            .ok();
 
         if self.is_within_nx_tui {
             // within the tui, update the parser directly so it is displayed in the tui

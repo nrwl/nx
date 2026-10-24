@@ -159,7 +159,19 @@
     },
     "test": [
       {
-        "dependsOn": ["test-native", "build-native", "^build-native"]
+        "dependsOn": ["test-native", "build-native", "^build-native"],
+        "inputs": [
+          "...",
+          {
+            "fileset": "{workspaceRoot}/packages/nx/src/native/*.node",
+            "includeIgnored": true,
+            "always": true
+          }
+        ],
+        "ultracache": {
+          "...": true,
+          "ignoreReads": ["packages/nx/src/native/*.node"]
+        }
       },
       {
         "filter": {
@@ -242,16 +254,6 @@
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
-    },
-    "build-storybook": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/.storybook/**/*",
-        "{projectRoot}/.storybook/**/*",
-        "{projectRoot}/tsconfig.storybook.json"
-      ],
-      "cache": true
     },
     "build-ng": {
       "cache": true

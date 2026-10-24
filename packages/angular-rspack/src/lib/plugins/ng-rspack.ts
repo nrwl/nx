@@ -11,6 +11,11 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
+import {
+  applyDevServerReadySignal,
+  ssrServerEmitsReadySignal,
+  READY_SIGNAL_PLUGIN,
+} from '../utils/dev-server-ready-signal';
 import { loadEsmModule } from '../utils/misc-helpers';
 import { isServeMode } from '../utils/rspack-serve-env';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
@@ -20,7 +25,10 @@ import {
   type SharedLicenseInputs,
 } from './extract-licenses-plugin';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
-import { IndexHtmlPlugin } from './index-html-plugin';
+import {
+  IndexHtmlPlugin,
+  type SharedServerRenderingInputs,
+} from './index-html-plugin';
 import { ProgressPlugin } from './progress-plugin';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 
@@ -30,6 +38,10 @@ export class NgRspackPlugin implements RspackPluginInstance {
   readonly i18n: I18nOptions;
   private readonly sharedLicenseInputs: SharedLicenseInputs | undefined;
   private readonly sharedAngularPlugin: AngularRspackPlugin | undefined;
+  private readonly serverRenderingInputs:
+    | SharedServerRenderingInputs
+    | undefined;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
@@ -50,6 +62,11 @@ export class NgRspackPlugin implements RspackPluginInstance {
        * own compilation.
        */
       sharedAngularPlugin?: AngularRspackPlugin;
+      /**
+       * Filled by the browser compiler of an SSR build for the server
+       * compiler.
+       */
+      serverRenderingInputs?: SharedServerRenderingInputs;
     }
   ) {
     this.pluginOptions = pluginOptions;
@@ -57,11 +74,24 @@ export class NgRspackPlugin implements RspackPluginInstance {
     this.isPlatformServer = extraOptions.platform === 'server';
     this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
     this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
+    this.serverRenderingInputs = extraOptions.serverRenderingInputs;
   }
 
   apply(compiler: Compiler) {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
+
+    if (
+      !isDevServer ||
+      !this.pluginOptions.hasServer ||
+      !ssrServerEmitsReadySignal(
+        root,
+        this.pluginOptions.ssr,
+        this.pluginOptions.fileReplacements
+      )
+    ) {
+      applyDevServerReadySignal(compiler);
+    }
 
     if (this.isPlatformServer && isDevServer) {
       if (
@@ -223,6 +253,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
         chunksIntegrity: this.pluginOptions.subresourceIntegrity
           ? new Map()
           : undefined,
+        serverRenderingInputs: this.serverRenderingInputs,
       }).apply(compiler);
     }
     if (

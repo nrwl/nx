@@ -49,7 +49,6 @@ import { relative } from 'node:path/posix';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...options,
   });
@@ -66,7 +65,6 @@ export async function e2eProjectGeneratorInternal(
   // Detect Jest 30+ to use .cts config files (CommonJS TypeScript)
   const jestMajorVersion = getInstalledJestMajorVersion(host);
   const useCommonJsConfig = jestMajorVersion === null || jestMajorVersion >= 30;
-  const jestConfigExt = useCommonJsConfig ? 'cts' : 'ts';
 
   const dependsOn = [
     `${options.project}:${options.buildTarget ?? 'build'}`,
@@ -93,12 +91,9 @@ export async function e2eProjectGeneratorInternal(
           options.testRunner === 'vitest'
             ? { dependsOn }
             : {
-                executor: '@nx/jest:jest',
+                command: 'jest --passWithNoTests',
+                options: { cwd: options.e2eProjectRoot },
                 outputs: ['{projectRoot}/test-output/jest/coverage'],
-                options: {
-                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-                  passWithNoTests: true,
-                },
                 dependsOn,
               },
       },
@@ -113,12 +108,9 @@ export async function e2eProjectGeneratorInternal(
           options.testRunner === 'vitest'
             ? { dependsOn }
             : {
-                executor: '@nx/jest:jest',
+                command: 'jest --passWithNoTests',
+                options: { cwd: options.e2eProjectRoot },
                 outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
-                options: {
-                  jestConfig: `${options.e2eProjectRoot}/jest.config.${jestConfigExt}`,
-                  passWithNoTests: true,
-                },
                 dependsOn,
               },
       },
@@ -327,7 +319,6 @@ export async function e2eProjectGeneratorInternal(
         linter: options.linter,
         project: options.e2eProjectName,
         rootProject: options.rootProject,
-        addPlugin: options.addPlugin,
         // The generated e2e specs are Jest; this is what enables the linter's
         // Jest rules.
         unitTestRunner: options.testRunner,
@@ -346,7 +337,6 @@ export async function e2eProjectGeneratorInternal(
       enableTypedLinting: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
-      addPlugin: options.addPlugin,
     });
     tasks.push(linterTask);
 
@@ -413,15 +403,9 @@ async function normalizeOptions(
     directory,
   });
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   return {
-    addPlugin,
     ...options,
     // Both arms below test for a concrete linter, so an unresolved `undefined`
     // would fall through them and leave the e2e project with no linter at all.
@@ -450,7 +434,6 @@ async function addVitest(
     initGenerator,
   }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
   const task = await initGenerator(tree, {
-    addPlugin: false,
     skipFormat: true,
   });
 

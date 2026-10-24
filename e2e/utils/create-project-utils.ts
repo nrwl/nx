@@ -100,17 +100,14 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 /**
  * Locate a pre-built base workspace template for this package manager and preset,
  * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
- * each agent. Templates are not selected for `NX_ADD_PLUGINS=false`; combinations
- * that were not pre-built also fall back to building the workspace the original way.
+ * each agent. Combinations that were not pre-built fall back to building the
+ * workspace the original way.
  */
 function sharedBaseWorkspacePath(
   packageManager: string,
   preset: string
 ): string | null {
-  if (
-    process.env.NX_E2E_SKIP_SHARED_BASE === 'true' ||
-    process.env.NX_ADD_PLUGINS === 'false'
-  ) {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
     return null;
   }
   const candidate = join(

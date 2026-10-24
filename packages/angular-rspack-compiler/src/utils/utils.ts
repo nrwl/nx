@@ -19,3 +19,16 @@ export const maxWorkers = () => {
     ? parsedWorkers
     : Math.min(4, Math.max(availableParallelism() - 1, 1));
 };
+
+/**
+ * The JavaScript transformer's worker count on `@angular/build` >= 22.2, as
+ * its `maxTransformWorkers` computes it. That transformer keeps a fixed pool of
+ * this size and rejects anything but an integer >= 1.
+ */
+export const maxTransformWorkers = () => {
+  const value = process.env[ENV_NG_BUILD_MAX_WORKERS];
+  const parsed = isPresent(value) ? Number(value) : NaN;
+  return Number.isInteger(parsed) && parsed >= 1
+    ? parsed
+    : Math.max(1, Math.min(6, Math.floor(availableParallelism() / 4)));
+};

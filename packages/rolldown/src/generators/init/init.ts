@@ -4,9 +4,9 @@ import {
   createProjectGraphAsync,
   formatFiles,
   type GeneratorCallback,
-  readNxJson,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { createNodesV2 } from '../../plugins/plugin';
 import {
   assertSupportedRolldownVersion,
@@ -19,11 +19,6 @@ export async function rolldownInitGenerator(tree: Tree, schema: Schema) {
   assertSupportedRolldownVersion(tree);
 
   let task: GeneratorCallback = () => {};
-  const nxJson = readNxJson(tree);
-  schema.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   if (!schema.skipPackageJson) {
     task = addDependenciesToPackageJson(
       tree,
@@ -34,16 +29,15 @@ export async function rolldownInitGenerator(tree: Tree, schema: Schema) {
     );
   }
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/rolldown/plugin',
-      createNodesV2,
-      { buildTargetName: ['build', 'rolldown:build', 'rolldown-build'] },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/rolldown/plugin',
+    createNodesV2,
+    { buildTargetName: ['build', 'rolldown:build', 'rolldown-build'] },
+    schema.updatePackageScripts
+  );
+  await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

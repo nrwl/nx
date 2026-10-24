@@ -44,7 +44,6 @@ export type AddVitestAnalogOptions = {
   skipPackageJson: boolean;
   strict: boolean;
   zoneless: boolean;
-  addPlugin?: boolean;
 };
 
 export async function addVitestAngular(
@@ -153,7 +152,6 @@ export async function addVitestAnalog(
       uiFramework: 'angular',
       testEnvironment: 'jsdom',
       coverageProvider: 'v8',
-      addPlugin: options.addPlugin ?? false,
       skipFormat: options.skipFormat,
       skipPackageJson: options.skipPackageJson,
       zoneless: options.zoneless,

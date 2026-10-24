@@ -10,7 +10,7 @@
     "executors.json",
     "generators.json"
   ],
-  "description": "The Nx Plugin for Jest contains executors and generators allowing your workspace to use the powerful Jest testing capabilities.",
+  "description": "The Nx Plugin for Jest infers tasks and provides generators allowing your workspace to use the powerful Jest testing capabilities.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -103,18 +103,14 @@
     }
   },
   "dependencies": {
-    "@jest/reporters": "catalog:jest",
-    "@jest/test-result": "catalog:jest",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "identity-obj-proxy": "catalog:jest",
     "jest-config": "catalog:jest",
     "jest-resolve": "catalog:jest",
-    "jest-util": "catalog:jest",
     "jsonc-parser": "catalog:",
     "minimatch": "catalog:",
-    "picocolors": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
     "tslib": "catalog:typescript",

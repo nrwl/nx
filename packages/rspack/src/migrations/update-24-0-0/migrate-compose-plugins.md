@@ -6,12 +6,14 @@ builds the project graph. They do not configure builds, and a config that loads 
 working build.
 
 `@nx/rspack:convert-config-to-rspack-plugin` already ran. The agent context lists the
-projects it converted and, separately, the projects it could not convert with the reason
+projects it converted, including configs an earlier conversion left wrapped in
+`useLegacyNxPlugin`, and, separately, the projects it could not convert with the reason
 for each. Work only on those projects and the files they import. Do not re-inventory the
 workspace, and do not run the converter again.
 
 Preserve the installed Rspack version, bundler, targets, configurations, and commands.
-Executor conversion is a separate migration, and `convert-to-inferred` is not this task.
+Nx 24 also removed the `@nx/rspack:rspack` executor. Its targets are converted to inferred
+`@nx/rspack/plugin` tasks by a separate migration, so do not add it back or keep a target on it.
 
 ## Baseline
 
@@ -59,12 +61,9 @@ optimization, public paths, output filenames, and dev-server behavior. Set outpu
 explicitly where the old helper defaults differ from the plugin defaults; a build that
 succeeds with renamed entry files is not output parity.
 
-When keeping `@nx/rspack:rspack`, set `standardRspackConfigFunction: true` whenever the
-config uses the native plugin classes, including for object exports. Despite the name, the
-flag also bypasses legacy entry validation that otherwise runs before `NxAppRspackPlugin`
-applies and fails with "Entry is required". For function exports it additionally selects
-standard invocation over Nx callback context. For Rspack CLI targets, represent the options
-the executor used to supply. Use config functions or separate configs where values vary by configuration.
+Inferred targets run the Rspack CLI, which calls a function export with `(env, argv)`.
+Represent the options the executor used to supply in the config itself. Use config
+functions or separate configs where values vary by configuration.
 
 For custom composable functions, move the function into user-owned code and supply the
 options and context it needs explicitly. A local adapter exposing `apply(compiler)` can

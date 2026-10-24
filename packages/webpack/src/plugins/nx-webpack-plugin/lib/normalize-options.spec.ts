@@ -76,16 +76,22 @@ describe('native webpack plugin executor options', () => {
     const pluginOptions = {
       outputFileName: 'server.js',
       buildLibsFromSource: false,
+      standardWebpackConfigFunction: true,
     };
     const defaulted = webpackExecutorContext.run(
       {
-        options: { outputFileName: 'main.js', buildLibsFromSource: true },
+        options: {
+          outputFileName: 'main.js',
+          buildLibsFromSource: true,
+          standardWebpackConfigFunction: false,
+        },
         target: { project: 'app', target: 'build' },
       },
       () => normalizeOptions({ ...pluginOptions })
     );
     expect(defaulted.outputFileName).toBe('server.js');
     expect(defaulted.buildLibsFromSource).toBe(false);
+    expect(defaulted).toHaveProperty('standardWebpackConfigFunction', true);
 
     const overridden = webpackExecutorContext.run(
       {

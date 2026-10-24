@@ -72,14 +72,60 @@ export default defineConfig({
     '/guides/nx-cloud/encryption': '/docs/kb/encryption',
     '/guides/nx-cloud/google-auth': '/docs/kb/google-auth',
     '/features/ci-features/dynamic-agents':
-      '/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size',
+      '/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size',
     '/getting-started/nx-cloud': '/docs/features/ci-features',
     '/concepts/ci-concepts/parallelization-distribution':
-      '/docs/concepts/ci-concepts/building-blocks-fast-ci',
-    '/platform-features/orchestration-ci':
-      '/docs/platform-features/continuous-integration-ci',
+      '/docs/features/ci-features#building-blocks-of-fast-ci',
+    '/platform-features/orchestration-ci': '/docs/features/ci-features',
+    // Hidden sidebar hub pages removed with the Core features / CI features split.
+    '/platform-features': '/docs/features/run-tasks',
+    '/platform-features/code-organization': '/docs/features/explore-graph',
+    '/platform-features/code-organization/enforce-module-boundaries':
+      '/docs/features/enforce-module-boundaries',
+    '/platform-features/continuous-integration-ci':
+      '/docs/features/ci-features',
+    '/platform-features/release-publishing': '/docs/features/manage-releases',
+    '/platform-features/maintenance':
+      '/docs/features/automate-updating-dependencies',
+    '/platform-features/enterprise': '/docs/enterprise',
+    '/platform-features/enterprise/single-tenant':
+      '/docs/enterprise/single-tenant/overview',
+    '/platform-features/enterprise/conformance-reference':
+      '/docs/reference/conformance/overview',
     '/kb/setup-ci': '/docs/getting-started/setup-ci',
-    '/concepts/inferred-tasks': '/docs/concepts/mental-model',
+    // Executor reference pages removed in Nx 24 with their executors.
+    '/technologies/test-tools/cypress/executors':
+      '/docs/technologies/test-tools/cypress/introduction',
+    '/technologies/test-tools/detox/executors':
+      '/docs/technologies/test-tools/detox/introduction',
+    '/technologies/test-tools/jest/executors':
+      '/docs/technologies/test-tools/jest/introduction',
+    '/technologies/test-tools/playwright/executors':
+      '/docs/technologies/test-tools/playwright/introduction',
+    '/technologies/test-tools/storybook/executors':
+      '/docs/technologies/test-tools/storybook/introduction',
+    '/technologies/test-tools/vitest/executors':
+      '/docs/technologies/test-tools/vitest/introduction',
+    '/technologies/eslint/executors': '/docs/technologies/eslint/introduction',
+    '/technologies/react/next/executors':
+      '/docs/technologies/react/next/introduction',
+    '/technologies/build-tools/rollup/executors':
+      '/docs/technologies/build-tools/rollup/introduction',
+    '/technologies/build-tools/vite/executors':
+      '/docs/technologies/build-tools/vite/introduction',
+    '/concepts/inferred-tasks': '/docs/features/run-tasks#inferred-tasks',
+    '/concepts/mental-model': '/docs/getting-started/how-nx-works',
+    '/concepts/how-caching-works':
+      '/docs/features/cache-task-results#how-caching-works',
+    '/concepts/task-pipeline-configuration':
+      '/docs/features/run-tasks#defining-a-task-pipeline',
+    '/concepts/types-of-configuration': '/docs/reference/project-configuration',
+    '/concepts/nx-plugins': '/docs/plugin-registry',
+    '/concepts/ci-concepts/building-blocks-fast-ci':
+      '/docs/features/ci-features#building-blocks-of-fast-ci',
+    '/concepts/ci-concepts': '/docs/features/ci-features',
+    '/concepts': '/docs/getting-started/how-nx-works',
+    '/how-nx-works': '/docs/getting-started/how-nx-works',
     '/concepts/executors-and-configurations':
       '/docs/kb/executors-and-configurations',
     '/concepts/nx-daemon': '/docs/reference/nx-daemon',
@@ -220,6 +266,24 @@ if (h === "nx.dev") {
           attrs: {
             src: `${BASE}/global-scripts.js`,
             defer: true,
+          },
+        },
+        // Link unfurlers (Slack) skip SVG favicons and fall back to /favicon.ico.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            type: 'image/png',
+            sizes: '32x32',
+            href: `${BASE}/favicon-32x32.png`,
+          },
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'apple-touch-icon',
+            sizes: '180x180',
+            href: `${BASE}/apple-touch-icon.png`,
           },
         },
       ],

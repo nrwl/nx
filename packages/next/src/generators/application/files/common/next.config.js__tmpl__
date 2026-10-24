@@ -1,5 +1,4 @@
 //@ts-check
-<% if (addPlugin) { -%>
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -8,29 +7,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-<% } else { -%>
-const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
-const { relative, resolve } = require('path');
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-/**
- * @param {string} phase
- * @returns {import('next').NextConfig}
- */
-module.exports = (phase) => ({
-  ...nextConfig,
-  ...(phase !== PHASE_DEVELOPMENT_SERVER && process.env.NX_NEXT_OUTPUT_PATH
-    ? {
-        distDir: relative(
-          __dirname,
-          resolve(__dirname, '<%= offsetFromRoot %>', process.env.NX_NEXT_OUTPUT_PATH, '.next')
-        ),
-      }
-    : {}),
-  ...(process.env.NX_SERVE_STATIC_BUILD_RUNNING === 'true'
-    ? { output: 'export', distDir: 'out' }
-    : {}),
-});
-<% } -%>

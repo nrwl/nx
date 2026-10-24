@@ -2,6 +2,7 @@ package dev.nx.maven.targets
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import dev.nx.maven.utils.MojoAnalyzer
 import dev.nx.maven.utils.PathFormatter
 import dev.nx.maven.utils.isUnder
@@ -212,21 +213,13 @@ class NxTargetFactory(
     // Use the batch executor instead of run-commands
     val target = NxTarget("@nx/maven:maven", options, isCacheable, isContinuous)
 
-    // Copy caching info from analysis
     if (isCacheable) {
-      // Convert inputs to JsonArray
-      val inputsArray = JsonArray()
-      inputs.forEach { input -> inputsArray.add(input) }
-      target.inputs = inputsArray
-
-      // Convert outputs to JsonArray
       val outputsArray = JsonArray()
       outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
-      addBuildStateJsonInputsAndOutputs(project, target)
-      addUpstreamOutputInputs(project, target)
-      addExternalDependenciesInput(target, externalDependencies)
     }
+    target.inputs = inputs
+    addStandardInputs(project, target, externalDependencies)
 
     return target
   }
@@ -292,7 +285,7 @@ class NxTargetFactory(
     val target = if (isSkipped) {
       val skipProp = phaseSkipProperties[phase]
       log.info("Creating noop $phase target for ${project.artifactId} ($skipProp=true)")
-      createSkippedPhaseTarget(project, phase)
+      createSkippedPhaseTarget(project, phase, externalDependencies)
     } else {
       createPhaseBatchTarget(project, phase, goalsForPhase ?: emptyList(), externalDependencies)
     }
@@ -355,7 +348,7 @@ class NxTargetFactory(
     val ciTarget = if (isSkipped) {
       val skipProp = phaseSkipProperties[phase]
       log.info("Creating noop $phase CI target for ${project.artifactId} ($skipProp=true)")
-      createSkippedPhaseTarget(project, phase)
+      createSkippedPhaseTarget(project, phase, externalDependencies)
     } else if (hasGoals && phase != "test") {
       createPhaseBatchTarget(project, phase, goalsForPhase!!, externalDependencies)
     } else {
@@ -531,14 +524,18 @@ class NxTargetFactory(
 
   private fun createSkippedPhaseTarget(
     project: MavenProject,
-    phase: String
+    phase: String,
+    externalDependencies: List<String>
   ): NxTarget {
     log.info("Creating skipped phase target for '$phase' (no goals)")
     val options = JsonObject()
     options.addProperty("phase", phase)
     options.add("goals", JsonArray())
     options.addProperty("project", "${project.groupId}:${project.artifactId}")
-    return NxTarget("@nx/maven:maven", options, cache = true, continuous = false)
+    val target = NxTarget("@nx/maven:maven", options, cache = true, continuous = false)
+    target.inputs = JsonArray()
+    addStandardInputs(project, target, externalDependencies)
+    return target
   }
 
   private fun createSimpleGoalTarget(
@@ -573,23 +570,16 @@ class NxTargetFactory(
 
     val target = NxTarget("@nx/maven:maven", options, analysis.isCacheable, analysis.isContinuous)
 
-    // Add inputs and outputs if cacheable
     if (analysis.isCacheable) {
-      // Convert inputs to JsonArray
-      val inputsArray = JsonArray()
-      analysis.inputs.forEach { input -> inputsArray.add(input) }
-      analysis.ignoredInputs.forEach { input -> inputsArray.add(ignoredFileset(input)) }
-      target.inputs = inputsArray
-
-      // Convert outputs to JsonArray
       val outputsArray = JsonArray()
       analysis.outputs.forEach { output -> outputsArray.add(output) }
       target.outputs = outputsArray
-      addExternalDependenciesInput(target, externalDependencies)
     }
-
-    addBuildStateJsonInputsAndOutputs(project, target)
-    addUpstreamOutputInputs(project, target)
+    val inputsArray = JsonArray()
+    analysis.inputs.forEach { input -> inputsArray.add(input) }
+    analysis.ignoredInputs.forEach { input -> inputsArray.add(ignoredFileset(input)) }
+    target.inputs = inputsArray
+    addStandardInputs(project, target, externalDependencies)
     return target
   }
 
@@ -675,11 +665,22 @@ class NxTargetFactory(
     target.inputs?.add(ignoredFileset(modulePath(buildStateFile(project), project)))
   }
 
+  // Every target gets explicit inputs, cacheable or not: without them Nx falls back to
+  // `{projectRoot}/**/*` + `^default`, which reaches every file under a root aggregator.
+  private fun addStandardInputs(project: MavenProject, target: NxTarget, externalDependencies: List<String>) {
+    val inputs = target.inputs ?: return
+    mojoAnalyzer.pomInputs(project).map { JsonPrimitive(it) }.filterNot { inputs.contains(it) }.forEach { inputs.add(it) }
+    addBuildStateJsonInputsAndOutputs(project, target)
+    addUpstreamOutputInputs(project, target)
+    addExternalDependenciesInput(target, externalDependencies)
+  }
+
   private fun addBuildStateJsonInputsAndOutputs(project: MavenProject, target: NxTarget) {
     session.projectDependencyGraph.getUpstreamProjects(project, true).forEach { upstream ->
       // A pom module (parent, aggregator, BOM) only contributes its pom, not build output.
       if (upstream.packaging == "pom") {
-        target.inputs?.add(pathFormatter.toWorkspacePath(upstream.file, workspaceRoot))
+        val pom = JsonPrimitive(pathFormatter.toWorkspacePath(upstream.file, workspaceRoot))
+        if (target.inputs?.contains(pom) == false) target.inputs?.add(pom)
       } else {
         target.inputs?.add(ignoredFileset(pathFormatter.toWorkspacePath(buildStateFile(upstream), workspaceRoot)))
       }

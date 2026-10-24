@@ -201,6 +201,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -245,6 +249,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -274,6 +282,9 @@ describe('@nx/webpack/plugin', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "signal": true,
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -289,6 +300,62 @@ describe('@nx/webpack/plugin', () => {
         ],
       ]
     `);
+  });
+
+  describe('readyWhen', () => {
+    // NxAppWebpackPlugin and NxReadySignalPlugin carry this marker
+    const signallingPlugin = {
+      [Symbol.for('@nx/ready-signal-plugin')]: true,
+      apply() {},
+    };
+    const readyWhen = async () => {
+      const [[, { projects }]] = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        {},
+        context
+      );
+      const { targets } = projects['my-app'];
+      return [targets.serve.readyWhen, targets.preview.readyWhen];
+    };
+
+    it('waits for the signal when the config loads a plugin that sends it', async () => {
+      mockWebpackConfig({
+        devServer: { port: 9000 },
+        plugins: [signallingPlugin],
+      });
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
+    });
+
+    it('checks the port at task time when nothing in the config signals', async () => {
+      mockWebpackConfig({ devServer: { port: 9000 }, plugins: [{}] });
+      const check = {
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js`,
+        interval: 1000,
+      };
+
+      expect(await readyWhen()).toEqual([check, check]);
+    });
+
+    it('checks every port when several configs start a dev server', async () => {
+      // Only the first dev server to listen would signal
+      mockWebpackConfig([
+        { devServer: { port: 9000 }, plugins: [signallingPlugin] },
+        { devServer: { port: 9001 }, plugins: [signallingPlugin] },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
+
+    it('checks the port when a dev server config lacks the plugin', async () => {
+      // The plugin only wraps an existing devServer object
+      mockWebpackConfig([
+        { plugins: [signallingPlugin] },
+        { devServer: { port: 9000 } },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

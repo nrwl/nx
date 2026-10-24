@@ -49,10 +49,6 @@ export const autoprefixerVersion = '10.4.13';
 
 // SSR
 export const expressVersion = '^4.21.2';
-export const typesExpressVersion = '^4.17.21';
-export const isbotVersion = '^3.6.5';
-export const corsVersion = '~2.8.5';
-export const typesCorsVersion = '~2.8.12';
 
 // style preprocessors
 export const sassVersion = '^1.97.2';

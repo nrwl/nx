@@ -26,7 +26,7 @@ describe('configurationGenerator', () => {
   });
 
   it('should write a rolldown config and register the plugin', async () => {
-    await configurationGenerator(tree, { project: 'api', addPlugin: true });
+    await configurationGenerator(tree, { project: 'api' });
 
     expect(tree.read('apps/api/rolldown.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -84,7 +84,6 @@ describe('configurationGenerator', () => {
     await configurationGenerator(tree, {
       project: 'api',
       format: 'cjs',
-      addPlugin: true,
     });
 
     const config = tree.read('apps/api/rolldown.config.ts', 'utf-8');
@@ -95,7 +94,7 @@ describe('configurationGenerator', () => {
   it('should read external dependencies from the project package.json', async () => {
     tree.write('apps/api/package.json', '{"name":"api"}');
 
-    await configurationGenerator(tree, { project: 'api', addPlugin: true });
+    await configurationGenerator(tree, { project: 'api' });
 
     expect(tree.read('apps/api/rolldown.config.ts', 'utf-8')).toContain(
       "import packageJson from './package.json' with { type: 'json' };"
@@ -108,34 +107,12 @@ describe('configurationGenerator', () => {
   ])('should bundle dependencies for %j', async (extra) => {
     await configurationGenerator(tree, {
       project: 'api',
-      addPlugin: true,
       ...extra,
     });
 
     const config = tree.read('apps/api/rolldown.config.ts', 'utf-8');
     expect(config).not.toContain('external');
     expect(config).not.toContain('package.json');
-  });
-
-  it('should add an explicit build target when not using the plugin', async () => {
-    await configurationGenerator(tree, { project: 'api', addPlugin: false });
-
-    expect(readProjectConfiguration(tree, 'api').targets.build)
-      .toMatchInlineSnapshot(`
-      {
-        "cache": true,
-        "command": "rolldown -c rolldown.config.ts",
-        "dependsOn": [
-          "^build",
-        ],
-        "options": {
-          "cwd": "apps/api",
-        },
-        "outputs": [
-          "{workspaceRoot}/dist/apps/api",
-        ],
-      }
-    `);
   });
 
   it('should throw if the project already has a rolldown config', async () => {

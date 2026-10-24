@@ -812,8 +812,7 @@ export interface NxMigrateConfiguration {
   /**
    * Whether `nx migrate` resolves package versions via the npm registry
    * (faster) instead of a package-manager install. The
-   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
-   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` env var takes precedence over this.
    * Defaults to `true`.
    */
   useRegistryResolution?: boolean;
@@ -996,7 +995,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 
   /**
-   * Set this to false to disable adding inference plugins when generating new projects
+   * When false, `nx add` does not update package.json scripts by default and
+   * `nx init` uses its legacy setup. Generators always add their inference plugin.
    */
   useInferencePlugins?: boolean;
 

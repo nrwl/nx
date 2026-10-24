@@ -4,6 +4,7 @@ import {
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
+  readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
@@ -65,7 +66,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
 
         updateJson(tree, 'package.json', (json) => {
@@ -81,7 +81,6 @@ describe('@nx/storybook:configuration', () => {
             project: 'test-ui-lib',
             uiFramework: '@storybook/react-vite',
             interactionTests: true,
-            addPlugin: true,
           })
         );
 
@@ -97,7 +96,6 @@ describe('@nx/storybook:configuration', () => {
             project: 'test-ui-lib',
             uiFramework: '@storybook/react-webpack5',
             interactionTests: false,
-            addPlugin: true,
           })
         );
 
@@ -118,7 +116,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -134,6 +131,15 @@ describe('@nx/storybook:configuration', () => {
         // angular specific
         expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
         expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
+        const { storybook } = readProjectConfiguration(
+          tree,
+          'test-ui-lib'
+        ).targets;
+        expect(storybook.continuous).toBe(true);
+        expect(storybook.readyWhen).toEqual({
+          port: '{env.SBCONFIG_PORT ?? options.port ?? 9009}',
+          host: '{env.SBCONFIG_HOSTNAME ?? options.host ?? localhost}',
+        });
         // react specific
         expect(
           packageJson.devDependencies['@storybook/react-webpack5']
@@ -162,7 +168,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -202,7 +207,6 @@ describe('@nx/storybook:configuration', () => {
           await configurationGenerator(tree, {
             project: 'test-ui-lib',
             uiFramework: '@storybook/react-vite',
-            addPlugin: true,
           });
 
           const main = tree.read('test-ui-lib/.storybook/main.ts', 'utf-8');
@@ -227,7 +231,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/html-webpack5',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -270,7 +273,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/web-components-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -321,7 +323,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/vue-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -372,7 +373,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/vue3-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -427,7 +427,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/svelte-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -480,7 +479,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
@@ -493,7 +491,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
@@ -505,26 +502,10 @@ describe('@nx/storybook:configuration', () => {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
           interactionTests: false,
-          addPlugin: true,
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
         expect(devDependencies['@storybook/test-runner']).not.toBeDefined();
-      });
-
-      it('should install the runner the explicit target invokes', async () => {
-        await configurationGenerator(tree, {
-          project: 'test-ui-lib',
-          uiFramework: '@storybook/react-vite',
-          addPlugin: false,
-        });
-
-        const { devDependencies } = readJson(tree, 'package.json');
-        expect(devDependencies['@storybook/test-runner']).toBeDefined();
-        const project = readJson(tree, 'test-ui-lib/project.json');
-        expect(project.targets['test-storybook'].options.command).toContain(
-          'test-storybook -c'
-        );
       });
     });
 
@@ -542,7 +523,6 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib',
           bundler: 'none',
-          addPlugin: true,
         });
         writeJson(tree, 'package.json', {
           devDependencies: {
@@ -556,7 +536,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
@@ -570,7 +549,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         const tsconfigJson = readJson<TsConfig>(
           tree,
@@ -613,7 +591,6 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
-          addPlugin: true,
         });
 
         updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
@@ -626,7 +603,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
@@ -643,13 +619,11 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(
@@ -665,7 +639,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         expect(
@@ -681,7 +654,6 @@ describe('@nx/storybook:configuration', () => {
           project: 'test-ui-lib',
           interactionTests: true,
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(
@@ -693,15 +665,15 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: false,
         });
 
         const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
         expect(nxJson.namedInputs.production).not.toContain(
           '!{projectRoot}/tsconfig.storybook.json'
         );
-        expect(nxJson.targetDefaults['build-storybook'].inputs).not.toContain(
-          '{projectRoot}/tsconfig.storybook.json'
+        expect(nxJson.targetDefaults?.['build-storybook']).toBeUndefined();
+        expect(nxJson.plugins).toContainEqual(
+          expect.objectContaining({ plugin: '@nx/storybook/plugin' })
         );
       });
 
@@ -709,15 +681,15 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: false,
         });
 
         const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
         expect(nxJson.namedInputs.production).toContain(
           '!{projectRoot}/tsconfig.storybook.json'
         );
-        expect(nxJson.targetDefaults['build-storybook'].inputs).toContain(
-          '{projectRoot}/tsconfig.storybook.json'
+        expect(nxJson.targetDefaults?.['build-storybook']).toBeUndefined();
+        expect(nxJson.plugins).toContainEqual(
+          expect.objectContaining({ plugin: '@nx/storybook/plugin' })
         );
       });
     });
@@ -731,7 +703,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
 
         updateJson(tree, 'package.json', (json) => {
@@ -758,7 +729,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          addPlugin: true,
         });
 
         const tsconfig = readJson(tree, 'tsconfig.json');
@@ -799,7 +769,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          addPlugin: true,
         });
 
         const tsconfig = readJson(tree, 'tsconfig.json');
@@ -837,7 +806,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          addPlugin: true,
         });
 
         const tsconfig = readJson(tree, 'tsconfig.json');
@@ -891,57 +859,47 @@ describe('@nx/storybook:configuration', () => {
           project: 'reapp',
           tsConfiguration: false,
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-vite',
           tsConfiguration: false,
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-vite-ts',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-webpack',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'reappw',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'react-rollup',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'react-vite',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'nextapp',
           uiFramework: '@storybook/nextjs',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'react-swc',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'wv1',
           uiFramework: '@storybook/web-components-vite',
-          addPlugin: true,
         });
       });
 
@@ -1000,14 +958,12 @@ describe('@nx/storybook:configuration', () => {
           directory: 'mylib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
           useProjectJson: false,
         });
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`
@@ -1101,7 +1057,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
 
         updateJson(tree, 'package.json', (json) => {
@@ -1123,7 +1078,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1167,7 +1121,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1208,7 +1161,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/html-webpack5',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1251,7 +1203,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/web-components-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1302,7 +1253,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/vue-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1353,7 +1303,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/vue3-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1408,7 +1357,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/svelte-vite',
-          addPlugin: true,
         });
 
         const packageJson = readJson(tree, 'package.json');
@@ -1459,7 +1407,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
@@ -1470,7 +1417,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         // 0.20+ peers storybook ^8.2, so 8.0/8.1 fall back to the 0.17 line.
@@ -1484,7 +1430,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
@@ -1495,7 +1440,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
@@ -1508,7 +1452,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
         updateJson(tree, 'package.json', (json) => {
           json.devDependencies ??= {};
@@ -1519,7 +1462,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
@@ -1534,7 +1476,6 @@ describe('@nx/storybook:configuration', () => {
             directory: 'test-ui-lib',
             bundler: 'none',
             skipFormat: true,
-            addPlugin: true,
           });
           updateJson(tree, 'package.json', (json) => {
             json.devDependencies ??= {};
@@ -1547,7 +1488,6 @@ describe('@nx/storybook:configuration', () => {
               project: 'test-ui-lib',
               uiFramework: '@storybook/react-vite',
               interactionTests: true,
-              addPlugin: true,
             })
           );
 
@@ -1573,7 +1513,6 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib',
           bundler: 'none',
-          addPlugin: true,
         });
         writeJson(tree, 'package.json', {
           devDependencies: {
@@ -1587,7 +1526,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
@@ -1601,7 +1539,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         const tsconfigJson = readJson<TsConfig>(
           tree,
@@ -1644,7 +1581,6 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
-          addPlugin: true,
         });
 
         updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
@@ -1657,7 +1593,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
@@ -1674,13 +1609,11 @@ describe('@nx/storybook:configuration', () => {
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(
@@ -1696,7 +1629,6 @@ describe('@nx/storybook:configuration', () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
           uiFramework: '@storybook/angular',
-          addPlugin: true,
         });
 
         expect(
@@ -1712,7 +1644,6 @@ describe('@nx/storybook:configuration', () => {
           project: 'test-ui-lib',
           interactionTests: true,
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         expect(
@@ -1730,7 +1661,6 @@ describe('@nx/storybook:configuration', () => {
           directory: 'test-ui-lib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
         });
 
         updateJson(tree, 'package.json', (json) => {
@@ -1772,7 +1702,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          addPlugin: true,
         });
 
         const tsconfig = readJson(tree, 'tsconfig.json');
@@ -1810,7 +1739,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          addPlugin: true,
         });
 
         const tsconfig = readJson(tree, 'tsconfig.json');
@@ -1864,57 +1792,47 @@ describe('@nx/storybook:configuration', () => {
           project: 'reapp',
           tsConfiguration: false,
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-vite',
           tsConfiguration: false,
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-vite-ts',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'main-webpack',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'reappw',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
         await configurationGenerator(tree, {
           project: 'react-rollup',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'react-vite',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'nextapp',
           uiFramework: '@storybook/nextjs',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'react-swc',
           uiFramework: '@storybook/react-webpack5',
-          addPlugin: true,
         });
 
         await configurationGenerator(tree, {
           project: 'wv1',
           uiFramework: '@storybook/web-components-vite',
-          addPlugin: true,
         });
       });
 
@@ -1973,14 +1891,12 @@ describe('@nx/storybook:configuration', () => {
           directory: 'mylib',
           bundler: 'none',
           skipFormat: true,
-          addPlugin: true,
           useProjectJson: false,
         });
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
           uiFramework: '@storybook/react-vite',
-          addPlugin: true,
         });
 
         expect(readJson(tree, 'tsconfig.json')).toMatchInlineSnapshot(`

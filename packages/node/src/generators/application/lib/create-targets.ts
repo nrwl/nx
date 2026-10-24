@@ -4,7 +4,6 @@ import {
   Tree,
   TargetConfiguration,
   detectPackageManager,
-  readNxJson,
 } from '@nx/devkit';
 import {
   getProjectSourceRoot,
@@ -12,63 +11,6 @@ import {
 } from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 import { getLockFileName } from '@nx/js';
-
-export function getWebpackBuildConfig(
-  tree: Tree,
-  project: ProjectConfiguration,
-  options: NormalizedSchema
-): TargetConfiguration {
-  const sourceRoot = getProjectSourceRoot(project, tree);
-  return {
-    executor: `@nx/webpack:webpack`,
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: {
-      target: 'node',
-      compiler: 'tsc',
-      outputPath: options.outputPath,
-      main: joinPathFragments(
-        sourceRoot,
-        'main' + (options.js ? '.js' : '.ts')
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      assets: [joinPathFragments(sourceRoot, 'assets')],
-      webpackConfig: joinPathFragments(
-        options.appProjectRoot,
-        'webpack.config.js'
-      ),
-      generatePackageJson: options.isUsingTsSolutionConfig ? undefined : true,
-    },
-    configurations: {
-      development: {
-        outputHashing: 'none',
-      },
-      production: {
-        ...(options.docker && { generateLockfile: true }),
-      },
-    },
-  };
-}
-
-/** Explicit form of the build target @nx/js/typescript infers from tsconfig.app.json. */
-export function getTscBuildConfig(
-  tree: Tree,
-  options: NormalizedSchema
-): TargetConfiguration {
-  const namedInputs = readNxJson(tree)?.namedInputs ?? {};
-  return {
-    command: 'tsc --build tsconfig.app.json',
-    options: { cwd: options.appProjectRoot },
-    cache: true,
-    dependsOn: ['^build'],
-    inputs:
-      'production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default'],
-    outputs: ['{projectRoot}/dist'],
-    syncGenerators: ['@nx/js:typescript-sync'],
-  };
-}
 
 export function getEsBuildConfig(
   tree: Tree,
@@ -114,18 +56,6 @@ export function getEsBuildConfig(
 }
 
 export function getServeConfig(options: NormalizedSchema): TargetConfiguration {
-  if (options.bundler === 'tsc' || options.bundler === 'rolldown') {
-    // These build targets have no development/production configurations.
-    return {
-      continuous: true,
-      executor: '@nx/js:node',
-      dependsOn: [options.buildTargetName],
-      options: {
-        buildTarget: `${options.name}:${options.buildTargetName}`,
-        runBuildTargetDependencies: false,
-      },
-    };
-  }
   return {
     continuous: true,
     executor: '@nx/js:node',

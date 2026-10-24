@@ -4,7 +4,6 @@ import {
   formatFiles,
   GeneratorCallback,
   logger,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   getDependencyVersionFromPackageJson,
@@ -16,16 +15,13 @@ import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
-import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 import {
   addAngularStorybookTarget,
   addBuildStorybookToCacheableOperations,
   addStaticTarget,
-  addStorybookTarget,
   addStorybookToNamedInputs,
-  addStorybookToTargetDefaults,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
@@ -58,7 +54,7 @@ export function configurationGenerator(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return configurationGeneratorInternal(tree, schema);
 }
 
 export async function configurationGeneratorInternal(
@@ -74,7 +70,7 @@ export async function configurationGeneratorInternal(
     );
   }
 
-  const schema = normalizeSchema(tree, rawSchema);
+  const schema = normalizeSchema(rawSchema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -117,19 +113,11 @@ export async function configurationGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     skipFormat: true,
-    addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
 
   editRootTsConfig(tree);
-
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/storybook/plugin'
-      : p.plugin === '@nx/storybook/plugin'
-  );
 
   const mainDir =
     !!nextConfigFilePath &&
@@ -161,7 +149,6 @@ export async function configurationGeneratorInternal(
     compiler === 'swc',
     usesVite,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
     usesReactNative,
     useNativeTsconfigPaths
@@ -183,24 +170,13 @@ export async function configurationGeneratorInternal(
 
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree, schema);
-  if (!hasPlugin) {
-    addStorybookToTargetDefaults(tree, schema);
-  }
 
   let devDeps = {};
 
-  if (!hasPlugin || schema.addExplicitTargets) {
-    warnStorybookExecutorGenerating();
-    if (schema.uiFramework === '@storybook/angular') {
-      addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
-    } else {
-      addStorybookTarget(
-        tree,
-        schema.project,
-        schema.uiFramework,
-        schema.interactionTests
-      );
-    }
+  if (schema.uiFramework === '@storybook/angular') {
+    // `@storybook/angular:*` builders are third-party and still supported, so
+    // Angular keeps an explicit target rather than relying on inference.
+    addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     if (schema.configureStaticServe) {
       await addStaticTarget(tree, schema);
     }
@@ -260,19 +236,12 @@ export async function configurationGeneratorInternal(
 }
 
 function normalizeSchema(
-  tree: Tree,
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   const defaults = {
     interactionTests: true,
     js: false,
     tsConfiguration: true,
-    addPlugin,
   };
   return {
     ...defaults,

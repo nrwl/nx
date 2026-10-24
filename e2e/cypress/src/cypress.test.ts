@@ -4,9 +4,11 @@ import {
   cleanupProject,
   createFile,
   killPort,
+  killPorts,
   newProject,
   readFile,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
   tmpProjPath,
@@ -85,15 +87,55 @@ describe('Cypress E2E Test runner', () => {
 
       const { targets } = JSON.parse(runCLI(`show project ${app}-e2e --json`));
       expect(targets['e2e-ci--src/e2e/app.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview' },
+        { projects: [app], target: 'preview', waitFor: 'ready' },
       ]);
       expect(targets['e2e-ci--src/e2e/feature.cy.ts'].dependsOn).toEqual([
-        { projects: [app], target: 'preview', inputs: false },
+        { projects: [app], target: 'preview', waitFor: 'ready', inputs: false },
       ]);
 
       expect(runCLI(`lint ${app}-e2e`)).toContain(
         'Successfully ran target lint'
       );
+    },
+    TEN_MINS_MS
+  );
+
+  it(
+    'should run e2e tests against the local web server when CI is not set',
+    async () => {
+      if (!(await shouldRunCypressTests())) {
+        return;
+      }
+      const app = uniq('app');
+      const e2eProject = `${app}-e2e`;
+      const port = await reservePort();
+      runCLI(
+        `generate @nx/react:app apps/${app} --e2eTestRunner=cypress --linter=eslint --unitTestRunner=none --port=${port} --no-interactive`
+      );
+      const [, ciServerTarget, localServerTarget] =
+        readFile(`apps/${e2eProject}/cypress.config.ts`).match(
+          new RegExp(
+            `process\\.env\\['CI'\\]\\s*\\?\\s*'[^']* nx run ${app}:([\\w-]+)[^']*'\\s*:\\s*'[^']* nx run ${app}:([\\w-]+)[^']*'`
+          )
+        ) ?? [];
+      expect(localServerTarget).toBeDefined();
+
+      try {
+        // runCLI sets CI, and an undefined value drops it from the child env.
+        // Without CI and a TTY, an out-of-sync workspace fails the run.
+        const result = runCLI(`e2e ${e2eProject} --skip-sync`, {
+          env: { CI: undefined },
+        });
+        expect(result).toContain(
+          `Successfully ran target e2e for project ${e2eProject}`
+        );
+        expect(result).toMatch(
+          new RegExp(`nx run ${app}:${localServerTarget}(?![\\w-])`)
+        );
+        expect(result).not.toContain(`nx run ${app}:${ciServerTarget}`);
+      } finally {
+        await killPorts(port);
+      }
     },
     TEN_MINS_MS
   );
@@ -231,7 +273,8 @@ export default defineConfig({
     TEN_MINS_MS
   );
 
-  it(
+  // TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+  xit(
     `should allow CT and e2e in same project for an angular project`,
     async () => {
       let appName = uniq(`angular-cy-app`);

@@ -31,12 +31,15 @@ vi.mock('../../utils/cache-directory', () => ({
 }));
 
 import { output } from '../../utils/output';
+import { globalSpinner } from '../../utils/spinner';
 import { resetHandler } from './reset';
 
 describe('nx reset', () => {
   let exit: ReturnType<typeof vi.spyOn>;
   let error: ReturnType<typeof vi.spyOn>;
   let success: ReturnType<typeof vi.spyOn>;
+  let stepSucceeded: ReturnType<typeof vi.spyOn>;
+  let stepFailed: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     invoke.mockReset();
@@ -46,7 +49,11 @@ describe('nx reset', () => {
     }) as never);
     error = vi.spyOn(output, 'error').mockImplementation(() => {});
     success = vi.spyOn(output, 'success').mockImplementation(() => {});
-    vi.spyOn(output, 'note').mockImplementation(() => {});
+    vi.spyOn(globalSpinner, 'start').mockReturnValue(globalSpinner);
+    stepSucceeded = vi
+      .spyOn(globalSpinner, 'succeed')
+      .mockImplementation(() => {});
+    stepFailed = vi.spyOn(globalSpinner, 'fail').mockImplementation(() => {});
   });
 
   afterEach(() => vi.restoreAllMocks());
@@ -61,6 +68,30 @@ describe('nx reset', () => {
       expect.objectContaining({ title: 'Successfully reset the Nx workspace.' })
     );
     expect(exit).not.toHaveBeenCalled();
+  });
+
+  it('marks each finished step as a success', async () => {
+    invoke.mockResolvedValue(undefined);
+
+    await resetHandler({});
+
+    expect(stepSucceeded.mock.calls.map(([text]) => text)).toEqual([
+      'Stopped the Nx Daemon',
+      'Removed the Nx Daemon workspace data',
+      'Removed the cache directory',
+      'Removed the workspace data directory',
+      'Cleaned up the Nx Cloud client',
+      'Removed the installed Nx Cloud client',
+    ]);
+    expect(stepFailed).not.toHaveBeenCalled();
+  });
+
+  it('only runs the steps an --only flag asks for', async () => {
+    await resetHandler({ onlyCache: true });
+
+    expect(stepSucceeded.mock.calls.map(([text]) => text)).toEqual([
+      'Removed the cache directory',
+    ]);
   });
 
   it('records a failed Nx Cloud cleanup, still removes the installed client and exits 1', async () => {
@@ -80,6 +111,12 @@ describe('nx reset', () => {
           'Error: marker file is in use',
         ]),
       })
+    );
+    expect(stepFailed).toHaveBeenCalledWith(
+      'Failed to clean up the Nx Cloud client.'
+    );
+    expect(stepSucceeded).toHaveBeenCalledWith(
+      'Removed the installed Nx Cloud client'
     );
     expect(success).not.toHaveBeenCalled();
     expect(exit).toHaveBeenCalledWith(1);

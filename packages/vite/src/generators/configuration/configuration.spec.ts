@@ -4,6 +4,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
   writeJson,
@@ -49,7 +50,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
         projectType: 'application',
@@ -110,7 +110,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-test-web-app',
       });
@@ -153,7 +152,6 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-angular-app',
         });
@@ -179,7 +177,6 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -190,6 +187,26 @@ describe('@nx/vite:configuration', () => {
         );
       }
     });
+  });
+
+  it('should refuse to convert a project with targets on removed executors', async () => {
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    mockReactAppGenerator(tree);
+    writeJson(tree, 'apps/my-test-react-app/project.json', {
+      root: 'apps/my-test-react-app',
+      projectType: 'application',
+      targets: { build: { executor: '@nx/webpack:webpack' } },
+    });
+
+    await expect(
+      viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'my-test-react-app',
+      })
+    ).rejects.toThrow(
+      'removed executors: build (@nx/webpack:webpack). Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=my-test-react-app".'
+    );
+    expect(tree.exists('apps/my-test-react-app/webpack.config.ts')).toBe(true);
   });
 
   describe('vitest', () => {
@@ -204,7 +221,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
         includeVitest: true,
@@ -229,7 +245,6 @@ describe('@nx/vite:configuration', () => {
     it('should add config for building library', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',
@@ -244,7 +259,6 @@ describe('@nx/vite:configuration', () => {
     it('should set up non buildable library correctly', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'react-lib-nonb-jest',
         includeVitest: true,
@@ -261,7 +275,6 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'react',
           project: 'react-lib-nonb-vitest',
           includeVitest: true,
@@ -419,6 +432,25 @@ describe('@nx/vite:configuration', () => {
       });
     });
 
+    it('should register @nx/js/typescript', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        newProject: true,
+      });
+
+      expect(readNxJson(tree).plugins).toContainEqual(
+        expect.objectContaining({ plugin: '@nx/js/typescript' })
+      );
+    });
+
     it('should create package.json with exports field for libraries', async () => {
       addProjectConfiguration(tree, 'my-lib', {
         root: 'packages/my-lib',
@@ -427,7 +459,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'packages/my-lib/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -468,7 +499,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'packages/my-lib/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -489,7 +519,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'apps/my-app/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-app',
         projectType: 'application',
@@ -514,7 +543,6 @@ describe('@nx/vite:configuration', () => {
       tree.write('packages/my-lib/src/index.ts', '');
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -577,7 +605,6 @@ describe('@nx/vite:configuration', () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',

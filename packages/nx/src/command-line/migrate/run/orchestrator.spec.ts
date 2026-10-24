@@ -30,7 +30,8 @@ vi.mock('../execute-migration', () => ({
 
 const mockCommit = vi.fn();
 const mockCheckpoint = vi.fn();
-vi.mock('../migrate-commits', () => ({
+vi.mock('../migrate-commits', async () => ({
+  ...(await vi.importActual('../migrate-commits')),
   commitMigrationIfRequested: (...args: unknown[]) => mockCommit(...args),
   commitCheckpointBeforeMigrations: (...args: unknown[]) =>
     mockCheckpoint(...args),
@@ -41,6 +42,7 @@ const mockGetGitCurrentBranch = vi.fn();
 const mockGetGitRepositoryStatus = vi.fn();
 const mockGetLatestCommitSha = vi.fn();
 const mockGetPathCommitExposure = vi.fn();
+const mockGetPathHeadStatus = vi.fn();
 const mockGetWorkingTreeStatus = vi.fn();
 const mockIsAncestorCommit = vi.fn();
 const mockResetWorkingTree = vi.fn();
@@ -54,6 +56,7 @@ vi.mock('../../../utils/git-utils', async () => ({
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   getPathCommitExposure: (...args: unknown[]) =>
     mockGetPathCommitExposure(...args),
+  getPathHeadStatus: (...args: unknown[]) => mockGetPathHeadStatus(...args),
   getWorkingTreeStatus: (...args: unknown[]) =>
     mockGetWorkingTreeStatus(...args),
   // The gitignore fallback invoked at init consumes the boolean probe; keep it
@@ -185,6 +188,7 @@ describe('orchestrator', () => {
     mockGetGitRepositoryStatus.mockReset().mockReturnValue('git');
     mockGetLatestCommitSha.mockReset().mockReturnValue(null);
     mockGetPathCommitExposure.mockReset().mockReturnValue('ignored');
+    mockGetPathHeadStatus.mockReset().mockReturnValue('unknown');
     mockGetWorkingTreeStatus.mockReset().mockReturnValue('clean');
     mockIsAncestorCommit.mockReset().mockReturnValue(false);
     mockResetWorkingTree.mockReset();
@@ -669,6 +673,33 @@ describe('orchestrator', () => {
       expect(mockCheckpoint).not.toHaveBeenCalled();
       const { state } = findActiveRun(root).active;
       expect(state.commits.some((c) => c.kind === 'checkpoint')).toBe(false);
+      expect(state.checkpointFailed).toBeUndefined();
+    });
+
+    it('does not mark the run when only the uncommitted plan and prompt files remain', async () => {
+      // The checkpoint leaves them out, so a probe that counted them would
+      // rule out clean retries for the whole run.
+      mockGetPathHeadStatus.mockReturnValue('absent');
+      mockGetWorkingTreeStatus.mockImplementation(
+        (_root: string, excludePaths: string[] = []) =>
+          excludePaths.includes('migrations.json') &&
+          excludePaths.includes('tools/ai-migrations')
+            ? 'clean'
+            : 'dirty'
+      );
+
+      await runOrchestratorInit({
+        root,
+        migrationsJson: { migrations: [genMig('@nx/js', 'a')] },
+        createCommits: true,
+        commitPrefix: 'chore: [nx migration] ',
+        skipInstall: false,
+        installedNxVersion: '23.0.0',
+        validate: undefined,
+        finalValidation: undefined,
+      });
+
+      const { state } = findActiveRun(root).active;
       expect(state.checkpointFailed).toBeUndefined();
     });
 

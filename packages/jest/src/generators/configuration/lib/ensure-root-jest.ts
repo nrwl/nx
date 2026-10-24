@@ -14,7 +14,6 @@ import { ensureDependencies } from './ensure-dependencies';
  */
 export async function ensureRootJest(tree: Tree): Promise<GeneratorCallback> {
   const initTask = await jestInitGenerator(tree, {
-    addPlugin: false,
     skipFormat: true,
   });
   writeRootJestPreset(tree, getPresetExt(tree));

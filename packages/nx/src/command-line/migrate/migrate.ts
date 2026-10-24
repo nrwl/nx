@@ -365,9 +365,11 @@ export class Migrator {
       addToPackageJson: false,
     });
     await this.applyPendingPackageJsonUpdates();
-    this.applyIncludeFilter();
+    const requiredPackageUpdates = this.applyIncludeFilter();
 
-    const { migrations, promptContents } = await this.createMigrateJson();
+    const { migrations, promptContents } = await this.createMigrateJson(
+      requiredPackageUpdates
+    );
     return {
       packageUpdates: this.packageUpdates,
       migrations,
@@ -376,46 +378,72 @@ export class Migrator {
     };
   }
 
-  private async createMigrateJson() {
+  private async createMigrateJson(
+    requiredPackageUpdates: Record<string, PackageUpdate>
+  ) {
     const promptContents: Record<string, string> = {};
-    const migrations = await Promise.all(
-      Object.keys(this.packageUpdates).map(async (packageName) => {
-        if (this.packageUpdates[packageName].ignoreMigrations) {
-          return [];
+    const collect = async (
+      packageName: string,
+      metadataVersion: string,
+      fromVersion: string,
+      toVersion: string
+    ) => {
+      const { generators: migrationEntries, resolvedPromptFiles } =
+        await this.fetchMigrationConfig(packageName, metadataVersion);
+
+      if (!migrationEntries) return [];
+
+      if (resolvedPromptFiles) {
+        for (const [promptPath, content] of Object.entries(
+          resolvedPromptFiles
+        )) {
+          promptContents[promptContentKey(packageName, promptPath)] = content;
         }
+      }
 
-        const currentVersion = this.getPkgVersion(packageName);
-        if (currentVersion === null) return [];
+      return Object.entries(migrationEntries)
+        .filter(
+          ([, migration]) =>
+            migration.version &&
+            this.gt(migration.version, fromVersion) &&
+            this.lte(migration.version, toVersion) &&
+            this.shouldCollectMigration(packageName, migration)
+        )
+        .map(([migrationName, migration]) => ({
+          ...migration,
+          package: packageName,
+          name: migrationName,
+        }));
+    };
 
-        const { version } = this.packageUpdates[packageName];
-        const { generators: migrationEntries, resolvedPromptFiles } =
-          await this.fetchMigrationConfig(packageName, version);
+    const migrations = await Promise.all([
+      ...Object.entries(this.packageUpdates).map(
+        async ([packageName, { version, ignoreMigrations }]) => {
+          if (ignoreMigrations) return [];
 
-        if (!migrationEntries) return [];
+          const currentVersion = this.getPkgVersion(packageName);
+          if (currentVersion === null) return [];
 
-        if (resolvedPromptFiles) {
-          for (const [promptPath, content] of Object.entries(
-            resolvedPromptFiles
-          )) {
-            promptContents[promptContentKey(packageName, promptPath)] = content;
-          }
+          return collect(packageName, version, currentVersion, version);
         }
+      ),
+      // The optional pass keeps required packages at their installed version,
+      // and the runner resolves migrations from there. An older target caps the
+      // range.
+      ...Object.entries(requiredPackageUpdates).map(
+        async ([packageName, { version, ignoreMigrations }]) => {
+          const installedVersion = this.getInstalledPackageVersion(packageName);
+          if (ignoreMigrations || !installedVersion) return [];
 
-        return Object.entries(migrationEntries)
-          .filter(
-            ([, migration]) =>
-              migration.version &&
-              this.gt(migration.version, currentVersion) &&
-              this.lte(migration.version, version) &&
-              this.areMigrationRequirementsMet(packageName, migration)
-          )
-          .map(([migrationName, migration]) => ({
-            ...migration,
-            package: packageName,
-            name: migrationName,
-          }));
-      })
-    );
+          return collect(
+            packageName,
+            installedVersion,
+            '0.0.0',
+            this.lt(version, installedVersion) ? version : installedVersion
+          );
+        }
+      ),
+    ]);
 
     return { migrations: migrations.flat(), promptContents };
   }
@@ -828,9 +856,10 @@ export class Migrator {
     return false;
   }
 
-  private applyIncludeFilter(): void {
+  private applyIncludeFilter(): Record<string, PackageUpdate> {
+    const requiredPackageUpdates: Record<string, PackageUpdate> = {};
     if (this.include !== 'optional') {
-      return;
+      return requiredPackageUpdates;
     }
     // Cascade walks through the required packages so cross-plugin optional
     // deps (e.g. typescript managed by @nx/js but used by @nx/angular) get
@@ -838,9 +867,11 @@ export class Migrator {
     // optional updates land in package.json.
     for (const name of Object.keys(this.packageUpdates)) {
       if (this.requiredPackages!.has(name)) {
+        requiredPackageUpdates[name] = this.packageUpdates[name];
         delete this.packageUpdates[name];
       }
     }
+    return requiredPackageUpdates;
   }
 
   private shouldApplyPackageUpdate(
@@ -928,6 +959,53 @@ export class Migrator {
         })
       );
     });
+  }
+
+  private shouldCollectMigration(
+    packageName: string,
+    migration: MigrationsJsonEntry
+  ): boolean {
+    if (this.include === 'required') {
+      return (
+        migration.optionalUpdate !== true &&
+        this.areMigrationRequirementsMet(packageName, migration)
+      );
+    }
+    if (
+      this.include === 'optional' &&
+      this.requiredPackages!.has(packageName)
+    ) {
+      // Every past migration of a required package is in range here. Collect
+      // only those that apply an optional update or were skipped.
+      return (
+        (migration.optionalUpdate === true ||
+          this.wasMigrationSkipped(migration.requires)) &&
+        this.areRequirementsMetAfterUpdates(migration.requires)
+      );
+    }
+    return this.areMigrationRequirementsMet(packageName, migration);
+  }
+
+  // Counts only updates above the installed version. The optional walk also
+  // collects stale pins below it, which are never written.
+  private areRequirementsMetAfterUpdates(
+    requirements: MigrationsJsonEntry['requires']
+  ): boolean {
+    return Object.entries(requirements ?? {}).every(
+      ([pkgName, versionRange]) => {
+        const installedVersion = this.getInstalledPackageVersion(pkgName);
+        const update = this.packageUpdates[pkgName];
+        const version =
+          update &&
+          (!installedVersion || this.gt(update.version, installedVersion))
+            ? cleanSemver(update.version)
+            : installedVersion;
+        return (
+          !!version &&
+          satisfies(version, versionRange, { includePrerelease: true })
+        );
+      }
+    );
   }
 
   private areMigrationRequirementsMet(

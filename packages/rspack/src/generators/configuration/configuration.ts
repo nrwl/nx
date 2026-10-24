@@ -9,22 +9,19 @@ import {
 } from '@nx/devkit';
 import { relative } from 'path';
 import {
-  addOrChangeBuildTarget,
-  addOrChangeServeTarget,
+  assertNoRemovedExecutorTargets,
   deleteWebpackConfig,
   determineFrameworkAndTarget,
   findExistingTargetsInProject,
   handleUnknownExecutors,
   handleUnsupportedUserProvidedTargets,
-  TargetFlags,
   UserProvidedTargetName,
   writeRspackConfigFile,
 } from '../../utils/generator-utils';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
-import { getProjectType, getTsConfigBaseOptions } from '@nx/js/internal';
+import { getTsConfigBaseOptions } from '@nx/js/internal';
 import { Framework } from '../init/schema';
-import { warnRspackExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
@@ -79,10 +76,7 @@ export async function configurationGenerator(
   const task = await rspackInitGenerator(tree, {
     ...options,
   });
-  const { targets, root, projectType } = readProjectConfiguration(
-    tree,
-    options.project
-  );
+  const { targets, root } = readProjectConfiguration(tree, options.project);
 
   const { target, framework } = determineFrameworkAndTarget(
     tree,
@@ -98,12 +92,6 @@ export async function configurationGenerator(
   let buildTargetName = 'build';
   let serveTargetName = 'serve';
 
-  /**
-   * This is for when we are converting an existing project
-   * to use the vite executors.
-   */
-  let projectAlreadyHasRspackTargets: TargetFlags = {};
-
   if (!options.newProject) {
     const userProvidedTargetName: UserProvidedTargetName = {
       build: options.buildTarget,
@@ -116,25 +104,21 @@ export async function configurationGenerator(
       userProvidedTargetIsUnsupported,
       alreadyHasNxRspackTargets,
     } = findExistingTargetsInProject(targets, userProvidedTargetName);
-    projectAlreadyHasRspackTargets = alreadyHasNxRspackTargets;
 
-    if (
-      alreadyHasNxRspackTargets.build &&
-      (alreadyHasNxRspackTargets.serve ||
-        getProjectType(tree, options.project, projectType) === 'library' ||
-        options.framework === 'nest')
-    ) {
+    if (alreadyHasNxRspackTargets.build || alreadyHasNxRspackTargets.serve) {
       throw new Error(
-        `The project ${options.project} is already configured to use the @nx/rspack executors.
+        `The project ${options.project} has targets using the removed @nx/rspack executors.
         Please try a different project, or remove the existing targets
         and re-run this generator to reset the existing Rspack Configuration.
         `
       );
     }
 
+    assertNoRemovedExecutorTargets(options.project, targets);
+
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
-        `The project ${options.project} cannot be converted to use the @nx/rspack executors.`
+        `The project ${options.project} cannot be converted to use Rspack.`
       );
     }
 
@@ -182,26 +166,6 @@ export async function configurationGenerator(
     );
   }
 
-  const willScaffoldExecutorTargets =
-    !projectAlreadyHasRspackTargets.build ||
-    ((options.framework !== 'none' || options.devServer) &&
-      options.framework !== 'nest' &&
-      !projectAlreadyHasRspackTargets.serve);
-  if (willScaffoldExecutorTargets) {
-    warnRspackExecutorGenerating();
-  }
-
-  if (!projectAlreadyHasRspackTargets.build) {
-    addOrChangeBuildTarget(tree, options, buildTargetName);
-  }
-
-  if (
-    (options.framework !== 'none' || options.devServer) &&
-    options.framework !== 'nest' &&
-    !projectAlreadyHasRspackTargets.serve
-  ) {
-    addOrChangeServeTarget(tree, options, serveTargetName);
-  }
   writeRspackConfigFile(tree, options, foundStylePreprocessorOptions);
   await formatFiles(tree);
   return task;

@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   offsetFromRoot,
   ProjectConfiguration,
-  TargetConfiguration,
   Tree,
   updateJson,
   writeJson,
@@ -95,13 +94,8 @@ export function migrateConfigToMonorepoStyle(
   projects.forEach((project) => {
     let eslintFile: string;
 
-    const lintTarget = findLintTarget(project);
-    if (lintTarget) {
-      // If target is configured in project.json, read file from target options.
-      eslintFile =
-        lintTarget.options?.eslintConfig || findEslintFile(tree, project.root);
-    } else if (hasEslintPlugin(tree)) {
-      // Otherwise, if `@nx/eslint/plugin` is used, match any of the known config files.
+    if (hasEslintPlugin(tree)) {
+      // If `@nx/eslint/plugin` is used, match any of the known config files.
       for (const f of ESLINT_CONFIG_FILENAMES) {
         if (tree.exists(joinPathFragments(project.root, f))) {
           eslintFile = f;
@@ -135,16 +129,6 @@ export function migrateConfigToMonorepoStyle(
     },
     undefined,
     keepExistingVersions ?? true
-  );
-}
-
-export function findLintTarget(
-  project: ProjectConfiguration
-): TargetConfiguration {
-  return Object.values(project.targets ?? {}).find(
-    (target) =>
-      target.executor === '@nx/eslint:lint' ||
-      target.executor === '@nx/linter:eslint'
   );
 }
 

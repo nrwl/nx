@@ -1,6 +1,6 @@
 import type { Compilation } from '@rspack/core';
 import type {
-  JavaScriptTransformer,
+  JavaScriptTransformerAdapter,
   SourceFileCache,
 } from '@nx/angular-rspack-compiler';
 import { I18nOptions } from './i18n';
@@ -8,7 +8,7 @@ import { I18nOptions } from './i18n';
 export const NG_RSPACK_SYMBOL_NAME = 'NG_RSPACK_BUILD';
 
 export type NG_RSPACK_COMPILATION_STATE = {
-  javascriptTransformer: JavaScriptTransformer;
+  javascriptTransformer: JavaScriptTransformerAdapter;
   typescriptFileCache: SourceFileCache['typeScriptFileCache'];
   babelFileCache: SourceFileCache['babelFileCache'];
   // Mirrors @angular/build: false means Angular emitted transformed

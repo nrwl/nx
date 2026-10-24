@@ -61,7 +61,7 @@ This will install the correct version of `@nx/react-native`.
 ### How @nx/react-native infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/mental-model#inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/features/run-tasks#inferred-tasks).
 {% /aside %}
 
 The `@nx/react-native` plugin will create a task for any project that has an app configuration file present. Any of the following files will be recognized as an app configuration file:
@@ -77,7 +77,7 @@ The `@nx/expo/plugin` handles those projects.
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/react-native configuration
 
@@ -118,6 +118,18 @@ The `@nx/react-native/plugin` is configured in the `plugins` array in `nx.json`.
 | `upgradeTargetName`      | `upgrade`       | Runs `react-native upgrade`.                                         |
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/react-native/plugin`.
+
+### Wait for Metro to be ready
+
+The inferred `start` task passes Metro an Nx reporter with `--custom-log-reporter-path`.
+The reporter prints what the default Metro reporter prints, and reports to Nx that the task is ready, with the address Metro listens on, once the server listens.
+A task waits for it only when its `dependsOn` entry sets `waitFor` to `ready`.
+The plugin adds the reporter only when `node_modules/@nx/react-native/dist/plugins/metro-reporter.js` exists in the workspace root.
+Without that file, for example when the plugin is installed outside the root `node_modules`, it infers plain `react-native start` with no `readyWhen`, and `start` counts as ready once it has started.
+Nx appends `args` after the inferred command, and the React Native CLI keeps the last value of a repeated `--custom-log-reporter-path`.
+If you pass your own `--custom-log-reporter-path` in `args`, yours replaces the Nx reporter, and the tasks waiting for `start` fail after the timeout.
+Set `readyWhen` on the target in that case, or set it to `null`.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ### Generating applications
 

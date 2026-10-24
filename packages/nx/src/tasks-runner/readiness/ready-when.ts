@@ -15,18 +15,34 @@ import {
   type TokenScope,
 } from '../tokens';
 import { getExecutorForTask } from '../utils';
+import { formatDuration } from '../../native';
 
-const DEFAULT_READY_TIMEOUT = 60_000;
+export const DEFAULT_READY_TIMEOUT = 600_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
-// No interval means the probe's own default applies
+// No interval means the probe's own default applies. A command's env is set
+// only by getReadyWhen, which knows the env the producer runs with.
 type ReadyWhenProbe<Deferred> = { timeout: number; interval?: number } & (
   | { kind: 'url'; url: string | Deferred }
   | { kind: 'port'; port: number | Deferred; host?: string | Deferred }
-  | { kind: 'command'; command: string | Deferred }
+  | {
+      kind: 'command';
+      command: string | Deferred;
+      env?: Record<string, string>;
+    }
   | { kind: 'logMatches'; logMatches: (string | Deferred)[] }
+  | { kind: 'signal' }
 );
+
+// With 0 or `auto` the server picks its port at startup, so there is nothing
+// to probe and waiters wait for the producer to start
+type ServerPicksPort = {
+  kind: 'serverPicksPort';
+  port: 0 | 'auto';
+  host?: string | EnvDeferred;
+  timeout: number;
+};
 
 export type NormalizedReadyWhen = ReadyWhenProbe<never>;
 
@@ -36,7 +52,7 @@ export interface ReadyWhenWait {
   description: string;
 }
 
-const PROBE_KEYS = ['url', 'port', 'command', 'logMatches'] as const;
+const PROBE_KEYS = ['url', 'port', 'command', 'logMatches', 'signal'] as const;
 
 class EnvUnknownHere extends Error {}
 
@@ -70,18 +86,23 @@ export function normalizeReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): NormalizedReadyWhen {
+): NormalizedReadyWhen | null {
+  const probe = resolveReadyWhen(readyWhen, taskId, data);
   // Only checkReadyWhen's env throws EnvUnknownHere, so nothing is deferred
-  return resolveReadyWhen(readyWhen, taskId, data) as NormalizedReadyWhen;
+  return probe.kind === 'serverPicksPort'
+    ? null
+    : (probe as NormalizedReadyWhen);
 }
 
 function resolveReadyWhen(
   readyWhen: ReadyWhen,
   taskId: string,
   data: ReadyWhenData
-): ReadyWhenProbe<EnvDeferred> {
+): ReadyWhenProbe<EnvDeferred> | ServerPicksPort {
   const invalid = (reason: string) =>
-    new Error(`Task "${taskId}" has an invalid "readyWhen": ${reason}.`);
+    new InvalidReadyWhenError(
+      `Task "${taskId}" has an invalid "readyWhen": ${reason}.`
+    );
 
   if (typeof readyWhen !== 'object' || readyWhen === null) {
     throw invalid('expected an object');
@@ -105,18 +126,33 @@ function resolveReadyWhen(
       return String(value);
     },
   };
-  const resolve = (value: unknown): unknown => {
+  // A flag passed without a value parses as `true`, and no host or port is a
+  // boolean
+  const hostScope: TokenScope = {
+    ...scope,
+    isUnset: (value) => typeof value === 'boolean',
+  };
+  // The Rspack dev server reads an empty port option as 0. An empty env var
+  // stays unset.
+  const portScope: TokenScope = {
+    ...hostScope,
+    read: (name, path) => {
+      const value = scope.read(name, path);
+      return value === '' ? 0 : value;
+    },
+  };
+  const resolve = (value: unknown, tokenScope = scope): unknown => {
     if (typeof value !== 'string') {
       return value;
     }
     let nodes: TokenNode[];
     try {
-      nodes = parseTokens(value, scope);
+      nodes = parseTokens(value, tokenScope);
     } catch (e) {
       throw invalid(e.message);
     }
     try {
-      return renderTokens(nodes, scope);
+      return renderTokens(nodes, tokenScope);
     } catch (e) {
       if (e instanceof EnvUnknownHere) {
         return new EnvDeferred(value);
@@ -126,8 +162,11 @@ function resolveReadyWhen(
   };
   // Braces are never valid in a host or port once resolved, so a leftover is
   // a typo. A url keeps them: they are legal in its path and query.
-  const resolveWithoutBraces = (key: string): unknown => {
-    const value = resolve(config[key]);
+  const resolveWithoutBraces = (
+    key: string,
+    tokenScope?: TokenScope
+  ): unknown => {
+    const value = resolve(config[key], tokenScope);
     if (typeof value === 'string' && /[{}]/.test(value)) {
       throw invalid(`"${key}" contains an unknown placeholder`);
     }
@@ -163,19 +202,23 @@ function resolveReadyWhen(
       return { kind: 'url', url, ...shared };
     }
     case 'port': {
-      let port = resolveWithoutBraces('port');
+      let port = resolveWithoutBraces('port', portScope);
       if (typeof port === 'string' && /^\d+$/.test(port)) {
         port = Number(port);
       }
       if (
+        port !== 0 &&
+        port !== 'auto' &&
         !(port instanceof EnvDeferred) &&
         (!isPositiveInteger(port) || port > 65535)
       ) {
-        throw invalid('"port" must be an integer from 1 to 65535');
+        throw invalid('"port" must be an integer from 0 to 65535, or "auto"');
       }
-      const host = resolveWithoutBraces('host');
+      const host = resolveWithoutBraces('host', hostScope);
       if (host == null) {
-        return { kind: 'port', port, ...shared };
+        return port === 0 || port === 'auto'
+          ? { kind: 'serverPicksPort', port, ...shared }
+          : { kind: 'port', port, ...shared };
       }
       if (
         !(host instanceof EnvDeferred) &&
@@ -183,7 +226,9 @@ function resolveReadyWhen(
       ) {
         throw invalid('"host" must be a non-empty string');
       }
-      return { kind: 'port', port, host, ...shared };
+      return port === 0 || port === 'auto'
+        ? { kind: 'serverPicksPort', port, host, ...shared }
+        : { kind: 'port', port, host, ...shared };
     }
     case 'command': {
       const command = resolve(config.command);
@@ -200,7 +245,7 @@ function resolveReadyWhen(
         Array.isArray(config.logMatches)
           ? config.logMatches
           : [config.logMatches]
-      ).map(resolve);
+      ).map((match) => resolve(match));
       if (
         logMatches.length === 0 ||
         !logMatches.every(
@@ -213,6 +258,15 @@ function resolveReadyWhen(
         );
       }
       return { kind: 'logMatches', logMatches, ...shared };
+    }
+    case 'signal': {
+      if (config.signal !== true) {
+        throw invalid('"signal" must be true');
+      }
+      if (config.interval != null) {
+        throw invalid('"interval" is not used by "signal"');
+      }
+      return { kind: 'signal', timeout };
     }
   }
 }
@@ -245,8 +299,11 @@ export function readinessTimeoutError(
 ): Error {
   const description =
     'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
+  const longer = Math.min(readyWhen.timeout * 2, MAX_DURATION);
   return new Error(
-    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}).`
+    `Task "${taskId}" did not become ready within ${formatDuration(readyWhen.timeout)} (readyWhen: ${description}). ` +
+      `If it needs longer, set "timeout": ${longer} in the target's "readyWhen", as { "...": true, "timeout": ${longer} } to keep an inferred check. ` +
+      'To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.'
   );
 }
 
@@ -262,6 +319,8 @@ export class ProducerFailedError extends Error {
 // An exit or a stop is completed by its own handler, not as a verdict
 export class NotReadyError extends Error {}
 
+export class InvalidReadyWhenError extends Error {}
+
 export function notReadyError(
   taskId: string,
   reason: 'exited' | 'was stopped' | 'failed'
@@ -271,11 +330,14 @@ export function notReadyError(
   );
 }
 
-function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
+function describeReadyWhen(
+  readyWhen: ReadyWhenProbe<EnvDeferred> | ServerPicksPort
+): string {
   switch (readyWhen.kind) {
     case 'url':
       return `url ${readyWhen.url}`;
     case 'port':
+    case 'serverPicksPort':
       return readyWhen.host
         ? `port ${readyWhen.host}:${readyWhen.port}`
         : `port ${readyWhen.port}`;
@@ -283,6 +345,8 @@ function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
       return `command "${readyWhen.command}"`;
     case 'logMatches':
       return `logMatches ${readyWhen.logMatches.map((m) => `"${m}"`).join(', ')}`;
+    case 'signal':
+      return 'signal';
   }
 }
 
@@ -291,7 +355,7 @@ function describeReadyWhen(readyWhen: ReadyWhenProbe<EnvDeferred>): string {
 export function getReadyWhenConfig(
   task: Task,
   projectGraph: ProjectGraph
-): ReadyWhen | undefined {
+): ReadyWhen | null | undefined {
   if (!task.continuous) {
     return undefined;
   }
@@ -309,49 +373,54 @@ export function getReadyWhen(
   projectGraph: ProjectGraph,
   projects: Record<string, ProjectConfiguration>,
   workspaceRoot: string,
-  taskEnv: NodeJS.ProcessEnv
+  taskEnv: NodeJS.ProcessEnv,
+  inputs = getReadyWhenInputs(task, projectGraph, projects, workspaceRoot)
 ): NormalizedReadyWhen | null {
-  const inputs = getReadyWhenInputs(
-    task,
-    projectGraph,
-    projects,
-    workspaceRoot
-  );
   if (!inputs) {
     return null;
   }
   const { readyWhen, executor, data } = inputs;
   const { options } = data;
   let commandEnv: NodeJS.ProcessEnv | undefined;
-  return normalizeReadyWhen(readyWhen, task.id, {
-    ...data,
-    env: () => {
-      if (executor !== 'nx:run-commands') {
-        return taskEnv;
-      }
-      if (commandEnv) {
-        return commandEnv;
-      }
-      // Required lazily, so loading run-command.ts doesn't also load the
-      // run-commands executor
-      const { calculateCwd, processEnv } =
-        require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
-      commandEnv = processEnv(
-        options.color as boolean,
-        calculateCwd(
-          options.cwd as string,
-          {
-            root: workspaceRoot,
-          } as ExecutorContext
-        ),
-        (options.env ?? {}) as Record<string, string>,
-        options.envFile as string,
-        taskEnv
-      );
+  const env = () => {
+    if (executor !== 'nx:run-commands') {
+      return taskEnv;
+    }
+    if (commandEnv) {
       return commandEnv;
-    },
-  });
+    }
+    // Required lazily, so loading run-command.ts doesn't also load the
+    // run-commands executor
+    const { calculateCwd, processEnv } =
+      require('../../executors/run-commands/running-tasks') as typeof import('../../executors/run-commands/running-tasks');
+    commandEnv = processEnv(
+      options.color as boolean,
+      calculateCwd(
+        options.cwd as string,
+        {
+          root: workspaceRoot,
+        } as ExecutorContext
+      ),
+      (options.env ?? {}) as Record<string, string>,
+      options.envFile as string,
+      taskEnv
+    );
+    return commandEnv;
+  };
+  const probe = normalizeReadyWhen(readyWhen, task.id, { ...data, env });
+  if (probe?.kind === 'command') {
+    probe.env = {
+      ...Object.fromEntries(
+        Object.entries(env()).filter(([, value]) => value !== undefined)
+      ),
+      [TASK_OPTIONS_ENV]: JSON.stringify(options),
+    };
+  }
+  return probe;
 }
+
+// A command check reads the options its producer runs with from this variable
+export const TASK_OPTIONS_ENV = 'NX_TASK_OPTIONS';
 
 // The probe of a producer another process may run
 export function getReadyWhenWait(
@@ -369,9 +438,11 @@ export function getReadyWhenWait(
   return inputs && checkReadyWhen(inputs.readyWhen, task.id, inputs.data);
 }
 
+export type ReadyWhenInputs = ReturnType<typeof getReadyWhenInputs>;
+
 // Placeholders resolve against the options the executor receives: aliases,
 // schema defaults and the spelling of command-line overrides applied
-function getReadyWhenInputs(
+export function getReadyWhenInputs(
   task: Task,
   projectGraph: ProjectGraph,
   projects: Record<string, ProjectConfiguration>,
@@ -403,6 +474,32 @@ function getReadyWhenInputs(
       options,
     },
   };
+}
+
+// Only a signal check reports a URL, which its waiters get as NX_READY_URL
+export function mayReportReadyUrl(
+  task: Task,
+  projectGraph: ProjectGraph
+): boolean {
+  const readyWhen = getReadyWhenConfig(task, projectGraph);
+  if (typeof readyWhen !== 'object' || readyWhen === null) {
+    return false;
+  }
+  const kind = PROBE_KEYS.find((key) => readyWhen[key] != null);
+  switch (kind) {
+    case 'signal':
+      return true;
+    case 'url':
+    case 'port':
+    case 'command':
+    case 'logMatches':
+    case undefined:
+      return false;
+    default: {
+      const unhandled: never = kind;
+      throw new Error(`Unhandled readyWhen check: ${unhandled}`);
+    }
+  }
 }
 
 export function getReadyProducerIds(

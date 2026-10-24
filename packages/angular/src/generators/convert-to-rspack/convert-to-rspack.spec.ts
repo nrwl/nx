@@ -10,6 +10,8 @@ import {
   writeJson,
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/internal';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 vi.mock('@nx/devkit/internal', async () => ({
   ...(await vi.importActual<any>('@nx/devkit/internal')),
@@ -21,6 +23,25 @@ vi.mock('@nx/devkit/internal', async () => ({
 }));
 
 describe('convert-to-rspack', () => {
+  // The generator keeps a polyfill that resolves from the workspace's
+  // node_modules. Unit tests run against an empty scratch workspace root.
+  const tslib = join(
+    process.env.NX_WORKSPACE_ROOT_PATH,
+    'node_modules',
+    'tslib'
+  );
+  beforeAll(() => {
+    mkdirSync(tslib, { recursive: true });
+    writeFileSync(
+      join(tslib, 'package.json'),
+      '{"name":"tslib","main":"index.js"}'
+    );
+    writeFileSync(join(tslib, 'index.js'), '');
+  });
+  afterAll(() => {
+    rmSync(tslib, { recursive: true, force: true });
+  });
+
   it('should record the build script decisions @nx/angular-rspack pulls in', async () => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app', {
@@ -1603,6 +1624,7 @@ module.exports = withModuleFederation(config, { dts: false });
             },
             serve: {
               continuous: true,
+              readyWhen: { signal: true },
               syncGenerators: ['@nx/js:typescript-sync'],
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
@@ -1699,6 +1721,7 @@ module.exports = withModuleFederation(config, { dts: false });
             },
             serve: {
               parallelism: false,
+              readyWhen: { signal: true, timeout: 120000 },
               executor: '@angular-devkit/build-angular:dev-server',
               options: {},
             },
@@ -1711,6 +1734,7 @@ module.exports = withModuleFederation(config, { dts: false });
         const updatedProject = readProjectConfiguration(tree, 'app');
         expect(updatedProject.targets.serve).toStrictEqual({
           parallelism: false,
+          readyWhen: { signal: true, timeout: 120000 },
         });
       });
 

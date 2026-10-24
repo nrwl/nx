@@ -21,7 +21,12 @@ const data = {
   workspaceRoot: '/workspace',
   projectRoot: 'apps/app',
   projectName: 'app',
-  options: { port: 4200, host: 'dev.local', server: { port: 0 } },
+  options: {
+    port: 4200,
+    host: 'dev.local',
+    server: { port: 0 },
+    hmrPort: 'auto',
+  },
   env: () => ({}),
 };
 
@@ -42,7 +47,7 @@ describe('normalizeReadyWhen', () => {
     expect(normalizeReadyWhen({ port: 3000 }, 'app:serve', data)).toEqual({
       kind: 'port',
       port: 3000,
-      timeout: 60_000,
+      timeout: 600_000,
     });
     expect(
       normalizeReadyWhen({ port: 3000, host: 'localhost' }, 'app:serve', data)
@@ -114,6 +119,63 @@ describe('normalizeReadyWhen', () => {
     ).toMatchObject({ url });
   });
 
+  it.each([true, false])('treats %s as an unset host or port', (flag) => {
+    const normalize = (readyWhen: any) =>
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, host: flag, port: flag },
+      });
+
+    expect(
+      normalize({
+        port: '{options.port ?? 5173}',
+        host: '{options.host ?? localhost}',
+      })
+    ).toMatchObject({ port: 5173, host: 'localhost' });
+    expect(() => normalize({ port: 3000, host: '{options.host}' })).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value'
+    );
+  });
+
+  it.each([
+    [{ port: 0 }, {}],
+    [{ port: 'auto' }, {}],
+    [{ port: '{options.port ?? 4200}' }, { port: 0 }],
+    [{ port: '{options.port ?? 4200}' }, { port: '0' }],
+    [{ port: '{options.port ?? 4200}' }, { port: 'auto' }],
+    [{ port: '{options.port ?? 4200}' }, { port: '' }],
+  ])('skips the check of %j with the options %j', (readyWhen, options) => {
+    expect(
+      normalizeReadyWhen(readyWhen, 'app:serve', {
+        ...data,
+        options: { ...data.options, ...options },
+      })
+    ).toBeNull();
+  });
+
+  it('treats an empty env var as an unset port', () => {
+    expect(
+      normalizeReadyWhen({ port: '{env.PORT ?? 4200}' }, 'app:serve', {
+        ...data,
+        env: () => ({ PORT: '' }),
+      })
+    ).toMatchObject({ port: 4200 });
+  });
+
+  // A waiter in another process can't read PORT and checks the host, so the
+  // producer's process must check it too
+  it('checks the host when the server picks the port', () => {
+    expect(() =>
+      normalizeReadyWhen(
+        { port: '{env.PORT}', host: '{options.host}' },
+        'app:serve',
+        { ...data, options: {}, env: () => ({ PORT: '0' }) }
+      )
+    ).toThrow(
+      'Task "app:serve" has an invalid "readyWhen": "{options.host}" has no value.'
+    );
+  });
+
   it('reads env tokens case-insensitively on Windows', () => {
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
@@ -138,8 +200,7 @@ describe('normalizeReadyWhen', () => {
     [{ url: 'http://x', port: 1 }, 'expected exactly one of'],
     [{ url: 'ftp://x' }, '"url" must be an http or https URL'],
     [{ url: 'not a url' }, '"url" must be an http or https URL'],
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
-    [{ port: 70000 }, '"port" must be an integer from 1 to 65535'],
+    [{ port: 70000 }, '"port" must be an integer from 0 to 65535, or "auto"'],
     [{ port: 80, host: '' }, '"host" must be a non-empty string'],
     [{ command: '' }, '"command" must be a non-empty string'],
     [{ logMatches: [] }, '"logMatches" must be a non-empty string'],
@@ -168,7 +229,15 @@ describe('normalizeReadyWhen', () => {
       '"{options.port ?? 4200 ?? env.PORT}" has a fallback after the literal "4200" that can never be used',
     ],
     [{ port: '{port}' }, '"port" contains an unknown placeholder'],
-    [{ port: '{options.host}' }, '"port" must be an integer from 1 to 65535'],
+    [
+      { port: '{options.host}' },
+      '"port" must be an integer from 0 to 65535, or "auto"',
+    ],
+    // Only a port reads `auto` as a port the server picks
+    [
+      { url: 'http://localhost:{options.hmrPort}' },
+      '"url" must be an http or https URL',
+    ],
   ])('rejects %j', (readyWhen, reason) => {
     expect(() =>
       normalizeReadyWhen(readyWhen as any, 'app:serve', data)
@@ -176,7 +245,74 @@ describe('normalizeReadyWhen', () => {
   });
 });
 
+describe('normalizeReadyWhen signal', () => {
+  const normalize = (readyWhen: any) =>
+    normalizeReadyWhen(readyWhen, 'app:serve', data);
+
+  it('fills in the default timeout', () => {
+    expect(normalize({ signal: true })).toEqual({
+      kind: 'signal',
+      timeout: 600_000,
+    });
+    expect(normalize({ signal: true, timeout: 5000 })).toEqual({
+      kind: 'signal',
+      timeout: 5000,
+    });
+  });
+
+  it.each([
+    [{ signal: false }, '"signal" must be true'],
+    [{ signal: true, interval: 10 }, '"interval" is not used by "signal"'],
+    [{ signal: true, port: 1 }, 'expected exactly one of'],
+  ])('rejects %j', (readyWhen, reason) => {
+    expect(() => normalize(readyWhen)).toThrow(reason);
+  });
+});
+
 describe('getReadyWhen', () => {
+  it('gives a command check the env and options the producer runs with', () => {
+    const serve = {
+      executor: 'nx:run-commands',
+      continuous: true,
+      readyWhen: { command: 'check-ready' },
+      options: { command: 'serve', env: { NX_READY_WHEN_PORT: '5001' } },
+    };
+    const projectGraph = {
+      nodes: {
+        app: {
+          name: 'app',
+          type: 'app',
+          data: { root: 'apps/app', targets: { serve } },
+        },
+      },
+    } as unknown as ProjectGraph;
+    const projects = { app: { root: 'apps/app', targets: { serve } } };
+    const task = {
+      id: 'app:serve',
+      target: { project: 'app', target: 'serve' },
+      overrides: { port: 4400 },
+      continuous: true,
+    } as Task;
+
+    const readyWhen = getReadyWhen(task, projectGraph, projects, '/w', {
+      NX_TASK_ENV: 'yes',
+    });
+
+    expect(readyWhen).toMatchObject({
+      kind: 'command',
+      command: 'check-ready',
+    });
+    const { env } = readyWhen as any;
+    expect(env).toMatchObject({
+      NX_TASK_ENV: 'yes',
+      NX_READY_WHEN_PORT: '5001',
+    });
+    expect(JSON.parse(env.NX_TASK_OPTIONS)).toMatchObject({
+      command: 'serve',
+      port: 4400,
+    });
+  });
+
   it('resolves against the options the executor receives', () => {
     const serve = {
       executor: '@nx/web:file-server',
@@ -253,12 +389,12 @@ describe('checkReadyWhen', () => {
 
   it('leaves only the values that read the env to the producer process', () => {
     expect(check({ url: 'http://localhost:{options.port}' })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'url http://localhost:4200',
     });
     // options.port has a value, so the env is never read
     expect(check({ port: '{options.port ?? env.PORT}' })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'port 4200',
     });
     expect(
@@ -268,13 +404,19 @@ describe('checkReadyWhen', () => {
       description: 'port h:{options.unset ?? env.PORT}',
     });
     expect(check({ logMatches: ['on {env.PORT}', 'ready'] })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'logMatches "on {env.PORT}", "ready"',
     });
   });
 
+  it('waits for the producer to start when the server picks the port', () => {
+    expect(check({ port: 'auto', host: 'h' })).toEqual({
+      timeout: 600_000,
+      description: 'port h:auto',
+    });
+  });
+
   it.each([
-    [{ port: 0 }, '"port" must be an integer from 1 to 65535'],
     [{ port: '{options.prot}' }, '"{options.prot}" has no value'],
     [{ port: '{env.PORT}', host: '' }, '"host" must be a non-empty string'],
     [

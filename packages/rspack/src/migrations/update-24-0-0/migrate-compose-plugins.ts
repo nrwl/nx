@@ -12,13 +12,15 @@ export default async function migrateComposePlugins(tree: Tree) {
 
   const converted: HelperUsage[] = [];
   const remaining: { usage: HelperUsage; reason: string }[] = [];
+  const moduleFederation: HelperUsage[] = [];
 
   for (const usage of usages) {
-    if (!usage.usesExecutor) {
-      remaining.push({
-        usage,
-        reason: `does not use the \`@nx/rspack:rspack\` executor, which ${CONVERTER} requires`,
-      });
+    if (!usage.usesHelpers) {
+      converted.push(usage);
+      continue;
+    }
+    if (usage.usesModuleFederation) {
+      moduleFederation.push(usage);
       continue;
     }
 
@@ -39,7 +41,7 @@ export default async function migrateComposePlugins(tree: Tree) {
 
   return {
     nextSteps: nextSteps(converted, remaining),
-    agentContext: agentContext(converted, remaining),
+    agentContext: agentContext(converted, remaining, moduleFederation),
   };
 }
 
@@ -65,7 +67,8 @@ function nextSteps(
 
 function agentContext(
   converted: HelperUsage[],
-  remaining: { usage: HelperUsage; reason: string }[]
+  remaining: { usage: HelperUsage; reason: string }[],
+  moduleFederation: HelperUsage[]
 ): string[] {
   const context: string[] = [];
 
@@ -85,6 +88,16 @@ function agentContext(
       ...remaining.map(
         ({ usage, reason }) =>
           `- ${usage.name} (${usage.root}): ${usage.configPaths.join(', ')} - ${reason}`
+      )
+    );
+  }
+
+  if (moduleFederation.length) {
+    context.push(
+      `These projects compose Module Federation helpers, so their configs are untouched. The @nx/module-federation migration handles them; do not convert them here:`,
+      ...moduleFederation.map(
+        (usage) =>
+          `- ${usage.name} (${usage.root}): ${usage.configPaths.join(', ')}`
       )
     );
   }

@@ -24,10 +24,10 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
+import { getStartStorybookReadyWhen } from '../../../utils/dev-server-ready-check';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
-import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import {
   findRuntimeTsConfigName,
   getProjectType,
@@ -35,52 +35,6 @@ import {
 } from '@nx/js/internal';
 
 const DEFAULT_PORT = 4400;
-
-export function addStorybookTarget(
-  tree: Tree,
-  projectName: string,
-  uiFramework: UiFramework,
-  interactionTests: boolean
-) {
-  const projectConfig = readProjectConfiguration(tree, projectName);
-  projectConfig.targets['storybook'] = {
-    executor: '@nx/storybook:storybook',
-    options: {
-      port: DEFAULT_PORT,
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  projectConfig.targets['build-storybook'] = {
-    executor: '@nx/storybook:build',
-    outputs: ['{options.outputDir}'],
-    options: {
-      outputDir: joinPathFragments('dist/storybook', projectName),
-      configDir: `${projectConfig.root}/.storybook`,
-    },
-    configurations: {
-      ci: {
-        quiet: true,
-      },
-    },
-  };
-
-  if (interactionTests === true) {
-    projectConfig.targets['test-storybook'] = {
-      executor: 'nx:run-commands',
-      options: {
-        command: `test-storybook -c ${projectConfig.root}/.storybook --url=http://localhost:${DEFAULT_PORT}`,
-      },
-    };
-  }
-
-  updateProjectConfiguration(tree, projectName, projectConfig);
-}
 
 export function addAngularStorybookTarget(
   tree: Tree,
@@ -93,6 +47,8 @@ export function addAngularStorybookTarget(
   );
   projectConfig.targets['storybook'] = {
     executor: '@storybook/angular:start-storybook',
+    continuous: true,
+    readyWhen: getStartStorybookReadyWhen(),
     options: {
       port: 4400,
       configDir: `${projectConfig.root}/.storybook`,
@@ -516,49 +472,6 @@ export function addStorybookToNamedInputs(
   }
 }
 
-export function addStorybookToTargetDefaults(
-  tree: Tree,
-  schema: StorybookConfigureSchema,
-  setCache = true
-) {
-  const nxJson = readNxJson(tree) ?? {};
-
-  const existing = findTargetDefault(nxJson.targetDefaults, {
-    target: 'build-storybook',
-  });
-
-  const inputs = existing?.inputs
-    ? [...existing.inputs]
-    : [
-        'default',
-        nxJson.namedInputs && 'production' in nxJson.namedInputs
-          ? '^production'
-          : '^default',
-      ];
-
-  if (!inputs.includes('{projectRoot}/.storybook/**/*')) {
-    inputs.push('{projectRoot}/.storybook/**/*');
-  }
-
-  // Drop the negation glob so Storybook rebuilds when .storybook changes.
-  const negatedIndex = inputs.indexOf('!{projectRoot}/.storybook/**/*');
-  if (negatedIndex !== -1) inputs.splice(negatedIndex, 1);
-
-  if (
-    schema.uiFramework !== '@storybook/angular' &&
-    !inputs.includes('{projectRoot}/tsconfig.storybook.json')
-  ) {
-    inputs.push('{projectRoot}/tsconfig.storybook.json');
-  }
-
-  upsertTargetDefault(tree, nxJson, {
-    target: 'build-storybook',
-    ...(setCache && existing?.cache === undefined ? { cache: true } : {}),
-    inputs,
-  });
-  updateNxJson(tree, nxJson);
-}
-
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
@@ -574,7 +487,6 @@ export function createProjectStorybookDir(
   usesSwc?: boolean,
   usesVite?: boolean,
   viteConfigFilePath?: string,
-  hasPlugin?: boolean,
   viteConfigFileName?: string,
   usesReactNative?: boolean,
   useNativeTsconfigPaths = true
@@ -626,7 +538,6 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
     usesReactNative,
     useNativeTsconfigPaths,

@@ -152,26 +152,32 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
           clearRequireCache();
           requireCacheCleared = true;
         }
-        const rawConfig = await loadConfigFile(absConfigFilePath, [
-          'tsconfig.spec.json',
-          'tsconfig.test.json',
-          'tsconfig.jest.json',
-          'tsconfig.json',
-        ]);
-        const { externalFiles, needsDtsInputs } =
-          await collectExternalFileReferences(
-            rawConfig,
-            absConfigFilePath,
-            projectRoot,
-            context.workspaceRoot,
-            {
-              presetCache,
-              tsconfigJsonCache,
-              tsconfigExistsCache,
-              isolatedModulesCache,
-            }
-          );
-        return { rawConfig, externalFiles, needsDtsInputs };
+        // Rethrown per file below, so one config that fails to load does not
+        // drop every other project's inferred targets.
+        try {
+          const rawConfig = await loadConfigFile(absConfigFilePath, [
+            'tsconfig.spec.json',
+            'tsconfig.test.json',
+            'tsconfig.jest.json',
+            'tsconfig.json',
+          ]);
+          const { externalFiles, needsDtsInputs } =
+            await collectExternalFileReferences(
+              rawConfig,
+              absConfigFilePath,
+              projectRoot,
+              context.workspaceRoot,
+              {
+                presetCache,
+                tsconfigJsonCache,
+                tsconfigExistsCache,
+                isolatedModulesCache,
+              }
+            );
+          return { rawConfig, externalFiles, needsDtsInputs };
+        } catch (error) {
+          return { error, externalFiles: [] as string[] };
+        }
       })
     );
 
@@ -190,7 +196,11 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
         async (configFilePath, options, context, idx) => {
           const projectRoot = projectRoots[idx];
           const hash = hashes[idx];
-          const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
+          const loadedConfig = loadedConfigs[idx];
+          if ('error' in loadedConfig) {
+            throw loadedConfig.error;
+          }
+          const { rawConfig, needsDtsInputs } = loadedConfig;
 
           if (!targetsCache.has(hash)) {
             targetsCache.set(

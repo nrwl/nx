@@ -53,7 +53,7 @@ export async function applicationGenerator(
     schema.bundler = 'webpack';
   }
 
-  const options = await normalizeOptions(tree, schema, isRspack);
+  const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await jsInitGenerator(tree, {
@@ -65,7 +65,6 @@ export async function applicationGenerator(
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
-    addPlugin: options.addPlugin,
   });
 
   if (!options.skipPackageJson) {

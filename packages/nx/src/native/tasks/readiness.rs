@@ -1,4 +1,5 @@
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::process::Stdio;
 use std::time::{Duration, Instant};
@@ -24,6 +25,8 @@ pub struct ReadinessProbeConfig {
     pub port: Option<u32>,
     pub host: Option<String>,
     pub command: Option<String>,
+    /// The whole environment of `command`. Without it the command inherits this process's.
+    pub env: Option<HashMap<String, String>>,
     pub timeout: u32,
     pub interval: Option<u32>,
 }
@@ -41,6 +44,7 @@ enum Probe {
     Command {
         command: String,
         cwd: String,
+        env: Option<HashMap<String, String>>,
     },
 }
 
@@ -55,7 +59,7 @@ impl PortHost {
     fn parse(host: Option<&str>) -> anyhow::Result<Self> {
         Ok(match host {
             None => Self::Loopback,
-            Some(host) => match host.parse::<IpAddr>() {
+            Some(host) => match unbracketed(host).parse::<IpAddr>() {
                 Ok(ip) => Self::Ip(ip),
                 Err(_) => Self::Name(host.to_string(), Box::new(system_resolver()?)),
             },
@@ -73,7 +77,7 @@ impl Probe {
     fn from_config(config: &ReadinessProbeConfig, cwd: String) -> anyhow::Result<Self> {
         match (&config.url, config.port, &config.command) {
             (Some(url), None, None) => Ok(Self::Url {
-                url: Url::parse(url)?,
+                url: connect_url(url)?,
                 client: OnceCell::new(),
             }),
             (None, Some(port), None) => Ok(Self::Port {
@@ -83,6 +87,7 @@ impl Probe {
             (None, None, Some(command)) => Ok(Self::Command {
                 command: command.clone(),
                 cwd,
+                env: config.env.clone(),
             }),
             _ => anyhow::bail!("A readiness probe needs exactly one of url, port or command"),
         }
@@ -110,7 +115,9 @@ impl Probe {
                 .run_until_cancelled(probe_port(*port, host, deadline))
                 .await
                 .unwrap_or(false),
-            Self::Command { command, cwd } => probe_command(command, cwd, deadline, token).await,
+            Self::Command { command, cwd, env } => {
+                probe_command(command, cwd, env.as_ref(), deadline, token).await
+            }
         })
     }
 }
@@ -137,8 +144,7 @@ async fn http_client(url: &Url, deadline: Instant) -> anyhow::Result<Client> {
 // resolver, so a proxied request never waits on local DNS and a literal needs
 // no DNS configuration at all.
 async fn loopback_addrs(url: &Url, deadline: Instant) -> Option<Vec<IpAddr>> {
-    let host = url.host_str()?;
-    let host = host.trim_start_matches('[').trim_end_matches(']');
+    let host = unbracketed(url.host_str()?);
     if let Ok(ip) = host.parse::<IpAddr>() {
         return ip_is_loopback(ip).then(|| vec![ip]);
     }
@@ -298,9 +304,40 @@ async fn probe_port(port: u16, host: &PortHost, deadline: Instant) -> bool {
 }
 
 async fn connects(ip: IpAddr, port: u16, deadline: Instant) -> bool {
-    tokio::time::timeout_at(deadline.into(), TcpStream::connect((ip, port)))
-        .await
-        .is_ok_and(|result| result.is_ok())
+    tokio::time::timeout_at(
+        deadline.into(),
+        TcpStream::connect((connect_destination(ip), port)),
+    )
+    .await
+    .is_ok_and(|result| result.is_ok())
+}
+
+// A wildcard means loopback of its own family, as on Linux and macOS and in
+// Node on Windows. Windows itself rejects it as a destination.
+fn connect_destination(ip: IpAddr) -> IpAddr {
+    match ip.to_canonical() {
+        IpAddr::V4(v4) if v4.is_unspecified() => Ipv4Addr::LOCALHOST.into(),
+        IpAddr::V6(v6) if v6.is_unspecified() => Ipv6Addr::LOCALHOST.into(),
+        _ => ip,
+    }
+}
+
+// Rewriting the host, not only the connection, gives a wildcard url the
+// loopback client
+fn connect_url(url: &str) -> anyhow::Result<Url> {
+    let mut url = Url::parse(url)?;
+    if let Some(Ok(ip)) = url
+        .host_str()
+        .map(|host| unbracketed(host).parse::<IpAddr>())
+    {
+        url.set_ip_host(connect_destination(ip))
+            .map_err(|()| anyhow::anyhow!("Cannot set the host of {url}"))?;
+    }
+    Ok(url)
+}
+
+fn unbracketed(host: &str) -> &str {
+    host.trim_start_matches('[').trim_end_matches(']')
 }
 
 // On overrun or cancel the whole tree is killed: the shell's own kill leaves
@@ -308,18 +345,27 @@ async fn connects(ip: IpAddr, port: u16, deadline: Instant) -> bool {
 async fn probe_command(
     command: &str,
     cwd: &str,
+    env: Option<&HashMap<String, String>>,
     deadline: Instant,
     token: &CancellationToken,
 ) -> bool {
     let mut cmd = if cfg!(windows) {
         let mut cmd = Command::new("cmd.exe");
-        cmd.args(["/d", "/s", "/c", command]);
+        cmd.args(["/d", "/s", "/c"]);
+        // Appended as written, the way Node's `shell: true` does: `/s` strips
+        // the outer quotes, and regular arg quoting would escape every inner
+        // `"` as `\"`, which cmd.exe hands on to the program
+        #[cfg(windows)]
+        cmd.raw_arg(format!("\"{command}\""));
         cmd
     } else {
         let mut cmd = Command::new("sh");
         cmd.args(["-c", command]);
         cmd
     };
+    if let Some(env) = env {
+        cmd.env_clear().envs(env);
+    }
     cmd.current_dir(cwd)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -464,6 +510,7 @@ mod tests {
             host: host.map(String::from),
             command: None,
             timeout,
+            env: None,
             interval: None,
         }
     }
@@ -533,6 +580,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 2000,
+            env: None,
             interval: None,
         };
         let started = Instant::now();
@@ -571,6 +619,12 @@ mod tests {
                 .await
                 .unwrap()
         );
+        assert!(
+            !probe(port_config(port, Some("0.0.0.0"), 300))
+                .wait()
+                .await
+                .unwrap()
+        );
     }
 
     #[tokio::test]
@@ -585,6 +639,59 @@ mod tests {
         );
     }
 
+    #[test]
+    fn a_wildcard_connects_to_loopback_of_the_same_family() {
+        // Linux and macOS remap a wildcard destination themselves, so only
+        // the mapping shows the Windows behavior
+        for (host, destination) in [
+            ("0.0.0.0", "127.0.0.1"),
+            ("::", "::1"),
+            ("::ffff:0.0.0.0", "127.0.0.1"),
+            ("::ffff:127.0.0.1", "::ffff:127.0.0.1"),
+            ("10.0.0.1", "10.0.0.1"),
+            ("fd00::1", "fd00::1"),
+        ] {
+            assert_eq!(
+                connect_destination(host.parse().unwrap()),
+                destination.parse::<IpAddr>().unwrap(),
+                "{host}"
+            );
+        }
+        for (url, requested) in [
+            ("https://0.0.0.0:4200/a?b", "https://127.0.0.1:4200/a?b"),
+            ("http://[::]:4200/", "http://[::1]:4200/"),
+            (
+                "http://[::ffff:7f00:1]:4200/",
+                "http://[::ffff:7f00:1]:4200/",
+            ),
+            ("http://localhost:4200/", "http://localhost:4200/"),
+        ] {
+            let config = ReadinessProbeConfig {
+                url: Some(url.into()),
+                port: None,
+                host: None,
+                command: None,
+                timeout: 1,
+                env: None,
+                interval: None,
+            };
+            let Probe::Url { url: built, .. } = Probe::from_config(&config, String::new()).unwrap()
+            else {
+                panic!("{url}");
+            };
+            assert_eq!(built.as_str(), requested);
+        }
+    }
+
+    #[test]
+    fn port_host_may_be_a_bracketed_ipv6_address() {
+        let config = port_config(4200, Some("[::1]"), 1);
+        assert!(matches!(
+            Probe::from_config(&config, String::new()).unwrap(),
+            Probe::Port { host: PortHost::Ip(ip), .. } if ip == Ipv6Addr::LOCALHOST
+        ));
+    }
+
     #[cfg(not(windows))]
     #[tokio::test]
     async fn command_attempt_may_use_the_whole_remaining_timeout() {
@@ -594,6 +701,41 @@ mod tests {
             host: None,
             command: Some("sleep 1.2".into()),
             timeout: 3000,
+            env: None,
+            interval: Some(50),
+        };
+        assert!(probe(config).wait().await.unwrap());
+    }
+
+    // Regular arg quoting would hand cmd.exe `\"a\"`, so the comparison fails
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn command_reaches_cmd_with_its_inner_quotes() {
+        let config = ReadinessProbeConfig {
+            url: None,
+            port: None,
+            host: None,
+            command: Some(r#"if "a"=="a" (exit 0) else (exit 1)"#.into()),
+            timeout: 2000,
+            env: None,
+            interval: Some(50),
+        };
+        assert!(probe(config).wait().await.unwrap());
+    }
+
+    #[cfg(not(windows))]
+    #[tokio::test]
+    async fn command_runs_with_only_the_given_env() {
+        let config = ReadinessProbeConfig {
+            url: None,
+            port: None,
+            host: None,
+            command: Some(r#"test "$NX_READINESS_GIVEN" = yes && test -z "$HOME""#.into()),
+            timeout: 2000,
+            env: Some(HashMap::from([
+                ("NX_READINESS_GIVEN".into(), "yes".into()),
+                ("PATH".into(), std::env::var("PATH").unwrap()),
+            ])),
             interval: Some(50),
         };
         assert!(probe(config).wait().await.unwrap());
@@ -613,6 +755,7 @@ mod tests {
                 marker.display()
             )),
             timeout: 10_000,
+            env: None,
             interval: None,
         };
         let probe = ReadinessProbe::new(config, dir.path().to_string_lossy().to_string()).unwrap();
@@ -659,6 +802,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 5_000,
+            env: None,
             interval: None,
         });
         let token = probe.token.clone();
@@ -698,6 +842,7 @@ mod tests {
             host: None,
             command: None,
             timeout: 500,
+            env: None,
             interval: None,
         };
         SETUP_DELAY_MS.store(600, std::sync::atomic::Ordering::Relaxed);

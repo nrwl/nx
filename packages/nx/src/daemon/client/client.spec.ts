@@ -779,3 +779,84 @@ describe('DaemonClient state machine', () => {
     });
   });
 });
+
+describe('streamed progress', () => {
+  type ProgressClient = {
+    currentMessage: unknown;
+    handleMessage: (serialized: Buffer) => void;
+    sendMessageToDaemon: (message: unknown) => Promise<unknown>;
+    sendToDaemonViaQueue: (message: unknown, spinner?: unknown) => unknown;
+  };
+
+  let client: ProgressClient;
+  let setMessage: MockInstance;
+
+  const request = {
+    targets: ['build'],
+    changedFiles: [],
+    overrides: {},
+    extraTargetDependencies: {},
+    excludeTaskDependencies: false,
+    exclude: [],
+  };
+
+  function streamProgress(message: string) {
+    client.handleMessage(
+      Buffer.from(JSON.stringify({ type: 'UPDATE_PROGRESS_MESSAGE', message }))
+    );
+  }
+
+  beforeEach(async () => {
+    const { DelayedSpinner } = await import('../../utils/delayed-spinner');
+    setMessage = vi.spyOn(DelayedSpinner.prototype, 'setMessage');
+    client = new DaemonClient() as unknown as ProgressClient;
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('shows the daemon progress while it selects affected tasks', async () => {
+    vi.spyOn(client, 'sendMessageToDaemon').mockImplementation(
+      async (message) => {
+        client.currentMessage = message;
+        streamProgress('Calculating affected tasks');
+        return {};
+      }
+    );
+
+    await (client as unknown as DaemonClient).selectAffectedTasks(request);
+
+    expect(setMessage).toHaveBeenCalledWith('Calculating affected tasks');
+  });
+
+  it('routes progress to the in-flight request, not one queued behind it', async () => {
+    const send = vi.spyOn(client, 'sendToDaemonViaQueue');
+    const pending: Array<() => void> = [];
+    const daemonSend = vi
+      .spyOn(client, 'sendMessageToDaemon')
+      .mockImplementation(
+        (message) =>
+          new Promise((resolve) => {
+            client.currentMessage = message;
+            pending.push(() => resolve({}));
+          })
+      );
+
+    const daemon = client as unknown as DaemonClient;
+    const first = daemon.selectAffectedTasks(request);
+    const second = daemon.selectAffectedTasks(request);
+    await vi.waitFor(() => expect(daemonSend).toHaveBeenCalledTimes(1));
+
+    streamProgress('Calculating affected tasks');
+
+    const [firstSpinner, secondSpinner] = send.mock.calls.map(
+      ([, spinner]) => spinner
+    );
+    expect(setMessage.mock.contexts).toEqual([firstSpinner]);
+    expect(firstSpinner).not.toBe(secondSpinner);
+
+    pending.shift()();
+    await vi.waitFor(() => expect(daemonSend).toHaveBeenCalledTimes(2));
+    pending.shift()();
+    await Promise.all([first, second]);
+  });
+});

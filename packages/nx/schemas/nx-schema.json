@@ -155,7 +155,7 @@
     },
     "useInferencePlugins": {
       "type": "boolean",
-      "description": "Specifies whether to add inference plugins when generating new projects."
+      "description": "When `false`, `nx add` does not update package.json scripts by default and `nx init` uses its legacy setup. Generators ignore this setting and always add their inference plugin."
     },
     "analytics": {
       "type": "boolean",
@@ -447,7 +447,7 @@
         },
         "useRegistryResolution": {
           "type": "boolean",
-          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION env var takes precedence over this.",
           "default": true
         },
         "agentic": {
@@ -625,18 +625,23 @@
   },
   "definitions": {
     "readyWhen": {
-      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName}, {options.*}, and {env.*} placeholders, resolved against the options and environment the task runs with. A placeholder can list fallbacks, as in {options.port ?? env.PORT ?? 4200}.",
+      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName}, {options.*}, and {env.*} placeholders, resolved against the options and environment the task runs with. A placeholder can list fallbacks, as in {options.port ?? env.PORT ?? 4200}. Set it to null to turn off a check inherited from a plugin or targetDefaults.",
       "type": "object",
       "properties": {
+        "...": {
+          "type": "boolean",
+          "const": true,
+          "description": "Merges with the inherited readyWhen instead of replacing it, so { \"...\": true, \"timeout\": 1200000 } keeps an inferred check and only gives it more time. Keys before this token defer to the inherited value; keys after it win."
+        },
         "url": {
           "type": "string",
           "description": "Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A redirect counts as ready and is not followed"
         },
         "port": {
           "type": ["integer", "string"],
-          "minimum": 1,
+          "minimum": 0,
           "maximum": 65535,
-          "description": "Ready when a TCP connection to this port succeeds. A string must resolve to a port number through a placeholder such as {options.port}"
+          "description": "Ready when a TCP connection to this port succeeds. A string can be a port number, auto, or a placeholder such as {options.port}. With 0 or auto the server picks its port, so Nx runs no check and the target counts as ready once it starts"
         },
         "host": {
           "type": "string",
@@ -644,7 +649,7 @@
         },
         "command": {
           "type": "string",
-          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0"
+          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0. It runs with the environment the task runs with, and the task's options as JSON in NX_TASK_OPTIONS"
         },
         "logMatches": {
           "description": "Ready when every one of these substrings has appeared in the task's output",
@@ -660,21 +665,32 @@
         "timeout": {
           "type": "integer",
           "minimum": 1,
-          "default": 60000,
-          "description": "Milliseconds to wait for readiness before failing dependents that wait for it"
+          "default": 600000,
+          "description": "Milliseconds to wait for readiness before failing dependents that wait for it. Defaults to 10 minutes"
         },
         "interval": {
           "type": "integer",
           "minimum": 1,
           "default": 250,
-          "description": "Milliseconds between probe attempts. Unused by logMatches"
+          "description": "Milliseconds between probe attempts. Unused by logMatches and signal"
+        },
+        "signal": {
+          "const": true,
+          "description": "Ready when the task reports it, through emitReadySignal from @nx/devkit. The webpack, Rspack, Vite and Rsbuild plugins of Nx report it once their dev server listens"
         }
       },
       "oneOf": [
-        { "required": ["url"] },
-        { "required": ["port"] },
-        { "required": ["command"] },
-        { "required": ["logMatches"] }
+        { "required": ["..."] },
+        {
+          "not": { "required": ["..."] },
+          "oneOf": [
+            { "required": ["url"] },
+            { "required": ["port"] },
+            { "required": ["command"] },
+            { "required": ["logMatches"] },
+            { "required": ["signal"] }
+          ]
+        }
       ],
       "additionalProperties": false
     },
@@ -1057,7 +1073,7 @@
           "description": "Whether this target runs continuously until stopped"
         },
         "readyWhen": {
-          "$ref": "#/definitions/readyWhen"
+          "oneOf": [{ "$ref": "#/definitions/readyWhen" }, { "type": "null" }]
         },
         "parallelism": {
           "type": "boolean",

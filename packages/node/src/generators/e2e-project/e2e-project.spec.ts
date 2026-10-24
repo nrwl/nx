@@ -22,12 +22,10 @@ describe('e2eProjectGenerator', () => {
       directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
-      addPlugin: true,
     });
 
     expect(tree.exists(`api-e2e/src/api/api.spec.ts`)).toBeTruthy();
@@ -39,13 +37,11 @@ describe('e2eProjectGenerator', () => {
       framework: 'express',
       e2eTestRunner: 'none',
       rootProject: true,
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
       rootProject: true,
-      addPlugin: true,
     });
 
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
@@ -56,12 +52,10 @@ describe('e2eProjectGenerator', () => {
       directory: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
-      addPlugin: true,
     });
 
     expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
@@ -95,13 +89,11 @@ describe('e2eProjectGenerator', () => {
       name: 'my-cli',
       framework: 'none',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',
       project: 'my-cli',
       rootProject: true,
-      addPlugin: true,
     });
 
     expect(tree.read('e2e/src/cli/cli.spec.ts', 'utf-8')).toContain(
@@ -114,13 +106,11 @@ describe('e2eProjectGenerator', () => {
       directory: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
       buildTarget: 'bundle',
-      addPlugin: true,
     });
 
     expect(
@@ -133,12 +123,10 @@ describe('e2eProjectGenerator', () => {
       directory: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',
       project: 'api',
-      addPlugin: true,
     });
     expect(tree.read('api-e2e/src/api/api.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -163,12 +151,10 @@ describe('e2eProjectGenerator', () => {
       directory: 'cli',
       framework: 'none',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',
       project: 'cli',
-      addPlugin: true,
     });
 
     expect(tree.read('cli-e2e/jest.config.cts', 'utf-8'))
@@ -219,13 +205,11 @@ describe('e2eProjectGenerator', () => {
         directory: 'api',
         framework: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'server',
         project: '@proj/api',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -265,13 +249,11 @@ describe('e2eProjectGenerator', () => {
         directory: 'api',
         framework: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'server',
         project: '@proj/api',
-        addPlugin: true,
       });
 
       expect(tree.read('api-e2e/jest.config.cts', 'utf-8'))
@@ -332,13 +314,11 @@ describe('e2eProjectGenerator', () => {
         directory: 'cli',
         framework: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'cli',
         project: '@proj/cli',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -405,12 +385,10 @@ describe('e2eProjectGenerator', () => {
       framework: 'express',
       linter: 'oxlint',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
       project: 'api',
-      addPlugin: true,
     });
 
     // The e2e specs are Jest, so the project needs its own config to turn the

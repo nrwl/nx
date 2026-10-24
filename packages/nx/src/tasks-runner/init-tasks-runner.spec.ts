@@ -13,7 +13,7 @@ vi.mock('./task-orchestrator', () => ({
   TaskOrchestrator: vi.fn(function () {
     return {
       init: vi.fn(),
-      processAllScheduledTasks: vi.fn(),
+      processTasks: vi.fn(),
       nextBatch: () => null,
       resolveCachedTasks: async () => [],
       runTaskDirectly: async (_: boolean, task: any) => ({ task }),

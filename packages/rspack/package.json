@@ -37,11 +37,29 @@
       "app-plugin.js": [
         "dist/app-plugin.d.ts"
       ],
+      "module-federation": [
+        "dist/module-federation.d.ts"
+      ],
+      "module-federation.js": [
+        "dist/module-federation.d.ts"
+      ],
       "plugin": [
         "dist/plugin.d.ts"
       ],
       "plugin.js": [
         "dist/plugin.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
+      "ready-check.js": [
+        "dist/ready-check.d.ts"
+      ],
+      "ready-signal": [
+        "dist/ready-signal.d.ts"
+      ],
+      "ready-signal.js": [
+        "dist/ready-signal.d.ts"
       ],
       "react-plugin": [
         "dist/react-plugin.d.ts"
@@ -79,6 +97,16 @@
       "types": "./dist/app-plugin.d.ts",
       "default": "./dist/app-plugin.js"
     },
+    "./module-federation": {
+      "@nx/nx-source": "./module-federation.ts",
+      "types": "./dist/module-federation.d.ts",
+      "default": "./dist/module-federation.js"
+    },
+    "./module-federation.js": {
+      "@nx/nx-source": "./module-federation.ts",
+      "types": "./dist/module-federation.d.ts",
+      "default": "./dist/module-federation.js"
+    },
     "./plugin": {
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
@@ -88,6 +116,26 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
+    "./ready-check.js": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
+    "./ready-signal": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
+    },
+    "./ready-signal.js": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
     },
     "./react-plugin": {
       "@nx/nx-source": "./react-plugin.ts",

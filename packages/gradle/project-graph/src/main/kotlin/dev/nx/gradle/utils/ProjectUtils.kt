@@ -168,8 +168,7 @@ private fun processTargetsForProjectImpl(
   fun applyPrefix(name: String): String =
       if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$name" else name
 
-  // Create GitIgnoreClassifier once for the entire project
-  val gitIgnoreClassifier = GitIgnoreClassifier(File(workspaceRoot))
+  val buildOutputClassifier = BuildOutputClassifier.forBuild(project)
 
   val projectBuildPath = project.buildTreePath.trimEnd(':')
   val nxProjectName = getNxProjectName(project)
@@ -212,7 +211,7 @@ private fun processTargetsForProjectImpl(
               externalNodes,
               dependencies,
               targetNameOverrides,
-              gitIgnoreClassifier,
+              buildOutputClassifier,
               targetNamePrefix,
               project)
 
@@ -252,7 +251,7 @@ private fun processTargetsForProjectImpl(
               projectRoot,
               workspaceRoot,
               ciTestTargetName,
-              gitIgnoreClassifier,
+              buildOutputClassifier,
               targetNameOverrides,
               targetNamePrefix)
         }

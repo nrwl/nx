@@ -1792,6 +1792,43 @@ describe('TasksSchedule', () => {
       );
     });
 
+    it('reports every producer such a task still waits on', async () => {
+      process.env['NX_BATCH_MODE'] = 'false';
+      taskGraph.tasks['lib1:serve'] = createMockTask('lib1:serve', true, true);
+      taskGraph.dependencies['lib1:serve'] = [];
+      taskGraph.continuousDependencies['lib1:serve'] = [];
+      taskGraph.continuousDependencies['app1:build'].push({
+        id: 'lib1:serve',
+        waitFor: 'ready',
+      });
+      taskGraph.roots.push('lib1:serve');
+      projectGraph.nodes.lib1.data.targets.serve = {
+        executor: 'awesome-executors:serve',
+        continuous: true,
+        readyWhen: { logMatches: 'ready' },
+      };
+      const onReadinessHold = vi.fn();
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        readProjectsConfigurationFromProjectGraph(projectGraph).projects,
+        taskGraph,
+        { lifeCycle },
+        taskGraph,
+        { onReadinessHold }
+      );
+      await taskSchedule.init();
+
+      await taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask((t) => t.continuous);
+      taskSchedule.nextTask((t) => t.continuous);
+      await taskSchedule.scheduleNextTasks();
+
+      expect(onReadinessHold.mock.calls).toEqual([
+        ['app1:serve'],
+        ['lib1:serve'],
+      ]);
+    });
+
     it('treats a ready edge to a producer without a probe as a plain edge', async () => {
       const { taskSchedule } = await createChainSchedule({
         probe: false,

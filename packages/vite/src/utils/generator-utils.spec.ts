@@ -39,36 +39,6 @@ describe('generator utils', () => {
       );
     });
 
-    it('should return correct path for vite.config file if custom configFile is set', () => {
-      const projectConfig = readProjectConfiguration(
-        tree,
-        'my-test-react-vite-app'
-      );
-      updateProjectConfiguration(tree, 'my-test-react-vite-app', {
-        ...projectConfig,
-        targets: {
-          ...projectConfig.targets,
-          build: {
-            ...projectConfig.targets.build,
-            options: {
-              ...projectConfig.targets.build.options,
-              configFile: 'apps/my-test-react-vite-app/vite.config.custom.ts',
-            },
-          },
-        },
-      });
-
-      tree.write(`apps/my-test-react-vite-app/vite.config.custom.ts`, '');
-
-      const viteConfigPath = getViteConfigPathForProject(
-        tree,
-        'my-test-react-vite-app'
-      );
-      expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.config.custom.ts'
-      );
-    });
-
     it('should return correct path for vite.config file given a target name', () => {
       const projectConfig = readProjectConfiguration(
         tree,
@@ -238,38 +208,40 @@ describe('generator utils', () => {
 
       expect(tree.read('myproj/vite.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/myproj',
-          server:{
-            port: 4200,
-            host: 'localhost',
-          },
-          preview:{
-            port: 4300,
-            host: 'localhost',
-          },
-          resolve: {
-            tsconfigPaths: true,
-          },
-          // Uncomment this if you are using workers.
-          // worker: {
-          //  plugins: [],
-          // },
-          build: {
-            outDir: '../dist/myproj',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/myproj',
+            server:{
+              port: 4200,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            preview:{
+              port: 4300,
+              host: 'localhost',
+            },
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/myproj',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should generate correct config when using ts solution setup', () => {

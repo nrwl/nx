@@ -112,6 +112,30 @@ class MojoAnalyzerTest {
     )
   }
 
+  @Test
+  fun `install and deploy hash the artifacts they publish`() {
+    listOf("maven-install-plugin" to "install", "maven-deploy-plugin" to "deploy").forEach { (artifactId, goal) ->
+      val analysis = analyze(artifactId, goal, "target/classes")
+      assertEquals(false, analysis.isCacheable)
+      assertEquals(setOf("{projectRoot}/target/app-1.0.jar", "{projectRoot}/target/app-1.0-*"), analysis.ignoredInputs)
+      assertEquals(emptySet(), analysis.outputs)
+    }
+  }
+
+  @Test
+  fun `exec java is not cacheable`() {
+    val analysis = analyze("exec-maven-plugin", "java", "target/classes")
+    assertEquals(false, analysis.isCacheable)
+    assertEquals(emptySet(), analysis.outputs)
+  }
+
+  @Test
+  fun `unconfigured non-cacheable goals get no inputs`() {
+    val analysis = analyze("maven-clean-plugin", "clean", "target/classes")
+    assertEquals(emptySet(), analysis.inputs)
+    assertEquals(emptySet(), analysis.ignoredInputs)
+  }
+
   private fun fileParameter(name: String, defaultValue: String? = null) = Parameter().apply {
     this.name = name
     type = "java.io.File"
@@ -136,6 +160,7 @@ class MojoAnalyzerTest {
       build = Build().apply {
         directory = File(basedir, "target").path
         this.outputDirectory = File(basedir, outputDirectory).path
+        finalName = "app-1.0"
       }
     }).apply { file = File(basedir, "pom.xml") }
 

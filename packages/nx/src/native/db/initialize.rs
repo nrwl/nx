@@ -2,6 +2,7 @@ use crate::native::db::connection::NxDbConnection;
 use crate::native::tasks::details::SCHEMA as TASK_DETAILS_SCHEMA;
 use crate::native::tasks::running_tasks_service::READINESS_SCHEMA as RUNNING_TASK_READINESS_SCHEMA;
 use crate::native::tasks::running_tasks_service::SCHEMA as RUNNING_TASKS_SCHEMA;
+use crate::native::tasks::running_tasks_service::add_readiness_url_column;
 use crate::native::tasks::task_history::SCHEMA as TASK_HISTORY_SCHEMA;
 use crate::native::tasks::task_invocation_tracker::SCHEMA as TASK_INVOCATIONS_SCHEMA;
 use rusqlite::vtab::array;
@@ -155,6 +156,10 @@ pub(crate) fn initialize_db(db_path: &Path) -> anyhow::Result<NxDbConnection> {
             Ok(mut c) => {
                 let c = if db_existed_before_open {
                     trace!("Database already exists, reusing");
+                    // Best effort: without the column, readiness is still recorded
+                    if let Err(e) = add_readiness_url_column(&c) {
+                        debug!("Could not add the readiness url column: {:?}", e);
+                    }
                     c
                 } else {
                     // New DB — configure pragmas/journal mode and create tables

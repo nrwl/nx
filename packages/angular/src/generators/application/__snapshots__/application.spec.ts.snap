@@ -140,8 +140,24 @@ app.use('/**', (req, res, next) => {
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
-  app.listen(port, () => {
+  const server = app.listen(port, async (error?: Error) => {
+    if (error) {
+      throw error;
+    }
+
     console.log(\`Node Express server listening on http://localhost:\${port}\`);
+    // Set when Nx waits for this server to be ready
+    if (process.env['NX_READY_SIGNAL_SOCKET']) {
+      try {
+        // Function keeps TypeScript and bundlers from rewriting or bundling the import
+        const load = new Function('s', 'return import(s)') as (
+          s: string,
+        ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+        (await load('@nx/js/ready-signal')).emitReadySignal(server);
+      } catch {
+        // @nx/js isn't installed
+      }
+    }
   });
 }
 
@@ -826,9 +842,6 @@ exports[`app > nested > should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -841,9 +854,15 @@ exports[`app > nested > should create project configs 1`] = `
       "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular/build:dev-server",
+      "readyWhen": {
+        "signal": true,
+      },
     },
     "serve-static": {
       "continuous": true,
+      "dependsOn": [
+        "build",
+      ],
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
@@ -851,16 +870,9 @@ exports[`app > nested > should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-dir/my-app/jest.config.cts",
-        "tsConfig": "my-dir/my-app/tsconfig.spec.json",
+      "readyWhen": {
+        "signal": true,
       },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -934,9 +946,6 @@ exports[`app > not nested > should create project configs 1`] = `
         "{options.outputPath}",
       ],
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -949,9 +958,15 @@ exports[`app > not nested > should create project configs 1`] = `
       "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular/build:dev-server",
+      "readyWhen": {
+        "signal": true,
+      },
     },
     "serve-static": {
       "continuous": true,
+      "dependsOn": [
+        "build",
+      ],
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
@@ -959,16 +974,9 @@ exports[`app > not nested > should create project configs 1`] = `
         "spa": true,
         "staticFilePath": "dist/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-app/jest.config.cts",
-        "tsConfig": "my-app/tsconfig.spec.json",
+      "readyWhen": {
+        "signal": true,
       },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }

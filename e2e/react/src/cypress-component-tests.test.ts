@@ -10,7 +10,6 @@ import {
   updateJson,
   shouldRunCypressTests,
 } from '@nx/e2e-utils';
-import { join } from 'path';
 
 describe('React Cypress Component Tests', () => {
   let projectName;
@@ -19,7 +18,6 @@ describe('React Cypress Component Tests', () => {
   const buildableLibName = uniq('cy-react-buildable-lib');
 
   beforeAll(async () => {
-    process.env.NX_ADD_PLUGINS = 'false';
     projectName = newProject({
       name: uniq('cy-react'),
       packages: ['@nx/react', '@nx/webpack', '@nx/jest', '@nx/cypress'],
@@ -137,19 +135,16 @@ export default Input;
 `
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets['build'].options.assets.push({
-        glob: '**/*',
-        input: 'libs/assets',
-        output: 'assets',
-      });
-      return config;
-    });
+    updateFile(`apps/${appName}/webpack.config.js`, (content) =>
+      content.replace(
+        'assets: [',
+        `assets: [{ glob: '**/*', input: 'libs/assets', output: 'assets' }, `
+      )
+    );
   });
 
   afterAll(() => {
     cleanupProject();
-    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should test app', async () => {
@@ -157,7 +152,7 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -168,7 +163,7 @@ export default Input;
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -186,7 +181,7 @@ export default Input;
       );
     });
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${usedInAppLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -218,7 +213,7 @@ describe(Input.name, () => {
     );
 
     if (await shouldRunCypressTests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -239,18 +234,21 @@ describe(Input.name, () => {
               }, 1000);
             });
             return {
-              plugins: [new NxAppWebpackPlugin(), new NxReactWebpackPlugin()],
+              plugins: [
+                new NxAppWebpackPlugin({
+                  tsConfig: './tsconfig.app.json',
+                  compiler: 'babel',
+                  main: './src/main.tsx',
+                  index: './src/index.html',
+                  assets: ['./src/favicon.ico', './src/assets'],
+                  styles: [],
+                }),
+                new NxReactWebpackPlugin(),
+              ],
             };
         };
       `
     );
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets['build'].options.webpackConfig =
-        `apps/${appName}/webpack.config.js`;
-
-      return config;
-    });
-
     if (await shouldRunCypressTests()) {
       const results = runCLI(`component-test ${appName}`);
       expect(results).toContain('I am from the custom async Webpack config');

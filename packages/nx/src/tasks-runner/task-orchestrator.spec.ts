@@ -10,10 +10,12 @@ import { join } from 'path';
 import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { PseudoIPCClient } from './pseudo-ipc';
 import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
 import { BatchStatus } from '../native';
 import type { TaskResult } from './life-cycle';
+import { getExecutorForTask } from './utils';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
 performance.measure = vi.fn();
@@ -2073,6 +2075,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readiness = new Map();
       orchestrator.readinessFailures = new Map();
       orchestrator.readinessFailureReasons = new Map();
+      orchestrator.readyUrls = new Map();
       orchestrator.waitingLogged = new Set();
       const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
       orchestrator.cache = {
@@ -2168,7 +2171,7 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('resolved');
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 1);
+      ).toHaveBeenCalledWith('app:serve', 1, null);
       expect(
         orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
       ).toEqual([
@@ -2189,8 +2192,7 @@ describe('TaskOrchestrator', () => {
         runningTask
       );
       await expect(waiting).rejects.toThrow('did not become ready within 20ms');
-      const message =
-        'Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never").';
+      const message = `Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never"). If it needs longer, set "timeout": 40 in the target's "readyWhen", as { "...": true, "timeout": 40 } to keep an inferred check. To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.`;
       expect(orchestrator.complete).toHaveBeenCalledWith(
         [{ task: serve, status: 'failure', terminalOutput: message }],
         1
@@ -2200,7 +2202,7 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledWith('app:serve', `\r\n${message}\r\n`, false);
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 2);
+      ).toHaveBeenCalledWith('app:serve', 2, null);
       expect(runningTask.kill).not.toHaveBeenCalled();
 
       // The runner's exit handler writes the transcript, then the reason goes in
@@ -2274,7 +2276,7 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.complete).not.toHaveBeenCalled();
       expect(
         orchestrator.runningTasksService.setTaskReadiness
-      ).toHaveBeenCalledWith('app:serve', 2);
+      ).toHaveBeenCalledWith('app:serve', 2, null);
     });
 
     it('fails the waiter when the producer fails before it starts', async () => {
@@ -2316,35 +2318,60 @@ describe('TaskOrchestrator', () => {
       ).toHaveBeenCalledTimes(2);
     });
 
-    it('polls the readiness row when another process owns the producer', async () => {
-      const { orchestrator, e2e, settled } = createOrchestrator({ flat: true });
-      orchestrator.tuiEnabled = false;
-      orchestrator.runningTasksService.getTaskReadiness
-        .mockReturnValueOnce(0)
-        .mockReturnValueOnce(0)
-        .mockReturnValue(1);
-      const log = vi.spyOn(console, 'log').mockImplementation(() => {});
-      try {
-        const waiting = orchestrator.waitForReadyDependencies(e2e);
-        await expect(settled(waiting)).resolves.toBe('pending');
-        await expect(waiting).resolves.toBeUndefined();
-        // Each row state observed is reported once, however often it is read
-        expect(
-          orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
-        ).toEqual([
-          ['app:serve', 0],
-          ['app:serve', 1],
-        ]);
+    it.each([{ logMatches: 'listening' }, { port: 0 }])(
+      'polls the readiness row of %j when another process owns the producer',
+      async (readyWhen) => {
+        const { orchestrator, e2e, settled } = createOrchestrator({
+          flat: true,
+          readyWhen,
+        });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(0)
+          .mockReturnValueOnce(0)
+          .mockReturnValue(1);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          const waiting = orchestrator.waitForReadyDependencies(e2e);
+          await expect(settled(waiting)).resolves.toBe('pending');
+          await expect(waiting).resolves.toBeUndefined();
+          // Each row state observed is reported once, however often it is read
+          expect(
+            orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+          ).toEqual([
+            ['app:serve', 0],
+            ['app:serve', 1],
+          ]);
 
-        await orchestrator.waitForReadyDependencies(e2e);
-        expect(log).toHaveBeenCalledTimes(1);
-        expect(log).toHaveBeenCalledWith(
-          'Waiting for "app:serve" to be ready...'
-        );
-      } finally {
-        log.mockRestore();
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).toHaveBeenCalledTimes(1);
+          expect(log).toHaveBeenCalledWith(
+            'Waiting for "app:serve" to be ready...'
+          );
+        } finally {
+          log.mockRestore();
+        }
       }
-    });
+    );
+
+    it.each([
+      ['ready', 1],
+      ['absent', null],
+    ])(
+      'does not report a producer in another process whose row is %s',
+      async (_, row) => {
+        const { orchestrator, e2e } = createOrchestrator({ flat: true });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(row);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).not.toHaveBeenCalled();
+        } finally {
+          log.mockRestore();
+        }
+      }
+    );
 
     it('fails the waiter when the producer row disappears mid-wait', async () => {
       const { orchestrator, e2e } = createOrchestrator({ flat: true });
@@ -2367,8 +2394,9 @@ describe('TaskOrchestrator', () => {
     });
 
     it.each([
-      ['ready', 1, 'resolved', []],
+      [{ logMatches: 'listening' }, 'ready', 1, 'resolved', []],
       [
+        { logMatches: 'listening' },
         'failed',
         2,
         'rejected',
@@ -2384,10 +2412,13 @@ describe('TaskOrchestrator', () => {
           1,
         ],
       ],
+      [{ port: 0 }, 'ready', 1, 'resolved', []],
     ])(
-      'settles waiters from the row when another process runs the producer and its probe is %s',
-      async (_, status, outcome, completion) => {
-        const { orchestrator, serve, e2e, settled } = createOrchestrator();
+      'settles waiters on %j from the row when another process runs the producer and it is %s',
+      async (readyWhen, _, status, outcome, completion) => {
+        const { orchestrator, serve, e2e, settled } = createOrchestrator({
+          readyWhen,
+        });
         orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
         orchestrator.runningTasksService.getTaskReadiness
           .mockReturnValueOnce(0)
@@ -2513,6 +2544,243 @@ describe('TaskOrchestrator', () => {
       await expect(settled(waiting)).resolves.toBe('resolved');
     });
 
+    it('hands a waiter the url a producer another Nx process runs reported', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      // Another process owns the producer and has recorded it ready
+      orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+      onTestFinished(() => {
+        // Stop watching the other process without running exit handling
+        const shared = orchestrator.runningContinuousTasks.get('app:serve');
+        if (shared) shared.runningTask.detached = true;
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+      });
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    it('hands the url of a producer outside the task graph to the waiter', async () => {
+      const { orchestrator, e2e } = createOrchestrator({
+        flat: true,
+        readyWhen: { signal: true },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+
+      await orchestrator.waitForReadyDependencies(e2e);
+
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    it('hands the url a producer signals to the tasks that waited for it', async () => {
+      const { orchestrator, serve, e2e, runningTask, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      let producerEnv: NodeJS.ProcessEnv;
+      orchestrator.runTask = vi.fn(async (_task, _stream, env) => {
+        producerEnv = env;
+        return Object.assign(runningTask, { onExit: vi.fn() });
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+      await expect(settled(waiting)).resolves.toBe('pending');
+
+      const client = new PseudoIPCClient(producerEnv.NX_READY_SIGNAL_SOCKET);
+      onTestFinished(() => client.close());
+      expect(producerEnv.NX_READY_SIGNAL_TASK).toBe('app:serve');
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    function addChainedProducer(orchestrator: any, readyWhen: unknown): Task {
+      const proxy = createTask('proxy:serve', true);
+      orchestrator.projectGraph.nodes.proxy = {
+        name: 'proxy',
+        type: 'app',
+        data: {
+          root: 'proxy',
+          targets: { serve: { continuous: true, readyWhen } },
+        },
+      };
+      const graph: TaskGraph = orchestrator.fullTaskGraph;
+      graph.tasks['proxy:serve'] = proxy;
+      graph.dependencies['proxy:serve'] = [];
+      graph.continuousDependencies['proxy:serve'] = [
+        { id: 'app:serve', waitFor: 'ready' },
+      ];
+      graph.continuousDependencies['e2e:e2e'] = [
+        { id: 'proxy:serve', waitFor: 'ready' },
+      ];
+      orchestrator.processedTasks.set('proxy:serve', Promise.resolve({}));
+      return proxy;
+    }
+
+    it('resolves the probe of a producer against the url its own producer reported', async () => {
+      const { orchestrator, serve, runningTask, emit, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      const proxy = addChainedProducer(orchestrator, {
+        logMatches: 'proxying {env.NX_READY_URL}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return task.id === 'proxy:serve'
+          ? Object.assign(runningTask, { onExit: vi.fn() })
+          : { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+      emit('proxying http://localhost:4300/');
+      await expect(
+        settled(orchestrator.readinessOf('proxy:serve').promise)
+      ).resolves.toBe('resolved');
+    });
+
+    it('waits for its own producer before it fails a probe that only a reported url breaks', async () => {
+      const { orchestrator, serve, settled } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      const proxy = addChainedProducer(orchestrator, {
+        port: '{env.NX_READY_URL ?? 4310}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      await expect(settled(proxyStarted)).resolves.toBe('pending');
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+        false,
+        proxy,
+        1,
+        expect.objectContaining({
+          message:
+            'Task "proxy:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+        })
+      );
+      expect([...envs.keys()]).toEqual(['app:serve']);
+    });
+
+    it.each([
+      [
+        'an invalid port',
+        { logMatches: 'listening' },
+        { port: 70000 },
+        '"port" must be an integer from 0 to 65535, or "auto"',
+      ],
+      [
+        'a url its own producer cannot report',
+        { url: 'http://localhost:4300' },
+        { url: '{env.NX_READY_URL}' },
+        '"{env.NX_READY_URL}" has no value',
+      ],
+      [
+        'an unset env var, whatever url its own producer reports',
+        { signal: true },
+        { url: '{env.PROXY_URL}/health' },
+        '"{env.PROXY_URL}" has no value',
+      ],
+    ])(
+      'fails a producer with %s before it waits for its own producer',
+      async (_, producerReadyWhen, readyWhen, reason) => {
+        const { orchestrator, settled } = createOrchestrator({
+          readyWhen: producerReadyWhen,
+        });
+        const proxy = addChainedProducer(orchestrator, readyWhen);
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+        orchestrator.runTask = vi.fn();
+
+        const starting = orchestrator.startContinuousTask(proxy, 1);
+
+        await expect(settled(starting)).resolves.toBe('resolved');
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          proxy,
+          1,
+          expect.objectContaining({
+            message: `Task "proxy:serve" has an invalid "readyWhen": ${reason}.`,
+          })
+        );
+        expect(orchestrator.runTask).not.toHaveBeenCalled();
+      }
+    );
+
     it('fails the waiter when the row is still pending at its own deadline', async () => {
       const { orchestrator, e2e } = createOrchestrator({
         flat: true,
@@ -2612,6 +2880,39 @@ describe('TaskOrchestrator', () => {
       expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
       expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
     });
+
+    it.each([
+      ['pending, then failed', 0, 2, 'skipped', ''],
+      ['failed, then gone', 2, null, 'skipped', ''],
+      [
+        'pending, then gone',
+        0,
+        null,
+        'failure',
+        'Task "app:serve" exited before it became ready.',
+      ],
+      [
+        'absent',
+        null,
+        null,
+        'failure',
+        'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+      ],
+    ])(
+      'settles a waiter on a producer with an invalid readyWhen when its row is %s',
+      async (_, first, then, status, terminalOutput) => {
+        const { orchestrator, e2e } = createOrchestrator({
+          flat: true,
+          readyWhen: { port: 70000 },
+        });
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(first)
+          .mockReturnValue(then);
+        await expect(
+          orchestrator.runTaskDirectly(true, e2e, 1)
+        ).resolves.toMatchObject({ task: e2e, status, terminalOutput });
+      }
+    );
 
     describe('dispatch', () => {
       it('keeps the summary output style silent about the wait', () => {
@@ -2734,7 +3035,7 @@ describe('TaskOrchestrator', () => {
         expect(heldDuringCompletion).toBe(true);
         expect(
           orchestrator.runningTasksService.setTaskReadiness
-        ).not.toHaveBeenCalledWith('app:serve', 1);
+        ).not.toHaveBeenCalledWith('app:serve', 1, null);
         await expect(skippedWhenRejected).resolves.toBe(
           'skipped: Task "app:serve" exited before it became ready.'
         );
@@ -2743,7 +3044,7 @@ describe('TaskOrchestrator', () => {
 
       it('fails a shared producer with an invalid readyWhen the way an owned one fails', async () => {
         const { orchestrator, serve } = createOrchestrator({
-          readyWhen: { port: 0 },
+          readyWhen: { port: 70000 },
         });
         orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
 
@@ -2757,9 +3058,143 @@ describe('TaskOrchestrator', () => {
           1,
           expect.objectContaining({
             message:
-              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 1 to 65535.',
+              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
           })
         );
+      });
+
+      it('fails a producer before it starts on an error outside its readyWhen even when nothing waits for it', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 4200 },
+          waitFor: 'started',
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+        const error = new Error('Unable to resolve @acme/plugin:serve.');
+        vi.mocked(getExecutorForTask).mockImplementationOnce(() => {
+          throw error;
+        });
+
+        const shared = await orchestrator.startContinuousTask(serve, 1);
+
+        await expect(shared.getResults()).resolves.toMatchObject({ code: 1 });
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          serve,
+          1,
+          error
+        );
+      });
+
+      // Returns the native rows, where a claim resets readiness to Pending
+      function prepareStart(
+        { orchestrator, runningTask }: ReturnType<typeof createOrchestrator>,
+        running: string[]
+      ) {
+        Object.assign(orchestrator, {
+          runTask: vi.fn(async () => ({ ...runningTask, onExit: vi.fn() })),
+          detectTaskInvocationLoop: vi.fn(),
+          scheduleNextTasksAndReleaseThreads: vi.fn(),
+          runningContinuousTasks: new Map(),
+          continuousTaskExitHandled: new Map(),
+        });
+        orchestrator.processedTasks.set(
+          'app:serve',
+          Promise.resolve(process.env)
+        );
+        orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+        orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+        const readiness = new Map<string, number>(running.map((id) => [id, 0]));
+        Object.assign(orchestrator.runningTasksService, {
+          getRunningTasks: () => running,
+          addRunningTask: (id: string) => readiness.set(id, 0),
+          setTaskReadiness: (id: string, status: number) => {
+            if (readiness.has(id)) readiness.set(id, status);
+          },
+        });
+        return readiness;
+      }
+
+      it.each([
+        ['an owned', [], 2],
+        ['a shared', ['app:serve'], 0],
+      ])(
+        'runs %s producer with an invalid readyWhen without a check when nothing waits for it to be ready',
+        async (_, running, rowReadiness) => {
+          const harness = createOrchestrator({
+            readyWhen: { port: 70000 },
+            waitFor: 'started',
+          });
+          const { orchestrator, serve } = harness;
+          const readiness = prepareStart(harness, running);
+          const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+          try {
+            const started = await orchestrator.startContinuousTask(serve, 1);
+
+            expect(
+              orchestrator.handleDiscreteWorkerFailure
+            ).not.toHaveBeenCalled();
+            expect(orchestrator.runningContinuousTasks.has('app:serve')).toBe(
+              true
+            );
+            // A waiter in another process polls the owner's row
+            expect(readiness.get('app:serve')).toBe(rowReadiness);
+            expect(
+              orchestrator.options.lifeCycle.appendTaskOutput
+            ).toHaveBeenCalledWith(
+              'app:serve',
+              '\r\nTask "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto". Nothing in this run waits for it to be ready, so it runs without a readiness check.\r\n',
+              false
+            );
+            // The TUI replaces an owned task's terminal in runTask
+            if (running.length === 0) {
+              expect(
+                orchestrator.options.lifeCycle.appendTaskOutput.mock
+                  .invocationCallOrder[0]
+              ).toBeGreaterThan(
+                orchestrator.runTask.mock.invocationCallOrder[0]
+              );
+            }
+            // Detach without running the exit handling of a real producer
+            orchestrator.completedTasks.set('app:serve', 'stopped');
+            started.kill();
+          } finally {
+            log.mockRestore();
+          }
+        }
+      );
+
+      it('counts a producer as ready once it starts when the server picks the port', async () => {
+        const harness = createOrchestrator({
+          readyWhen: { port: '{options.port ?? 4200}' },
+        });
+        const { orchestrator, serve } = harness;
+        serve.overrides = { port: 0 };
+        const readiness = prepareStart(harness, []);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          const started = await orchestrator.startContinuousTask(serve, 1);
+
+          expect(
+            orchestrator.handleDiscreteWorkerFailure
+          ).not.toHaveBeenCalled();
+          // Releases the waiter in this run
+          expect(orchestrator.tasksSchedule.markReady).toHaveBeenCalledWith(
+            'app:serve'
+          );
+          // A waiter in another process polls the row
+          expect(readiness.get('app:serve')).toBe(1);
+          expect(
+            orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+          ).toEqual([['app:serve', 1]]);
+          expect(
+            orchestrator.options.lifeCycle.appendTaskOutput
+          ).not.toHaveBeenCalled();
+          // Detach without running the exit handling of a real producer
+          orchestrator.completedTasks.set('app:serve', 'stopped');
+          started.kill();
+        } finally {
+          log.mockRestore();
+        }
       });
 
       it('ignores a readiness row that turns ready after a shared producer exited', async () => {

@@ -11,6 +11,7 @@ import {
   FsTree,
   printChanges,
 } from '../../generators/tree';
+import { getCatalogManager } from '../../utils/catalog';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { singleLine } from './text';
@@ -433,18 +434,19 @@ export async function runNxOrAngularMigration(
 }
 
 /**
- * The workspace's declared dependencies, serialized for equality comparison,
- * or `null` when package.json could not be read or parsed. Callers that
- * persist the value across processes need that distinction: an unreadable
- * package.json is not an empty dependency set.
+ * The workspace's declared dependencies, catalogs included, serialized for
+ * equality comparison, or `null` when package.json could not be read or
+ * parsed. Callers that persist the value across processes need that
+ * distinction: an unreadable package.json is not an empty dependency set.
  */
 export function readPackageJsonDeps(root: string): string | null {
   try {
     const { dependencies, devDependencies } = readJsonFile<PackageJson>(
       join(root, 'package.json')
     );
+    const catalogs = getCatalogManager(root)?.getCatalogDefinitions(root);
 
-    return JSON.stringify([dependencies, devDependencies]);
+    return JSON.stringify([dependencies, devDependencies, catalogs]);
   } catch {
     return null;
   }

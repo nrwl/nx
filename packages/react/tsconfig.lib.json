@@ -55,6 +55,9 @@
       "path": "../rsbuild/tsconfig.lib.json"
     },
     {
+      "path": "../rspack/tsconfig.lib.json"
+    },
+    {
       "path": "../playwright/tsconfig.lib.json"
     },
     {

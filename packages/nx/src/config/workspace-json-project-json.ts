@@ -193,20 +193,20 @@ export type TargetUltracacheSettings = Spreadable<TaskUltracacheSettings>;
 export interface ReadyWhenOptions {
   /**
    * Milliseconds to wait for readiness before failing dependents that wait
-   * for it. Default is 60000.
+   * for it. Default is 600000 (10 minutes).
    */
   timeout?: number;
 
   /**
    * Milliseconds between probe attempts. Default is 250. Unused by
-   * `logMatches`.
+   * `logMatches` and `signal`.
    */
   interval?: number;
 }
 
 /**
  * Readiness probe of a continuous target. Exactly one of `url`, `port`,
- * `command` or `logMatches` must be set. Strings may use the `{workspaceRoot}`,
+ * `command`, `logMatches` or `signal` must be set. Strings may use the `{workspaceRoot}`,
  * `{projectRoot}`, `{projectName}`, `{options.*}` and `{env.*}` placeholders,
  * resolved against the options and environment the task runs with. A
  * placeholder can list fallbacks, as in `{options.port ?? env.PORT ?? 4200}`.
@@ -221,9 +221,10 @@ export type ReadyWhen =
     } & ReadyWhenOptions)
   | ({
       /**
-       * Ready when a TCP connection to the port succeeds. A string must
-       * resolve to a port number through a placeholder such as
-       * `{options.port}`.
+       * Ready when a TCP connection to the port succeeds. A string can be a
+       * port number, `"auto"`, or a placeholder such as `{options.port}`.
+       * With `0` or `"auto"` the server picks its port, so Nx runs no check
+       * and the target counts as ready once it starts.
        */
       port: number | string;
 
@@ -235,7 +236,8 @@ export type ReadyWhen =
   | ({
       /**
        * Ready when the command, run through the shell at the workspace root,
-       * exits with code 0.
+       * exits with code 0. It runs with the env the task runs with, and the
+       * task's options as JSON in `NX_TASK_OPTIONS`.
        */
       command: string;
     } & ReadyWhenOptions)
@@ -245,7 +247,16 @@ export type ReadyWhen =
        * output.
        */
       logMatches: string | string[];
-    } & ReadyWhenOptions);
+    } & ReadyWhenOptions)
+  | {
+      /**
+       * Ready when the task reports it with `emitReadySignal` from
+       * `@nx/devkit`.
+       */
+      signal: true;
+
+      timeout?: number;
+    };
 
 export interface TargetDependencyConfig {
   /**
@@ -399,9 +410,10 @@ export interface TargetConfiguration<T = any> {
   /**
    * How Nx detects that this continuous target is ready. Only honored when
    * `continuous` is true; dependents opt in with `waitFor: 'ready'` on their
-   * `dependsOn` entry.
+   * `dependsOn` entry. `null` turns off a check inherited from a plugin or
+   * `targetDefaults`.
    */
-  readyWhen?: ReadyWhen;
+  readyWhen?: ReadyWhen | null;
 
   /**
    * List of generators to run before the target to ensure the workspace

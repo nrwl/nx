@@ -2,6 +2,7 @@ import {
   loadConfigFile,
   getNamedInputs,
   calculateHashesForCreateNodes,
+  getReadyCheckReadyWhen,
   PluginCache,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
@@ -23,6 +24,7 @@ import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
+import { loadsReadySignalModule } from '../utils/ready-signal';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 type NuxtTargets = Record<string, TargetConfiguration>;
@@ -127,9 +129,11 @@ async function buildNuxtTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
-  const nuxtConfig: {
-    buildDir: string;
-  } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
+  const nuxtConfig = await getInfoFromNuxtConfig(
+    configFilePath,
+    context,
+    projectRoot
+  );
 
   const { buildOutputs } = getOutputs(nuxtConfig, projectRoot);
 
@@ -144,7 +148,11 @@ async function buildNuxtTargets(
     projectRoot
   );
 
-  targets[options.serveTargetName] = serveTarget(projectRoot, namedInputs);
+  targets[options.serveTargetName] = serveTarget(
+    projectRoot,
+    namedInputs,
+    nuxtConfig.signalsReady
+  );
 
   targets[options.serveStaticTargetName] = serveStaticTarget(
     options,
@@ -202,7 +210,8 @@ function buildInputs(namedInputs: {
 
 function serveTarget(
   projectRoot: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  signalsReady: boolean
 ) {
   const targetConfig: TargetConfiguration = {
     command: `nuxt dev`,
@@ -210,6 +219,9 @@ function serveTarget(
       cwd: projectRoot,
     },
     continuous: true,
+    readyWhen: signalsReady
+      ? { signal: true }
+      : getReadyCheckReadyWhen('@nx/nuxt/ready-check'),
     inputs: buildInputs(namedInputs),
   };
 
@@ -223,6 +235,7 @@ function serveStaticTarget(
   const targetConfig: TargetConfiguration = {
     dependsOn: [`${options.buildStaticTargetName}`],
     continuous: true,
+    readyWhen: { signal: true },
     inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
@@ -270,13 +283,14 @@ async function getInfoFromNuxtConfig(
   projectRoot: string
 ): Promise<{
   buildDir: string;
+  signalsReady: boolean;
 }> {
-  // Only `buildDir` is read below. Typing it to the full `@nuxt/schema`
-  // `NuxtOptions` couples to one schema version, which clashes when
-  // `loadNuxtConfig` returns the (possibly older) `@nuxt/schema` bundled by the
-  // installed `@nuxt/kit`. Type just what we read so it holds across the
+  // Only `buildDir` and `modules` are read below. Typing it to the full
+  // `@nuxt/schema` `NuxtOptions` couples to one schema version, which clashes
+  // when `loadNuxtConfig` returns the (possibly older) `@nuxt/schema` bundled by
+  // the installed `@nuxt/kit`. Type just what we read so it holds across the
   // supported Nuxt 3.x–4.x range.
-  let config: { buildDir?: string };
+  let config: { buildDir?: string; modules?: unknown };
   if (process.env.NX_ISOLATE_PLUGINS !== 'false') {
     config = await (
       await loadNuxtKitDynamicImport()
@@ -292,6 +306,7 @@ async function getInfoFromNuxtConfig(
       // Match .nuxt default build dir from '@nuxt/schema'
       // See: https://github.com/nuxt/nuxt/blob/871404ae5673425aeedde82f123ea58aa7c6facf/packages/schema/src/config/common.ts#L117-L119
       '.nuxt',
+    signalsReady: loadsReadySignalModule(config?.modules),
   };
 }
 

@@ -51,7 +51,6 @@ describe('@nx/vitest:configuration', () => {
         project: 'mylib',
         uiFramework: 'none',
         coverageProvider: 'v8',
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -67,7 +66,6 @@ describe('@nx/vitest:configuration', () => {
         project: 'mylib',
         uiFramework: 'angular',
         coverageProvider: 'v8',
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -91,7 +89,6 @@ describe('@nx/vitest:configuration', () => {
           uiFramework: 'none',
           coverageProvider: 'v8',
           skipPackageJson: true,
-          addPlugin: false,
           skipFormat: true,
         })
       ).resolves.not.toThrow();
@@ -110,7 +107,6 @@ describe('@nx/vitest:configuration', () => {
         project: 'mylib',
         uiFramework: 'none',
         coverageProvider: 'v8',
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -131,7 +127,6 @@ describe('@nx/vitest:configuration', () => {
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -160,7 +155,6 @@ describe('@nx/vitest:configuration', () => {
         coverageProvider: 'v8',
         passWithNoTests,
         skipPackageJson: true,
-        addPlugin: false,
         skipFormat: true,
       });
 
@@ -193,7 +187,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       passWithNoTests: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -211,7 +204,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -231,7 +223,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -255,7 +246,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -282,7 +272,6 @@ export default defineConfig(() => ({ test: { globals: true } }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -313,7 +302,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -344,7 +332,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -375,7 +362,6 @@ export default defineConfig({
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -408,7 +394,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -432,7 +417,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 
@@ -451,7 +435,6 @@ export default defineConfig(() => ({ plugins: [] }));
       coverageProvider: 'v8',
       skipViteConfig: true,
       skipPackageJson: true,
-      addPlugin: false,
       skipFormat: true,
     });
 

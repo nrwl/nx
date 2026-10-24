@@ -3,10 +3,8 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   normalizePath,
-  readNxJson,
   readProjectConfiguration,
   type Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { relative } from 'node:path';
@@ -29,16 +27,9 @@ export async function configurationGenerator(
     );
   }
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    options.addPlugin ??
-    (process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false);
-
   const task = await rolldownInitGenerator(tree, {
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
-    addPlugin,
   });
 
   const fromRoot = (path: string) =>
@@ -99,18 +90,6 @@ export default defineConfig([
 ]);
 `
   );
-
-  if (!addPlugin) {
-    project.targets ??= {};
-    project.targets.build = {
-      command: 'rolldown -c rolldown.config.ts',
-      options: { cwd: project.root },
-      cache: true,
-      dependsOn: ['^build'],
-      outputs: [joinPathFragments('{workspaceRoot}', outputPath)],
-    };
-    updateProjectConfiguration(tree, options.project, project);
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -390,6 +390,7 @@ exports[`@nx/vite:configuration > transform React app to use Vite > should creat
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -405,7 +406,7 @@ export default defineConfig(() => ({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [react()],
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
@@ -444,6 +445,7 @@ exports[`@nx/vite:configuration > transform React app to use Vite > should move 
 exports[`@nx/vite:configuration > transform Web app to use Vite > should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -459,6 +461,7 @@ export default defineConfig(() => ({
   resolve: {
     tsconfigPaths: true,
   },
+  plugins: [nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],
@@ -498,6 +501,7 @@ exports[`@nx/vite:configuration > vitest > should create a vitest configuration 
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -513,7 +517,7 @@ export default defineConfig(() => ({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [react()],
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],

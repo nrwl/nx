@@ -13,5 +13,4 @@ export interface Schema {
   skipFormat?: boolean;
   rootProject?: boolean;
   useProjectJson?: boolean;
-  addPlugin?: boolean;
 }
