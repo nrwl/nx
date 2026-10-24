@@ -409,6 +409,48 @@ nx build my-app --configuration release
 nx build my-app --configuration debug
 ```
 
+### Build and publish for a runtime identifier
+
+Multi-targeted executable projects get build and publish targets for each evaluated runtime
+identifier (RID).
+For example, publish one framework and RID with:
+
+```shell
+nx run my-app:publish:net10.0:linux-x64
+```
+
+The publish task depends on `build:net10.0:linux-x64` and uses `--no-build`.
+Before an uncached RID publish, the task removes only its evaluated publish directory.
+This prevents newer files left by another build from surviving a restored older build.
+Both tasks default to Release.
+A conflicting `defaultConfiguration` in the base build or publish options is rejected.
+To publish Debug, pass `--configuration=debug`, which selects Debug for both tasks.
+Use `debug` or `release` for inferred RID tasks.
+There are no separate Release variant targets.
+
+Invoke a RID build explicitly with `nx run my-app:build:net10.0:linux-x64`.
+MSBuild builds framework-compatible project references within that task.
+RID builds run without other build tasks in the same workspace to avoid concurrent writes to
+shared reference outputs.
+
+A non-empty `RuntimeIdentifiers` list takes precedence over `RuntimeIdentifier`.
+Otherwise, the evaluated singular value supplies the RID, which can be an SDK default.
+Each framework must be executable (`OutputType` is `Exe` or `WinExe`) in both Debug and Release.
+
+Set `ridVariants: false` in the plugin options to keep target-framework variants without RID tasks.
+Setting `tfmVariants: false` disables both families, even with `ridVariants: true`.
+`build: false` suppresses RID build and publish tasks.
+`publish: false` removes RID publish tasks while retaining explicit RID builds.
+Custom build and publish target names also apply to their variants.
+
+RID targets require the standard appended output layout.
+The plugin warns and skips them for `UseArtifactsOutput`, disabled
+`AppendTargetFrameworkToOutputPath` or `AppendRuntimeIdentifierToOutputPath`, a custom `PublishDir`,
+or output paths that can't be scoped to the evaluated configuration, framework, and RID.
+An `OutDir` that differs from `OutputPath`, or generated OpenAPI documents outside the scoped build
+directories, also causes the plugin to skip RID targets.
+Configuration- and RID-conditioned properties are evaluated before declaring cache outputs.
+
 ## Set up CI for your .NET monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.

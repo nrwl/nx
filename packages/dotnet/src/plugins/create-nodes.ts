@@ -22,6 +22,7 @@ const executionOptions = new Set([
   'usePty',
   'streamOutput',
 ]);
+const ridPublishDirectoryVariable = 'NX_DOTNET_PUBLISH_DIRECTORY';
 const loggingSwitch = String.raw`(?:--nologo|(?:--verbosity(?:=|\s+)|-v(?:[:=]|\s+))(?:quiet|minimal|normal|detailed|diagnostic|q|m|n|d|diag))`;
 const loggingArguments = new RegExp(
   String.raw`^\s*(?:${loggingSwitch}(?:\s+${loggingSwitch})*)?\s*$`,
@@ -68,6 +69,7 @@ export type TargetConfigurationWithName = Partial<TargetConfiguration> & {
  * ```
  */
 export interface DotNetPluginOptions {
+  ridVariants?: boolean;
   /**
    * Infer per-TFM build targets for multi-targeted projects. Defaults to true.
    */
@@ -159,6 +161,18 @@ export function mergeUserTargetConfigurations(
   ];
 
   const mergedTargets = { ...node.targets };
+  if (
+    pluginOptions.build === false ||
+    pluginOptions.tfmVariants === false ||
+    pluginOptions.ridVariants === false
+  ) {
+    for (const [name, target] of Object.entries(mergedTargets)) {
+      if (target.metadata?.runtimeIdentifier && target.metadata?.variantOf) {
+        delete mergedTargets[name];
+        removeFromDependsOn(mergedTargets, name);
+      }
+    }
+  }
 
   for (const { targetOption, defaultTargetName, optIn } of targetMappings) {
     if (targetOption === false || (optIn && targetOption === undefined)) {
@@ -184,10 +198,6 @@ export function mergeUserTargetConfigurations(
     const generatedTarget =
       mergedTargets[actualTargetName] ?? mergedTargets[defaultTargetName];
 
-    if (!generatedTarget) {
-      continue;
-    }
-
     const variants = Object.entries(mergedTargets).filter(
       ([, target]) =>
         target.metadata?.variantOf === actualTargetName ||
@@ -201,6 +211,10 @@ export function mergeUserTargetConfigurations(
           name
         );
       }
+    }
+
+    if (!generatedTarget) {
+      continue;
     }
 
     const hasUserConfig = Object.keys(userSpecifiedConfig).length > 0;
@@ -335,6 +349,15 @@ function mergeVariantTarget(
   name: string
 ): TargetConfiguration {
   if (
+    variant.metadata?.runtimeIdentifier &&
+    user.defaultConfiguration !== undefined &&
+    user.defaultConfiguration !== 'release'
+  ) {
+    throw new Error(
+      `RID variant '${name}' must default to release so publish and its build resolve the same configuration. Select debug explicitly, or set ridVariants: false to customize defaults.`
+    );
+  }
+  if (
     user.outputs !== undefined ||
     (variant.parallelism === false && user.parallelism === true) ||
     (variant.cache === false && user.cache === true)
@@ -352,6 +375,15 @@ function mergeVariantTarget(
     );
   }
   const validate = (options: Record<string, unknown> | undefined): string => {
+    if (
+      Object.keys(variantEnvironment(options?.env, name)).some(
+        (key) => key.toUpperCase() === ridPublishDirectoryVariable
+      )
+    ) {
+      throw new Error(
+        `Cannot override the evaluated RID publish directory for .NET variant '${name}'.`
+      );
+    }
     const extraOptions = Object.fromEntries(
       Object.entries(options ?? {}).filter(
         ([key]) => !executionOptions.has(key)
@@ -401,6 +433,12 @@ function mergeVariantTarget(
   )) {
     const custom = user.configurations?.[configuration] ?? {};
     const customArgs = validate(custom);
+    const env = {
+      ...variantEnvironment(user.options?.env, name),
+      ...variantEnvironment(custom.env, name),
+      ...variantEnvironment(variant.options?.env, name),
+      ...variantEnvironment(generated.env, name),
+    };
     configurations[configuration] = {
       ...custom,
       ...generated,
@@ -408,6 +446,7 @@ function mergeVariantTarget(
       nxArgs: [generated.nxArgs, baseArgs, customArgs]
         .filter(Boolean)
         .join(' '),
+      ...(Object.keys(env).length > 0 && { env }),
     };
   }
   return {
@@ -431,10 +470,41 @@ function mergeVariantTarget(
     outputs: variant.outputs,
     parallelism: variant.parallelism,
     cache: variant.cache === false ? false : (user.cache ?? variant.cache),
-    options: { ...user.options, ...variant.options },
+    options: {
+      ...user.options,
+      ...variant.options,
+      ...((user.options?.env || variant.options?.env) && {
+        env: {
+          ...variantEnvironment(user.options?.env, name),
+          ...variantEnvironment(variant.options?.env, name),
+        },
+      }),
+    },
     configurations,
     metadata: { ...user.metadata, ...variant.metadata },
   };
+}
+
+function variantEnvironment(
+  value: unknown,
+  name: string
+): Record<string, string> {
+  if (value === undefined) return {};
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(
+      `Expected an environment object for .NET variant '${name}'.`
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (typeof entry !== 'string') {
+        throw new Error(
+          `Expected a string for environment variable '${key}' on .NET variant '${name}'.`
+        );
+      }
+      return [key, entry] as const;
+    })
+  );
 }
 
 /**
@@ -471,6 +541,10 @@ export const createNodes: CreateNodes<DotNetPluginOptions> = [
 
       // Extract target names from new format and create options for analyzer
       const analyzerOptions = {
+        ridVariants:
+          normalizedOptions.build !== false &&
+          normalizedOptions.tfmVariants !== false &&
+          normalizedOptions.ridVariants !== false,
         tfmVariants:
           normalizedOptions.build !== false &&
           normalizedOptions.tfmVariants !== false,

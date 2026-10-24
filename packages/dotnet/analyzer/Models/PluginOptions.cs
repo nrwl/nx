@@ -5,6 +5,8 @@ namespace MsbuildAnalyzer.Models;
 /// </summary>
 public class PluginOptions
 {
+    public bool RidVariants { get; set; } = true;
+
     public bool TfmVariants { get; set; } = true;
 
     /// <summary>
