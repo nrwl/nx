@@ -167,17 +167,17 @@ To typecheck with `tsgo`, set `compiler: 'tsgo'` on `@nx/js/typescript`, which i
 
 The inferred `dev` and `preview` targets come with a `readyWhen` check, so a task can wait until the server accepts requests instead of only until it has started.
 The `nxReadySignal()` plugin reports the dev or preview server's address to Nx once it listens.
-Generated app configs include it.
-In an existing config, import it from `@nx/vite/plugins/nx-ready-signal.plugin` and add it to `plugins` in `vite.config.*`.
+Generated app configs include it, and `nx migrate` adds it to existing application configs when you update to Nx 24.
+In any other config, import it from `@nx/vite/plugins/nx-ready-signal.plugin` and add it to `plugins` in `vite.config.*`.
 The report carries the address the server actually listens on, so the waiting task tests against it however the port was chosen.
 
 Without the plugin, the check resolves the Vite config when the task runs instead, in the task's environment and with its options.
-That covers `.env` files and `--port`, `--host`, or `--mode` flags.
+That covers `.env` files and the `--port`, `--host`, and `--mode` (`-m`) flags.
 It takes the port from the `--port` flag, `server.port` or `preview.port`, or the Vite defaults of 5173 and 4173, and waits for it.
 With a port of `0`, the server picks its own port.
 There's nothing to wait for then, and the target counts as ready once it has started.
 If another process holds the configured port and Vite moves to the next free one, this check can pass before the server is up.
-The `serve-static` target checks the port of its file server.
+The `serve-static` target's file server reports its address once it listens.
 
 A dependent task starts as soon as the server task has started, unless its `dependsOn` entry sets `waitFor` to `ready`:
 
@@ -219,7 +219,7 @@ To avoid specific targets, adjust the config files that trigger them. For exampl
 
 ### View inferred tasks
 
-To see what tasks Nx inferred for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run:
+To see what tasks Nx inferred for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run:
 
 ```shell
 nx show project my-app --web

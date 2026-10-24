@@ -514,12 +514,12 @@ module.exports = [
     });
   });
 
-  describe('--setParserOptionsProject', () => {
+  describe('--enableTypedLinting', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
       });
 
       const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
@@ -554,7 +554,7 @@ module.exports = [
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
         useProjectJson: false,
       });
@@ -706,7 +706,7 @@ module.exports = [
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
         useProjectJson: false,
         bundler: 'vite',
@@ -743,7 +743,7 @@ module.exports = [
 
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
         linter: 'eslint',
         useProjectJson: false,
         bundler: 'vite',

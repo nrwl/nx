@@ -16,7 +16,6 @@ import {
   findEslintFile,
   inspectTypedLinting,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -45,7 +44,7 @@ export async function addLintingGenerator(
         joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: rootProject,
       skipPackageJson: options.skipPackageJson,
     })

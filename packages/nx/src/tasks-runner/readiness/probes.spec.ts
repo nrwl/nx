@@ -7,8 +7,12 @@ import {
 } from 'node:net';
 import { tmpdir, type NetworkInterfaceInfo } from 'node:os';
 import { join } from 'node:path';
+import type { ExecutorContext } from '../../config/misc-interfaces';
+import { runCommands } from '../../executors/run-commands/run-commands.impl';
+import { SeriallyRunningTasks } from '../../executors/run-commands/running-tasks';
 import type { RunningTask } from '../running-tasks/running-task';
 import { PseudoIPCClient } from '../pseudo-ipc';
+import { createPseudoTerminal, PseudoTerminal } from '../pseudo-terminal';
 import { waitForReadiness } from './probes';
 import {
   READY_SIGNAL_SOCKET_ENV,
@@ -105,6 +109,54 @@ describe('waitForReadiness', () => {
         'Task "app:serve" exited before it became ready.'
       );
     });
+
+    async function runSerially(command: string): Promise<RunningTask> {
+      // The worker has no TTY, which run-commands needs to take the pty path
+      const isSupported = vi
+        .spyOn(PseudoTerminal, 'isSupported')
+        .mockReturnValue(true);
+      onTestFinished(() => isSupported.mockRestore());
+      const task = await runCommands(
+        {
+          commands: ['node -e 0', command],
+          parallel: false,
+          usePty: true,
+          streamOutput: false,
+          __unparsed__: [],
+        },
+        { root: process.cwd() } as ExecutorContext,
+        { id: 'app:serve' }
+      );
+      expect(task).toBeInstanceOf(SeriallyRunningTasks);
+      // run-commands forwards this worker's IPC messages to the task, which rejects them
+      (task as SeriallyRunningTasks).send = () => {};
+      return task;
+    }
+
+    it.each([
+      [
+        'run directly',
+        async (command: string): Promise<RunningTask> =>
+          createPseudoTerminal(true).runCommand(command, { quiet: true }),
+      ],
+      ['run by serial run-commands', runSerially],
+    ])(
+      'does not match the command line a pseudo terminal prints before the output, %s',
+      async (_, start) => {
+        const task = await start(
+          `node -e "console.log(40 + 2); setTimeout(() => console.log('listening'), 1000)"`
+        );
+        onTestFinished(() => task.kill());
+        runningTask = task;
+        const ready = wait({ logMatches: 'listening', timeout: 5000 });
+        // Only the process prints 42, and the command line arrives before it
+        await new Promise<void>((resolve) =>
+          task.onOutput((chunk) => chunk.includes('42') && resolve())
+        );
+        await expect(settled(ready)).resolves.toBe('pending');
+        await expect(ready).resolves.toEqual({});
+      }
+    );
   });
 
   describe('port', () => {

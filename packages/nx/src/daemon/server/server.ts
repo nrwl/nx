@@ -339,11 +339,14 @@ export async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
+    // The client names the module to run, so its failure says nothing about
+    // the daemon's health. Respond, but stay alive for other clients.
     await handleResult(
       socket,
       'PROCESS_IN_BACKGROUND',
       () => handleProcessInBackground(payload),
-      mode
+      mode,
+      respondWithError
     );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH_BATCH') {
     await handleResult(
@@ -479,7 +482,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
     await handleResult(
       socket,
       SELECT_AFFECTED_TASKS,
-      () => handleSelectAffectedTasks(payload.request),
+      () => handleSelectAffectedTasks(payload.request, socket),
       mode
     );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
@@ -554,7 +557,8 @@ export async function handleResult(
   socket: Socket,
   type: string,
   hrFn: () => Promise<HandlerResult>,
-  mode: 'json' | 'v8'
+  mode: 'json' | 'v8',
+  respondToError = respondWithErrorAndExit
 ) {
   let hr: HandlerResult;
   const startMark = new Date();
@@ -565,7 +569,7 @@ export async function handleResult(
   }
   const doneHandlingMark = new Date();
   if (hr.error) {
-    await respondWithErrorAndExit(socket, hr.description, hr.error);
+    await respondToError(socket, hr.description, hr.error);
   } else {
     serverLogger.log(
       `Serializing response for ${type} message in ${mode} mode`

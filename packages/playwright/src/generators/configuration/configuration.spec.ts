@@ -8,6 +8,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { typesNodeVersion } from '@nx/js/internal';
 import configGenerator from './configuration';
 
 describe('Playwright e2e configuration', () => {
@@ -58,6 +59,124 @@ describe('Playwright e2e configuration', () => {
     });
   });
 
+  describe('webServer', () => {
+    beforeEach(() => {
+      addProjectConfiguration(tree, 'myapp-e2e', { root: 'apps/myapp-e2e' });
+    });
+
+    const readConfig = () =>
+      tree.read('apps/myapp-e2e/playwright.config.mts', 'utf-8');
+
+    it('should use the one web server everywhere when no CI server is given', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve-static',
+        webServerAddress: 'http://localhost:4200',
+      });
+
+      const config = readConfig();
+      expect(config).toContain("command: 'npx nx run myapp:serve-static',");
+      expect(config).toContain("url: getReadyUrl('http://localhost:4200'),");
+      expect(config).not.toContain('isCI');
+    });
+
+    it('should switch to the CI web server when CI is set', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:preview',
+        ciWebServerAddress: 'http://localhost:4300',
+      });
+
+      const config = readConfig();
+      expect(config).toContain(
+        "const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');"
+      );
+      expect(config).toContain(
+        "const baseURL = process.env['BASE_URL'] || webServerAddress;"
+      );
+      expect(config).toContain(
+        "command: isCI ? 'npx nx run myapp:preview' : 'npx nx run myapp:serve',"
+      );
+      expect(config).toContain('url: webServerAddress,');
+    });
+
+    it('should only switch the command when the CI address is the same', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:serve-static',
+      });
+
+      const config = readConfig();
+      expect(config).toContain(
+        "command: isCI ? 'npx nx run myapp:serve-static' : 'npx nx run myapp:serve',"
+      );
+      expect(config).toContain("url: getReadyUrl('http://localhost:4200'),");
+      expect(config).toContain(
+        "const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4200');"
+      );
+      expect(config).not.toContain('const webServerAddress');
+    });
+
+    it('should not switch on CI when the CI web server is the same', async () => {
+      await configGenerator(tree, {
+        project: 'myapp-e2e',
+        webServerCommand: 'npx nx run myapp:serve',
+        webServerAddress: 'http://localhost:4200',
+        ciWebServerCommand: 'npx nx run myapp:serve',
+        ciWebServerAddress: 'http://localhost:4200',
+      });
+
+      expect(readConfig()).not.toContain('isCI');
+    });
+
+    it.each([
+      [
+        'switching on CI',
+        {
+          webServerCommand: String.raw`C:\tools\serve.cmd --title 'my app'`,
+          webServerAddress: 'http://localhost:4200',
+          ciWebServerCommand:
+            'npx nx run myapp:build && npx serve "dist/my app"',
+          ciWebServerAddress: 'http://localhost:4300/?a=1&b=2',
+        },
+        [
+          String.raw`command: isCI ? 'npx nx run myapp:build && npx serve \"dist/my app\"' : 'C:\\tools\\serve.cmd --title \'my app\'',`,
+          String.raw`const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300/?a=1&b=2' : 'http://localhost:4200');`,
+        ],
+      ],
+      [
+        'one server',
+        {
+          webServerCommand: String.raw`C:\tools\serve.cmd --title 'my app'`,
+          webServerAddress: 'http://localhost:4200/?a=1&b=2',
+        },
+        [
+          String.raw`command: 'C:\\tools\\serve.cmd --title \'my app\'',`,
+          String.raw`url: getReadyUrl('http://localhost:4200/?a=1&b=2'),`,
+          String.raw`const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4200/?a=1&b=2');`,
+        ],
+      ],
+    ])(
+      'should keep quotes, backslashes and ampersands in web server values (%s)',
+      async (_, options, expectedLines) => {
+        await configGenerator(tree, {
+          project: 'myapp-e2e',
+          skipFormat: true,
+          ...options,
+        });
+
+        const config = readConfig();
+        for (const line of expectedLines) {
+          expect(config).toContain(line);
+        }
+      }
+    );
+  });
+
   describe('TS Solution Setup', () => {
     beforeEach(() => {
       updateJson(tree, 'package.json', (json) => {
@@ -93,7 +212,8 @@ describe('Playwright e2e configuration', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
-            "sourceMap": false
+            "sourceMap": false,
+            "types": ["node"]
           },
           "include": [
             "**/*.ts",
@@ -110,6 +230,27 @@ describe('Playwright e2e configuration', () => {
         "
       `);
       expect(tree.exists('apps/myapp/tsconfig.e2e.json')).toBeFalsy();
+      expect(
+        readJson(tree, 'package.json').devDependencies['@types/node']
+      ).toBe(typesNodeVersion);
+    });
+
+    it('should keep an installed @types/node version', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { '@types/node': '^20.0.0' };
+        return json;
+      });
+      writeJson(tree, 'apps/myapp-e2e/package.json', {
+        name: '@proj/myapp-e2e',
+      });
+
+      await configGenerator(tree, {
+        project: '@proj/myapp-e2e',
+      });
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@types/node']
+      ).toBe('^20.0.0');
     });
 
     it('should use tsconfig.e2e.json if tsconfig.json already exists', async () => {
@@ -146,7 +287,8 @@ describe('Playwright e2e configuration', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
-            "sourceMap": false
+            "sourceMap": false,
+            "types": ["node"]
           },
           "include": ["e2e/**/*.ts", "e2e/**/*.js", "playwright.config.mts"],
           "exclude": ["out-tsc", "test-output"]

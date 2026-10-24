@@ -17,7 +17,7 @@ Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test
 
 Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
-- parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- parallelization across multiple machines with [Workers](/docs/features/ci-features/distribute-task-execution)
 - faster [flaky test detection & retries](/docs/kb/flaky-tasks) by isolating and re-running only the failed tests
 
 ## Enable automated task splitting
@@ -82,11 +82,11 @@ This command will register the appropriate plugin in the `plugins` array of `nx.
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vitest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests)
-- [Configure Vitest Task Splitting](/docs/technologies/test-tools/vitest/introduction#splitting-e2e-tests)
-- [Configure Gradle Testing Task Splitting](/docs/technologies/java/gradle/introduction#test-distribution)
+- [Configure Cypress task splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
+- [Configure Playwright task splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
+- [Configure Jest task splitting](/docs/technologies/test-tools/jest/introduction#unit-and-e2e-configurations)
+- [Configure Vitest task splitting](/docs/technologies/test-tools/vitest/introduction#configure-unit-and-e2e-separately)
+- [Configure Gradle testing task splitting](/docs/technologies/java/gradle/introduction#nxgradle-configuration)
 
 ## Verify automated task splitting works
 
@@ -460,7 +460,7 @@ jobs:
         with:
           version: 9
 
-      - run: pnpm dlx nx start-nx-agents
+      - run: pnpm dlx nx-cloud start-workers
 
       - uses: actions/setup-node@v6
         with:
@@ -475,78 +475,17 @@ jobs:
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
 
-## Scope a test file to its projects
+## Skip unaffected test files
 
-An atomized e2e task depends on the app it tests, so a change to any library the app bundles reruns every test file.
-To rerun a test file only when the projects it exercises change, scope its task in project configuration or with a comment in the test file.
+Splitting an e2e suite lets its test files run in parallel, but by default each task still depends on
+the whole app, its dependencies, and the e2e project. Even a small change can rerun every test file.
 
-### Scope a task in project configuration
+Scoping each test file to the code it tests lets Nx reuse the other files' cached results.
+For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its
+cached result. A change to shared code that both tests depend on reruns both.
 
-Add the test file's task to `project.json` under its name, with two changes to the configuration the plugin infers:
+This means fewer tests to execute on each PR, shorter CI runs, and lower compute costs as your suite grows.
 
-```jsonc
-// apps/shop-e2e/project.json
-{
-  "targets": {
-    "e2e-ci--src/e2e/checkout.cy.ts": {
-      "inputs": [
-        "default",
-        {
-          "input": "production",
-          "projects": ["checkout", "checkout-utils"],
-          "always": true,
-        },
-        {
-          "input": "production",
-          "projects": ["checkout", "checkout-utils"],
-          "dependencies": true,
-          "always": true,
-        },
-        { "externalDependencies": ["cypress"] },
-      ],
-      "dependsOn": [
-        { "projects": ["shop"], "target": "serve-static", "inputs": false },
-      ],
-    },
-  },
-}
-```
-
-- `^production` becomes two inputs. The first selects the listed projects, and the second, with `"dependencies": true`, selects the projects they depend on. With `"always": true`, [ultracache keeps their files in the hash](/docs/reference/inputs#inputs-kept-under-ultracache).
-- The dependency on the web server task sets [`"inputs": false`](/docs/reference/inputs#inputs-of-continuous-dependencies), so the server's inputs stop counting.
-
-`inputs` and `dependsOn` in `project.json` replace the arrays the plugin infers, so list every entry you keep.
-Run `nx show project shop-e2e --json` to see the inferred entries.
-Don't add `"..."` to `inputs`, because it restores `^production`.
-The task name comes from the test file's path. When you move or rename the file, the entry no longer matches its task, and each new test file needs its own entry.
-
-### Scope a task with a comment in the test file
-
-For Cypress, Playwright, and Jest atomized tasks, you can name the projects in an `@nx-depends-on` comment at the top of the test file instead:
-
-```ts
-// apps/shop-e2e/src/e2e/checkout.cy.ts
-// @nx-depends-on: checkout, checkout-utils
-import { getSubmitButton } from '../support/app.po';
-```
-
-The plugin then infers the configuration above for the `e2e-ci--src/e2e/checkout.cy.ts` task.
-It keeps the rest of the inferred configuration, so you don't restate any of it.
-The scope moves with the test file, and a new test file opts in with its own comment.
-
-Nx reads the comment from the comment block at the top of the file and stops at the first line of code.
-Nx ignores a comment without projects and logs a warning that names the test file.
-When Playwright starts the web server itself, there's no server task, so only the inputs change.
-Jest atomized tasks have no server task either, so only their inputs change.
-Test files without the comment keep the inferred configuration.
-
-### What counts after scoping
-
-These rules apply to both ways of scoping:
-
-- The listed projects and the projects they depend on count as dependency inputs.
-- The task keeps its other declared inputs, such as `default` and any shared globs it includes.
-- Under ultracache, the files the test read during its recorded run replace the declared file inputs, except the `always` ones.
-- A change outside the remaining inputs leaves the task's hash unchanged, so Nx replays the cached result.
-- A listed name that matches no project is an error. A project left off the list goes unnoticed unless a listed project depends on it, so list every project the test exercises.
-- `nx affected` selects the task by these inputs. With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects.
+Use `@nx-ignore-server-inputs` with Ultracache to track the code a test imports, or `@nx-depends-on`
+to list the projects it covers. See [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests)
+for examples and setup instructions.

@@ -237,30 +237,7 @@ function normalizeOptions(
     );
   }
 
-  if (options.args && Array.isArray(options.args)) {
-    options.args = options.args.join(' ');
-  }
-
-  const unparsedCommandArgs = yargsParser(options.__unparsed__, {
-    configuration: {
-      'parse-numbers': false,
-      'parse-positional-numbers': false,
-      'dot-notation': false,
-      'camel-case-expansion': false,
-    },
-  });
-  options.unknownOptions = Object.keys(options)
-    .filter(
-      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
-    )
-    .reduce((m, c) => ((m[c] = options[c]), m), {});
-
-  options.parsedArgs = parseArgs(
-    unparsedCommandArgs,
-    options.unknownOptions,
-    options.args as string
-  );
-  options.unparsedCommandArgs = unparsedCommandArgs;
+  Object.assign(options, normalizeArgs(options));
 
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
@@ -271,6 +248,43 @@ function normalizeOptions(
     );
   });
   return options as NormalizedRunCommandsOptions;
+}
+
+/** The options `interpolateArgsIntoCommand` reads, from the task's options. */
+export function normalizeArgs(
+  options: RunCommandsOptions
+): Pick<
+  NormalizedRunCommandsOptions,
+  | 'args'
+  | 'parsedArgs'
+  | '__unparsed__'
+  | 'unknownOptions'
+  | 'unparsedCommandArgs'
+> {
+  const args = Array.isArray(options.args)
+    ? options.args.join(' ')
+    : options.args;
+  const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+    configuration: {
+      'parse-numbers': false,
+      'parse-positional-numbers': false,
+      'dot-notation': false,
+      'camel-case-expansion': false,
+    },
+  });
+  const unknownOptions = Object.keys(options)
+    .filter(
+      (p) => propKeys.indexOf(p) === -1 && unparsedCommandArgs[p] === undefined
+    )
+    .reduce((m, c) => ((m[c] = options[c]), m), {});
+
+  return {
+    args,
+    __unparsed__: options.__unparsed__,
+    unknownOptions,
+    parsedArgs: parseArgs(unparsedCommandArgs, unknownOptions, args),
+    unparsedCommandArgs,
+  };
 }
 
 export function interpolateArgsIntoCommand(

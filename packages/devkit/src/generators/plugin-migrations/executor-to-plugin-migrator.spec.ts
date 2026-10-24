@@ -4549,3 +4549,200 @@ describe('Phase 4: verify + equivalence oracle + fallback', () => {
     'compatible restatement: an earlier plugin inferring the same target with the same runnable identity keeps the attribution, so the centralized default silently does not apply; needs a post-flush source-map audit'
   );
 });
+
+describe('projects the plugin does not infer', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function addProjects(app3ConfigFile?: string) {
+    for (const name of ['app1', 'app2', 'app3']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'build',
+        target: uniformExecutorTarget(),
+        configFile: name === 'app3' ? app3ConfigFile : undefined,
+      });
+    }
+  }
+
+  it('leaves a project whose config file the plugin does not match and converts the rest', async () => {
+    ctx = setupFixture('uninferred-unmatched-config');
+    addProjects('build.app.config.json');
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    const migrated = await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect([...migrated.keys()]).toEqual(['app1', 'app2']);
+    expect(
+      readJson(ctx.tree, 'app1/project.json').targets
+    ).toMatchInlineSnapshot(`{}`);
+    expect(readJson(ctx.tree, 'app3/project.json').targets)
+      .toMatchInlineSnapshot(`
+        {
+          "build": {
+            "cache": true,
+            "executor": "@acme/tool:build",
+            "options": {
+              "config": "build.config.json",
+              "mode": "production",
+            },
+            "outputs": [
+              "{projectRoot}/dist",
+            ],
+          },
+        }
+      `);
+    expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
+      [
+        "convert-to-inferred left target "build" in project "app3" on its executor because the plugin found no config file it detects in app3. Rename the config file to one the plugin detects, then rerun the migration to convert it.",
+      ]
+    `);
+  });
+
+  it('leaves a project whose config file fails to load and converts the rest', async () => {
+    ctx = setupFixture('uninferred-errored-config');
+    addProjects();
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const root = dirname(file);
+          if (root === 'app3') {
+            errors.push([file, new Error('REMIX_SECRET is required')]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = vi.fn();
+
+    const migrated = await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect([...migrated.keys()]).toEqual(['app1', 'app2']);
+    expect(
+      readJson(ctx.tree, 'app2/project.json').targets
+    ).toMatchInlineSnapshot(`{}`);
+    expect(readJson(ctx.tree, 'app3/project.json').targets.build.executor).toBe(
+      SYNTHETIC_EXECUTOR
+    );
+    expect(readNxJson(ctx.tree).plugins).toMatchInlineSnapshot(`
+      [
+        {
+          "include": [
+            "app1/**/*",
+            "app2/**/*",
+          ],
+          "options": {
+            "targetName": "build",
+          },
+          "plugin": "@acme/tool/plugin",
+        },
+      ]
+    `);
+    expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
+      [
+        "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+      ]
+    `);
+  });
+
+  it('names the load error of a config file nested inside the project', async () => {
+    ctx = setupFixture('uninferred-nested-errored-config');
+    addProjects(`nested/${SYNTHETIC_CONFIG_FILE}`);
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const targetName = options?.targetName ?? 'build';
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const root = dirname(file);
+          if (root.startsWith('app3/')) {
+            errors.push([file, new Error('REMIX_SECRET is required')]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [targetName]: defaultInferredTarget(root, targetName),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+    const warn = vi.fn();
+
+    const migrated = await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+
+    expect([...migrated.keys()]).toEqual(['app1', 'app2']);
+    expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
+      [
+        "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/nested/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+      ]
+    `);
+  });
+});

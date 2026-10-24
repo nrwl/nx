@@ -2,9 +2,14 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 <% if (webServerCommand && webServerAddress) { %>import { getReadyUrl, workspaceRoot } from '@nx/devkit';<% } %>
 
+<% const switchesOnCI = webServerCommand && webServerAddress && (ciWebServerCommand || ciWebServerAddress); %><% if (switchesOnCI) { %>const isCI = !!process.env['CI'];
+<% } %><% if (switchesOnCI && ciWebServerAddress) { %>// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(isCI ? <%- toJsStringLiteral(ciWebServerAddress) %> : <%- toJsStringLiteral(webServerAddress) %>);
+
 // For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || webServerAddress;<% } else { %>// For CI, you may want to set BASE_URL to the deployed application.
 <% if (webServerCommand && webServerAddress) { %>// getReadyUrl moves the address to the port the dev server task reported.
-const baseURL = process.env['BASE_URL'] || getReadyUrl('<%= webServerAddress %>');<% } else { %>const baseURL = process.env['BASE_URL'] || '<% if(webServerAddress) {%><%= webServerAddress %><% } else {%>http://localhost:3000<% } %>';<% } %>
+const baseURL = process.env['BASE_URL'] || getReadyUrl(<%- toJsStringLiteral(webServerAddress) %>);<% } else { %>const baseURL = process.env['BASE_URL'] || <%- toJsStringLiteral(webServerAddress || 'http://localhost:3000') %>;<% } %><% } %>
 
 /**
  * Read environment variables from file.
@@ -29,14 +34,14 @@ export default defineConfig({
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-  },
-  /* Run your local dev server before starting the tests */<% if(webServerCommand && webServerAddress) {%>
+  },<% if(webServerCommand && webServerAddress) {%>
   webServer: {
-    command: '<%= webServerCommand %>',
-    url: getReadyUrl('<%= webServerAddress %>'),
+    command: <% if (ciWebServerCommand) { %>isCI ? <%- toJsStringLiteral(ciWebServerCommand) %> : <%- toJsStringLiteral(webServerCommand) %><% } else { %><%- toJsStringLiteral(webServerCommand) %><% } %>,
+    url: <% if (ciWebServerAddress) { %>webServerAddress<% } else { %>getReadyUrl(<%- toJsStringLiteral(webServerAddress) %>)<% } %>,
     reuseExistingServer: true,
     cwd: workspaceRoot
   },<% } else {%>
+  /* Run your local dev server before starting the tests */
   // webServer: {
   //   command: 'npm run start',
   //   url: 'http://127.0.0.1:3000',

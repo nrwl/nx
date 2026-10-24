@@ -2,7 +2,7 @@ import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { pluginNxReadySignal } from './ready-signal-plugin';
 
 const devkit = vi.hoisted(() => ({
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
 mockCjsModule(import.meta.url, '@nx/devkit', devkit);
@@ -18,7 +18,7 @@ describe('pluginNxReadySignal', () => {
   beforeEach(() => {
     hooks = {};
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.signalTaskReady.mockClear();
+    devkit.emitReadySignal.mockClear();
   });
 
   afterEach(() => {
@@ -27,16 +27,16 @@ describe('pluginNxReadySignal', () => {
 
   it('signals the port the dev or preview server started on', () => {
     pluginNxReadySignal().setup(api);
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
     hooks.dev({ port: 3000 });
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://localhost:3000/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'http://localhost:3000/'
+    );
     hooks.preview({ port: 3001 });
-    expect(devkit.signalTaskReady).toHaveBeenLastCalledWith({
-      url: 'http://localhost:3001/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenLastCalledWith(
+      'http://localhost:3001/'
+    );
   });
 
   it.each([
@@ -50,9 +50,9 @@ describe('pluginNxReadySignal', () => {
       getNormalizedConfig: () => ({ server: { host } }),
     });
     hooks.dev({ port: 3000 });
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: `http://${urlHost}:3000/`,
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      `http://${urlHost}:3000/`
+    );
   });
 
   it('signals the preview server through the Rsbuild 1 hook', () => {
@@ -62,9 +62,9 @@ describe('pluginNxReadySignal', () => {
       onAfterStartProdServer: (fn) => (hooks.preview = fn),
     });
     hooks.preview({ port: 3001 });
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://localhost:3001/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'http://localhost:3001/'
+    );
   });
 
   it('uses https when the server is configured for it', () => {
@@ -73,15 +73,15 @@ describe('pluginNxReadySignal', () => {
       getNormalizedConfig: () => ({ server: { https: {} } }),
     });
     hooks.dev({ port: 3000 });
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'https://localhost:3000/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'https://localhost:3000/'
+    );
   });
 
   it('does nothing outside a signalling task', () => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
     pluginNxReadySignal().setup(api);
     expect(hooks).toEqual({});
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
   });
 });

@@ -382,6 +382,18 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
       });
+
+      it('should return success true when the string specified as ready condition is found on stderr', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo READY >&2',
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+      });
     });
 
     describe('array of strings', () => {
@@ -399,6 +411,18 @@ describe('Run Commands', () => {
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
+      });
+
+      it('should return success true when one output chunk holds every string specified as ready condition', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo "READY foo"',
+            readyWhen: ['READY', 'foo'],
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
       });
 
       it('should keep waiting when not all strings specified as ready condition were found', async () => {
@@ -1287,6 +1311,109 @@ describe('Run Commands', () => {
       // Should complete quickly after failure and cleanup. The margin leaves
       // room for CPU contention in a full parallel suite run.
       expect(duration).toBeLessThan(1500);
+    });
+  });
+
+  describe('process listeners', () => {
+    const events = ['exit', 'SIGINT', 'SIGTERM', 'SIGHUP'];
+    const listenersOf = (event: string) =>
+      (process as NodeJS.EventEmitter).listeners(event);
+    let startCommands: typeof startRunCommands;
+    let initialListeners: Function[][];
+    const addedListeners = () =>
+      events.map((event, i) =>
+        listenersOf(event).filter(
+          (listener) => !initialListeners[i].includes(listener)
+        )
+      );
+    const addedListenerCounts = () =>
+      addedListeners().map((listeners) => listeners.length);
+
+    beforeEach(async () => {
+      // A readyWhen run resolves while its commands still run, so earlier
+      // tests' commands would share the listeners these tests count
+      vi.resetModules();
+      ({ runCommands: startCommands } = await import('./run-commands.impl.js'));
+      initialListeners = events.map(listenersOf);
+    });
+
+    it.each([
+      ['in the nx process', false, [1, 0, 0, 0]],
+      ['in a forked executor', true, [1, 1, 1, 1]],
+    ])(
+      'adds one listener per event %s for all running commands',
+      async (_, forked, added) => {
+        if (forked) {
+          process.env.NX_FORKED_TASK_EXECUTOR = 'true';
+        }
+        try {
+          const parallel = await startCommands(
+            {
+              commands: Array(4).fill('sleep 0.2'),
+              parallel: true,
+              __unparsed__: [],
+            },
+            context
+          );
+          const serial = await startCommands(
+            {
+              commands: ['sleep 0.5', 'sleep 0.5'],
+              parallel: false,
+              usePty: false,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(addedListenerCounts()).toEqual(added);
+
+          await parallel.getResults();
+          // The serial commands are still running
+          expect(addedListenerCounts()).toEqual(added);
+
+          await serial.getResults();
+          expect(addedListenerCounts()).toEqual([0, 0, 0, 0]);
+        } finally {
+          delete process.env.NX_FORKED_TASK_EXECUTOR;
+        }
+      }
+    );
+
+    it('stops every running command on a signal in a forked executor', async () => {
+      process.env.NX_FORKED_TASK_EXECUTOR = 'true';
+      try {
+        // Longer than the test timeout, so only the signal ends them
+        const parallel = await startCommands(
+          {
+            commands: ['sleep 60', 'sleep 60'],
+            parallel: true,
+            __unparsed__: [],
+          },
+          context
+        );
+        const serial = await startCommands(
+          {
+            commands: ['sleep 60', 'sleep 60'],
+            parallel: false,
+            usePty: false,
+            __unparsed__: [],
+          },
+          context
+        );
+
+        // Only the handlers run-commands added, not the test runner's
+        for (const listener of addedListeners()[events.indexOf('SIGTERM')]) {
+          listener('SIGTERM');
+        }
+
+        const results = await Promise.all([
+          parallel.getResults(),
+          serial.getResults(),
+        ]);
+        expect(results.map(({ code }) => code)).not.toContain(0);
+        expect(addedListenerCounts()).toEqual([0, 0, 0, 0]);
+      } finally {
+        delete process.env.NX_FORKED_TASK_EXECUTOR;
+      }
     });
   });
 });

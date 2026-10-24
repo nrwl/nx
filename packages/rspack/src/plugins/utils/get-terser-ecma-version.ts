@@ -31,6 +31,6 @@ export function getTerserEcmaVersion(projectRoot: string): 2020 | 5 {
   }
 
   const env = browserslist.loadConfig({ path: pathToBrowserslistFile });
-  const browsers = browserslist(env);
+  const browsers = browserslist(env, { path: projectRoot });
   return browsers.some((b) => ES5_BROWSERS.includes(b)) ? 5 : 2020;
 }

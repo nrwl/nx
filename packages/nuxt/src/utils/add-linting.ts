@@ -12,7 +12,6 @@ import {
   addIgnoresToLintConfig,
   findEslintFile,
   isEslintConfigSupported,
-  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -33,10 +32,6 @@ export async function addLinting(
     unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
     enableTypedLinting?: boolean;
-    /**
-     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-     */
-    setParserOptionsProject?: boolean;
   }
 ) {
   const tasks: GeneratorCallback[] = [];
@@ -48,14 +43,14 @@ export async function addLinting(
       tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
     })
   );
 
   // Everything below configures ESLint — predefined configs, `extends`, ignore
   // entries — which have no equivalent in other linters.
   if (options.linter === 'eslint') {
-    const enableTypedLinting = isTypedLintingEnabled(options);
+    const { enableTypedLinting } = options;
     const isFlatConfig = useFlatConfig(host);
 
     // Version-aware dependencies:

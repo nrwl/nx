@@ -1,310 +1,82 @@
 ---
 title: Run Only Tasks Affected by a PR
-description: Learn how to use Nx affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
+description: Run only the tasks a pull request affects with nx affected, which selects each task whose inputs your change touches and skips the rest.
 sidebar:
   order: 13
 
 filter: 'type:Features'
 ---
 
-{% youtube src="https://youtu.be/q-cu5Lw3DoE" title="Only Run Tasks for Projects That Changed" /%}
-
-As your workspace grows, re-testing, re-building, and re-linting **all projects becomes too slow**. To address this, Nx comes with an "affected" command. Using this command, Nx
-
-- determines the minimum set of **projects that are affected by the change**
-- only runs tasks on those affected projects
-
-This drastically improves the speed of your CI and reduces the amount of compute needed. This advantage is further enhanced when [paired with remote caching and distribution](#best-paired-with-remote-caching-and-distribution).
-
-{% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
-
-```json
-{
-  "projects": [
-    {
-      "type": "app",
-      "name": "app1",
-      "data": {}
-    },
-    {
-      "type": "app",
-      "name": "app2",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib1",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib2",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib3",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib4",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib5",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib6",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib7",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib8",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib9",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib10",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib11",
-      "data": {}
-    },
-    {
-      "type": "lib",
-      "name": "lib12",
-      "data": {}
-    }
-  ],
-  "groupByFolder": false,
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "libs"
-  },
-  "dependencies": {
-    "app1": [
-      {
-        "target": "lib1",
-        "source": "app1",
-        "type": "direct"
-      },
-      {
-        "target": "lib2",
-        "source": "app1",
-        "type": "direct"
-      }
-    ],
-    "app2": [
-      {
-        "target": "lib4",
-        "source": "app2",
-        "type": "direct"
-      },
-      {
-        "target": "lib5",
-        "source": "app2",
-        "type": "direct"
-      },
-      {
-        "target": "lib6",
-        "source": "app2",
-        "type": "direct"
-      }
-    ],
-    "lib1": [
-      {
-        "target": "lib7",
-        "source": "lib1",
-        "type": "direct"
-      },
-      {
-        "target": "lib8",
-        "source": "lib1",
-        "type": "direct"
-      }
-    ],
-    "lib2": [
-      {
-        "target": "lib3",
-        "source": "lib2",
-        "type": "direct"
-      }
-    ],
-    "lib3": [
-      {
-        "target": "lib8",
-        "source": "lib3",
-        "type": "direct"
-      }
-    ],
-    "lib4": [
-      {
-        "target": "lib3",
-        "source": "lib4",
-        "type": "direct"
-      },
-      {
-        "target": "lib9",
-        "source": "lib4",
-        "type": "direct"
-      },
-      {
-        "target": "lib10",
-        "source": "lib4",
-        "type": "direct"
-      }
-    ],
-    "lib5": [
-      {
-        "target": "lib10",
-        "source": "lib5",
-        "type": "direct"
-      },
-      {
-        "target": "lib11",
-        "source": "lib5",
-        "type": "direct"
-      },
-      {
-        "target": "lib12",
-        "source": "lib5",
-        "type": "direct"
-      }
-    ],
-    "lib6": [
-      {
-        "target": "lib12",
-        "source": "lib6",
-        "type": "direct"
-      }
-    ],
-    "lib7": [],
-    "lib8": [],
-    "lib9": [],
-    "lib10": [],
-    "lib11": [],
-    "lib12": []
-  },
-  "affectedProjectIds": ["lib10", "lib4", "lib5", "app2"]
-}
-```
-
-{% /graph %}
-
-## Using Nx affected commands
-
-To leverage this feature, use the following command when running your tasks, particularly on CI:
-
-```shell
-nx affected -t <task>
-```
-
-When you run `nx affected -t test`, Nx will:
-
-- Use Git to determine the files you changed in your PR.
-- Use the [project graph](/docs/features/explore-graph) to determine which projects the files belong to.
-- Determine which projects depend on the projects you modified.
-
-Once the projects are identified, Nx runs the tasks you specified on that subset of projects.
-
-You can also visualize the affected projects using the [Nx graph](/docs/features/explore-graph). Simply run:
-
-```shell
-nx graph --affected
-```
-
-## Selecting tasks or projects
-
-Nx selects individual tasks, based on whether your change reaches what each task reads. Changing one spec file runs that project's `test` task rather than the `test` task of every project that depends on it. Tasks that read most of a project, like `lint`, narrow very little.
-
 {% youtube src="https://youtu.be/0R55-uFQyX4" title="Task-based affected in Nx" /%}
 
-Task selection can also pick up a task that project selection misses. A `dependsOn` that names another project's target, like `{ "projects": ["lib"], "target": "build" }`, adds an edge the project graph doesn't record. When the task reads that target's output through `dependentTasksOutputFiles`, task selection follows the edge and project selection can't.
+[Remote caching](/docs/features/ci-features/remote-cache) speeds up your CI, but you can go even faster by skipping unnecessary tasks altogether.
 
-The run also executes the tasks the affected ones depend on, and those can restore from cache when nothing in them changed.
+Most pull requests change a few files, so CI should only run the tasks those files affect.
+`nx affected` selects and runs only the tasks that need to run for the given changes.
 
-To select whole projects instead, so every task of every affected project runs, set `affected.legacy` to `true` in `nx.json`:
+For example, say a `web` app depends on a `ui` library, and your pull request only updates the unit test file `button.spec.ts` in `ui`.
+`nx affected` runs `ui:test` and skips `ui:build`, since spec files aren't an input to the [production](/docs/reference/inputs#production-inputs) build.
+It skips `web:build` and `web:test` too, because the spec file for `ui` isn't an input to either.
+
+![Changing button.spec.ts in ui runs ui:test and skips ui:build, web:build, and web:test](../../../../assets/features/ci-features/affected-tasks.svg)
+
+## How Nx selects affected tasks
+
+Run `nx affected` with the targets you want, particularly on CI:
+
+```shell
+nx affected -t <targets>
+```
+
+For the `web` and `ui` example, run the affected `build` and `test` tasks:
+
+```shell
+nx affected -t build test
+```
+
+Nx then:
+
+1. Uses Git to find the files your branch changed, for example `libs/ui/src/button.spec.ts`.
+1. Selects each `build` and `test` task whose [inputs](/docs/reference/inputs) include a changed file.
+1. Selects the tasks that [read the outputs](/docs/reference/inputs#outputs-of-dependent-tasks) of a selected task, like a `web:build` that reads the `ui` build output.
+1. Runs the selected tasks and the tasks they depend on, restoring unchanged dependencies from the cache.
+
+Only `ui:test` reads the spec file. In this `nx.json`, `production` is a [named input](/docs/reference/inputs#named-inputs) that leaves out spec files, and `^` reads an input from a project's dependencies:
 
 ```json
 // nx.json
 {
-  "affected": {
-    "legacy": true
+  "namedInputs": {
+    "production": ["{projectRoot}/**/*", "!{projectRoot}/**/*.spec.ts"]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["production", "^production"]
+    },
+    "test": {
+      "inputs": ["{projectRoot}/**/*", "^production"]
+    }
   }
 }
 ```
 
-Running `nx migrate` to Nx 24 writes this setting into existing workspaces, so upgrading doesn't change what runs. Remove it, or set it to `false`, to select tasks.
-
-`NX_LEGACY_AFFECTED` overrides the setting for one invocation. `true` selects projects and `false` selects tasks. Set it for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set.
-
-The setting applies to `nx affected -t` and `nx show projects --affected -t`. `nx graph --affected` always shows projects.
-
-{% aside type="caution" title="What task selection changes" %}
-Nx selects a task when your change reaches one of its inputs, rather than by where the task sits in the task graph.
-
-**`dependsOn` alone doesn't make a task affected.** A change to a dependency reaches a task only through the task's own inputs, for example `^production` or the dependency's build output through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks). An edge that only orders the two tasks doesn't carry the change across.
-
-**Inputs and outputs matter even when a task isn't cached.** Nx uses them to select tasks, not only to cache them. A task whose inputs miss what it depends on can stop running when that dependency changes, and files a task writes without listing them in `outputs` don't carry a change to the tasks that read them.
-
-**A task whose executor defines a custom hasher is always selected** for the targets you run. Its hash comes from code outside its inputs, so Nx can't tell which changes reach it.
-
-**Sync generators that change files during a run don't update the selection.** Nx selects tasks before syncing, so run the command again after a sync applies changes.
-{% /aside %}
-
-## Understanding why something is affected
-
-Use the `--explain` flag to show why tasks are affected. Nx prints the explanation, then exits without running anything:
+To see the affected tasks in the task graph without running them, pass `--graph`:
 
 ```shell
-nx affected -t build --explain
+nx affected -t build test --graph
 ```
 
-`--explain` explains task selection, so it needs targets passed with `-t`. Without them, or with `affected.legacy` set, it stops with an error.
+{% aside type="note" title="What decides whether a task is affected" %}
+Nx selects a task when your change touches one of its inputs, not by the task hierarchy in the task graph.
 
-```text
- NX   3 out of 12 build tasks are affected
+**`dependsOn` alone doesn't make a task affected.** `web:build` depends on `ui:build`, but a change affects `web:build` only through its own inputs, such as `^production`, or the `ui` build output read through [`dependentTasksOutputFiles`](/docs/reference/inputs#outputs-of-dependent-tasks) or an [`includeIgnored`](/docs/reference/inputs#gitignored-files) fileset. An edge that only orders the two tasks doesn't carry the change across.
 
-Changing 1 file touches 1 build task. Pass --verbose to list each with its reasons.
+**Declare inputs and outputs, even for tasks you don't cache.** Nx selects tasks from them. If `web:test` lists only `{projectRoot}/**/*`, a change to the `ui` source doesn't select it, even though `web` imports `ui`. If `ui:build` writes to `dist` without listing it in `outputs`, a `web:build` that reads that folder isn't selected when the `ui` build changes.
 
-  libs/ui/src/index.ts:
-    - ui:build
-
-Touching those tasks changes outputs read by 2 build tasks. Pass --verbose to list each with its reasons.
-  - admin:build
-  - app:build
-```
-
-Pass `--explain=stdout` for the data as JSON, or `--explain=reasons.json` to write it to a file. `nx show projects --affected -t build --explain` works the same way.
-
-## Best paired with remote caching and distribution
-
-Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
-
-- If you're modifying a **project that is used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
-- If you have a set of 10 projects affected by a PR and you continue making changes, you will **always end up running tasks for those 10 projects**. The set of affected projects doesn't change but is always calculated with respect to your last successful run on the main branch.
-
-This is why Nx Affected is best paired with [remote caching](/docs/features/ci-features/remote-cache) and [distributed task execution](/docs/features/ci-features/distribute-task-execution).
+**[Sync generators](/docs/concepts/sync-generators) that change files during a run don't update the selection.** Nx selects tasks before syncing, so run `nx sync` first, or run the command again after a sync applies changes.
+{% /aside %}
 
 ## Configure affected on CI
-
-To understand which projects are affected, Nx uses the Git history and the [project graph](/docs/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
 The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
@@ -386,47 +158,73 @@ CI:
 
 For other CI providers (Jenkins, Azure Pipelines, Bitbucket), see our guides to get the [last successful CI run for your CI provider](/docs/kb/affected-base-commit).
 
+## Understanding why something is affected
+
+Use the `--explain` flag to show why tasks are affected. Nx prints the explanation, then exits without running anything. Say your branch changes `libs/ui/src/index.ts` instead of the spec file:
+
+```shell
+nx affected -t build --explain
+```
+
+```text
+ NX   2 out of 2 build tasks are affected
+
+Changing 1 file touches 2 build tasks. Pass --verbose to list each with its reasons.
+
+  libs/ui/src/index.ts:
+    - ui:build
+    - web:build
+```
+
+`--explain` explains task selection, so it needs targets passed with `-t`. Without them, or with `affected.legacy` set, it stops with an error.
+
+Pass `--explain=stdout` for the data as JSON, or `--explain=reasons.json` to write it to a file. `nx show projects --affected -t build --explain` works the same way.
+
+## Best paired with remote caching and distribution
+
+`nx affected` can still select a lot of work:
+
+- A change to a project most of the workspace depends on, or to an input every task shares, selects most tasks.
+- Every push to a pull request is compared with the same base commit on `main`, so each push selects the same tasks again.
+
+[Remote caching](/docs/features/ci-features/remote-cache) replays the selected tasks whose inputs didn't change since an earlier run, so a later push only runs what its new commits affect.
+With [Ultracache](/docs/features/ci-features/remote-cache#ultracache-and-affected), Nx selects tasks from the files each task read in CI instead of its declared inputs, so unused files don't select tasks and reads missing from `inputs` aren't overlooked.
+[Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the tasks that do run across machines.
+
 ## Ignoring files from affected commands
 
-Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands:
+Nx provides two methods to exclude glob patterns (files and folders) from `nx affected -t <targets>`:
 
 - Glob patterns defined in your `.gitignore` file are ignored.
 - Glob patterns defined in an optional `.nxignore` file are ignored.
 
-## Marking projects affected by dependency updates
+## Lock file changes
 
-By default, Nx will mark **all** projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. You can configure this behavior with the `projectsAffectedByDependencyUpdates` option in `nx.json`:
-
-```json
-// nx.json
-{
-  "pluginsConfig": {
-    "@nx/js": {
-      "projectsAffectedByDependencyUpdates": "auto"
-    }
-  }
-}
-```
-
-The `projectsAffectedByDependencyUpdates` option accepts the following values:
-
-| Value      | Description                                                                                                                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"all"`    | **(default)** Every project in the workspace is marked as affected when the lock file changes. This is the safest option but may result in unnecessary CI work.                                                                              |
-| `"auto"`   | Only projects whose dependencies actually changed in the lock file are marked as affected. Nx inspects the lock file structure to determine which workspace projects had their resolved dependencies change. See the note below for details. |
-| `string[]` | An array of project names or glob patterns (e.g., `["app-*", "shared-lib"]`). Only the matching projects are marked as affected when the lock file changes.                                                                                  |
-
-{% aside type="note" title="How 'auto' works per package manager" %}
-In `"auto"` mode, Nx parses both the base and head revisions of your lock file using the same parsers it uses to build the project graph, diffs the resolved package metadata to find which dependencies changed, then maps those packages back to the workspace projects that depend on them.
-
-Nx supports the following lock files: `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`.
-
-For binary Bun lockfiles (`bun.lockb`), Nx asks Bun to render the lockfile before diffing it, so Bun needs to be available in the environment that runs `nx affected`.
-{% /aside %}
+By default, a change to your package manager's lock file affects every task.
+To limit it to the tasks of projects whose resolved dependencies changed, set [`projectsAffectedByDependencyUpdates`](/docs/reference/nx-json#projectsaffectedbydependencyupdates) to `"auto"` in `nx.json`.
 
 ## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.
+
+## Nx 23 and earlier use project-based affected
+
+Nx 23 and earlier use project-based affected: a change to a project runs every task of that project and of every project that depends on it.
+Running `nx migrate` to Nx 24 keeps that behavior in existing workspaces by setting `affected.legacy` to `true` in `nx.json`:
+
+```json
+// nx.json
+{
+  "affected": {
+    "legacy": true
+  }
+}
+```
+
+Remove the setting, or set it to `false`, to use task-based affected.
+`NX_LEGACY_AFFECTED` overrides it for one invocation: `true` uses project-based affected and `false` uses task-based.
+Set it for the whole CI job, so `nx show projects --affected -t test` and `nx affected -t test` in the same script see the same affected set.
+`nx graph --affected` always shows projects.
 
 ## Related guides
 

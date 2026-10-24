@@ -8,7 +8,7 @@ import {
 } from './dev-server-ready-signal';
 
 const devkit = vi.hoisted(() => ({
-  signalTaskReady: vi.fn(() => true),
+  emitReadySignal: vi.fn(() => true),
 }));
 // The signal helpers are required lazily, which `vi.mock` cannot reach
 mockCjsModule(import.meta.url, '@nx/devkit', devkit);
@@ -16,7 +16,7 @@ mockCjsModule(import.meta.url, '@nx/devkit', devkit);
 describe('applyDevServerReadySignal', () => {
   beforeEach(() => {
     vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-    devkit.signalTaskReady.mockClear();
+    devkit.emitReadySignal.mockClear();
   });
 
   afterEach(() => {
@@ -33,13 +33,13 @@ describe('applyDevServerReadySignal', () => {
     const compiler = { options: { devServer: { onListening } } } as any;
 
     applyDevServerReadySignal(compiler);
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
     compiler.options.devServer.onListening(server);
     expect(onListening).toHaveBeenCalledWith(server);
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://localhost:4300/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'http://localhost:4300/'
+    );
   });
 
   it('wraps onListening when applied as the standalone plugin', () => {
@@ -51,9 +51,9 @@ describe('applyDevServerReadySignal', () => {
     );
 
     compiler.options.devServer.onListening(server);
-    expect(devkit.signalTaskReady).toHaveBeenCalledWith({
-      url: 'http://localhost:4300/',
-    });
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+      'http://localhost:4300/'
+    );
   });
 
   it('leaves the config alone outside a signalling task or without a dev server', () => {
@@ -66,7 +66,7 @@ describe('applyDevServerReadySignal', () => {
     const noDevServer = { options: {} } as any;
     applyDevServerReadySignal(noDevServer);
     expect(noDevServer.options.devServer).toBeUndefined();
-    expect(devkit.signalTaskReady).not.toHaveBeenCalled();
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
   });
 });
 

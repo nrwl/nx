@@ -2,7 +2,13 @@ import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import type { Configuration, Stats } from '@rspack/core';
 import * as path from 'path';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { runInNewContext } from 'vm';
 import { createRequire } from 'module';
@@ -493,4 +499,89 @@ describe('apply-base-config minimizer', () => {
       expect(logs).toEqual(['1,2,3']);
     }
   );
+});
+
+describe('apply-base-config watch option', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.resetModules();
+  });
+
+  it.each([
+    ['keeps the watch mode `rspack build --watch` set', undefined, true],
+    ['lets the plugin option override it', false, false],
+  ])('%s', async (_, watch, expected) => {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const config: Partial<Configuration> = { watch: true };
+
+    applyBaseConfig(
+      {
+        root: '/test',
+        projectRoot: 'apps/test',
+        target: 'node',
+        watch,
+      } as NormalizedNxAppRspackPluginOptions,
+      config
+    );
+
+    expect(config.watch).toBe(expected);
+  });
+});
+
+describe('apply-base-config extractLicenses', () => {
+  let root: string;
+
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+    root = mkdtempSync(path.join(tmpdir(), 'nx-rspack-licenses-'));
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    rmSync(root, { recursive: true, force: true });
+    vi.resetModules();
+  });
+
+  async function getLicensePlugin() {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const config: Partial<Configuration> = {};
+    applyBaseConfig(
+      {
+        root,
+        projectRoot: 'apps/test',
+        target: 'web',
+        extractLicenses: true,
+      } as NormalizedNxAppRspackPluginOptions,
+      config
+    );
+    return config.plugins.find(
+      (p) => p.constructor.name === 'LicenseWebpackPlugin'
+    ) as any;
+  }
+
+  it('excludes the project package that loader-prefixed data: modules resolve to', async () => {
+    mkdirSync(path.join(root, 'apps/test'), { recursive: true });
+    writeFileSync(
+      path.join(root, 'apps/test/package.json'),
+      JSON.stringify({ name: '@org/test' })
+    );
+
+    const { excludedPackageTest } = (await getLicensePlugin()).pluginOptions;
+
+    expect(excludedPackageTest('@org/test')).toBe(true);
+    expect(excludedPackageTest('react')).toBe(false);
+  });
+
+  it('excludes nothing when the project has no package.json', async () => {
+    const { excludedPackageTest } = (await getLicensePlugin()).pluginOptions;
+
+    expect(excludedPackageTest('react')).toBe(false);
+    expect(excludedPackageTest(undefined)).toBe(false);
+  });
 });

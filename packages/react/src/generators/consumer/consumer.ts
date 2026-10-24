@@ -14,6 +14,7 @@ import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
+  nxVersion,
   reactVersion,
   reactDomVersion,
   typesReactVersion,
@@ -92,6 +93,7 @@ export async function consumerGenerator(
           command: BUNDLER_DEV_COMMAND[opts.bundler],
           cwd: opts.projectRoot,
         },
+        readyWhen: { signal: true },
       },
       build: {
         executor: 'nx:run-commands',
@@ -150,6 +152,7 @@ export async function consumerGenerator(
     remoteType,
     versions: {
       ...mfVersions,
+      nxVersion,
       reactVersion,
       reactDomVersion,
       typesReactVersion,

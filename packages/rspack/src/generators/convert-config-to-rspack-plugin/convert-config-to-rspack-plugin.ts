@@ -15,6 +15,8 @@ import { parse } from 'path';
 import { validateProject } from './lib/validate-project';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
+const buildExecutors = ['@nx/rspack:rspack', '@nrwl/rspack:rspack'];
+
 interface Schema {
   project?: string;
   skipFormat?: boolean;
@@ -38,36 +40,38 @@ export async function convertConfigToRspackPluginGenerator(
   let migrated = 0;
 
   const projects = getProjects(tree);
-  forEachExecutorOptions<RspackExecutorSchema>(
-    tree,
-    '@nx/rspack:rspack',
-    (currentTargetOptions, projectName, targetName, configurationName) => {
-      if (options.project && projectName !== options.project) {
-        return;
-      }
-      if (!configurationName) {
-        const project = projects.get(projectName);
-        const target = project.targets[targetName];
-
-        const hasError = validateProject(tree, project);
-        if (hasError) {
-          throw new Error(hasError);
+  for (const executor of buildExecutors) {
+    forEachExecutorOptions<RspackExecutorSchema>(
+      tree,
+      executor,
+      (currentTargetOptions, projectName, targetName, configurationName) => {
+        if (options.project && projectName !== options.project) {
+          return;
         }
+        if (!configurationName) {
+          const project = projects.get(projectName);
+          const target = project.targets[targetName];
 
-        const rspackConfigPath = currentTargetOptions?.rspackConfig || '';
+          const hasError = validateProject(tree, project);
+          if (hasError) {
+            throw new Error(hasError);
+          }
 
-        if (
-          rspackConfigPath &&
-          tree.exists(rspackConfigPath) &&
-          convertConfigFile(tree, project.root, rspackConfigPath)
-        ) {
-          target.options.standardRspackConfigFunction = true;
-          updateProjectConfiguration(tree, projectName, project);
-          migrated++;
+          const rspackConfigPath = currentTargetOptions?.rspackConfig || '';
+
+          if (
+            rspackConfigPath &&
+            tree.exists(rspackConfigPath) &&
+            convertConfigFile(tree, project.root, rspackConfigPath)
+          ) {
+            target.options.standardRspackConfigFunction = true;
+            updateProjectConfiguration(tree, projectName, project);
+            migrated++;
+          }
         }
       }
-    }
-  );
+    );
+  }
 
   // Projects already on the inference plugin keep their options in the config,
   // so only the config needs converting.
@@ -76,8 +80,8 @@ export async function convertConfigToRspackPluginGenerator(
       continue;
     }
     if (
-      Object.values(project.targets ?? {}).some(
-        (target) => target.executor === '@nx/rspack:rspack'
+      Object.values(project.targets ?? {}).some((target) =>
+        buildExecutors.includes(target.executor)
       )
     ) {
       continue;
@@ -112,11 +116,18 @@ function convertConfigFile(
     withNxConfig: rspackOptions,
     withReactConfig,
     strippedSource,
+    leftoverHelpers,
   } = extractRspackOptions(tree, rspackConfigPath);
 
   // if rspackOptions === undefined
   // withNx was not found in the rspack.config.js file so we should skip this project
   if (rspackOptions !== undefined) {
+    // The `.old` config would call helpers whose imports were removed, or inert stubs.
+    if (leftoverHelpers.length) {
+      throw new Error(
+        `Could not convert ${rspackConfigPath}: ${leftoverHelpers.join(', ')} would be left in the old config. Only \`require\`d helpers passed directly to \`composePlugins\` are supported.`
+      );
+    }
     let parsedOptions = {};
     if (rspackOptions) {
       // Parse before writing anything: a non-literal option value leaves the
@@ -143,11 +154,18 @@ function convertConfigFile(
       `${joinPathFragments(dir, `${name}.old${ext}`)}`
     );
 
+    const usesReact = withReactConfig !== undefined;
+    const reactRequire = usesReact
+      ? `\nconst { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');`
+      : '';
+    const reactPlugin = usesReact
+      ? `\nnew NxReactRspackPlugin(${withReactConfig ? withReactConfig.getText() : ''}),`
+      : '';
+
     tree.write(
       rspackConfigPath,
       stripIndents`
-    const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
-    const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+    const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');${reactRequire}
     const { useLegacyNxPlugin } = require('@nx/rspack');
     
     // This file was migrated using @nx/rspack:convert-config-to-rspack-plugin from your './rspack.config.old.js'
@@ -165,12 +183,7 @@ function convertConfigFile(
           rspackOptions
             ? 'new NxAppRspackPlugin(options)'
             : 'new NxAppRspackPlugin()'
-        },
-        ${
-          withReactConfig
-            ? `new NxReactRspackPlugin(${withReactConfig.getText()})`
-            : `new NxReactRspackPlugin()`
-        },
+        },${reactPlugin}
         // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
         // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
         // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.

@@ -11,6 +11,11 @@ import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../models';
+import {
+  applyDevServerReadySignal,
+  ssrServerEmitsReadySignal,
+  READY_SIGNAL_PLUGIN,
+} from '../utils/dev-server-ready-signal';
 import { loadEsmModule } from '../utils/misc-helpers';
 import { isServeMode } from '../utils/rspack-serve-env';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
@@ -36,6 +41,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
   private readonly serverRenderingInputs:
     | SharedServerRenderingInputs
     | undefined;
+  readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
@@ -74,6 +80,18 @@ export class NgRspackPlugin implements RspackPluginInstance {
   apply(compiler: Compiler) {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
+
+    if (
+      !isDevServer ||
+      !this.pluginOptions.hasServer ||
+      !ssrServerEmitsReadySignal(
+        root,
+        this.pluginOptions.ssr,
+        this.pluginOptions.fileReplacements
+      )
+    ) {
+      applyDevServerReadySignal(compiler);
+    }
 
     if (this.isPlatformServer && isDevServer) {
       if (

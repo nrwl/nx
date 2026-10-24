@@ -83,7 +83,7 @@ If your repository uses package manager workspaces, Nx uses those settings to fi
 
 ### Tasks inferred from your tooling configuration
 
-Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/mental-model#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
+Nx [plugins](/docs/plugin-registry) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/features/run-tasks#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 ### TypeScript project references kept in sync
 
@@ -287,7 +287,7 @@ The output location is controlled by `outDir` in your build tsconfig (defaults t
 }
 ```
 
-The plugin reads `outDir` automatically and sets the correct [task outputs](/docs/concepts/how-caching-works) for caching.
+The plugin reads `outDir` automatically and sets the correct [task outputs](/docs/features/cache-task-results#how-caching-works) for caching.
 
 If you're manually defining the `build` targets, make sure to keep the [target configuration outputs](/docs/kb/configure-outputs) in sync with where typescript is outputting the built artifacts. This ensures Nx properly restores the cache for your build tasks.
 
