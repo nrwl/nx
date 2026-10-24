@@ -20,7 +20,6 @@ import { Linter as LinterEnum, LinterType } from '../utils/linter';
 import {
   determineEslintConfigFormat,
   findEslintFile,
-  isTypedLintingEnabled,
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
@@ -50,10 +49,6 @@ interface LintProjectOptions {
   tsConfigPaths?: string[];
   skipFormat: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
@@ -153,7 +148,7 @@ export async function lintProjectGeneratorInternal(
       tree,
       options,
       projectConfig,
-      isTypedLintingEnabled(options),
+      options.enableTypedLinting,
       options.rootProject,
       addDependencyChecks
     );

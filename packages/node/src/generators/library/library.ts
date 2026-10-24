@@ -21,7 +21,6 @@ import {
   updateTsConfigsToJs,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import {
   addSwcConfig,
@@ -91,7 +90,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       importPath: schema.importPath,
       testEnvironment: 'node',
       skipFormat: true,
-      enableTypedLinting: isTypedLintingEnabled(schema),
       useProjectJson: options.useProjectJson,
     })
   );

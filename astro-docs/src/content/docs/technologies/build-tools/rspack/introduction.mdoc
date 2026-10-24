@@ -61,7 +61,7 @@ The `@nx/rspack` plugin will create a task for any project that has a Rspack con
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/rspack configuration
 
@@ -103,14 +103,20 @@ Use `include` and `exclude` glob patterns on the plugin entry to scope inference
 
 The inferred `serve` and `preview` targets come with a `readyWhen` check, so a task can wait until the dev server accepts requests instead of only until it has started.
 When the Rspack config sets `devServer` and loads `NxAppRspackPlugin`, the check waits for the plugin to report the server's address once it listens.
-In a config without `NxAppRspackPlugin`, add `new NxReadySignalPlugin()` from `@nx/rspack/ready-signal` to `plugins` instead.
+Angular Rspack configs made with `createConfig` from `@nx/angular-rspack` load `NgRspackPlugin`, which reports it the same way.
+In other configs, add `new NxReadySignalPlugin()` from `@nx/rspack/ready-signal` to `plugins` instead.
 The report carries the port the server actually uses, so the check is right however the port was chosen.
 
-Without either plugin, the check reads the Rspack config when the task runs instead, in the task's environment and with its options.
+In an Angular server-side rendering (SSR) app, the dev server reports once it listens, without waiting for the build.
+It holds requests until the build finishes.
+The SSR server starts only after the build, on `PORT` or the port its server file sets, 4000 in generated apps.
+A task that tests SSR on that port has to wait for it itself.
+
+Without any of these plugins, the check reads the Rspack config when the task runs instead, in the task's environment and with its options.
 That covers `.env` files and `--port` or `--host` flags.
 It works out the port the way `rspack serve` does, from the `--port` flag, `devServer.port`, `RSPACK_DEV_SERVER_BASE_PORT`, or 8080, and waits for it.
 When the server picks its own port (a `devServer.port` of `0` or `"auto"`) or listens on a socket instead of a port (`devServer.ipc`), there's nothing to wait for, and the target counts as ready once it has started.
-The `serve-static` target checks the port of its file server.
+The `serve-static` target's file server reports its address once it listens.
 
 A dependent task starts as soon as the server task has started, unless its `dependsOn` entry sets `waitFor` to `ready`:
 

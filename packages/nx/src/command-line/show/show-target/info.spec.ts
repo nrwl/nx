@@ -1,4 +1,7 @@
 import type { Mock } from 'vitest';
+import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
+import { DEFAULT_READY_TIMEOUT } from '../../../tasks-runner/readiness/ready-when';
+import { formatDuration } from '../../../native';
 import {
   GraphBuilder,
   setupBeforeEach,
@@ -8,6 +11,12 @@ import {
   setMockHasCustomHasher,
 } from './test-utils';
 import { showTargetInfoHandler } from './info';
+
+const ultracache = vi.hoisted(() => ({ on: false }));
+vi.mock('../../../ultracache/ci-status', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../ultracache/ci-status')>()),
+  isUltracacheOnInCI: async () => ultracache.on,
+}));
 
 describe('show target info', () => {
   beforeEach(setupBeforeEach);
@@ -522,6 +531,216 @@ describe('show target info', () => {
     ]);
   });
 
+  describe('ultracache', () => {
+    afterEach(() => (ultracache.on = false));
+
+    const buildTarget = (target: Record<string, unknown>) =>
+      setGraph(
+        new GraphBuilder()
+          .addProjectConfiguration(
+            {
+              root: 'apps/my-app',
+              name: 'my-app',
+              targets: { build: { executor: '@nx/web:build', ...target } },
+            },
+            'app'
+          )
+          .build()
+      );
+
+    const text = () => (console.log as Mock).mock.calls.flat().join('\n');
+
+    it('says a cacheable target is hashed from Ultracache when the workspace is On', async () => {
+      ultracache.on = true;
+      buildTarget({
+        cache: true,
+        inputs: ['{projectRoot}/**/*', { fileset: 'a', always: true }],
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).toContain(
+        'Ultracache: In CI, file inputs are replaced by the files this task read during previous runs. `always` inputs still count.'
+      );
+      expect(text().indexOf('Ultracache:')).toBeLessThan(
+        text().indexOf('Inputs:')
+      );
+    });
+
+    it('leaves the JSON output alone', async () => {
+      ultracache.on = true;
+      buildTarget({ cache: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+      const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+      expect(parsed).not.toHaveProperty('ultracacheInCI');
+      expect(parsed).not.toHaveProperty('ultracacheMode');
+    });
+
+    it('says nothing when the workspace is not On', async () => {
+      buildTarget({ cache: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).not.toContain('Ultracache');
+    });
+
+    it.each([
+      [
+        'warn',
+        'Ultracache: In CI, Nx Cloud warns if this task reads files outside its hash or writes files outside its outputs.',
+      ],
+      [
+        'error',
+        'Ultracache: In CI, Nx Cloud fails the run if this task reads files outside its hash or writes files outside its outputs.',
+      ],
+      ['off', 'Ultracache: In CI, this task is not recorded.'],
+    ])('explains %s mode', async (mode, expected) => {
+      ultracache.on = true;
+      buildTarget({ cache: true, ultracache: { mode } });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).toContain(expected);
+    });
+
+    it('says nothing for a target Ultracache does not apply to', async () => {
+      ultracache.on = true;
+      buildTarget({ cache: true, continuous: true });
+
+      await showTargetInfoHandler({ target: 'my-app:build' });
+
+      expect(text()).not.toContain('Ultracache');
+    });
+  });
+
+  describe('readyWhen', () => {
+    const serve = (readyWhen?: TargetConfiguration['readyWhen']) =>
+      setGraph(
+        new GraphBuilder()
+          .addProjectConfiguration(
+            {
+              root: 'apps/my-app',
+              name: 'my-app',
+              targets: {
+                serve: {
+                  executor: '@nx/webpack:dev-server',
+                  continuous: true,
+                  ...(readyWhen !== undefined ? { readyWhen } : {}),
+                },
+              },
+            },
+            'app'
+          )
+          .build()
+      );
+    const text = () => (console.log as Mock).mock.calls.flat().join('\n');
+    const json = () => JSON.parse((console.log as Mock).mock.calls[0][0]);
+
+    it('shows an inferred check with its source and the default timeout', async () => {
+      serve({ port: '{options.port}', host: '{options.host ?? localhost}' });
+      setMockSourceMaps({
+        'apps/my-app': {
+          'targets.serve.readyWhen': [
+            'apps/my-app/webpack.config.js',
+            '@nx/webpack/plugin',
+          ],
+        },
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:serve', json: true });
+      expect(json().readyWhen).toEqual({
+        port: '{options.port}',
+        host: '{options.host ?? localhost}',
+        timeout: DEFAULT_READY_TIMEOUT,
+      });
+      expect(json().sourceMap.readyWhen).toEqual([
+        'apps/my-app/webpack.config.js',
+        '@nx/webpack/plugin',
+      ]);
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:serve', verbose: true });
+      expect(text()).toContain(
+        `Ready when: port {options.port} on {options.host ?? localhost} (timeout ${formatDuration(DEFAULT_READY_TIMEOUT)}) (from apps/my-app/webpack.config.js by @nx/webpack/plugin)`
+      );
+      expect(text().indexOf('Continuous: true')).toBeLessThan(
+        text().indexOf('Ready when:')
+      );
+    });
+
+    it('shows an override with its own timeout and interval', async () => {
+      serve({
+        command: 'curl -sf http://localhost:4200',
+        timeout: 5000,
+        interval: 500,
+      });
+      setMockSourceMaps({
+        'apps/my-app': {
+          'targets.serve.readyWhen': ['nx.json', 'nx/core/target-defaults'],
+        },
+      });
+
+      await showTargetInfoHandler({ target: 'my-app:serve', json: true });
+      expect(json().readyWhen).toEqual({
+        command: 'curl -sf http://localhost:4200',
+        timeout: 5000,
+        interval: 500,
+      });
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:serve', verbose: true });
+      expect(text()).toContain(
+        'Ready when: command "curl -sf http://localhost:4200" (timeout 5.0s, interval 500ms) (from nx.json by nx/core/target-defaults)'
+      );
+    });
+
+    it.each([
+      [{ signal: true }, 'signal'],
+      [{ url: 'http://localhost:4200' }, 'url http://localhost:4200'],
+      [{ port: 4200 }, 'port 4200'],
+      [{ logMatches: 'ready' }, 'logMatches "ready"'],
+      [
+        { logMatches: ['ready', 'listening'] },
+        'logMatches "ready", "listening"',
+      ],
+    ] as [TargetConfiguration['readyWhen'], string][])(
+      'describes %j',
+      async (readyWhen, expected) => {
+        serve(readyWhen);
+
+        await showTargetInfoHandler({ target: 'my-app:serve' });
+
+        expect(text()).toContain(
+          `Ready when: ${expected} (timeout ${formatDuration(DEFAULT_READY_TIMEOUT)})`
+        );
+      }
+    );
+
+    it('says a null readyWhen turns the check off', async () => {
+      serve(null);
+
+      await showTargetInfoHandler({ target: 'my-app:serve', json: true });
+      expect(json()).toHaveProperty('readyWhen', null);
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:serve' });
+      expect(text()).toContain('Ready when: off (null)');
+    });
+
+    it('says nothing for a target without readyWhen', async () => {
+      serve();
+
+      await showTargetInfoHandler({ target: 'my-app:serve', json: true });
+      expect(json()).not.toHaveProperty('readyWhen');
+
+      (console.log as Mock).mockClear();
+      await showTargetInfoHandler({ target: 'my-app:serve' });
+      expect(text()).not.toContain('Ready when');
+    });
+  });
+
   it('should indicate custom hasher in JSON output', async () => {
     setGraph(
       new GraphBuilder()
@@ -881,5 +1100,102 @@ describe('show target info', () => {
     expect(parsed.dependsOn).toEqual(['my-app:serve']);
     expect(parsed.transitiveTasks).toEqual(['my-app:build']);
     expect(parsed.transitiveTasks).not.toContain('my-app-e2e:e2e:ci');
+    expect(parsed).not.toHaveProperty('_continuousDeps');
+  });
+
+  it('says when a dependency waits for a continuous task to be ready', async () => {
+    const graph = new GraphBuilder()
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app-e2e',
+          name: 'my-app-e2e',
+          targets: {
+            e2e: {
+              executor: 'nx:run-commands',
+              options: { command: 'playwright test' },
+              dependsOn: [
+                { projects: ['my-app'], target: 'serve', waitFor: 'ready' },
+                { projects: ['my-app'], target: 'preview' },
+              ],
+            },
+          },
+        },
+        'app'
+      )
+      .addProjectConfiguration(
+        {
+          root: 'apps/my-app',
+          name: 'my-app',
+          targets: {
+            serve: { executor: '@nx/web:dev-server', continuous: true },
+            preview: { executor: '@nx/web:dev-server', continuous: true },
+          },
+        },
+        'app'
+      )
+      .build();
+    const line = (task: string) =>
+      (console.log as Mock).mock.calls
+        .map(([l]) => l as string)
+        .find((l) => l.includes(task));
+
+    setGraph(graph);
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e' });
+    expect(line('  my-app:serve')).toContain('(continuous, waits for ready)');
+    expect(line('  my-app:preview')).toContain('(continuous)');
+    expect(line('  my-app:preview')).not.toContain('waits for ready');
+  });
+
+  it('says whether a continuous dependency adds its inputs', async () => {
+    const e2e = (inputs?: false) =>
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app-e2e',
+            name: 'my-app-e2e',
+            targets: {
+              e2e: {
+                executor: 'nx:run-commands',
+                options: { command: 'playwright test' },
+                dependsOn: [
+                  { projects: ['my-app'], target: 'serve', inputs },
+                  { projects: ['my-app'], target: 'build' },
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              serve: { executor: '@nx/web:dev-server', continuous: true },
+              build: { executor: '@nx/web:build' },
+            },
+          },
+          'app'
+        )
+        .build();
+    const line = (task: string) =>
+      (console.log as Mock).mock.calls
+        .map(([l]) => l as string)
+        .find((l) => l.includes(task));
+
+    setGraph(e2e());
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e' });
+    expect(line('  my-app:serve')).toContain('(continuous)');
+    expect(line('  my-app:build')).not.toContain('continuous');
+    const text = (console.log as Mock).mock.calls.flat().join('\n');
+    expect(text.indexOf('Inputs:')).toBeLessThan(
+      text.indexOf('inputs of my-app:serve (continuous dependency)')
+    );
+
+    (console.log as Mock).mockClear();
+    setGraph(e2e(false));
+    await showTargetInfoHandler({ target: 'my-app-e2e:e2e' });
+    expect(line('  my-app:serve')).toContain('(continuous)');
+    expect(line('inputs of my-app:serve')).toBeUndefined();
   });
 });

@@ -196,6 +196,47 @@ describe('convertConfigToRspackPluginGenerator', () => {
     ).resolves.toEqual({ plugins: ['custom'], mode: 'production' });
   });
 
+  it('should not add the React plugin to a config that does not use withReact', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/rspack.config.js`,
+      `
+      const { composePlugins, withNx, withWeb } = require('@nx/rspack');
+      module.exports = composePlugins(withNx(), withWeb(), (config) => config);
+      `
+    );
+
+    await convertConfigToRspackPluginGenerator(tree, {
+      project: project.name,
+    });
+
+    expect(tree.read(`${project.name}/rspack.config.js`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+      const { useLegacyNxPlugin } = require('@nx/rspack');
+
+      // This file was migrated using @nx/rspack:convert-config-to-rspack-plugin from your './rspack.config.old.js'
+      // Please check that the options here are correct as they were moved from the old rspack.config.js to this file.
+      const options = {};
+
+      /**
+       * @type{import('@rspack/core').RspackOptionsNormalized}
+       */
+      module.exports = async () => ({
+        plugins: [
+          new NxAppRspackPlugin(),
+          // NOTE: useLegacyNxPlugin ensures that the non-standard Rspack configuration file previously used still works.
+          // To remove its usage, move options such as "plugins" into this file as standard Rspack configuration options.
+          // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+          // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          await useLegacyNxPlugin(require('./rspack.config.old'), options),
+        ],
+      });
+      "
+    `);
+  });
+
   it('should update project.json adding the standardRspackConfigFunction option', async () => {
     const project = createProject(tree, {
       name: 'my-app',

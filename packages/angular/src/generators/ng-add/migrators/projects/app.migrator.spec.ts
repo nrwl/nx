@@ -1421,6 +1421,28 @@ describe('app migrator', () => {
         },
       });
     });
+
+    it.each([
+      ['serve', '@angular/build:dev-server'],
+      ['serve', '@angular-devkit/build-angular:dev-server'],
+      ['serve-ssr', '@angular-devkit/build-angular:ssr-dev-server'],
+    ])(
+      'should make the %s target using %s continuous with a readyWhen',
+      async (targetName, builder) => {
+        const project = addProject('app1', {
+          root: '',
+          sourceRoot: 'src',
+          architect: { [targetName]: { builder } },
+        });
+        const migrator = new AppMigrator(tree, {}, project);
+
+        await migrator.migrate();
+
+        const { targets } = readProjectConfiguration(tree, 'app1');
+        expect(targets[targetName].continuous).toBe(true);
+        expect(targets[targetName].readyWhen).toStrictEqual({ signal: true });
+      }
+    );
   });
 
   describe('tsConfig', () => {

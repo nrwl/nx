@@ -2,6 +2,7 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   clearRequireCache,
+  getReadyCheckReadyWhen,
   loadConfigFile,
   PluginCache,
   hashObject,
@@ -19,12 +20,13 @@ import {
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import { canResolve } from './router-plugin-utils';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
@@ -169,7 +171,11 @@ async function buildReactRouterTargets(
   targets[options.devTargetName] = await devTarget(
     projectRoot,
     namedInputs,
-    isUsingTsSolutionSetup
+    isUsingTsSolutionSetup,
+    getDevReadyWhen(
+      context.workspaceRoot,
+      join(context.workspaceRoot, projectRoot)
+    )
   );
 
   if (serverBuildPath) {
@@ -259,7 +265,8 @@ function buildInputs(namedInputs: {
 async function devTarget(
   projectRoot: string,
   namedInputs: { [inputName: string]: any[] },
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  readyWhen: TargetConfiguration['readyWhen']
 ) {
   const devTarget: TargetConfiguration = {
     continuous: true,
@@ -268,10 +275,48 @@ async function devTarget(
     options: { cwd: projectRoot },
   };
 
+  if (readyWhen) {
+    devTarget.readyWhen = readyWhen;
+  }
+
   if (isUsingTsSolutionSetup) {
     devTarget.syncGenerators = ['@nx/js:typescript-sync'];
   }
   return devTarget;
+}
+
+// Vite's lookup order for the config in its root
+const viteConfigFiles = [
+  'vite.config.js',
+  'vite.config.mjs',
+  'vite.config.ts',
+  'vite.config.cjs',
+  'vite.config.mts',
+  'vite.config.cts',
+];
+
+// The Vite check resolves the config when the task runs, with the task's env
+// and options, and waits for the server's port.
+function getDevReadyWhen(
+  workspaceRoot: string,
+  absoluteProjectRoot: string
+): TargetConfiguration['readyWhen'] {
+  // `react-router dev` serves with the default Vite config of its cwd.
+  const configFile = viteConfigFiles.find((file) =>
+    existsSync(join(absoluteProjectRoot, file))
+  );
+  if (!configFile) {
+    return undefined;
+  }
+  // Nx runs the check from the workspace root, where @nx/vite may be missing
+  if (!canResolve('@nx/vite/ready-check', workspaceRoot)) {
+    return undefined;
+  }
+  return getReadyCheckReadyWhen(
+    '@nx/vite/ready-check',
+    configFile,
+    'react-router-dev'
+  );
 }
 
 async function startTarget(
@@ -292,6 +337,7 @@ async function startTarget(
     inputs: buildInputs(namedInputs),
     command: `react-router-serve ${serverPath}`,
     options: { cwd: projectRoot },
+    readyWhen: getReadyCheckReadyWhen('@nx/react/ready-check'),
   };
 
   if (isUsingTsSolutionSetup) {

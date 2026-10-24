@@ -218,7 +218,7 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        expect(version).toBe('^10.5.0');
+        expect(version).toBe('^10.6.2');
       });
 
       it('should return the v8 install constant when v8 is installed', () => {
@@ -232,7 +232,7 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        expect(version).toBe('^8.6.11');
+        expect(version).toBe('^8.6.19');
       });
 
       it('should fall through to the latest install constant when an unsupported version is installed', () => {
@@ -247,7 +247,7 @@ describe('testing utilities', () => {
         );
         const version = getStorybookVersionToInstall(tree);
         // v7 is below the floor; no version map entry — fall through to latest.
-        expect(version).toBe('^10.5.0');
+        expect(version).toBe('^10.6.2');
       });
 
       it('should return the v9 install constant when v9 is installed via dependencies', () => {
@@ -261,7 +261,7 @@ describe('testing utilities', () => {
           })
         );
         const version = getStorybookVersionToInstall(tree);
-        expect(version).toBe('^9.0.5');
+        expect(version).toBe('^9.1.21');
       });
     });
 

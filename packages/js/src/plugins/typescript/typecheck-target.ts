@@ -106,12 +106,16 @@ export function selectTypecheckTsConfig(
   return (
     ['tsconfig.app.json', 'tsconfig.lib.json', DEFAULT_TSCONFIG].find((file) =>
       tsConfigFiles.includes(file)
-    ) ?? tsConfigFiles.find((file) => SHELL_SAFE_TSCONFIG.test(file))
+    ) ?? tsConfigFiles.find(isShellSafeTsConfigName)
   );
 }
 
-// The name goes unquoted into a shell command.
-const SHELL_SAFE_TSCONFIG = /^tsconfig[\w.-]*\.json$/;
+/**
+ * Whether a tsconfig file name can go unquoted into a shell command.
+ */
+export function isShellSafeTsConfigName(name: string): boolean {
+  return /^tsconfig[\w.-]*\.json$/.test(name);
+}
 
 /**
  * ` <tsconfig>` for a tsc command, or an empty string for `tsconfig.json`,

@@ -114,6 +114,116 @@ describe('invalidateGraphCache', () => {
   });
 });
 
+describe('external nodes after configuration errors', () => {
+  let fs: TempFs;
+  let cleanupPlugins: (() => void) | undefined;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-external-node-recovery');
+  });
+
+  afterEach(() => {
+    cleanupPlugins?.();
+    fs.cleanup();
+  });
+
+  it('recovers external dependencies after repairing a plugin configuration', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({
+        plugins: [join(fs.tempDir, 'external-dependencies.cjs')],
+      }),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'external-dependencies.json': JSON.stringify({ ready: false }),
+      'external-dependencies.cjs': `
+        const { readFileSync } = require('node:fs');
+        const { join } = require('node:path');
+
+        const readConfig = (root) =>
+          JSON.parse(readFileSync(join(root, 'external-dependencies.json'), 'utf8'));
+
+        exports.name = 'external-dependencies';
+        exports.createNodes = [
+          'external-dependencies.json',
+          async (files, options, context) => {
+            if (!readConfig(context.workspaceRoot).ready) {
+              throw new Error('Invalid external dependency configuration');
+            }
+            return files.map((file) => [file, {
+              externalNodes: {
+                'npm:first': {
+                  name: 'npm:first',
+                  type: 'npm',
+                  data: { packageName: 'first', version: '1.0.0' },
+                },
+                'npm:second': {
+                  name: 'npm:second',
+                  type: 'npm',
+                  data: { packageName: 'second', version: '2.0.0' },
+                },
+              },
+            }]);
+          },
+        ];
+        exports.createDependencies = (options, context) =>
+          readConfig(context.workspaceRoot).ready
+            ? [{ source: 'npm:first', target: 'npm:second', type: 'static' }]
+            : [];
+      `,
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    ({ cleanupPlugins } =
+      await import('../../project-graph/plugins/get-plugins'));
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+
+    const failed = await getCachedSerializedProjectGraphPromise();
+    expect(failed.error).toMatchObject({
+      name: 'DaemonProjectGraphError',
+      errors: expect.arrayContaining([
+        expect.objectContaining({
+          errors: [
+            [
+              null,
+              expect.objectContaining({
+                message: 'Invalid external dependency configuration',
+              }),
+            ],
+          ],
+        }),
+      ]),
+    });
+
+    fs.writeFile('external-dependencies.json', JSON.stringify({ ready: true }));
+
+    const recovered = await getCachedSerializedProjectGraphPromise();
+    expect(recovered.error).toBeNull();
+    expect(recovered.projectGraph.externalNodes).toEqual({
+      'npm:first': {
+        name: 'npm:first',
+        type: 'npm',
+        data: { packageName: 'first', version: '1.0.0' },
+      },
+      'npm:second': {
+        name: 'npm:second',
+        type: 'npm',
+        data: { packageName: 'second', version: '2.0.0' },
+      },
+    });
+    expect(recovered.projectGraph.dependencies['npm:first']).toEqual([
+      { source: 'npm:first', target: 'npm:second', type: 'static' },
+    ]);
+  });
+});
+
 describe('pending dotenv replay before serving a graph', () => {
   let fs: TempFs;
 

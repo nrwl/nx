@@ -10,10 +10,6 @@ export interface Schema {
   js?: boolean;
   skipFormat?: boolean;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   framework: 'react-native' | 'expo';
   useProjectJson?: boolean;
 }

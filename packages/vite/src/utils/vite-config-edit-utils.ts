@@ -596,7 +596,7 @@ export function addTsconfigPathsPlugin(
  * called with an object or with a factory, and a bare default export. Returns
  * undefined when the config is assembled somewhere we cannot follow.
  */
-function findConfigObject(
+export function findConfigObject(
   tsModule: typeof import('typescript'),
   tsquery: any,
   file: import('typescript').SourceFile

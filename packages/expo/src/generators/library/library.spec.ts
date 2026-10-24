@@ -665,6 +665,11 @@ describe('lib', () => {
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
           ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
         }
       `);
     });

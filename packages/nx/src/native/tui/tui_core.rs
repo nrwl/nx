@@ -33,6 +33,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::native::tasks::types::{Task, TaskResult};
+use crate::native::utils::time::current_timestamp_millis;
 
 use super::action::Action;
 use super::components::tasks_list::TaskStatus;
@@ -100,10 +101,12 @@ impl TuiCore {
     // === Task Lifecycle Methods ===
 
     /// Start tasks - records start times and updates status to InProgress
-    pub fn start_tasks(&self, tasks: &[Task]) {
+    pub fn start_tasks(&self, tasks: &mut [Task]) {
         let mut state = self.state.lock();
+        let now = current_timestamp_millis();
         for task in tasks {
-            state.record_task_start(&task.id);
+            let start_time = *task.start_time.get_or_insert(now);
+            state.record_task_start(&task.id, Some(start_time));
             state.update_task_status(&task.id, TaskStatus::InProgress);
         }
     }
@@ -114,7 +117,7 @@ impl TuiCore {
 
         // Record start time when task transitions to InProgress
         if status == TaskStatus::InProgress && state.get_task_timing(task_id).0.is_none() {
-            state.record_task_start(task_id);
+            state.record_task_start(task_id, None);
         }
 
         state.update_task_status(task_id, status);

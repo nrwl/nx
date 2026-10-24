@@ -1089,7 +1089,7 @@ describe('Nx Running Tests', () => {
             silenceError: true,
           });
           expect(output).toContain(
-            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: url http://localhost:${port}).`
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: url http://localhost:${port}).`
           );
           expect(output).toMatch(
             new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)
@@ -1133,9 +1133,9 @@ describe('Nx Running Tests', () => {
             // The workspace itself does not depend on @nx/devkit: pnpm exposes it only
             // next to the packages that do
             const { createRequire } = require('module');
-            const { signalTaskReady } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
+            const { emitReadySignal } = createRequire(require.resolve('@nx/js'))('@nx/devkit');
             setTimeout(() => {
-              console.log('SIGNALLED=' + signalTaskReady({ url: 'http://localhost:${port}/' }));
+              console.log('SIGNALLED=' + emitReadySignal('http://localhost:${port}/'));
             }, 1500);
             setInterval(() => {}, 1000);
           `
@@ -1179,7 +1179,7 @@ describe('Nx Running Tests', () => {
             silenceError: true,
           });
           expect(output).toContain(
-            `Task "${mylib1}:serve" did not become ready within 2000ms (readyWhen: signal).`
+            `Task "${mylib1}:serve" did not become ready within 2.0s (readyWhen: signal).`
           );
           expect(output).toMatch(
             new RegExp(`Failed tasks:\\s+- ${mylib1}:serve`)

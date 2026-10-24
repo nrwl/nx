@@ -120,7 +120,7 @@ a given `source` project the resulting constraints would be **all** that match i
 ## E2E tests that hash from their imports
 
 An atomized e2e test file with `// @nx-ignore-server-inputs` imports app code so its task
-[hashes from that code](/docs/kb/hash-e2e-tests-from-imports).
+[hashes from that code](/docs/kb/skip-unaffected-e2e-tests#using-nx-ignore-server-inputs).
 For its bare imports of other projects, such as
 `import '../../shop/src/app/checkout/checkout-page'`, the rule skips these checks:
 
@@ -132,6 +132,7 @@ For its bare imports of other projects, such as
 It still checks imports of e2e projects, circular dependencies, and direct imports of external
 packages.
 Imports that name values or types get the usual checks.
+A test file with only an `@nx-depends-on` directive gets every check.
 A file counts as atomized when its project has a target named `<target>--<file path>`, with the
 file path relative to the project root, such as `e2e-ci--src/checkout.spec.ts`.
 

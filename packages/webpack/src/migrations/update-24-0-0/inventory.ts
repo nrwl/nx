@@ -5,12 +5,14 @@ const REMOVED_HELPERS =
   /\b(composePlugins|composePluginsSync|withNx|withWeb|withReact)\b/;
 // Left by an earlier conversion; the wrapped `.old` config still calls the helpers.
 const LEGACY_WRAPPER = /\buseLegacyNxPlugin\b/;
+const MODULE_FEDERATION_HELPERS = /\bwithModuleFederation(ForSSR)?\b/;
 
 export interface HelperUsage {
   name: string;
   root: string;
   configPaths: string[];
   usesHelpers: boolean;
+  usesModuleFederation: boolean;
   usesExecutor: boolean;
 }
 
@@ -35,8 +37,13 @@ export function inventoryComposePlugins(tree: Tree): HelperUsage[] {
       root: project.root,
       configPaths: configPaths.sort(),
       usesHelpers: configs.some(({ source }) => REMOVED_HELPERS.test(source)),
-      usesExecutor: Object.values(project.targets ?? {}).some(
-        (target) => target.executor === '@nx/webpack:webpack'
+      usesModuleFederation: configs.some(({ source }) =>
+        MODULE_FEDERATION_HELPERS.test(source)
+      ),
+      usesExecutor: Object.values(project.targets ?? {}).some((target) =>
+        ['@nx/webpack:webpack', '@nrwl/webpack:webpack'].includes(
+          target.executor
+        )
       ),
     });
   }

@@ -8,11 +8,14 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   cloneFromUpstream,
   getPathCommitExposure,
+  getLatestCommitSha,
+  getPathHeadStatus,
   getWorkingTreeStatus,
+  resetWorkingTree,
   tryCommitChanges,
 } from './git-utils';
 
@@ -131,6 +134,47 @@ describe('getPathCommitExposure', () => {
   });
 });
 
+describe('getPathHeadStatus', () => {
+  let repo: string;
+
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), 'nx-head-status-'));
+    runGit(['init'], repo);
+    runGit(['config', 'user.email', 'test@example.com'], repo);
+    runGit(['config', 'user.name', 'Test User'], repo);
+  });
+
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('reports committed for a committed file whose deletion is staged, in a nested workspace', () => {
+    const directory = join(repo, 'apps/ws');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'migrations.json'), '{}');
+    // Keeps the workspace directory alive once `git rm` removes the plan.
+    writeFileSync(join(directory, 'package.json'), '{}');
+    runGit(['add', '-A'], repo);
+    runGit(['commit', '-m', 'plan'], repo);
+    runGit(['rm', '-q', 'migrations.json'], directory);
+
+    expect(getPathHeadStatus('migrations.json', directory)).toBe('committed');
+  });
+
+  it('reports absent on an unborn HEAD', () => {
+    expect(getPathHeadStatus('migrations.json', repo)).toBe('absent');
+  });
+
+  it('reports unknown outside a git repository', () => {
+    const plain = mkdtempSync(join(tmpdir(), 'nx-head-status-plain-'));
+    try {
+      expect(getPathHeadStatus('migrations.json', plain)).toBe('unknown');
+    } finally {
+      rmSync(plain, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('getWorkingTreeStatus with excluded paths', () => {
   let repo: string;
 
@@ -182,4 +226,64 @@ describe('getWorkingTreeStatus with excluded paths', () => {
     rmSync(join(repo, 'outside.txt'));
     expect(getWorkingTreeStatus(nested, ['.nx/migrate-runs'])).toBe('clean');
   });
+
+  it('sees a new file that status.showUntrackedFiles=no hides, as git add -A stages it', () => {
+    runGit(['config', 'status.showUntrackedFiles', 'no'], repo);
+    writeFileSync(join(repo, 'new.ts'), '');
+
+    expect(getWorkingTreeStatus(repo, ['.nx/migrate-runs'])).toBe('dirty');
+  });
+});
+
+describe('resetWorkingTree', () => {
+  let repo: string;
+  let head: string;
+
+  beforeEach(() => {
+    repo = mkdtempSync(join(tmpdir(), 'nx-reset-'));
+    runGit(['init'], repo);
+    runGit(['config', 'user.email', 'test@example.com'], repo);
+    runGit(['config', 'user.name', 'Test User'], repo);
+    runGit(['commit', '--allow-empty', '-m', 'initial commit'], repo);
+    head = getLatestCommitSha(repo);
+  });
+
+  afterEach(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it.each([
+    ['', false],
+    ['apps/ws', false],
+    ['apps/[ws]', true],
+  ])(
+    'keeps the kept paths of the workspace at %j and nothing deeper (staged: %s)',
+    (workspace, staged) => {
+      const directory = join(repo, workspace);
+      const kept = [
+        '.nx/migrate-runs/run-1/run.json',
+        'migrations.json',
+        'tools/ai-migrations/a.md',
+      ];
+      const removed = 'libs/lib/migrations.json';
+      for (const file of [...kept, removed]) {
+        mkdirSync(dirname(join(directory, file)), { recursive: true });
+        writeFileSync(join(directory, file), '{}');
+      }
+      if (staged) {
+        runGit(['add', '-A'], repo);
+      }
+
+      resetWorkingTree(
+        head,
+        ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations'],
+        directory
+      );
+
+      expect(kept.filter((file) => !existsSync(join(directory, file)))).toEqual(
+        []
+      );
+      expect(existsSync(join(directory, removed))).toBe(false);
+    }
+  );
 });

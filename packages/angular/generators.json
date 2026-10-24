@@ -90,30 +90,6 @@
       "description": "Generate an Angular Pipe",
       "aliases": ["p"]
     },
-    "scam-to-standalone": {
-      "factory": "./dist/src/generators/scam-to-standalone/scam-to-standalone",
-      "schema": "./dist/src/generators/scam-to-standalone/schema.json",
-      "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
-      "x-deprecated": "SCAMs are superseded by Angular standalone components. Convert any remaining SCAMs before upgrading. It will be removed in Nx v24."
-    },
-    "scam": {
-      "factory": "./dist/src/generators/scam/scam",
-      "schema": "./dist/src/generators/scam/schema.json",
-      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",
-      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:component` generator instead. It will be removed in Nx v24."
-    },
-    "scam-directive": {
-      "factory": "./dist/src/generators/scam-directive/scam-directive",
-      "schema": "./dist/src/generators/scam-directive/schema.json",
-      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM).",
-      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:directive` generator instead. It will be removed in Nx v24."
-    },
-    "scam-pipe": {
-      "factory": "./dist/src/generators/scam-pipe/scam-pipe",
-      "schema": "./dist/src/generators/scam-pipe/schema.json",
-      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
-      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:pipe` generator instead. It will be removed in Nx v24."
-    },
     "setup-ssr": {
       "factory": "./dist/src/generators/setup-ssr/setup-ssr",
       "schema": "./dist/src/generators/setup-ssr/schema.json",

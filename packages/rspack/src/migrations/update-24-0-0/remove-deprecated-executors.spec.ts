@@ -345,6 +345,59 @@ module.exports = composePlugins(withNx(), (config) => config);
     ).toBeUndefined();
   });
 
+  it('leaves a Module Federation helper config for the Module Federation migration', async () => {
+    const project = createProject(tree);
+    const config = `const { composePlugins, withNx } = require('@nx/rspack');
+const { withModuleFederation } = require('@nx/module-federation/rspack');
+
+module.exports = composePlugins(withNx(), withModuleFederation({ name: 'host' }));
+`;
+    writeRspackConfig(tree, project.root, config);
+
+    await update(tree);
+
+    expect(tree.exists(`${project.root}/rspack.config.old.js`)).toBe(false);
+    expect(tree.read(`${project.root}/rspack.config.js`, 'utf-8')).toBe(config);
+  });
+
+  it('converts a helper config on an @nrwl-aliased target in one run', async () => {
+    const project = createProject(tree, {
+      buildExecutor: '@nrwl/rspack:rspack',
+    });
+    writeRspackConfig(
+      tree,
+      project.root,
+      `const { composePlugins, withNx } = require('@nx/rspack');
+
+module.exports = composePlugins(withNx(), (config) => config);
+`
+    );
+
+    const result = await update(tree);
+
+    expect(result.nextSteps).toBeUndefined();
+    expect(tree.exists(`${project.root}/rspack.config.old.js`)).toBe(true);
+    expect(readProjectConfiguration(tree, project.name).targets)
+      .toMatchInlineSnapshot(`
+      {
+        "build": {
+          "configurations": {
+            "development": {},
+            "production": {},
+          },
+          "defaultConfiguration": "production",
+        },
+        "serve": {
+          "configurations": {
+            "development": {},
+            "production": {},
+          },
+          "defaultConfiguration": "development",
+        },
+      }
+    `);
+  });
+
   it('skips the prompt when no project uses the removed executors', async () => {
     const nxJson = readNxJson(tree);
 

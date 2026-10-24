@@ -12,13 +12,13 @@ export function pluginNxReadySignal(): RsbuildPlugin {
       if (!process.env.NX_READY_SIGNAL_SOCKET) {
         return;
       }
-      const { signalTaskReady } =
+      const { emitReadySignal } =
         require('@nx/devkit') as typeof import('@nx/devkit');
       const report = ({ port }: { port: number }) => {
         const { https, host } = api.getNormalizedConfig().server;
-        signalTaskReady({
-          url: `${https ? 'https' : 'http'}://${getUrlHost(host)}:${port}/`,
-        });
+        emitReadySignal(
+          `${https ? 'https' : 'http'}://${getUrlHost(host)}:${port}/`
+        );
       };
       api.onAfterStartDevServer(report);
       // Rsbuild 1 names the preview hook onAfterStartProdServer

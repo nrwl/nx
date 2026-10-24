@@ -7,7 +7,7 @@ import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import type { RspackExecutorSchema } from '../../../executors/rspack/schema';
 import type { NxAppRspackPluginOptions } from '../../../plugins/utils/models';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function buildPostTargetTransformerFactory(
@@ -24,6 +24,19 @@ export function buildPostTargetTransformerFactory(
       projectName: projectDetails.projectName,
       projectRoot: projectDetails.root,
     };
+
+    // outputPath moves into the config, where `{options.outputPath}` can't resolve.
+    const outputPath = target.options?.outputPath;
+    if (target.outputs && typeof outputPath === 'string') {
+      target.outputs = target.outputs.map((output) =>
+        output.startsWith('{options.outputPath}')
+          ? output.replace(
+              '{options.outputPath}',
+              `{workspaceRoot}/${outputPath}`
+            )
+          : output.replace('{options.outputPath}', outputPath)
+      );
+    }
 
     const { pluginOptions, rspackConfigPath } = processOptions(target, context);
 
@@ -162,6 +175,12 @@ function updateRspackConfig(
     sourceFile = ast(rspackConfigText);
   };
   updateSources();
+
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (hasMigratedConfigValues(sourceFile, 'build')) {
+    return;
+  }
 
   setOptionsInRspackConfig(
     tree,

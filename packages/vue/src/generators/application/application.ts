@@ -9,7 +9,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -124,7 +123,7 @@ export async function applicationGeneratorInternal(
         linter: options.linter,
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting: options.enableTypedLinting,
         rootProject: options.rootProject,
         projectName: options.projectName,
       },

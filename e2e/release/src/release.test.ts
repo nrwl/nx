@@ -125,7 +125,9 @@ describe('nx release', () => {
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(
+      `git config user.email "test@users.noreply.github.com"`
+    );
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);

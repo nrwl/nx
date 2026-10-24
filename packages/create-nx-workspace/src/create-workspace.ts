@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { createEmptyWorkspace } from './create-empty-workspace';
 import { createPreset } from './create-preset';
@@ -32,6 +32,7 @@ import { execAndWait } from './utils/child-process-utils';
 import {
   generatePackageManagerFiles,
   getPackageManagerCommand,
+  getPackageManagerVersion,
 } from './utils/package-manager';
 import { isAiAgent, logProgress } from './utils/ai/ai-output';
 import { confirmThirdPartyPreset } from './internal-utils/prompts';
@@ -127,6 +128,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 
       // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
       generatePackageManagerFiles(directory, packageManager);
+
+      const packageJsonPath = join(directory, 'package.json');
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+      packageJson.packageManager = `${packageManager}@${getPackageManagerVersion(packageManager)}`;
+      writeFileSync(
+        packageJsonPath,
+        JSON.stringify(packageJson, null, 2) + '\n'
+      );
 
       // Install dependencies with the user's package manager
       if (aiMode) {
@@ -406,7 +415,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
 }
 
 function setAnalyticsPreference(directory: string, enabled: boolean): void {
-  const { readFileSync, writeFileSync } = require('fs');
   const nxJsonPath = join(directory, 'nx.json');
   const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
   nxJson.analytics = enabled;

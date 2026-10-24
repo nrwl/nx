@@ -38,7 +38,7 @@ describe('.NET Plugin - Cache Tests', () => {
 
     // Initialize git repository and make an initial commit
     runCommand('git init');
-    runCommand('git config user.email "test@test.com"');
+    runCommand('git config user.email "test@users.noreply.github.com"');
     runCommand('git config user.name "Test User"');
     runCommand('git add .');
     runCommand('git commit -m "Initial commit"');

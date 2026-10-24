@@ -47,7 +47,7 @@ describe('normalizeReadyWhen', () => {
     expect(normalizeReadyWhen({ port: 3000 }, 'app:serve', data)).toEqual({
       kind: 'port',
       port: 3000,
-      timeout: 60_000,
+      timeout: 600_000,
     });
     expect(
       normalizeReadyWhen({ port: 3000, host: 'localhost' }, 'app:serve', data)
@@ -252,7 +252,7 @@ describe('normalizeReadyWhen signal', () => {
   it('fills in the default timeout', () => {
     expect(normalize({ signal: true })).toEqual({
       kind: 'signal',
-      timeout: 60_000,
+      timeout: 600_000,
     });
     expect(normalize({ signal: true, timeout: 5000 })).toEqual({
       kind: 'signal',
@@ -389,12 +389,12 @@ describe('checkReadyWhen', () => {
 
   it('leaves only the values that read the env to the producer process', () => {
     expect(check({ url: 'http://localhost:{options.port}' })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'url http://localhost:4200',
     });
     // options.port has a value, so the env is never read
     expect(check({ port: '{options.port ?? env.PORT}' })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'port 4200',
     });
     expect(
@@ -404,14 +404,14 @@ describe('checkReadyWhen', () => {
       description: 'port h:{options.unset ?? env.PORT}',
     });
     expect(check({ logMatches: ['on {env.PORT}', 'ready'] })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'logMatches "on {env.PORT}", "ready"',
     });
   });
 
   it('waits for the producer to start when the server picks the port', () => {
     expect(check({ port: 'auto', host: 'h' })).toEqual({
-      timeout: 60_000,
+      timeout: 600_000,
       description: 'port h:auto',
     });
   });

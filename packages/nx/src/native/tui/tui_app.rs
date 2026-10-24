@@ -169,8 +169,8 @@ pub trait TuiApp: Send {
     /// # Arguments
     ///
     /// * `tasks` - List of tasks that will be executed
-    fn start_tasks(&mut self, tasks: Vec<Task>) {
-        self.core().start_tasks(&tasks);
+    fn start_tasks(&mut self, mut tasks: Vec<Task>) {
+        self.core().start_tasks(&mut tasks);
         self.on_tasks_started(&tasks);
     }
 

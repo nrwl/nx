@@ -11,7 +11,7 @@ filter: 'type:References'
 [Docker](https://www.docker.com/) packages applications into portable container images. In a Docker monorepo, Nx builds, caches, and publishes those images alongside the rest of your projects.
 
 The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
-Using the `@nx/docker` [Inference Plugin](/docs/concepts/mental-model#inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
+Using the `@nx/docker` [Inference Plugin](/docs/features/run-tasks#inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
 It will also provide a `nx-release-publish` target for publishing docker images to a registry.
 
 ## Installation
@@ -34,7 +34,7 @@ The `@nx/docker` plugin will create a task for any project that has a Dockerfile
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
 
 ### @nx/docker configuration
 
@@ -192,8 +192,8 @@ In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild a
 
 For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
-{% aside type="note" title="Building Docker images on Nx Agents" %}
-To build Docker images on Nx Agents, your organization needs the [dedicated compute cluster](/docs/kb/dedicated-compute-cluster) add-on. It reserves an isolated Nx Cloud environment that runs Docker-in-Docker, which agents need to build and push container images.
+{% aside type="note" title="Building Docker images on Workers" %}
+To build Docker images on Workers, your organization needs the [dedicated compute cluster](/docs/kb/dedicated-compute-cluster) add-on. It reserves an isolated Nx Cloud environment that runs Docker-in-Docker, which agents need to build and push container images.
 {% /aside %}
 
 ## Using Nx release to publish Docker images

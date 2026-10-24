@@ -29,6 +29,7 @@ import {
   getProjectPackageManagerWorkspaceStateWarningTask,
   ensureTypescript,
   isUsingTsSolutionSetup,
+  typesNodeVersion,
 } from '@nx/js/internal';
 import { execSync } from 'child_process';
 import * as path from 'path';
@@ -40,10 +41,7 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
-import {
-  addIgnoresToLintConfig,
-  isTypedLintingEnabled,
-} from '@nx/eslint/internal';
+import { addIgnoresToLintConfig } from '@nx/eslint/internal';
 
 export function configurationGenerator(
   tree: Tree,
@@ -87,6 +85,8 @@ export async function configurationGeneratorInternal(
     webServerAddress: options.webServerAddress ?? null,
     isTsSolutionSetup,
     ...options,
+    ...getCiWebServer(options),
+    toJsStringLiteral,
   });
   const playwrightConfigFile = options.js
     ? 'playwright.config.mjs'
@@ -100,6 +100,7 @@ export async function configurationGeneratorInternal(
           allowJs: true,
           outDir: 'out-tsc/playwright',
           sourceMap: false,
+          types: ['node'],
         },
         include: [
           joinPathFragments(options.directory, '**/*.ts'),
@@ -138,6 +139,7 @@ export async function configurationGeneratorInternal(
         allowJs: true,
         outDir: `${offsetFromProjectRoot}dist/out-tsc`,
         sourceMap: false,
+        types: ['node'],
       },
       include: [
         '**/*.ts',
@@ -174,7 +176,6 @@ export async function configurationGeneratorInternal(
       }
     } else {
       tsconfig.compilerOptions.outDir = `${offsetFromProjectRoot}dist/out-tsc`;
-      tsconfig.compilerOptions.module = 'commonjs';
     }
 
     writeJson(tree, tsconfigPath, tsconfig);
@@ -213,7 +214,7 @@ export async function configurationGeneratorInternal(
       skipPackageJson: options.skipPackageJson,
       js: options.js,
       directory: options.directory,
-      enableTypedLinting: isTypedLintingEnabled(options),
+      enableTypedLinting: options.enableTypedLinting,
       rootProject: options.rootProject ?? projectConfig.root === '.',
     })
   );
@@ -234,6 +235,14 @@ export async function configurationGeneratorInternal(
           // required since used in playwright config
           '@nx/devkit': nxVersion,
         }
+      ),
+      // The e2e tsconfig loads Node types. Keep an installed version.
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { '@types/node': typesNodeVersion },
+        undefined,
+        true
       )
     );
   }
@@ -281,6 +290,29 @@ async function normalizeOptions(
     linter,
     directory: options.directory ?? 'e2e',
   };
+}
+
+function getCiWebServer(options: NormalizedGeneratorOptions): {
+  ciWebServerCommand: string | null;
+  ciWebServerAddress: string | null;
+} {
+  const differs = (ciValue: string | undefined, value: string | undefined) =>
+    ciValue && ciValue !== value ? ciValue : null;
+  return {
+    ciWebServerCommand: differs(
+      options.ciWebServerCommand,
+      options.webServerCommand
+    ),
+    ciWebServerAddress: differs(
+      options.ciWebServerAddress,
+      options.webServerAddress
+    ),
+  };
+}
+
+// The template inserts the result with `<%-`, since `<%=` would HTML-escape it.
+function toJsStringLiteral(value: string): string {
+  return `'${JSON.stringify(value).slice(1, -1).replace(/'/g, "\\'")}'`;
 }
 
 async function promptForMissingServeData(projectName: string) {
