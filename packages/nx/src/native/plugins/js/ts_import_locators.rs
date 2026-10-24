@@ -644,6 +644,13 @@ fn process_file(
     let mut dynamic_import_expressions: Vec<(String, BytePos)> = vec![];
 
     loop {
+        let follows_dot = matches!(
+            &state.current_token,
+            Some(TokenAndSpan {
+                token: Token::Dot,
+                ..
+            })
+        );
         let current_token = state.next();
 
         // This is the end of the file
@@ -660,6 +667,9 @@ fn process_file(
                     continue;
                 }
             };
+            if follows_dot {
+                continue;
+            }
             let import = match word {
                 // This is an import keyword
                 Keyword(keyword) if *keyword == Import => {
@@ -1750,6 +1760,64 @@ import(myTag`react@${version}`);
         assert_eq!(
             result.static_import_expressions,
             vec![String::from("path"), String::from("fs")]
+        );
+    }
+
+    #[test]
+    fn should_not_treat_member_calls_named_import_or_require_as_module_imports() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      const registry = {
+        import(name: string) { return name; },
+        require(name: string) { return name; },
+      };
+
+      registry.import("lodash");
+      registry.require("chalk");
+      registry?.import("left-pad");
+      registry?.require("is-odd");
+      registry
+        .import("multi-line");
+      this.require("on-this");
+      scope.child.import("Node");
+      module.require("from-module");
+      registry.
+        import("dot-then-newline");
+
+      const chalk = require("real-require");
+      const lazy = import("real-dynamic");
+      const { require: renamed } = module;
+      const meta = import.meta.url;
+      const merged = Object.assign({}, ...require("spread-real"));
+      registry.use();
+      import("after-member-call");
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![String::from("real-require"), String::from("spread-real")]
+        );
+        assert_eq!(
+            result.dynamic_import_expressions,
+            vec![
+                String::from("real-dynamic"),
+                String::from("after-member-call")
+            ]
         );
     }
 
