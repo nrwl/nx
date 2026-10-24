@@ -31,6 +31,7 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export {
   mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
 } from './project-graph/utils/project-configuration/target-merging';
 export {
   findMatchingTargetNames,
@@ -173,13 +174,21 @@ export type { InputDefinition } from './config/workspace-json-project-json';
 export type { ChangedFile, UnregisterCallback } from './daemon/client/client';
 export { daemonClient } from './daemon/client/client';
 export type { RunCommandsOptions } from './executors/run-commands/run-commands.impl';
-export { LARGE_BUFFER } from './executors/run-commands/run-commands.impl';
+export {
+  LARGE_BUFFER,
+  interpolateArgsIntoCommand,
+  normalizeArgs as normalizeRunCommandsArgs,
+} from './executors/run-commands/run-commands.impl';
 export { FsTree } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
 export type { JsonInput } from './native';
-export { isAiAgent, killProcessTreeGraceful } from './native';
+export {
+  isAiAgent,
+  killProcessTreeGraceful,
+  readShebangHeaders,
+} from './native';
 export { killChildOnHostExit } from './utils/kill-child-on-host-exit';
 export { connectToNxCloud } from './nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 export type { NxCloudOnBoardingStatus } from './nx-cloud/models/onboarding-status';

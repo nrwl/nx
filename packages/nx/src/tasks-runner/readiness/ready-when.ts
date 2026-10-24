@@ -15,8 +15,9 @@ import {
   type TokenScope,
 } from '../tokens';
 import { getExecutorForTask } from '../utils';
+import { formatDuration } from '../../native';
 
-export const DEFAULT_READY_TIMEOUT = 60_000;
+export const DEFAULT_READY_TIMEOUT = 600_000;
 // Node timers take at most a signed 32-bit count of milliseconds
 const MAX_DURATION = 2_147_483_647;
 
@@ -298,8 +299,10 @@ export function readinessTimeoutError(
 ): Error {
   const description =
     'kind' in readyWhen ? describeReadyWhen(readyWhen) : readyWhen.description;
+  const longer = Math.min(readyWhen.timeout * 2, MAX_DURATION);
   return new Error(
-    `Task "${taskId}" did not become ready within ${readyWhen.timeout}ms (readyWhen: ${description}). ` +
+    `Task "${taskId}" did not become ready within ${formatDuration(readyWhen.timeout)} (readyWhen: ${description}). ` +
+      `If it needs longer, set "timeout": ${longer} in the target's "readyWhen", as { "...": true, "timeout": ${longer} } to keep an inferred check. ` +
       'To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.'
   );
 }
@@ -370,14 +373,9 @@ export function getReadyWhen(
   projectGraph: ProjectGraph,
   projects: Record<string, ProjectConfiguration>,
   workspaceRoot: string,
-  taskEnv: NodeJS.ProcessEnv
+  taskEnv: NodeJS.ProcessEnv,
+  inputs = getReadyWhenInputs(task, projectGraph, projects, workspaceRoot)
 ): NormalizedReadyWhen | null {
-  const inputs = getReadyWhenInputs(
-    task,
-    projectGraph,
-    projects,
-    workspaceRoot
-  );
   if (!inputs) {
     return null;
   }
@@ -440,9 +438,11 @@ export function getReadyWhenWait(
   return inputs && checkReadyWhen(inputs.readyWhen, task.id, inputs.data);
 }
 
+export type ReadyWhenInputs = ReturnType<typeof getReadyWhenInputs>;
+
 // Placeholders resolve against the options the executor receives: aliases,
 // schema defaults and the spelling of command-line overrides applied
-function getReadyWhenInputs(
+export function getReadyWhenInputs(
   task: Task,
   projectGraph: ProjectGraph,
   projects: Record<string, ProjectConfiguration>,
@@ -474,6 +474,32 @@ function getReadyWhenInputs(
       options,
     },
   };
+}
+
+// Only a signal check reports a URL, which its waiters get as NX_READY_URL
+export function mayReportReadyUrl(
+  task: Task,
+  projectGraph: ProjectGraph
+): boolean {
+  const readyWhen = getReadyWhenConfig(task, projectGraph);
+  if (typeof readyWhen !== 'object' || readyWhen === null) {
+    return false;
+  }
+  const kind = PROBE_KEYS.find((key) => readyWhen[key] != null);
+  switch (kind) {
+    case 'signal':
+      return true;
+    case 'url':
+    case 'port':
+    case 'command':
+    case 'logMatches':
+    case undefined:
+      return false;
+    default: {
+      const unhandled: never = kind;
+      throw new Error(`Unhandled readyWhen check: ${unhandled}`);
+    }
+  }
 }
 
 export function getReadyProducerIds(

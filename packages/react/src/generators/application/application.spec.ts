@@ -173,13 +173,13 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: '<pm-exec> nx run my-app:dev',
+                default: process.env['CI'] ? '<pm-exec> nx run my-app:preview' : '<pm-exec> nx run my-app:dev',
                 production: '<pm-exec> nx run my-app:preview',
               },
               ciWebServerCommand: '<pm-exec> nx run my-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',
           },
         });
         "
@@ -218,9 +218,12 @@ describe('app', () => {
         import { nxE2EPreset } from '@nx/playwright/preset';
         import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
+        const isCI = !!process.env['CI'];
+        // getReadyUrl moves the address to the port the server task reported.
+        const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
+
         // For CI, you may want to set BASE_URL to the deployed application.
-        // getReadyUrl moves the address to the port the dev server task reported.
-        const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4300');
+        const baseURL = process.env['BASE_URL'] || webServerAddress;
 
         /**
          * Read environment variables from file.
@@ -246,10 +249,9 @@ describe('app', () => {
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
             trace: 'on-first-retry',
           },
-          /* Run your local dev server before starting the tests */
           webServer: {
-            command: 'npx nx run my-app:preview',
-            url: getReadyUrl('http://localhost:4300'),
+            command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+            url: webServerAddress,
             reuseExistingServer: true,
             cwd: workspaceRoot
           },
@@ -704,18 +706,6 @@ describe('app', () => {
         );
       }
     );
-
-    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        e2eTestRunner: 'playwright',
-        setParserOptionsProject: true,
-      });
-
-      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
-        'projectService: true'
-      );
-    });
 
     it('should not set up typed linting in the e2e project by default', async () => {
       await applicationGenerator(appTree, {
@@ -1472,6 +1462,9 @@ describe('app', () => {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "exclude": [
             "out-tsc",
@@ -1493,6 +1486,22 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should reference tsconfig.app.json once from tsconfig.spec.json with jest', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        linter: 'none',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+      });
+
+      expect(readJson(appTree, 'myapp/tsconfig.spec.json').references).toEqual([
+        { path: './tsconfig.app.json' },
+      ]);
     });
 
     it('should respect the provided name', async () => {

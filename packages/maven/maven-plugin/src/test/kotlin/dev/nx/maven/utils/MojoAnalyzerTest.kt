@@ -123,6 +123,13 @@ class MojoAnalyzerTest {
   }
 
   @Test
+  fun `exec java is not cacheable`() {
+    val analysis = analyze("exec-maven-plugin", "java", "target/classes")
+    assertEquals(false, analysis.isCacheable)
+    assertEquals(emptySet(), analysis.outputs)
+  }
+
+  @Test
   fun `unconfigured non-cacheable goals get no inputs`() {
     val analysis = analyze("maven-clean-plugin", "clean", "target/classes")
     assertEquals(emptySet(), analysis.inputs)

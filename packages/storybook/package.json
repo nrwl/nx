@@ -36,6 +36,9 @@
       "presets/cypress": [
         "dist/presets/cypress.d.ts"
       ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
       "src/*": [
         "dist/src/*.d.ts"
       ],
@@ -77,6 +80,11 @@
       "types": "./dist/presets/cypress.d.ts",
       "default": "./dist/presets/cypress.js"
     },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",
       "types": "./dist/src/*.d.ts",
@@ -99,7 +107,7 @@
   },
   "devDependencies": {
     "nx": "workspace:*",
-    "storybook": "9.0.6"
+    "storybook": "9.1.21"
   },
   "peerDependencies": {
     "@nx/web": "workspace:*",

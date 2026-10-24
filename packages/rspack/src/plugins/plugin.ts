@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashFile,
   hashObject,
@@ -286,7 +287,7 @@ async function createRspackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
-    readyWhen: { port: '{options.port}', host: '{options.host ?? localhost}' },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -360,9 +361,10 @@ function normalizeOutputPath(
   }
 }
 
-// A dev server whose config loads NxAppRspackPlugin or NxReadySignalPlugin reports
-// when it listens. Otherwise the check reads the config when the task runs,
-// with the task's env and options, and waits for the dev server's port.
+// A dev server whose config loads NxAppRspackPlugin, NxReadySignalPlugin or
+// @nx/angular-rspack's NgRspackPlugin reports when it listens. Otherwise the
+// check reads the config when the task runs, with the task's env and options,
+// and waits for the dev server's port.
 function getDevServerReadyWhen(
   configFilePath: string,
   configs: { devServer?: unknown; plugins?: unknown[] }[]
@@ -373,11 +375,8 @@ function getDevServerReadyWhen(
   );
   return signals
     ? { signal: true }
-    : {
-        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-        // becomes user-chosen, since the shell expands $, backticks and %.
-        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" ${basename(configFilePath)}`,
-        // Each attempt loads the config
-        interval: 1000,
-      };
+    : getReadyCheckReadyWhen(
+        '@nx/rspack/ready-check',
+        basename(configFilePath)
+      );
 }

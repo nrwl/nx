@@ -874,11 +874,17 @@ export function isNativeTypeStripError(err: unknown): boolean {
  * Module resolution failures - typically a tsconfig path alias that hasn't
  * been registered yet, or a workspace lib not surfaced via package manager
  * symlinks. CJS uses `MODULE_NOT_FOUND`, ESM uses `ERR_MODULE_NOT_FOUND`.
+ * `ERR_PACKAGE_PATH_NOT_EXPORTED` covers a linked package shadowing a path
+ * alias for a subpath its `exports` doesn't list.
  */
 function isModuleNotFoundError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const code = (err as { code?: string }).code;
-  return code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND';
+  return (
+    code === 'MODULE_NOT_FOUND' ||
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
 }
 
 /**
@@ -1177,8 +1183,8 @@ export function requireWithTsconfigFallback<T = any>(
  *   - ESM-redispatch signals callers expect to handle
  *     (`ERR_REQUIRE_ESM`, `ERR_REQUIRE_ASYNC_MODULE`)
  *   - plain module-resolution failures (`MODULE_NOT_FOUND`,
- *     `ERR_MODULE_NOT_FOUND`) - disabling strip-types doesn't fix a missing
- *     module, the hint just misleads.
+ *     `ERR_MODULE_NOT_FOUND`, `ERR_PACKAGE_PATH_NOT_EXPORTED`) - disabling
+ *     strip-types doesn't fix a missing module, the hint just misleads.
  */
 function augmentLoadFailure(filePath: string, err: unknown): unknown {
   if (!(err instanceof Error)) return err;
@@ -1187,7 +1193,8 @@ function augmentLoadFailure(filePath: string, err: unknown): unknown {
     code === 'ERR_REQUIRE_ESM' ||
     code === 'ERR_REQUIRE_ASYNC_MODULE' ||
     code === 'MODULE_NOT_FOUND' ||
-    code === 'ERR_MODULE_NOT_FOUND'
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
   ) {
     return err;
   }

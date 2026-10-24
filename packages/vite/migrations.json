@@ -78,6 +78,13 @@
       "description": "Register @nx/js/typescript with its typecheck target in workspaces that use @nx/vite/plugin without it, since @nx/vite/plugin no longer infers typecheck targets except for Vue projects.",
       "implementation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck",
       "documentation": "./dist/src/migrations/update-24-0-0/register-typescript-plugin-for-typecheck.md"
+    },
+    "update-24-0-0-add-ready-signal-plugin": {
+      "version": "24.0.0-beta.5",
+      "description": "Add the `nxReadySignal()` plugin to the Vite configs of application projects, so that `@nx/vite/plugin` infers `readyWhen: { signal: true }` for their dev and preview targets; an AI prompt finishes the configs the codemod cannot edit safely.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-ready-signal-plugin",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-ready-signal-plugin.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-ready-signal-plugin.md"
     }
   },
   "packageJsonUpdates": {

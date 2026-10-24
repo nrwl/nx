@@ -17,6 +17,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 
+/** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
@@ -95,7 +96,10 @@ export async function customServerGenerator(
   };
 
   project.targets['serve-custom-server'] = {
+    continuous: true,
     executor: '@nx/js:node',
+    // The server template calls emitReadySignal once it listens
+    readyWhen: { signal: true },
     defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.project}:build-custom-server`,

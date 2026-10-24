@@ -164,6 +164,10 @@ describe('@nx/angular/plugin', () => {
                     "options": {
                       "cwd": ".",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/angular/ready-check').waitForDevServer(process.argv[1])" angular.json",
+                      "interval": 1000,
+                    },
                   },
                   "test": {
                     "cache": true,
@@ -463,6 +467,10 @@ describe('@nx/angular/plugin', () => {
                     "options": {
                       "cwd": "nested-ng-workspaces/org1",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/angular/ready-check').waitForDevServer(process.argv[1])" angular.json",
+                      "interval": 1000,
+                    },
                   },
                   "test": {
                     "cache": true,
@@ -647,6 +655,10 @@ describe('@nx/angular/plugin', () => {
                     },
                     "options": {
                       "cwd": "nested-ng-workspaces/org2",
+                    },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/angular/ready-check').waitForDevServer(process.argv[1])" angular.json",
+                      "interval": 1000,
                     },
                   },
                   "test": {
@@ -1178,6 +1190,26 @@ describe('@nx/angular/plugin', () => {
         },
       }
     `);
+  });
+
+  it('should wait for the server of an ssr-dev-server target', async () => {
+    await createAngularWorkspace('');
+    await addAngularProjectToWorkspace('my-app', '', {
+      root: '',
+      projectType: 'application',
+      architect: {
+        'serve-ssr': {
+          builder: '@angular-devkit/build-angular:ssr-dev-server',
+        },
+      },
+    });
+
+    const nodes = await createNodesFunction(['angular.json'], {}, context);
+
+    expect(nodes[0][1].projects['.'].targets['serve-ssr'].readyWhen).toEqual({
+      command: `node -e "require('@nx/angular/ready-check').waitForDevServer(process.argv[1])" angular.json`,
+      interval: 1000,
+    });
   });
 
   it('should use coverage.reportsDirectory from vitest config when runnerConfig is set', async () => {

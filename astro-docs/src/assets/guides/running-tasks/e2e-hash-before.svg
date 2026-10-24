@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 730 140" font-family="Inter, system-ui, sans-serif">
+<text x="170" y="16" font-size="12" fill="#64748B">checkout/</text>
+<text x="280" y="16" font-size="12" fill="#F43F5E">search/ (edited)</text>
+<text x="390" y="16" font-size="12" fill="#64748B">cart/</text>
+<text x="500" y="16" font-size="12" fill="#64748B">shared/</text>
+<text x="0" y="51" font-size="13" fill="#64748B">checkout.spec.ts</text>
+<rect x="170" y="30" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="280" y="30" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="390" y="30" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="500" y="30" width="100" height="32" rx="4" fill="#6366F1"/>
+<text x="614" y="51" font-size="12" fill="#F43F5E">reruns</text>
+<text x="0" y="95" font-size="13" fill="#64748B">search.spec.ts</text>
+<rect x="170" y="74" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="280" y="74" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="390" y="74" width="100" height="32" rx="4" fill="#6366F1"/>
+<rect x="500" y="74" width="100" height="32" rx="4" fill="#6366F1"/>
+<text x="614" y="95" font-size="12" fill="#F43F5E">reruns</text>
+<rect x="170" y="124" width="12" height="12" rx="2" fill="#6366F1"/>
+<text x="188" y="134" font-size="12" fill="#64748B">In the test's hash</text>
+</svg>

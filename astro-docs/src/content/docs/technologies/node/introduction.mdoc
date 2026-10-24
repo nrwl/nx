@@ -71,9 +71,9 @@ The `serve` task comes from the first two lines of `src/main.ts`:
 // @nx-target-name: serve
 ```
 
-`@nx/js/node` picks up files whose shebang names `node`, and `@nx-target-name` sets the task name. The generator registers that plugin in `nx.json` with `watch: true`, so `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Workspace libraries the application depends on are built first, through `dependsOn` on the `serve` entry in the project configuration. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
+`@nx/js/node` picks up files whose shebang names `node`, and `@nx-target-name` sets the task name. The generator adds that plugin to `nx.json` unless a registration already exists. The plugin runs scripts in watch mode by default, so `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Set `watch: false` in the plugin options to turn watch off for every script the registration covers, `serve` included. Workspace libraries the application depends on are built first, through `dependsOn` on the `serve` entry in the project configuration. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
 
-In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/concepts/nx-plugins) turned off, get an explicit `serve` target in `project.json` instead.
+In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/plugin-registry) turned off, get an explicit `serve` target in `project.json` instead.
 
 ### Creating libraries
 
@@ -128,6 +128,50 @@ Generating Node applications has an option to configure other projects in the wo
 nx g @nx/node:application apps/my-new-app \
 --frontendProject my-react-app
 ```
+
+### Waiting for the server to be ready
+
+Tasks that depend on `serve` with `waitFor: "ready"`, such as Playwright and Cypress e2e tasks, start once the server reports that it's listening.
+Applications generated with the Express, Fastify, Koa, or NestJS framework report it.
+Their `src/main.ts` calls `emitReadySignal` from `@nx/js/ready-signal` once the server listens, and their `serve` entry sets `"readyWhen": { "signal": true }`.
+
+To add this to an existing server, check that the root `package.json` lists `@nx/js`, so the server can import it.
+If it doesn't, add `@nx/js` at the same version as `nx`:
+
+```shell
+npm install -D @nx/js@<nx-version>
+```
+
+Call `emitReadySignal` with the server once it listens:
+
+```ts
+const server = app.listen(port, host, async () => {
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (
+        s: string
+      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
+});
+```
+
+Then set `readyWhen` on the `serve` entry in the project configuration:
+
+```json
+"serve": {
+  "readyWhen": { "signal": true }
+}
+```
+
+`emitReadySignal` reads the address from the server and passes it to the waiting tasks as `NX_READY_URL`.
+Without `readyWhen`, a task that waits for `serve` starts as soon as `serve` starts.
+For why the import is guarded, and for the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ### Debugging
 

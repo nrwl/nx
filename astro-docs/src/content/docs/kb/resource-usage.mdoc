@@ -30,7 +30,7 @@ Resource usage requires Nx 22.1 or later.
 Resource usage is an add-on, enabled by default for new organizations. Once it's on, Nx uploads CPU
 and memory metrics for your CI runs and you view them in Nx Cloud. There's nothing else to set up.
 
-Data collection for each report costs 10 credits. With Nx Agents, each agent generates its own
+Data collection for each report costs 10 credits. With Workers, each agent generates its own
 report. For non-distributed runs, every report generated on the same machine counts as a single
 10 credit charge, however many runs happen there. See the
 [credits pricing reference](/docs/reference/nx-cloud/credits-pricing) for details.
@@ -39,17 +39,17 @@ Data collection can be turned off at either the organization or the workspace le
 
 ### Organization
 
-Turn the resource usage add-on on or off under **Settings > Add-ons**. Disabling it here stops
+Turn the resource usage add-on on or off under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons). Disabling it here stops
 collection for every workspace in the organization.
 
 ![The resource usage add-on toggle in organization settings](../../../assets/guides/nx-cloud/resource-usage-org-add-on.avif)
 
 ### Workspace
 
-Once the add-on is on for the organization, go to **Workspace > Settings** and find the
+Once the add-on is on for the organization, go to [**Workspace > Settings**](https://cloud.nx.app/go/workspace/settings) and find the
 **Resource usage reports** card. Two switches control collection independently:
 
-- **Distributed runs** - metrics for runs distributed across Nx Agents.
+- **Distributed runs** - metrics for runs distributed across Workers.
 - **Non distributed runs** - metrics for runs from non-distributed Nx commands.
 
 ![The distributed and non distributed run toggles in workspace settings](../../../assets/guides/nx-cloud/resource-usage-workspace-toggles.avif)
@@ -67,14 +67,14 @@ your own CI, add a single CLI step per agent job to upload metrics. See
 
 ## Viewing resource usage
 
-What gets measured depends on how you run. With Nx Agents, Nx records every task an agent executes.
+What gets measured depends on how you run. With Workers, Nx records every task an agent executes.
 For a standalone Nx command in CI, it records every task in the run.
 
-### Runs with Nx Agents
+### Runs with Workers
 
 Open any CI pipeline execution and go to the **Resource usage** tab.
 
-![The Resource usage tab for a run distributed across Nx Agents](../../../assets/guides/nx-cloud/resource-usage-agents-view.avif)
+![The Resource usage tab for a run distributed across Workers](../../../assets/guides/nx-cloud/resource-usage-agents-view.avif)
 
 #### Agent resource usage summary
 
@@ -113,12 +113,12 @@ The detail view has a few controls for digging in:
 
 - **Download CSV** - export the raw per-process data for deeper analysis.
 
-### Runs without Nx Agents
+### Runs without Workers
 
-For a run that isn't distributed on Nx Agents, open the run details and go to the **Resource usage**
+For a run that isn't distributed on Workers, open the run details and go to the **Resource usage**
 view.
 
-![Resource usage view for a run that isn't distributed on Nx Agents](../../../assets/guides/nx-cloud/resource-usage-non-distributed-view.avif)
+![Resource usage view for a run that isn't distributed on Workers](../../../assets/guides/nx-cloud/resource-usage-non-distributed-view.avif)
 
 Three cards across the top give you the machine specs plus average and maximum figures for CPU and
 memory. Memory and CPU charts below them plot utilization over the run's lifetime, broken down by
@@ -140,7 +140,7 @@ The Public API's `resource-utilization` asset contains process samples and metad
 - **Debug OOM kills** - trace an out-of-memory failure to the exact task that caused it.
 - **Spot misconfigured tooling** - catch a bundler or build tool pulling in more files than it
   should.
-- **Right-size agents** - pick the correct agent resource class when moving to Nx Agents from
+- **Right-size agents** - pick the correct agent resource class when moving to Workers from
   GitHub Actions or another CI provider.
 - **Detect memory leaks** - look for tasks where memory keeps climbing over time.
 - **Compare before and after upgrades** - check whether a dependency upgrade spiked resource usage.
@@ -148,7 +148,7 @@ The Public API's `resource-utilization` asset contains process samples and metad
 ## Resource metrics when you bring your own compute
 
 {% aside type="note" title="Enterprise Feature" %}
-Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Nx Agents](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
+Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
 {% /aside %}
 
 If you run the agents on your own CI compute, Nx Cloud can still collect per-agent CPU and
@@ -156,7 +156,7 @@ memory metrics. Opt in by adding a single CLI step to each agent job.
 
 ### What to add
 
-At the end of each agent job, run `npx nx-cloud upload-agent-metrics`. Use your provider's
+At the end of each agent job, run `npx nx-cloud upload-worker-metrics`. Use your provider's
 always-run mechanism so the step runs even when the agent is killed mid-task, which is precisely the
 scenario where the metrics matter most.
 
@@ -165,7 +165,7 @@ Here's the GitHub Actions step:
 ```yaml
 - name: Upload agent metrics
   if: always()
-  run: npx nx-cloud upload-agent-metrics
+  run: npx nx-cloud upload-worker-metrics
   env:
     NX_AGENT_NAME: ${{ matrix.agent }}
 ```

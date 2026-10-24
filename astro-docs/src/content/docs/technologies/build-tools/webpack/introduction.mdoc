@@ -68,7 +68,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/webpack configuration
 
@@ -118,7 +118,7 @@ Without either plugin, the check reads the webpack config when the task runs ins
 That covers `.env` files and `--port` or `--host` flags.
 It works out the port the way `webpack-cli serve` does, from the `--port` flag, `devServer.port`, `WEBPACK_DEV_SERVER_BASE_PORT`, or 8080, and waits for it.
 When the server picks its own port (a `devServer.port` of `0` or `"auto"`) or listens on a socket instead of a port (`devServer.ipc`), there's nothing to wait for, and the target counts as ready once it has started.
-The `serve-static` target checks the port of its file server.
+The `serve-static` target's file server reports its address once it listens.
 
 A dependent task starts as soon as the server task has started, unless its `dependsOn` entry sets `waitFor` to `ready`:
 

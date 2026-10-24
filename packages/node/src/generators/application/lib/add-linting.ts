@@ -1,5 +1,4 @@
 import { GeneratorCallback, joinPathFragments, Tree } from '@nx/devkit';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { addLintingToProject } from '@nx/js/internal';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -14,7 +13,7 @@ export async function addLintingToApplication(
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
+    enableTypedLinting: options.enableTypedLinting,
     rootProject: options.rootProject,
   });
 }

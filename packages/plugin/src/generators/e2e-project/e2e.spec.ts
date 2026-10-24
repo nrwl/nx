@@ -64,26 +64,37 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(tree.exists('my-plugin-e2e/src/my-plugin.spec.ts')).toBeTruthy();
   });
 
-  it('should create the test workspace with the requested package manager', async () => {
-    // An explicit non-npm choice with a literal expectation. Detection in this
-    // suite resolves to npm, so a template that hardcodes npm would pass an
-    // assertion written against the detected value.
-    await e2eProjectGenerator(tree, {
-      pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
-      packageManager: 'pnpm',
-    });
+  it.each([
+    {
+      packageManager: 'npm' as const,
+      dlxCommand: 'npx --workspaces=false',
+      addCommand: /npm install -D .*my-plugin@e2e/,
+      listCommand: /npm ls .*my-plugin/,
+    },
+    {
+      packageManager: 'pnpm' as const,
+      dlxCommand: 'pnpm dlx',
+      addCommand: /pnpm add .*my-plugin@e2e/,
+      listCommand: /pnpm ls .*my-plugin/,
+    },
+  ])(
+    'should create the test workspace with $packageManager',
+    async ({ packageManager, dlxCommand, addCommand, listCommand }) => {
+      await e2eProjectGenerator(tree, {
+        pluginName: 'my-plugin',
+        pluginOutputPath: `dist/libs/my-plugin`,
+        npmPackageName: '@proj/my-plugin',
+        packageManager,
+      });
 
-    const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
+      const spec = tree.read('my-plugin-e2e/src/my-plugin.spec.ts', 'utf-8');
 
-    expect(spec).toContain('--packageManager=pnpm');
-
-    // Creation, install and checks all have to run under that same manager.
-    expect(spec).toContain('pnpm dlx create-nx-workspace@latest');
-    expect(spec).toMatch(/pnpm add .*my-plugin@e2e/);
-    expect(spec).toMatch(/pnpm ls .*my-plugin/);
-  });
+      expect(spec).toContain(`--packageManager=${packageManager}`);
+      expect(spec).toContain(`${dlxCommand} create-nx-workspace@latest`);
+      expect(spec).toMatch(addCommand);
+      expect(spec).toMatch(listCommand);
+    }
+  );
 
   it('should budget the setup hook for a cold package manager cache', async () => {
     await e2eProjectGenerator(tree, {

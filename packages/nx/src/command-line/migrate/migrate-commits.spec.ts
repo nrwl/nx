@@ -1,5 +1,6 @@
 import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
+  getPathHeadStatus: vi.fn(),
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
   tryCommitChangesAsync: vi.fn(),
@@ -23,6 +24,7 @@ import { readNxJson } from '../../config/configuration';
 import {
   getGitCurrentBranch,
   getGitRemoteNames,
+  getPathHeadStatus,
   hasUncommittedChanges,
   tryCommitChanges,
   tryCommitChangesAsync,
@@ -34,9 +36,11 @@ import {
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
   currentBranchIfDefault,
+  migrateCommitExcludes,
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
+const mockHeadStatus = getPathHeadStatus as Mock;
 const mockHas = hasUncommittedChanges as Mock;
 const mockTry = tryCommitChanges as Mock;
 const mockTryAsync = tryCommitChangesAsync as Mock;
@@ -59,6 +63,7 @@ const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]/g;
 const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 
 beforeEach(() => {
+  mockHeadStatus.mockReset().mockReturnValue('committed');
   mockHas.mockReset();
   mockTry.mockReset();
   mockTryAsync.mockReset();
@@ -126,19 +131,6 @@ describe('commitMigrationIfRequested', () => {
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- No changes to commit for m1."`
     );
-  });
-
-  it('probes the tree with the same exclusions the commit applies, so scratch-only dirt reads as no-changes', async () => {
-    mockHas.mockReturnValue(false);
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps
-    );
-    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
   });
 
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
@@ -372,6 +364,14 @@ describe('commitMigrationIfRequested with an output sink', () => {
     expect(out.lines[0][1]).toContain(
       'Before the next step, tell the user what failed and ask whether to fix the cause first'
     );
+  });
+});
+
+describe('migrateCommitExcludes', () => {
+  it('does not exclude the plan and prompt files when the HEAD probe fails', () => {
+    mockHeadStatus.mockReturnValue('unknown');
+
+    expect(migrateCommitExcludes(ROOT)).toEqual(['.nx/migrate-runs']);
   });
 });
 

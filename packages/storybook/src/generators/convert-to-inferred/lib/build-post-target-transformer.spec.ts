@@ -602,6 +602,94 @@ describe('buildPostTargetTransformer', () => {
       `);
     });
   });
+
+  it('should not add configValues to the storybook config twice when rerun', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/myapp/.storybook/main.ts',
+      storybookConfigFileV17_ReactVite
+    );
+    const createTarget = () => ({
+      options: {
+        outputDir: 'dist/storybook/myapp',
+        configDir: 'apps/myapp/.storybook',
+        docsMode: true,
+      },
+    });
+
+    // A package.json script with the same name keeps the target, so a rerun
+    // transforms it again.
+    for (let run = 0; run < 2; run++) {
+      buildPostTargetTransformer(new AggregatedLog())(
+        createTarget(),
+        tree,
+        { projectName: 'myapp', root: 'apps/myapp' },
+        { outputs: ['{projectRoot}/{options.output-dir}'] }
+      );
+    }
+
+    expect(tree.read('apps/myapp/.storybook/main.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "import type { StorybookConfig } from '@storybook/react-vite';
+          
+          // These options were migrated by @nx/storybook:convert-to-inferred from the project.json file.
+          const configValues = {"default":{"docsMode":true}};
+          
+          // Determine the correct configValue to use based on the configuration
+          const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
+          
+          const options = {
+            ...configValues.default,
+            ...(configValues[nxConfiguration] ?? {})
+          }
+          
+
+        const config: StorybookConfig = {docs: { docsMode: options.docsMode },
+          stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+          addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+          framework: {
+            name: '@storybook/react-vite',
+            options: {
+              builder: {
+                viteConfigPath: './vite.config.ts',
+              },
+            },
+          },
+        };
+
+        export default config;"
+      `);
+  });
+
+  it('should add configValues when the storybook config declares its own configValues', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    tree.write(
+      'apps/myapp/.storybook/main.ts',
+      `${storybookConfigFileV17_ReactVite}
+function getAddons() {
+  const configValues = { addons: [] };
+  return configValues.addons;
+}
+`
+    );
+
+    buildPostTargetTransformer(new AggregatedLog())(
+      {
+        options: {
+          outputDir: 'dist/storybook/myapp',
+          configDir: 'apps/myapp/.storybook',
+          docsMode: true,
+        },
+      },
+      tree,
+      { projectName: 'myapp', root: 'apps/myapp' },
+      { outputs: ['{projectRoot}/{options.output-dir}'] }
+    );
+
+    expect(tree.read('apps/myapp/.storybook/main.ts', 'utf-8')).toContain(
+      'const configValues = {"default":{"docsMode":true}};'
+    );
+  });
 });
 
 const storybookConfigFileV17_ReactVite = `import type { StorybookConfig } from '@storybook/react-vite';

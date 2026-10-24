@@ -283,8 +283,7 @@ describe('@nx/webpack/plugin', () => {
                       "spa": true,
                     },
                     "readyWhen": {
-                      "host": "{options.host ?? localhost}",
-                      "port": "{options.port}",
+                      "signal": true,
                     },
                   },
                   "watch-deps": {

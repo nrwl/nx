@@ -4,21 +4,60 @@ import { getBaseRef } from '../../utils/command-line-utils';
 import {
   getGitCurrentBranch,
   getGitRemoteNames,
+  getPathHeadStatus,
+  getWorkingTreeStatus,
   hasUncommittedChanges,
   tryCommitChanges,
   tryCommitChangesAsync,
+  type WorkingTreeStatus,
 } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import type { ResolvedAgentic } from './agentic/types';
 import { MIGRATE_RUNS_RELATIVE_DIR } from './agentic/types';
+import { AI_MIGRATIONS_DIR } from './prompt-files';
 import { migrateConfirm } from './safe-prompt';
 import { terminalOutput, type MigrateOutputSink } from './deferred-output';
 
-// `git add -A` captures an orchestrated run's scratch state whenever the
-// ignore rule that normally hides it goes missing mid-run (a checkout, a
-// .gitignore edit, or the migration's own changes).
-const MIGRATE_COMMIT_EXCLUDES = [MIGRATE_RUNS_RELATIVE_DIR];
+const MIGRATE_PLAN_PATHS = ['migrations.json', AI_MIGRATIONS_DIR];
+
+/** Workspace-relative paths nx migrate writes for itself. */
+export const MIGRATE_OWNED_PATHS = [
+  MIGRATE_RUNS_RELATIVE_DIR,
+  ...MIGRATE_PLAN_PATHS,
+];
+
+/**
+ * The scratch state is excluded even when git ignores it, since its ignore
+ * rule can go missing mid-run.
+ */
+export function migrateCommitExcludes(root: string): string[] {
+  return [
+    MIGRATE_RUNS_RELATIVE_DIR,
+    ...MIGRATE_PLAN_PATHS.filter((path) => isUncommitted(path, root)),
+  ];
+}
+
+function isUncommitted(path: string, root: string): boolean {
+  const status = getPathHeadStatus(path, root);
+  switch (status) {
+    case 'absent':
+      return true;
+    // On a failed probe the path stays visible, so clean-tree checks err
+    // toward dirty.
+    case 'committed':
+    case 'unknown':
+      return false;
+    default: {
+      const unhandled: never = status;
+      throw new Error(`Unhandled path HEAD status: ${unhandled}`);
+    }
+  }
+}
+
+export function migrateTreeStatus(root: string): WorkingTreeStatus {
+  return getWorkingTreeStatus(root, migrateCommitExcludes(root));
+}
 
 /**
  * What becomes of a failed commit's changes: a later migration step's commit
@@ -98,10 +137,11 @@ export async function commitMigrationIfRequested(
   if (!shouldCreateCommits) return { status: 'disabled' };
   const out = sink ?? terminalOutput;
   await installDepsIfChanged();
-  // Generator may have only touched gitignored paths or the excluded scratch
-  // dir, or the prompt half made no change: log neutrally, not as an error.
+  // Generator may have only touched gitignored paths or the excluded owned
+  // paths, or the prompt half made no change: log neutrally, not as an error.
   // The probe excludes what the commit excludes, else the commit fails empty.
-  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) {
+  const excludes = migrateCommitExcludes(root);
+  if (!hasUncommittedChanges(root, excludes)) {
     out.line('dim', `- No changes to commit for ${migration.name}.`);
     return { status: 'no-changes' };
   }
@@ -110,12 +150,9 @@ export async function commitMigrationIfRequested(
     pendingMigrations
   );
   try {
-    const sha = await tryCommitChangesAsync(
-      commitMessage,
-      root,
-      MIGRATE_COMMIT_EXCLUDES,
-      { withoutTerminal: sink !== undefined }
-    );
+    const sha = await tryCommitChangesAsync(commitMessage, root, excludes, {
+      withoutTerminal: sink !== undefined,
+    });
     if (sha) return { status: 'committed', sha };
     // null = commit landed but `git rev-parse HEAD` failed (see
     // `tryCommitChangesAsync`). Degraded-but-correct — log yellow, not red.
@@ -164,24 +201,26 @@ function buildCommitMessage(
 }
 
 /**
- * Commits any pre-existing working-tree state into a dedicated "checkpoint"
- * commit before the first migration runs. Without this, the first migration's
- * commit would absorb whatever was already pending — most commonly the
- * package.json edit `nx migrate latest` produces and the lockfile churn from
- * the orchestrator's `npm install --ignore-scripts` step — and migration 1's
- * validation would see that mixed in with the generator output. No-op when
- * the working tree is already clean.
+ * Commits pre-existing working-tree state, except what `migrateCommitExcludes`
+ * leaves out, into a dedicated "checkpoint" commit before the first migration
+ * runs. Without this, the first migration's commit would absorb whatever was
+ * already pending (most commonly the package.json edit `nx migrate latest`
+ * produces and the lockfile churn from the orchestrator's
+ * `npm install --ignore-scripts` step), and migration 1's validation would see
+ * that mixed in with the generator output. No-op when the working tree is
+ * already clean.
  */
 export function commitCheckpointBeforeMigrations(
   root: string,
   commitPrefix: string
 ): void {
-  if (!hasUncommittedChanges(root, MIGRATE_COMMIT_EXCLUDES)) return;
+  const excludes = migrateCommitExcludes(root);
+  if (!hasUncommittedChanges(root, excludes)) return;
   try {
     const sha = tryCommitChanges(
       `${commitPrefix}checkpoint before running migrations`,
       root,
-      MIGRATE_COMMIT_EXCLUDES
+      excludes
     );
     if (sha) {
       logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));

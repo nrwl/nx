@@ -25,6 +25,8 @@ export default [
             'typescript',
             'postcss-loader',
             '@rspack/cli',
+            // Resolved from @rspack/cli 1.0 to 1.5, which parse with it
+            'yargs',
             '@nx/workspace',
             '@nx/react',
             '@nx/nest',

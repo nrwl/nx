@@ -49,6 +49,7 @@ import {
 import {
   createTypecheckTarget,
   getTsConfigArg,
+  isShellSafeTsConfigName,
   selectTypecheckTsConfig,
 } from './typecheck-target';
 import { buildTypechecksProject } from './build-typechecks';
@@ -285,6 +286,7 @@ const tsConfigGlob = '**/tsconfig*.json';
 export const createNodesV2: CreateNodes<TscPluginOptions> = [
   tsConfigGlob,
   async (configFilePaths, options, context) => {
+    const normalizedOptions = normalizePluginOptions(options);
     const optionsHash = hashObject(options);
     const targetsCachePath = join(
       workspaceDataDirectory,
@@ -310,7 +312,6 @@ export const createNodesV2: CreateNodes<TscPluginOptions> = [
 
     initializeTsConfigCache(configFilePaths, context.workspaceRoot, cache);
 
-    const normalizedOptions = normalizePluginOptions(options);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup(
       new FsTree(context.workspaceRoot, false)
     );
@@ -1864,6 +1865,23 @@ function normalizePluginOptions(
       watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
       skipBuildCheck: pluginOptions.build.skipBuildCheck ?? false,
     };
+  }
+
+  // These options go unquoted into the inferred targets' shell commands.
+  if (compiler !== 'tsc' && compiler !== 'tsgo') {
+    throw new Error(
+      `The "compiler" option of @nx/js/typescript must be "tsc" or "tsgo", but got ${JSON.stringify(compiler)}.`
+    );
+  }
+  for (const [option, configName] of [
+    ['typecheck.configName', typecheck ? typecheck.configName : undefined],
+    ['build.configName', build ? build.configName : undefined],
+  ]) {
+    if (configName !== undefined && !isShellSafeTsConfigName(configName)) {
+      throw new Error(
+        `The "${option}" option of @nx/js/typescript must be a file name like "tsconfig.lib.json", containing only letters, digits, ".", "_" and "-", but got ${JSON.stringify(configName)}.`
+      );
+    }
   }
 
   return {

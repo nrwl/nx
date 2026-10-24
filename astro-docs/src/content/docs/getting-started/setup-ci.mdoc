@@ -100,7 +100,7 @@ The generated workflow also includes the Nx Cloud steps described below.
 
 ## Add remote caching
 
-With remote caching, a task that already ran with the same inputs, in CI or on a teammate's machine, is restored from the cache instead of running again.
+With [remote caching](/docs/features/ci-features/remote-cache), a task that already ran with the same inputs, in CI or on a teammate's machine, is restored from the cache instead of running again.
 A pipeline with many cache hits finishes sooner and uses fewer machine-minutes, which reduces cost.
 Setup takes under 5 minutes and is free to start.
 
@@ -108,13 +108,15 @@ Setup takes under 5 minutes and is free to start.
 
 For read-only and read-write CI tokens, see [CI access tokens](/docs/kb/access-tokens).
 
-## Distribute tasks with Nx Agents
+On Nx Cloud, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) configures each task's inputs and outputs automatically from the files it reads and writes, so cache hits are always correct.
 
-With Nx Agents, your tasks run across several machines instead of one.
+## Distribute tasks with Workers
+
+With Workers, your tasks run across several machines instead of one.
 With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep agents close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
-Add a `.nx/ci-config.yaml` file with the number of agents, then start them with `start-nx-agents`:
+Add a `.nx/ci-config.yaml` file with the number of agents, then start them with `start-workers`:
 
 ```yaml
 # .nx/ci-config.yaml
@@ -129,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ... checkout
-      - run: npx nx-cloud start-nx-agents
+      - run: npx nx-cloud start-workers
       # ... set up Node.js, install dependencies, and set SHAs
       - run: npx nx affected -t lint test build
 ```
@@ -180,7 +182,7 @@ jobs:
 
       # Provisions the agents declared in .nx/ci-config.yaml.
       # Run it before installing dependencies so agents boot while this job installs.
-      - run: npx nx-cloud start-nx-agents
+      - run: npx nx-cloud start-workers
 
       - uses: actions/setup-node@v6
         with:

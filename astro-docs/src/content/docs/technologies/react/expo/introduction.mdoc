@@ -68,7 +68,7 @@ Nx treats the project as Expo when the app configuration has an `expo` key or `p
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/expo configuration
 
@@ -113,6 +113,18 @@ The `@nx/expo/plugin` is configured in the `plugins` array in `nx.json`.
 | `watchDepsTargetName`  | none          | Name of an optional dependency watch task.            |
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/expo/plugin`.
+
+### Wait for Metro to be ready
+
+The inferred `start` and `serve` targets come with a `readyWhen` check.
+With it, a task can wait until Metro accepts connections instead of only until it has started.
+The check runs when the task runs, with the task's environment and options, and waits for the Metro port.
+The port comes from the `--port` flag, then `RCT_METRO_PORT`, then 8081.
+It reads `RCT_METRO_PORT` from the environment first, then from the project's `.env` files, such as `.env.development`, the way `expo start` loads them.
+
+A dependent task waits for the check only when its `dependsOn` entry sets `waitFor` to `ready`.
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ### Creating applications
 

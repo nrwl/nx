@@ -214,7 +214,9 @@ export async function libraryGeneratorInternal(
       (json) => {
         // add project reference to the runtime tsconfig.lib.json file
         json.references ??= [];
-        json.references.push({ path: './tsconfig.lib.json' });
+        if (!json.references.some((r) => r.path === './tsconfig.lib.json')) {
+          json.references.push({ path: './tsconfig.lib.json' });
+        }
 
         const compilerOptions = getCompilerOptions(options);
         // respect the module and moduleResolution set by the test runner generator
@@ -390,7 +392,6 @@ export type AddLintOptions = Pick<
   | 'unitTestRunner'
   | 'js'
   | 'enableTypedLinting'
-  | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
   | 'isUsingTsSolutionConfig'
@@ -418,7 +419,6 @@ export async function addLint(
     isEslintConfigSupported,
     updateOverrideInLintConfig,
     addIgnoresToLintConfig,
-    isTypedLintingEnabled,
     // nx-ignore-next-line
   } = require('@nx/eslint/internal');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
@@ -430,7 +430,7 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
+    enableTypedLinting: options.enableTypedLinting,
     rootProject: options.rootProject,
     // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.
     addPackageJsonDependencyChecks: options.bundler !== 'none',

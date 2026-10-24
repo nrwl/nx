@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   calculateHashesForCreateNodes,
   PluginCache,
   hashObject,
@@ -354,13 +355,11 @@ function getServerReadyWhen(
 ): TargetConfiguration['readyWhen'] {
   return signals
     ? { signal: true }
-    : {
-        // Unquoted: the plugin's glob fixes the file name. Quote it if it ever
-        // becomes user-chosen, since the shell expands $, backticks and %.
-        command: `node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], '${command}')" ${basename(configFilePath)}`,
-        // Each attempt loads the config
-        interval: 1000,
-      };
+    : getReadyCheckReadyWhen(
+        '@nx/rsbuild/ready-check',
+        basename(configFilePath),
+        command
+      );
 }
 
 // Rsbuild's plugins option nests arrays and promises, and allows falsy entries
