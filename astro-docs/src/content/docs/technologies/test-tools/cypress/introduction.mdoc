@@ -47,7 +47,7 @@ This will install the correct version of `@nx/cypress`.
 ### How @nx/cypress infers tasks
 
 {% aside type="note" title="Inferred Tasks" %}
-Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/concepts/mental-model#inferred-tasks).
+Nx plugins can infer tasks for your projects based on the configuration of different tools. You can read more about it at the [Inferred Tasks concept page](/docs/features/run-tasks#inferred-tasks).
 {% /aside %}
 
 The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
@@ -61,7 +61,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/cypress configuration
 
@@ -97,10 +97,68 @@ The options shown above control the names of the inferred Cypress tasks. The fol
 
 The e2e and component-test tasks are cached and track Cypress screenshot and video outputs.
 The `openTargetName` task opens the interactive Cypress application.
-The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
 Set `ciComponentTestingTargetName` to atomize component tests as well.
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/cypress/plugin`.
+
+### Wait for the dev server to be ready
+
+The e2e tasks wait for the dev server task's [`readyWhen` check](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) before Cypress starts.
+`nxE2EPreset` then takes the protocol and port from the address the server reported in `NX_READY_URL`, and keeps the path and query of `baseUrl`.
+A `localhost` host stays as it is when the server listens on a loopback address.
+Any other host moves to the one the server reported.
+`nxE2EPreset` keeps a `baseUrl` set with `CYPRESS_BASE_URL`, or a `--config` value other than the one Cypress would use anyway: the config file's `baseUrl`, or `ciBaseUrl` in `e2e-ci` tasks.
+Nx still starts the dev server.
+The preset waits up to `webServerConfig.timeout` (60 seconds by default) for that `baseUrl` to respond, then Cypress tests against it.
+To start Cypress as soon as the dev server task starts instead, set the `waitForServerReady` plugin option to `false`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "waitForServerReady": false
+      }
+    }
+  ]
+}
+```
+
+The option is deprecated and will be removed in Nx 25, when the e2e tasks always wait.
+
+The plugin infers the dependency on the dev server from `webServerCommands` in `nxE2EPreset`.
+In a config without `nxE2EPreset`, add the dependency with `waitFor` set to `ready` yourself:
+
+```json
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": ["myapp"], "target": "serve", "waitFor": "ready" }
+      ]
+    }
+  }
+}
+```
+
+Then pass `baseUrl` through `getReadyUrl` from `@nx/devkit`.
+It returns the address unchanged when Nx reports none, and otherwise moves it to the reported port:
+
+```ts
+// apps/myapp-e2e/cypress.config.ts
+import { defineConfig } from 'cypress';
+import { getReadyUrl } from '@nx/devkit';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: getReadyUrl('http://localhost:4200'),
+  },
+});
+```
 
 ### Splitting E2E tasks by file
 
@@ -128,8 +186,12 @@ export default defineConfig({
 ```
 
 {% aside type="note" title="Using setupNodeEvents function" %}
-If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset`. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
+If you use the `setupNodeEvents` function in your Cypress configuration, make sure to invoke the same function that is returned by `nxE2EPreset` and return `config` from yours. See the recipe on [using `setupNodeEvents` with Cypress preset](/docs/kb/cypress-setup-node-events) for more details.
 {% /aside %}
+
+An atomized task reruns when the app, any project the app depends on, or any test file changes.
+To scope it to the code its test file exercises, see
+[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
 
 ### Splitting component testing tasks by file
 
@@ -187,6 +249,56 @@ The `@nx/cypress:configuration` generator is not a project generator. It won't g
 To set up a separate project, you can generate a separate project with a project generator like `@nx/js:library` first and then run the `@nx/cypress:configuration` generator.
 {% /aside %}
 
+### Choosing the web server per environment
+
+Most application generators pass two servers to the Cypress configuration: the dev server for local
+runs and a production build for CI.
+When the two differ, the generated config reads the `CI` environment variable and picks between them.
+
+```ts
+// apps/<your-app-name>-e2e/cypress.config.ts
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(import.meta.url, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: process.env['CI']
+          ? 'npx nx run <your-app-name>:preview'
+          : 'npx nx run <your-app-name>:dev',
+        production: 'npx nx run <your-app-name>:preview',
+      },
+      ciWebServerCommand: 'npx nx run <your-app-name>:preview',
+      ciBaseUrl: 'http://localhost:4300',
+    }),
+    baseUrl: process.env['CI']
+      ? 'http://localhost:4300'
+      : 'http://localhost:4200',
+  },
+});
+```
+
+`nx e2e` runs against the dev server locally, which avoids a rebuild on every change, and against a
+production build in CI.
+The `e2e-ci` tasks always run against `ciWebServerCommand`.
+
+These applications run against the dev server in CI as well:
+
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
+
+The inferred `e2e` task includes the `CI` environment variable in its inputs, so local and CI runs
+don't share cached results.
+An `inputs` list you set for this task in `targetDefaults` or in a project configuration replaces
+the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
+
 ### Testing applications
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
@@ -215,30 +327,13 @@ terminal. Screenshots and videos will be accessible in `dist/cypress/apps/fronte
 You can also run Cypress in headed mode and watching for changes. This is a great way to enhance the dev workflow. You can build up test files with the application
 running and Cypress will re-run those tests as you enhance and add to the suite.
 
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
-
 ```shell
 nx open-cypress frontend-e2e
 ```
 
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --watch
-```
-
-{% /tabitem %}
-{% /tabs %}
-
 ### Specifying a custom url to test
 
 The `baseUrl` property provides you the ability to test an application hosted on a specific domain.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
 
 ```shell
 nx e2e frontend-e2e --config="baseUrl=https://frontend.com"
@@ -247,21 +342,6 @@ nx e2e frontend-e2e --config="baseUrl=https://frontend.com"
 {% aside type="note" title="Required options" %}
 If `baseUrl` is not provided, Cypress will expect to have the `baseUrl` property in its config file. Otherwise, it will error.
 {% /aside %}
-
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --baseUrl=https://frontend.com
-```
-
-{% aside type="note" title="Required options" %}
-If no `baseUrl` and no `devServerTarget` are provided, Cypress will expect to have the `baseUrl` property in its config file. Otherwise, it will error.
-{% /aside %}
-
-{% /tabitem %}
-{% /tabs %}
 
 ## Using cypress.config.ts
 
@@ -277,14 +357,11 @@ For adding more dynamic configurations to your Cypress configuration, you can lo
 
 If you need to pass a variable to Cypress that you don't want to commit to your repository (i.e. API keys, dynamic values based on configurations, API URLs), you can use [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables).
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or the command line.
+The most common ways to pass environment variables to Cypress are the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file) and the `-e` Cypress arg, which you can set in the [project configuration](/docs/reference/project-configuration#task-definitions-targets) or on the command line.
 
 Create a `cypress.env.json` file in the projects root (i.e. `apps/my-cool-app-e2e/cypress.env.json`). Cypress will automatically pick up this file. This method is helpful for configurations that you don't want to commit. Make sure to add the file to the `.gitignore` and add documentation so people in your repo know what values to populate in their local copy of the `cypress.env.json` file.
 
-Setting the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` executor in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
+Setting the `-e` Cypress arg in the project configuration is a good way to add values you want to define that you don't mind committing to the repository, such as a base API URL.
 
 ```json
 // project.json
@@ -300,47 +377,11 @@ Setting the `-e` Cypress arg or the `env` option from the `@nx/cypress:cypress` 
 }
 ```
 
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```json
-// project.json
-{
-  ...
-  "targets": {
-    "e2e": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "env": "API_URL=https://api.my-nx-website.com"
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
-
-Finally, you can also pass environment variables via the command line with the `-e` Cypress arg or the `--env` option for the `@nx/cypress:cypress` executor.
-
-{% tabs %}
-{% tabitem label="Using inferred tasks" %}
+Finally, you can also pass environment variables via the command line with the `-e` Cypress arg.
 
 ```shell
 nx e2e frontend-e2e -e=API_URL=https://api.my-nx-website.com,API_KEY=abc-123
 ```
-
-{% /tabitem %}
-
-{% tabitem label="Using the @nx/cypress:cypress executor" %}
-
-```shell
-nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY="abc-123"
-```
-
-{% /tabitem %}
-{% /tabs %}
 
 {% aside type="caution" title="Command-line args vs configuration options" %}
 Providing a flag will override any option with the same name set in the project or workspace configuration.
@@ -361,7 +402,7 @@ cy.env(['API_URL']).then(({ API_URL }) => {
 For non-sensitive values that a test needs synchronously, use the Cypress 16 `expose` configuration
 (the `expose` config key, the `--expose` Cypress arg, or the `expose` test configuration) and read
 them with `Cypress.expose('KEY')`.
-The `env` values passed with `--env` or the executor's `env` option are not readable with
+The `env` values passed with `--env` are not readable with
 `Cypress.expose()`.
 
 ## Set up CI

@@ -11,6 +11,11 @@ export {
   resolvePrompt,
   PromptResolutionError,
   acknowledgeBuildScripts,
+  acknowledgeDeclaredBuildScripts,
+  createCliOptions,
+  createOverrides,
+  isAiAgent,
+  readShebangHeaders,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
   // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
@@ -22,6 +27,7 @@ export {
   applyDaemonEnvFromClient,
   getGraphTimeDotEnvForTask,
   hashDaemonClientEnv,
+  resolveStartupHost,
 } from 'nx/src/devkit-internals';
 
 // Formatter detection and setup. `@nx/js` needs these to write and detect a
@@ -38,6 +44,10 @@ export {
 export type { FormatterType } from 'nx/src/devkit-internals';
 
 // Generators
+export {
+  addReadyWhenSignalToTargets,
+  readApplicableTargetDefaults,
+} from './src/generators/add-ready-when-signal';
 export {
   determineArtifactNameAndDirectoryOptions,
   getRelativeCwd,
@@ -109,6 +119,19 @@ export {
 } from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
+export { parseNxDirectives } from './src/utils/nx-directives';
+export {
+  getForwardedArgs,
+  getListeningUrl,
+  getReadyCheckReadyWhen,
+  getServerAddress,
+  parseCacArgs,
+  parseCommanderArgs,
+  runReadyCheck,
+  type ServerAddress,
+} from './src/utils/readiness';
+export { applyTestFileDirectives } from './src/utils/test-file-directives';
+export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
 export { checkAndCleanWithSemver } from './src/utils/semver';
@@ -139,7 +162,6 @@ export {
   type ChangedFile,
   CompositeLifeCycle,
   DeletedFileChange,
-  type DependsOnEntryLocation,
   confirmationPrompt,
   // NOTE: distinct from @nx/devkit's public FileChange (generators/tree.ts),
   // which describes a pending Tree write. This one is a per-file diff
@@ -290,6 +312,7 @@ export {
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
+  resolveNxTokensInOptions,
   runNxSync,
   safeExecFileSync,
   safeSpawn,
@@ -318,3 +341,4 @@ export {
 // Only erased types are re-exported — `AfterAllProjectsVersioned` below, and
 // `FinalConfigForProject` via nx/src/devkit-internals.
 export type { AfterAllProjectsVersioned } from 'nx/release';
+export { migrateRemovedExecutors } from './src/generators/plugin-migrations/remove-executors';

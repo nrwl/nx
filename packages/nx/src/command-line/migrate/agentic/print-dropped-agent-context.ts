@@ -52,8 +52,8 @@ export function escapeXmlAttr(value: string): string {
 
 /**
  * Both the classic loop and the single-migration worker call this only under
- * `agentic.kind === 'inside-agent'`. Under `enabled` the inner agent step
- * consumes `agentContext` through the prompt builders; under `disabled` the
+ * `agentic.kind === 'inside-agent'`. Under `enabled` a step that gives the
+ * agent work carries `agentContext` in its prompt block; under `disabled` the
  * run is human-driven and agent-targeted context is only noise.
  */
 export function printDroppedAgentContextForOuterAgent(

@@ -1,8 +1,10 @@
+import type { MockedFunction } from 'vitest';
 import {
   ExecutorContext,
   readJsonFile,
   detectPackageManager,
 } from '@nx/devkit';
+import { safeExecFileSync } from '@nx/devkit/internal';
 import { execSync } from 'child_process';
 import { PublishExecutorSchema } from './schema';
 import runExecutor from './release-publish.impl';
@@ -10,56 +12,58 @@ import * as npmConfigModule from '../../utils/npm-config';
 import * as npmRunPath from 'npm-run-path';
 import * as extractModule from './extract-npm-publish-json-data';
 
-jest.mock('child_process');
-jest.mock('npm-run-path', () => ({
-  env: jest.fn(() => ({})),
+// `getPackageManagerVersion` still shells out through child_process, so pnpm
+// flag resolution needs this even though the executor's own sinks do not.
+vi.mock('child_process');
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  safeExecFileSync: vi.fn(),
 }));
-jest.mock('../../utils/npm-config');
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  detectPackageManager: jest.fn(() => 'npm'),
-  readJsonFile: jest.fn(),
+vi.mock('npm-run-path', () => ({
+  env: vi.fn(() => ({})),
 }));
-jest.mock('./extract-npm-publish-json-data');
-jest.mock('./log-tar');
+vi.mock('../../utils/npm-config');
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  detectPackageManager: vi.fn(() => 'npm'),
+  readJsonFile: vi.fn(),
+}));
+vi.mock('./extract-npm-publish-json-data');
+vi.mock('./log-tar');
 
 describe('release-publish executor', () => {
   let context: ExecutorContext;
   let options: PublishExecutorSchema;
-  const mockExecSync = execSync as jest.MockedFunction<typeof execSync>;
-  const mockDetectPackageManager = detectPackageManager as jest.MockedFunction<
+  const mockExec = safeExecFileSync as MockedFunction<typeof safeExecFileSync>;
+  const mockExecSync = execSync as MockedFunction<typeof execSync>;
+  const mockDetectPackageManager = detectPackageManager as MockedFunction<
     typeof detectPackageManager
   >;
   const mockParseRegistryOptions =
-    npmConfigModule.parseRegistryOptions as jest.MockedFunction<
+    npmConfigModule.parseRegistryOptions as MockedFunction<
       typeof npmConfigModule.parseRegistryOptions
     >;
-  const mockReadJsonFile = readJsonFile as jest.MockedFunction<
-    typeof readJsonFile
-  >;
+  const mockReadJsonFile = readJsonFile as MockedFunction<typeof readJsonFile>;
 
   function npmViewNotFoundError() {
     const error: any = new Error('npm view failed');
-    error.stdout = Buffer.from(
-      JSON.stringify({
-        error: {
-          code: 'E404',
-          summary: 'No match found for version 1.0.0',
-        },
-      })
-    );
-    error.stderr = Buffer.from(
-      'npm error code E404\nnpm error 404 No match found for version 1.0.0'
-    );
+    error.stdout = JSON.stringify({
+      error: {
+        code: 'E404',
+        summary: 'No match found for version 1.0.0',
+      },
+    });
+    error.stderr =
+      'npm error code E404\nnpm error 404 No match found for version 1.0.0';
     return error;
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockDetectPackageManager.mockReturnValue('npm');
-    jest.spyOn(console, 'log').mockImplementation();
-    jest.spyOn(console, 'warn').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
+    vi.spyOn(console, 'log').mockImplementation();
+    vi.spyOn(console, 'warn').mockImplementation();
+    vi.spyOn(console, 'error').mockImplementation();
 
     context = {
       root: '/root',
@@ -99,36 +103,41 @@ describe('release-publish executor', () => {
       registryConfigKey: 'registry',
     });
 
-    // Default mock for npm --version check (first execSync call in the executor)
-    mockExecSync.mockReturnValueOnce('11.5.1' as any);
+    // Default mock for npm --version check (first safeExecFileSync call in the executor)
+    mockExec.mockReturnValueOnce('11.5.1');
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('already published error handling', () => {
     function mockNpmViewNotFound() {
-      mockExecSync.mockImplementationOnce(() => {
+      mockExec.mockImplementationOnce(() => {
         throw npmViewNotFoundError();
       });
+    }
+
+    // With no `packageManager` field at the workspace root, resolving pnpm's
+    // flags runs `pnpm --version`; answer it before the publish call.
+    function mockPnpmVersion() {
+      mockExecSync.mockReturnValueOnce('10.0.0' as any);
     }
 
     it('should skip publishing when pnpm reports that the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
-      mockExecSync.mockImplementationOnce(() => {
+      mockPnpmVersion();
+      mockExec.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
-        error.stdout = Buffer.from(
-          JSON.stringify({
-            error: {
-              code: 'E403',
-              message:
-                'You cannot publish over the previously published versions: 1.0.0.',
-            },
-          })
-        );
-        error.stderr = Buffer.from('');
+        error.stdout = JSON.stringify({
+          error: {
+            code: 'E403',
+            message:
+              'You cannot publish over the previously published versions: 1.0.0.',
+          },
+        });
+        error.stderr = '';
         throw error;
       });
 
@@ -144,12 +153,12 @@ describe('release-publish executor', () => {
     it('should skip publishing when raw publish output says the version was previously published', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
-      mockExecSync.mockImplementationOnce(() => {
+      mockPnpmVersion();
+      mockExec.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
-        error.stdout = Buffer.from('not json');
-        error.stderr = Buffer.from(
-          'ERR_PNPM_PUBLISH_CONFLICT 403 Forbidden - You cannot publish over the previously published versions: 1.0.0.'
-        );
+        error.stdout = 'not json';
+        error.stderr =
+          'ERR_PNPM_PUBLISH_CONFLICT 403 Forbidden - You cannot publish over the previously published versions: 1.0.0.';
         throw error;
       });
 
@@ -165,17 +174,16 @@ describe('release-publish executor', () => {
     it('should fail when pnpm publish returns a generic 403 error', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
       mockNpmViewNotFound();
-      mockExecSync.mockImplementationOnce(() => {
+      mockPnpmVersion();
+      mockExec.mockImplementationOnce(() => {
         const error: any = new Error('pnpm publish failed');
-        error.stdout = Buffer.from(
-          JSON.stringify({
-            error: {
-              code: 'E403',
-              message: '403 Forbidden - You do not have permission to publish',
-            },
-          })
-        );
-        error.stderr = Buffer.from('');
+        error.stdout = JSON.stringify({
+          error: {
+            code: 'E403',
+            message: '403 Forbidden - You do not have permission to publish',
+          },
+        });
+        error.stderr = '';
         throw error;
       });
 
@@ -212,17 +220,17 @@ describe('release-publish executor', () => {
         expect.stringContaining('no new version was resolved')
       );
       // Should only have called npm --version, not npm view or npm publish
-      expect(mockExecSync).toHaveBeenCalledTimes(1);
+      expect(mockExec).toHaveBeenCalledTimes(1);
     });
 
     it('should proceed with publishing when nxReleaseVersionData indicates a new version', async () => {
-      mockExecSync
+      mockExec
         .mockImplementationOnce(() => {
           throw npmViewNotFoundError();
-        })
-        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -254,17 +262,18 @@ describe('release-publish executor', () => {
       const result = await runExecutor(optionsWithVersionData, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledTimes(3);
+      // Should have proceeded with npm --version, npm view, and publish
+      expect(mockExec).toHaveBeenCalledTimes(3);
     });
 
     it('should proceed with publishing when nxReleaseVersionData is not provided', async () => {
-      mockExecSync
+      mockExec
         .mockImplementationOnce(() => {
           throw npmViewNotFoundError();
-        })
-        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -285,57 +294,65 @@ describe('release-publish executor', () => {
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledTimes(3);
+      // Should have proceeded with npm --version, npm view, and publish
+      expect(mockExec).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('npm metadata lookup', () => {
     it('queries the current version and requested dist-tag together', async () => {
-      mockExecSync
+      mockExec
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              name: '@scope/test-package',
-              version: '1.0.0',
-              'dist-tags[latest]': '0.9.0',
-            })
-          )
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
         )
-        .mockReturnValueOnce(Buffer.from(''));
+        .mockReturnValueOnce('');
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenNthCalledWith(
+      expect(mockExec).toHaveBeenNthCalledWith(
         2,
-        'npm view @scope/test-package@1.0.0 name version "dist-tags[latest]" --json --"registry=https://registry.npmjs.org/"',
+        'npm',
+        [
+          'view',
+          '@scope/test-package@1.0.0',
+          'name',
+          'version',
+          'dist-tags[latest]',
+          '--json',
+          '--registry=https://registry.npmjs.org/',
+        ],
         expect.anything()
       );
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining(' versions '),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['versions']),
         expect.anything()
       );
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm dist-tag add'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
         expect.anything()
       );
     });
 
     it('skips publishing when the requested tag already points to the current version', async () => {
-      mockExecSync.mockReturnValueOnce(
-        Buffer.from(
-          JSON.stringify({
-            name: '@scope/test-package',
-            version: '1.0.0',
-            'dist-tags[latest]': '1.0.0',
-          })
-        )
+      mockExec.mockReturnValueOnce(
+        JSON.stringify({
+          name: '@scope/test-package',
+          version: '1.0.0',
+          'dist-tags[latest]': '1.0.0',
+        })
       );
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledTimes(2);
+      expect(mockExec).toHaveBeenCalledTimes(2);
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('already exists')
       );
@@ -347,51 +364,60 @@ describe('release-publish executor', () => {
         tag: 'release.next',
         registryConfigKey: '@scope:registry',
       });
-      mockExecSync
+      mockExec
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify([
-              {
-                name: '@scope/test-package',
-                version: '1.0.0+build.1',
-                'dist-tags[release.next]': '0.9.0',
-              },
-              {
-                name: '@scope/test-package',
-                version: '1.0.0',
-                'dist-tags[release.next]': '0.9.0',
-              },
-            ])
-          )
+          JSON.stringify([
+            {
+              name: '@scope/test-package',
+              version: '1.0.0+build.1',
+              'dist-tags[release.next]': '0.9.0',
+            },
+            {
+              name: '@scope/test-package',
+              version: '1.0.0',
+              'dist-tags[release.next]': '0.9.0',
+            },
+          ])
         )
-        .mockReturnValueOnce(Buffer.from(''));
+        .mockReturnValueOnce('');
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenNthCalledWith(
+      expect(mockExec).toHaveBeenNthCalledWith(
         2,
-        'npm view @scope/test-package@1.0.0 name version "dist-tags[release.next]" --json --"@scope:registry=https://registry.example.com/"',
+        'npm',
+        [
+          'view',
+          '@scope/test-package@1.0.0',
+          'name',
+          'version',
+          'dist-tags[release.next]',
+          '--json',
+          '--@scope:registry=https://registry.example.com/',
+        ],
         expect.anything()
       );
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm dist-tag add'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
         expect.anything()
       );
     });
 
     it('publishes when npm reports the exact version is missing', async () => {
-      mockExecSync
+      mockExec
         .mockImplementationOnce(() => {
           throw npmViewNotFoundError();
         })
-        .mockReturnValueOnce(Buffer.from('{}'));
+        .mockReturnValueOnce('{}');
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm publish'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
     });
@@ -400,55 +426,55 @@ describe('release-publish executor', () => {
       ['non-404 registry error', 'E403', 'npm error 403 Not Found'],
       ['child process buffer error', 'ENOBUFS', 'npm error code E404'],
     ])('fails without publishing on %s', async (_name, code, stderr) => {
-      mockExecSync.mockImplementationOnce(() => {
+      mockExec.mockImplementationOnce(() => {
         const error: any = new Error('npm view failed');
         error.code = code;
-        error.stdout = Buffer.from(
-          JSON.stringify({ error: { code, summary: 'request failed' } })
-        );
-        error.stderr = Buffer.from(stderr);
+        error.stdout = JSON.stringify({
+          error: { code, summary: 'request failed' },
+        });
+        error.stderr = stderr;
         throw error;
       });
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(false);
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('publish'),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('dist-tag add'),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
         expect.anything()
       );
     });
 
     it('fails without publishing when npm returns an unexpected response', async () => {
-      mockExecSync.mockReturnValueOnce(Buffer.from('{"name":"other-package"}'));
+      mockExec.mockReturnValueOnce('{"name":"other-package"}');
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(false);
-      expect(mockExecSync).toHaveBeenCalledTimes(2);
+      expect(mockExec).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('npm dist-tag error handling', () => {
     it('returns failure and logs only the dist-tag add error when add fails with empty stdout', async () => {
-      mockExecSync
+      mockExec
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              name: '@scope/test-package',
-              version: '1.0.0',
-              'dist-tags[latest]': '0.9.0',
-            })
-          )
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
         )
         .mockImplementationOnce(() => {
           const error: any = new Error('npm dist-tag add failed');
-          error.stdout = Buffer.from('');
-          error.stderr = Buffer.from('npm ERR! permission denied');
+          error.stdout = '';
+          error.stderr = 'npm ERR! permission denied';
           error.code = 1;
           throw error;
         });
@@ -467,29 +493,29 @@ describe('release-publish executor', () => {
   describe('devEngines enforcement', () => {
     it('forces the npm registry calls past a non-npm devEngines pin', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
-      mockExecSync
+      mockExec
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              name: '@scope/test-package',
-              version: '1.0.0',
-              'dist-tags[latest]': '0.9.0',
-            })
-          )
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
         )
-        .mockReturnValueOnce(Buffer.from(''));
+        .mockReturnValueOnce('');
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm view'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['view']),
         expect.objectContaining({
           env: expect.objectContaining({ npm_config_force: 'true' }),
         })
       );
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm dist-tag add'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
         expect.objectContaining({
           env: expect.objectContaining({ npm_config_force: 'true' }),
         })
@@ -498,19 +524,20 @@ describe('release-publish executor', () => {
 
     it('does not force the publish command', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
-      mockExecSync
+      mockExec
         .mockImplementationOnce(() => {
           throw npmViewNotFoundError();
         })
-        .mockReturnValueOnce(Buffer.from('[]'));
+        .mockReturnValueOnce('[]');
+      mockExecSync.mockReturnValueOnce('10.0.0' as any);
 
       await runExecutor(options, context);
 
-      const publishCall = mockExecSync.mock.calls.find(([cmd]) =>
-        String(cmd).includes('publish')
+      const publishCall = mockExec.mock.calls.find(([, args]) =>
+        (args as string[]).includes('publish')
       );
       expect(publishCall).toBeDefined();
-      expect((publishCall![1] as any).env?.npm_config_force).toBeUndefined();
+      expect((publishCall![2] as any).env?.npm_config_force).toBeUndefined();
     });
   });
 
@@ -521,11 +548,11 @@ describe('release-publish executor', () => {
       // Packages). Previously this crashed on `JSON.parse('')` and was reported
       // as "Something unexpected went wrong when checking for existing
       // dist-tags." See https://github.com/nrwl/nx/issues/36358
-      mockExecSync
-        .mockReturnValueOnce(Buffer.from('') as any) // npm view -> empty stdout
-        .mockReturnValueOnce(Buffer.from('{}') as any); // npm publish
+      mockExec
+        .mockReturnValueOnce('') // npm view -> empty stdout
+        .mockReturnValueOnce('{}'); // npm publish
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -551,80 +578,76 @@ describe('release-publish executor', () => {
         expect.anything()
       );
       // Should have proceeded with npm --version, npm view, and publish
-      expect(mockExecSync).toHaveBeenCalledTimes(3);
+      expect(mockExec).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('npm availability check', () => {
     it('should continue without error when pm is bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
-      mockExecSync.mockReset();
+      mockExec.mockReset();
 
       // npm --version throws (npm not installed)
-      mockExecSync
+      mockExec
         .mockImplementationOnce(() => {
           throw new Error('Command not found: npm');
         })
         // bun info call for view command
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
+          JSON.stringify({
+            versions: ['0.9.0'],
+            'dist-tags': { latest: '0.9.0' },
+          })
         )
         // bun publish call
-        .mockReturnValueOnce(Buffer.from('bun publish output'));
+        .mockReturnValueOnce('bun publish output');
 
-      jest
-        .spyOn(extractModule, 'extractNpmPublishJsonData')
-        .mockReturnValue(null);
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
 
       const result = await runExecutor(options, context);
 
       expect(result.success).toBe(true);
       // Verify the view command used bun info (not npm view)
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('bun info'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'bun',
+        expect.arrayContaining(['info']),
         expect.anything()
       );
       // Verify npm dist-tag add was NOT called (npm not installed)
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('npm dist-tag add'),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
         expect.anything()
       );
     });
 
     it('should fall back to npm publish when bun publish fails with an authentication error and npm is installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
-      mockExecSync.mockReset();
+      mockExec.mockReset();
 
-      mockExecSync
+      mockExec
         // npm --version succeeds (npm is installed)
-        .mockReturnValueOnce('11.5.1' as any)
+        .mockReturnValueOnce('11.5.1')
         // bun info (view) call
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
+          JSON.stringify({
+            versions: ['0.9.0'],
+            'dist-tags': { latest: '0.9.0' },
+          })
         )
         // bun publish fails with missing authentication
         .mockImplementationOnce(() => {
           const error: any = new Error('bun publish failed');
-          error.stdout = Buffer.from('');
-          error.stderr = Buffer.from(
-            'error: missing authentication (run `bunx npm login`)'
-          );
+          error.stdout = '';
+          error.stderr = 'error: missing authentication (run `bunx npm login`)';
           throw error;
         })
         // npm publish (fallback) succeeds
-        .mockReturnValueOnce(Buffer.from('{}') as any);
+        .mockReturnValueOnce('{}');
 
-      jest.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue({
         beforeJsonData: '',
         jsonData: {
           id: '@scope/test-package@1.0.0',
@@ -646,13 +669,15 @@ describe('release-publish executor', () => {
 
       expect(result.success).toBe(true);
       // bun publish was tried first
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('bun publish'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'bun',
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
       // npm publish was tried after bun failed
-      expect(mockExecSync).toHaveBeenCalledWith(
-        expect.stringContaining('npm publish'),
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
       // the user-facing fallback warning was logged
@@ -663,27 +688,23 @@ describe('release-publish executor', () => {
 
     it('should not fall back to npm publish when bun publish fails with a non-auth error', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
-      mockExecSync.mockReset();
+      mockExec.mockReset();
 
-      mockExecSync
+      mockExec
         // npm --version succeeds (npm is installed)
-        .mockReturnValueOnce('11.5.1' as any)
+        .mockReturnValueOnce('11.5.1')
         // bun info (view) call
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
+          JSON.stringify({
+            versions: ['0.9.0'],
+            'dist-tags': { latest: '0.9.0' },
+          })
         )
         // bun publish fails with a non-auth error (e.g., version conflict)
         .mockImplementationOnce(() => {
           const error: any = new Error('bun publish failed');
-          error.stdout = Buffer.from('');
-          error.stderr = Buffer.from(
-            'error: version 1.0.0 already exists in the registry'
-          );
+          error.stdout = '';
+          error.stderr = 'error: version 1.0.0 already exists in the registry';
           throw error;
         });
 
@@ -692,8 +713,9 @@ describe('release-publish executor', () => {
       expect(result.success).toBe(false);
       expect(console.error).toHaveBeenCalledWith('bun publish error:');
       // npm publish must NOT be attempted for non-auth bun errors
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('npm publish'),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
       // the fallback warning must NOT have been logged
@@ -704,29 +726,25 @@ describe('release-publish executor', () => {
 
     it('should not fall back to npm publish when bun publish fails with an authentication error but npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('bun');
-      mockExecSync.mockReset();
+      mockExec.mockReset();
 
-      mockExecSync
+      mockExec
         // npm --version throws (npm not installed)
         .mockImplementationOnce(() => {
           throw new Error('Command not found: npm');
         })
         // bun info (view) call
         .mockReturnValueOnce(
-          Buffer.from(
-            JSON.stringify({
-              versions: ['0.9.0'],
-              'dist-tags': { latest: '0.9.0' },
-            })
-          )
+          JSON.stringify({
+            versions: ['0.9.0'],
+            'dist-tags': { latest: '0.9.0' },
+          })
         )
         // bun publish fails with an auth error — but npm is unavailable, so no fallback
         .mockImplementationOnce(() => {
           const error: any = new Error('bun publish failed');
-          error.stdout = Buffer.from('');
-          error.stderr = Buffer.from(
-            'error: missing authentication (run `bunx npm login`)'
-          );
+          error.stdout = '';
+          error.stderr = 'error: missing authentication (run `bunx npm login`)';
           throw error;
         });
 
@@ -735,18 +753,19 @@ describe('release-publish executor', () => {
       expect(result.success).toBe(false);
       expect(console.error).toHaveBeenCalledWith('bun publish error:');
       // npm publish must NOT be attempted when npm is unavailable
-      expect(mockExecSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('npm publish'),
+      expect(mockExec).not.toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['publish']),
         expect.anything()
       );
     });
 
     it('should return failure when pm is not bun and npm is not installed', async () => {
       mockDetectPackageManager.mockReturnValue('pnpm');
-      mockExecSync.mockReset();
+      mockExec.mockReset();
 
       // npm --version throws (npm not installed)
-      mockExecSync.mockImplementationOnce(() => {
+      mockExec.mockImplementationOnce(() => {
         throw new Error('Command not found: npm');
       });
 
@@ -759,6 +778,89 @@ describe('release-publish executor', () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('"pnpm"')
       );
+    });
+  });
+
+  describe('untrusted values reaching the child process', () => {
+    // `tag` and `registry` come back from `npm config get`, i.e. verbatim from
+    // a workspace .npmrc an install script can write.
+    const TAG_PAYLOAD = 'latest; touch NX_PWNED';
+    const REGISTRY_PAYLOAD = 'https://r.example.com/"; touch NX_PWNED; "';
+
+    function argvFor(binary: string, subcommand: string): string[] | undefined {
+      return mockExec.mock.calls.find(
+        ([command, args]) => command === binary && args?.[0] === subcommand
+      )?.[1] as string[] | undefined;
+    }
+
+    it('should pass an injected tag and registry to publish as single argv elements', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: REGISTRY_PAYLOAD,
+        tag: TAG_PAYLOAD,
+        registryConfigKey: 'registry',
+      });
+      mockExec
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
+
+      await runExecutor(options, context);
+
+      const publishArgs = argvFor('npm', 'publish');
+      expect(publishArgs).toContain(`--tag=${TAG_PAYLOAD}`);
+      expect(publishArgs).toContain(`--registry=${REGISTRY_PAYLOAD}`);
+    });
+
+    it('should pass an injected tag to npm dist-tag add as a single argv element', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: REGISTRY_PAYLOAD,
+        tag: TAG_PAYLOAD,
+        registryConfigKey: 'registry',
+      });
+      mockExec
+        .mockReturnValueOnce(
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            [`dist-tags[${TAG_PAYLOAD}]`]: '0.9.0',
+          })
+        ) // npm view: the version already exists, so the dist-tag path runs
+        .mockReturnValueOnce(''); // npm dist-tag add
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      const distTagArgs = argvFor('npm', 'dist-tag');
+      expect(distTagArgs).toContain(TAG_PAYLOAD);
+      expect(distTagArgs).toContain(`--registry=${REGISTRY_PAYLOAD}`);
+    });
+
+    it('should pass otp and access through as single argv elements', async () => {
+      mockExec
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
+
+      await runExecutor(
+        {
+          ...options,
+          otp: '123456; touch NX_PWNED' as any,
+          access: 'public evil' as any,
+        },
+        context
+      );
+
+      const publishArgs = argvFor('npm', 'publish');
+      expect(publishArgs).toContain('--otp=123456; touch NX_PWNED');
+      expect(publishArgs).toContain('--access=public evil');
     });
   });
 });

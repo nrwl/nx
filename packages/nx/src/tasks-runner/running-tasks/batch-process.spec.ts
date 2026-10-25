@@ -60,6 +60,7 @@ import { stripVTControlCharacters } from 'util';
 import type { ChildProcess } from 'child_process';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { output } from '../../utils/output';
+import { BatchMessageType } from '../batch/batch-messages';
 import { BatchProcess } from './batch-process';
 
 function fakeChildProcess() {
@@ -72,6 +73,10 @@ function fakeChildProcess() {
   // tests that production cannot reach.
   (child as any).stdout = new PassThrough();
   (child as any).stderr = new PassThrough();
+  (child as any).connected = true;
+  (child as any).disconnect = vi.fn(() => {
+    (child as any).connected = false;
+  });
   return child;
 }
 
@@ -135,6 +140,40 @@ const FOLDING_ENV = {
 };
 
 describe('BatchProcess', () => {
+  it('disconnects the worker once it reports the batch results', async () => {
+    const child = fakeChildProcess();
+    const batch = new BatchProcess(child, '@nx/js:tsc');
+    const results = batch.getResults();
+
+    child.emit('message', {
+      type: BatchMessageType.CompleteBatchExecution,
+      results: { 'proj:build': { success: true } },
+    });
+
+    await expect(results).resolves.toEqual({
+      'proj:build': { success: true },
+    });
+    expect(child.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the worker connected while it streams task results', () => {
+    const child = fakeChildProcess();
+    const batch = new BatchProcess(child, '@nx/js:tsc');
+    const onTaskResults = vi.fn();
+    batch.onTaskResults(onTaskResults);
+
+    child.emit('message', {
+      type: BatchMessageType.CompleteTask,
+      task: 'proj:build',
+      result: { success: true },
+    });
+
+    expect(onTaskResults).toHaveBeenCalledWith('proj:build', {
+      success: true,
+    });
+    expect(child.disconnect).not.toHaveBeenCalled();
+  });
+
   it('forwards batch output live when grouping does not apply', () => {
     const child = fakeChildProcess();
 

@@ -5,9 +5,11 @@
 //!   themselves live in `crate::native::glob::glob_transform`.
 //! - `expansion` resolves the entries into files, leaning on the workspace
 //!   context or an index wherever it can, and walking where it cannot.
+//! - `scope` keeps an entry to its project's files, out of nested projects.
 
 mod entries;
 mod expansion;
+mod scope;
 
 pub(crate) use entries::{Negation, Positive};
 pub use expansion::FilesExpansion;
@@ -17,6 +19,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
+pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -32,6 +35,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_from_disk(workspace_root),
         )
     }
@@ -45,6 +49,7 @@ pub(crate) mod tests {
         expand_globs(
             workspace_root,
             globs,
+            &[],
             &Source::fileset_reading_disk(tracked_file, workspace_root),
         )
     }
@@ -84,7 +89,7 @@ pub(crate) mod tests {
     #[test]
     fn a_source_that_ignores_the_filter_cannot_widen_the_result() {
         let temp = workspace();
-        let everything = |dir: &str, _accept: PathPredicate| {
+        let everything = |dir: &str, _accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| globs(&["dist/gen/a.js", "dist/gen/a.js.map"]))
         };
         let group = globs(&["dist/gen/**/*.js"]);
@@ -93,6 +98,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &everything),
         )
         .unwrap();
@@ -103,7 +109,7 @@ pub(crate) mod tests {
     fn a_directory_is_whatever_the_source_says_it_holds() {
         let temp = workspace();
         // A phantom the disk does not have, to prove the source is believed.
-        let listed = |dir: &str, accept: PathPredicate| {
+        let listed = |dir: &str, accept: PathPredicate, _skip: &[String]| {
             (dir == "dist/gen").then(|| {
                 globs(&[
                     "dist/gen/a.js",
@@ -122,6 +128,7 @@ pub(crate) mod tests {
             temp.path(),
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -135,6 +142,7 @@ pub(crate) mod tests {
             temp.path(),
             &parse_group(&globs(&["dist/other/**"])).unwrap().0,
             &[],
+            &ProjectScope::default(),
             &Source::fileset(NOTHING_TRACKED, &listed),
         )
         .unwrap();
@@ -317,6 +325,86 @@ pub(crate) mod tests {
         assert_eq!(
             expansion.files,
             vec!["dist/gen/a.js", "dist/gen/nested/b.js"]
+        );
+    }
+
+    #[test]
+    fn a_walk_skips_a_directory_a_negation_excludes_whole() {
+        let temp = workspace();
+        let skipped = std::sync::Mutex::new(Vec::new());
+        let reading = |dir: &str, accept: PathPredicate, skip: &[String]| {
+            skipped.lock().unwrap().extend(skip.iter().cloned());
+            crate::native::walker::read_directory(temp.path(), dir, accept, skip)
+        };
+        let expand = |group: &[&str]| {
+            skipped.lock().unwrap().clear();
+            let files = expand_globs(
+                temp.path(),
+                &globs(group),
+                &[],
+                &Source::fileset(NOTHING_TRACKED, reading),
+            )
+            .unwrap()
+            .files;
+            (files, skipped.lock().unwrap().clone())
+        };
+        let kept = vec!["dist/gen/a.js", "dist/gen/a.js.map", "dist/other/c.js"];
+        for negation in [
+            "!dist/gen/nested",
+            "!dist/gen/nested/**",
+            "!dist/gen/nested/**/*",
+        ] {
+            assert_eq!(
+                expand(&["dist/**", negation]),
+                (globs(&kept), globs(&["dist/gen/nested"])),
+                "{negation}"
+            );
+        }
+        // Other files in the folder are still wanted, so it is walked.
+        assert_eq!(
+            expand(&["dist/**", "!dist/**/*.map"]),
+            (
+                globs(&["dist/gen/a.js", "dist/gen/nested/b.js", "dist/other/c.js"]),
+                vec![]
+            )
+        );
+        // A folder outside where the glob reads is not its to skip.
+        assert_eq!(
+            expand(&["dist/gen/**", "!dist/other"]).1,
+            Vec::<String>::new()
+        );
+    }
+
+    #[test]
+    fn a_walk_skips_projects_nested_below_the_one_it_reads_from() {
+        let temp = TempDir::new().unwrap();
+        for path in [
+            "packages/gradle/src/a.ts",
+            "packages/gradle/build/out.json",
+            "packages/gradle/batch-runner/build.gradle.kts",
+            "packages/gradle/batch-runner/build/runner.jar",
+        ] {
+            temp.child(path).write_str("x").unwrap();
+        }
+        let roots = globs(&["packages/gradle", "packages/gradle/batch-runner"]);
+        let expand = |group: &[&str]| {
+            expand_globs(
+                temp.path(),
+                &globs(group),
+                &roots,
+                &Source::fileset_from_disk(temp.path()),
+            )
+            .unwrap()
+            .files
+        };
+        assert_eq!(
+            expand(&["packages/gradle/**/*"]),
+            vec!["packages/gradle/build/out.json", "packages/gradle/src/a.ts"]
+        );
+        // Read from inside the nested project, the glob is that project's.
+        assert_eq!(
+            expand(&["packages/gradle/batch-runner/build/**"]),
+            vec!["packages/gradle/batch-runner/build/runner.jar"]
         );
     }
 

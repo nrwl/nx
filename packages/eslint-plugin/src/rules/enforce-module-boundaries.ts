@@ -49,7 +49,11 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import { isRelativePath, isProjectGraphProjectNode } from '@nx/devkit/internal';
+import {
+  hasIgnoreServerInputsDirective,
+  isRelativePath,
+  isProjectGraphProjectNode,
+} from '@nx/devkit/internal';
 
 export type Options = [
   {
@@ -253,6 +257,35 @@ export default ESLintUtils.RuleCreator(
         projectGraph
       );
 
+    let ignoreServerInputsSpec: boolean | undefined;
+    // Atomized e2e specs (`<target>--<spec path>`) with
+    // `// @nx-ignore-server-inputs` import app code with bare imports
+    // (`import 'app/feature'`) to hash from it.
+    function isIgnoreServerInputsImport(
+      node: Parameters<typeof run>[1],
+      sourceProject: ProjectGraphProjectNode,
+      sourceFilePath: string
+    ): boolean {
+      if (
+        node.type !== AST_NODE_TYPES.ImportDeclaration ||
+        context.sourceCode.getFirstToken(node, 1).range[0] !==
+          node.source.range[0]
+      ) {
+        return false;
+      }
+      if (ignoreServerInputsSpec === undefined) {
+        const specPath = normalizePath(
+          relative(sourceProject.data.root, sourceFilePath)
+        );
+        ignoreServerInputsSpec =
+          hasIgnoreServerInputsDirective(context.sourceCode.text) &&
+          Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
+            targetName.endsWith(`--${specPath}`)
+          );
+      }
+      return ignoreServerInputsSpec;
+    }
+
     function run(
       imp: string,
       node:
@@ -297,8 +330,9 @@ export default ESLintUtils.RuleCreator(
       }
 
       if (
-        (targetProject && sourceProject !== targetProject) ||
-        isAbsoluteImportIntoAnotherProj
+        ((targetProject && sourceProject !== targetProject) ||
+          isAbsoluteImportIntoAnotherProj) &&
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         context.report({
           node,
@@ -601,7 +635,11 @@ export default ESLintUtils.RuleCreator(
       }
 
       // cannot import apps
-      if (targetProject.type === 'app' && !appIsMFERemote(targetProject)) {
+      if (
+        targetProject.type === 'app' &&
+        !appIsMFERemote(targetProject) &&
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
+      ) {
         context.report({
           node,
           messageId: 'noImportsOfApps',
@@ -650,7 +688,8 @@ export default ESLintUtils.RuleCreator(
           targetProject.name,
           imp,
           sourceFilePath
-        )
+        ) &&
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
           projectFileMap,
@@ -671,7 +710,10 @@ export default ESLintUtils.RuleCreator(
       }
 
       // check that dependency constraints are satisfied
-      if (depConstraints.length > 0) {
+      if (
+        depConstraints.length > 0 &&
+        !isIgnoreServerInputsImport(node, sourceProject, sourceFilePath)
+      ) {
         const constraints = findConstraintsFor(depConstraints, sourceProject);
         // when no constrains found => error. Force the user to provision them.
         if (constraints.length === 0) {

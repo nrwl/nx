@@ -1,5 +1,7 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
+import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { readdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
@@ -112,6 +114,33 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
         ],
       ]
     `);
+  });
+
+  it('should report a config that fails to load against its own file and infer the others', async () => {
+    mockJestConfig({}, context);
+    await tempFs.createFiles({
+      'broken/jest.config.js': `throw new Error('cannot load preset');`,
+      'broken/project.json': '{}',
+    });
+
+    let error: AggregateCreateNodesError;
+    try {
+      await createNodesFunction(
+        ['proj/jest.config.js', 'broken/jest.config.js'],
+        { targetName: 'test', disableJestRuntime },
+        context
+      );
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(AggregateCreateNodesError);
+    expect(error.errors.map(([file, e]) => [file, e.message])).toEqual([
+      ['broken/jest.config.js', 'cannot load preset'],
+    ]);
+    expect(error.partialResults.map(([file]) => file)).toEqual([
+      'proj/jest.config.js',
+    ]);
   });
 
   it('should create test-ci targets based on jest.config.ts', async () => {
@@ -559,6 +588,135 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       expect(targets[targetName].outputs).toEqual([]);
       expect(targets[targetName].cache).toBe(false);
     }
+  });
+
+  describe('a test file with an @nx-depends-on directive', () => {
+    async function atomizedTargets() {
+      mockJestConfig(
+        {
+          testMatch: ['**/*.spec.ts'],
+          testPathIgnorePatterns: ['ignore.spec.ts'],
+        },
+        context
+      );
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+      return results[0][1].projects!['proj'].targets!;
+    }
+
+    it("scopes its atomized target's dependency inputs", async () => {
+      await tempFs.createFiles({
+        'proj/src/feature.spec.ts':
+          '// @nx-depends-on: feature, feature-utils\nimport { x } from "feature";\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['test-ci--src/feature.spec.ts'].inputs).toEqual([
+        'default',
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          always: true,
+        },
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          dependencies: true,
+          always: true,
+        },
+        { externalDependencies: ['jest'] },
+      ]);
+      expect(targets['test-ci--src/feature.spec.ts'].dependsOn).toBeUndefined();
+      expect(targets['test-ci--src/unit.spec.ts'].inputs).toEqual(
+        targets['test'].inputs
+      );
+    });
+
+    // The plugin cache key covers the project's files, so the cache on disk
+    // cannot serve targets built before the directive changed.
+    it('rebuilds the cached targets when the directive changes, leaving other files alone', async () => {
+      const previous = process.env.NX_CACHE_PROJECT_GRAPH;
+      process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+      try {
+        await tempFs.createFiles({
+          'proj/src/feature.spec.ts': 'import { x } from "feature";\n',
+        });
+        const before = await atomizedTargets();
+        expect(before['test-ci--src/feature.spec.ts'].inputs).toEqual(
+          before['test'].inputs
+        );
+        expect(
+          readdirSync(join(tempFs.tempDir, 'tmp/project-graph-cache'))
+        ).not.toEqual([]);
+
+        await tempFs.createFiles({
+          'proj/src/feature.spec.ts':
+            '// @nx-depends-on: feature\nimport { x } from "feature";\n',
+        });
+        // A new process (or the daemon's watcher) sees the edit.
+        resetWorkspaceContext();
+        const after = await atomizedTargets();
+
+        expect(after['test-ci--src/feature.spec.ts'].inputs).toContainEqual({
+          input: 'production',
+          projects: ['feature'],
+          always: true,
+        });
+        expect(JSON.stringify(after['test-ci--src/unit.spec.ts'])).toBe(
+          JSON.stringify(before['test-ci--src/unit.spec.ts'])
+        );
+      } finally {
+        if (previous === undefined) {
+          delete process.env.NX_CACHE_PROJECT_GRAPH;
+        } else {
+          process.env.NX_CACHE_PROJECT_GRAPH = previous;
+        }
+      }
+    });
+
+    it('ignores a directive that lists no projects, with a warning naming the file', async () => {
+      await tempFs.createFiles({
+        'proj/src/feature.spec.ts': '// @nx-depends-on:\n',
+      });
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const targets = await atomizedTargets();
+
+        expect(targets['test-ci--src/feature.spec.ts'].inputs).toEqual(
+          targets['test'].inputs
+        );
+        expect(warn).toHaveBeenCalledWith(
+          'proj/src/feature.spec.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('ignores "@nx-ignore-server-inputs" with a warning naming the file', async () => {
+      await tempFs.createFiles({
+        'proj/src/feature.spec.ts': '// @nx-ignore-server-inputs\n',
+      });
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const targets = await atomizedTargets();
+
+        expect(targets['test-ci--src/feature.spec.ts'].inputs).toEqual(
+          targets['test'].inputs
+        );
+        expect(warn).toHaveBeenCalledWith(
+          'proj/src/feature.spec.ts: "@nx-ignore-server-inputs" is not supported in this test file, so Nx ignores it.'
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
   });
 
   describe('ciGroupName', () => {

@@ -261,17 +261,14 @@ describe('cache', () => {
     expect(outputsWithUntouchedOutputs).toContain('x.txt');
     expect(outputsWithUntouchedOutputs).toContain('z.md');
 
-    // The daemon ignores output changes within 2s of recording their hash.
-    await waitPastOutputsTrackingWindow();
-
     // Create a file in the dist that does not match output glob
     updateFile('dist/apps/c.ts', '');
 
-    // Rerun. Outputs were modified (extra file in dist), so the daemon's
-    // outputs-hash check fails and nx restores from cache → "[local cache]"
-    // rather than the "existing outputs match" no-op path.
+    // Rerun. The new file is not an output, so the outputs still match.
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
-    expect(rerunWithNewUnrelatedFile).toContain('local cache');
+    expect(rerunWithNewUnrelatedFile).toContain(
+      'existing outputs match the cache'
+    );
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
@@ -289,8 +286,6 @@ describe('cache', () => {
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('x.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('z.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
-
-    await waitPastOutputsTrackingWindow();
 
     // Clear Dist
     rmDist();
@@ -850,7 +845,9 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s) => {
+    lines.forEach((line) => {
+      // GitHub log groups prefix the task header with a cache-status icon.
+      const s = line.replace(/^(?:::group::|##\[group\])[^>]*(?=> nx run)/, '');
       if (s.trimStart().startsWith(`> nx run`)) {
         const projectName = s
           .trimStart()
@@ -892,7 +889,3 @@ const dirSize = async (dir) => {
     .flat(Infinity)
     .reduce((i, size) => i + size, 0);
 };
-
-function waitPastOutputsTrackingWindow() {
-  return new Promise((resolve) => setTimeout(resolve, 2100));
-}

@@ -8,6 +8,13 @@
       "command": "node ./scripts/copy-readme.js remix packages/remix/readme-template.md packages/remix/README.md",
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"]
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["cypress", "eslint"],

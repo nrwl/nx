@@ -21,7 +21,6 @@
             "cypress",
             "docker",
             "eslint",
-            "module-federation",
             "node",
             "playwright",
             "rollup",
@@ -42,6 +41,13 @@
     },
     "nx-release-publish": {
       "dependsOn": []
+    },
+    "test": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/vitest/**/*",
+        "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
+      ]
     }
   },
   "implicitDependencies": ["rspack"]

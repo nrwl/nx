@@ -80,16 +80,13 @@ When `expectedCommitSha` or `previousCipeUrl` is provided, you must detect wheth
 **Field Sets for Efficient Polling:**
 
 ```yaml
-WAIT_FIELDS:
-  'cipeUrl,commitSha,cipeStatus'
+WAIT_FIELDS: 'cipeUrl,commitSha,cipeStatus'
   # Minimal fields for detecting new CI Attempt
 
-LIGHT_FIELDS:
-  'cipeStatus,cipeUrl,branch,commitSha,selfHealingStatus,verificationStatus,userAction,failedTaskIds,verifiedTaskIds,selfHealingEnabled,failureClassification,couldAutoApplyTasks,shortLink,confidence,confidenceReasoning'
+LIGHT_FIELDS: 'cipeStatus,cipeUrl,branch,commitSha,selfHealingStatus,verificationStatus,userAction,failedTaskIds,verifiedTaskIds,selfHealingEnabled,failureClassification,couldAutoApplyTasks,shortLink,confidence,confidenceReasoning'
   # Status fields for determining actionable state
 
-HEAVY_FIELDS:
-  'taskOutputSummary,suggestedFix,suggestedFixReasoning,suggestedFixDescription'
+HEAVY_FIELDS: 'taskOutputSummary,suggestedFix,suggestedFixReasoning,suggestedFixDescription'
   # Large content fields - fetch only when returning to main agent
 ```
 

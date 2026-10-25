@@ -6,6 +6,7 @@ import {
   getPathCommitExposure,
   getUncommittedChangesSnapshot,
   getWorkingTreeStatus,
+  getAncestorStatus,
   isAncestorCommit,
   tryCommitChanges,
   tryCommitChangesAsync,
@@ -590,7 +591,7 @@ describe('git utils tests', () => {
       getWorkingTreeStatus('/repo');
 
       expect(execSync).toHaveBeenCalledWith(
-        'git status --porcelain',
+        'git status --porcelain --untracked-files=normal',
         expect.objectContaining({ cwd: '/repo' })
       );
     });
@@ -601,7 +602,7 @@ describe('git utils tests', () => {
       getWorkingTreeStatus('/repo', ['.nx/migrate-runs', 'tmp']);
 
       expect(execSync).toHaveBeenCalledWith(
-        'git status --porcelain -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
+        'git status --porcelain --untracked-files=normal -- ":(exclude).nx/migrate-runs" ":(exclude)tmp"',
         expect.objectContaining({ cwd: '/repo' })
       );
     });
@@ -1041,6 +1042,34 @@ describe('git utils tests', () => {
       expect(isAncestorCommit('abc123', shaB, '/repo')).toBe(false);
       expect(isAncestorCommit(shaA, 'a'.repeat(41), '/repo')).toBe(false);
       expect(execSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAncestorStatus', () => {
+    const shaA = 'a'.repeat(40);
+    const shaB = 'b'.repeat(40);
+
+    afterEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("reports 'not-ancestor' only on git's exit 1", () => {
+      (execSync as Mock).mockImplementation(() => {
+        throw Object.assign(new Error('exit 1'), { status: 1 });
+      });
+
+      expect(getAncestorStatus(shaA, shaB, '/repo')).toBe('not-ancestor');
+    });
+
+    it("reports 'unknown' on any other failure and for a non-sha value", () => {
+      (execSync as Mock).mockImplementation(() => {
+        throw Object.assign(new Error('fatal: not a git repository'), {
+          status: 128,
+        });
+      });
+
+      expect(getAncestorStatus(shaA, shaB, '/repo')).toBe('unknown');
+      expect(getAncestorStatus('HEAD~1', shaB, '/repo')).toBe('unknown');
     });
   });
 });

@@ -6,13 +6,18 @@ import {
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
-import type { IoSnapshotVersion } from '../daemon/message-types/io-snapshot-version';
+import type { UltracacheConfigurationVersion } from '../daemon/message-types/ultracache-configuration-version';
 import { hashArray } from './file-hasher';
 import { InputDefinition } from '../config/workspace-json-project-json';
 import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
+import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
-import { HashInputs, IoSnapshots, NxWorkspaceFilesExternals } from '../native';
+import {
+  HashInputs,
+  UltracacheConfigurations,
+  NxWorkspaceFilesExternals,
+} from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 
 // Re-export HashInputs from native module for public API
@@ -115,7 +120,7 @@ export interface TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash[]>;
 
   hashTask(
@@ -124,7 +129,7 @@ export interface TaskHasherImpl {
     env: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<PartialHash>;
 
   hashTasksUpfront(
@@ -133,7 +138,7 @@ export interface TaskHasherImpl {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, PartialHash>>;
 }
 
@@ -172,7 +177,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
     private readonly runnerOptions: any,
-    private readonly ioSnapshots?: IoSnapshotVersion
+    private readonly ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ) {}
 
   async hashTasks(
@@ -188,7 +193,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
       process.cwd(),
       collectInputs,
-      this.ioSnapshots
+      this.ultracacheConfigurationsVersion
     );
   }
 
@@ -205,7 +210,7 @@ export class DaemonBasedTaskHasher implements TaskHasher {
       perTaskEnvs,
       process.cwd(),
       collectInputs,
-      this.ioSnapshots
+      this.ultracacheConfigurationsVersion
     );
   }
 
@@ -230,8 +235,9 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly nxJson: NxJsonConfiguration,
     private readonly externalRustReferences: NxWorkspaceFilesExternals | null,
     private readonly options: any,
-    /** This run's snapshot set; the daemon passes one per request instead. */
-    private readonly ioSnapshots?: IoSnapshots
+    private readonly planningContext?: TaskPlanningContext,
+    /** This run's Ultracache configurations; the daemon passes them per request instead. */
+    private readonly ultracacheConfigurations?: UltracacheConfigurations
   ) {
     this.taskHasher = new NativeTaskHasherImpl(
       workspaceRoot,
@@ -240,7 +246,8 @@ export class InProcessTaskHasher implements TaskHasher {
       this.externalRustReferences,
       {
         selectivelyHashTsConfig: this.options?.selectivelyHashTsConfig ?? false,
-      }
+      },
+      this.planningContext
     );
   }
 
@@ -250,7 +257,7 @@ export class InProcessTaskHasher implements TaskHasher {
     envOrPerTaskEnvs: NodeJS.ProcessEnv | Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash[]> {
     const hashes = await this.taskHasher.hashTasks(
       tasks,
@@ -258,7 +265,7 @@ export class InProcessTaskHasher implements TaskHasher {
       normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
       cwd ?? process.cwd(),
       collectInputs,
-      ioSnapshots ?? this.ioSnapshots
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     return tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
@@ -271,7 +278,7 @@ export class InProcessTaskHasher implements TaskHasher {
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, Hash>> {
     const hashes = await this.taskHasher.hashTasksUpfront(
       tasks,
@@ -279,7 +286,7 @@ export class InProcessTaskHasher implements TaskHasher {
       perTaskEnvs,
       cwd ?? process.cwd(),
       collectInputs,
-      ioSnapshots ?? this.ioSnapshots
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     const result: Record<string, Hash> = {};
     for (const task of tasks) {
@@ -296,7 +303,7 @@ export class InProcessTaskHasher implements TaskHasher {
     env?: NodeJS.ProcessEnv,
     cwd?: string,
     collectInputs?: boolean,
-    ioSnapshots?: IoSnapshots
+    ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash> {
     const res = await this.taskHasher.hashTask(
       task,
@@ -304,7 +311,7 @@ export class InProcessTaskHasher implements TaskHasher {
       env ?? process.env,
       cwd ?? process.cwd(),
       collectInputs,
-      ioSnapshots ?? this.ioSnapshots
+      ultracacheConfigurations ?? this.ultracacheConfigurations
     );
     return this.createHashDetails(task, res);
   }
@@ -431,13 +438,17 @@ export function splitInputsIntoSelfAndDependencies(
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
   depsInputs: { input: string; dependencies: true }[];
-  projectInputs: { input: string; projects: string[] }[];
+  projectInputs: { input: string; projects: string[]; dependencies?: true }[];
   selfInputs: ExpandedSelfInput[];
   depsOutputs: ExpandedDepsOutput[];
   depsFilesets: { fileset: string; dependencies: true }[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
-  const projectInputs: { input: string; projects: string[] }[] = [];
+  const projectInputs: {
+    input: string;
+    projects: string[];
+    dependencies?: true;
+  }[] = [];
   const depsFilesets: { fileset: string; dependencies: true }[] = [];
   const selfInputs = [];
   for (const d of inputs) {
@@ -464,7 +475,7 @@ export function splitInputsIntoSelfAndDependencies(
       } else if (
         'input' in d &&
         !('fileset' in d) &&
-        (('dependencies' in d && d.dependencies) ||
+        (('dependencies' in d && d.dependencies && !('projects' in d)) ||
           // Todo(@AgentEnder): Remove check in v17
           ('projects' in d &&
             typeof d.projects === 'string' &&
@@ -485,6 +496,9 @@ export function splitInputsIntoSelfAndDependencies(
         projectInputs.push({
           input: d.input,
           projects: Array.isArray(d.projects) ? d.projects : [d.projects],
+          ...('dependencies' in d && d.dependencies
+            ? { dependencies: true }
+            : {}),
         });
       } else {
         selfInputs.push(d);

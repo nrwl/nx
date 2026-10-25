@@ -35,7 +35,7 @@ export interface DotEnvChangeClassification {
  *
  * Only the workspace root and project roots invalidate: getEnvPathsForTask
  * loads dotenv files from those, never from an arbitrary subdirectory (e.g. one
- * under node_modules), and the outputs watcher spans the whole workspace root.
+ * under node_modules), and the raw-event stream spans the whole workspace root.
  * An unclassified event is not necessarily irrelevant, though: the graph it was
  * classified against can predate the file's project root (none is committed
  * during the initial computation, and a replaced graph lacks a project that
@@ -158,7 +158,7 @@ function isDotEnvUnderRoot(path: string, roots: Set<string>): boolean {
 
 // Paths of dotenv-shaped events whose graph refresh is not provably scheduled:
 // paths under no known root on arrival (the next graph may know the root) and
-// edits to tracked files (the workspace watcher schedules the refresh, but a
+// edits to tracked files (the file-change stream schedules the refresh, but a
 // computation already in flight may have read the file before the edit). Each
 // maps to the recomputation generation current at queue time, so the pre-serve
 // replay can prove whether a computation started before the event arrived.

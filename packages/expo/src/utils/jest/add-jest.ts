@@ -16,8 +16,7 @@ export async function addJest(
   projectName: string,
   appProjectRoot: string,
   js: boolean,
-  skipPackageJson: boolean,
-  addPlugin: boolean
+  skipPackageJson: boolean
 ): Promise<GeneratorCallback> {
   if (unitTestRunner !== 'jest') {
     return () => {};
@@ -37,7 +36,6 @@ export async function addJest(
     compiler: 'babel',
     skipPackageJson,
     skipFormat: true,
-    addPlugin,
   });
 
   // Expo SDK 54+ (including 55) use the winter-runtime ImportMetaRegistry mock;

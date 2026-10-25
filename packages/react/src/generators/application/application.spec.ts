@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   detectPackageManager,
@@ -20,20 +21,20 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
-  const original = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const original = await vi.importActual<any>('@nx/devkit');
   return {
     ...original,
-    createProjectGraphAsync: jest
+    createProjectGraphAsync: vi
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
-    detectPackageManager: jest.fn(),
+    detectPackageManager: vi.fn(),
   };
 });
 
@@ -50,19 +51,20 @@ describe('app', () => {
     linter: 'eslint',
     style: 'css',
     strict: true,
-    addPlugin: true,
   };
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
-  beforeEach(() => {
+  beforeEach(async () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
-    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
-      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    const actual =
+      await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+    (detectPackageManager as Mock).mockImplementation(
+      actual.detectPackageManager
     );
   });
 
@@ -150,7 +152,6 @@ describe('app', () => {
         ...schema,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        addPlugin: true,
         // Let the generator format the tree so we assert on the same
         // prettier-formatted config a user gets, not the raw intermediate the
         // e2e generator writes with skipFormat.
@@ -172,13 +173,13 @@ describe('app', () => {
               cypressDir: 'src',
               bundler: 'vite',
               webServerCommands: {
-                default: '<pm-exec> nx run my-app:dev',
+                default: process.env['CI'] ? '<pm-exec> nx run my-app:preview' : '<pm-exec> nx run my-app:dev',
                 production: '<pm-exec> nx run my-app:preview',
               },
               ciWebServerCommand: '<pm-exec> nx run my-app:preview',
               ciBaseUrl: 'http://localhost:4300',
             }),
-            baseUrl: 'http://localhost:4200',
+            baseUrl: process.env['CI'] ? 'http://localhost:4300' : 'http://localhost:4200',
           },
         });
         "
@@ -202,7 +203,6 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
-        addPlugin: true,
       });
       // Spot-check the generated playwright config. Avoid inline snapshot
       // here: `webServer.command` interpolates `packageCmd` at runtime
@@ -216,10 +216,14 @@ describe('app', () => {
       expect(playwrightConfig).toMatchInlineSnapshot(`
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
-        import { workspaceRoot } from '@nx/devkit';
+        import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+        const isCI = !!process.env['CI'];
+        // getReadyUrl moves the address to the port the server task reported.
+        const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
 
         // For CI, you may want to set BASE_URL to the deployed application.
-        const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+        const baseURL = process.env['BASE_URL'] || webServerAddress;
 
         /**
          * Read environment variables from file.
@@ -245,10 +249,9 @@ describe('app', () => {
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
             trace: 'on-first-retry',
           },
-          /* Run your local dev server before starting the tests */
           webServer: {
-            command: 'npx nx run my-app:preview',
-            url: 'http://localhost:4300',
+            command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+            url: webServerAddress,
             reuseExistingServer: true,
             cwd: workspaceRoot
           },
@@ -704,18 +707,6 @@ describe('app', () => {
       }
     );
 
-    it('should forward the deprecated setParserOptionsProject flag to the e2e project', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        e2eTestRunner: 'playwright',
-        setParserOptionsProject: true,
-      });
-
-      expect(appTree.read('my-app-e2e/eslint.config.mjs', 'utf-8')).toContain(
-        'projectService: true'
-      );
-    });
-
     it('should not set up typed linting in the e2e project by default', async () => {
       await applicationGenerator(appTree, {
         ...schema,
@@ -1018,51 +1009,53 @@ describe('app', () => {
 
       expect(appTree.read('my-app/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import { reactRouter } from '@react-router/dev/vite';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { reactRouter } from '@react-router/dev/vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/my-app',
-          server: {
-            port: 4200,
-            host: 'localhost',
-          },
-          preview: {
-            port: 4300,
-            host: 'localhost',
-          },
-          plugins: [!process.env.VITEST && reactRouter(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
-          build: {
-            outDir: '../dist/my-app',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/my-app',
+            server: {
+              port: 4200,
+              host: 'localhost',
             },
-          },
-          test: {
-            name: 'my-app',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: '../coverage/my-app',
-              provider: 'v8' as const,
+            preview: {
+              port: 4300,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [!process.env.VITEST && reactRouter(), nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/my-app',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+            test: {
+              name: 'my-app',
+              watch: false,
+              globals: true,
+              environment: 'jsdom',
+              include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+              reporters: ['default'],
+              coverage: {
+                reportsDirectory: '../coverage/my-app',
+                provider: 'v8' as const,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should add types to tsconfig', async () => {
@@ -1276,7 +1269,7 @@ describe('app', () => {
     });
   });
 
-  it('should add targetDefaults to nxJson when addPlugin=false', async () => {
+  it('should enable inference', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     let nxJson = readNxJson(tree);
@@ -1286,7 +1279,6 @@ describe('app', () => {
     // ACT
     await applicationGenerator(tree, {
       directory: 'myapp',
-      addPlugin: false,
       linter: 'none',
       style: 'none',
       e2eTestRunner: 'none',
@@ -1294,29 +1286,16 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    const td = nxJson.targetDefaults!;
-    const buildEntry = Array.isArray(td)
-      ? td.find(
-          (e) =>
-            e.target === 'build' &&
-            e.projects === undefined &&
-            e.plugin === undefined
+    expect(
+      nxJson.plugins?.some((plugin) =>
+        ['@nx/vite/plugin', '@nx/webpack/plugin', '@nx/rspack/plugin'].includes(
+          typeof plugin === 'string' ? plugin : plugin.plugin
         )
-      : td.build;
-    const {
-      target: _t,
-      projects: _p,
-      plugin: _pl,
-      ...buildConfig
-    } = (buildEntry as any) ?? {};
-    expect(buildConfig).toMatchInlineSnapshot(`
-      {
-        "cache": true,
-        "dependsOn": [
-          "^build",
-        ],
-      }
-    `);
+      )
+    ).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'myapp').targets?.build
+    ).toBeUndefined();
   });
 
   describe('TS solution setup', () => {
@@ -1342,7 +1321,6 @@ describe('app', () => {
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1484,6 +1462,9 @@ describe('app', () => {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "exclude": [
             "out-tsc",
@@ -1507,11 +1488,26 @@ describe('app', () => {
       `);
     });
 
+    it('should reference tsconfig.app.json once from tsconfig.spec.json with jest', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        linter: 'none',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+      });
+
+      expect(readJson(appTree, 'myapp/tsconfig.spec.json').references).toEqual([
+        { path: './tsconfig.app.json' },
+      ]);
+    });
+
     it('should respect the provided name', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         name: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1537,7 +1533,6 @@ describe('app', () => {
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1547,7 +1542,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1556,7 +1550,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1574,7 +1567,7 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
-      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      (detectPackageManager as Mock).mockReturnValue('pnpm');
       updateJson(appTree, 'package.json', (json) => {
         delete json.workspaces;
         return json;
@@ -1584,7 +1577,6 @@ describe('app', () => {
 
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1594,7 +1586,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1604,7 +1595,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1614,7 +1604,6 @@ describe('app', () => {
       });
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1640,51 +1629,46 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
 
       expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
-        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-        const { join } = require('path');
+          "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+          const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+          const { join } = require('path');
 
-        module.exports = {
-          output: {
-            path: join(__dirname, 'dist'),
-            clean: true,
-          },
-          devServer: {
-            port: 4200,
-            historyApiFallback: {
-              index: '/index.html',
-              disableDotRule: true,
-              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          module.exports = {
+            output: {
+              path: join(__dirname, 'dist'),
+              clean: true,
             },
-          },
-          plugins: [
-            new NxAppWebpackPlugin({
-              tsConfig: './tsconfig.app.json',
-              compiler: 'babel',
-              main: './src/main.tsx',
-              index: './src/index.html',
-              baseHref: '/',
-              assets: ["./src/favicon.ico","./src/assets"],
-              styles: [],
-              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-              optimization: process.env['NODE_ENV'] === 'production',
-            }),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
-          ],
-        };
-        "
-      `);
+            devServer: {
+              port: 4200,
+              historyApiFallback: {
+                index: '/index.html',
+                disableDotRule: true,
+                htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+              },
+            },
+            plugins: [
+              new NxAppWebpackPlugin({
+                tsConfig: './tsconfig.app.json',
+                compiler: 'babel',
+                main: './src/main.tsx',
+                index: './src/index.html',
+                baseHref: '/',
+                assets: ["./src/favicon.ico","./src/assets"],
+                styles: [],
+                outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+                optimization: process.env['NODE_ENV'] === 'production',
+              }),
+              new NxReactWebpackPlugin(),
+            ],
+          };
+          "
+        `);
     });
 
     it('should configure webpack build task correctly with the output contained within the project root', async () => {
@@ -1694,15 +1678,13 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should configure rspack build task correctly with the output contained within the project root', async () => {
@@ -1712,21 +1694,18 @@ describe('app', () => {
         linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: false,
         useProjectJson: false,
         skipFormat: true,
       });
 
-      expect(
-        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
-          .outputPath
-      ).toBe('apps/my-app/dist');
+      expect(appTree.read('apps/my-app/rspack.config.js', 'utf-8')).toContain(
+        "path: join(__dirname, 'dist')"
+      );
     });
 
     it('should generate project.json if useProjectJson is true', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
-        addPlugin: true,
         linter: 'eslint',
         style: 'none',
         bundler: 'vite',
@@ -1834,8 +1813,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1848,10 +1826,13 @@ describe('app', () => {
             port: 9000,
             host: 'localhost',
           },
-          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -1905,11 +1886,7 @@ describe('app', () => {
               outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
               optimization: process.env['NODE_ENV'] === 'production',
             }),
-            new NxReactWebpackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactWebpackPlugin(),
           ],
         };
         "
@@ -1953,11 +1930,7 @@ describe('app', () => {
               outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
               optimization: process.env['NODE_ENV'] === 'production',
             }),
-            new NxReactRspackPlugin({
-              // Uncomment this line if you don't want to use SVGR
-              // See: https://react-svgr.com/
-              // svgr: false
-            }),
+            new NxReactRspackPlugin(),
           ],
         };
         "
@@ -1976,8 +1949,7 @@ describe('app', () => {
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+        import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
         export default defineConfig(() => ({
           root: import.meta.dirname,
@@ -1990,10 +1962,13 @@ describe('app', () => {
             port: 4300,
             host: 'localhost',
           },
-          plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+          resolve: {
+            tsconfigPaths: true,
+          },
+          plugins: [react(), nxReadySignal()],
           // Uncomment this if you are using workers.
           // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
+          //  plugins: [],
           // },
           build: {
             outDir: '../dist/my-app',
@@ -2037,8 +2012,12 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
     });
 
     it('should generate webpack app with cypress using custom port', async () => {
@@ -2070,8 +2049,12 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
     });
 
     it('should generate rspack app with cypress using custom port', async () => {
@@ -2103,8 +2086,68 @@ describe('app', () => {
         'my-app-e2e/playwright.config.mts',
         'utf-8'
       );
-      expect(playwrightConfig).toContain("|| 'http://localhost:9000'");
-      expect(playwrightConfig).toContain("url: 'http://localhost:9000'");
+      expect(playwrightConfig).toContain(
+        "|| getReadyUrl('http://localhost:9000')"
+      );
+      expect(playwrightConfig).toContain(
+        "url: getReadyUrl('http://localhost:9000')"
+      );
+    });
+  });
+
+  describe('--port', () => {
+    it('should not write a dev-server port that was never requested', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'default-app',
+        bundler: 'webpack',
+      });
+
+      expect(
+        readProjectConfiguration(appTree, 'default-app').targets.serve
+      ).toBeUndefined();
+      expect(appTree.read('default-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4200'
+      );
+    });
+
+    it('should write an explicitly requested port to the config', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'pinned-app',
+        bundler: 'webpack',
+        port: 4321,
+      });
+
+      expect(appTree.read('pinned-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4321'
+      );
+    });
+
+    it('should write port 0, which asks the dev server for a free port', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'ephemeral-app',
+        bundler: 'webpack',
+        port: 0,
+      });
+
+      expect(
+        appTree.read('ephemeral-app/webpack.config.js', 'utf-8')
+      ).toContain('port: 0');
+    });
+
+    it('should accept the deprecated devServerPort from programmatic callers', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        directory: 'aliased-app',
+        bundler: 'webpack',
+        devServerPort: 4322,
+      });
+
+      expect(appTree.read('aliased-app/webpack.config.js', 'utf-8')).toContain(
+        'port: 4322'
+      );
     });
   });
 });

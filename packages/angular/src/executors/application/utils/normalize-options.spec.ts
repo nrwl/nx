@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import * as angularVersionUtils from '../../utilities/angular-version-utils';
 import type { ApplicationExecutorOptions } from '../schema';
 import { normalizeOptions } from './normalize-options';
@@ -19,17 +20,17 @@ function normalizeSsr(ssr: SsrPlatformInput): SsrPlatformInput {
 }
 
 describe('normalizeOptions', () => {
-  let getInstalledAngularVersionInfoSpy: jest.SpyInstance;
+  let getInstalledAngularVersionInfoSpy: MockInstance;
 
   beforeEach(() => {
-    getInstalledAngularVersionInfoSpy = jest.spyOn(
+    getInstalledAngularVersionInfoSpy = vi.spyOn(
       angularVersionUtils,
       'getInstalledAngularVersionInfo'
     );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should preserve other options untouched', () => {

@@ -1,6 +1,9 @@
 import type { NxJsonConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
-import type { InputDefinition } from '../../../config/workspace-json-project-json';
+import type {
+  InputDefinition,
+  ReadyWhen,
+} from '../../../config/workspace-json-project-json';
 import type { ConfigurationSourceMaps } from '../../../project-graph/utils/project-configuration/source-maps';
 import { getNamedInputs } from '../../../hasher/task-hasher';
 import { createTaskGraph } from '../../../tasks-runner/create-task-graph';
@@ -8,6 +11,16 @@ import {
   createTaskId,
   getDependencyConfigs,
 } from '../../../tasks-runner/utils';
+import { DEFAULT_READY_TIMEOUT } from '../../../tasks-runner/readiness/ready-when';
+import { formatDuration } from '../../../native';
+import {
+  hasAlwaysInput,
+  isUltracacheOnInCI,
+  ultracacheDocsLink,
+  ultracacheInCINotice,
+  ultracacheModeInCI,
+  type UltracacheModeInCI,
+} from '../../../ultracache/ci-status';
 import type { ShowTargetBaseOptions } from '../command-object';
 import {
   resolveTarget,
@@ -23,6 +36,13 @@ export async function showTargetInfoHandler(
 ): Promise<void> {
   const t = await resolveTarget(args, { withSourceMaps: true });
   const data = resolveTargetInfoData(t);
+  if (
+    !args.json &&
+    data.ultracacheMode &&
+    (await isUltracacheOnInCI(t.nxJson))
+  ) {
+    data.ultracacheInCI = data.ultracacheMode;
+  }
   renderTargetInfo(data, args);
 }
 
@@ -84,7 +104,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     commandSourceKey = 'options.script';
   }
 
-  const { dependsOn, depSourceIndices, transitiveTasks } =
+  const { dependsOn, depSourceIndices, transitiveTasks, continuousDeps } =
     resolveTaskGraphDependencies(
       graph,
       {},
@@ -101,6 +121,9 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     sourceMaps
   );
   const usesCustomHasher = hasCustomHasher(projectName, targetName, graph);
+  const expandedInputs = targetConfig.inputs
+    ? expandInputsForDisplay(targetConfig.inputs, node, nxJson)
+    : undefined;
 
   return {
     project: projectName,
@@ -110,24 +133,24 @@ function resolveTargetInfoData(t: ResolvedTarget) {
     ...(command ? { command, _commandSourceKey: commandSourceKey } : {}),
     ...(usesCustomHasher ? { customHasher: true } : {}),
     ...(dependsOn.length > 0
-      ? { dependsOn, _depSources: depSourceIndices }
+      ? {
+          dependsOn,
+          _depSources: depSourceIndices,
+          _continuousDeps: continuousDeps,
+        }
       : {}),
     ...(transitiveTasks.length > 0 ? { transitiveTasks } : {}),
     parallelism: targetConfig.parallelism ?? true,
     continuous: targetConfig.continuous ?? false,
+    ...(targetConfig.readyWhen !== undefined
+      ? { readyWhen: withEffectiveTimeout(targetConfig.readyWhen) }
+      : {}),
     cache: targetConfig.cache ?? false,
-    ...(targetConfig.inputs
-      ? (() => {
-          const expanded = expandInputsForDisplay(
-            targetConfig.inputs,
-            node,
-            nxJson
-          );
-          return {
-            inputs: expanded.map((e) => e.value),
-            _inputSources: expanded.map((e) => e.originalIndex),
-          };
-        })()
+    ...(expandedInputs
+      ? {
+          inputs: expandedInputs.map((e) => e.value),
+          _inputSources: expandedInputs.map((e) => e.originalIndex),
+        }
       : {}),
     ...(targetConfig.outputs
       ? { outputs: targetConfig.outputs as string[] }
@@ -143,7 +166,15 @@ function resolveTargetInfoData(t: ResolvedTarget) {
       ? { defaultConfiguration: targetConfig.defaultConfiguration }
       : {}),
     ...(targetSourceMap ? { sourceMap: targetSourceMap } : {}),
+    /** Set by the handler once Nx Cloud confirms the workspace is On. */
+    ultracacheInCI: undefined as UltracacheModeInCI | undefined,
+    ultracacheMode: ultracacheModeInCI(targetConfig, usesCustomHasher),
   };
+}
+
+function withEffectiveTimeout(readyWhen: ReadyWhen | null): ReadyWhen | null {
+  if (readyWhen === null || typeof readyWhen !== 'object') return readyWhen;
+  return { ...readyWhen, timeout: readyWhen.timeout ?? DEFAULT_READY_TIMEOUT };
 }
 
 function resolveDependencyProjects(
@@ -188,6 +219,11 @@ function resolveTaskGraphDependencies(
   dependsOn: string[];
   depSourceIndices: number[];
   transitiveTasks: string[];
+  /** Direct continuous dependencies, and whether this task hashes their inputs. */
+  continuousDeps?: Record<
+    string,
+    { inputsHashed: boolean; waitsForReady: boolean }
+  >;
 } {
   try {
     const taskGraph = createTaskGraph(
@@ -213,8 +249,17 @@ function resolveTaskGraphDependencies(
     const directDeps = [
       ...(taskGraph.dependencies[rootId] ?? []),
       ...(taskGraph.continuousDependencies[rootId] ?? []),
-    ];
+    ].map((edge) => edge.id);
     const directDepSet = new Set<string>(directDeps);
+    const continuousDeps = Object.fromEntries(
+      (taskGraph.continuousDependencies[rootId] ?? []).map((edge) => [
+        edge.id,
+        {
+          inputsHashed: edge.inputs !== false,
+          waitsForReady: edge.waitFor === 'ready',
+        },
+      ])
+    );
 
     const depSourceIndices = directDeps.map((depTaskId) => {
       const task = taskGraph.tasks[depTaskId];
@@ -229,7 +274,12 @@ function resolveTaskGraphDependencies(
       (id) => id !== rootId && !directDepSet.has(id)
     );
 
-    return { dependsOn: directDeps, depSourceIndices, transitiveTasks };
+    return {
+      dependsOn: directDeps,
+      depSourceIndices,
+      transitiveTasks,
+      continuousDeps,
+    };
   } catch {
     return {
       ...resolveDependsOnFromConfigs(depConfigs, projectName, graph),
@@ -373,10 +423,44 @@ function extractTargetSourceMap(
 
 // ── Render ──────────────────────────────────────────────────────────
 
+function describeReadyWhen(readyWhen: ReadyWhen | null): string {
+  if (readyWhen === null) return 'off (null)';
+  if (typeof readyWhen !== 'object') return JSON.stringify(readyWhen);
+  const timing = [`timeout ${formatDuration(readyWhen.timeout)}`];
+  if ('interval' in readyWhen && readyWhen.interval !== undefined) {
+    timing.push(`interval ${formatDuration(readyWhen.interval)}`);
+  }
+  return `${describeReadyCheck(readyWhen)} (${timing.join(', ')})`;
+}
+
+function describeReadyCheck(readyWhen: ReadyWhen): string {
+  if ('url' in readyWhen) return `url ${readyWhen.url}`;
+  if ('port' in readyWhen) {
+    return readyWhen.host
+      ? `port ${readyWhen.port} on ${readyWhen.host}`
+      : `port ${readyWhen.port}`;
+  }
+  if ('command' in readyWhen) return `command "${readyWhen.command}"`;
+  if ('logMatches' in readyWhen) {
+    const matches = [readyWhen.logMatches].flat().map((m) => `"${m}"`);
+    return `logMatches ${matches.join(', ')}`;
+  }
+  if ('signal' in readyWhen) return 'signal';
+  return JSON.stringify(readyWhen);
+}
+
 function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   if (args.json) {
     // Strip internal renderer-only fields from JSON output
-    const { _inputSources, _depSources, _commandSourceKey, ...jsonData } = data;
+    const {
+      _inputSources,
+      _depSources,
+      _commandSourceKey,
+      _continuousDeps,
+      ultracacheMode,
+      ultracacheInCI,
+      ...jsonData
+    } = data;
     console.log(JSON.stringify(jsonData, null, 2));
     return;
   }
@@ -428,7 +512,15 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
         srcIdx !== undefined && srcIdx >= 0
           ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
           : sourceHint('dependsOn');
-      console.log(`  ${data.dependsOn[i]}${hint}`);
+      const continuousDep = data._continuousDeps?.[data.dependsOn[i]];
+      const note = continuousDep
+        ? ` ${c.dim(
+            continuousDep.waitsForReady
+              ? '(continuous, waits for ready)'
+              : '(continuous)'
+          )}`
+        : '';
+      console.log(`  ${data.dependsOn[i]}${note}${hint}`);
     }
     if (data.transitiveTasks && data.transitiveTasks.length > 0) {
       console.log(`  ${c.dim(formatTransitiveSummary(data.transitiveTasks))}`);
@@ -441,10 +533,28 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
   console.log(
     `${c.bold('Continuous')}: ${data.continuous}${sourceHint('continuous')}`
   );
+  if (data.readyWhen !== undefined) {
+    console.log(
+      `${c.bold('Ready when')}: ${describeReadyWhen(data.readyWhen)}${sourceHint('readyWhen')}`
+    );
+  }
   console.log(`${c.bold('Cache')}: ${data.cache}${sourceHint('cache')}`);
 
-  if (data.inputs && data.inputs.length > 0) {
+  if (data.ultracacheInCI) {
+    const notice = ultracacheInCINotice(
+      data.ultracacheInCI,
+      hasAlwaysInput(data.inputs)
+    );
+    console.log(`${c.bold('Ultracache')}: ${notice} ${ultracacheDocsLink()}`);
+  }
+
+  const hashedContinuousDeps = Object.entries(data._continuousDeps ?? {})
+    .filter(([, { inputsHashed }]) => inputsHashed)
+    .map(([depId]) => depId);
+  if (data.inputs?.length || hashedContinuousDeps.length) {
     console.log(`${c.bold('Inputs')}:`);
+  }
+  if (data.inputs && data.inputs.length > 0) {
     const inputSources = data._inputSources;
     // Build sortable entries with their source index
     const entries = data.inputs.map((input, i) => ({
@@ -475,6 +585,9 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
           : '';
       console.log(`  - ${display}${hint}`);
     }
+  }
+  for (const depId of hashedContinuousDeps) {
+    console.log(`  - inputs of ${depId} ${c.dim('(continuous dependency)')}`);
   }
 
   if (data.outputs && data.outputs.length > 0) {

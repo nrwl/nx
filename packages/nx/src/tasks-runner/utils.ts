@@ -7,7 +7,8 @@ import {
 } from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskGraphEdge } from '../config/task-graph';
+import { hashObject } from '../hasher/file-hasher';
 import {
   ProjectConfiguration,
   TargetConfiguration,
@@ -19,19 +20,21 @@ import {
 } from '../native';
 import { isRelativePath } from '../utils/fileutils';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import {
-  LegacyDependsOnLocation,
-  LegacyDependsOnViolation,
-  flushLegacyDependsOnViolations,
-  warnLegacyDependsOnMagicString,
-} from './legacy-depends-on-warning';
 import { isGlobPattern } from '../utils/globs';
 import { isLongRunningTargetName } from '../utils/long-running-target';
+import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
 import { splitTargetFromNodes } from '../utils/split-target';
 import { workspaceRoot } from '../utils/workspace-root';
 import { isTuiEnabled } from './is-tui-enabled';
+import {
+  parseTokens,
+  readPath,
+  resolveToken,
+  type TokenNode,
+  type TokenScope,
+} from './tokens';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -43,47 +46,32 @@ export function getDependencyConfigs(
   projectGraph: ProjectGraph,
   allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] | undefined {
-  const legacyViolations: LegacyDependsOnViolation[] = [];
-  const dependencyConfigs = (
+  return (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).flatMap((config, index) =>
+  ).flatMap((config) =>
     normalizeDependencyConfigDefinition(
       config,
       project,
       projectGraph,
-      allTargetNames,
-      { ownerTarget: target, index, legacyViolations }
+      allTargetNames
     )
   );
-  if (legacyViolations.length) {
-    flushLegacyDependsOnViolations(
-      project,
-      target,
-      legacyViolations,
-      projectGraph.nodes[project]?.data?.root
-    );
-  }
-  return dependencyConfigs;
 }
-
-export type DependsOnEntryLocation = LegacyDependsOnLocation;
 
 export function normalizeDependencyConfigDefinition(
   definition: string | TargetDependencyConfig,
   currentProject: string,
   graph: ProjectGraph,
-  allTargetNames: string[],
-  location?: DependsOnEntryLocation
+  allTargetNames: string[]
 ): NormalizedTargetDependencyConfig[] {
   return expandWildcardTargetConfiguration(
     normalizeDependencyConfigProjects(
       expandDependencyConfigSyntaxSugar(definition, graph, currentProject),
       currentProject,
-      graph,
-      location
+      graph
     ),
     allTargetNames
   );
@@ -92,14 +80,11 @@ export function normalizeDependencyConfigDefinition(
 export function normalizeDependencyConfigProjects(
   dependencyConfig: TargetDependencyConfig,
   currentProject: string,
-  graph: ProjectGraph,
-  location?: DependsOnEntryLocation
+  graph: ProjectGraph
 ): NormalizedTargetDependencyConfig {
-  const noStringConfig = normalizeTargetDependencyWithStringProjects(
-    dependencyConfig,
-    currentProject,
-    location
-  );
+  assertNotLegacyProjectsString(dependencyConfig, currentProject, graph);
+  const noStringConfig =
+    normalizeTargetDependencyWithStringProjects(dependencyConfig);
 
   if (noStringConfig.projects) {
     dependencyConfig.projects = findMatchingProjects(
@@ -110,6 +95,22 @@ export function normalizeDependencyConfigProjects(
     dependencyConfig.projects = [currentProject];
   }
   return dependencyConfig as NormalizedTargetDependencyConfig;
+}
+
+function assertNotLegacyProjectsString(
+  dependencyConfig: TargetDependencyConfig,
+  currentProject: string,
+  graph: ProjectGraph
+) {
+  const projects = dependencyConfig.projects;
+  if (
+    (projects === 'self' || projects === 'dependencies') &&
+    !graph.nodes[projects]
+  ) {
+    throw new Error(
+      `${currentProject} has a dependsOn entry using projects: '${projects}', which is no longer supported: ${JSON.stringify(dependencyConfig)}\nPlease run "nx repair" to repair your configuration`
+    );
+  }
 }
 
 export function expandDependencyConfigSyntaxSugar(
@@ -227,32 +228,10 @@ export function getOutputs(
 }
 
 export function normalizeTargetDependencyWithStringProjects(
-  dependencyConfig: TargetDependencyConfig,
-  currentProject?: string,
-  location?: DependsOnEntryLocation
+  dependencyConfig: TargetDependencyConfig
 ): Omit<TargetDependencyConfig, 'projects'> & { projects?: string[] } {
   if (typeof dependencyConfig.projects === 'string') {
-    // TODO(v24): Remove the `self` / `dependencies` magic-string shim.
-    // The v16 `update-depends-on-to-tokens` migration already rewrites
-    // these to the modern shape, and `nx repair` will re-run it on demand.
-    if (dependencyConfig.projects === 'self') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      delete dependencyConfig.projects;
-    } else if (dependencyConfig.projects === 'dependencies') {
-      warnLegacyDependsOnMagicString(
-        currentProject,
-        dependencyConfig,
-        location
-      );
-      dependencyConfig.dependencies = true;
-      delete dependencyConfig.projects;
-    } else {
-      dependencyConfig.projects = [dependencyConfig.projects];
-    }
+    dependencyConfig.projects = [dependencyConfig.projects];
   }
   return dependencyConfig as Omit<TargetDependencyConfig, 'projects'> & {
     projects?: string[];
@@ -375,23 +354,14 @@ export function getOutputsForTargetAndConfiguration(
 
     const result = new Set<string>();
     for (const output of targetConfiguration.outputs) {
-      // A leading `!` is negation, not part of the path: strip it so
-      // `{workspaceRoot}` still sits where interpolate requires it.
-      const isNegated = output.startsWith('!');
-      const interpolatedOutput = interpolate(
-        isNegated ? output.substring(1) : output,
-        {
-          projectRoot: node.data.root,
-          projectName: node.name,
-          project: { ...node.data, name: node.name }, // this is legacy
-          options,
-        }
-      );
+      const interpolatedOutput = interpolateOutput(output, node, options);
       if (
         !!interpolatedOutput &&
         !interpolatedOutput.match(/{(projectRoot|workspaceRoot|(options.*))}/)
       ) {
-        result.add(isNegated ? `!${interpolatedOutput}` : interpolatedOutput);
+        result.add(
+          output.startsWith('!') ? `!${interpolatedOutput}` : interpolatedOutput
+        );
       }
     }
     return Array.from(result);
@@ -415,46 +385,110 @@ export function getOutputsForTargetAndConfiguration(
 }
 
 /**
- * Matches portions of a string which need to be interpolated.
- * Matches anything within curly braces, excluding the braces.
+ * Resolves the tokens in a configured output, without its leading `!`. A token
+ * with no value stays as written.
  */
-const replacementRegex = /{([\s\S]+?)}/g;
+export function interpolateOutput(
+  output: string,
+  node: ProjectGraphProjectNode,
+  options: Record<string, unknown>
+): string {
+  // A leading `!` is negation, not part of the path: strip it so
+  // `{workspaceRoot}` still sits where interpolate requires it.
+  return interpolate(output.startsWith('!') ? output.substring(1) : output, {
+    projectRoot: node.data.root,
+    projectName: node.name,
+    project: { ...node.data, name: node.name }, // this is legacy
+    options,
+  });
+}
 
-export function interpolate(template: string, data: any): string {
-  // Path is absolute or doesn't need interpolation
-  if (template.startsWith('/') || !replacementRegex.test(template)) {
+/**
+ * Resolves Nx tokens in a path, where each token names a key of `data`
+ * (`{projectRoot}/dist`, `{options.outputPath ?? dist/{projectRoot}}`).
+ * Paths starting with `/` are returned as written. A token with no value
+ * stays as written. `env.` is text, unless `envNotAllowed` is given: then it
+ * throws with that message.
+ */
+export function interpolate(
+  template: string,
+  data: any,
+  options?: { envNotAllowed?: (template: string) => string }
+): string {
+  if (!/{[\s\S]+?}/.test(template)) {
     return template;
   }
 
-  if (template.includes('{workspaceRoot}', 1)) {
+  const scope: TokenScope = {
+    isToken: (name) => name === 'env' || Object.hasOwn(data, name),
+    read: (name, path) => readPath(data[name], path),
+    env: options?.envNotAllowed
+      ? { reject: () => new Error(options.envNotAllowed(template)) }
+      : undefined,
+    noValue: (token) => token,
+  };
+  if (template.startsWith('/')) {
+    if (options?.envNotAllowed) {
+      parseTokens(template, scope);
+    }
+    return template;
+  }
+  const nodes = parseTokens(template, scope);
+  if (!isWorkspaceRootOnlyAtStart(nodes, true)) {
     throw new Error(
       `Output '${template}' is invalid. {workspaceRoot} can only be used at the beginning of the expression.`
     );
   }
 
-  const parts = template.split('/').map((s) => _interpolate(s, data));
-
-  return join(...parts).replace('{workspaceRoot}/', '');
+  return joinSegments(nodes, data, scope).replace('{workspaceRoot}/', '');
 }
 
-function _interpolate(template: string, data: any): string {
-  let res = template;
-
-  if (data.projectRoot == '.') {
-    res = res.replace('{projectRoot}', '');
-  }
-
-  return res.replace(replacementRegex, (match: string) => {
-    let value = data;
-    let path = match.slice(1, -1).trim().split('.');
-    for (let idx = 0; idx < path.length; idx++) {
-      if (!value[path[idx]]) {
-        return match;
-      }
-      value = value[path[idx]];
+// A fallback's literal only ever replaces its whole token, so a token at the
+// start can fall back to `{workspaceRoot}/...`
+function isWorkspaceRootOnlyAtStart(
+  nodes: TokenNode[],
+  atStart: boolean
+): boolean {
+  return nodes.every((node, i) => {
+    const nodeAtStart = atStart && i === 0;
+    if (node.kind === 'text') {
+      return !node.text.includes('{workspaceRoot}', nodeAtStart ? 1 : 0);
     }
-    return value;
+    return node.parts.every((part) =>
+      part.kind === 'literal'
+        ? isWorkspaceRootOnlyAtStart(part.nodes, nodeAtStart)
+        : part.name !== 'workspaceRoot' || nodeAtStart
+    );
   });
+}
+
+// Joining the `/`-separated segments normalizes a root project's
+// `{projectRoot}` away, wherever it sits
+function joinSegments(nodes: TokenNode[], data: any, scope: TokenScope) {
+  const segments = [''];
+  const append = (nodes: TokenNode[], isLiteral: boolean): string => {
+    for (const [i, node] of nodes.entries()) {
+      if (node.kind === 'text') {
+        // A literal keeps its leading `/` on the segment, as an option value
+        // does, so an absolute fallback stays absolute
+        const root =
+          isLiteral && i === 0 && node.text.startsWith('/') ? '/' : '';
+        const [first, ...rest] = node.text.substring(root.length).split('/');
+        segments[segments.length - 1] += root + first;
+        segments.push(...rest);
+      } else {
+        // Resolved before indexing `segments`: a fallback literal appends to it
+        const value =
+          data.projectRoot == '.' && node.raw === '{projectRoot}'
+            ? ''
+            : resolveToken(node, scope, (literal) => append(literal, true));
+        segments[segments.length - 1] += value;
+      }
+    }
+    return '';
+  };
+  append(nodes, false);
+  return join(...segments);
 }
 
 export function getTargetConfigurationForTask(
@@ -504,10 +538,10 @@ export function expandInitiatingTasksThroughNoop(
 
     if (getExecutorNameForTask(task, projectGraph) === 'nx:noop') {
       for (const dep of taskGraph.dependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
       for (const dep of taskGraph.continuousDependencies[taskId] ?? []) {
-        queue.push(dep);
+        queue.push(dep.id);
       }
     } else {
       expanded.add(taskId);
@@ -533,12 +567,56 @@ export function getExecutorForTask(
   );
 }
 
+// TODO(v25): remove custom hasher support.
 export function getCustomHasher(
   task: Task,
   projects: Record<string, ProjectConfiguration>
 ): CustomHasher | null {
   const factory = getExecutorForTask(task, projects).hasherFactory;
-  return factory ? factory() : null;
+  if (!factory) {
+    return null;
+  }
+  warnCustomHasherDeprecation(
+    projects[task.target.project].targets[task.target.target].executor
+  );
+  return factory();
+}
+
+const customHasherDeprecationWarned = new Set<string>();
+
+function warnCustomHasherDeprecation(executor: string): void {
+  if (customHasherDeprecationWarned.has(executor)) {
+    return;
+  }
+  customHasherDeprecationWarned.add(executor);
+  output.warn({
+    title: `The "${executor}" executor uses a custom hasher, which is deprecated and will be removed in Nx 25.`,
+    bodyLines: [
+      'Replace the custom hasher with target inputs, following the migration guide:',
+      'https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs',
+      'If the executor comes from a third-party plugin, report this to its maintainers.',
+    ],
+  });
+}
+
+/** Test-only: forget which executors have been warned about. */
+export function resetCustomHasherDeprecationWarnings(): void {
+  customHasherDeprecationWarned.clear();
+}
+
+/**
+ * `taskGraph` pruned to `required`, which must already hold its dependencies.
+ * Unknown ids are ignored: a sync generator can remove a task after selection.
+ */
+export function pruneToSelectedTasks(
+  taskGraph: TaskGraph,
+  required: Iterable<string>
+): TaskGraph {
+  const keep = new Set(required);
+  return removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(taskGraph.tasks).filter((id) => !keep.has(id))
+  );
 }
 
 export function removeTasksFromTaskGraph(
@@ -557,16 +635,16 @@ export function removeTasksFromTaskGraph(
 function removeIdsFromTaskGraph<T>(
   graph: {
     roots: string[];
-    dependencies: Record<string, string[]>;
-    continuousDependencies: Record<string, string[]>;
+    dependencies: Record<string, TaskGraphEdge[]>;
+    continuousDependencies: Record<string, TaskGraphEdge[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
 ): {
   mapWithIds: Record<string, T>;
   roots: string[];
-  dependencies: Record<string, string[]>;
-  continuousDependencies: Record<string, string[]>;
+  dependencies: Record<string, TaskGraphEdge[]>;
+  continuousDependencies: Record<string, TaskGraphEdge[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
@@ -576,10 +654,10 @@ function removeIdsFromTaskGraph<T>(
     if (!removedSet.has(id)) {
       filteredMapWithIds[id] = mapWithIds[id];
       dependencies[id] = graph.dependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
       continuousDependencies[id] = graph.continuousDependencies[id].filter(
-        (depId) => !removedSet.has(depId)
+        (dep) => !removedSet.has(dep.id)
       );
     }
   }
@@ -604,13 +682,13 @@ export function calculateReverseDeps(
 
   Object.keys(taskGraph.dependencies).forEach((taskId) => {
     taskGraph.dependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 
   Object.keys(taskGraph.continuousDependencies).forEach((taskId) => {
     taskGraph.continuousDependencies[taskId].forEach((d) => {
-      reverseTaskDeps[d].push(taskId);
+      reverseTaskDeps[d.id].push(taskId);
     });
   });
 
@@ -690,4 +768,24 @@ export function createTaskId(
     id += `:${configuration}`;
   }
   return id;
+}
+
+/**
+ * Distinguishes two invocations of the same task for the recursive invocation
+ * detector. The task id alone would report `nx run app:build --flag` invoked
+ * from within `app:build` as a loop, so the detector pairs the id with this
+ * hash and only treats an exact repeat as an immediate loop.
+ *
+ * The hash cannot decide recursion on its own. Arguments that accumulate
+ * through forwarding (`app:build` -> `app:build hello` -> `app:build hello
+ * hello`) hash differently on every hop, so the tracker also bounds how many
+ * ancestors may be running one task id.
+ *
+ * `__overrides_unparsed__` is dropped, matching how the task hasher treats it:
+ * it restates the other keys as raw argv, down to flag order and spelling.
+ */
+export function hashTaskOverrides(task: Task): string {
+  const overrides = { ...task.overrides };
+  delete overrides['__overrides_unparsed__'];
+  return hashObject(overrides);
 }

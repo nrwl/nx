@@ -3,5 +3,4 @@ export interface InitSchema {
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
-  addPlugin?: boolean;
 }

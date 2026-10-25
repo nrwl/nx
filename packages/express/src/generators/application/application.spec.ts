@@ -1,12 +1,12 @@
 // Pin the detected package manager so inferred lock-file outputs (e.g.
 // prune-lockfile) and package-manager commands are deterministic regardless of
 // which package manager runs the tests.
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
   return {
     ...actual,
-    detectPackageManager: jest.fn(() => 'npm'),
-    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
   };
@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { transpileModule } from 'typescript';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -46,6 +47,10 @@ describe('app', () => {
 
     const mainFile = appTree.read('my-node-app/src/main.ts').toString();
     expect(mainFile).toContain(`import express from 'express';`);
+    expect(mainFile).toContain("load('@nx/js/ready-signal')");
+    expect(mainFile).toContain('emitReadySignal(server)');
+    expect(mainFile).toContain('app.listen(port, async (error?: Error) =>');
+    expect(mainFile).toContain('process.exit(1)');
 
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
@@ -163,9 +168,14 @@ describe('app', () => {
       } as Schema);
 
       expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
-      expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
-        `import express from 'express';`
-      );
+      const mainFile = appTree.read('my-node-app/src/main.js').toString();
+      expect(mainFile).toContain(`import express from 'express';`);
+      expect(mainFile).toContain("load('@nx/js/ready-signal')");
+      const { diagnostics } = transpileModule(mainFile, {
+        fileName: 'main.js',
+        reportDiagnostics: true,
+      });
+      expect(diagnostics).toEqual([]);
 
       const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
@@ -244,30 +254,6 @@ describe('app', () => {
           "name": "@proj/myapp",
           "nx": {
             "targets": {
-              "build": {
-                "configurations": {
-                  "development": {
-                    "outputHashing": "none",
-                  },
-                  "production": {},
-                },
-                "defaultConfiguration": "production",
-                "executor": "@nx/webpack:webpack",
-                "options": {
-                  "assets": [
-                    "myapp/src/assets",
-                  ],
-                  "compiler": "tsc",
-                  "main": "myapp/src/main.ts",
-                  "outputPath": "myapp/dist",
-                  "target": "node",
-                  "tsConfig": "myapp/tsconfig.app.json",
-                  "webpackConfig": "myapp/webpack.config.js",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              },
               "copy-workspace-modules": {
                 "cache": true,
                 "dependsOn": [
@@ -280,9 +266,6 @@ describe('app', () => {
                 "outputs": [
                   "{workspaceRoot}/myapp/dist/workspace_modules",
                 ],
-              },
-              "lint": {
-                "executor": "@nx/eslint:lint",
               },
               "prune": {
                 "dependsOn": [
@@ -324,16 +307,14 @@ describe('app', () => {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
+                "readyWhen": {
+                  "signal": true,
+                },
               },
               "test": {
-                "executor": "@nx/jest:jest",
                 "options": {
-                  "jestConfig": "myapp/jest.config.cts",
                   "passWithNoTests": true,
                 },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
               },
             },
           },
@@ -458,30 +439,6 @@ describe('app', () => {
           "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {
-            "build": {
-              "configurations": {
-                "development": {
-                  "outputHashing": "none",
-                },
-                "production": {},
-              },
-              "defaultConfiguration": "production",
-              "executor": "@nx/webpack:webpack",
-              "options": {
-                "assets": [
-                  "myapp/src/assets",
-                ],
-                "compiler": "tsc",
-                "main": "myapp/src/main.ts",
-                "outputPath": "myapp/dist",
-                "target": "node",
-                "tsConfig": "myapp/tsconfig.app.json",
-                "webpackConfig": "myapp/webpack.config.js",
-              },
-              "outputs": [
-                "{options.outputPath}",
-              ],
-            },
             "copy-workspace-modules": {
               "cache": true,
               "dependsOn": [
@@ -494,9 +451,6 @@ describe('app', () => {
               "outputs": [
                 "{workspaceRoot}/myapp/dist/workspace_modules",
               ],
-            },
-            "lint": {
-              "executor": "@nx/eslint:lint",
             },
             "prune": {
               "dependsOn": [
@@ -538,16 +492,14 @@ describe('app', () => {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
               },
+              "readyWhen": {
+                "signal": true,
+              },
             },
             "test": {
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp/jest.config.cts",
                 "passWithNoTests": true,
               },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
             },
           },
         }

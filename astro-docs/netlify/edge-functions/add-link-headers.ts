@@ -25,6 +25,12 @@ function withCacheVariation(response: Response, link?: string): Response {
   });
 }
 
+const preloadFonts = [
+  'instrument-sans-400.woff2',
+  'instrument-sans-600.woff2',
+  'server-mono-400.woff2',
+];
+
 export default async function handler(
   request: Request,
   context: Context
@@ -54,6 +60,12 @@ export default async function handler(
     `<${mdPath}>; rel="alternate"; type="text/markdown"`,
     `</docs/llms.txt>; rel="alternate"; type="text/markdown"; title="LLM Index"`,
     `</docs/llms-full.txt>; rel="alternate"; type="text/markdown"; title="Full Documentation"`,
+    // Brand fonts used above the fold, so text does not shift when they swap
+    // in (most visible when a deep link scrolls to a heading on load).
+    ...preloadFonts.map(
+      (font) =>
+        `</docs/fonts/${font}>; rel="preload"; as="font"; type="font/woff2"; crossorigin`
+    ),
   ].join(', ');
 
   return withCacheVariation(response, linkHeader);

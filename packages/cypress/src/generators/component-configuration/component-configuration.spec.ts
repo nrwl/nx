@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -17,9 +18,9 @@ import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
 import { cypressInitGenerator } from '../init/init';
 
-jest.mock('../../utils/versions', () => ({
-  ...jest.requireActual('../../utils/versions'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('../../utils/versions', async () => ({
+  ...(await vi.importActual<any>('../../utils/versions')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 
 let projectConfig: ProjectConfiguration = {
@@ -43,7 +44,7 @@ let projectConfig: ProjectConfiguration = {
 };
 describe('Cypress Component Configuration', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
@@ -102,13 +103,17 @@ describe('Cypress Component Configuration', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockedInstalledCypressVersion.mockReset();
   });
 
   it('should install the cypress 15 set for the vite bundler on a fresh workspace with a vite below 8', async () => {
     mockedInstalledCypressVersion.mockImplementation(
-      jest.requireActual('../../utils/versions').getInstalledCypressMajorVersion
+      (
+        await vi.importActual<typeof import('../../utils/versions')>(
+          '../../utils/versions'
+        )
+      ).getInstalledCypressMajorVersion
     );
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies = { ...json.devDependencies, vite: '^7.0.0' };
@@ -120,7 +125,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         bundler: 'vite',
         skipFormat: true,
-        addPlugin: true,
       })
     );
 
@@ -169,7 +173,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         skipFormat: true,
         bundler: 'webpack',
-        addPlugin: true,
       })
     );
 
@@ -186,7 +189,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         skipFormat: true,
         bundler: 'vite',
-        addPlugin: true,
       })
     );
 
@@ -196,9 +198,7 @@ describe('Cypress Component Configuration', () => {
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {
-    await cypressInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await cypressInitGenerator(tree, {});
     const nxJson = readNxJson(tree);
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*'],
@@ -209,7 +209,6 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
-      addPlugin: true,
     });
 
     expect(

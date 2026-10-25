@@ -13,6 +13,7 @@ import { join } from 'path';
 import { FileLock, IS_WASM } from '../../../native';
 import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { parseJson } from '../../../utils/json';
+import { prettyTime } from '../../../tasks-runner/life-cycles/pretty-time';
 import {
   ensureRunSubdir,
   handoffsDirState,
@@ -28,7 +29,9 @@ import {
   commitMigrationIfRequested,
   type CommitResult,
 } from '../migrate-commits';
+import { logLineToAgent } from './agent-output';
 import { publishFileAtomically } from './atomic-write';
+import { giveUpWithCommit, type GiveUpOutcome } from './give-up';
 import {
   readRunState,
   type MigrateRunPolicy,
@@ -41,24 +44,34 @@ import { updateRunState } from './state-lock';
 import {
   appendCommit,
   clearCommitStarted,
+  commitNameForStep,
   commitResultToLedgerEntry,
+  gitRan,
   markCommitStarted,
   markInstallFailed,
-  splitMigrationId,
+  stepLabel,
   stepsToPendingMigrations,
   uncoveredFailedStepIds,
 } from './state-machine';
 import { attachIssueIdsToCommitEntry } from './issues';
 import { resetForCleanRetry } from './clean-retry';
-import { installDepsChangedSinceDispense, isPidAlive } from './util';
+import {
+  commitFailureRecovery,
+  installDepsChangedSinceDispense,
+  isPidAlive,
+} from './util';
 
 export const BROKER_ENV_VAR = 'NX_MIGRATE_BROKER';
 const BROKER_DIR_NAME = 'broker';
 const CHILD_POLL_INTERVAL_MS = 250;
+// The runbook's "Long-running commands" section states both intervals.
+const FIRST_WAITING_LINE_MS = 15_000;
+const WAITING_LINE_INTERVAL_MS = 60_000;
 
-// The seam a request comes from, and its name: within a session, non-reset
-// seams reuse one answer per attempt (see `invocation`). A worker's commit,
-// the fold's and the adopt's share one seam.
+// Repeated requests reuse the first answer; a reset asks anew (see
+// `invocation`). A died step's adopt shares the worker's commit request until
+// a commit or a failed install is recorded for the step; later adopts and a
+// failed step's actions ask under their own request id.
 export type BrokerRequestKind =
   | 'commit'
   // A worker's install: after its generator, or a retry's from the baseline.
@@ -68,12 +81,13 @@ export type BrokerRequestKind =
   // The install a skip or a non-commit adopt owes for the tree it keeps.
   | 'action-install'
   // A clean retry's reset of the tree to the step's starting ref.
-  | 'reset';
+  | 'reset'
+  // A give-up's commit of the partial tree and the transition it settles,
+  // as one operation (see give-up.ts).
+  | 'give-up';
 
 export type InstallSeam = 'install' | 'fold-install' | 'action-install';
 
-// Names the seam only. Whether to install or commit is the parent's own
-// policy, so a request carries nothing that would widen it.
 export interface BrokerRequest {
   kind: BrokerRequestKind;
   stepId: string;
@@ -81,6 +95,9 @@ export interface BrokerRequest {
   // Reset only: a fresh id per clean retry, so a second retry of the same
   // attempt resets again instead of reading the first reset's answer.
   invocation?: string;
+  // The parent owns commit policy; this only tells a failed step's adopt
+  // commit apart from the worker's request.
+  commitAs?: 'adopt';
 }
 
 export type BrokerResult =
@@ -98,11 +115,12 @@ export type BrokerResult =
       output: DeferredOutputRecord[];
     }
   | { kind: 'reset'; error?: string }
+  | { kind: 'give-up'; outcome: GiveUpOutcome; output: DeferredOutputRecord[] }
   | { kind: 'stale' };
 
 type BrokerAnswer = Extract<
   BrokerResult,
-  { kind: 'commit' | 'installed' | 'reset' }
+  { kind: 'commit' | 'installed' | 'reset' | 'give-up' }
 >;
 
 export interface BrokeredCommit {
@@ -178,7 +196,7 @@ export function acquireTreeOperation(
     const held = liveTreeOperation(fresh, owner);
     if (held) throw new TreeBusyError(treeBusyMessage(held));
     marks =
-      request.kind === 'commit' &&
+      commitsStep(request.kind) &&
       fresh.steps.find((s) => s.id === request.stepId)?.commitStarted !== true;
     return {
       ...(marks ? markCommitStarted(fresh, request.stepId) : fresh),
@@ -225,20 +243,37 @@ export function liveTreeOperation(
   return held;
 }
 
-export function treeBusyMessage(held: MigrateTreeOperation): string {
+export function treeBusyMessage(
+  held: MigrateTreeOperation,
+  stepName?: string
+): string {
   return `The working tree is held by process ${held.pid} for ${treeOperationLabel(
-    held
+    held,
+    stepName
   )}; run the reconcile again once it finishes.`;
 }
 
 export function treeOperationLabel(
-  held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>
+  held: Pick<MigrateTreeOperation, 'kind' | 'stepId'>,
+  stepName = `step '${held.stepId}'`
 ): string {
-  return held.kind === 'checkpoint'
-    ? 'the checkpoint commit'
-    : `the ${
-        held.kind === 'commit' || held.kind === 'reset' ? held.kind : 'install'
-      } of step '${held.stepId}'`;
+  switch (held.kind) {
+    case 'checkpoint':
+      return 'the checkpoint commit';
+    case 'commit':
+    case 'give-up':
+      return `the commit of ${stepName}`;
+    case 'reset':
+      return `the reset of ${stepName}`;
+    case 'install':
+    case 'fold-install':
+    case 'action-install':
+      return `the install of ${stepName}`;
+    default: {
+      const exhaustive: never = held.kind;
+      throw new Error(`Unhandled tree operation '${exhaustive}'.`);
+    }
+  }
 }
 
 function atSeam(
@@ -267,22 +302,24 @@ const SEAM_STATUSES: Record<
   BrokerRequestKind,
   ReadonlySet<MigrateStepStatus>
 > = {
-  commit: new Set(['running', 'awaiting-prompt-outcome', 'died']),
+  commit: new Set(['running', 'awaiting-prompt-outcome', 'failed', 'died']),
   install: new Set(['running']),
   'fold-install': new Set(['awaiting-prompt-outcome']),
   'action-install': new Set(['failed', 'died']),
   reset: new Set(['failed', 'died']),
+  'give-up': new Set(['failed', 'died']),
 };
 
 function isAtSeam(
   step: MigrateStep | undefined,
   request: BrokerRequest
 ): boolean {
-  return (
-    step !== undefined &&
-    step.attempt === request.attempt &&
-    SEAM_STATUSES[request.kind].has(step.status)
-  );
+  if (step === undefined || step.attempt !== request.attempt) return false;
+  // A failed step commits only through its adopt.
+  if (request.kind === 'commit' && step.status === 'failed') {
+    return request.commitAs === 'adopt';
+  }
+  return SEAM_STATUSES[request.kind].has(step.status);
 }
 
 export function brokerDir(runDirPath: string): string {
@@ -322,12 +359,14 @@ export async function commitStepTree(
   step: MigrateStep,
   absorbedStepIds: string[],
   commitInProcess: () => Promise<CommitResult>,
-  scope: TreeScope
+  scope: TreeScope,
+  commitAs?: 'adopt'
 ): Promise<BrokeredCommit> {
   const request: BrokerRequest = {
     kind: 'commit',
     stepId: step.id,
     attempt: step.attempt,
+    ...(commitAs !== undefined ? { commitAs } : {}),
   };
   const nonce = process.env[BROKER_ENV_VAR];
   if (!nonce) {
@@ -337,7 +376,7 @@ export async function commitStepTree(
     if (gitRan(result)) lease.markedStepId = undefined;
     return { result, absorbedStepIds, recorded: false };
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'commit') {
     throw new Error(`Unexpected '${answer.kind}' answer to a commit request.`);
   }
@@ -346,25 +385,6 @@ export async function commitStepTree(
     absorbedStepIds: answer.absorbedStepIds,
     recorded: true,
   };
-}
-
-// Whether git may have written history for this result. A landed commit's
-// mark is the ledger entry's to clear, and a failure reported once git ran
-// (a hook's output overflowing the subprocess buffer after the commit) cannot
-// vouch that nothing landed, so only the other results release the mark.
-function gitRan(result: CommitResult): boolean {
-  switch (result.status) {
-    case 'committed':
-    case 'failed':
-      return true;
-    case 'no-changes':
-    case 'disabled':
-      return false;
-    default: {
-      const exhaustive: never = result;
-      throw new Error(`Unhandled commit result: ${JSON.stringify(exhaustive)}`);
-    }
-  }
 }
 
 /**
@@ -388,7 +408,7 @@ export async function installStepTree(
     scope.lease = acquireTreeOperation(dir, request);
     return installInProcess();
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'installed') {
     throw new Error(
       `Unexpected '${answer.kind}' answer to an install request.`
@@ -418,20 +438,59 @@ export async function resetStepTree(
     scope.lease = acquireTreeOperation(dir, request);
     return resetInProcess();
   }
-  const answer = await ask(dir, nonce, request);
+  const answer = await ask(dir, nonce, request, stepLabel(step));
   if (answer.kind !== 'reset') {
     throw new Error(`Unexpected '${answer.kind}' answer to a reset request.`);
   }
 }
 
+/**
+ * The same for giving a failed or died step up while the run commits. Unlike
+ * the seams above, the operation settles the step itself, under the
+ * reservation it runs with, so the caller writes no transition of its own.
+ */
+export async function giveUpStepTree(
+  root: string,
+  dir: string,
+  step: MigrateStep,
+  skipInstall: boolean,
+  reconcileCommand: string,
+  scope: TreeScope
+): Promise<GiveUpOutcome> {
+  const request: BrokerRequest = {
+    kind: 'give-up',
+    stepId: step.id,
+    attempt: step.attempt,
+  };
+  const nonce = process.env[BROKER_ENV_VAR];
+  if (!nonce) {
+    const lease = acquireTreeOperation(dir, request);
+    scope.lease = lease;
+    return giveUpWithCommit({
+      root,
+      dir,
+      step,
+      lease,
+      skipInstall,
+      reconcileCommand,
+    });
+  }
+  const answer = await ask(dir, nonce, request, stepLabel(step));
+  if (answer.kind !== 'give-up') {
+    throw new Error(`Unexpected '${answer.kind}' answer to a give-up request.`);
+  }
+  return answer.outcome;
+}
+
 async function ask(
   dir: string,
   nonce: string,
-  request: BrokerRequest
+  request: BrokerRequest,
+  stepName: string
 ): Promise<BrokerAnswer> {
   const id = `${nonce}-${request.stepId}-${request.attempt}-${request.kind}${
     request.invocation ? `-${request.invocation}` : ''
-  }`;
+  }${request.commitAs !== undefined ? `-${request.commitAs}` : ''}`;
   const path = resultPath(dir, id);
   // A repeat reads the first answer, whatever became of the session since.
   if (existsSync(path)) {
@@ -457,6 +516,8 @@ async function ask(
   } catch (e) {
     throw notAccepting(e);
   }
+  const askedAt = Date.now();
+  let nextWaitingLineAt = askedAt + FIRST_WAITING_LINE_MS;
   for (;;) {
     if (existsSync(path)) {
       return settle(readJsonFile<BrokerResult>(path));
@@ -468,8 +529,61 @@ async function ask(
         `The nx migrate session that started this step ended before its request was answered. The install or the commit may still have landed; check the working tree and git log.`
       );
     }
+    if (Date.now() >= nextWaitingLineAt) {
+      nextWaitingLineAt = Date.now() + WAITING_LINE_INTERVAL_MS;
+      logLineToAgent(waitingLine(request, stepName, Date.now() - askedAt));
+    }
     await new Promise((resolve) => setTimeout(resolve, CHILD_POLL_INTERVAL_MS));
   }
+}
+
+function waitingLine(
+  request: BrokerRequest,
+  stepName: string,
+  waitedMs: number
+): string {
+  return [
+    `[nx] Waiting for the nx process that started this session to finish ${treeOperationLabel(
+      request,
+      stepName
+    )} (${formatElapsed(waitedMs)} so far).`,
+    ...(commitsStep(request.kind)
+      ? [
+          COMMIT_INSTALLS_FIRST,
+          'A signing popup or a security key can also hold a commit until the user answers it.',
+        ]
+      : []),
+    `If it seems stuck, the user can ${sessionOperationWayOut('it')}.`,
+  ].join(' ');
+}
+
+export const COMMIT_INSTALLS_FIRST =
+  'A commit first installs any dependency changes.';
+
+export function commitsStep(kind: MigrateTreeOperation['kind']): boolean {
+  switch (kind) {
+    case 'commit':
+    case 'give-up':
+      return true;
+    case 'checkpoint':
+    case 'install':
+    case 'fold-install':
+    case 'action-install':
+    case 'reset':
+      return false;
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`Unhandled tree operation '${exhaustive}'.`);
+    }
+  }
+}
+
+export function sessionOperationWayOut(operation: string): string {
+  return `quit this session, then press Ctrl+C in the terminal to end ${operation}, and resume the run afterwards`;
+}
+
+export function formatElapsed(ms: number): string {
+  return prettyTime(Math.max(0, Math.round(ms)) * 1e6, 's');
 }
 
 function notAccepting(e: unknown): BrokerUnavailableError {
@@ -504,6 +618,9 @@ function settle(result: BrokerResult): BrokerAnswer {
     case 'reset':
       if (result.error !== undefined) throw new Error(result.error);
       return result;
+    case 'give-up':
+      replayDeferredOutput(result.output);
+      return result;
     case 'stale':
       throw new BrokerStaleRequestError(
         `The request for this step no longer matches its attempt; nothing was installed or committed.`
@@ -513,6 +630,12 @@ function settle(result: BrokerResult): BrokerAnswer {
       throw new Error(`Unhandled broker result: ${JSON.stringify(exhaustive)}`);
     }
   }
+}
+
+export interface InFlightOperation {
+  request: BrokerRequest;
+  startedAt: number;
+  stepName: string;
 }
 
 /**
@@ -527,7 +650,7 @@ function settle(result: BrokerResult): BrokerAnswer {
 export class MigrateCommitBroker {
   readonly nonce = randomBytes(4).toString('hex');
   private readonly handled = new Set<string>();
-  private inFlight: BrokerRequest | null = null;
+  private inFlight: InFlightOperation | null = null;
   // Kept referenced: the lock is released when the instance is collected.
   private readonly lock: FileLock | null;
 
@@ -542,8 +665,8 @@ export class MigrateCommitBroker {
     this.lock?.lock();
   }
 
-  /** The request whose operation this process is running right now. */
-  get requestInFlight(): BrokerRequest | null {
+  /** The request whose operation this process is running right now, and since when. */
+  get requestInFlight(): InFlightOperation | null {
     return this.inFlight;
   }
 
@@ -574,8 +697,7 @@ export class MigrateCommitBroker {
       this.handled.add(id);
       let result: BrokerResult;
       try {
-        if (lease) this.inFlight = request;
-        result = lease ? await this.answer(request) : { kind: 'stale' };
+        result = lease ? await this.answer(request, lease) : { kind: 'stale' };
         // Recorded by the process that ran the commit, before the answer: the
         // step reading it can die with the commit already in history. A failed
         // record throws and ends the session rather than losing the entry.
@@ -624,16 +746,45 @@ export class MigrateCommitBroker {
     });
   }
 
-  private async answer(request: BrokerRequest): Promise<BrokerResult> {
+  private async answer(
+    request: BrokerRequest,
+    lease: TreeLease
+  ): Promise<BrokerResult> {
     const state = readRunState(this.dir);
     const step = state.steps.find((s) => s.id === request.stepId);
     if (
       !Object.hasOwn(SEAM_STATUSES, request.kind) ||
       !isAtSeam(step, request) ||
-      ((request.kind === 'commit' || request.kind === 'reset') &&
-        !this.policy.createCommits)
+      ((commitsStep(request.kind) || request.kind === 'reset') &&
+        !this.policy.createCommits) ||
+      (request.commitAs !== undefined && request.commitAs !== 'adopt')
     ) {
       return { kind: 'stale' };
+    }
+    const stepName = stepLabel(step);
+    this.inFlight = { request, startedAt: Date.now(), stepName };
+    if (request.kind === 'give-up') {
+      const output = new DeferredOutputCollector();
+      const outcome = await giveUpWithCommit({
+        root: this.root,
+        dir: this.dir,
+        step,
+        lease,
+        skipInstall: this.policy.skipInstall,
+        reconcileCommand: this.reconcileCommand,
+        output,
+      });
+      // Raw package-manager output only for a failed install, as for a commit.
+      return {
+        kind: 'give-up',
+        outcome,
+        output: output.render(
+          outcome.kind === 'given-up' &&
+            outcome.commit.status === 'install-failed'
+            ? 'keep'
+            : 'drop'
+        ),
+      };
     }
     if (request.kind === 'reset') {
       try {
@@ -666,12 +817,12 @@ export class MigrateCommitBroker {
       );
       const result = await commitMigrationIfRequested(
         this.root,
-        { name: splitMigrationId(step.migrationId).name },
+        { name: commitNameForStep(step) },
         true,
         state.commitPrefix,
         install,
         stepsToPendingMigrations(state, absorbedStepIds),
-        undefined,
+        commitFailureRecovery(state),
         output
       );
       return {
@@ -704,7 +855,7 @@ export class MigrateCommitBroker {
     }
   }
 
-  /** Releases the lock; call after the last `service` settled. */
+  /** Releases the lock; call after the last `service` settled, or once giving up on it. */
   close(): void {
     this.lock?.unlock();
     // A reservation this session still holds would only expire with its pid.

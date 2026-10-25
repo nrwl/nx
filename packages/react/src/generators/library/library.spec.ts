@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
@@ -18,14 +19,14 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/internal', () => ({
-  ...jest.requireActual('@nx/cypress/internal'),
-  getInstalledCypressMajorVersion: jest.fn(),
+vi.mock('@nx/cypress/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/cypress/internal')),
+  getInstalledCypressMajorVersion: vi.fn(),
 }));
 describe('lib', () => {
   let tree: Tree;
   let envBackup: string | undefined;
-  let mockedInstalledCypressVersion: jest.Mock<
+  let mockedInstalledCypressVersion: Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   let defaultSchema: Schema = {
@@ -37,7 +38,6 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -652,34 +652,28 @@ module.exports = withNx(
 `);
     });
 
-    it('should add build targets (legacy)', async () => {
+    it('should add build targets', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
       });
 
       const projectsConfigurations = getProjects(tree);
 
-      expect(projectsConfigurations.get('my-lib').targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-          entryFile: 'my-lib/src/index.ts',
-          outputPath: 'dist/my-lib',
-          project: 'my-lib/package.json',
-          tsConfig: 'my-lib/tsconfig.lib.json',
-          rollupConfig: '@nx/react/plugins/bundle-rollup',
-        },
-      });
+      expect(
+        projectsConfigurations.get('my-lib').targets.build
+      ).toBeUndefined();
+      const rollupConfig = tree.read('my-lib/rollup.config.cjs', 'utf-8');
+      expect(rollupConfig).toContain(
+        'external: ["react","react-dom","react/jsx-runtime"]'
+      );
+      expect(rollupConfig).toContain("main: './src/index.ts'");
     });
 
-    it('should support style none (legacy)', async () => {
+    it('should support style none', async () => {
       await libraryGenerator(tree, {
         ...defaultSchema,
-        addPlugin: false,
         publishable: true,
         importPath: '@proj/my-lib',
         style: 'none',
@@ -687,11 +681,10 @@ module.exports = withNx(
 
       const config = readProjectConfiguration(tree, 'my-lib');
 
-      expect(config.targets.build).toMatchObject({
-        options: {
-          external: ['react', 'react-dom', 'react/jsx-runtime'],
-        },
-      });
+      expect(config.targets.build).toBeUndefined();
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8')).toContain(
+        'external: ["react","react-dom","react/jsx-runtime"]'
+      );
     });
   });
 
@@ -794,12 +787,12 @@ module.exports = withNx(
     });
   });
 
-  describe('--setParserOptionsProject', () => {
+  describe('--enableTypedLinting', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
       process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
-        setParserOptionsProject: true,
+        enableTypedLinting: true,
       });
 
       const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');

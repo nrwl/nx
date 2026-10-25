@@ -1,16 +1,16 @@
 import { readdirSync } from 'node:fs';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createBrowserOutputServerAssets } from './server-assets';
+import { createServerAssets } from './server-assets';
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return { ...actual, readdirSync: vi.fn(actual.readdirSync) };
 });
 
-describe('createBrowserOutputServerAssets', () => {
+describe('createServerAssets', () => {
   let root: string | undefined;
 
   afterEach(async () => {
@@ -20,24 +20,26 @@ describe('createBrowserOutputServerAssets', () => {
     }
   });
 
-  async function createBrowserOutput(
+  async function createOutput(
     files: Record<string, string>
-  ): Promise<string> {
+  ): Promise<{ server: string; browser: string }> {
     root = await mkdtemp(join(tmpdir(), 'server-assets-'));
     for (const [name, content] of Object.entries(files)) {
+      await mkdir(dirname(join(root, name)), { recursive: true });
       await writeFile(join(root, name), content);
     }
-    return root;
+    return { server: join(root, 'server'), browser: join(root, 'browser') };
   }
 
-  it('should map the index html and include stylesheets when critical CSS inlining is enabled', async () => {
-    const dir = await createBrowserOutput({
-      'index.html': '<html></html>',
-      'styles.css': 'body{}',
-      'main.js': '',
+  it('should map the index documents and include stylesheets when critical CSS inlining is enabled', async () => {
+    const { server, browser } = await createOutput({
+      'server/index.server.html': '<html>server</html>',
+      'server/index.csr.html': '<html>csr</html>',
+      'browser/styles.css': 'body{}',
+      'browser/main.js': '',
     });
 
-    const assets = createBrowserOutputServerAssets(dir, 'index.html', true);
+    const assets = createServerAssets(server, browser, true);
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
@@ -45,18 +47,22 @@ describe('createBrowserOutputServerAssets', () => {
       'styles.css',
     ]);
     await expect(assets['index.server.html'].text()).resolves.toBe(
-      '<html></html>'
+      '<html>server</html>'
+    );
+    await expect(assets['index.csr.html'].text()).resolves.toBe(
+      '<html>csr</html>'
     );
     await expect(assets['styles.css'].text()).resolves.toBe('body{}');
   });
 
   it('should skip stylesheets when critical CSS inlining is disabled', async () => {
-    const dir = await createBrowserOutput({
-      'index.html': '<html></html>',
-      'styles.css': 'body{}',
+    const { server, browser } = await createOutput({
+      'server/index.server.html': '<html></html>',
+      'server/index.csr.html': '<html></html>',
+      'browser/styles.css': 'body{}',
     });
 
-    const assets = createBrowserOutputServerAssets(dir, 'index.html', false);
+    const assets = createServerAssets(server, browser, false);
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
@@ -64,10 +70,12 @@ describe('createBrowserOutputServerAssets', () => {
     ]);
   });
 
-  it('should return no assets when the browser output does not exist', () => {
-    const assets = createBrowserOutputServerAssets(
-      join(tmpdir(), 'server-assets-missing'),
-      'index.html',
+  it('should return no assets when the outputs do not exist', () => {
+    const missing = join(tmpdir(), 'server-assets-missing');
+
+    const assets = createServerAssets(
+      join(missing, 'server'),
+      join(missing, 'browser'),
       true
     );
 
@@ -75,25 +83,21 @@ describe('createBrowserOutputServerAssets', () => {
   });
 
   it('should throw when the browser output cannot be listed', async () => {
-    const dir = await createBrowserOutput({ 'not-a-dir': '' });
+    const { server, browser } = await createOutput({ browser: '' });
 
-    expect(() =>
-      createBrowserOutputServerAssets(
-        join(dir, 'not-a-dir'),
-        'index.html',
-        true
-      )
-    ).toThrow();
+    expect(() => createServerAssets(server, browser, true)).toThrow();
   });
 
   it('should drop assets removed between the listing and the stat', async () => {
-    const dir = await createBrowserOutput({ 'index.html': '<html></html>' });
+    const { server, browser } = await createOutput({
+      'server/index.server.html': '<html></html>',
+      'server/index.csr.html': '<html></html>',
+    });
     vi.mocked(readdirSync).mockReturnValueOnce([
-      'index.html',
       'ghost.css',
     ] as unknown as ReturnType<typeof readdirSync>);
 
-    const assets = createBrowserOutputServerAssets(dir, 'index.html', true);
+    const assets = createServerAssets(server, browser, true);
 
     expect(Object.keys(assets).sort()).toEqual([
       'index.csr.html',
@@ -102,13 +106,15 @@ describe('createBrowserOutputServerAssets', () => {
   });
 
   it('should not cache a failed content read', async () => {
-    const dir = await createBrowserOutput({ 'index.html': '<html></html>' });
-    const assets = createBrowserOutputServerAssets(dir, 'index.html', false);
-    await rm(join(dir, 'index.html'));
+    const { server, browser } = await createOutput({
+      'server/index.server.html': '<html></html>',
+    });
+    const assets = createServerAssets(server, browser, false);
+    await rm(join(server, 'index.server.html'));
 
     await expect(assets['index.server.html'].text()).rejects.toThrow();
 
-    await writeFile(join(dir, 'index.html'), '<html></html>');
+    await writeFile(join(server, 'index.server.html'), '<html></html>');
     await expect(assets['index.server.html'].text()).resolves.toBe(
       '<html></html>'
     );

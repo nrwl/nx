@@ -3,6 +3,7 @@ package dev.nx.maven.shared
 import org.slf4j.Logger
 import java.io.File
 import java.nio.file.Paths
+import kotlin.io.path.invariantSeparatorsPathString
 
 /**
  * Utility object for converting between absolute and relative paths
@@ -16,7 +17,7 @@ object PathUtils {
         return try {
             val absPath = File(absolutePath).canonicalPath
             val rootPath = projectRoot.canonicalPath
-            Paths.get(rootPath).relativize(Paths.get(absPath)).toString()
+            Paths.get(rootPath).relativize(Paths.get(absPath)).invariantSeparatorsPathString
         } catch (_: Exception) {
             logger?.warn("Failed to convert absolute path to relative: $absolutePath, using absolute path")
             absolutePath

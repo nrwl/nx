@@ -6,7 +6,7 @@ import {
   PNPM_MAJOR_RUNTIME_INPUT,
 } from '@nx/js/internal';
 import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
-import { rmSync } from 'fs';
+import { mkdirSync, rmSync, symlinkSync } from 'fs';
 import { join } from 'path';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
@@ -136,6 +136,10 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "serve": {
                     "command": "rspack serve",
@@ -158,6 +162,10 @@ describe('@nx/rspack', () => {
                         "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -179,6 +187,9 @@ describe('@nx/rspack', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "signal": true,
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -194,6 +205,70 @@ describe('@nx/rspack', () => {
         ],
       ]
     `);
+  });
+
+  describe('readyWhen', () => {
+    const readyWhen = async () => {
+      const [[, { projects }]] = await createNodesFunction(
+        ['my-app/rspack.config.ts'],
+        {},
+        context
+      );
+      const { targets } = projects['my-app'];
+      return [targets.serve.readyWhen, targets.preview.readyWhen];
+    };
+
+    it('waits for the signal when the config loads a plugin that sends it', async () => {
+      // NxAppRspackPlugin, NxReadySignalPlugin and NgRspackPlugin carry this marker
+      tempFs.createFileSync(
+        'my-app/rspack.config.ts',
+        `export default { devServer: { port: 9000 }, plugins: [{ [Symbol.for('@nx/ready-signal-plugin')]: true, apply() {} }] };`
+      );
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
+    });
+
+    it('waits for the signal from an Angular config made with createConfig', async () => {
+      // The config convert-to-rspack writes, resolving the repo's package
+      tempFs.createFileSync(
+        'my-app/rspack.config.ts',
+        `import { createConfig } from '@nx/angular-rspack';
+
+export default createConfig({
+  options: {
+    root: __dirname,
+
+    outputPath: {
+      base: '../dist/my-app',
+    },
+    index: './src/index.html',
+    browser: './src/main.ts',
+    polyfills: ['tslib'],
+    tsConfig: './tsconfig.app.json',
+    styles: ['./src/styles.css'],
+    scripts: [],
+  },
+});
+`
+      );
+      mkdirSync(join(tempFs.tempDir, 'node_modules/@nx'), { recursive: true });
+      symlinkSync(
+        join(__dirname, '../../../angular-rspack'),
+        join(tempFs.tempDir, 'node_modules/@nx/angular-rspack'),
+        'junction'
+      );
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
+    });
+
+    it('checks the port at task time when nothing in the config signals', async () => {
+      const check = {
+        command: `node -e "require('@nx/rspack/ready-check').waitForDevServer(process.argv[1])" rspack.config.ts`,
+        interval: 1000,
+      };
+
+      expect(await readyWhen()).toEqual([check, check]);
+    });
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {

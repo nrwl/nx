@@ -17,9 +17,7 @@ singletons.
 
 Micro frontends solve a team-coordination problem, not a performance problem.
 Before adopting the architecture, check the tradeoffs in
-[What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture), and if faster builds
-are the actual goal, see
-[faster builds with Module Federation](/docs/kb/faster-builds-with-module-federation).
+[What is Micro Frontend Architecture?](/docs/kb/micro-frontend-architecture).
 
 ## Start from the React Module Federation template
 
@@ -77,7 +75,7 @@ biggest micro frontend pains:
   team's slice private.
 - **Integration is tested before deploy** - [affected](/docs/features/ci-features/affected) runs
   test only the applications a change touches, and
-  [Nx Agents](/docs/features/ci-features/distribute-task-execution) keep CI time flat as providers
+  [Workers](/docs/features/ci-features/distribute-task-execution) keep CI time flat as providers
   multiply.
 
 ## SSR

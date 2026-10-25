@@ -6,7 +6,7 @@ filter: 'type:References'
 
 Nx Cloud reads CI configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
 The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
-Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Nx Agents, run [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).
+Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Workers, run [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
 
 ```yaml
 # .nx/ci-config.yaml
@@ -22,15 +22,19 @@ lifecycle:
 Start the run by invoking the command once, early in your main job:
 
 ```shell
-npx nx-cloud start-nx-agents
+npx nx-cloud start-workers
 ```
 
 The command takes no configuration flags. Everything lives in the file, so the same configuration is versioned with your workspace and can be overridden per environment.
 
 {% aside type="caution" title="start-ci-run and .nx/ci-config.yaml cannot be combined" %}
-`nx-cloud start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and directs you to `start-nx-agents`.
-Choose one path: either the config file with `start-nx-agents`, or CLI flags with `start-ci-run`.
+`nx-cloud start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and directs you to `start-workers`.
+Choose one path: either the config file with `start-workers`, or CLI flags with `start-ci-run`.
 For a mapping between the two, see the [Nx Cloud CLI reference](/docs/reference/nx-cloud-cli).
+{% /aside %}
+
+{% aside type="note" title="Runs without distribution use start-ci-run" %}
+If you don't want distribution, use `npx nx-cloud start-ci-run --no-distribution` instead.
 {% /aside %}
 
 ## File location
@@ -41,15 +45,15 @@ Nx Cloud reads the file from `.nx/ci-config.yaml`. A `.nx/ci-config.yml` extensi
 
 The file has five top-level sections. All are optional, and each falls back to its defaults when omitted.
 
-| Section     | Purpose                                                             |
-| ----------- | ------------------------------------------------------------------- |
-| `lifecycle` | Stop conditions and stall detection for the run.                    |
-| `ai`        | Self-healing CI configuration.                                      |
-| `dte`       | Distributed task execution: how tasks are distributed to Nx Agents. |
-| `nx-agents` | Configuration for the Nx Agents themselves.                         |
-| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.           |
+| Section     | Purpose                                                           |
+| ----------- | ----------------------------------------------------------------- |
+| `lifecycle` | Stop conditions and stall detection for the run.                  |
+| `ai`        | Self-healing CI configuration.                                    |
+| `dte`       | Distributed task execution: how tasks are distributed to Workers. |
+| `workers`   | Configuration for the Workers themselves.                         |
+| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.         |
 
-For complete pipelines that pair this file with a provider workflow, see [Setting up CI for Nx Cloud](/docs/kb/setup-ci).
+For complete pipelines that pair this file with a provider workflow, see [setting up CI](/docs/getting-started/setup-ci) and [CI workflow examples](/docs/kb/ci-workflow-examples).
 
 ## `lifecycle`
 
@@ -124,7 +128,7 @@ Type: array of strings.
 
 ## `dte`
 
-Distributed task execution: how tasks are distributed to Nx Agents.
+Distributed task execution: how tasks are distributed to Workers.
 
 ```yaml
 # .nx/ci-config.yaml
@@ -143,7 +147,7 @@ Type: `boolean`. Default: `true`.
 ### `dte.distribute-on`
 
 How many agents to use and which [launch templates](/docs/kb/launch-templates) to run them on.
-Accepts a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/dynamic-agents).
+Accepts a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
 
 A launch-template string is one or more `<number> <template-name>` segments separated by commas.
 
@@ -171,8 +175,27 @@ dte:
   distribute-on: .nx/workflows/distribution-config.yaml
 ```
 
-To bring your own compute instead of using Nx Agents, set `distribute-on: manual`.
+To bring your own compute instead of using Workers, set `distribute-on: manual`.
 See [bring your own compute](/docs/kb/bring-your-own-compute).
+
+### `dte.scheduling-constraints`
+
+Tasks that must never run on the same agent at the same time, for example because they share a port or a database.
+Each entry selects tasks by `projects`, `targets`, or `configurations` globs, and `cannot-run-with` lists the tasks they can't overlap with on one agent.
+Provide the constraints inline, or a path to a YAML file with a top-level `scheduling-constraints` list.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    # e2e tasks share a resource, so never run two of them on one agent at once
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
+```
+
+Tasks outside the constraint still share the agent with them.
+To give a task an agent to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
 
 ### `dte.assignment-rules`
 
@@ -202,21 +225,22 @@ dte:
 Each inline rule matches tasks by `projects`, `targets`, and `configurations` globs, and routes them to the agents listed under `run-on`.
 `run-on` is required on every rule. Each `run-on` entry needs an `agent`, with optional `parallelism`.
 
-## `nx-agents`
+## `workers`
 
-Configuration for the Nx Agents.
+Configuration for the Workers.
+The older `nx-agents` key still works, and its entries merge with `workers`.
 
 ```yaml
 # .nx/ci-config.yaml
-nx-agents:
+workers:
   with-env-vars:
     - CHROMATIC_BRANCH
     - CHROMATIC_SHA
 ```
 
-### `nx-agents.with-env-vars`
+### `workers.with-env-vars`
 
-Environment variables forwarded from the main job to every Nx Agent.
+Environment variables forwarded from the main job to every Worker.
 Variables prefixed with `NX_` are forwarded automatically, so list only the additional ones you need.
 
 Type: array of strings.

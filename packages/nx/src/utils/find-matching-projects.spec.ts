@@ -321,6 +321,40 @@ describe('findMatchingProjects', () => {
       '@test/test-e2e',
     ]);
   });
+
+  const node = (name: string, root: string): ProjectGraphProjectNode => ({
+    name,
+    type: 'lib',
+    data: { root, tags: [] },
+  });
+
+  it('should keep an unknown prefix as part of the pattern', () => {
+    const graph = {
+      'dev.nx.maven:core': node('dev.nx.maven:core', 'maven/core'),
+      'dev.nx.maven:plugin': node('dev.nx.maven:plugin', 'maven/plugin'),
+      ':gradle-lib': node(':gradle-lib', 'gradle/lib'),
+      app: node('app', 'apps/app'),
+    };
+    expect(findMatchingProjects(['dev.nx.maven:*'], graph)).toEqual([
+      'dev.nx.maven:core',
+      'dev.nx.maven:plugin',
+    ]);
+    expect(findMatchingProjects(['!dev.nx.maven:*'], graph)).toEqual([
+      ':gradle-lib',
+      'app',
+    ]);
+    expect(findMatchingProjects([':gradle-*'], graph)).toEqual([':gradle-lib']);
+    expect(findMatchingProjects(['typo:app'], graph)).toEqual([]);
+  });
+
+  it('should match regular expression characters literally', () => {
+    const graph = {
+      '@acme/foo.bar': node('@acme/foo.bar', 'libs/foo.bar'),
+      'foo-bar': node('foo-bar', 'libs/foo-bar'),
+    };
+    expect(findMatchingProjects(['foo.bar'], graph)).toEqual(['@acme/foo.bar']);
+    expect(findMatchingProjects(['?foo'], graph)).toEqual([]);
+  });
 });
 
 const projects = [

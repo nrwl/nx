@@ -1,16 +1,17 @@
+import type { Mock } from 'vitest';
 import { readNxJson, updateNxJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { isInteractive, selectPrompt } from '@nx/devkit/internal';
 import { normalizeLinterOption } from './generator-prompts';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  isInteractive: jest.fn(),
-  selectPrompt: jest.fn(),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  isInteractive: vi.fn(),
+  selectPrompt: vi.fn(),
 }));
 
-const prompt = selectPrompt as jest.Mock;
-const interactive = isInteractive as jest.Mock;
+const prompt = selectPrompt as Mock;
+const interactive = isInteractive as Mock;
 
 describe('normalizeLinterOption', () => {
   let tree: Tree;

@@ -5,10 +5,10 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  getReadyCheckReadyWhen,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -41,14 +41,11 @@ export interface NextPluginOptions {
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
-type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
+// Next.js takes its port and hostname from the CLI and env, not from its
+// config, so the check gets no config file
+const readyWhen = getReadyCheckReadyWhen('@nx/next/ready-check');
 
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
+type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
 export const createNodes: CreateNodes<NextPluginOptions> = [
   nextConfigBlob,
@@ -237,6 +234,7 @@ function getDevTargetConfig(
       cwd: projectRoot,
     },
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   if (isTsSolutionSetup) {
@@ -259,6 +257,7 @@ function getStartTargetConfig(
     },
     dependsOn: [options.buildTargetName],
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   return targetConfig;

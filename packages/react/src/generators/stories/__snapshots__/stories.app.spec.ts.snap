@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`react:stories for applications should create the stories with interaction tests 1`] = `
+exports[`react:stories for applications > should create the stories with interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { NxWelcome } from './nx-welcome';
 import { expect } from 'storybook/test';
@@ -30,7 +30,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:stories for applications should create the stories with interaction tests 2`] = `
+exports[`react:stories for applications > should create the stories with interaction tests 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { Test } from './another-cmp';
 import { expect } from 'storybook/test';
@@ -62,7 +62,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:stories for applications should create the stories without interaction tests 1`] = `
+exports[`react:stories for applications > should create the stories without interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { NxWelcome } from './nx-welcome';
 
@@ -82,7 +82,7 @@ export const Primary = {
 "
 `;
 
-exports[`react:stories for applications should create the stories without interaction tests 2`] = `
+exports[`react:stories for applications > should create the stories without interaction tests 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { Test } from './another-cmp';
 
@@ -103,7 +103,7 @@ export const Primary = {
 "
 `;
 
-exports[`react:stories for applications should not update existing stories 1`] = `
+exports[`react:stories for applications > should not update existing stories 1`] = `
 "import { ComponentStory, ComponentMeta } from '@storybook/react-webpack5';
 "
 `;

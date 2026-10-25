@@ -213,7 +213,9 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('~4.1.0');
+          // Literal, not the constant that decides it: a regression back to
+          // vitest 4 has to fail here.
+          expect(packageJson.devDependencies['vitest']).toEqual('~5.0.1');
         });
 
         it('should fall back to a .ts vitest config on eslintrc', async () => {
@@ -526,6 +528,23 @@ describe('app', () => {
     });
   });
 
+  it('should run playwright against serve locally and serve-static in ci', async () => {
+    tree = createTreeWithEmptyWorkspace();
+
+    await applicationGenerator(tree, {
+      directory: 'myapp',
+      e2eTestRunner: 'playwright',
+      unitTestRunner: 'none',
+      useAppDir: false,
+    });
+
+    const config = tree.read('myapp-e2e/playwright.config.mts', 'utf-8');
+    expect(config).toContain(
+      `command: isCI ? 'npx nx run myapp:serve-static' : 'npx nx run myapp:serve'`
+    );
+    expect(config).toContain(`url: getReadyUrl('http://localhost:4200')`);
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -679,6 +698,9 @@ describe('app', () => {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "exclude": [
             "out-tsc",

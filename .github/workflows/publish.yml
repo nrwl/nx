@@ -14,6 +14,11 @@ on:
   release:
     types: [ published ]
 
+# Default for jobs that do not declare their own. The publish, PR comment
+# and data resolution jobs override this with exactly what they use.
+permissions:
+  contents: read
+
 # Dynamically generate the display name for the GitHub UI based on the event type and inputs
 run-name: ${{ github.event.inputs.pr && format('PR Release for {0}', github.event.inputs.pr) || github.event_name == 'schedule' && 'Canary Release' || github.event_name == 'workflow_dispatch' && !github.event.inputs.pr && 'Release Dry-Run' || github.ref_name }}
 
@@ -26,7 +31,7 @@ env:
   CARGO_INCREMENTAL: '0'
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 26.7.0
+  NODE_VERSION: 26.12.1
   PNPM_VERSION: 12.4.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
@@ -50,6 +55,9 @@ jobs:
     name: Resolve Required Data
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # publish-resolve-data.js calls pulls.get
     outputs:
       version: ${{ steps.script.outputs.version }}
       dry_run_flag: ${{ steps.script.outputs.dry_run_flag }}
@@ -141,6 +149,8 @@ jobs:
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
+              # Until a released nx-maven-plugin emits "/" roots, the Maven graph breaks on Windows
+              export NX_MAVEN_DISABLE=true
               pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
@@ -325,8 +335,10 @@ jobs:
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
+              # Until a released nx-maven-plugin emits "/" roots, the Maven graph breaks on Windows
+              export NX_MAVEN_DISABLE=true
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@26.7.0
+    name: stable - ${{ matrix.settings.target }} - node@26.12.1
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -361,7 +373,10 @@ jobs:
             ~/.cargo/git/db/
             .cargo-cache
             target/
-          key: ${{ matrix.settings.target }}-cargo-registry
+          # Scoped to the ref being released, so a release build only restores a
+          # cache written from that same ref rather than any branch that shares
+          # the target name.
+          key: ${{ matrix.settings.target }}-cargo-registry-${{ github.ref_name }}
 
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
@@ -384,7 +399,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           check-latest: true
-          cache: pnpm
           architecture: x86
 
       - name: Build in docker
@@ -457,15 +471,16 @@ jobs:
           RUSTUP_IO_THREADS: 1
           CARGO_INCREMENTAL: '0'
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 26.7.0
+          NODE_VERSION: 26.12.1
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
+          NX_MAVEN_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS PNPM_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NX_MAVEN_DISABLE NODE_OPTIONS PNPM_VERSION
           shell: bash
           run: |
             env
@@ -718,6 +733,7 @@ jobs:
       - build-freebsd
       - build
     runs-on: ubuntu-latest
+    permissions: {} # posts to Slack only
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
     outputs:
@@ -805,38 +821,72 @@ jobs:
           errors: true
           payload: ${{ steps.message.outputs.payload }}
 
-  report-published:
-    name: Report Successful Publish to Slack
-    if: ${{ github.repository_owner == 'nrwl' }}
+  report-publish-result:
+    name: Report Publish Result to Slack
+    # always() lets this run when `publish` fails or the run is cancelled; without it GitHub skips the job.
+    if: ${{ always() && github.repository_owner == 'nrwl' && contains(fromJSON('["success", "failure", "cancelled"]'), needs.publish.result) }}
     needs:
       - resolve-required-data
       - publish
       - report-pending-publish
     runs-on: ubuntu-latest
+    permissions:
+      actions: read # reads the run's approvals; the Slack post uses its own token
     timeout-minutes: 10
     continue-on-error: true  # Don't fail the workflow if notification fails
     steps:
-      # Only fires once `publish` has actually succeeded - if `publish` fails, GitHub
-      # skips this job by default since it's a listed `needs` dependency that didn't succeed.
+      # A rejected npm-registry approval fails `publish` the same way a broken publish does,
+      # so the run's approvals are the only way to tell the two apart.
+      - name: Check for a rejected publish approval
+        id: approval
+        if: ${{ needs.publish.result == 'failure' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REJECTED_BY=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/approvals" \
+            --jq '[.[] | select(.state == "rejected")][0].user.login // empty')
+          echo "rejected_by=$REJECTED_BY" >> "$GITHUB_OUTPUT"
+
       - name: Build Slack message payload
         id: message
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          REJECTED_BY: ${{ steps.approval.outputs.rejected_by }}
           THREAD_TS: ${{ needs.report-pending-publish.outputs.slack_thread_ts }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          MAIN_TEXT="*Version ${VERSION}* was published to NPM successfully."
+          if [ "$PUBLISH_RESULT" = "success" ]; then
+            TITLE_TEXT="🎉 Published Successfully"
+            MAIN_TEXT="*Version ${VERSION}* was published to NPM successfully."
+            COLOR="good"
+          elif [ -n "$REJECTED_BY" ]; then
+            TITLE_TEXT="🚫 Publish Rejected"
+            MAIN_TEXT="*Version ${VERSION}* was not published to NPM. ${REJECTED_BY} rejected the approval."
+            COLOR="warning"
+          elif [ "$PUBLISH_RESULT" = "cancelled" ]; then
+            TITLE_TEXT="⏹️ Publish Cancelled"
+            MAIN_TEXT="*Version ${VERSION}* was not published to NPM because the run was cancelled."
+            COLOR="warning"
+          else
+            TITLE_TEXT="❌ Publish Failed"
+            MAIN_TEXT="*Version ${VERSION}* failed to publish to NPM."
+            COLOR="danger"
+          fi
           PAYLOAD=$(jq -nc \
+            --arg title "$TITLE_TEXT" \
             --arg main "$MAIN_TEXT" \
+            --arg color "$COLOR" \
             --arg ts "$THREAD_TS" \
             --arg run_url "$RUN_URL" \
             '{
               channel: "C024JCL7TST",
-              text: "🎉 Published Successfully",
+              text: $title,
               thread_ts: $ts,
               attachments: [
                 {
-                  color: "good",
+                  color: $color,
                   blocks: [
                     {
                       type: "section",

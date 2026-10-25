@@ -61,6 +61,18 @@
       "description": "Update Maven plugin version from 0.0.16 to 0.0.17 in pom.xml files",
       "factory": "./dist/migrations/0-0-17/update-pom-xml-version"
     },
+    "update-0-0-18": {
+      "version": "24.0.0-beta.4",
+      "description": "Update the Nx Maven plugin version from 0.0.17 to 0.0.18 in the root pom.xml.",
+      "implementation": "./dist/migrations/update-24-0-0/update-nx-maven-plugin-to-0-0-18",
+      "documentation": "./dist/migrations/update-24-0-0/update-nx-maven-plugin-to-0-0-18.md"
+    },
+    "update-0-0-19": {
+      "version": "24.0.0-rc.2",
+      "description": "Update the Nx Maven plugin version from 0.0.18 to 0.0.19 in the root pom.xml.",
+      "implementation": "./dist/migrations/update-24-0-0/update-nx-maven-plugin-to-0-0-19",
+      "documentation": "./dist/migrations/update-24-0-0/update-nx-maven-plugin-to-0-0-19.md"
+    },
     "update-23-0-0-migrate-create-nodes-v2-import": {
       "version": "23.0.0-beta.26",
       "description": "Rename imports of `createNodesV2` from `@nx/maven` to the canonical `createNodes` export.",

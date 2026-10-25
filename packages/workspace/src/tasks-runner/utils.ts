@@ -1,6 +1,5 @@
 export { getOutputsForTargetAndConfiguration } from '@nx/devkit';
 export {
-  DependsOnEntryLocation,
   NormalizedTargetDependencyConfig,
   calculateReverseDeps,
   createTaskId,

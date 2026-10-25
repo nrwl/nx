@@ -41,7 +41,9 @@ export function getSwcCmd(
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
-function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
+export function getTypeCheckOptions(
+  normalizedOptions: NormalizedSwcExecutorOptions
+): TypeCheckOptions {
   const { sourceRoot, projectRoot, watch, tsConfig, root, outputPath } =
     normalizedOptions;
   const inputDir =
@@ -59,7 +61,7 @@ function getTypeCheckOptions(normalizedOptions: NormalizedSwcExecutorOptions) {
     tsConfigPath: tsConfig,
     outDir: outputPath,
     workspaceRoot: root,
-    rootDir: inputDir,
+    rootDir: join(root, inputDir),
   };
 
   if (watch) {

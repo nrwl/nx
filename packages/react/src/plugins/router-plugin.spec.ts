@@ -1,17 +1,28 @@
+import type { Mock } from 'vitest';
 import { type CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './router-plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { canResolve } from './router-plugin-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'path';
 
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+// In the vm, require.resolve ignores `paths`. By default @nx/vite resolves.
+vi.mock('./router-plugin-utils', () => ({
+  canResolve: vi.fn().mockReturnValue(true),
+}));
+
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/react/react-router-plugin', () => {
@@ -21,7 +32,7 @@ describe('@nx/react/react-router-plugin', () => {
   let cwd: string;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
   });
 
   describe('React Router', () => {
@@ -44,11 +55,13 @@ describe('@nx/react/react-router-plugin', () => {
         'acme/react-router.config.js': 'module.exports = {}',
         'acme/vite.config.js': '',
         'acme/project.json': JSON.stringify({ name: 'acme' }),
+        'acme/tsconfig.json': '{}',
       });
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
+      resetCjsMocks();
       tempFs.cleanup();
       process.chdir(cwd);
     });
@@ -84,11 +97,38 @@ describe('@nx/react/react-router-plugin', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should not make dev wait when the workspace cannot resolve @nx/vite/ready-check', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+      (canResolve as Mock).mockReturnValueOnce(false);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.dev.readyWhen).toBeUndefined();
+    });
+
+    it('should not create a typecheck target', async () => {
+      mockConfig('acme/react-router.config.js', {}, context);
+
+      const nodes = await createNodesFunction(
+        ['acme/react-router.config.js'],
+        {},
+        context
+      );
+
+      const targets = nodes[0][1].projects['acme'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets.build).toBeDefined();
+    });
   });
 
+  // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
   function mockConfig(path: string, config, context: CreateNodesContext) {
-    jest.mock(join(context.workspaceRoot, path), () => config, {
-      virtual: true,
-    });
+    mockCjsModule(import.meta.url, join(context.workspaceRoot, path), config);
   }
 });

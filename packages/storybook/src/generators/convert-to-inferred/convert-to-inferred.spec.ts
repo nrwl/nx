@@ -11,7 +11,11 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
@@ -19,12 +23,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -129,10 +133,11 @@ export default config;`;
     `${projectRoot}/.storybook/main.ts`,
     storybookConfigContents
   );
-  jest.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, projectRoot, '.storybook', 'main.ts'),
-    () => storybookConfig,
-    { virtual: true }
+    storybookConfig
   );
 }
 
@@ -204,7 +209,8 @@ describe('Storybook - Convert To Inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
+    resetCjsMocks();
   });
 
   describe('--project', () => {
@@ -233,13 +239,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -309,13 +308,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -384,13 +376,6 @@ describe('Storybook - Convert To Inferred', () => {
               "output-dir": "../../dist/storybook/apps/app1",
               "stats-json": true,
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -443,13 +428,6 @@ describe('Storybook - Convert To Inferred', () => {
               "config-dir": ".storybook",
               "output-dir": "../../dist/storybook/apps/app1",
             },
-            "outputs": [
-              "{projectRoot}/{options.output-dir}",
-              "{projectRoot}/storybook-static",
-              "{options.output-dir}",
-              "{options.outputDir}",
-              "{options.o}",
-            ],
           },
           "storybook": {
             "configurations": {
@@ -594,13 +572,6 @@ describe('Storybook - Convert To Inferred', () => {
           {
             filter: { plugin: '@nx/storybook/plugin' },
             options: { 'config-dir': '.storybook' },
-            outputs: [
-              '{projectRoot}/{options.output-dir}',
-              '{projectRoot}/storybook-static',
-              '{options.output-dir}',
-              '{options.outputDir}',
-              '{options.o}',
-            ],
           },
         ],
         storybook: [

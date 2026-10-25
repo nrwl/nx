@@ -1,12 +1,12 @@
 ---
 title: 'Launch Templates'
-description: 'Define setup steps for Nx Agents with custom launch templates'
+description: 'Define setup steps for Workers with custom launch templates'
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
 ---
 
-A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
+A launch template defines the setup steps Workers will run before running tasks. A custom launch template isn't required to use Workers.
 Nx Cloud provides several pre-built launch templates for common use-cases. You can view available templates in the [`nx-cloud-workflows` repository](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
 
 {% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
@@ -76,7 +76,7 @@ A launch template's `image` defines the available base software for the agent ma
 {% aside type="tip" title="Looking for Docker in Docker support?" %}
 
 Docker-in-Docker (DinD) runs on a
-[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Every agent in
+[dedicated compute cluster](/docs/kb/dedicated-compute-cluster). Every agent in
 the cluster can run DinD, so your tasks can build and push container images or run Testcontainers.
 Request the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 
@@ -162,7 +162,7 @@ launch-templates:
 
 ### `launch-templates.<template-name>.init-steps`
 
-A launch template's `init-steps` defines the series of steps to perform before an Nx Agent runs. Without a defined `init-steps` the Nx Agent is unable to process any tasks.
+A launch template's `init-steps` defines the series of steps to perform before a Worker runs. Without a defined `init-steps` the Worker is unable to process any tasks.
 
 Typical `init-steps` perform actions such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as an `init-step`. Once all steps run successfully, the agent machine will inform Nx Cloud that it is ready to accept tasks.
 

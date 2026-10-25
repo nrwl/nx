@@ -18,36 +18,10 @@ describe('getWebpackE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it('should use the default values when no plugin is registered and plugins are not being used', async () => {
-    // ARRANGE
-    const nxJson = readNxJson(tree);
-    nxJson.plugins ??= [];
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
-      tree,
-      'app',
-      'app/webpack.config.ts',
-      false
-    );
-
-    // ASSERT
-    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
-      {
-        "e2eCiBaseUrl": "http://localhost:4200",
-        "e2eCiWebServerCommand": "npx nx run app:serve-static",
-        "e2eDevServerTarget": "app:serve",
-        "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:serve",
-      }
-    `);
-  });
-
-  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -64,8 +38,7 @@ describe('getWebpackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
-      'app/webpack.config.ts',
-      false
+      'app/webpack.config.ts'
     );
 
     // ASSERT
@@ -90,8 +63,7 @@ describe('getWebpackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
-      'app/webpack.config.ts',
-      true
+      'app/webpack.config.ts'
     );
 
     // ASSERT
@@ -123,8 +95,7 @@ describe('getWebpackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
-      'app/webpack.config.ts',
-      true
+      'app/webpack.config.ts'
     );
 
     // ASSERT
@@ -156,8 +127,7 @@ describe('getWebpackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
-      'app/webpack.config.ts',
-      true
+      'app/webpack.config.ts'
     );
 
     // ASSERT
@@ -198,8 +168,7 @@ describe('getWebpackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getWebpackE2EWebServerInfo(
       tree,
       'app',
-      'app/webpack.config.ts',
-      true
+      'app/webpack.config.ts'
     );
 
     // ASSERT
@@ -227,7 +196,6 @@ describe('getWebpackE2EWebServerInfo', () => {
       tree,
       'app',
       'app/webpack.config.ts',
-      false,
       4321
     );
 
@@ -249,7 +217,6 @@ describe('getWebpackE2EWebServerInfo', () => {
       tree,
       'app',
       'app/webpack.config.ts',
-      false,
       undefined
     );
 

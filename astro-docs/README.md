@@ -24,7 +24,7 @@ This documentation site leverages Astro's static site generation capabilities wi
 
 ## Information Architecture Principles
 
-When creating or reorganizing documentation, follow these 7 principles to determine where content belongs.
+When creating or reorganizing documentation, follow these 6 principles to determine where content belongs.
 
 ### 1. Progressive Disclosure (The "Journey" Rule)
 
@@ -41,36 +41,29 @@ When creating or reorganizing documentation, follow these 7 principles to determ
 - **Concept:** Separate **Learning** (Narrative/Guides) from **Looking Up** (Reference/API).
 - **The Test:** _Is the user here to learn a workflow (Guide) or look up a flag syntax (Reference)?_
 
-### 4. The Pen & Paper Test (The "Theory" Rule)
+### 4. Universal vs. Specific (The "Placement" Rule)
 
-- **Concept:** Distinguish Architecture from Features to keep "Core Concepts" pure.
-- **The Test:** _Can I explain this using only a pen and paper?_
-- **Yes:** It goes in **How Nx Works** (Architecture).
-- **No (I need a terminal):** It goes in **Platform Features** (Feature).
-
-### 5. Universal vs. Specific (The "Placement" Rule)
-
-- **Concept:** Distinguish Platform features from Ecosystem tools to prevent "Features" from becoming a junk drawer.
+- **Concept:** Distinguish Core features from Ecosystem tools to prevent "Features" from becoming a junk drawer.
 - **The Test:** _Does this feature apply to EVERY user (e.g., Caching, Agents)?_
-- **Yes:** **Platform Features**.
+- **Yes:** **Core features**, or **CI features** when it only applies in CI.
 - **No (Only React users):** **Technologies**.
 
-### 6. The Golden Path (The "One Way" Rule)
+### 5. The Golden Path (The "One Way" Rule)
 
 - **Concept:** Feature pages teach the default workflow. Limit flags and variants to the ones a reader needs to make a decision.
 - **The Test:** _Would a first-time user need this sentence to succeed or to choose? If not, it belongs in the corresponding Knowledge Base guide._
 
-### 7. One Page Per Feature (The "Don't Make Me Hunt" Rule)
+### 6. One Page Per Feature (The "Don't Make Me Hunt" Rule)
 
 - **Concept:** A feature page answers most of what a new reader arrives with. Specifics fan out to Knowledge Base guides, the questions stay on the page.
 - **The Test:** _List the questions a new reader, or an AI answering for one, would ask about this feature. Does any answer live only on another page?_
-- **Counterweight to rule 6:** Trim variants and edge cases, keep every question a reader has to answer before they can choose or start.
+- **Counterweight to rule 5:** Trim variants and edge cases, keep every question a reader has to answer before they can choose or start.
 
 ### Sidebar Structure
 
 The sidebar has 4 top-level sections that follow the user journey:
 
-1. **Getting Started** - Essential setup, tutorials, and core concepts (How Nx Works, Platform Features)
+1. **Getting Started** - Essential setup, tutorials, Core features, and CI features
 2. **Technologies** - Framework and tool-specific guides (React, Angular, Node, build tools, test tools)
 3. **Knowledge Base** - Recipes, troubleshooting, and topic-specific guides
 4. **Reference** - Exhaustive facts, no narrative (CLI commands, configuration, API docs)
@@ -113,6 +106,20 @@ The site uses custom content loaders to dynamically generate documentation:
 - **PluginLoader** (`plugin.loader.ts`) - Generates official plugin documentation (generators, executors, migrations)
 - **CommunityPluginsLoader** (`community-plugins.loader.ts`) - Generates data for plugin registry (e.g. GitHub stars, npm downloads)
 - **NxReferencePackagesLoader** (`nx-reference-packages.loader.ts`) - Generated data for CNW, Devkit, nx cli (e.g. nx core related things)
+- **NxCloudPublicApiLoader** (`nx-cloud-public-api.loader.ts`) - Generates the Public API reference from the deployed OpenAPI specification.
+
+### Nx Cloud Public API reference
+
+The reference at `/docs/reference/nx-cloud/public-api` uses one model in
+`src/plugins/nx-cloud-public-api/` for the Astro page, Markdown, copy content, and AI exports.
+Edit API descriptions in the upstream OpenAPI source and usage guides in `src/content/docs/kb/`.
+
+The loader fetches `https://cloud.nx.app/nx-cloud/data/openapi.json` on each content sync.
+Set `NX_CLOUD_OPENAPI_URL` to use another deployment.
+Fetch or parse errors fail the sync instead of publishing stale documentation.
+
+The build uses `scripts/hash-openapi-spec.mjs` as a runtime input.
+Specification changes invalidate the Nx cache without a repository change.
 
 ## Content Management
 
@@ -263,6 +270,16 @@ export const sidebar = [
 - Global styles in `src/styles/global.css`
 - Component-specific styles use Tailwind utilities
 - Dark/light mode support built into Starlight and customized in `global.css`
+
+### Nx brand
+
+The docs follow the Nx brand guidelines, so `nx.dev/docs` reads as one site with `nx.dev` and the blog.
+
+- **Colors**: the brand ramps (`--color-nx-neutral-*`, `--color-nx-primary-*`, plus `cloud`, `success`, `warning` and `danger`) are defined in the `@theme` block of `global.css`. Tailwind's `slate`, `gray`, `zinc`, `blue`, `sky`, `green`, `yellow`, `amber` and `red` palettes point at them, so existing utility classes pick up the brand colors. The Starlight tokens (`--sl-color-*`) are set from the same ramps.
+- **Fonts**: Instrument Sans for text and Server Mono for code, served from `public/fonts`.
+- **Code blocks**: themes and surfaces are set in `ec.config.mjs`.
+- **Header and footer**: `src/components/layout/Header.astro` and `src/components/layout/site-nav/` are hand-built copies of the nx.dev (Framer) navbar and footer, shared with the blog (`nrwl/nx-blog`). They are always dark, like nx.dev. The header keeps the docs' own arrangement: logo, version switcher and the whole nav on the left (in line with the sidebar), search, the GitHub star count and the theme toggle on the right, with no "Get Started" pill. The theme toggle shows the active theme's icon and expands on hover or focus. The footer leaves out nx.dev's animated rays. When the Framer navbar or footer changes, update these and the blog together.
+- The header is 80px tall (64px below `50rem`), set through `--sl-nav-height`. Below `50rem` the nx.dev nav moves to the end of the sidebar menu.
 
 ## Configuration Files
 

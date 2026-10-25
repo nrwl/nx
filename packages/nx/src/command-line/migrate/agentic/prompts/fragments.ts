@@ -1,5 +1,5 @@
-// Wording the agent system prompt (system-prompt.ts) and the orchestrated
-// run's runbook (run/runbook.ts) must state identically.
+// The runbook's (run/runbook.ts) contract wording. The dispensed step blocks
+// and the final validation instructions reuse parts of it word for word.
 
 import { formatCommandFor } from '../format-command';
 import { MIGRATE_RUNS_RELATIVE_DIR } from '../types';
@@ -25,23 +25,11 @@ export function renderHandoffShapeLines(): string[] {
   ];
 }
 
-/**
- * Where the formatter command comes from. A prompt built right before the
- * agent runs carries the resolved command; the runbook outlives many steps,
- * so it points at the `Format command:` line each dispensed step resolves.
- */
-export type FormatInstruction =
-  | { source: 'command'; command: string | null }
-  | { source: 'dispensed-step' };
-
-export function renderAuthorScopeRuleLines(
-  pmExec: string,
-  format: FormatInstruction
-): string[] {
+export function renderAuthorScopeRuleLines(pmExec: string): string[] {
   return [
     `- Apply only the changes the migration prompt asks for.`,
     `- Do not refactor or update dependencies beyond what the migration prompt directs, and do not reformat files you did not change.`,
-    renderFormatRule(pmExec, format),
+    renderFormatRule(pmExec),
     `- Do not modify files outside the workspace root.`,
     `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write.`,
     `- Do not run \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, \`nx run-many\`, generators, etc.). Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
@@ -55,7 +43,9 @@ const FORMAT_SCOPE = `over exactly the files you created or modified`;
 const NO_FILES = `If you created or modified no files, do not run it.`;
 const NO_NX_FORMAT = `Do not use \`nx format:write\` for this: it also selects files changed earlier on the branch and always reformats the root config files.`;
 
-function renderFormatRule(pmExec: string, format: FormatInstruction): string {
+// The runbook outlives many steps, so it points at the `Format command:` line
+// each dispensed step resolves.
+function renderFormatRule(pmExec: string): string {
   // The command is resolved before the step runs, so the step that adds or
   // replaces the formatter is the one case it cannot cover; name the exact
   // replacements so the agent does not have to guess flags.
@@ -63,20 +53,7 @@ function renderFormatRule(pmExec: string, format: FormatInstruction): string {
     'prettier',
     pmExec
   )}\` for Prettier, \`${formatCommandFor('oxfmt', pmExec)}\` for oxfmt, but only if it is installed under node_modules; if it is not, do not install or run it. ${NO_FILES}`;
-  switch (format.source) {
-    case 'command':
-      return format.command === null
-        ? `- No configured formatter is installed in this workspace; do not install or run one over your changes. ${replacement}`
-        : `- After applying your changes and before writing the handoff, run \`${format.command}\` ${FORMAT_SCOPE} (the flag keeps the command from failing when some or all of those paths are files the formatter does not handle). ${replacement} ${NO_NX_FORMAT}`;
-    case 'dispensed-step':
-      return `- After applying your changes and before writing the handoff, run the command on the dispensed step's \`Format command:\` line ${FORMAT_SCOPE}; when that line says none, do not run a formatter. ${replacement} ${NO_NX_FORMAT}`;
-    default: {
-      const unhandled: never = format;
-      throw new Error(
-        `Unhandled format instruction: ${JSON.stringify(unhandled)}`
-      );
-    }
-  }
+  return `- After applying your changes and before writing the handoff, run the command on the dispensed step's \`Format command:\` line ${FORMAT_SCOPE}; when that line says none, do not run a formatter. ${replacement} ${NO_NX_FORMAT}`;
 }
 
 export function renderValidationScopeRuleLines(): string[] {
@@ -90,5 +67,22 @@ export function renderValidationScopeRuleLines(): string[] {
     `- Do not modify files outside the workspace root.`,
     `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write.`,
     `- If validation finds blocking issues you cannot resolve within scope: apply every fix you can within scope, then report the unresolved findings to the user and ask how to proceed (see the handoff contract). Do not guess.`,
+  ];
+}
+
+// The one place `nx affected --base` is allowed: the pass judges the whole
+// run, so it needs the whole run's delta, not one step's file list.
+export function renderFinalValidationScopeRuleLines(): string[] {
+  return [
+    `- Your job is to validate the workspace after every migration has run: run its lint, build and unit-test tasks, fix what the upgrade broke, and report the rest.`,
+    `- Discover targets before running them: \`nx show project <name> --json\` is authoritative, since it includes targets inferred by plugins. Target names vary between workspaces; \`lint\`, \`build\` and \`test\` are the common ones, and an equivalent (\`typecheck\` for a project with no \`build\`, for example) stands in when one is missing. Never run e2e, serve, deploy, publish or release targets.`,
+    `- Run tasks through \`nx affected --base <ref> -t <targets>\` with the base ref the step's instructions name, in full: no sampling, no time budget. \`nx run <project>:<target>\` and \`nx run-many -t <target> -p <projects>\` are fine to rerun a failure. Unscoped \`nx run-many\` is allowed only when the instructions say the base ref is unknown.`,
+    `- Fix only breakage the upgrade caused, judged from the run's diff: the dependency changes it made and the migrations' changes. A failure the diff cannot explain is reported as an issue and left alone; it may predate the run.`,
+    `- Do not refactor, do not update dependencies, do not rewrite tests to pass, and do not rerun migrations. If the migrated workspace cannot run \`nx\` at all, stop and report that to the user instead of repairing the install.`,
+    `- Read-only and artifact-writing inspection commands are permitted: \`nx show\`, \`nx graph --file <path>\`, \`git diff\`, reading files.`,
+    `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx format:write\`, generators, etc.).`,
+    `- Do not modify files outside the workspace root.`,
+    `- Do not edit anything under \`${MIGRATE_RUNS_RELATIVE_DIR}\` except the handoff file you are asked to write.`,
+    `- If a failure you cannot resolve within scope blocks the workspace: apply every fix you can, then report the unresolved findings to the user and ask how to proceed (see the handoff contract). Do not guess.`,
   ];
 }

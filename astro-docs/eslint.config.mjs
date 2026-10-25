@@ -3,7 +3,10 @@ import playwright from 'eslint-plugin-playwright';
 
 export default [
   ...baseConfig,
-  playwright.configs['flat/recommended'],
+  {
+    ...playwright.configs['flat/recommended'],
+    files: ['e2e/**/*.{ts,js}'],
+  },
   {
     files: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.js', '**/*.test.js'],
     rules: {

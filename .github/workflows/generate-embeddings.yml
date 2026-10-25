@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "0 5 * * 0,4" # sunday, thursday 5AM
 
+permissions:
+  contents: read
+
 jobs:
   cache-and-install:
     if: github.repository == 'nrwl/nx'
@@ -20,6 +23,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: '24'
+          check-latest: true
           package-manager-cache: false
 
       - name: Install pnpm

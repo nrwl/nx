@@ -242,7 +242,7 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      const expandedOutputs = this.cache.put(
+      const { expandedOutputs, files } = this.cache.put(
         task.hash,
         terminalOutput,
         outputs,
@@ -260,6 +260,7 @@ export class DbCache {
           code
         );
       }
+      return files;
     });
   }
 

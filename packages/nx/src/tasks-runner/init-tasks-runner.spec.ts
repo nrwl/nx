@@ -1,10 +1,5 @@
-const applyIoSnapshotOutputs = vi.fn();
 const createTaskHasher = vi.fn(() => ({}));
 
-vi.mock('../io-snapshots/outputs', () => ({
-  applyIoSnapshotOutputs: (...args: unknown[]) =>
-    applyIoSnapshotOutputs(...args),
-}));
 vi.mock('../hasher/create-task-hasher', () => ({
   createTaskHasher: (...args: unknown[]) => createTaskHasher(...args),
 }));
@@ -18,7 +13,7 @@ vi.mock('./task-orchestrator', () => ({
   TaskOrchestrator: vi.fn(function () {
     return {
       init: vi.fn(),
-      processAllScheduledTasks: vi.fn(),
+      processTasks: vi.fn(),
       nextBatch: () => null,
       resolveCachedTasks: async () => [],
       runTaskDirectly: async (_: boolean, task: any) => ({ task }),
@@ -50,28 +45,32 @@ describe.each([
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('hashes and extends outputs from the set the caller passes', async () => {
-    const snapshots = { commit: 'head', resolution: { fetchedAt: 1 } } as any;
+  it('hashes from the configurations the caller passes', async () => {
+    const configurations = {
+      commit: 'head',
+      resolution: { fetchedAt: 1 },
+    } as any;
 
-    await run([task], projectGraph, fullTaskGraph, {}, {} as any, snapshots);
-
-    expect(applyIoSnapshotOutputs).toHaveBeenCalledWith(
+    await run(
+      [task],
       projectGraph,
       fullTaskGraph,
-      snapshots
+      {},
+      {} as any,
+      configurations
     );
+
     expect(createTaskHasher).toHaveBeenCalledWith(
       projectGraph,
       {},
       { accessToken: 't' },
-      snapshots
+      configurations
     );
   });
 
   it('hashes natively when the caller passes no set', async () => {
     await run([task], projectGraph, fullTaskGraph, {}, {} as any);
 
-    expect(applyIoSnapshotOutputs).not.toHaveBeenCalled();
     expect(createTaskHasher).toHaveBeenCalledWith(
       projectGraph,
       {},

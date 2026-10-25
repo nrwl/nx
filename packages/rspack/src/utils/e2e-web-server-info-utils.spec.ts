@@ -22,7 +22,7 @@ describe('getRspackE2EWebServerInfo', () => {
     vi.resetModules();
   });
 
-  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -39,8 +39,7 @@ describe('getRspackE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getRspackE2EWebServerInfo(
       tree,
       'app',
-      'app/rspack.config.ts',
-      false
+      'app/rspack.config.ts'
     );
 
     // ASSERT
@@ -68,7 +67,6 @@ describe('getRspackE2EWebServerInfo', () => {
       tree,
       'app',
       'app/rspack.config.ts',
-      false,
       4321
     );
 

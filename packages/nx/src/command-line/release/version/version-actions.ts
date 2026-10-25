@@ -12,6 +12,7 @@ import {
   requireWithTsconfigFallback,
 } from '../../../plugins/js/utils/register';
 import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from '../utils/interpolate-release-config';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -33,6 +34,9 @@ export type SemverBumpType = ReleaseType | 'none';
  * does not contain one. The resolved value can be the dependency's new version
  * when it is part of the release, or its current version when it is not being
  * versioned.
+ *
+ * When the project is not configured for Nx Release, the returned promise
+ * rejects with an error whose `code` is `NX_RELEASE_PROJECT_NOT_CONFIGURED`.
  *
  * @public
  */
@@ -258,7 +262,7 @@ export abstract class VersionActions {
       this.finalConfigForProject.manifestRootsToUpdate.map((manifestRoot) => {
         return {
           ...manifestRoot,
-          path: interpolate(manifestRoot.path, {
+          path: interpolateReleaseConfig(manifestRoot.path, {
             workspaceRoot: '',
             projectRoot: this.projectGraphNode.data.root,
             projectName: this.projectGraphNode.name,

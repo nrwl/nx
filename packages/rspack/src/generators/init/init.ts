@@ -5,7 +5,6 @@ import {
   createProjectGraphAsync,
   detectPackageManager,
   GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -30,59 +29,51 @@ export async function rspackInitGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const nxJson = readNxJson(tree);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
-
-  if (schema.addPlugin) {
-    await addPlugin(
-      tree,
-      await createProjectGraphAsync(),
-      '@nx/rspack/plugin',
-      createNodes,
-      {
-        buildTargetName: [
-          'build',
-          'rspack:build',
-          'build:rspack',
-          'rspack-build',
-          'build-rspack',
-        ],
-        serveTargetName: [
-          'serve',
-          'rspack:serve',
-          'serve:rspack',
-          'rspack-serve',
-          'serve-rspack',
-        ],
-        serveStaticTargetName: [
-          'serve-static',
-          'rspack:serve-static',
-          'rspack-serve-static',
-        ],
-        previewTargetName: [
-          'preview',
-          'rspack:preview',
-          'preview:rspack',
-          'rspack-preview',
-          'preview-rspack',
-        ],
-        buildDepsTargetName: [
-          'build-deps',
-          'rspack:build-deps',
-          'rspack-build-deps',
-        ],
-        watchDepsTargetName: [
-          'watch-deps',
-          'rspack:watch-deps',
-          'rspack-watch-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+  await addPlugin(
+    tree,
+    await createProjectGraphAsync(),
+    '@nx/rspack/plugin',
+    createNodes,
+    {
+      buildTargetName: [
+        'build',
+        'rspack:build',
+        'build:rspack',
+        'rspack-build',
+        'build-rspack',
+      ],
+      serveTargetName: [
+        'serve',
+        'rspack:serve',
+        'serve:rspack',
+        'rspack-serve',
+        'serve-rspack',
+      ],
+      serveStaticTargetName: [
+        'serve-static',
+        'rspack:serve-static',
+        'rspack-serve-static',
+      ],
+      previewTargetName: [
+        'preview',
+        'rspack:preview',
+        'preview:rspack',
+        'rspack-preview',
+        'preview-rspack',
+      ],
+      buildDepsTargetName: [
+        'build-deps',
+        'rspack:build-deps',
+        'rspack-build-deps',
+      ],
+      watchDepsTargetName: [
+        'watch-deps',
+        'rspack:watch-deps',
+        'rspack-watch-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   const jsInitTask = await initGenerator(tree, {
     ...schema,

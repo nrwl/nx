@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: PureComponent class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'PureComponent class & then default ex…' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -32,7 +32,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: PureComponent class & then default export should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'PureComponent class & then default ex…' > should properly setup the controls based on the component props 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -64,7 +64,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: arrow function should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'arrow function without {..}' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -96,7 +96,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: arrow function without {..} should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'arrow function' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -128,7 +128,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: component class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'component class & then default export' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -160,7 +160,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: component class & then default export should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'component class & then default export…' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -192,7 +192,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: default export function should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'default export function' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -224,7 +224,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: direct export of component class new JSX transform should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'direct export of component class new …' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -256,7 +256,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: direct export of component class should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'direct export of component class' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -288,7 +288,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: function and then export should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with DEFAULT export > React component defined as: 'function and then export' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -320,7 +320,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default PureComponent class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default PureComponent class & then…' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -352,7 +352,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default PureComponent class & then default export should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default PureComponent class & then…' > should properly setup the controls based on the component props 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -384,7 +384,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default arrow function should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default arrow function without {..}' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -416,7 +416,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default arrow function without {..} should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default arrow function' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -448,7 +448,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default component class should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default component class' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -480,7 +480,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default direct export of component class new JSX transform should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default direct export of component…' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -512,7 +512,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default direct export of component class should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default direct export of component…' > should properly setup the controls based on the component props 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -544,7 +544,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default simple export function should properly setup the controls based on the component props 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > React component defined as: 'no default simple export function' > should properly setup the controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -576,7 +576,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 1`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > should create stories for all components in a file with no default export 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { One } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -602,7 +602,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 2`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > should create stories for all components in a file with no default export 2`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Two } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -628,7 +628,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 3`] = `
+exports[`react:component-story > default setup > Other types of component definitions > Component files with NO DEFAULT export > should create stories for all components in a file with no default export 3`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Three } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -658,7 +658,167 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup component with props and actions should setup controls based on the component props 1`] = `
+exports[`react:component-story > default setup > component with props > should setup controls based on the component destructured props defined in an inline literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Test } from './test-ui-lib';
+import { expect } from 'storybook/test';
+
+const meta = {
+  component: Test,
+  title: 'Test',
+} satisfies Meta<typeof Test>;
+export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+} satisfies Story;
+
+export const Heading = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
+  },
+} satisfies Story;
+"
+`;
+
+exports[`react:component-story > default setup > component with props > should setup controls based on the component destructured props without type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Test } from './test-ui-lib';
+import { expect } from 'storybook/test';
+
+const meta = {
+  component: Test,
+  title: 'Test',
+} satisfies Meta<typeof Test>;
+export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: '',
+  },
+} satisfies Story;
+
+export const Heading = {
+  args: {
+    name: '',
+    displayAge: '',
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
+  },
+} satisfies Story;
+"
+`;
+
+exports[`react:component-story > default setup > component with props > should setup controls based on the component props defined in a literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Test } from './test-ui-lib';
+import { expect } from 'storybook/test';
+
+const meta = {
+  component: Test,
+  title: 'Test',
+} satisfies Meta<typeof Test>;
+export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+} satisfies Story;
+
+export const Heading = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
+  },
+} satisfies Story;
+"
+`;
+
+exports[`react:component-story > default setup > component with props > should setup controls based on the component props defined in an inline literal type 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Test } from './test-ui-lib';
+import { expect } from 'storybook/test';
+
+const meta = {
+  component: Test,
+  title: 'Test',
+} satisfies Meta<typeof Test>;
+export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+} satisfies Story;
+
+export const Heading = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
+  },
+} satisfies Story;
+"
+`;
+
+exports[`react:component-story > default setup > component with props > should setup controls based on the component props defined in an interface 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Test } from './test-ui-lib';
+import { expect } from 'storybook/test';
+
+const meta = {
+  component: Test,
+  title: 'Test',
+} satisfies Meta<typeof Test>;
+export default meta;
+
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+} satisfies Story;
+
+export const Heading = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
+  },
+} satisfies Story;
+"
+`;
+
+exports[`react:component-story > default setup > component with props and actions > should setup controls based on the component props 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -695,167 +855,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup component with props should setup controls based on the component destructured props defined in an inline literal type 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Test } from './test-ui-lib';
-import { expect } from 'storybook/test';
-
-const meta = {
-  component: Test,
-  title: 'Test',
-} satisfies Meta<typeof Test>;
-export default meta;
-
-type Story = StoryObj<typeof Test>;
-
-export const Primary = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-} satisfies Story;
-
-export const Heading = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
-  },
-} satisfies Story;
-"
-`;
-
-exports[`react:component-story default setup component with props should setup controls based on the component destructured props without type 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Test } from './test-ui-lib';
-import { expect } from 'storybook/test';
-
-const meta = {
-  component: Test,
-  title: 'Test',
-} satisfies Meta<typeof Test>;
-export default meta;
-
-type Story = StoryObj<typeof Test>;
-
-export const Primary = {
-  args: {
-    name: '',
-    displayAge: '',
-  },
-} satisfies Story;
-
-export const Heading = {
-  args: {
-    name: '',
-    displayAge: '',
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
-  },
-} satisfies Story;
-"
-`;
-
-exports[`react:component-story default setup component with props should setup controls based on the component props defined in a literal type 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Test } from './test-ui-lib';
-import { expect } from 'storybook/test';
-
-const meta = {
-  component: Test,
-  title: 'Test',
-} satisfies Meta<typeof Test>;
-export default meta;
-
-type Story = StoryObj<typeof Test>;
-
-export const Primary = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-} satisfies Story;
-
-export const Heading = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
-  },
-} satisfies Story;
-"
-`;
-
-exports[`react:component-story default setup component with props should setup controls based on the component props defined in an inline literal type 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Test } from './test-ui-lib';
-import { expect } from 'storybook/test';
-
-const meta = {
-  component: Test,
-  title: 'Test',
-} satisfies Meta<typeof Test>;
-export default meta;
-
-type Story = StoryObj<typeof Test>;
-
-export const Primary = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-} satisfies Story;
-
-export const Heading = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
-  },
-} satisfies Story;
-"
-`;
-
-exports[`react:component-story default setup component with props should setup controls based on the component props defined in an interface 1`] = `
-"import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Test } from './test-ui-lib';
-import { expect } from 'storybook/test';
-
-const meta = {
-  component: Test,
-  title: 'Test',
-} satisfies Meta<typeof Test>;
-export default meta;
-
-type Story = StoryObj<typeof Test>;
-
-export const Primary = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-} satisfies Story;
-
-export const Heading = {
-  args: {
-    name: '',
-    displayAge: false,
-  },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/Test/gi)).toBeTruthy();
-  },
-} satisfies Story;
-"
-`;
-
-exports[`react:component-story default setup component without any props defined should create a story without controls 1`] = `
+exports[`react:component-story > default setup > component without any props defined > should create a story without controls 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Test } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -881,7 +881,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup default component setup should properly set up the story 1`] = `
+exports[`react:component-story > default setup > default component setup > should properly set up the story 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TestUiLib } from './test-ui-lib';
 import { expect } from 'storybook/test';
@@ -907,7 +907,7 @@ export const Heading = {
 "
 `;
 
-exports[`react:component-story default setup when using plain JS components should properly set up the story 1`] = `
+exports[`react:component-story > default setup > when using plain JS components > should properly set up the story 1`] = `
 "import componentName from './test-ui-libplain';
 import { expect } from 'storybook/test';
 
@@ -928,7 +928,7 @@ export const Heading: Story = {
 "
 `;
 
-exports[`react:component-story using eslint - not using interaction tests should properly set up the story 1`] = `
+exports[`react:component-story > using eslint - not using interaction tests > should properly set up the story 1`] = `
 "import type { Meta, StoryObj } from '@storybook/react-vite';
 import { TestUiLib } from './test-ui-lib';
 

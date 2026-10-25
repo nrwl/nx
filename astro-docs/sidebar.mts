@@ -27,6 +27,7 @@ const learnGroups: SidebarItems = [
     collapsed: false,
     items: [
       { label: 'Intro to Nx', link: 'getting-started/intro' },
+      { label: 'How Nx works', link: 'getting-started/how-nx-works' },
       { label: 'Installation', link: 'getting-started/installation' },
       {
         label: 'Start a new project',
@@ -77,32 +78,7 @@ const learnGroups: SidebarItems = [
   },
 
   {
-    label: 'How Nx works',
-    collapsed: true,
-    items: [
-      { label: 'Mental model', link: 'concepts/mental-model' },
-      { label: 'How caching works', link: 'concepts/how-caching-works' },
-      {
-        label: 'Task pipeline configuration',
-        link: 'concepts/task-pipeline-configuration',
-      },
-      {
-        label: 'Types of configuration',
-        link: 'concepts/types-of-configuration',
-      },
-      { label: 'Nx plugins', link: 'concepts/nx-plugins' },
-      {
-        label: 'Building blocks of fast CI',
-        link: 'concepts/ci-concepts/building-blocks-fast-ci',
-      },
-      {
-        label: 'Parallelization and distribution',
-        link: 'concepts/ci-concepts/parallelization-distribution',
-      },
-    ],
-  },
-  {
-    label: 'Platform features',
+    label: 'Core features',
     collapsed: true,
     items: [
       { label: 'Run tasks', link: 'features/run-tasks' },
@@ -147,80 +123,6 @@ const learnGroups: SidebarItems = [
                 link: 'guides/enforce-module-boundaries/tags-allow-list',
               },
             ],
-          },
-        ],
-      },
-      {
-        label: 'Orchestration & CI',
-        collapsed: true,
-        items: [
-          {
-            label: 'Overview',
-            link: 'features/ci-features',
-          },
-          { label: 'Affected', link: 'features/ci-features/affected' },
-          {
-            label: 'Remote caching',
-            link: 'features/ci-features/remote-cache',
-          },
-          {
-            label: 'Self-healing CI',
-            link: 'features/ci-features/self-healing-ci',
-          },
-          { label: 'Flaky tasks', link: 'features/ci-features/flaky-tasks' },
-          {
-            label: 'Distribute task execution (Nx Agents)',
-            link: 'features/ci-features/distribute-task-execution',
-          },
-          {
-            label: 'Split E2E tasks',
-            link: 'features/ci-features/split-e2e-tasks',
-          },
-          {
-            label: 'Dynamically allocate agents',
-            link: 'features/ci-features/dynamic-agents',
-          },
-          {
-            label: 'Optimize your TTG',
-            link: 'guides/nx-cloud/optimize-your-ttg',
-          },
-          {
-            label: 'Record commands',
-            link: 'guides/nx-cloud/record-commands',
-          },
-          {
-            label: 'GitHub integration',
-            link: 'features/ci-features/github-integration',
-          },
-          {
-            label: 'CIPE affected project graph',
-            link: 'guides/nx-cloud/cipe-affected-project-graph',
-          },
-          { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
-          { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
-          {
-            label: 'Resource usage',
-            link: 'features/ci-features/resource-usage',
-          },
-          {
-            label: 'Dedicated compute cluster',
-            link: 'features/ci-features/dedicated-compute-cluster',
-          },
-          {
-            label: 'Sandboxing',
-            link: 'features/ci-features/sandboxing',
-          },
-          {
-            label: 'Docker layer caching',
-            link: 'features/ci-features/docker-layer-caching',
-          },
-          {
-            label: 'Docker read-through cache',
-            link: 'features/ci-features/docker-read-through-cache',
-          },
-          {
-            label: 'npm read-through cache',
-            link: 'features/ci-features/npm-read-through-cache',
           },
         ],
       },
@@ -401,6 +303,32 @@ const learnGroups: SidebarItems = [
       },
     ],
   },
+  {
+    label: 'CI features',
+    collapsed: true,
+    items: [
+      {
+        label: 'CI Overview (Nx Cloud)',
+        link: 'features/ci-features',
+      },
+      {
+        label: 'Run affected tasks',
+        link: 'features/ci-features/affected',
+      },
+      {
+        label: 'Remote caching',
+        link: 'features/ci-features/remote-cache',
+      },
+      {
+        label: 'Distribute task execution (workers)',
+        link: 'features/ci-features/distribute-task-execution',
+      },
+      {
+        label: 'Self-healing CI',
+        link: 'features/ci-features/self-healing-ci',
+      },
+    ],
+  },
 ];
 
 const technologiesGroups: SidebarItems = [
@@ -498,6 +426,10 @@ const technologiesGroups: SidebarItems = [
             link: 'technologies/build-tools/rollup/introduction',
           },
           {
+            label: 'Rolldown',
+            link: 'technologies/build-tools/rolldown/introduction',
+          },
+          {
             label: 'ESBuild',
             link: 'technologies/build-tools/esbuild/introduction',
           },
@@ -576,6 +508,10 @@ const referenceGroups: SidebarItems = [
       { label: 'Nx MCP', link: 'reference/nx-mcp' },
       { label: 'Nx Console settings', link: 'reference/nx-console-settings' },
       { label: 'Nx Cloud CLI', link: 'reference/nx-cloud-cli' },
+      {
+        label: 'Nx Cloud Public API',
+        link: 'reference/nx-cloud/public-api',
+      },
       {
         label: 'CI configuration file',
         link: 'reference/nx-cloud/ci-config',
@@ -681,6 +617,11 @@ const referenceGroups: SidebarItems = [
         label: 'Rollup',
         collapsed: true,
         items: [...getTechnologyAPIItems('rollup', 'build-tools')],
+      },
+      {
+        label: 'Rolldown',
+        collapsed: true,
+        items: [...getTechnologyAPIItems('rolldown', 'build-tools')],
       },
       {
         label: 'ESBuild',

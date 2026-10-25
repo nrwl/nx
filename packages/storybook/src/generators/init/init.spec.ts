@@ -1,20 +1,12 @@
-import {
-  readJson,
-  type NxJsonConfiguration,
-  type Tree,
-  ProjectGraph,
-  updateNxJson,
-  readNxJson,
-} from '@nx/devkit';
-import { findTargetDefault } from '@nx/devkit/internal';
+import { type Tree, ProjectGraph, updateNxJson, readNxJson } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -30,32 +22,16 @@ describe('@nx/storybook:init', () => {
   });
 
   it('should deny the esbuild build script pulled in by storybook', async () => {
-    await withPnpm(tree, '11.2.2', () =>
-      initGenerator(tree, { addPlugin: false })
-    );
+    await withPnpm(tree, '11.2.2', () => initGenerator(tree, {}));
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
       /['"]?esbuild['"]?: false/
     );
   });
 
-  it('should add build-storybook to cacheable operations if NX_ADD_PLUGINS=false', async () => {
-    await initGenerator(tree, {
-      addPlugin: false,
-    });
-    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    const buildStorybookDefault = findTargetDefault(nxJson.targetDefaults, {
-      target: 'build-storybook',
-    });
-    expect(buildStorybookDefault?.cache).toEqual(true);
-    delete process.env.NX_ADD_PLUGINS;
-  });
-
   it('should add storybook-static to .gitignore', async () => {
     tree.write('.gitignore', '');
-    await initGenerator(tree, {
-      addPlugin: true,
-    });
+    await initGenerator(tree, {});
     expect(tree.read('.gitignore', 'utf-8')).toContain('storybook-static');
   });
 
@@ -68,9 +44,7 @@ describe('@nx/storybook:init', () => {
     node_modules
   `
     );
-    await initGenerator(tree, {
-      addPlugin: true,
-    });
+    await initGenerator(tree, {});
     expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
   });
 
@@ -86,9 +60,7 @@ describe('@nx/storybook:init', () => {
     updateNxJson(tree, nxJson);
 
     // ACT
-    await initGenerator(tree, {
-      addPlugin: false,
-    });
+    await initGenerator(tree, {});
 
     // ASSERT
     const updatedNxJson = readNxJson(tree);

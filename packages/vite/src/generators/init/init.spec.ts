@@ -8,15 +8,16 @@ import {
   stripIndents,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));
@@ -41,22 +42,20 @@ describe('@nx/vite:init', () => {
         { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
-      await initGenerator(tree, {
-        addPlugin: true,
-      });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
     });
 
     it('should default to vite 8 when no vite is installed', async () => {
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^8.0.0');
     });
 
     it('should default to vite 7 when an older esbuild is already installed', async () => {
-      const warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {
+      const warnSpy = vi.spyOn(output, 'warn').mockImplementation(() => {
         // no-op
       });
       updateJson(tree, 'package.json', (json) => {
@@ -64,7 +63,7 @@ describe('@nx/vite:init', () => {
         return json;
       });
 
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
       expect(packageJson.devDependencies['esbuild']).toEqual('^0.19.2');
@@ -83,7 +82,7 @@ describe('@nx/vite:init', () => {
         json.devDependencies = { vite: '^7.0.0' };
         return json;
       });
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
     });
@@ -93,7 +92,7 @@ describe('@nx/vite:init', () => {
         json.devDependencies = { vite: '^7.8.0' };
         return json;
       });
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       // Should stay on v7, not get bumped to v8
       expect(packageJson.devDependencies['vite']).toMatch(/^\^7\./);
@@ -104,13 +103,13 @@ describe('@nx/vite:init', () => {
         json.devDependencies = { vite: '^6.0.0' };
         return json;
       });
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^6.0.0');
     });
 
     it('should use vite 7 when useViteV7 flag is set', async () => {
-      await initGenerator(tree, { addPlugin: true, useViteV7: true });
+      await initGenerator(tree, { useViteV7: true });
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['vite']).toEqual('^7.0.0');
     });
@@ -120,7 +119,7 @@ describe('@nx/vite:init', () => {
         json.devDependencies = { vite: '^7.1.3' };
         return json;
       });
-      await initGenerator(tree, { addPlugin: true });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
       // Should stay on v7, not bump to v8
       expect(packageJson.devDependencies['vite']).toMatch(/^\^7\./);
@@ -135,9 +134,7 @@ describe('@nx/vite:init', () => {
         return json;
       });
 
-      await initGenerator(tree, {
-        addPlugin: true,
-      });
+      await initGenerator(tree, {});
 
       const nxJson = readNxJson(tree);
 
@@ -155,6 +152,14 @@ describe('@nx/vite:init', () => {
             ],
           },
           "plugins": [
+            {
+              "options": {
+                "typecheck": {
+                  "targetName": "typecheck",
+                },
+              },
+              "plugin": "@nx/js/typescript",
+            },
             {
               "options": {
                 "buildDepsTargetName": "build-deps",
@@ -182,7 +187,7 @@ describe('@nx/vite:init', () => {
     });
   });
 
-  it('should add nxViteTsPaths plugin to vite config files when setupPathsPlugin is set to true', async () => {
+  it('should enable native paths resolution when setupPathsPlugin is set to true', async () => {
     tree.write(
       'proj/vite.config.ts',
       stripIndents`
@@ -194,16 +199,17 @@ describe('@nx/vite:init', () => {
     );
 
     await initGenerator(tree, {
-      addPlugin: true,
       setupPathsPlugin: true,
     });
 
     expect(tree.read('proj/vite.config.ts').toString()).toMatchInlineSnapshot(`
       "import { defineConfig } from 'vite';
       import react from '@vitejs/plugin-react';
-      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       export default defineConfig({
-        plugins: [react(), nxViteTsPaths()],
+        resolve: {
+          tsconfigPaths: true,
+        },
+        plugins: [react()],
       });
       "
     `);
@@ -397,5 +403,48 @@ vite.config.*.timestamp*`
         ],
       }
     `);
+  });
+  it('should use the selected Vite version when setting up paths', async () => {
+    tree.write(
+      'vite.config.ts',
+      "import { defineConfig } from 'vite'; export default defineConfig({});"
+    );
+    await initGenerator(tree, { setupPathsPlugin: true, useViteV7: true });
+    expect(readJson(tree, 'package.json').devDependencies.vite).toBe('^7.0.0');
+    const config = tree.read('vite.config.ts', 'utf-8');
+    expect(config).toContain("import tsconfigPaths from 'vite-tsconfig-paths'");
+    expect(config).toContain('tsconfigPaths({ loose: true })');
+    expect(config).not.toContain('tsconfigPaths: true');
+  });
+
+  it('should register @nx/js/typescript for typecheck outside a TS solution setup', async () => {
+    await initGenerator(tree, {});
+
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+  });
+
+  it('should register @nx/js/typescript in a TS solution setup', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    tree.write('pnpm-workspace.yaml', `packages:\n  - 'packages/*'\n`);
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+
+    await initGenerator(tree, {});
+
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/js/typescript' })
+    );
   });
 });

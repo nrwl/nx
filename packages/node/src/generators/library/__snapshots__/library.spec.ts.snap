@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib not nested should update configuration 1`] = `
+exports[`lib > not nested > should update configuration 1`] = `
 "module.exports = {
   displayName: 'my-lib',
   preset: '../jest.preset.js',

@@ -23,7 +23,7 @@ describe('nx release - deleted project affectedness', () => {
     runCLI(`generate @nx/workspace:npm-package ${releasedPackageB}`);
     runCLI(`generate @nx/workspace:npm-package ${retiredPackage}`);
 
-    runCommand('git config user.email "test@test.com"');
+    runCommand('git config user.email "test@users.noreply.github.com"');
     runCommand('git config user.name "Test"');
 
     updateJson('nx.json', () => ({

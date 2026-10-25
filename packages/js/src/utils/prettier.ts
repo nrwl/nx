@@ -63,7 +63,7 @@ export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrett
 
 export function generatePrettierSetup(
   tree: Tree,
-  options: { skipPackageJson?: boolean }
+  options: { skipPackageJson?: boolean; keepExistingVersions?: boolean }
 ): GeneratorCallback {
   assertNxSupportsFormatters();
 
@@ -100,7 +100,13 @@ export function generatePrettierSetup(
 
   return options.skipPackageJson
     ? () => {}
-    : addDependenciesToPackageJson(tree, {}, { prettier: prettierVersion });
+    : addDependenciesToPackageJson(
+        tree,
+        {},
+        { prettier: prettierVersion },
+        undefined,
+        options.keepExistingVersions ?? true
+      );
 }
 
 export async function resolvePrettierConfigPath(

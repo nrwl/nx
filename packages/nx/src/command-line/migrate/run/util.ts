@@ -1,6 +1,5 @@
-// Internal to run/: deliberately not re-exported from ./index.
-
 import { createHash } from 'crypto';
+import { needsShellQuoting, quoteShellArg } from '../../../utils/shell-quoting';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -11,9 +10,11 @@ import {
   runInstall,
 } from '../execute-migration';
 import type { MigrateOutputSink } from '../deferred-output';
-import type { MigrateStep } from './run-state';
+import type { CommitFailureRecovery } from '../migrate-commits';
+import { runKind, type MigrateRunState, type MigrateStep } from './run-state';
 import { updateRunState } from './state-lock';
 import { warnToAgent } from './agent-output';
+import { hasLineBreak } from '../text';
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -50,6 +51,9 @@ export function depsHash(root: string): string | null {
  * dispense-time probe failed has no baseline, which says the dependencies it
  * started from are unknown rather than unchanged, and skipping there would
  * strand the change with nothing left to detect it.
+ *
+ * A failed or died step whose install already failed settles without it, so
+ * the settle cannot hang on that install again. A retry's rearm drops the mark.
  */
 export async function installDepsChangedSinceDispense(
   root: string,
@@ -59,6 +63,12 @@ export async function installDepsChangedSinceDispense(
   rerunCommand?: string,
   sink?: MigrateOutputSink
 ): Promise<void> {
+  if (
+    step.installFailed === true &&
+    (step.status === 'failed' || step.status === 'died')
+  ) {
+    return;
+  }
   const current = depsHash(root);
   if (current !== null && current === step.depsHashAtDispense) return;
   if (skipInstall) {
@@ -138,13 +148,40 @@ export function summarizeError(e: unknown): string {
   return firstLine.length > 200 ? `${firstLine.slice(0, 197)}...` : firstLine;
 }
 
+// A `--run-migration` run has no later migration step to absorb the diff.
+export function commitFailureRecovery(
+  state: MigrateRunState
+): CommitFailureRecovery {
+  const kind = runKind(state);
+  switch (kind) {
+    case 'single':
+      return 'manual';
+    case 'active':
+    case 'finished':
+      return 'later-step';
+    default: {
+      const unhandled: never = kind;
+      throw new Error(`Unhandled migrate run kind: ${unhandled}`);
+    }
+  }
+}
+
+const UNCOMMITTED_CHANGES_FATE: Record<CommitFailureRecovery, string> = {
+  'later-step': ' for a later commit to absorb',
+  manual: '',
+};
+
 // The commit helper reports its own failures via the result status and logs
 // the details itself; `cause` is set only when the attempt threw instead
 // (the pre-commit dependency install), which nothing else has logged.
-export function warnCommitFailed(name: string, cause?: unknown): void {
+export function warnCommitFailed(
+  name: string,
+  recovery: CommitFailureRecovery,
+  cause?: unknown
+): void {
   const causeText = cause === undefined ? '' : ` (${summarizeError(cause)})`;
   warnToAgent({
-    title: `The commit for ${name} could not be created${causeText}; its changes remain in the working tree for a later commit to absorb.`,
+    title: `The commit for ${name} could not be created${causeText}; its changes remain in the working tree${UNCOMMITTED_CHANGES_FATE[recovery]}.`,
   });
 }
 
@@ -166,6 +203,26 @@ function pmCommands(root: string): ReturnType<typeof getPackageManagerCommand> {
 
 export function pmExecPrefix(root: string): string {
   return pmCommands(root).exec;
+}
+
+const DEFAULT_MIGRATIONS_FILE = 'migrations.json';
+
+// The --run-migrations flag a rendered command repeats; null when the path
+// cannot go out as a one-line command for this shell. On Windows the paste
+// target may be cmd.exe or PowerShell, whose quoting and expansion conflict
+// (`%VAR%` expands in cmd, `$(...)` runs in PowerShell).
+export function runMigrationsFlag(migrationsPath: string): string | null {
+  if (migrationsPath === DEFAULT_MIGRATIONS_FILE) {
+    return '--run-migrations';
+  }
+  if (hasLineBreak(migrationsPath)) {
+    return null;
+  }
+  const arg = `--run-migrations=${migrationsPath}`;
+  if (process.platform !== 'win32') {
+    return quoteShellArg(arg);
+  }
+  return !needsShellQuoting(arg) && !/[%^]/.test(arg) ? arg : null;
 }
 
 export function pmInstallCommand(root: string): string {

@@ -3,13 +3,14 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import {
   IS_WASM,
-  getIoSnapshotDeferredTaskIds,
-  type IoSnapshots,
+  getUltracacheDeferredTaskIds,
+  type UltracacheConfigurations,
   TaskDetails,
 } from '../native';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { getTaskSpecificEnv } from '../tasks-runner/task-env';
+// TODO(v25): remove custom hasher support.
 import { getCustomHasher } from '../tasks-runner/utils';
 import { getDbConnection } from '../utils/db-connection';
 import { getInputs, TaskHasher } from './task-hasher';
@@ -33,18 +34,19 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   tasksDetails: TaskDetails | null,
-  ioSnapshots?: IoSnapshots
-) {
+  ultracacheConfigurations?: UltracacheConfigurations
+): Promise<Set<string>> {
   performance.mark('hashMultipleTasks:start');
 
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // A snapshot can make a task depend on producer outputs its declared
+  // An Ultracache configuration can make a task depend on producer outputs its declared
   // inputs never mentioned; those hash after their producers too.
-  const deferredBySnapshot = ioSnapshots
-    ? new Set(getIoSnapshotDeferredTaskIds(ioSnapshots, taskGraph))
+  const deferredByConfiguration = ultracacheConfigurations
+    ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
+  // TODO(v25): remove custom hasher support.
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
       const customHasher = getCustomHasher(task, projects);
@@ -60,7 +62,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     .filter(
       ({ task, customHasher }) =>
         !customHasher &&
-        !deferredBySnapshot?.has(task.id) &&
+        !deferredByConfiguration?.has(task.id) &&
         !readsDependencyOutputs(task, taskGraph, projectGraph, nxJson)
     )
     .map((t) => t.task);
@@ -104,6 +106,8 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
+
+  return new Set(tasks.filter((t) => !(t.id in hashes)).map((t) => t.id));
 }
 
 function readsDependencyOutputs(
@@ -130,6 +134,7 @@ export async function hashTask(
 
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
+  // TODO(v25): remove custom hasher support.
   const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
   const { value, details, inputs } = await (customHasher
@@ -197,6 +202,7 @@ export async function hashTasks(
     (task) => !task.hash
   );
 
+  // TODO(v25): remove custom hasher support.
   // Separate tasks with custom hashers from those without
   const tasksWithCustomHashers: Task[] = [];
   const tasksWithoutCustomHashers: Task[] = [];

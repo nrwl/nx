@@ -48,7 +48,7 @@ describe('forEachExecutorOptions', () => {
   });
 
   it('should call a function for all options', () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
 
     forEachExecutorOptions(tree, 'builder1', callback);
 

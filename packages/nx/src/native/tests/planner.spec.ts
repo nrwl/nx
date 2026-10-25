@@ -6,9 +6,9 @@ import {
   closeDbConnection,
   connectToNxDb,
   HashPlanner,
-  IoSnapshotStore,
-  getIoSnapshotDeferredTaskIds,
-  getIoSnapshotReport,
+  UltracacheConfigurationStore,
+  getUltracacheDeferredTaskIds,
+  getUltracacheReport,
   TaskHasher,
   testOnlyTransferFileMap,
   transferProjectGraph,
@@ -16,7 +16,8 @@ import {
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
-import { transformProjectGraphForRust } from '../transform-objects';
+import { toRustProjectGraph } from '../transform-objects';
+import { getUltracacheSettings } from '../../ultracache/overrides';
 import { DependencyType } from '../../config/project-graph';
 
 let tempFs = new TempFs('task-planner');
@@ -105,9 +106,7 @@ describe('task planner', () => {
 
       let nxJson = {} as any;
 
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       const planner = new HashPlanner(nxJson as any, ref);
 
       const plans = planner.getPlans(['parent:build'], taskGraph);
@@ -135,6 +134,78 @@ describe('task planner', () => {
     });
   });
 
+  describe('project selections with dependencies', () => {
+    function plansFor(e2eInputs: any[]) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        app: [{ file: 'libs/app/index.ts', hash: 'a.hash' }],
+        feature: [{ file: 'libs/feature/index.ts', hash: 'b.hash' }],
+      });
+      const lib = (name: string, inputs?: any[]) =>
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root: `libs/${name}`,
+            targets: { build: { executor: 'nx:run-commands', inputs } },
+          },
+        });
+      builder.addNode({
+        name: 'e2e',
+        type: 'app',
+        data: {
+          root: 'apps/e2e',
+          targets: { e2e: { executor: 'nx:run-commands', inputs: e2eInputs } },
+        },
+      });
+      lib('app', ['^default']);
+      lib('feature');
+      lib('util');
+      builder.addStaticDependency('app', 'feature', 'libs/app/index.ts');
+      builder.addStaticDependency('feature', 'util', 'libs/feature/index.ts');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e', 'app'],
+        ['e2e', 'build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
+      const plans = new HashPlanner({} as any, ref).getPlans(
+        ['e2e:e2e', 'app:build'],
+        taskGraph
+      );
+      const fileSets = (plan: string[]) =>
+        plan.filter((i) => /^[a-z]+:libs\//.test(i));
+      return {
+        e2e: fileSets(plans['e2e:e2e']),
+        app: fileSets(plans['app:build']),
+      };
+    }
+
+    it("hashes the selected projects' dependencies as their own ^ input does", () => {
+      const { e2e, app } = plansFor([
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual(['feature:libs/feature/**/*', 'util:libs/util/**/*']);
+      expect(e2e).toEqual(app);
+    });
+
+    it('covers the selected projects too when paired with the plain selection', () => {
+      const { e2e } = plansFor([
+        { input: 'default', projects: ['app'] },
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual([
+        'app:libs/app/**/*',
+        'feature:libs/feature/**/*',
+        'util:libs/util/**/*',
+      ]);
+    });
+  });
+
   describe('includeIgnored filesets', () => {
     function planFor(inputs: any[], namedInputs?: Record<string, any[]>) {
       const builder = new ProjectGraphBuilder();
@@ -157,9 +228,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return new HashPlanner({} as any, ref).getPlans(
         ['parent:build'],
         taskGraph
@@ -260,9 +329,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return (order: string[]) =>
         new HashPlanner({} as any, ref).getPlans(order, taskGraph);
     }
@@ -302,9 +369,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       return new HashPlanner({} as any, ref).getPlans(['a:build'], taskGraph);
     }
 
@@ -385,9 +450,7 @@ describe('task planner', () => {
         {},
         false
       );
-      const ref = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
-      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
       const plans = new HashPlanner({} as any, ref).getPlans(
         ['a:build'],
         taskGraph
@@ -569,7 +632,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
 
@@ -633,7 +696,7 @@ describe('task planner', () => {
     } as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
 
@@ -705,7 +768,7 @@ describe('task planner', () => {
 
       const planner = new HashPlanner(
         nxJson,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -782,7 +845,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -852,7 +915,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:e2e'], taskGraph);
 
@@ -907,7 +970,7 @@ describe('task planner', () => {
     } as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -982,7 +1045,7 @@ describe('task planner', () => {
 
         const planner = new HashPlanner(
           nxJson as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1052,7 +1115,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1096,7 +1159,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1146,7 +1209,7 @@ describe('task planner', () => {
     let nxJson = {} as any;
     const planner = new HashPlanner(
       nxJson,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const taskIds = Object.keys(taskGraph.tasks);
 
@@ -1186,9 +1249,7 @@ describe('task planner', () => {
       {}
     );
     let nxJson = {} as any;
-    const transformed = transferProjectGraph(
-      transformProjectGraphForRust(projectGraph)
-    );
+    const transformed = transferProjectGraph(toRustProjectGraph(projectGraph));
     const planner = new HashPlanner(nxJson as any, transformed);
 
     const plans = planner.getPlans(['app:build'], taskGraph);
@@ -1263,7 +1324,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {},
-        transferProjectGraph(transformProjectGraphForRust(graph))
+        transferProjectGraph(toRustProjectGraph(graph))
       );
       const plan = planner.getPlans(['app:build'], tasks)['app:build'];
       expect(
@@ -1298,7 +1359,7 @@ describe('task planner', () => {
           },
           [{ file: 'nx.json', hash: 'nx-json-hash' }]
         );
-        const transformed = transformProjectGraphForRust(graph);
+        const transformed = toRustProjectGraph(graph);
         if (changes.acyclic) {
           transformed.dependencies.child =
             transformed.dependencies.child.filter((dep) => dep !== 'app');
@@ -1401,7 +1462,7 @@ describe('task planner', () => {
     };
     const planner = new HashPlanner(
       nxJson as any,
-      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+      transferProjectGraph(toRustProjectGraph(projectGraph))
     );
     const plans = planner.getPlans(['parent:build'], taskGraph);
     // {projectRoot} should be interpolated to 'libs/parent', so the workspace fileset
@@ -1517,7 +1578,7 @@ describe('task planner', () => {
       });
 
       const transformed = transferProjectGraph(
-        transformProjectGraphForRust(projectGraph)
+        toRustProjectGraph(projectGraph)
       );
       const planner = new HashPlanner(nxJson, transformed);
 
@@ -1566,14 +1627,14 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
       // The dependency serving this task runs in its own process, so only its
       // declared inputs can stand in for what it reads.
-      expect(taskGraph.continuousDependencies['parent:test']).toContain(
-        'child:serve'
-      );
+      expect(taskGraph.continuousDependencies['parent:test']).toContainEqual({
+        id: 'child:serve',
+      });
       expect(
         planner.getPlans(['parent:test'], taskGraph)['parent:test']
       ).toContain('child:libs/child/**/*');
@@ -1636,12 +1697,12 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
-      expect(taskGraph.continuousDependencies['child:serve']).toContain(
-        'grandchild:serve'
-      );
+      expect(taskGraph.continuousDependencies['child:serve']).toContainEqual({
+        id: 'grandchild:serve',
+      });
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(plan).toContain('child:libs/child/**/*');
       expect(plan).toContain('grandchild:libs/grandchild/**/*');
@@ -1702,7 +1763,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       return { planner, taskGraph };
     }
@@ -1763,7 +1824,7 @@ describe('task planner', () => {
     it('terminates on a cycle of continuous dependencies and hashes each server once', () => {
       const { planner, taskGraph } = servedBy({});
       // child:serve is (nonsensically) served by parent:test, closing a loop.
-      taskGraph.continuousDependencies['child:serve'] = ['parent:test'];
+      taskGraph.continuousDependencies['child:serve'] = [{ id: 'parent:test' }];
 
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(
@@ -1831,7 +1892,7 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
@@ -1842,9 +1903,12 @@ describe('task planner', () => {
       }
     });
   });
-  describe('io snapshots', () => {
+  describe('ultracache configurations', () => {
     function fixture(
-      opts: { cyclic?: boolean; extraParentInputs?: unknown[] } = {}
+      opts: {
+        cyclic?: boolean;
+        extraParentInputs?: unknown[];
+      } = {}
     ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
@@ -1880,7 +1944,6 @@ describe('task planner', () => {
         type: 'lib',
         data: {
           root: 'libs/child',
-          // The child's own negation must scope to the child's reads.
           namedInputs: { prod: ['default', '!{workspaceRoot}/**/*.md'] },
           targets: {
             build: {
@@ -1908,7 +1971,7 @@ describe('task planner', () => {
       } as any;
       const planner = new HashPlanner(
         nxJson,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       return { planner, taskGraph, projectGraph };
     }
@@ -1917,22 +1980,29 @@ describe('task planner', () => {
     function withContinuousDependency(taskGraph: any) {
       return {
         ...taskGraph,
-        continuousDependencies: { 'parent:build': ['child:build'] },
+        tasks: {
+          ...taskGraph.tasks,
+          'child:build': {
+            ...taskGraph.tasks['child:build'],
+            continuous: true,
+          },
+        },
+        continuousDependencies: { 'parent:build': [{ id: 'child:build' }] },
       };
     }
 
-    const snapshotDbDir = join(
+    const configurationDbDir = join(
       tmpdir(),
-      `nx-planner-io-snapshots-${process.pid}-${Date.now()}`
+      `nx-planner-ultracache-${process.pid}-${Date.now()}`
     );
-    const snapshotDb = connectToNxDb(snapshotDbDir, 'io-snapshots');
+    const configurationDb = connectToNxDb(configurationDbDir, 'ultracache');
     afterAll(() => {
-      closeDbConnection(snapshotDb);
-      rmSync(snapshotDbDir, { recursive: true, force: true });
+      closeDbConnection(configurationDb);
+      rmSync(configurationDbDir, { recursive: true, force: true });
     });
     let setCount = 0;
     /** Stores a set with the given entries and loads it as the daemon would. */
-    function snapshotsFor(
+    function configurationsFor(
       entries: Record<
         string,
         {
@@ -1942,9 +2012,9 @@ describe('task planner', () => {
       >
     ) {
       const commit = `c${setCount++}`.padEnd(40, 'c');
-      new IoSnapshotStore(snapshotDb).import({
+      new UltracacheConfigurationStore(configurationDb).import({
         requestedCommit: commit,
-        snapshotsJson: JSON.stringify(
+        configurationsJson: JSON.stringify(
           Object.fromEntries(
             Object.entries(entries).map(([id, e]) => [
               id,
@@ -1957,13 +2027,10 @@ describe('task planner', () => {
           )
         ),
       });
-      return new IoSnapshotStore(snapshotDb).get(commit);
+      return new UltracacheConfigurationStore(configurationDb).get(commit);
     }
 
-    const PARENT_NEG = '!libs/parent/**/*.spec.ts';
-    const CHILD_NEG = '!**/*.md';
-
-    it('leaves plans byte-identical when no task has a snapshot', () => {
+    it('leaves plans byte-identical when no task has an Ultracache configuration', () => {
       const { planner, taskGraph } = fixture();
       const plain = planner.getPlans(['parent:build'], taskGraph);
       expect(plain['parent:build']).toEqual(
@@ -1977,13 +2044,13 @@ describe('task planner', () => {
         ])
       );
       expect(
-        planner.getPlans(['parent:build'], taskGraph, snapshotsFor({}))
+        planner.getPlans(['parent:build'], taskGraph, configurationsFor({}))
       ).toEqual(plain);
       expect(
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({ 'child:build': {} })
+          configurationsFor({ 'child:build': {} })
         )['parent:build']
       ).toEqual(plain['parent:build']);
       expect(plain['parent:build']).not.toContainEqual(
@@ -1991,14 +2058,14 @@ describe('task planner', () => {
       );
     });
 
-    it("marks a task with the digest of its own writes, so another task's snapshot does not move it", () => {
+    it('marks a task by its own ultracache settings, so no configuration moves it', () => {
       const { planner, taskGraph } = fixture();
-      const planFor = (snapshots: ReturnType<typeof snapshotsFor>) =>
-        planner.getPlans(['parent:build'], taskGraph, snapshots)[
+      const planFor = (configurations: ReturnType<typeof configurationsFor>) =>
+        planner.getPlans(['parent:build'], taskGraph, configurations)[
           'parent:build'
         ];
-      const marker = (snapshots: ReturnType<typeof snapshotsFor>) =>
-        planFor(snapshots).find((i) => i.startsWith('io-snapshot:'));
+      const marker = (configurations: ReturnType<typeof configurationsFor>) =>
+        planFor(configurations).find((i) => i.startsWith('io-snapshot:'));
       const base = {
         'parent:build': {
           inputs: ['libs/parent/filea.ts'],
@@ -2006,15 +2073,15 @@ describe('task planner', () => {
         },
         'child:build': { inputs: ['libs/child/fileb.ts'] },
       };
-      const same = marker(snapshotsFor(base));
+      const same = marker(configurationsFor(base));
       const childChanged = marker(
-        snapshotsFor({
+        configurationsFor({
           ...base,
           'child:build': { inputs: ['libs/child/other.ts'] },
         })
       );
       const parentWroteMore = marker(
-        snapshotsFor({
+        configurationsFor({
           ...base,
           'parent:build': {
             ...base['parent:build'],
@@ -2022,7 +2089,7 @@ describe('task planner', () => {
           },
         })
       );
-      const parentReadOther = snapshotsFor({
+      const parentReadOther = configurationsFor({
         ...base,
         'parent:build': {
           ...base['parent:build'],
@@ -2032,31 +2099,47 @@ describe('task planner', () => {
 
       expect(same).toMatch(/^io-snapshot:\d+$/);
       expect(childChanged).toBe(same);
-      expect(parentWroteMore).not.toBe(same);
+      // Outputs come from the declaration, so recorded writes don't count.
+      expect(parentWroteMore).toBe(same);
       // The reads are hashed as the file group they become, so they move the
       // plan without moving the digest — hashing them here too would make a
       // read the plan drops, or one naming a missing file, move the key.
       expect(marker(parentReadOther)).toBe(same);
-      expect(planFor(parentReadOther)).not.toEqual(planFor(snapshotsFor(base)));
+      expect(planFor(parentReadOther)).not.toEqual(
+        planFor(configurationsFor(base))
+      );
     });
 
-    it('keeps a negation only when every visit of the project declares it', () => {
-      const read = snapshotsFor({
-        'parent:build': { inputs: ['libs/child/readme.md'] },
+    it('hashes observed reads that declared negations exclude', () => {
+      const { planner, taskGraph } = fixture();
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurationsFor({
+          'parent:build': {
+            inputs: ['libs/child/readme.md', 'libs/parent/a.spec.ts'],
+          },
+        })
+      )['parent:build'];
+      expect(plan).toContain('files:[libs/child/readme.md]');
+      expect(plan).toContain('files:[libs/parent/a.spec.ts]');
+    });
+
+    it("keeps an always input's declared files", () => {
+      const read = configurationsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      const groupFor = (extraParentInputs?: unknown[]) => {
-        const { planner, taskGraph } = fixture({ extraParentInputs });
-        return planner
-          .getPlans(['parent:build'], taskGraph, read)
-          ['parent:build'].find((entry) => entry.includes('readme.md'));
+      const planWith = (always: boolean) => {
+        const { planner, taskGraph } = fixture({
+          extraParentInputs: [{ input: 'prod', projects: ['child'], always }],
+        });
+        return planner.getPlans(['parent:build'], taskGraph, read)[
+          'parent:build'
+        ];
       };
 
-      // Only ^prod visits the child, and it excludes markdown.
-      expect(groupFor()).toBe(`files:[libs/child/readme.md,${CHILD_NEG}]`);
-      // A second visit hashes the child's markdown natively, so the read stays.
-      expect(groupFor([{ input: 'default', projects: ['child'] }])).toBe(
-        'files:[libs/child/readme.md]'
-      );
+      expect(planWith(false)).not.toContain('child:libs/child/**/*');
+      expect(planWith(true)).toContain('child:libs/child/**/*');
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
@@ -2064,48 +2147,45 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         withContinuousDependency(taskGraph),
-        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+        configurationsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+        })
       )['parent:build'];
 
-      // The task keeps its own snapshot precision and additionally hashes what
+      // The task keeps its own configuration's precision and additionally hashes what
       // the dependency serving it reads, which no trace of this task can see.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:/));
       expect(plan).toContain('child:libs/child/**/*');
     });
 
-    it('hashes a continuous dependency from its own snapshot when it has one', () => {
+    it('hashes a continuous dependency from its declared inputs even when it has a configuration', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
         withContinuousDependency(taskGraph),
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
-          'child:build': {
-            inputs: ['libs/child/src/index.ts'],
-            outputs: ['dist/libs/child'],
-          },
+          'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
 
-      expect(plan).not.toContain('child:libs/child/**/*');
-      expect(plan).toContainEqual(
+      expect(plan).toContain('child:libs/child/**/*');
+      expect(plan).not.toContainEqual(
         expect.stringMatching(/^files:\[libs\/child\/src\/index\.ts[,\]]/)
       );
-      // Its marker joins the task's, so its outputs and exclusions count too
-      // (identical digests would share one).
       expect(
         plan.filter((entry) => entry.startsWith('io-snapshot:'))
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
 
-    it('keeps the declared inputs of a continuous dependency of a task that opted out of backfill', () => {
+    it('keeps the declared inputs of a continuous dependency of a task whose ultracache mode is not on', () => {
       const { planner, taskGraph } = fixture();
       const graph = withContinuousDependency(taskGraph);
-      graph.tasks['parent:build'].sandbox = { backfill: false };
+      graph.tasks['parent:build'].ultracache = { mode: 'warn' };
       const plan = planner.getPlans(
         ['parent:build'],
         graph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
           'child:build': { inputs: ['libs/child/src/index.ts'] },
         })
@@ -2115,12 +2195,12 @@ describe('task planner', () => {
       expect(plan).not.toContainEqual(expect.stringMatching(/^io-snapshot:/));
     });
 
-    it('replaces declared filesets (self and dependency) with one files group per owning project, each with its own negations', () => {
+    it('replaces declared filesets (self and dependency) with one files group per owning project', () => {
       const { planner, taskGraph } = fixture();
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'docs/readme.md',
@@ -2132,10 +2212,9 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
-          `files:[libs/child/src/index.ts,${CHILD_NEG}]`,
-          // Reads under no project root belong to the task's own project, so
-          // the dependency's !**/*.md never suppresses docs/readme.md.
-          `files:[docs/readme.md,libs/parent/src/**/*.ts,${PARENT_NEG}]`,
+          'files:[libs/child/src/index.ts]',
+          // Reads under no project root belong to the task's own project.
+          'files:[docs/readme.md,libs/parent/src/**/*.ts]',
           'parent:ProjectConfiguration',
           'child:ProjectConfiguration',
           'env:TESTENV',
@@ -2161,7 +2240,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/parent/package.json', 'tsconfig.base.json'],
           },
@@ -2174,7 +2253,7 @@ describe('task planner', () => {
           'parent:json:libs/parent/package.json[version]',
           // Both files are hashed whole too: the native instructions cover
           // only selected fields and a stripped tsconfig.
-          `files:[libs/parent/package.json,tsconfig.base.json,${PARENT_NEG}]`,
+          'files:[libs/parent/package.json,tsconfig.base.json]',
         ])
       );
     });
@@ -2184,7 +2263,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: [
               'node_modules/foo/index.js',
@@ -2197,9 +2276,7 @@ describe('task planner', () => {
       )['parent:build'];
       // Externals hash resolved versions, not package.json scripts or the
       // rest of the lockfile.
-      expect(plan).toContain(
-        `files:[package.json,tools/x.ts,yarn.lock,${PARENT_NEG}]`
-      );
+      expect(plan).toContain('files:[package.json,tools/x.ts,yarn.lock]');
       expect(plan).toContain('AllExternalDependencies');
       expect(plan).not.toContainEqual(expect.stringMatching(/node_modules/));
     });
@@ -2232,7 +2309,7 @@ describe('task planner', () => {
         );
         const planner = new HashPlanner(
           {} as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         return { planner, taskGraph };
       }
@@ -2265,7 +2342,7 @@ describe('task planner', () => {
           const plan = planner.getPlans(
             ['tools:audit'],
             taskGraph,
-            snapshotsFor({
+            configurationsFor({
               'tools:audit': {
                 inputs: ['package-lock.json', 'tools/audit-deps.js'],
               },
@@ -2294,7 +2371,9 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['tools:audit'],
           taskGraph,
-          snapshotsFor({ 'tools:audit': { inputs: ['tools/audit-deps.js'] } })
+          configurationsFor({
+            'tools:audit': { inputs: ['tools/audit-deps.js'] },
+          })
         )['tools:audit'];
         expect(plan).toContain('files:[tools/audit-deps.js]');
         expect(plan).not.toContainEqual(
@@ -2317,7 +2396,7 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       expect(
         planner.getPlans(['parent:build'], taskGraph)['parent:build']
@@ -2328,7 +2407,9 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({ 'parent:build': { inputs: ['libs/parent/filea.ts'] } })
+        configurationsFor({
+          'parent:build': { inputs: ['libs/parent/filea.ts'] },
+        })
       )['parent:build'];
       expect(plan).toContain('env:MODE');
       expect(plan).not.toContain('child:libs/child/**/*');
@@ -2336,7 +2417,7 @@ describe('task planner', () => {
       expect(plan).not.toContain('**/*.d.ts:dist/libs/child');
     });
 
-    it("keeps a selected project's read that another visit still hashes natively", () => {
+    it("keeps a selected project's read that its declared negation excludes", () => {
       const { taskGraph, projectGraph } = fixture();
       (projectGraph.nodes.parent.data.targets.build as any).inputs.push({
         input: 'selected',
@@ -2350,12 +2431,12 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': {
             inputs: ['libs/child/a.gen.ts', 'libs/child/fileb.ts'],
           },
@@ -2364,8 +2445,6 @@ describe('task planner', () => {
       const childGroup = plan.find((entry) =>
         entry.includes('libs/child/fileb.ts')
       );
-      // ^prod visits the child too and does not exclude *.gen.ts, so natively
-      // a.gen.ts is hashed and the selected input's negation cannot drop it.
       expect(childGroup).toBe(
         'files:[libs/child/a.gen.ts,libs/child/fileb.ts]'
       );
@@ -2399,14 +2478,14 @@ describe('task planner', () => {
         {
           namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
         } as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
       const json = 'child:json:libs/child/package.json[version]';
       const planReading = (inputs: string[]) =>
         planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({ 'parent:build': { inputs } })
+          configurationsFor({ 'parent:build': { inputs } })
         )['parent:build'];
 
       expect(
@@ -2457,7 +2536,7 @@ describe('task planner', () => {
           {
             namedInputs: { prod: ['default', '!{projectRoot}/**/*.spec.ts'] },
           } as any,
-          transferProjectGraph(transformProjectGraphForRust(projectGraph))
+          transferProjectGraph(toRustProjectGraph(projectGraph))
         );
         const declared = planner
           .getPlans(['parent:build'], taskGraph)
@@ -2467,7 +2546,7 @@ describe('task planner', () => {
         const plan = planner.getPlans(
           ['parent:build'],
           taskGraph,
-          snapshotsFor({
+          configurationsFor({
             'parent:build': { inputs: ['libs/child/gen/used.json'] },
           })
         )['parent:build'];
@@ -2479,71 +2558,76 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the snapshot marker when the task's sandbox exclusions change, and only then", () => {
+    it("moves the configuration marker when the task's ignoreReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      const markerWith = (sandbox: object | undefined) => {
-        taskGraph.tasks['parent:build'].sandbox = sandbox;
+      const markerWith = (ultracache: object | undefined) => {
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
         return planner
-          .getPlans(['parent:build'], taskGraph, snapshots)
+          .getPlans(['parent:build'], taskGraph, configurations)
           ['parent:build'].find((entry) => entry.startsWith('io-snapshot:'));
       };
 
       const none = markerWith(undefined);
-      const reads = markerWith({ ignoredReads: ['tmp/**', 'cache/**'] });
+      const reads = markerWith({ ignoreReads: ['tmp/**', 'cache/**'] });
       expect(reads).not.toBe(none);
       // Order means nothing; an empty list is no exclusion.
-      expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
-      expect(markerWith({ ignoredReads: [] })).toBe(none);
-      // Writes shape the recording too, and are told apart from reads.
-      const writes = markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] });
-      expect(writes).not.toBe(none);
-      expect(writes).not.toBe(reads);
+      expect(markerWith({ ignoreReads: ['cache/**', 'tmp/**'] })).toBe(reads);
+      expect(markerWith({ ignoreReads: [] })).toBe(none);
+      // Recorded writes are never used, so their exclusions don't count.
+      expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': {
           inputs: ['dist/libs/child/index.js'],
         },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
-      expect(plan).toContain(`files:[dist/libs/child/index.js,${PARENT_NEG}]`);
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
+      expect(plan).toContain('files:[dist/libs/child/index.js]');
       expect(plan).not.toContainEqual(
         expect.stringMatching(/^dist\/libs\/child\/index\.js:/)
       );
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
     });
 
     it('reports eligibility the same way it plans', () => {
       const { planner, taskGraph } = fixture();
-      const withheld = snapshotsFor({
+      const withheld = configurationsFor({
         'parent:build': { inputs: ['libs/./parent/*.gen'] },
       });
-      const report = getIoSnapshotReport(withheld, taskGraph, {
-        customHasherTaskIds: ['child:build'],
-      });
+      const report = getUltracacheReport(
+        withheld,
+        getUltracacheSettings(taskGraph),
+        {
+          customHasherTaskIds: ['child:build'],
+        }
+      );
       expect(report.used).toEqual([]);
       expect(report.diagnostics.map((d) => [d.reason, d.taskId])).toEqual([
         ['custom-hasher', 'child:build'],
         ['invalid-glob', 'parent:build'],
       ]);
-      expect(getIoSnapshotDeferredTaskIds(withheld, taskGraph)).toEqual([]);
+      expect(getUltracacheDeferredTaskIds(withheld, taskGraph)).toEqual([]);
 
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const negation of ['!', '!libs/parent/[']) {
-        const negated = snapshotsFor({
+        const negated = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts', negation] },
         });
         expect(
-          getIoSnapshotReport(negated, taskGraph).diagnostics
+          getUltracacheReport(negated, getUltracacheSettings(taskGraph))
+            .diagnostics
         ).toContainEqual(
           expect.objectContaining({
             reason: 'invalid-glob',
@@ -2563,43 +2647,48 @@ describe('task planner', () => {
     });
 
     it.each([
-      [{ enabled: false }, 'disabled'],
-      [{ backfill: false }, 'backfill-disabled'],
+      [{ mode: 'off' }, 'disabled'],
+      [{ mode: 'warn' }, 'autofix-disabled'],
+      [{ mode: 'error' }, 'autofix-disabled'],
     ])(
-      'withholds the snapshot from a task whose sandbox is %j',
-      (sandbox, reason) => {
+      'withholds the configuration from a task whose ultracache is %j',
+      (ultracache, reason) => {
         const { planner, taskGraph } = fixture();
         // Read off the task, where the task graph resolved target defaults.
-        taskGraph.tasks['parent:build'].sandbox = sandbox;
-        const snapshots = snapshotsFor({
+        taskGraph.tasks['parent:build'].ultracache = ultracache;
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/filea.ts'] },
         });
         const plain = planner.getPlans(['parent:build'], taskGraph);
         expect(
-          planner.getPlans(['parent:build'], taskGraph, snapshots)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, taskGraph).diagnostics
+          getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
+            .diagnostics
         ).toContainEqual(
           expect.objectContaining({ reason, taskId: 'parent:build' })
         );
       }
     );
 
-    it('hashes a snapshot glob that reads from the workspace root', () => {
+    it('hashes a configuration glob that reads from the workspace root', () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['**/*.gen', 'libs/parent/a.ts'] },
       });
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       expect(plan).toContainEqual(
         expect.stringMatching(/^files:\[\*\*\/\*\.gen,/)
       );
-      expect(getIoSnapshotReport(snapshots, taskGraph).used).toContain(
-        'parent:build'
-      );
+      expect(
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
+          .used
+      ).toContain('parent:build');
     });
 
     it('hashes a task that read nothing from native instructions plus the marker', () => {
@@ -2607,7 +2696,7 @@ describe('task planner', () => {
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({ 'parent:build': {} })
+        configurationsFor({ 'parent:build': {} })
       )['parent:build'];
       expect(plan).toEqual(
         expect.arrayContaining([
@@ -2626,46 +2715,48 @@ describe('task planner', () => {
       expect(plan.filter((i) => i.startsWith('files:'))).toEqual([]);
     });
 
-    it('applies dependency negations on cyclic graphs too (non-memo traversal)', () => {
+    it('replaces dependency filesets on cyclic graphs too (non-memo traversal)', () => {
       const { planner, taskGraph } = fixture({ cyclic: true });
       const plan = planner.getPlans(
         ['parent:build'],
         taskGraph,
-        snapshotsFor({
+        configurationsFor({
           'parent:build': { inputs: ['libs/child/src/index.ts'] },
         })
       )['parent:build'];
-      expect(plan).toContain(`files:[libs/child/src/index.ts,${CHILD_NEG}]`);
+      expect(plan).toContain('files:[libs/child/src/index.ts]');
       expect(plan).not.toContainEqual(expect.stringMatching(/^child:libs\//));
     });
 
     it("defers a task whose reads sit under a producer's declared outputs", () => {
       const { planner, taskGraph } = fixture();
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });
-      expect(getIoSnapshotDeferredTaskIds(snapshots, taskGraph)).toEqual([
+      expect(getUltracacheDeferredTaskIds(configurations, taskGraph)).toEqual([
         'parent:build',
       ]);
-      expect(getIoSnapshotReport(snapshots, taskGraph).used).toEqual([
-        'parent:build',
-      ]);
+      expect(
+        getUltracacheReport(configurations, getUltracacheSettings(taskGraph))
+          .used
+      ).toEqual(['parent:build']);
     });
 
-    it('refuses snapshot globs that leave the workspace and plans natively', () => {
+    it('refuses configuration globs that leave the workspace and plans natively', () => {
       const { planner, taskGraph } = fixture();
       const plain = planner.getPlans(['parent:build'], taskGraph);
       for (const glob of ['../secret.txt', 'libs/../../x', '/etc/passwd']) {
-        const snapshots = snapshotsFor({
+        const configurations = configurationsFor({
           'parent:build': { inputs: ['libs/parent/a.ts', glob] },
         });
         expect(
-          planner.getPlans(['parent:build'], taskGraph, snapshots)
+          planner.getPlans(['parent:build'], taskGraph, configurations)
         ).toEqual(plain);
         expect(
-          getIoSnapshotReport(snapshots, taskGraph).diagnostics.find(
-            (d) => d.taskId === 'parent:build'
-          )
+          getUltracacheReport(
+            configurations,
+            getUltracacheSettings(taskGraph)
+          ).diagnostics.find((d) => d.taskId === 'parent:build')
         ).toMatchObject({ reason: 'escapes-workspace', glob });
       }
     });
@@ -2693,33 +2784,35 @@ describe('task planner', () => {
       );
       const planner = new HashPlanner(
         {} as any,
-        transferProjectGraph(transformProjectGraphForRust(projectGraph))
+        transferProjectGraph(toRustProjectGraph(projectGraph))
       );
-      const snapshots = snapshotsFor({
+      const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
       });
-      return { planner, taskGraph, snapshots };
+      return { planner, taskGraph, configurations };
     }
 
-    it('rejects an invalid declared includeIgnored group with snapshots too', () => {
+    it('rejects an invalid declared includeIgnored group with a configuration too', () => {
       // A well-formed negation with nothing to filter: native planning throws,
-      // and a snapshot must not turn it into a plan.
-      const { planner, taskGraph, snapshots } = lonelyParent([
+      // and a configuration must not turn it into a plan.
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
       expect(() =>
-        planner.getPlans(['parent:build'], taskGraph, snapshots)
+        planner.getPlans(['parent:build'], taskGraph, configurations)
       ).toThrow(/no positive includeIgnored fileset/);
     });
 
-    it('keeps the snapshot when a declared includeIgnored negation has a positive fileset to filter', () => {
-      const { planner, taskGraph, snapshots } = lonelyParent([
+    it('keeps the configuration when a declared includeIgnored negation has a positive fileset to filter', () => {
+      const { planner, taskGraph, configurations } = lonelyParent([
         { fileset: '{projectRoot}/dist/**', includeIgnored: true },
         { fileset: '!{projectRoot}/dist/**/*.map', includeIgnored: true },
       ]);
-      const plan = planner.getPlans(['parent:build'], taskGraph, snapshots)[
-        'parent:build'
-      ];
+      const plan = planner.getPlans(
+        ['parent:build'],
+        taskGraph,
+        configurations
+      )['parent:build'];
       // Validated, then replaced by the reads like any declared fileset.
       expect(plan).toContainEqual(expect.stringMatching(/^io-snapshot:\d+$/));
       expect(plan).not.toContain(

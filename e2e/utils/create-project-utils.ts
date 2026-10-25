@@ -19,7 +19,6 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { typescriptVersion as defaultTypescriptVersion } from '@nx/js/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
 import { execFileSync, execSync, ExecSyncOptions } from 'node:child_process';
@@ -44,6 +43,10 @@ import { logError, logInfo } from './log-utils';
 
 let projName: string;
 
+const defaultAngularCliVersion: string = readJsonFile(
+  require.resolve('@angular/cli/package.json')
+).version;
+
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
   `@nx/angular`,
@@ -64,6 +67,7 @@ const nxPackages = [
   `@nx/oxlint`,
   `@nx/plugin`,
   `@nx/playwright`,
+  `@nx/rolldown`,
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
@@ -96,17 +100,14 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
 /**
  * Locate a pre-built base workspace template for this package manager and preset,
  * produced by the `populate-e2e-base-workspace` task and restored via Nx cache on
- * each agent. Templates are not selected for `NX_ADD_PLUGINS=false`; combinations
- * that were not pre-built also fall back to building the workspace the original way.
+ * each agent. Combinations that were not pre-built fall back to building the
+ * workspace the original way.
  */
 function sharedBaseWorkspacePath(
   packageManager: string,
   preset: string
 ): string | null {
-  if (
-    process.env.NX_E2E_SKIP_SHARED_BASE === 'true' ||
-    process.env.NX_ADD_PLUGINS === 'false'
-  ) {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true') {
     return null;
   }
   const candidate = join(
@@ -201,7 +202,7 @@ export function newProject({
   packageManager = getSelectedPackageManager(),
   packages,
   preset = 'apps',
-  typescriptVersion = defaultTypescriptVersion,
+  typescriptVersion,
   keepBackup = false,
 }: {
   name?: string;
@@ -307,13 +308,8 @@ export function newProject({
         // Installing typescript directly reclaims that slot. pnpm/yarn resolve
         // peers per dependent, so they are unaffected.
         // TODO: remove once tsquery bounds its peer or nx stops depending on it.
-        // The `apps` preset pins typescript ~6.0.3, so any suite that needs an
-        // older line (Remix) re-pins regardless of package manager.
-        if (
-          packageManager === 'npm' ||
-          typescriptVersion !== defaultTypescriptVersion
-        ) {
-          packageInstall('typescript', projScope, typescriptVersion);
+        if (packageManager === 'npm') {
+          packageInstall('typescript', projScope, defaultTypescriptVersion);
         }
         const packageInstallEnd = performance.mark('packageInstall:end');
         packageInstallMeasure = performance.measure(
@@ -328,6 +324,7 @@ export function newProject({
       execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
         cwd: stagingDirectory,
         stdio: isVerbose() ? 'inherit' : 'pipe',
+        env: getStrippedEnvironmentVariables(stagingDirectory),
       });
 
       if (keepBackup || builtOnce.has(packageManager)) {
@@ -379,6 +376,16 @@ export function newProject({
         console.error('Full error:', e);
         throw e;
       }
+    }
+
+    // Apply suite-specific versions after copying the shared package-manager
+    // backup so they work for every package manager without changing the backup.
+    if (
+      typescriptVersion &&
+      readJsonFile(`${projectDirectory}/package.json`).devDependencies
+        ?.typescript !== typescriptVersion
+    ) {
+      packageInstall('typescript', projName, typescriptVersion);
     }
 
     const newProjectEnd = performance.mark('new-project:end');
@@ -731,7 +738,9 @@ export function runNgNew(
   }
 
   projName = uniq('ng-proj');
-  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager}`;
+  // Installed once below, after the ranges are pinned. Installing here would
+  // resolve the latest minor, which npm then refuses to downgrade to the pin.
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projName} --package-manager=${packageManager} --skip-install`;
   execSync(command, {
     cwd: e2eCwd,
     stdio: isVerbose() ? 'inherit' : 'pipe',

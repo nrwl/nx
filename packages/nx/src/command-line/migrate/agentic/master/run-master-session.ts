@@ -1,28 +1,53 @@
 import { output } from '../../../../utils/output';
 import {
+  type MigrateRunStopReason,
+  reportMigrateOrchestratorAbandoned,
   reportMigrateRunComplete,
   reportMigrateRunError,
+  reportMigrateRunStopped,
 } from '../../migrate-analytics';
 import {
+  completionSummaryLines,
   completionWarnings,
+  hasUnresolvedIssues,
+  holdRunToContinue,
+  isHeld,
+  type MigrateRunPolicy,
   type MigrateRunState,
+  type OrchestratorInitResult,
   readRunState,
+  renderContinueCommand,
+  renderExistingRunCommands,
+  renderExistingRunReport,
   runDir,
   runOrchestratorInit,
   type RunOrchestratorInitInput,
+  runOrchestratorResume,
+  runTallies,
+  tallySteps,
 } from '../../run';
+import { canPrompt, migrateChoice } from '../../safe-prompt';
 import type { DetectedInstalledAgent } from '../types';
 import { spawnMasterSession } from './spawn-master';
 
 export interface RunMasterSessionInput extends Omit<
   RunOrchestratorInitInput,
-  'emitAgentInstructions'
+  'emitAgentInstructions' | 'onExistingRun'
 > {
   agent: DetectedInstalledAgent;
+  interactive?: boolean;
+  // The active run to continue instead of starting one (`--run-id`), or
+  // the one to replace under `startFresh`.
+  runId?: string;
+  // Delete the record of the run `runId` names and start a new one
+  // (`--start-fresh --run-id`).
+  startFresh?: boolean;
+  // Required here: without it init would start or replace a run unasked.
+  confirmStart: () => Promise<boolean>;
 }
 
 /**
- * Starts (or resumes) an orchestrated run and hands it to one agent session
+ * Starts (or continues) an orchestrated run and hands it to one agent session
  * that drives it through `--run-id` reconciles. Run state is the only
  * authority on the outcome: the exit code follows what run.json says once the
  * session ends, not what the agent process returned.
@@ -30,76 +55,111 @@ export interface RunMasterSessionInput extends Omit<
 export async function runMasterSession(
   input: RunMasterSessionInput
 ): Promise<number | undefined> {
-  const { agent, ...init } = input;
-  const ready = await runOrchestratorInit({
-    ...init,
-    emitAgentInstructions: false,
-  });
+  const {
+    agent,
+    interactive,
+    runId: requestedRunId,
+    startFresh,
+    ...init
+  } = input;
+  // The invocation's policy; an interactive continue adopts the run's recorded
+  // one instead, shown in the report and the choice, so resume, broker and
+  // the resume hint agree with the run.
+  let policy: MigrateRunPolicy = {
+    createCommits: init.createCommits,
+    skipInstall: init.skipInstall,
+  };
+  // A resume refuses when it cannot restore the run's missing runbook; a
+  // start refuses when the default-branch commit confirmation is declined.
+  let refusal: MigrateRunStopReason = 'declined_commits';
+  const resume = (runId: string) => {
+    refusal = 'runbook_missing';
+    return runOrchestratorResume({
+      root: init.root,
+      runId,
+      policy,
+      emitAgentInstructions: false,
+    });
+  };
+  // With `replaceRunId`, starts fresh over that run only; the consent covers
+  // the run the user saw, and any other active run is reported instead.
+  const start = (replaceRunId?: string) => {
+    refusal = 'declined_commits';
+    return runOrchestratorInit({
+      ...init,
+      emitAgentInstructions: false,
+      onExistingRun: replaceRunId === undefined ? 'report' : 'start-fresh',
+      replaceRunId,
+    });
+  };
+  let ready =
+    requestedRunId !== undefined && !startFresh
+      ? resume(requestedRunId)
+      : await start(startFresh ? requestedRunId : undefined);
+  if (ready.kind === 'existing-run' && canPrompt(interactive)) {
+    const decision = await decideExistingRun(ready, init.root);
+    if (decision === 'abort') {
+      output.log({
+        title: `Leaving migrate run ${ready.runId} as it is. ${continueHint(init.root, agent.id, ready.runId, ready.facts.policy)}`,
+      });
+      reportMigrateRunStopped('aborted');
+      return;
+    }
+    if (decision === 'continue') {
+      policy = ready.facts.policy;
+      ready = resume(ready.runId);
+    } else {
+      ready = await start(ready.runId);
+    }
+  }
+  if (ready.kind === 'existing-run') {
+    output.warn(
+      renderExistingRunReport(
+        ready.facts,
+        renderExistingRunCommands(
+          init.root,
+          ready.facts,
+          init.migrationsPath,
+          agent.id
+        )
+      )
+    );
+    reportMigrateRunStopped('existing_run');
+    return 1;
+  }
   if (ready.kind === 'refused') {
+    reportMigrateRunStopped(refusal);
     return;
   }
-  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
-  // Not rendered: the gate env var and the migrations path would have to be
-  // reproduced, and the same command carries both.
-  const resumeHint = 'Run the same nx migrate command again to resume it.';
+  const { runId, runRoot } = ready;
+  const resumeHint = continueHint(init.root, agent.id, runId, policy);
 
   output.log({
     title: `Starting ${agent.displayName} to drive migrate run ${runId}.`,
   });
-  const session = await spawnMasterSession({
+  const state = await driveMasterSession({
     agent,
-    runRoot,
-    runId,
-    runbookPath,
-    reconcileCommand,
-    policy: {
-      createCommits: init.createCommits,
-      skipInstall: init.skipInstall,
-    },
+    ready,
+    policy,
+    notStartedHint: `Migrate run ${runId} is still active. ${resumeHint}`,
   });
-  if (session.kind === 'spawn-failed') {
-    output.error({
-      title: `Could not start ${agent.displayName}: ${session.error.message}`,
-      bodyLines: [`Migrate run ${runId} is still active. ${resumeHint}`],
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-    return 1;
-  }
-  if (session.kind === 'broker-failed') {
-    // The broker itself reads run.json, so its failure can mean the state is
-    // unreadable; the read below decides whether a resume is safe to offer.
-    output.error({
-      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
-    });
-    reportMigrateRunError({ code: 'agentic', error: session.error });
-  }
-
-  let state: MigrateRunState;
-  try {
-    state = readRunState(runDir(runRoot, runId));
-  } catch (error) {
-    // No resume hint: run discovery skips a directory whose run.json is
-    // missing, so a rerun could start a second run over the same plan.
-    output.error({
-      title: `Nx could not determine whether migrate run ${runId} completed.`,
-      bodyLines: [error instanceof Error ? error.message : String(error)],
-    });
-    return 1;
-  }
+  if (!state) return 1;
   switch (state.status) {
     case 'active':
+      reportMigrateOrchestratorAbandoned({
+        ...runTallies(state),
+        agentUsed: agent.id,
+      });
       output.warn({
         title: `Migrate run ${runId} is still active. ${resumeHint}`,
       });
       return 1;
     case 'completed': {
-      const applied = state.steps.filter(
-        (s) => s.status === 'succeeded'
-      ).length;
-      const skipped = state.steps.filter((s) => s.status === 'skipped').length;
+      const tally = tallySteps(state);
+      const migrations = state.steps.filter((s) => s.kind === 'migration');
       output.log({
         title: `Migrate run ${runId} is complete.`,
-        bodyLines: [`  applied: ${applied}`, `  skipped: ${skipped}`],
+        bodyLines: completionSummaryLines(state),
       });
       for (const lines of completionWarnings(runRoot, runId, state)) {
         output.warn({ title: lines[0], bodyLines: lines.slice(1) });
@@ -107,9 +167,16 @@ export async function runMasterSession(
       reportMigrateRunComplete({
         agenticOutcome: 'enabled',
         agentUsed: agent.id,
-        migrationCount: state.steps.length,
-        appliedCount: applied,
+        migrationCount: migrations.length,
+        // The printed tally counts the pass; this metric counts migrations.
+        appliedCount: migrations.filter((s) => s.status === 'succeeded').length,
       });
+      if (tally.unresolved.length > 0 || hasUnresolvedIssues(state)) {
+        output.warn({
+          title: `Migrate run ${runId} left work unresolved; exiting with code 1.`,
+        });
+        return 1;
+      }
       return;
     }
     default: {
@@ -117,4 +184,107 @@ export async function runMasterSession(
       throw new Error(`Unhandled migrate run status: ${unhandled}`);
     }
   }
+}
+
+/**
+ * Hands a ready run to one agent session and reads the run's state once the
+ * session ends. `migration` is set for a `--run-migration` run. Returns null
+ * once it has printed why the session could not start or why its outcome is
+ * unknown; `notStartedHint` tells the user what to do when it could not start.
+ */
+export async function driveMasterSession(input: {
+  agent: DetectedInstalledAgent;
+  ready: Extract<OrchestratorInitResult, { kind: 'ready' }>;
+  policy: MigrateRunPolicy;
+  migration?: { package: string; name: string };
+  notStartedHint: string;
+}): Promise<MigrateRunState | null> {
+  const { agent, ready, policy, migration, notStartedHint } = input;
+  const { runId, runRoot, runbookPath, reconcileCommand } = ready;
+  const reportAgentError = (error: Error) =>
+    reportMigrateRunError({
+      code: 'agentic',
+      migrationPackage: migration?.package,
+      migrationName: migration?.name,
+      error,
+    });
+  const session = await spawnMasterSession({
+    agent,
+    runRoot,
+    runId,
+    runbookPath,
+    reconcileCommand,
+    policy,
+    singleMigration: migration !== undefined,
+  });
+  if (session.kind === 'spawn-failed') {
+    output.error({
+      title: `Could not start ${agent.displayName}: ${session.error.message}`,
+      bodyLines: [notStartedHint],
+    });
+    reportAgentError(session.error);
+    return null;
+  }
+  if (session.kind === 'broker-failed') {
+    // The broker itself reads run.json, so its failure can mean the state is
+    // unreadable; the read below decides what the caller can offer.
+    output.error({
+      title: `Closed the ${agent.displayName} session: a step's request could not be answered (${session.error.message}).`,
+    });
+    reportAgentError(session.error);
+  }
+  try {
+    return readRunState(runDir(runRoot, runId));
+  } catch (error) {
+    // No resume hint for a `--run-migrations` run: run discovery skips a
+    // directory whose run.json is missing, so a rerun could start a second run
+    // over the same plan.
+    output.error({
+      title: `Nx could not determine whether ${
+        migration
+          ? `migration ${migration.package}:${migration.name}`
+          : `migrate run ${runId}`
+      } completed.`,
+      bodyLines: [error instanceof Error ? error.message : String(error)],
+    });
+    return null;
+  }
+}
+
+function continueHint(
+  root: string,
+  agentId: string,
+  runId: string,
+  policy: MigrateRunPolicy
+): string {
+  return `Run ${renderContinueCommand(root, runId, policy, agentId)} to continue it.`;
+}
+
+async function decideExistingRun(
+  found: Extract<OrchestratorInitResult, { kind: 'existing-run' }>,
+  root: string
+): Promise<'continue' | 'start-fresh' | 'abort'> {
+  output.log(renderExistingRunReport(found.facts));
+  // A held run leaves nothing to ask: continue would open a second session
+  // over the live one, and start fresh refuses. The continue's own gate
+  // throws the refusal; a holder gone since the report lets the prompt run.
+  if (isHeld(found.facts.otherHolders)) {
+    holdRunToContinue(root, found.runId);
+  }
+  return migrateChoice({
+    message: 'What do you want to do with the active migrate run?',
+    choices: [
+      {
+        value: 'continue',
+        label: 'Continue it',
+        hint: 'picks the run up where it stopped, keeping its recorded commit and install policy',
+      },
+      {
+        value: 'start-fresh',
+        label: 'Start fresh',
+        hint: 'deletes the run record only; the whole plan runs again',
+      },
+      { value: 'abort', label: 'Abort', hint: 'leaves the run as it is' },
+    ],
+  });
 }

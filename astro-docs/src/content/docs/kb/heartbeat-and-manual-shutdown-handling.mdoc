@@ -24,7 +24,7 @@ dte:
 ```
 
 ```yaml
-- run: npx nx start-nx-agents # provisions the agents that the affected tasks below are distributed to
+- run: npx nx-cloud start-workers # provisions the agents that the affected tasks below are distributed to
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 # That's it - we don't need an extra step to tell NxCloud that we're done running Nx commands.
@@ -47,7 +47,7 @@ lifecycle:
 ```
 
 ```yaml
-- run: npx nx start-nx-agents
+- run: npx nx-cloud start-workers
 - run: npm ci
 - run: npx nx affected -t build,lint,test
 - run: npx nx complete-ci-run # this now tells NxCloud to turn off the agents
@@ -61,7 +61,7 @@ When you might need to do this:
 We've noticed that some CI providers tend to be more aggressive with background process management when moving between steps. Assume you have the following configuration:
 
 ```yaml
-- run: npx nx start-nx-agents
+- run: npx nx-cloud start-workers
 - run: npm ci
 - run: npx nx affected -t build,lint,test # This is the point where we turn on the heartbeat.
 - run: ./deploy-my-projects.sh

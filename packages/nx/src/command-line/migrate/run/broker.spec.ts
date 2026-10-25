@@ -1,5 +1,6 @@
 const mockCommit = vi.fn();
-vi.mock('../migrate-commits', () => ({
+vi.mock('../migrate-commits', async () => ({
+  ...(await vi.importActual('../migrate-commits')),
   commitMigrationIfRequested: (...args: unknown[]) => mockCommit(...args),
 }));
 
@@ -21,10 +22,17 @@ vi.mock('../../../utils/package-manager', () => ({
 
 const mockGetLatestCommitSha = vi.fn();
 const mockResetWorkingTree = vi.fn();
+// Reached only by tests that run the real commitMigrationIfRequested.
+const mockHasUncommittedChanges = vi.fn();
+const mockTryCommitChangesAsync = vi.fn();
 vi.mock('../../../utils/git-utils', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../utils/git-utils')>()),
   getLatestCommitSha: (...args: unknown[]) => mockGetLatestCommitSha(...args),
   resetWorkingTree: (...args: unknown[]) => mockResetWorkingTree(...args),
+  hasUncommittedChanges: (...args: unknown[]) =>
+    mockHasUncommittedChanges(...args),
+  tryCommitChangesAsync: (...args: unknown[]) =>
+    mockTryCommitChangesAsync(...args),
 }));
 
 const mockLockCtor = vi.fn();
@@ -102,6 +110,7 @@ function step(overrides: Partial<MigrateStep> = {}): MigrateStep {
   return {
     id: 'step-1',
     roundIndex: 0,
+    kind: 'migration',
     migrationId: '@nx/js:gen',
     status: 'running',
     attempt: 1,
@@ -151,6 +160,8 @@ describe('migrate commit broker', () => {
     vi.spyOn(output, 'error').mockImplementation(() => {});
     mockLockCtor.mockReset();
     mockCommit.mockReset().mockResolvedValue(committed);
+    mockHasUncommittedChanges.mockReset();
+    mockTryCommitChangesAsync.mockReset();
     mockReadPackageJsonDeps.mockReset().mockReturnValue('{"deps":2}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockLogSkippedInstall.mockReset();
@@ -288,7 +299,7 @@ describe('migrate commit broker', () => {
         'chore: [nx migration] ',
         expect.any(Function),
         [{ package: '@nx/js', name: 'old' }],
-        undefined,
+        'later-step',
         expect.anything()
       );
       expect(mockRunInstall).not.toHaveBeenCalled();
@@ -302,6 +313,37 @@ describe('migrate commit broker', () => {
       expect(brokerFiles()).toEqual([
         `${broker.nonce}-step-1-1-commit.result.json`,
       ]);
+    });
+
+    it('names what can hold a commit while it waits', async () => {
+      vi.useFakeTimers();
+      try {
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+        const pending = commitStepTree(dir, step(), [], vi.fn(), {});
+        await vi.advanceTimersByTimeAsync(15_000);
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-commit.result.json`),
+          JSON.stringify(ANSWER)
+        );
+        await vi.advanceTimersByTimeAsync(250);
+        await pending;
+        broker.close();
+
+        expect(vi.mocked(logger.info).mock.calls).toEqual([
+          [
+            '[nx] Waiting for the nx process that started this session to finish the commit of @nx/js:gen (15s so far). A commit first installs any dependency changes. A signing popup or a security key can also hold a commit until the user answers it. If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end it, and resume the run afterwards.',
+          ],
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('lands the commit after a succeeded install, keeping the install output out of the step', async () => {
@@ -550,6 +592,49 @@ describe('migrate commit broker', () => {
       expect(existsSync(brokerDir(dir))).toBe(false);
     });
 
+    it('prints what it waits on after 15 seconds, then every minute, with the way out', async () => {
+      vi.useFakeTimers();
+      try {
+        const broker = new MigrateCommitBroker(
+          root,
+          dir,
+          'npx nx migrate',
+          POLICY
+        );
+        process.env.NX_MIGRATE_BROKER = broker.nonce;
+        const wayOut =
+          'If it seems stuck, the user can quit this session, then press Ctrl+C in the terminal to end it, and resume the run afterwards.';
+
+        const pending = installStepTree(dir, step(), 'install', vi.fn(), {});
+        await vi.advanceTimersByTimeAsync(14_900);
+        const beforeFirst = vi.mocked(logger.info).mock.calls.length;
+        await vi.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(59_900);
+        const beforeSecond = vi.mocked(logger.info).mock.calls.length;
+        await vi.advanceTimersByTimeAsync(100);
+        writeFileSync(
+          join(brokerDir(dir), `${broker.nonce}-step-1-1-install.result.json`),
+          JSON.stringify({ kind: 'installed', output: [] })
+        );
+        await vi.advanceTimersByTimeAsync(250);
+        await pending;
+        broker.close();
+
+        expect(beforeFirst).toBe(0);
+        expect(beforeSecond).toBe(1);
+        expect(vi.mocked(logger.info).mock.calls).toEqual([
+          [
+            `[nx] Waiting for the nx process that started this session to finish the install of @nx/js:gen (15s so far). ${wayOut}`,
+          ],
+          [
+            `[nx] Waiting for the nx process that started this session to finish the install of @nx/js:gen (1m 15s so far). ${wayOut}`,
+          ],
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('hands the install to the advertised session, which moves the baseline it recorded', async () => {
       parentCommits();
       const broker = new MigrateCommitBroker(
@@ -702,7 +787,7 @@ describe('migrate commit broker', () => {
       expect(inProcess).not.toHaveBeenCalled();
       expect(mockResetWorkingTree).toHaveBeenCalledWith(
         ref,
-        ['.nx/migrate-runs'],
+        ['.nx/migrate-runs', 'migrations.json', 'tools/ai-migrations'],
         root
       );
       const state = readRunState(dir);
@@ -767,6 +852,37 @@ describe('migrate commit broker', () => {
 
       expect(mockResetWorkingTree).not.toHaveBeenCalled();
     });
+  });
+
+  it('lands the commit of a failed step adopted by hand after its own commit failed, under the plain name', async () => {
+    mockRunInstall.mockRejectedValueOnce(new Error('registry unreachable'));
+    mockCommit.mockImplementation(async (...args: unknown[]) => {
+      await (args[4] as () => Promise<void>)();
+      return committed;
+    });
+    const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', POLICY);
+    process.env.NX_MIGRATE_BROKER = broker.nonce;
+
+    const worker = commitStepTree(dir, step(), [], vi.fn(), {});
+    await sleep(20);
+    await broker.service();
+    await expect(worker).rejects.toThrow('registry unreachable');
+    const failed = step({ status: 'failed', generatorCompleted: true });
+    writeRunState(dir, runState({ steps: [failed] }));
+    const adopted = commitStepTree(dir, failed, [], vi.fn(), {}, 'adopt');
+    await sleep(20);
+    await broker.service();
+    const landed = await adopted;
+    broker.close();
+
+    expect(landed).toEqual({
+      result: committed,
+      absorbedStepIds: [],
+      recorded: true,
+    });
+    expect(mockRunInstall).toHaveBeenCalledTimes(2);
+    expect(mockCommit).toHaveBeenCalledTimes(2);
+    expect(mockCommit.mock.calls[1][1]).toEqual({ name: 'gen' });
   });
 
   describe('MigrateCommitBroker', () => {
@@ -892,6 +1008,41 @@ describe('migrate commit broker', () => {
       expect(mockCommit).not.toHaveBeenCalled();
     });
 
+    it('tells the agent of a --run-migration run that a failed commit is left to the user', async () => {
+      writeRunState(dir, runState({ singleMigration: true }));
+      const { commitMigrationIfRequested } =
+        await vi.importActual<typeof import('../migrate-commits')>(
+          '../migrate-commits'
+        );
+      mockCommit.mockImplementation(commitMigrationIfRequested);
+      mockHasUncommittedChanges.mockReturnValue(true);
+      mockTryCommitChangesAsync.mockRejectedValue(
+        new Error('error: gpg failed to sign the data')
+      );
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce);
+
+      await broker.service();
+      const answer = JSON.parse(readFileSync(resultPath, 'utf8'));
+      broker.close();
+
+      expect(answer.output).toContainEqual({
+        kind: 'line',
+        color: 'red',
+        text: expect.stringContaining(
+          "Commit or revert any remaining uncommitted changes manually. Commits in this session cannot ask for input, such as a signing passphrase or a hook's prompt. Tell the user what failed."
+        ),
+      });
+      expect(JSON.stringify(answer.output)).not.toMatch(
+        /later commit|next successful commit|next step/
+      );
+    });
+
     it('answers a request once, whatever else rewrites it', async () => {
       const broker = new MigrateCommitBroker(
         root,
@@ -915,8 +1066,12 @@ describe('migrate commit broker', () => {
     it.each<[string, Partial<MigrateRunState>]>([
       ['the attempt moved on', { steps: [step({ attempt: 2 })] }],
       ['the step is settled', { steps: [step({ status: 'succeeded' })] }],
-      ['the step failed', { steps: [step({ status: 'failed' })] }],
+      ['the step was given up on', { steps: [step({ status: 'unresolved' })] }],
       ['the step is unknown', { steps: [step({ id: 'step-9' })] }],
+      [
+        'the step failed and the request is not its adopt',
+        { steps: [step({ status: 'failed' })] },
+      ],
     ])(
       'answers stale without installing or committing when %s',
       async (_case, overrides) => {
@@ -942,6 +1097,51 @@ describe('migrate commit broker', () => {
         expect(mockRunInstall).not.toHaveBeenCalled();
       }
     );
+
+    describe('a give-up request', () => {
+      const giveUp = { kind: 'give-up', stepId: 'step-1', attempt: 1 };
+
+      it('answers stale when the run makes no commits', async () => {
+        writeRunState(dir, runState({ steps: [step({ status: 'failed' })] }));
+        const broker = new MigrateCommitBroker(root, dir, 'npx nx migrate', {
+          ...POLICY,
+          createCommits: false,
+        });
+        const resultPath = writeRequest(broker.nonce, giveUp);
+
+        await broker.service();
+        const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+        broker.close();
+
+        expect(result).toEqual({ kind: 'stale' });
+        expect(mockCommit).not.toHaveBeenCalled();
+        expect(readRunState(dir).steps[0].status).toBe('failed');
+      });
+    });
+
+    it('answers stale to a commit request carrying an unknown marker', async () => {
+      // A running step is at the commit seam, so only the marker rejects.
+      writeRunState(dir, runState());
+      const broker = new MigrateCommitBroker(
+        root,
+        dir,
+        'npx nx migrate',
+        POLICY
+      );
+      const resultPath = writeRequest(broker.nonce, {
+        kind: 'commit',
+        stepId: 'step-1',
+        attempt: 1,
+        commitAs: 'applied',
+      });
+
+      await broker.service();
+      const result = JSON.parse(readFileSync(resultPath, 'utf8'));
+      broker.close();
+
+      expect(result).toEqual({ kind: 'stale' });
+      expect(mockCommit).not.toHaveBeenCalled();
+    });
 
     it('answers a commit request stale from the session policy, whatever run.json says', async () => {
       // The run dir is writable from the agent's sandbox, so a createCommits

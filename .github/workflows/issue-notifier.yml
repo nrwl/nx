@@ -37,6 +37,7 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: '24'
+          check-latest: true
           cache: 'pnpm'
 
       - name: Install packages
@@ -44,7 +45,7 @@ jobs:
 
       - name: Download artifact
         id: download-artifact
-        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2 # Needed since we are downloading artifact from a different workflow run, official actions/download-artifact doesn't support this.
+        uses: dawidd6/action-download-artifact@b6e2e70617bc3265edd6dab6c906732b2f1ae151 # v21 # Needed since we are downloading artifact from a different workflow run, official actions/download-artifact doesn't support this.
         with:
           name: cached-issue-data
           path: ${{ github.workspace }}/scripts/issues-scraper/cached

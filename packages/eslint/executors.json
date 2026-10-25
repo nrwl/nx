@@ -1,9 +1,3 @@
 {
-  "executors": {
-    "lint": {
-      "implementation": "./dist/src/executors/lint/lint.impl",
-      "schema": "./dist/src/executors/lint/schema.json",
-      "description": "Run ESLint on a project."
-    }
-  }
+  "executors": {}
 }

@@ -22,6 +22,30 @@ export const RUN_STATE_FILE_NAME = 'run.json';
  * with fails closed as corrupt instead of being dispensed.
  */
 export const SHELL_SAFE_VALUE = /^[A-Za-z0-9@/:._-]+$/;
+
+export type MigrationIdProblem = 'not-shell-safe' | 'duplicate';
+
+/**
+ * The ids of `migrations` that no orchestrated run can take, each once, in the
+ * order found. A worker finds its step by migration id, so an id the plan
+ * lists twice can't name one step.
+ */
+export function migrationIdProblems(
+  migrations: ReadonlyArray<{ package: string; name: string }>
+): { id: string; problem: MigrationIdProblem }[] {
+  const seen = new Set<string>();
+  const problems = new Map<string, MigrationIdProblem>();
+  for (const m of migrations) {
+    const id = `${m.package}:${m.name}`;
+    if (!SHELL_SAFE_VALUE.test(id)) {
+      problems.set(id, 'not-shell-safe');
+    } else if (seen.has(id) && !problems.has(id)) {
+      problems.set(id, 'duplicate');
+    }
+    seen.add(id);
+  }
+  return [...problems].map(([id, problem]) => ({ id, problem }));
+}
 // `new Date().toISOString()`, the only shape Nx writes. Retention and active-run
 // selection compare these lexicographically, and the value is rendered into the
 // stdout the agent scans for blocks, so neither a different notation nor an
@@ -68,7 +92,6 @@ export type MigrateRunStatus = (typeof MIGRATE_RUN_STATUSES)[number];
 
 export interface MigrateRunRound {
   index: number;
-  planHash: string;
   planSnapshot: string;
 }
 
@@ -81,14 +104,15 @@ const MIGRATE_STEP_STATUSES = [
   'failed',
   'skipped',
   'died',
+  'unresolved',
 ] as const;
 export type MigrateStepStatus = (typeof MIGRATE_STEP_STATUSES)[number];
 
-// 'failed' and 'died' are not terminal: both can be re-armed into a fresh
-// attempt.
+// 'failed' and 'died' can be re-armed; 'unresolved' cannot.
 export const TERMINAL_STEP_STATUSES: ReadonlySet<MigrateStepStatus> = new Set([
   'succeeded',
   'skipped',
+  'unresolved',
 ]);
 
 const PROMPT_OUTCOME_STATUSES = ['completed', 'skipped', 'failed'] as const;
@@ -97,9 +121,14 @@ export type PromptOutcomeStatus = (typeof PROMPT_OUTCOME_STATUSES)[number];
 const MIGRATE_STEP_AWAITING_KINDS = [
   'migration-prompt',
   'generator-validation',
+  'final-validation',
 ] as const;
 export type MigrateStepAwaitingKind =
   (typeof MIGRATE_STEP_AWAITING_KINDS)[number];
+
+// What a step does when dispensed: 'migration' runs one planned migration,
+// 'final-validation' checks the whole workspace once every migration has run.
+const MIGRATE_STEP_KINDS = ['migration', 'final-validation'] as const;
 
 export interface MigrateStepOutcome {
   fileChanges?: string[];
@@ -113,11 +142,19 @@ export interface MigrateStepPromptOutcome {
   summary?: string;
 }
 
-export interface MigrateStep {
+export type MigrateStepKindFields =
+  | {
+      kind: 'migration';
+      // `<package>:<name>`.
+      migrationId: string;
+    }
+  | { kind: 'final-validation' };
+
+export type MigrateStep = MigrateStepBase & MigrateStepKindFields;
+
+export interface MigrateStepBase {
   id: string;
   roundIndex: number;
-  // `<package>:<name>`.
-  migrationId: string;
   status: MigrateStepStatus;
   attempt: number;
   dispenseCount: number;
@@ -144,6 +181,10 @@ export interface MigrateStep {
   outcome?: MigrateStepOutcome;
   // Folded from the handoff file at reconcile time.
   promptOutcome?: MigrateStepPromptOutcome;
+  adopted?: boolean;
+  // The run issue minted when the step was given up on, carrying its last
+  // failure to the completion report.
+  unresolvedIssueId?: string;
   // Recorded when the step enters 'awaiting-prompt-outcome'; dropped on re-arm
   // with the other per-attempt fields.
   awaitingKind?: MigrateStepAwaitingKind;
@@ -272,8 +313,16 @@ export interface MigrateRunState {
   // Whether generator changes get a validation pass dispensed over them,
   // captured like the install policy above.
   validate?: boolean;
+  // HEAD when the run started, before the checkpoint commit when one landed:
+  // the base every whole-run diff is taken against, so the dependency changes
+  // the checkpoint captured are inside it. Absent when the probe failed, or
+  // on a run created before the field existed.
+  gitRefAtInit?: string;
   // A bare file name despite the field name; it is joined to the run directory.
   runbookPath?: string;
+  // The branch checked out when the run started; absent on a detached HEAD or
+  // when git could not say.
+  branch?: string;
   rounds: MigrateRunRound[];
   steps: MigrateStep[];
   commits: MigrateCommitLedgerEntry[];
@@ -291,7 +340,27 @@ export interface MigrateRunState {
   // the working tree. Set before the operation and cleared by its owner after
   // the state that records it is written; a dead owner pid voids it.
   treeOperation?: MigrateTreeOperation;
+  // Set on the record of a `--run-migration` run, which active-run discovery
+  // skips.
+  singleMigration?: boolean;
   analytics: MigrateRunAnalytics;
+}
+
+// A `--run-migration` record is 'single' whatever its status.
+export function runKind(
+  state: MigrateRunState
+): 'single' | 'active' | 'finished' {
+  if (state.singleMigration === true) return 'single';
+  switch (state.status) {
+    case 'active':
+      return 'active';
+    case 'completed':
+      return 'finished';
+    default: {
+      const unhandled: never = state.status;
+      throw new Error(`Unhandled migrate run status: ${unhandled}`);
+    }
+  }
 }
 
 export const TREE_OPERATION_KINDS = [
@@ -300,6 +369,7 @@ export const TREE_OPERATION_KINDS = [
   'fold-install',
   'action-install',
   'reset',
+  'give-up',
   'checkpoint',
 ] as const;
 export type MigrateTreeOperationKind = (typeof TREE_OPERATION_KINDS)[number];
@@ -414,7 +484,6 @@ function isRoundShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.index === 'number' &&
-    typeof value.planHash === 'string' &&
     typeof value.planSnapshot === 'string' &&
     PLAN_SNAPSHOT_NAME.test(value.planSnapshot)
   );
@@ -440,14 +509,31 @@ function isPromptOutcomeShape(value: unknown): boolean {
   );
 }
 
+function isStepKindShape(value: Record<string, unknown>): boolean {
+  const kind = value.kind === undefined ? 'migration' : value.kind;
+  if (!isOneOf(MIGRATE_STEP_KINDS, kind)) return false;
+  switch (kind) {
+    case 'migration':
+      return (
+        typeof value.migrationId === 'string' &&
+        SHELL_SAFE_VALUE.test(value.migrationId)
+      );
+    case 'final-validation':
+      return value.migrationId === undefined;
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`Unhandled step kind '${exhaustive}'.`);
+    }
+  }
+}
+
 function isStepShape(value: unknown): boolean {
   return (
     isPlainObject(value) &&
     typeof value.id === 'string' &&
     STEP_ID.test(value.id) &&
     typeof value.roundIndex === 'number' &&
-    typeof value.migrationId === 'string' &&
-    SHELL_SAFE_VALUE.test(value.migrationId) &&
+    isStepKindShape(value) &&
     isOneOf(MIGRATE_STEP_STATUSES, value.status) &&
     // The attempt is interpolated into the stored-payload file name and
     // range-compared against it (agent-work-payload.ts), so a fractional or
@@ -482,6 +568,11 @@ function isStepShape(value: unknown): boolean {
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
+    isOptionalBoolean(value.adopted) &&
+    isOptionalMatching(ISSUE_ID, value.unresolvedIssueId) &&
+    // Minted by the same write that gives the step up, so it never names a
+    // step in any other status.
+    (value.unresolvedIssueId === undefined || value.status === 'unresolved') &&
     // A cross-field invariant the rest of the loop relies on: a running step
     // without a pid is never reclassified as died and no step action targets
     // it, so it stalls the run forever.
@@ -661,7 +752,10 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     isOptionalBoolean(parsed.checkpointFailed) &&
     isOptionalBoolean(parsed.skipInstall) &&
     isOptionalBoolean(parsed.validate) &&
+    isOptionalBoolean(parsed.singleMigration) &&
+    isOptionalSha(parsed.gitRefAtInit) &&
     isOptionalMatching(RUNBOOK_NAME, parsed.runbookPath) &&
+    isOptionalString(parsed.branch) &&
     (parsed.rounds as unknown[]).every(isRoundShape) &&
     (parsed.steps as unknown[]).every(isStepShape) &&
     hasUniqueStepIds(parsed.steps as unknown[]) &&
@@ -677,15 +771,22 @@ function hasValidRunStateShape(parsed: Record<string, unknown>): boolean {
     (parsed.commits as { issueIds?: string[] }[]).every(
       (c) =>
         c.issueIds === undefined ||
-        c.issueIds.every((id) =>
-          ((parsed.issues as { id: string }[] | undefined) ?? []).some(
-            (i) => i.id === id
-          )
-        )
+        c.issueIds.every((id) => hasIssueWithId(parsed, id))
+    ) &&
+    (parsed.steps as { unresolvedIssueId?: string }[]).every(
+      (s) =>
+        s.unresolvedIssueId === undefined ||
+        hasIssueWithId(parsed, s.unresolvedIssueId)
     ) &&
     isNoProgressShape(parsed.noProgress) &&
     isTreeOperationShape(parsed.treeOperation) &&
     isAnalyticsShape(parsed.analytics)
+  );
+}
+
+function hasIssueWithId(parsed: Record<string, unknown>, id: string): boolean {
+  return ((parsed.issues as { id: string }[] | undefined) ?? []).some(
+    (i) => i.id === id
   );
 }
 
@@ -694,15 +795,14 @@ function corruptRunStateError(filePath: string, reason: string): Error {
 }
 
 /**
- * Thrown when a run.json declares a `formatVersion` newer than this Nx
+ * Thrown for a run.json whose `formatVersion` is newer than this Nx
  * understands. Callers must not treat such a run as absent: an older Nx
  * ignoring a newer active run would start a competing run on top of it.
  *
- * Adding a member to any persisted closed set (run status, step status,
- * awaiting kind, prompt-outcome status, commit kind, issue disposition) needs a
- * `CURRENT_RUN_STATE_FORMAT_VERSION` bump: without it, an older Nx reading
- * the new value would reject the run as corrupt (the closed-set validation
- * fails) instead of refusing with this error's ask for a newer Nx.
+ * Adding a member to a persisted closed set needs a
+ * `CURRENT_RUN_STATE_FORMAT_VERSION` bump only once a released Nx can read the
+ * run, or that Nx rejects the new value as corruption instead of asking for a
+ * newer Nx.
  */
 export class NewerRunStateFormatError extends Error {
   constructor(message: string) {
@@ -754,7 +854,7 @@ export function readRunState(runDirPath: string): MigrateRunState {
         ? `Nx ${singleLine(parsed.nxVersion)}`
         : 'a newer version of Nx';
     throw new NewerRunStateFormatError(
-      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later to resume this run.`
+      `This migrate run was created with ${createdBy} (run state format v${parsed.formatVersion}), which is newer than the Nx version currently running, ${nxVersion} (run state format v${CURRENT_RUN_STATE_FORMAT_VERSION}). Re-run your migrate command with ${createdBy} or later.`
     );
   }
   if (
@@ -783,7 +883,12 @@ export function readRunState(runDirPath: string): MigrateRunState {
       )}.`
     );
   }
-  return parsed as unknown as MigrateRunState;
+  // Steps written before they had a kind each ran a migration; naming it here
+  // keeps every reader on one shape.
+  const steps = (parsed.steps as Record<string, unknown>[]).map((s) =>
+    s.kind === undefined ? { ...s, kind: 'migration' } : s
+  );
+  return { ...parsed, steps } as unknown as MigrateRunState;
 }
 
 /**
@@ -849,7 +954,8 @@ export interface UninterpretableRunDir {
  *
  * A dir that reads cleanly as a finished run is skipped whatever its name is:
  * it competes with nothing, and reporting it would block every future run
- * with no way for retention to ever clear it.
+ * with no way for retention to ever clear it. A `--run-migration` run's record
+ * is skipped too: nothing continues it, and a leftover must not block a run.
  *
  * Throws {@link NewerRunStateFormatError} when any run dir holds a
  * newer-format run.json: whether that run is active can't be determined
@@ -858,9 +964,12 @@ export interface UninterpretableRunDir {
  */
 export function findActiveRun(root: string): {
   active: { runId: string; state: MigrateRunState } | null;
+  // Every resumable active run, `active` included, in directory order.
+  activeRunIds: string[];
   uninterpretable: UninterpretableRunDir[];
 } {
   let newest: { runId: string; state: MigrateRunState } | null = null;
+  const activeRunIds: string[] = [];
   const uninterpretable: UninterpretableRunDir[] = [];
   for (const entry of readDirEntries(migrateRunsDir(root))) {
     if (!entry.isDirectory()) continue;
@@ -879,7 +988,7 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
-    if (state.status !== 'active') continue;
+    if (runKind(state) !== 'active') continue;
     // Run ids are joined into paths and interpolated into dispensed commands,
     // so a dir whose name fails the gate is never trusted as a resumable run.
     if (!RUN_ID_SAFE.test(entry.name)) {
@@ -889,11 +998,12 @@ export function findActiveRun(root: string): {
       });
       continue;
     }
+    activeRunIds.push(entry.name);
     if (!newest || state.createdAt > newest.state.createdAt) {
       newest = { runId: entry.name, state };
     }
   }
-  return { active: newest, uninterpretable };
+  return { active: newest, activeRunIds, uninterpretable };
 }
 
 /**

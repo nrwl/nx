@@ -1,12 +1,7 @@
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/nx-json';
-import {
-  FileData,
-  FileMap,
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
+import { FileData, FileMap, ProjectGraph } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
@@ -105,7 +100,6 @@ const projectGraphRecomputationListeners = new Set<
   ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
-let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
@@ -241,8 +235,8 @@ export async function getCachedSerializedProjectGraphPromise(
     await new Promise(setImmediate);
 
     // The queue can hold evidence against the settled cached graph itself: a
-    // tracked dotenv edit only the outputs watcher has delivered yet queues
-    // without invalidating, and the workspace watcher's recomputation may lag
+    // tracked dotenv edit only the raw-event stream has delivered yet queues
+    // without invalidating, and the file-change stream's recomputation may lag
     // this request. Classified against the exact graph the cache serves; an
     // in-flight computation needs no check here because its own pre-serve
     // replay consumes the queue. Content hashes are dropped before the
@@ -372,7 +366,7 @@ export function routeAppliedChanges(batch: ChangeBatch): void {
 }
 
 /**
- * Applies everything the workspace watcher has seen and routes what changed.
+ * Applies everything the file-change stream has seen and routes what changed.
  * Call before serving a cached project graph, so a change the watcher already
  * saw is never missed.
  */
@@ -498,11 +492,10 @@ function computeWorkspaceConfigHash(
 type FileMapUpdate = {
   fileMap: NonNullable<typeof fileMapWithFiles>;
   configHash: string;
-  knownExternalNodes?: Record<string, ProjectGraphExternalNode>;
 };
 
 async function processCollectedUpdatedAndDeletedFiles(
-  { projects, externalNodes, projectRootMap }: ConfigurationResult,
+  { projects, projectRootMap }: ConfigurationResult,
   updatedFileHashes: Record<string, string>,
   deletedFiles: string[]
 ): Promise<FileMapUpdate> {
@@ -515,7 +508,7 @@ async function processCollectedUpdatedAndDeletedFiles(
     // can't clobber a faster newer one's already-committed state.
     if (configHash !== storedWorkspaceConfigHash) {
       const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-      return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
+      return { fileMap: fresh, configHash };
     }
 
     // Config unchanged → patch the existing file map in place.
@@ -667,9 +660,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
-    if (fileMapUpdate.knownExternalNodes) {
-      knownExternalNodes = fileMapUpdate.knownExternalNodes;
-    }
 
     // Drain only after committing — a stale compute that returns at the
     // staleness check above must leave its snapshot in `collected*` so the
@@ -744,8 +734,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // against the graph about to be served. Runs after the last staleness
     // gate so a stale compute leaves the queue for its successor, and only
     // on the success path: an error result is never notified or persisted.
-    // Queue evidence is decisive here even for files the workspace watcher
-    // tracks: the two watchers deliver independently, so tracking alone does
+    // Queue evidence is decisive here even for files the file-change stream
+    // covers: the two streams deliver independently, so tracking alone does
     // not prove that watcher's recomputation was already scheduled.
     let staleDotEnv: boolean;
     try {
@@ -827,6 +817,7 @@ function copyFileMap(m: FileMap) {
 
 async function createAndSerializeProjectGraph({
   projects,
+  externalNodes,
   sourceMaps,
 }: ConfigurationResult): Promise<SerializedProjectGraph> {
   try {
@@ -836,7 +827,7 @@ async function createAndSerializeProjectGraph({
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingFileMap(
         projects,
-        knownExternalNodes,
+        externalNodes,
         fileMap,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),

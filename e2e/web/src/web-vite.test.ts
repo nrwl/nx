@@ -6,6 +6,7 @@ import {
   isNotWindows,
   killPorts,
   newProject,
+  reservePort,
   runCLI,
   runCLIAsync,
   uniq,
@@ -31,8 +32,9 @@ describe('Web Components Applications with bundler set as vite', () => {
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
+    const port = await reservePort();
     runCLI(
-      `generate @nx/web:app apps/${appName} --bundler=vite --no-interactive --linter=eslint --unitTestRunner=vitest`
+      `generate @nx/web:app apps/${appName} --bundler=vite --no-interactive --linter=eslint --unitTestRunner=vitest --port=${port}`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -54,7 +56,7 @@ describe('Web Components Applications with bundler set as vite', () => {
     if (isNotWindows() && (await shouldRunPlaywrightTests())) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      await killPorts();
+      await killPorts(port);
     }
   }, 500000);
 

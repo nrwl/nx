@@ -7,6 +7,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   maxWorkers: 1,
   globals: {},
+  setupFilesAfterEnv: ['<rootDir>/src/setup.ts'],
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
   displayName: 'e2e-release',

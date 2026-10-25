@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/gradle/plugin/nodes should create nodes based on gradle 1`] = `
+exports[`@nx/gradle/plugin/nodes > should create nodes based on gradle 1`] = `
 [
   [
     "proj/build.gradle",
@@ -409,7 +409,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle 1`] = `
 ]
 `;
 
-exports[`@nx/gradle/plugin/nodes should create nodes based on gradle for nested project root 1`] = `
+exports[`@nx/gradle/plugin/nodes > should create nodes based on gradle for nested project root 1`] = `
 [
   [
     "nested/nested/proj/build.gradle",
@@ -451,7 +451,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle for nested 
 ]
 `;
 
-exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets based on gradle if ciTestTargetName is specified 1`] = `
+exports[`@nx/gradle/plugin/nodes > should create nodes with atomized tests targets based on gradle if ciTestTargetName is specified 1`] = `
 [
   [
     "proj/build.gradle",
@@ -860,7 +860,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets
 ]
 `;
 
-exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests targets based on gradle if ciTestTargetName is not specified 1`] = `
+exports[`@nx/gradle/plugin/nodes > should not create nodes with atomized tests targets based on gradle if ciTestTargetName is not specified 1`] = `
 [
   [
     "proj/build.gradle",

@@ -6,6 +6,7 @@ import {
   type MigrateGenerateErrorCode,
   type MigratePromptName,
   type MigrateRunErrorCode,
+  type MigrateRunStopReason,
 } from './migrate-analytics';
 
 describe('computeMajorsCrossed', () => {
@@ -68,7 +69,6 @@ describe('GA4 event name length cap', () => {
     multi_major: true,
     agentic: true,
     agent_select: true,
-    ambiguous_agent_outcome: true,
   };
   const GENERATE_ERROR_CODES: Record<MigrateGenerateErrorCode, true> = {
     resolve_version: true,
@@ -81,6 +81,12 @@ describe('GA4 event name length cap', () => {
     agentic: true,
     other: true,
   };
+  const RUN_STOP_REASONS: Record<MigrateRunStopReason, true> = {
+    existing_run: true,
+    declined_commits: true,
+    aborted: true,
+    runbook_missing: true,
+  };
 
   it('keeps every event name within 40 characters', () => {
     const names = [
@@ -91,13 +97,20 @@ describe('GA4 event name length cap', () => {
       'migrate_orchestrator_init',
       'migrate_orchestrator_dispense',
       'migrate_orchestrator_complete',
+      'migrate_orchestrator_abandoned',
+      'migrate_orchestrator_resume',
+      'migrate_orchestrator_step_dispensed',
+      'migrate_orchestrator_existing_run',
       'migrate_single_migration_recorded',
       'migrate_single_migration_invocation',
+      'migrate_single_migration_complete',
+      'migrate_single_migration_abandoned',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
       ),
       ...Object.keys(RUN_ERROR_CODES).map((c) => `migrate_run_error_${c}`),
+      ...Object.keys(RUN_STOP_REASONS).map((r) => `migrate_run_stopped_${r}`),
     ];
     const tooLong = names.filter((name) => name.length > 40);
     expect(tooLong).toEqual([]);
@@ -159,6 +172,7 @@ describe('migrate-analytics events', () => {
         migrationCount: 3,
         appliedCount: 3,
       });
+      a.reportMigrateRunStopped('aborted');
       a.reportMigrateGenerateError('fetch_migrations', new Error('x'));
       a.reportMigrateRunError({ code: 'other', error: new Error('x') });
       expect(mockReportEvent).not.toHaveBeenCalled();
@@ -389,6 +403,12 @@ describe('migrate-analytics events', () => {
         appliedCount: 4,
       });
     });
+
+    it('encodes the stop reason in the event name', async () => {
+      const a = await load();
+      a.reportMigrateRunStopped('existing_run');
+      expect(countOf('migrate_run_stopped_existing_run')).toBe(1);
+    });
   });
 
   describe('reportMigrateRunError', () => {
@@ -463,30 +483,74 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the dispense action and attempt', async () => {
+    it('reports the dispense action, attempt and ordinal', async () => {
       const a = await load();
       a.reportMigrateOrchestratorDispense({
         action: 'next-step',
         attempt: 2,
+        ordinal: 5,
       });
       expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
         promptChoice: 'next-step',
         migrationCount: 2,
+        taskCount: 5,
       });
     });
 
-    it('reports the terminal tallies and total dispense count on complete', async () => {
+    it('reports the attempt and ordinal of a durable dispense', async () => {
       const a = await load();
-      a.reportMigrateOrchestratorComplete({
+      a.reportMigrateOrchestratorStepDispensed({ attempt: 2, ordinal: 3 });
+      expect(paramsFor('migrate_orchestrator_step_dispensed')).toEqual({
+        migrationCount: 2,
+        taskCount: 3,
+      });
+    });
+
+    it('carries no ordinal for a rejected step action', async () => {
+      const a = await load();
+      a.reportMigrateOrchestratorDispense({ action: 'error', attempt: 0 });
+      expect(paramsFor('migrate_orchestrator_dispense')).toEqual({
+        promptChoice: 'error',
+        migrationCount: 0,
+      });
+    });
+
+    it('reports the run tallies on complete, abandonment, resume and every existing-run activity', async () => {
+      const a = await load();
+      const tallies = {
         completed: 3,
         skipped: 1,
+        unresolved: 2,
         dispenseCount: 9,
-      });
-      expect(paramsFor('migrate_orchestrator_complete')).toEqual({
+      };
+      const params = {
         appliedCount: 3,
         taskCount: 1,
+        majorsCrossed: 2,
         migrationCount: 9,
+      };
+      const activities = ['idle', 'held', 'unknown'] as const;
+      a.reportMigrateOrchestratorComplete(tallies);
+      a.reportMigrateOrchestratorAbandoned({
+        ...tallies,
+        agentUsed: 'claude-code',
       });
+      a.reportMigrateOrchestratorResume(tallies);
+      for (const activity of activities) {
+        a.reportMigrateOrchestratorExistingRun({ ...tallies, activity });
+      }
+      expect(mockReportEvent.mock.calls).toEqual([
+        ['migrate_orchestrator_complete', params],
+        [
+          'migrate_orchestrator_abandoned',
+          { ...params, agentUsed: 'claude-code' },
+        ],
+        ['migrate_orchestrator_resume', params],
+        ...activities.map((activity) => [
+          'migrate_orchestrator_existing_run',
+          { ...params, promptChoice: activity },
+        ]),
+      ]);
     });
 
     it('encodes recorded vs standalone in the single-migration event name', async () => {
@@ -505,6 +569,18 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_single_migration_invocation')).toEqual({
         promptChoice: 'prompt',
       });
+    });
+
+    it('reports how an agent-enabled single migration ended', async () => {
+      const a = await load();
+      a.reportMigrateSingleMigrationComplete({});
+      a.reportMigrateSingleMigrationComplete({ agentUsed: 'claude-code' });
+      a.reportMigrateSingleMigrationAbandoned({ agentUsed: 'codex' });
+      expect(mockReportEvent.mock.calls).toEqual([
+        ['migrate_single_migration_complete', { agentUsed: undefined }],
+        ['migrate_single_migration_complete', { agentUsed: 'claude-code' }],
+        ['migrate_single_migration_abandoned', { agentUsed: 'codex' }],
+      ]);
     });
   });
 });

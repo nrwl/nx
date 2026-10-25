@@ -10,7 +10,6 @@ import { acknowledgeSwcBuildScripts } from '@nx/js/internal';
 import { coerce, major } from 'semver';
 import {
   ajvVersion,
-  analogVitestAngular,
   edgeRuntimeVmVersion,
   happyDomVersion,
   jsdomVersion,
@@ -48,11 +47,6 @@ export async function ensureDependencies(
     logger.info(
       `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`
     );
-  }
-
-  if (schema.uiFramework === 'angular') {
-    devDependencies['@analogjs/vitest-angular'] = analogVitestAngular;
-    devDependencies['@analogjs/vite-plugin-angular'] = analogVitestAngular;
   }
 
   if (schema.uiFramework === 'react') {
