@@ -1,19 +1,38 @@
 ---
 title: Authenticate with the Nx Cloud Public API
-description: Authenticate Nx Cloud Public API requests with a CI access token or a personal access token and Nx Cloud Id.
+description: Authenticate Nx Cloud Public API requests with nx-cloud api and your OAuth login, a CI access token, or a personal access token.
 filter: 'type:Guides'
 topics:
   - 'Nx Cloud'
   - 'Continuous integration'
 ---
 
-Use one of these two options to authenticate a Public API request:
+Call the Public API with `npx nx-cloud api` from your workspace, in a terminal or a script.
+It authenticates with your login from [`npx nx login`](/docs/kb/personal-access-tokens), or with a CI
+access token.
+
+To send requests without the Nx Cloud CLI, use one of these credentials:
 
 - A CI access token, sent as a bearer token.
 - A personal access token (PAT) and Nx Cloud Id, sent together in two headers.
 
 The Nx Cloud Id alone does not authenticate a Public API request.
 Service-account credentials for the Prometheus metrics API do not authenticate Public API requests.
+
+## Use `nx-cloud api`
+
+```shell
+npx nx-cloud api cipes
+```
+
+The command sends the login stored on your machine, with the `nxCloudId` from your `nx.json`, and
+refreshes an OAuth login when it expires.
+If you aren't logged in, run `npx nx login` and approve the code in your browser.
+
+In CI, set `NX_CLOUD_ACCESS_TOKEN` to a CI access token.
+Whenever that variable is set, the command sends it instead of your login.
+
+Run `npx nx-cloud api --help` for paths, filters, and pagination.
 
 ## Check plan eligibility
 
@@ -68,9 +87,8 @@ This option does not require an `Nx-Cloud-Id` header.
 
 ## Use a personal access token and Nx Cloud Id
 
-Create a PAT in your Nx Cloud **Profile** settings, under **Personal access tokens**.
-You can also provision one through `nx login`.
-See [personal access tokens](/docs/kb/personal-access-tokens) for token management.
+Use a PAT for a script that acts as you and can't run the Nx Cloud CLI.
+Create one in Nx Cloud under **Personal settings** > **Access tokens**.
 
 Store the PAT in your secret manager.
 Provide it to your shell or CI environment as `NX_CLOUD_PERSONAL_ACCESS_TOKEN`.

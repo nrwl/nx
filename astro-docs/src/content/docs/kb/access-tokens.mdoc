@@ -47,6 +47,14 @@ The `NX_CLOUD_ACCESS_TOKEN` takes precedence over any authentication method in y
 
 We recommend setting up a `read-write` token for you protected branches in CI and a `read-only` token for unprotected branches. You can leverage your CI provider's environment variables management to accomplish this.
 
+{% aside type="note" title="CI runs that warn about a personal access token" %}
+A CI run that prints `Personal access token used in an unattended run` sent a personal access token.
+Set `NX_CLOUD_ACCESS_TOKEN` as shown below, then drop the step that saves the personal access token.
+Keep a personal access token only for steps that run `nx-cloud onboard`,
+`nx-cloud publish-conformance-rule`, or `nx-cloud publish-conformance-rules`, which need a user's
+credential.
+{% /aside %}
+
 ### Azure DevOps
 
 Azure DevOps provides various [mechanisms to limit access to secrets](https://learn.microsoft.com/en-us/azure/devops/pipelines/security/secrets?view=azure-devops#limit-access-to-secret-variables). We'll be using _Variable groups_ in this process, but you can achieve the same result leveraging [Azure Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/general/overview).
@@ -275,8 +283,9 @@ We **do not recommend** that you commit an access token to your repository but o
 }
 ```
 
-{% aside type="caution" title="Nx Cloud authentication is changing" %}
-From Nx 19.7 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx login`](/docs/reference/nx-cloud-cli#nx-cloud-login) to provision their own local [personal access tokens](/docs/kb/personal-access-tokens) for user based authentication.
+{% aside type="caution" title="Nx 19.7 and later use `nxCloudId`" %}
+From Nx 19.7, new workspaces connect to Nx Cloud with the `nxCloudId` property instead, and
+developers [log in](/docs/kb/personal-access-tokens) with `nx login`.
 {% /aside %}
 
 #### Using `nx-cloud.env`
