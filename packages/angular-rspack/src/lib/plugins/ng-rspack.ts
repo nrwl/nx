@@ -18,8 +18,11 @@ import {
 } from '../utils/dev-server-ready-signal';
 import { loadEsmModule } from '../utils/misc-helpers';
 import { isServeMode } from '../utils/rspack-serve-env';
+import { addBodyScript } from '../utils/index-file/add-body-script';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
+import { connectSsrReload } from './client/ssr-reload-client';
+import type { SsrReloadServer } from './server/ssr-reload-server';
 import {
   ExtractLicensesPlugin,
   type SharedLicenseInputs,
@@ -41,6 +44,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
   private readonly serverRenderingInputs:
     | SharedServerRenderingInputs
     | undefined;
+  private readonly ssrReloadServer: SsrReloadServer | undefined;
   readonly [READY_SIGNAL_PLUGIN] = true;
 
   constructor(
@@ -67,6 +71,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
        * compiler.
        */
       serverRenderingInputs?: SharedServerRenderingInputs;
+      ssrReloadServer?: SsrReloadServer;
     }
   ) {
     this.pluginOptions = pluginOptions;
@@ -75,11 +80,13 @@ export class NgRspackPlugin implements RspackPluginInstance {
     this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
     this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
     this.serverRenderingInputs = extraOptions.serverRenderingInputs;
+    this.ssrReloadServer = extraOptions.ssrReloadServer;
   }
 
   apply(compiler: Compiler) {
     const root = this.pluginOptions.root;
     const isDevServer = isServeMode();
+    const ssrReloadServer = this.ssrReloadServer;
 
     if (
       !isDevServer ||
@@ -99,7 +106,9 @@ export class NgRspackPlugin implements RspackPluginInstance {
         typeof this.pluginOptions.ssr === 'object' &&
         this.pluginOptions.ssr.entry !== undefined
       ) {
-        new AngularSsrDevServer(this.pluginOptions).apply(compiler);
+        new AngularSsrDevServer(this.pluginOptions, ssrReloadServer).apply(
+          compiler
+        );
       }
     }
     if (this.isPlatformServer) {
@@ -225,6 +234,11 @@ export class NgRspackPlugin implements RspackPluginInstance {
     } else {
       new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
     }
+    if (!this.isPlatformServer && ssrReloadServer) {
+      compiler.hooks.shutdown.tapPromise('NgRspackPlugin', () =>
+        ssrReloadServer.close()
+      );
+    }
     if (!this.isPlatformServer && this.pluginOptions.index) {
       new IndexHtmlPlugin({
         indexPath: this.pluginOptions.index.input,
@@ -239,6 +253,19 @@ export class NgRspackPlugin implements RspackPluginInstance {
         i18n: this.i18n,
         optimization: this.pluginOptions.optimization,
         postTransform: this.pluginOptions.index.transformer,
+        serverPostTransform: ssrReloadServer
+          ? async (html) => {
+              if (!compiler.watchMode) {
+                return html;
+              }
+              const port = await ssrReloadServer.getPort();
+              return addBodyScript(
+                html,
+                `(${connectSsrReload.toString()})(${port});`,
+                'nx-angular-ssr-reload'
+              );
+            }
+          : undefined,
         isSsr: !!(
           this.pluginOptions.ssr ||
           this.pluginOptions.prerender ||

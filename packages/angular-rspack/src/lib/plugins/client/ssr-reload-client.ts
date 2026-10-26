@@ -1,18 +1,35 @@
-// casting is needed to force the type to be the global WebSocket and avoid type errors
-const socket: WebSocket = new WebSocket(`ws://localhost:60000`);
+// This function is serialized into HTML and cannot reference module-scoped values.
+export function connectSsrReload(port: number) {
+  const socket = new WebSocket(`ws://${globalThis.location.hostname}:${port}`);
+  let reloading = false;
 
-socket.addEventListener('message', (event) => {
-  if (event.data === 'ssr-reload') {
-    console.log('[AngularSSRDevServer] Reloading the page...');
-    // @ts-expect-error: This is a client-side file
-    window.location.reload();
+  async function reloadWhenReady() {
+    try {
+      await fetch(globalThis.location.href, {
+        cache: 'no-store',
+        mode: 'no-cors',
+      });
+    } catch {
+      setTimeout(reloadWhenReady, 100);
+      return;
+    }
+    reloading = false;
+    globalThis.location.reload();
   }
-});
 
-socket.addEventListener('open', () => {
-  console.log('[AngularSSRDevServer] WebSocket connection established.');
-});
+  socket.addEventListener('message', (event) => {
+    if (event.data === 'ssr-reload' && !reloading) {
+      reloading = true;
+      console.log('[AngularSSRDevServer] Reloading the page...');
+      void reloadWhenReady();
+    }
+  });
 
-socket.addEventListener('close', () => {
-  console.warn('[AngularSSRDevServer] WebSocket connection closed.');
-});
+  socket.addEventListener('open', () => {
+    console.log('[AngularSSRDevServer] WebSocket connection established.');
+  });
+
+  socket.addEventListener('close', () => {
+    console.warn('[AngularSSRDevServer] WebSocket connection closed.');
+  });
+}
