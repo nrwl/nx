@@ -438,10 +438,11 @@ export class TaskOrchestrator {
   ) {
     while (true) {
       if (this.stopRequested) break;
-      // On bail, start nothing new but let running tasks finish. Unstarted
-      // discrete tasks are skipped; a missing status means an interrupted run
+      // On bail, start nothing new but let running tasks finish. Skip unstarted
+      // discrete tasks unless stopped, so the run still reads as interrupted
       if (this.bailed) {
         await Promise.allSettled(this.pendingDiscreteWorkers);
+        if (this.stopRequested) break;
         for (const task of Object.values(this.taskGraph.tasks)) {
           if (!task.continuous && !this.completedTasks.has(task.id)) {
             this.completedTasks.set(task.id, 'skipped');

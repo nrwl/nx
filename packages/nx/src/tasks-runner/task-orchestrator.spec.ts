@@ -3506,31 +3506,40 @@ describe('TaskOrchestrator', () => {
       return { orchestrator, running };
     }
 
-    it('lets a running task finish and skips the tasks it never started', async () => {
-      const { orchestrator, running } = createCoordinator([
-        'a:build',
-        'b:build',
-        'c:build',
-      ]);
-      let finished = false;
-      const loop = orchestrator
-        .executeCoordinatorLoop(false, 2)
-        .then(() => (finished = true));
-      await vi.waitFor(() => expect(running.size).toBe(2));
+    it.each([
+      ['skips the tasks it never started', false, { 'c:build': 'skipped' }],
+      ['leaves them without a status when stopped meanwhile', true, {}],
+    ])(
+      'lets a running task finish and %s',
+      async (_, stopRequested, unstarted) => {
+        const { orchestrator, running } = createCoordinator([
+          'a:build',
+          'b:build',
+          'c:build',
+        ]);
+        let finished = false;
+        const loop = orchestrator
+          .executeCoordinatorLoop(false, 2)
+          .then(() => (finished = true));
+        await vi.waitFor(() => expect(running.size).toBe(2));
 
-      running.get('a:build')('failure');
-      await new Promise((r) => setTimeout(r));
-      expect(finished).toBe(false);
-      running.get('b:build')('success');
-      await loop;
+        running.get('a:build')('failure');
+        await new Promise((r) => setTimeout(r));
+        expect(finished).toBe(false);
+        // Stop during the wait for b:build. Any earlier, the loop-top stop
+        // check alone would leave c:build without a status
+        orchestrator.stopRequested = stopRequested;
+        running.get('b:build')('success');
+        await loop;
 
-      expect([...running.keys()]).toEqual(['a:build', 'b:build']);
-      expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
-        'a:build': 'failure',
-        'b:build': 'success',
-        'c:build': 'skipped',
-      });
-    });
+        expect([...running.keys()]).toEqual(['a:build', 'b:build']);
+        expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
+          'a:build': 'failure',
+          'b:build': 'success',
+          ...unstarted,
+        });
+      }
+    );
 
     it('starts nothing once a task fails while the coordinator is mid-pass', async () => {
       const { orchestrator, running } = createCoordinator([
