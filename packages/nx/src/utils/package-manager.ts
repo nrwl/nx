@@ -14,7 +14,7 @@ import {
 } from 'fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
@@ -31,6 +31,7 @@ import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
 import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
+  fileExists,
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
@@ -120,32 +121,64 @@ export interface PackageManagerCommands {
 }
 
 /**
- * Detects which package manager is used in the workspace based on the lock file.
+ * Detects the package manager from the CLI override or directory lockfiles.
+ * Project directories in the current workspace can fall back to its root lockfile.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(
+  dir: string = workspaceRoot
+): PackageManager {
   const nxJson = readNxJson();
   if (nxJson.cli?.packageManager) {
     return nxJson.cli.packageManager;
   }
 
-  const dirsToCheck =
-    dir && dir !== workspaceRoot ? [dir, workspaceRoot] : [workspaceRoot];
-  for (const d of dirsToCheck) {
-    if (existsSync(join(d, 'bun.lockb')) || existsSync(join(d, 'bun.lock'))) {
+  const dirsToCheck = isCurrentWorkspaceSubdirectory(dir)
+    ? [dir, workspaceRoot]
+    : [dir];
+  for (const directory of dirsToCheck) {
+    if (
+      existsSync(join(directory, 'bun.lockb')) ||
+      existsSync(join(directory, 'bun.lock'))
+    ) {
       return 'bun';
     }
-    if (existsSync(join(d, 'yarn.lock'))) {
+    if (existsSync(join(directory, 'yarn.lock'))) {
       return 'yarn';
     }
-    if (existsSync(join(d, 'pnpm-lock.yaml'))) {
+    if (existsSync(join(directory, 'pnpm-lock.yaml'))) {
       return 'pnpm';
     }
-    if (existsSync(join(d, 'package-lock.json'))) {
+    if (existsSync(join(directory, 'package-lock.json'))) {
       return 'npm';
     }
   }
 
   return detectInvokedPackageManager();
+}
+
+function isCurrentWorkspaceSubdirectory(dir: string): boolean {
+  let directory = resolve(dir);
+  const relativePath = relative(workspaceRoot, directory);
+  if (
+    !relativePath ||
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    return false;
+  }
+
+  while (relative(workspaceRoot, directory) !== '') {
+    if (
+      ['nx.json', 'nx', 'nx.bat'].some((file) =>
+        fileExists(join(directory, file))
+      )
+    ) {
+      return false;
+    }
+    directory = dirname(directory);
+  }
+  return true;
 }
 
 /**
