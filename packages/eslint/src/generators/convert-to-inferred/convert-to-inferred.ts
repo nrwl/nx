@@ -3,14 +3,18 @@ import {
   NoTargetsToMigrateError,
   processTargetOutputs,
   interpolate,
+  resolveNxTokensInOptions,
+  toProjectRelativePath,
 } from '@nx/devkit/internal';
 import {
   createProjectGraphAsync,
   formatFiles,
+  joinPathFragments,
   type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import { isAbsolute } from 'node:path';
 import { basename, dirname, relative } from 'node:path/posix';
 import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
@@ -157,9 +161,65 @@ function handlePropertiesInOptions(
     delete options.errorOnUnmatchedPattern;
   }
 
-  if ('outputFile' in options) {
+  for (const option of [
+    'outputFile',
+    'ignorePath',
+    'resolvePluginsRelativeTo',
+    'printConfig',
+  ]) {
+    if (!(option in options)) {
+      continue;
+    }
+    // the executor treated an empty value as unset
+    if (!options[option]) {
+      delete options[option];
+      continue;
+    }
+    options[option] = toProjectRootPath(
+      options[option],
+      option,
+      projectDetails
+    );
+  }
+
+  if (Array.isArray(options.rulesdir)) {
+    options.rulesdir = options.rulesdir.map((dir: string) =>
+      toProjectRootPath(dir, 'rulesdir', projectDetails)
+    );
+  }
+
+  if (typeof options.format === 'string') {
+    const format = resolveNxTokens(
+      options.format,
+      'format',
+      projectDetails
+    ).replace(/\\/g, '/');
+    // ESLint loads a formatter from a file, resolved from its cwd, when the
+    // name contains a `/` and is not a scoped package
+    if (format.includes('/') && !/^@.*\//.test(format)) {
+      const formatPath = toProjectRootPath(
+        options.format,
+        'format',
+        projectDetails
+      );
+      options.format = /[\\/]/.test(formatPath)
+        ? formatPath
+        : `./${formatPath}`;
+    }
+  }
+
+  // Nx rejects outputs outside the workspace, so such a report is not cached
+  if (
+    options.outputFile &&
+    !/^\.\.(\/|$)/.test(
+      joinPathFragments(projectDetails.root, options.outputFile)
+    )
+  ) {
+    const output = '{projectRoot}/{options.output-file}';
     target.outputs ??= [];
-    target.outputs.push(options.outputFile);
+    if (!target.outputs.includes(output)) {
+      target.outputs.push(output);
+    }
   }
 
   for (const key in targetOptionsToCliMap) {
@@ -203,6 +263,42 @@ function handlePropertiesInOptions(
 
     delete options.lintFilePatterns;
   }
+}
+
+function resolveNxTokens(
+  value: string,
+  option: string,
+  projectDetails: { projectName: string; root: string }
+): string {
+  return resolveNxTokensInOptions(
+    { [option]: value },
+    { root: projectDetails.root, name: projectDetails.projectName },
+    option
+  )[option];
+}
+
+/**
+ * Rewrites a path the executor resolved from the workspace root so that ESLint
+ * resolves it to the same location from the project root, where the inferred
+ * target runs it.
+ */
+function toProjectRootPath(
+  value: string,
+  option: string,
+  projectDetails: { projectName: string; root: string }
+): string {
+  const resolvedValue = resolveNxTokens(value, option, projectDetails);
+  // A relative path to an absolute location would depend on where the
+  // workspace is on disk. The executor joined the output file onto the
+  // workspace root, so its leading `/` stays inside the workspace.
+  if (option !== 'outputFile' && isAbsolute(resolvedValue)) {
+    return resolvedValue;
+  }
+
+  return toProjectRelativePath(
+    joinPathFragments('.', resolvedValue),
+    projectDetails.root
+  );
 }
 
 export default convertToInferred;
