@@ -280,6 +280,57 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       `);
     });
 
+    it.each([
+      ['skipped', NativeTaskStatus.Skipped, 'Ran target test'],
+      ['stopped', NativeTaskStatus.Stopped, 'Cancelled running target test'],
+    ])(
+      'should point at the batch worker log when its tasks were %s',
+      async (_, nativeStatus, headline) => {
+        const target = {
+          id: 'test:test',
+        } as Partial<Task> as Task;
+
+        const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+          args: {
+            targets: ['test'],
+          },
+          taskGraph: {
+            tasks: { target },
+            dependencies: {},
+            continuousDependencies: {},
+            roots: [],
+          },
+          initiatingProject: 'test',
+          initiatingTasks: [],
+          overrides: {},
+          projectNames: ['test'],
+          tasks: [target],
+          resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+        });
+
+        lifeCycle.startTasks?.([target], null as unknown as TaskMetadata);
+        if (nativeStatus === NativeTaskStatus.Stopped) {
+          lifeCycle.endTasks?.(
+            [{ code: 1, status: 'stopped', task: target, terminalOutput: '' }],
+            null as unknown as TaskMetadata
+          );
+        }
+        lifeCycle.setTaskStatus?.(target.id, nativeStatus);
+        lifeCycle.batchOutputAvailable?.(
+          'batchy:run 1',
+          '/ws/.nx/cache/batchOutputs/batchy-run-1.log'
+        );
+        lifeCycle.endCommand?.();
+
+        const output = getOutputLines(printSummary).join('\n');
+
+        expect(output).toContain(headline);
+        expect(output).toContain(
+          'batchy:run 1: /ws/.nx/cache/batchOutputs/batchy-run-1.log'
+        );
+      }
+    );
+
     it('should display cancelled for single continuous task', async () => {
       const target = {
         id: 'test:dev',
@@ -798,6 +849,141 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Successfully ran target test for 2 projects (37w)
+        "
+      `);
+    });
+
+    it('should mark skipped batch tasks and point at the batch worker log', async () => {
+      const foo = {
+        id: 'foo:check',
+        target: {
+          target: 'check',
+          project: 'foo',
+        },
+      } as Partial<Task> as Task;
+      const bar = {
+        id: 'bar:check',
+        target: {
+          target: 'check',
+          project: 'bar',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['check'],
+        },
+        initiatingProject: '',
+        initiatingTasks: [],
+        overrides: {},
+        taskGraph: {
+          tasks: { foo, bar },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
+        projectNames: ['foo', 'bar'],
+        tasks: [foo, bar],
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+      });
+
+      // The batch worker stopped before reaching either task
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.setTaskStatus?.(foo.id, NativeTaskStatus.Skipped);
+      lifeCycle.setTaskStatus?.(bar.id, NativeTaskStatus.Skipped);
+      lifeCycle.batchOutputAvailable?.(
+        'batchy:run 1',
+        '/ws/.nx/cache/batchOutputs/batchy-run-1.log'
+      );
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+
+           ⏭  nx run foo:check
+           ⏭  nx run bar:check
+
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Ran target check for 2 projects (37w)
+
+           Batch worker logs:
+
+              - batchy:run 1: /ws/.nx/cache/batchOutputs/batchy-run-1.log
+
+        "
+      `);
+    });
+
+    it('should list a task re-run in a later batch wave once, with every wave worker log', async () => {
+      const foo = {
+        id: 'foo:check',
+        target: {
+          target: 'check',
+          project: 'foo',
+        },
+      } as Partial<Task> as Task;
+      const bar = {
+        id: 'bar:check',
+        target: {
+          target: 'check',
+          project: 'bar',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['check'],
+        },
+        initiatingProject: '',
+        initiatingTasks: [],
+        overrides: {},
+        taskGraph: {
+          tasks: { foo, bar },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
+        projectNames: ['foo', 'bar'],
+        tasks: [foo, bar],
+        resolveRenderIsDonePromise: vi.fn().mockResolvedValue(null),
+      });
+
+      // The first worker reports only foo, so bar re-runs under the same batch
+      // id in a second worker with its own log.
+      lifeCycle.startTasks?.([foo, bar], null as unknown as TaskMetadata);
+      lifeCycle.setTaskStatus?.(foo.id, NativeTaskStatus.Skipped);
+      lifeCycle.batchOutputAvailable?.(
+        'batchy:run 1',
+        '/ws/.nx/cache/batchOutputs/batchy-run-1-1.log'
+      );
+      lifeCycle.startTasks?.([bar], null as unknown as TaskMetadata);
+      lifeCycle.setTaskStatus?.(bar.id, NativeTaskStatus.Skipped);
+      lifeCycle.batchOutputAvailable?.(
+        'batchy:run 1',
+        '/ws/.nx/cache/batchOutputs/batchy-run-1-2.log'
+      );
+      lifeCycle.endCommand?.();
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+
+           ⏭  nx run foo:check
+           ⏭  nx run bar:check
+
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Ran target check for 2 projects (37w)
+
+           Batch worker logs:
+
+              - batchy:run 1: /ws/.nx/cache/batchOutputs/batchy-run-1-1.log
+              - batchy:run 1: /ws/.nx/cache/batchOutputs/batchy-run-1-2.log
+
         "
       `);
     });

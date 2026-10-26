@@ -308,8 +308,6 @@ export class TaskOrchestrator {
   // exit, and the paths that never spawn one write it inline. The backstop in
   // postRunSteps consults this so a task's output is written exactly once.
   private tasksWithPersistedOutput = new Set<string>();
-  /** Batches whose worker log was handed to the life cycle, so it must survive. */
-  private announcedBatchLogs = new Set<string>();
   // endregion internal state
 
   constructor(
@@ -446,6 +444,12 @@ export class TaskOrchestrator {
         for (const task of Object.values(this.taskGraph.tasks)) {
           if (!task.continuous && !this.completedTasks.has(task.id)) {
             this.completedTasks.set(task.id, 'skipped');
+            if (this.tuiEnabled) {
+              this.options.lifeCycle.setTaskStatus(
+                task.id,
+                NativeTaskStatus.Skipped
+              );
+            }
           }
         }
         break;
@@ -1118,13 +1122,14 @@ export class TaskOrchestrator {
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     let batchProcess: BatchProcess | undefined;
+    let workerLogAnnounced = false;
     try {
       batchProcess = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
         this.projectGraph,
         this.fullTaskGraph,
         env,
-        printsTaskOutput(this.resolvedOutputStyle)
+        this.printsBatchOutput()
       );
 
       // Stream output from batch process to the batch
@@ -1208,7 +1213,7 @@ export class TaskOrchestrator {
         );
       }
 
-      this.announceBatchWorkerLog(
+      workerLogAnnounced = this.announceBatchWorkerLog(
         batch.id,
         taskResults,
         batchProcess.getCapturedOutputPath()
@@ -1232,7 +1237,7 @@ export class TaskOrchestrator {
 
       await batchProcess?.flushCapturedOutput();
 
-      this.announceBatchWorkerLog(
+      workerLogAnnounced = this.announceBatchWorkerLog(
         batch.id,
         taskResults,
         batchProcess?.getCapturedOutputPath()
@@ -1268,7 +1273,7 @@ export class TaskOrchestrator {
       // Kept only when something failed and the log was announced; an all-green
       // batch's chatter explains nothing and would sit in `batchOutputs/` until
       // the sweep.
-      if (!this.announcedBatchLogs.has(batch.id)) {
+      if (!workerLogAnnounced) {
         batchProcess?.discardCapturedOutput();
       }
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
@@ -1281,8 +1286,17 @@ export class TaskOrchestrator {
   }
 
   /**
+   * Whether a batch worker's output is written to the terminal as it streams.
+   * Under the TUI it reaches only the batch's pane, which closes with the batch
+   * (or with the TUI, if pinned), so it is captured to a file instead.
+   */
+  private printsBatchOutput(): boolean {
+    return printsTaskOutput(this.resolvedOutputStyle) && !this.tuiEnabled;
+  }
+
+  /**
    * Tells the life cycle where the batch worker's own log is, when something
-   * failed and a style that prints nothing would otherwise leave it unread.
+   * failed and its output was not printed as it streamed.
    *
    * The path is announced rather than the bytes copied into a task: one worker
    * produces one log, it explains the batch rather than any single task, and a
@@ -1292,23 +1306,23 @@ export class TaskOrchestrator {
     batchId: string,
     results: { status: TaskStatus }[],
     capturedOutputPath: string | undefined
-  ): void {
-    if (!capturedOutputPath || printsTaskOutput(this.resolvedOutputStyle)) {
-      return;
+  ): boolean {
+    if (!capturedOutputPath || this.printsBatchOutput()) {
+      return false;
     }
     const failed = results.some((r) => batchWorkerLogExplains(r.status));
     if (!failed) {
-      return;
+      return false;
     }
     // The path is minted when the file is opened, before any byte reaches it,
     // so a capture that failed on its first write leaves one that exists and is
     // empty. Announcing that offers the reader an address holding nothing.
     // Checked after the flush, so the size is what a reader will actually see.
     if (!hasContent(capturedOutputPath)) {
-      return;
+      return false;
     }
-    this.announcedBatchLogs.add(batchId);
     this.options.lifeCycle.batchOutputAvailable?.(batchId, capturedOutputPath);
+    return true;
   }
 
   /**

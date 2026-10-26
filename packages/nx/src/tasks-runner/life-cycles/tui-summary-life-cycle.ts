@@ -59,8 +59,9 @@ export function getTuiTerminalSummaryLifeCycle({
   // Finalized output strings set on task completion — read by summary print functions
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToTaskStatus: Record<string, TaskStatus> = {};
+  const batchWorkerLogs: [batchId: string, path: string][] = [];
 
-  const taskIdsInTheOrderTheyStart: string[] = [];
+  const taskIdsInTheOrderTheyStart = new Set<string>();
 
   const getTerminalOutput = (taskId: string): string =>
     tasksToTerminalOutputs[taskId] ?? taskOutputChunks[taskId]?.join('') ?? '';
@@ -68,7 +69,7 @@ export function getTuiTerminalSummaryLifeCycle({
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
       taskOutputChunks[t.id] ??= [];
-      taskIdsInTheOrderTheyStart.push(t.id);
+      taskIdsInTheOrderTheyStart.add(t.id);
       inProgressTasks.add(t.id);
     }
   };
@@ -142,10 +143,23 @@ export function getTuiTerminalSummaryLifeCycle({
     }
   };
 
+  lifeCycle.batchOutputAvailable = (batchId, path) => {
+    batchWorkerLogs.push([batchId, path]);
+  };
+
   lifeCycle.endCommand = () => {
     timeTakenText = prettyTime(process.hrtime(start));
     resolveRenderIsDonePromise();
   };
+
+  const batchWorkerLogRows = (): string[] => [
+    `${LEFT_PAD}${output.dim('Batch worker logs:')}`,
+    '',
+    ...batchWorkerLogs.map(
+      ([batchId, path]) =>
+        `${EXTENDED_LEFT_PAD}${output.dim(`- ${batchId}: ${path}`)}`
+    ),
+  ];
 
   const printSummary = () => {
     const isRunOne = initiatingProject && targets?.length === 1;
@@ -291,13 +305,17 @@ export function getTuiTerminalSummaryLifeCycle({
         )}`
       );
 
+      if (batchWorkerLogs.length > 0) {
+        messageLines.push('', ...batchWorkerLogRows());
+      }
+
       const viewLogs = viewLogsFooterRows(totalFailedTasks);
       messageLines.push(...viewLogs);
 
       // Print the entire failure message block with red color
       console.log(output.colors.red(messageLines.join(EOL)));
     } else {
-      console.log(
+      const messageLines = [
         output.applyNxPrefix(
           'red',
           output.colors.red(
@@ -305,8 +323,12 @@ export function getTuiTerminalSummaryLifeCycle({
               targets[0]
             )} for project ${output.bold(initiatingProject)}`
           ) + output.dim(` (${timeTakenText})`)
-        )
-      );
+        ),
+      ];
+      if (batchWorkerLogs.length > 0) {
+        messageLines.push('', ...batchWorkerLogRows());
+      }
+      console.log(messageLines.join(EOL));
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
@@ -338,7 +360,11 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const taskId of sortedTaskIds) {
       const taskStatus = tasksToTaskStatus[taskId];
       const terminalOutput = getTerminalOutput(taskId);
-      if (displayStoppedTasks.has(taskId) || !taskStatus) {
+      if (
+        displayStoppedTasks.has(taskId) ||
+        !taskStatus ||
+        taskStatus === 'stopped'
+      ) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         checklistLines.push(
@@ -384,10 +410,18 @@ export function getTuiTerminalSummaryLifeCycle({
             figures.tick
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
-      } else {
+      } else if (taskStatus === 'skipped') {
         checklistLines.push(
-          `${LEFT_PAD}${output.colors.green(
-            figures.tick
+          `${LEFT_PAD}${pc.yellow('⏭')}${SPACER}${output.colors.gray(
+            'nx run '
+          )}${taskId}`
+        );
+      } else {
+        const unhandled: never = taskStatus;
+        void unhandled;
+        checklistLines.push(
+          `${LEFT_PAD}${output.colors.cyan(
+            figures.squareSmallFilled
           )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
         );
       }
@@ -558,9 +592,12 @@ export function getTuiTerminalSummaryLifeCycle({
             );
           }
         }
-
-        failureSummaryRows.push(...viewLogsFooterRows(failedTasks.size));
       }
+
+      if (batchWorkerLogs.length > 0) {
+        failureSummaryRows.push(...batchWorkerLogRows(), '');
+      }
+      failureSummaryRows.push(...viewLogsFooterRows(failedTasks.size));
 
       console.log(output.colors.red(failureSummaryRows.join(EOL)));
     }
