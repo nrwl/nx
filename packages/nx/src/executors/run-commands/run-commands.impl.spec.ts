@@ -394,6 +394,77 @@ describe('Run Commands', () => {
         );
         expect(result).toEqual(expect.objectContaining({ success: true }));
       });
+
+      it.each([
+        [
+          true,
+          'in two writes',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
+          'with an escape sequence inside it',
+          'READY',
+          [`node -e "process.stdout.write('RE\\u001b[1mADY')"`],
+        ],
+        [
+          true,
+          'with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [`node -e "process.stdout.write('\\u001b[1mREADY')"`],
+        ],
+        [
+          false,
+          'across stdout and stderr',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          false,
+          'across two commands',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA')"`,
+            `node -e "setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+      ])(
+        'should return success %s when the string specified as ready condition is printed %s',
+        async (success, _, readyWhen, commands) => {
+          const result = await runCommands(
+            {
+              commands,
+              parallel: true,
+              readyWhen,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result.success).toBe(success);
+        }
+      );
+
+      it('should fail when every command exits before the string specified as ready condition is found', async () => {
+        const result = await runCommands(
+          {
+            commands: ['echo hi', 'echo there'],
+            parallel: true,
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result.success).toBe(false);
+        expect(result.terminalOutput).toContain('echo there');
+        expect(result.terminalOutput).toContain(
+          'exited before printing the readyWhen text "READY"'
+        );
+      });
     });
 
     describe('array of strings', () => {
@@ -431,7 +502,7 @@ describe('Run Commands', () => {
 
         runCommands(
           {
-            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo && sleep 1`],
             parallel: true,
             readyWhen: ['READY', 'bar'],
             __unparsed__: [],
