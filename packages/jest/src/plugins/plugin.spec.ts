@@ -1,7 +1,8 @@
 import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { readdirSync } from 'fs';
+import { spawnSync } from 'child_process';
+import { readdirSync, symlinkSync } from 'fs';
 import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
@@ -9,6 +10,28 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
+
+// jest-config sets rootDir on the config object it reads, so each test needs
+// its own
+const suffixConfig = () => ({
+  testMatch: ['**/*.spec.*'],
+  moduleFileExtensions: ['js', 'test.ts'],
+});
+const suffixSpecs = {
+  'proj/src/keep.spec.js': '',
+  'proj/src/unit.spec.JS': '',
+  'proj/src/flow.spec.test.ts': '',
+};
+// jest-haste-map's native find crawler, used where its find probe succeeds,
+// matches extensions as case-insensitive suffixes
+const nativeFindSpecs =
+  spawnSync(
+    'find',
+    ['.', '-type', 'f', '(', '-iname', '*.ts', '-o', '-iname', '*.js', ')'],
+    { cwd: __dirname, stdio: 'ignore' }
+  ).status === 0
+    ? ['src/flow.spec.test.ts', 'src/keep.spec.js', 'src/unit.spec.JS']
+    : ['src/keep.spec.js'];
 
 describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
@@ -588,6 +611,231 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       expect(targets[targetName].outputs).toEqual([]);
       expect(targets[targetName].cache).toBe(false);
     }
+  });
+
+  it.each([
+    [
+      'a <rootDir> testMatch glob',
+      { testMatch: ['<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)'] },
+      { 'proj/e2e/flow.spec.ts': '' },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      'a string testMatch',
+      { testMatch: '**/unit.spec.ts' },
+      {},
+      ['src/unit.spec.ts'],
+    ],
+    [
+      'a group in a testMatch glob next to a negated one',
+      { testMatch: ['**/*.(spec|test).ts', '!**/ignore.spec.ts'] },
+      { 'proj/src/unit.test.ts': '' },
+      ['src/unit.spec.ts', 'src/unit.test.ts'],
+    ],
+    [
+      'only negated testMatch globs',
+      { testMatch: ['!**/ignore.spec.ts'] },
+      {},
+      ['jest.config.js', 'project.json', 'src/unit.spec.ts'],
+    ],
+    [
+      'a <rootDir> testPathIgnorePatterns entry',
+      { testPathIgnorePatterns: ['<rootDir>/src/ignore'] },
+      {},
+      ['src/unit.spec.ts'],
+    ],
+    [
+      'testPathIgnorePatterns from a preset',
+      { preset: '../jest.preset.js' },
+      {
+        'jest.preset.js': `module.exports = { testPathIgnorePatterns: ['ignore'] };`,
+      },
+      ['src/unit.spec.ts'],
+    ],
+    [
+      'a testRegex matching a file outside the default testMatch',
+      { testRegex: '\\.e2e\\.ts$' },
+      { 'proj/src/flow.e2e.ts': '' },
+      ['src/flow.e2e.ts'],
+    ],
+    [
+      'testRegex from a preset matching the absolute path',
+      { preset: '../jest.preset.js' },
+      {
+        'jest.preset.js': `module.exports = { testRegex: '/proj/src/unit\\\\.spec' };`,
+      },
+      ['src/unit.spec.ts'],
+    ],
+    [
+      "an empty testRegex over a preset's",
+      { preset: '../jest.preset.js', testRegex: '' },
+      { 'jest.preset.js': `module.exports = { testRegex: 'neverMatches' };` },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      "an undefined testRegex over a preset's",
+      { preset: '../jest.preset.js', testRegex: undefined },
+      { 'jest.preset.js': `module.exports = { testRegex: 'neverMatches' };` },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      'roots',
+      { roots: ['<rootDir>/src'] },
+      { 'proj/e2e/flow.spec.ts': '' },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      'modulePathIgnorePatterns from a preset and the config',
+      {
+        preset: '../jest.preset.js',
+        modulePathIgnorePatterns: ['<rootDir>/src/ignore'],
+      },
+      {
+        'jest.preset.js': `module.exports = { modulePathIgnorePatterns: ['<rootDir>/e2e'] };`,
+        'proj/e2e/flow.spec.ts': '',
+      },
+      ['src/unit.spec.ts'],
+    ],
+    [
+      'a testMatch glob matching a file without a module file extension',
+      { testMatch: ['**/*.spec.*'] },
+      { 'proj/src/notes.spec.md': '' },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      'moduleFileExtensions',
+      { testMatch: ['**/*.spec.*'], moduleFileExtensions: ['js', 'md'] },
+      { 'proj/src/notes.spec.md': '' },
+      ['src/notes.spec.md'],
+    ],
+    [
+      'uppercase and compound extensions',
+      suffixConfig(),
+      suffixSpecs,
+      ['src/keep.spec.js'],
+    ],
+    [
+      "a preset's haste",
+      { ...suffixConfig(), preset: '../jest.preset.js' },
+      { ...suffixSpecs, 'jest.preset.js': `module.exports = { haste: {} };` },
+      nativeFindSpecs,
+    ],
+    [
+      "a haste over a preset's",
+      { ...suffixConfig(), preset: '../jest.preset.js', haste: {} },
+      {
+        ...suffixSpecs,
+        'jest.preset.js': `module.exports = { haste: { forceNodeFilesystemAPI: true } };`,
+      },
+      nativeFindSpecs,
+    ],
+  ])(
+    'should atomize the test files Jest runs with %s',
+    async (_, config, files, expected) => {
+      await tempFs.createFiles(files);
+      mockJestConfig(config, context);
+
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+
+      const targets = (results[0][1] as any).projects['proj'].targets;
+      expect(
+        Object.keys(targets)
+          .filter((t) => t.startsWith('test-ci--'))
+          .sort()
+      ).toEqual(expected.map((file) => `test-ci--${file}`));
+    }
+  );
+
+  it("should atomize the test files Jest runs with a preset's haste where find fails", async () => {
+    await tempFs.createFiles({
+      ...suffixSpecs,
+      'jest.preset.js': `module.exports = { haste: {} };`,
+    });
+    mockJestConfig({ ...suffixConfig(), preset: '../jest.preset.js' }, context);
+    const childProcess =
+      jest.requireActual<typeof import('child_process')>('child_process');
+    const spawn = childProcess.spawn;
+    const spawnSpy = jest
+      .spyOn(childProcess, 'spawn')
+      .mockImplementation(((command: string, ...args: any[]) =>
+        spawn(
+          command === 'find' ? 'nx-missing-find' : command,
+          ...args
+        )) as typeof spawn);
+
+    try {
+      // A fresh plugin module has no cached find probe result
+      let isolatedCreateNodes: typeof createNodesFunction;
+      jest.isolateModules(() => {
+        isolatedCreateNodes = require('./plugin').createNodesV2[1];
+      });
+      const results = await isolatedCreateNodes(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+
+      const targets = (results[0][1] as any).projects['proj'].targets;
+      expect(
+        Object.keys(targets).filter((t) => t.startsWith('test-ci--'))
+      ).toEqual(['test-ci--src/keep.spec.js']);
+    } finally {
+      spawnSpy.mockRestore();
+    }
+  });
+
+  it('should match <rootDir> testMatch globs in a workspace path with glob characters', async () => {
+    const globCharsFs = new TempFs('test {a,b}');
+    try {
+      process.chdir(globCharsFs.tempDir);
+      await globCharsFs.createFiles({
+        'proj/jest.config.js': `module.exports = {}`,
+        'proj/src/unit.spec.ts': '',
+        'proj/project.json': '{}',
+      });
+      const globCharsContext = {
+        ...context,
+        workspaceRoot: globCharsFs.tempDir,
+      };
+      mockJestConfig(
+        { testMatch: ['<rootDir>/src/**/*.spec.ts'] },
+        globCharsContext
+      );
+
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        globCharsContext
+      );
+
+      expect((results[0][1] as any).projects['proj'].targets).toHaveProperty([
+        'test-ci--src/unit.spec.ts',
+      ]);
+    } finally {
+      globCharsFs.cleanup();
+    }
+  });
+
+  it('should atomize the test files Jest runs with a rootDir through a symlink', async () => {
+    symlinkSync('.', join(tempFs.tempDir, 'proj/alias'));
+    mockJestConfig({ rootDir: 'alias' }, context);
+
+    const results = await createNodesFunction(
+      ['proj/jest.config.js'],
+      { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+      context
+    );
+
+    const targets = (results[0][1] as any).projects['proj'].targets;
+    expect(
+      Object.keys(targets)
+        .filter((t) => t.startsWith('test-ci--'))
+        .sort()
+    ).toEqual(['test-ci--src/ignore.spec.ts', 'test-ci--src/unit.spec.ts']);
   });
 
   describe('a test file with an @nx-depends-on directive', () => {
