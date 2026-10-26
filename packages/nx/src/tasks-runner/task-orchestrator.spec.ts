@@ -3399,4 +3399,125 @@ describe('TaskOrchestrator', () => {
       }
     );
   });
+
+  describe('bail', () => {
+    function createTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: false,
+        parallelism: true,
+        continuous: false,
+        hash: `${id}-hash`,
+      } as Task;
+    }
+
+    // Each dispatched task runs until the test settles it
+    function createCoordinator(ids: string[]) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      const queue = [...ids];
+      orchestrator.taskGraph = {
+        tasks: Object.fromEntries(ids.map((id) => [id, createTask(id)])),
+        dependencies: Object.fromEntries(ids.map((id) => [id, []])),
+        continuousDependencies: Object.fromEntries(ids.map((id) => [id, []])),
+        roots: ids,
+      };
+      orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({
+          scheduledTasks: [...queue],
+          scheduledBatches: [],
+        }),
+        nextBatch: () => null,
+        nextTask: () =>
+          queue.length > 0 ? orchestrator.taskGraph.tasks[queue.shift()] : null,
+        hasTasks: () => queue.length > 0,
+        scheduleNextTasks: async () => {},
+      };
+      orchestrator.completedTasks = new Map();
+      orchestrator.processedTasks = new Map();
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.waitingForTasks = [];
+      orchestrator.groups = [];
+      orchestrator.bailed = false;
+      orchestrator.stopRequested = false;
+      orchestrator.readinessSettled = false;
+      orchestrator.options = {
+        parallel: 2,
+        lifeCycle: { scheduleTask: vi.fn() },
+      };
+      orchestrator.processTask = vi.fn(async () => process.env);
+      const running = new Map<string, (status: TaskResult['status']) => void>();
+      orchestrator.runTaskDirectly = vi.fn(
+        (_: boolean, task: Task) =>
+          new Promise<void>((resolve) => {
+            running.set(task.id, (status) => {
+              orchestrator.completedTasks.set(task.id, status);
+              // What complete() does under --bail
+              if (status === 'failure') {
+                orchestrator.bailed = true;
+              }
+              resolve();
+            });
+          })
+      );
+      orchestrator.handleDiscreteWorkerFailure = vi.fn((...args: unknown[]) => {
+        throw args[3];
+      });
+      return { orchestrator, running };
+    }
+
+    it('lets a running task finish and skips the tasks it never started', async () => {
+      const { orchestrator, running } = createCoordinator([
+        'a:build',
+        'b:build',
+        'c:build',
+      ]);
+      let finished = false;
+      const loop = orchestrator
+        .executeCoordinatorLoop(false, 2)
+        .then(() => (finished = true));
+      await vi.waitFor(() => expect(running.size).toBe(2));
+
+      running.get('a:build')('failure');
+      await new Promise((r) => setTimeout(r));
+      expect(finished).toBe(false);
+      running.get('b:build')('success');
+      await loop;
+
+      expect([...running.keys()]).toEqual(['a:build', 'b:build']);
+      expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
+        'a:build': 'failure',
+        'b:build': 'success',
+        'c:build': 'skipped',
+      });
+    });
+
+    it('starts nothing once a task fails while the coordinator is mid-pass', async () => {
+      const { orchestrator, running } = createCoordinator([
+        'a:build',
+        'b:build',
+      ]);
+      // A readiness verdict makes the coordinator await a scheduling pass, and
+      // a task elsewhere fails during it
+      orchestrator.readinessSettled = true;
+      orchestrator.tasksSchedule.scheduleNextTasks = async () => {
+        orchestrator.bailed = true;
+      };
+
+      const loop = orchestrator.executeCoordinatorLoop(false, 2);
+      await new Promise((r) => setTimeout(r));
+      expect(running.size).toBe(0);
+      await loop;
+
+      expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
+        'a:build': 'skipped',
+        'b:build': 'skipped',
+      });
+    });
+  });
 });

@@ -414,7 +414,18 @@ export class TaskOrchestrator {
     parallelism: number
   ) {
     while (true) {
-      if (this.bailed || this.stopRequested) break;
+      if (this.stopRequested) break;
+      // On bail, start nothing new but let running tasks finish. A task that
+      // never started is skipped; with no status it reads as an interrupted run
+      if (this.bailed) {
+        await Promise.allSettled(this.pendingDiscreteWorkers);
+        for (const task of Object.values(this.taskGraph.tasks)) {
+          if (!task.continuous && !this.completedTasks.has(task.id)) {
+            this.completedTasks.set(task.id, 'skipped');
+          }
+        }
+        break;
+      }
 
       await this.scheduleAfterReadiness();
 
@@ -473,6 +484,9 @@ export class TaskOrchestrator {
         this.openGroup(groupId);
         continue;
       }
+
+      // A task may have failed during one of the awaits above
+      if (this.bailed) continue;
 
       // 5. Dispatch cache misses as individual workers
       while (this.pendingDiscreteWorkers.size < parallelism) {
