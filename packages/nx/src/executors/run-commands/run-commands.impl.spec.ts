@@ -496,11 +496,11 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
       });
 
-      it('should keep waiting when not all strings specified as ready condition were found', async () => {
+      it('should keep waiting when not all strings specified as ready condition were found, then fail naming the missing ones', async () => {
         const f = fileSync().name;
         let result: { success: boolean } | null = null;
 
-        runCommands(
+        const run = runCommands(
           {
             commands: [`echo 1 >> ${f} && echo READY`, `echo foo && sleep 1`],
             parallel: true,
@@ -509,13 +509,18 @@ describe('Run Commands', () => {
           },
 
           context
-        ).then((res) => {
+        );
+        run.then((res) => {
           result = res;
         });
 
         await new Promise((resolve) => setTimeout(resolve, 150));
         expect(readFile(f)).toEqual('1');
         expect(result).toBeNull();
+
+        const { success, terminalOutput } = await run;
+        expect(success).toBe(false);
+        expect(terminalOutput).toContain('readyWhen text "bar"');
       });
     });
   });
