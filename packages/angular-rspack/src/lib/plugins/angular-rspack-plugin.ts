@@ -164,11 +164,16 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     let currentWatchingModifiedFiles = new Set<string>();
     let watchRunInitialized = false;
 
-    // Register compilation hook once - adds modified files to dependencies
     compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
       currentWatchingModifiedFiles.forEach((file) => {
         compilation.fileDependencies.add(file);
       });
+      if (this.#_options.hasServer) {
+        // Server-only sources must invalidate the browser-owned Angular compilation.
+        for (const file of this.#sourceFileCache.referencedFiles ?? []) {
+          compilation.fileDependencies.add(normalize(file));
+        }
+      }
     });
 
     compiler.hooks.watchRun.tapAsync(

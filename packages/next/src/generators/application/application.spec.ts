@@ -1039,6 +1039,7 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "outDir": "./out-tsc/jest",
+            "rootDir": ".",
             "types": [
               "jest",
               "node",

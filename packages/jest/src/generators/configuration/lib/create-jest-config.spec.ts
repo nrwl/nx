@@ -7,41 +7,20 @@ jest.mock('@nx/devkit', () => ({
 }));
 
 import {
-  addProjectConfiguration as _addProjectConfiguration,
-  readProjectConfiguration,
-  type ProjectConfiguration,
+  addProjectConfiguration,
   type ProjectGraph,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createJestConfig } from './create-jest-config';
-
-function addProjectConfiguration(
-  tree: Tree,
-  name: string,
-  project: ProjectConfiguration
-) {
-  _addProjectConfiguration(tree, name, project);
-  projectGraph.nodes[name] = {
-    name: name,
-    type: 'lib',
-    data: {
-      root: project.root,
-      targets: project.targets,
-    },
-  };
-}
 
 describe('createJestConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    projectGraph = {
-      nodes: {},
-      dependencies: {},
-      externalNodes: {},
-    };
+    projectGraph = { nodes: {}, dependencies: {} };
   });
 
   it('should generate files with --js flag', async () => {
@@ -60,34 +39,6 @@ describe('createJestConfig', () => {
     expect(tree.read('jest.preset.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should not override existing files', async () => {
-    addProjectConfiguration(tree, 'my-project', {
-      root: 'apps/my-app',
-      name: 'my-app',
-      sourceRoot: 'apps/my-app/src',
-      targets: {
-        test: {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'apps/my-app/jest.config.ts',
-          },
-        },
-      },
-    });
-    const expected = `
-import { getJestProjectsAsync } from '@nx/jest';
-export default async () => ({
-  projects: await getJestProjectsAsync(),
-  extraThing: "Goes Here"
-});
-`;
-    tree.write('jest.config.ts', expected);
-
-    await createJestConfig(tree, {}, 'js');
-
-    expect(tree.read('jest.config.ts', 'utf-8')).toEqual(expected);
-  });
-
   it('should make js jest files', async () => {
     await createJestConfig(tree, { js: true }, 'js');
 
@@ -102,115 +53,67 @@ export default async () => ({
       expect(tree.exists('jest.config.ts')).toBeFalsy();
     });
 
-    it('should rename the project jest.config.ts to project jest config', async () => {
+    const projectConfig = `export default { displayName: 'my-project' };`;
+    const workspaceConfig = `import { getJestProjectsAsync } from '@nx/jest';
+export default async () => ({
+  projects: await getJestProjectsAsync(),
+  extraThing: "Goes Here"
+});
+`;
+
+    // Before Nx 24, these targets made the generator rename the root config
+    function addRootProject(test: TargetConfiguration, graphTest = test) {
       addProjectConfiguration(tree, 'my-project', {
         root: '.',
-        name: 'my-project',
         projectType: 'application',
-        sourceRoot: 'src',
-        targets: {
-          test: {
-            executor: '@nx/jest:jest',
-            options: {
-              jestConfig: 'jest.config.ts',
-            },
-          },
-        },
+        targets: { test },
       });
-      tree.write(
-        'jest.config.ts',
-        `
-/* eslint-disable */
-export default {
-  transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
-  displayName: 'my-project',
-  testEnvironment: 'node',
-  preset: './jest.preset.js',
-};
-`
+      projectGraph.nodes['my-project'] = {
+        name: 'my-project',
+        type: 'app',
+        data: { root: '.', targets: { test: graphTest } },
+      };
+    }
+
+    it.each(['ts', 'js', 'cjs', 'mts'])(
+      'should leave the root project jest.config.%s untouched',
+      async (ext) => {
+        addRootProject({
+          executor: '@nx/jest:jest',
+          options: { jestConfig: `jest.config.${ext}` },
+        });
+        tree.write(`jest.config.${ext}`, projectConfig);
+
+        await createJestConfig(tree, { rootProject: false }, 'js');
+
+        expect(tree.read(`jest.config.${ext}`, 'utf-8')).toEqual(projectConfig);
+        expect(
+          tree.listChanges().filter((c) => c.path.startsWith('jest.config.'))
+        ).toHaveLength(1);
+      }
+    );
+
+    it('should leave the root project jest.config.ts untouched when its test target runs jest', async () => {
+      addRootProject(
+        { executor: 'nx:run-commands', command: 'jest' },
+        { executor: 'nx:run-commands', options: { command: 'jest' } }
       );
+      tree.write('jest.config.ts', projectConfig);
 
       await createJestConfig(tree, { rootProject: false }, 'js');
 
-      expect(tree.exists('jest.config.app.ts')).toBeTruthy();
-      expect(tree.read('jest.config.app.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "
-        /* eslint-disable */
-        export default {
-          transform: {
-            '^.+\\.[tj]sx?$': 'ts-jest',
-          },
-          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-          globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
-          displayName: 'my-project',
-          testEnvironment: 'node',
-          preset: './jest.preset.js',
-        };
-        "
-      `);
-      expect(tree.read('jest.config.ts', 'utf-8'))
-        .toEqual(`import type { Config } from 'jest';
-import { getJestProjectsAsync } from '@nx/jest';
-
-export default async (): Promise<Config> => ({
-  projects: await getJestProjectsAsync()
-});`);
-      expect(readProjectConfiguration(tree, 'my-project').targets.test)
-        .toMatchInlineSnapshot(`
-        {
-          "executor": "@nx/jest:jest",
-          "options": {
-            "jestConfig": "jest.config.app.ts",
-          },
-        }
-      `);
+      expect(tree.read('jest.config.ts', 'utf-8')).toEqual(projectConfig);
+      expect(tree.exists('jest.config.app.ts')).toBe(false);
     });
 
-    it('should work with --js', async () => {
-      addProjectConfiguration(tree, 'my-project', {
-        root: '.',
-        name: 'my-project',
-        sourceRoot: 'src',
-        projectType: 'application',
-        targets: {
-          test: {
-            executor: '@nx/jest:jest',
-            options: {
-              jestConfig: 'jest.config.js',
-            },
-          },
-        },
-      });
-      tree.write(
-        'jest.config.js',
-        `
-/* eslint-disable */
-module.exports = {
-  transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-  globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
-  displayName: 'my-project',
-  testEnvironment: 'node',
-  preset: './jest.preset.js',
-};
-`
-      );
+    it('should leave an existing workspace config untouched', async () => {
+      tree.write('jest.config.ts', workspaceConfig);
 
-      await createJestConfig(tree, { js: true, rootProject: false }, 'js');
+      await createJestConfig(tree, { rootProject: false }, 'js');
 
-      expect(tree.exists('jest.config.app.js')).toBeTruthy();
-      expect(tree.read('jest.config.js', 'utf-8'))
-        .toEqual(`const { getJestProjectsAsync } = require('@nx/jest');
-
-module.exports = async () => ({
-  projects: await getJestProjectsAsync()
-});`);
+      expect(tree.read('jest.config.ts', 'utf-8')).toEqual(workspaceConfig);
+      expect(tree.exists('jest.config.app.ts')).toBe(false);
+      expect(tree.exists('jest.config.lib.ts')).toBe(false);
     });
   });
 });

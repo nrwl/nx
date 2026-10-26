@@ -718,6 +718,7 @@ describe('migrate orchestrator', () => {
 
   it('should hand the final validation pass to the agent after the last migration and commit its result', () => {
     writePlan([genMig]);
+    updateFile('pre-run-change.txt', 'uncommitted before the run');
 
     // `--no-validate` turns off the per-migration validation only; the pass
     // is its own policy and stays on.
@@ -735,9 +736,9 @@ describe('migrate orchestrator', () => {
       'final validation pass over the workspace is awaiting your outcome'
     );
     expect(passOutput).toContain('<nx_migrate_prompt step="step-2">');
-    // The plan file written before init dirtied the tree, so a checkpoint
-    // commit landed; the pass diffs against its parent so the checkpoint's
-    // own content is in the diff.
+    // The change written before init dirtied the tree, so a checkpoint commit
+    // landed; the pass diffs against its parent so the checkpoint's own
+    // content is in the diff.
     const parked = readRunStateFile(init.runId);
     expect(parked.commits[0].kind).toBe('checkpoint');
     expect(parked.gitRefAtInit).toBe(
@@ -1308,7 +1309,10 @@ describe('migrate orchestrator', () => {
     );
 
     expect(commitCountFor('prompt-mig (unresolved)')).toBe(1);
-    expect(runCommand('git status --porcelain').trim()).toBe('');
+    // The untracked plan stays out of every commit.
+    expect(runCommand('git status --porcelain').trim()).toBe(
+      '?? migrations.json'
+    );
     const state = readRunStateFile(failed.runId);
     expect(state.status).toBe('completed');
     const step = state.steps.find((s) => s.migrationId === `${PKG}:prompt-mig`);
@@ -1601,7 +1605,9 @@ describe('migrate orchestrator', () => {
         ).length
       ).toBe(1);
     }
-    expect(runCommand('git status --porcelain').trim()).toBe('');
+    expect(runCommand('git status --porcelain').trim()).toBe(
+      '?? migrations.json'
+    );
   }, 600000);
 
   it('should warn and continue when a reconcile finds the newest recorded commit gone from HEAD', () => {
@@ -1776,21 +1782,27 @@ function lastBlock(output) {
 }
 let block = lastBlock(run(reconcile));
 if (process.env.FAKE_AGENT_KILL_PARENT) {
-  const out = fs.openSync(path.join(process.cwd(), 'killed-step-output'), 'w');
-  const worker = spawn(block.payload.command, {
-    env, shell: true, detached: true, stdio: ['ignore', out, out],
-  });
-  worker.unref();
-  const brokerDir = path.join(process.cwd(), '.nx', 'migrate-runs', block.runId, 'broker');
-  const deadline = Date.now() + 60000;
-  while (!(fs.existsSync(brokerDir) && fs.readdirSync(brokerDir).some((f) => f.endsWith('.request.json')))) {
-    if (Date.now() > deadline) {
-      throw new Error('No request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
+  const parentPid = process.ppid;
+  // The step must publish an unanswered request before the parent dies.
+  process.kill(parentPid, 'SIGSTOP');
+  try {
+    const out = fs.openSync(path.join(process.cwd(), 'killed-step-output'), 'w');
+    const worker = spawn(block.payload.command, {
+      env, shell: true, detached: true, stdio: ['ignore', out, out],
+    });
+    worker.unref();
+    const brokerDir = path.join(process.cwd(), '.nx', 'migrate-runs', block.runId, 'broker');
+    const deadline = Date.now() + 60000;
+    while (!(fs.existsSync(brokerDir) && fs.readdirSync(brokerDir).some((f) => f.endsWith('.request.json')))) {
+      if (Date.now() > deadline) {
+        throw new Error('No request from the step:\\n' + fs.readFileSync(path.join(process.cwd(), 'killed-step-output'), 'utf8'));
+      }
+      execSync('sleep 0.2');
     }
-    execSync('sleep 0.2');
+    record({ killedParent: parentPid, workerPid: worker.pid });
+  } finally {
+    process.kill(parentPid, 'SIGKILL');
   }
-  record({ killedParent: process.ppid, workerPid: worker.pid });
-  process.kill(process.ppid, 'SIGKILL');
   process.exit(0);
 }
 let dispenses = 0;
@@ -2277,13 +2289,13 @@ process.exit(status ?? 1);
         expect.stringContaining('deps-mig'),
         expect.stringContaining('prompt-mig'),
       ]);
-      // Only harness files: the agent and git logs keep growing after a commit
-      // took them, and the exit code lands last.
+      // Besides the untracked plan, only harness files: the agent and git logs
+      // keep growing after a commit took them, and the exit code lands last.
       expect(
         runCommand(
           'git status --porcelain -- . :!fake-agent.log :!fake-git.log :!migrate-exit-code'
         ).trim()
-      ).toBe('');
+      ).toBe('?? migrations.json');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
         expect.stringMatching(/^[0-9a-f]{8}-step-2-1-commit\.result\.json$/),
@@ -2431,7 +2443,7 @@ process.exit(status ?? 1);
         runCommand(
           'git status --porcelain -- . :!fake-agent.log :!migrate-exit-code'
         ).trim()
-      ).toBe('');
+      ).toBe('?? migrations.json');
       expect(listFiles(`.nx/migrate-runs/${runId}/broker`).sort()).toEqual([
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-commit\.result\.json$/),
         expect.stringMatching(/^[0-9a-f]{8}-step-1-1-install\.result\.json$/),

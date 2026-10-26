@@ -3,7 +3,7 @@ import {
   isAncestorCommit,
   resetWorkingTree,
 } from '../../../utils/git-utils';
-import { MIGRATE_RUNS_RELATIVE_DIR } from '../agentic/types';
+import { MIGRATE_OWNED_PATHS } from '../migrate-commits';
 import { warnToAgent } from './agent-output';
 import {
   archiveIssues,
@@ -144,5 +144,7 @@ export function resetForCleanRetry(
     return reopened.state;
   });
   archiveReopenedResolutions(dir, prepared, updates, stepLabel(step));
-  resetWorkingTree(step.gitRefBefore, [MIGRATE_RUNS_RELATIVE_DIR], root);
+  // Unlike the commit exclusions, every owned path, committed or not: a failed
+  // probe must not let the reset remove the plan or prompt files.
+  resetWorkingTree(step.gitRefBefore, MIGRATE_OWNED_PATHS, root);
 }

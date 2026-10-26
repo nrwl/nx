@@ -63,13 +63,16 @@ import {
   getReadyProducerIds,
   getReadyWhen,
   getReadyWhenConfig,
+  getReadyWhenInputs,
   getReadyWhenWait,
   InvalidReadyWhenError,
+  mayReportReadyUrl,
   NotReadyError,
   notReadyError,
   ProducerFailedError,
   readinessTimeoutError,
   type NormalizedReadyWhen,
+  type ReadyWhenInputs,
   type ReadyWhenWait,
 } from './readiness/ready-when';
 import { BatchProcess } from './running-tasks/batch-process';
@@ -113,6 +116,29 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
+}
+
+function batchWorkerLogExplains(status: TaskStatus): boolean {
+  switch (status) {
+    case 'failure':
+    case 'stopped':
+    // The worker never reached it, e.g. `@nx/gradle` after a build failure
+    // outside the batch's own tasks
+    case 'skipped':
+      return true;
+    case 'success':
+    case 'local-cache':
+    case 'local-cache-kept-existing':
+    case 'remote-cache':
+      return false;
+    default: {
+      const unhandled: never = status;
+      void unhandled;
+      // Batch executors report their statuses untyped, so an unknown one can
+      // still arrive here. Nx can't tell it succeeded, so its log is shown
+      return true;
+    }
+  }
 }
 
 /** Whether a path names a file with bytes in it. */
@@ -411,7 +437,19 @@ export class TaskOrchestrator {
     parallelism: number
   ) {
     while (true) {
-      if (this.bailed || this.stopRequested) break;
+      if (this.stopRequested) break;
+      // On bail, start nothing new but let running tasks finish. Skip unstarted
+      // discrete tasks unless stopped, so the run still reads as interrupted
+      if (this.bailed) {
+        await Promise.allSettled(this.pendingDiscreteWorkers);
+        if (this.stopRequested) break;
+        for (const task of Object.values(this.taskGraph.tasks)) {
+          if (!task.continuous && !this.completedTasks.has(task.id)) {
+            this.completedTasks.set(task.id, 'skipped');
+          }
+        }
+        break;
+      }
 
       await this.scheduleAfterReadiness();
 
@@ -470,6 +508,9 @@ export class TaskOrchestrator {
         this.openGroup(groupId);
         continue;
       }
+
+      // A task may have failed during one of the awaits above
+      if (this.bailed) continue;
 
       // 5. Dispatch cache misses as individual workers
       while (this.pendingDiscreteWorkers.size < parallelism) {
@@ -1114,7 +1155,8 @@ export class TaskOrchestrator {
         // When the batch is being folded, printing is deferred to batch end
         // (printGroupedBatchOutput), which always renders each task through the
         // life cycle and adds the worker's whole log as a fold when the run
-        // asked for full output or any task failed or was stopped.
+        // asked for full output or any task failed, was stopped or was never
+        // reached.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
@@ -1254,9 +1296,7 @@ export class TaskOrchestrator {
     if (!capturedOutputPath || printsTaskOutput(this.resolvedOutputStyle)) {
       return;
     }
-    const failed = results.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
-    );
+    const failed = results.some((r) => batchWorkerLogExplains(r.status));
     if (!failed) {
       return;
     }
@@ -1307,8 +1347,9 @@ export class TaskOrchestrator {
    * those per-project summaries to the worker's stdio at all.
    *
    * The worker's whole captured log is rendered as a fold above them when the
-   * run asked for full output, or when any task failed or was stopped. A
-   * diagnostic that explains a failure is routinely one no task claimed:
+   * run asked for full output, or when any task failed, was stopped or was
+   * never reached.
+   * A diagnostic that explains a failure is routinely one no task claimed:
    * `@nx/maven`'s batch impl writes its exit-code dump and failed-task outputs
    * to the worker's stderr via `console.error`, and the Maven JVM it spawns
    * points slf4j at `System.out` because its own stderr carries the result
@@ -1348,8 +1389,8 @@ export class TaskOrchestrator {
       verbose: this.options.verbose,
       outputStyle: this.resolvedOutputStyle,
     });
-    const batchOwnsTheDiagnostic = taskResults.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
+    const batchOwnsTheDiagnostic = taskResults.some((r) =>
+      batchWorkerLogExplains(r.status)
     );
     if (
       printsTaskOutput(this.resolvedOutputStyle) &&
@@ -1403,7 +1444,9 @@ export class TaskOrchestrator {
       ? 'failure'
       : taskResults.some((r) => r.status === 'stopped')
         ? 'stopped'
-        : 'success';
+        : taskResults.some((r) => r.status === 'skipped')
+          ? 'skipped'
+          : 'success';
     output.logBatchGroup(label, body, worst);
     if (!redirectLines) {
       return;
@@ -1891,7 +1934,10 @@ export class TaskOrchestrator {
       }
       if (readyWhen) {
         const state = this.armReadiness(task.id);
-        this.pollReadinessRow(task, readyWhen, state.abort.signal, true).then(
+        this.pollReadinessRow(task, readyWhen, {
+          signal: state.abort.signal,
+          ownerObserved: true,
+        }).then(
           () => {
             if (!state.abort.signal.aborted) state.resolve();
           },
@@ -1970,16 +2016,23 @@ export class TaskOrchestrator {
             temporaryOutputPath,
             streamOutput
           );
+      const readyWhenInputs = getReadyWhenInputs(
+        task,
+        this.projectGraph,
+        this.projects,
+        workspaceRoot
+      );
+      this.checkReadyWhenBeforeWait(task, env, readyWhenInputs);
+      await this.waitForReadyDependencies(task);
+      Object.assign(env, this.getReadyUrlEnv(task));
       ({ readyWhen, uncheckedReason, readyOnStart } = this.getReadinessCheck(
         task,
-        () => this.getReadyWhen(task, env)
+        () => this.getReadyWhen(task, env, readyWhenInputs)
       ));
       if (readyWhen?.kind === 'signal') {
         this.readySignal ??= new ReadySignalServer();
         Object.assign(env, await this.readySignal.env(task.id));
       }
-      await this.waitForReadyDependencies(task);
-      Object.assign(env, this.getReadyUrlEnv(task));
     } catch (e) {
       this.runningTasksService?.removeRunningTask(task.id);
       if (e instanceof ProducerFailedError) {
@@ -2056,15 +2109,51 @@ export class TaskOrchestrator {
   // region Readiness
   private getReadyWhen(
     task: Task,
-    env: NodeJS.ProcessEnv
+    env: NodeJS.ProcessEnv,
+    inputs?: ReadyWhenInputs
   ): NormalizedReadyWhen | null {
     return getReadyWhen(
       task,
       this.projectGraph,
       this.projects,
       workspaceRoot,
-      env
+      env,
+      inputs
     );
+  }
+
+  // NX_READY_URL is known only after the wait, so fail now only when the
+  // check fails without it and, if a producer may report one, with a URL too
+  private checkReadyWhenBeforeWait(
+    task: Task,
+    env: NodeJS.ProcessEnv,
+    inputs: ReadyWhenInputs
+  ) {
+    const producerIds = getReadyProducerIds(task, this.fullTaskGraph);
+    if (!inputs || !producerIds.length) {
+      return;
+    }
+    const envs = [env];
+    if (
+      producerIds.some((id) =>
+        mayReportReadyUrl(this.fullTaskGraph.tasks[id], this.projectGraph)
+      )
+    ) {
+      envs.push({ ...env, [READY_URL_ENV]: 'http://localhost/' });
+    }
+    const errors = envs.map((checkEnv) => {
+      try {
+        this.getReadyWhen(task, checkEnv, inputs);
+        return null;
+      } catch (e) {
+        return e;
+      }
+    });
+    if (errors.every(Boolean)) {
+      this.getReadinessCheck(task, () => {
+        throw errors[errors.length - 1];
+      });
+    }
   }
 
   // Only the process that runs a producer knows the env its probe reads
@@ -2134,11 +2223,11 @@ export class TaskOrchestrator {
         ) {
           throw e;
         }
-        this.onReadinessHold(producerId);
-        const owned = await this.pollReadinessRow(producer, {
-          timeout: DEFAULT_READY_TIMEOUT,
-          description: 'invalid',
-        });
+        const owned = await this.pollReadinessRow(
+          producer,
+          { timeout: DEFAULT_READY_TIMEOUT, description: 'invalid' },
+          { onPending: () => this.onReadinessHold(producerId) }
+        );
         if (!owned) {
           throw e;
         }
@@ -2157,8 +2246,9 @@ export class TaskOrchestrator {
       if (this.taskGraph.tasks[producerId]) {
         await this.readinessOf(producerId).promise;
       } else {
-        this.onReadinessHold(producerId);
-        await this.pollReadinessRow(producer, readyWhen);
+        await this.pollReadinessRow(producer, readyWhen, {
+          onPending: () => this.onReadinessHold(producerId),
+        });
       }
     }
   }
@@ -2188,8 +2278,15 @@ export class TaskOrchestrator {
   private async pollReadinessRow(
     producer: Task,
     readyWhen: ReadyWhenWait,
-    signal?: AbortSignal,
-    ownerObserved = false
+    {
+      signal,
+      ownerObserved = false,
+      onPending,
+    }: {
+      signal?: AbortSignal;
+      ownerObserved?: boolean;
+      onPending?: () => void;
+    } = {}
   ): Promise<boolean> {
     const deadline = Date.now() + readyWhen.timeout;
     let lastStatus: TaskReadiness | null = null;
@@ -2222,6 +2319,7 @@ export class TaskOrchestrator {
       if (Date.now() >= deadline) {
         throw readinessTimeoutError(producer.id, readyWhen);
       }
+      onPending?.();
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }

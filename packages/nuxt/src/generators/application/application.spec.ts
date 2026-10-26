@@ -698,6 +698,9 @@ describe('app', () => {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "exclude": [
             "out-tsc",

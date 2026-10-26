@@ -405,14 +405,13 @@ export class TasksSchedule {
     if (!started) {
       return false;
     }
-    const pendingProducer = this.probedProducersOf(
+    const pendingProducers = this.probedProducersOf(
       this.taskGraph.tasks[taskId]
-    ).find((id) => this.taskGraph.tasks[id] && !this.readiness.has(id));
-    if (pendingProducer) {
-      this.hooks.onReadinessHold?.(pendingProducer);
-      return false;
+    ).filter((id) => this.taskGraph.tasks[id] && !this.readiness.has(id));
+    for (const producerId of pendingProducers) {
+      this.hooks.onReadinessHold?.(producerId);
     }
-    return true;
+    return pendingProducers.length === 0;
   }
 
   private canBeScheduled(taskId: string): boolean {

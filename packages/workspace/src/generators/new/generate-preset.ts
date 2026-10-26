@@ -32,9 +32,8 @@ export function addPresetDependencies(
   );
 }
 
-// Install scripts each preset dependency pulls in transitively. `nx new`
-// installs the preset dependencies before the preset generator runs, so the
-// generators that would otherwise record these decisions come too late.
+// Bootstrap dependencies need build script decisions before generation.
+// pnpm 10 also needs decisions for packages added during preset generation.
 const presetDependencyBuildScripts: Record<string, Record<string, boolean>> = {
   '@nx/angular-rspack': {
     // Its @nx/angular-rspack-compiler dependency patches `@angular/build`
@@ -79,6 +78,17 @@ export function getPresetBuildScripts(
     if (declared[pkg]) {
       Object.assign(buildScripts, presetDependencyBuildScripts[pkg]);
     }
+  }
+
+  if (
+    (options.preset === Preset.AngularMonorepo ||
+      options.preset === Preset.AngularStandalone) &&
+    options.bundler === 'rspack'
+  ) {
+    Object.assign(
+      buildScripts,
+      presetDependencyBuildScripts['@nx/angular-rspack']
+    );
   }
 
   // A third-party preset's install script is unvetted, and pnpm 10 does not run
@@ -223,7 +233,6 @@ export function getPresetDependencies({
           '@angular-devkit/core': angularCliVersion,
           '@nx/angular': nxVersion,
           '@nx/rspack': bundler === 'rspack' ? nxVersion : undefined,
-          '@nx/angular-rspack': bundler === 'rspack' ? nxVersion : undefined,
           typescript: typescriptVersion,
         },
       };

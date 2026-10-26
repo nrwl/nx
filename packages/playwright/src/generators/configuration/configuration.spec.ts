@@ -8,6 +8,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { typesNodeVersion } from '@nx/js/internal';
 import configGenerator from './configuration';
 
 describe('Playwright e2e configuration', () => {
@@ -211,7 +212,8 @@ describe('Playwright e2e configuration', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
-            "sourceMap": false
+            "sourceMap": false,
+            "types": ["node"]
           },
           "include": [
             "**/*.ts",
@@ -228,6 +230,27 @@ describe('Playwright e2e configuration', () => {
         "
       `);
       expect(tree.exists('apps/myapp/tsconfig.e2e.json')).toBeFalsy();
+      expect(
+        readJson(tree, 'package.json').devDependencies['@types/node']
+      ).toBe(typesNodeVersion);
+    });
+
+    it('should keep an installed @types/node version', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = { '@types/node': '^20.0.0' };
+        return json;
+      });
+      writeJson(tree, 'apps/myapp-e2e/package.json', {
+        name: '@proj/myapp-e2e',
+      });
+
+      await configGenerator(tree, {
+        project: '@proj/myapp-e2e',
+      });
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@types/node']
+      ).toBe('^20.0.0');
     });
 
     it('should use tsconfig.e2e.json if tsconfig.json already exists', async () => {
@@ -264,7 +287,8 @@ describe('Playwright e2e configuration', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
-            "sourceMap": false
+            "sourceMap": false,
+            "types": ["node"]
           },
           "include": ["e2e/**/*.ts", "e2e/**/*.js", "playwright.config.mts"],
           "exclude": ["out-tsc", "test-output"]

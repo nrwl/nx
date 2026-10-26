@@ -214,7 +214,9 @@ export async function libraryGeneratorInternal(
       (json) => {
         // add project reference to the runtime tsconfig.lib.json file
         json.references ??= [];
-        json.references.push({ path: './tsconfig.lib.json' });
+        if (!json.references.some((r) => r.path === './tsconfig.lib.json')) {
+          json.references.push({ path: './tsconfig.lib.json' });
+        }
 
         const compilerOptions = getCompilerOptions(options);
         // respect the module and moduleResolution set by the test runner generator

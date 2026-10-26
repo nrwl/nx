@@ -776,6 +776,8 @@ export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
 // `excludePaths` are left out of the probe the way `tryCommitChanges` leaves
 // them out of the commit, so a tree dirty only under them reads as clean. An
 // exclude-only pathspec still covers the whole tree, matching `git add -A`.
+// The untracked mode is explicit because `status.showUntrackedFiles=no` would
+// hide new files that `git add -A` still stages.
 export function getWorkingTreeStatus(
   directory?: string,
   excludePaths: string[] = []
@@ -785,7 +787,7 @@ export function getWorkingTreeStatus(
     .join('');
   try {
     const out = execSync(
-      `git status --porcelain${pathspecs ? ` --${pathspecs}` : ''}`,
+      `git status --porcelain --untracked-files=normal${pathspecs ? ` --${pathspecs}` : ''}`,
       {
         encoding: 'utf8',
         cwd: directory,
@@ -856,6 +858,38 @@ export function getPathCommitExposure(
     // check-ignore exits 1 for "not ignored"; anything else is a probe
     // failure.
     return (e as { status?: number })?.status === 1 ? 'unignored' : 'unknown';
+  }
+}
+
+export type PathHeadStatus = 'committed' | 'absent' | 'unknown';
+
+// Whether HEAD's tree, not the index, has an entry at the `directory`-relative
+// `path`. An unborn HEAD has none; 'unknown' means git failed.
+export function getPathHeadStatus(
+  path: string,
+  directory: string
+): PathHeadStatus {
+  const options = {
+    encoding: 'utf8' as const,
+    cwd: directory,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  };
+  try {
+    execFileSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], options);
+  } catch (e) {
+    // --verify -q exits 1 for a ref that does not resolve: an unborn HEAD.
+    return (e as { status?: number })?.status === 1 ? 'absent' : 'unknown';
+  }
+  try {
+    const entries = execFileSync(
+      'git',
+      ['ls-tree', '--name-only', 'HEAD', '--', path],
+      options
+    );
+    return entries.trim() === '' ? 'absent' : 'committed';
+  } catch {
+    return 'unknown';
   }
 }
 
@@ -1114,26 +1148,38 @@ function collectOutput(
 }
 
 /**
- * `git reset --hard <ref>` then `git clean -fd`, keeping `keepPaths` (git
- * exclusion patterns, repo-relative) out of the clean. Throws with git's
- * stderr when either fails. `ref` is a sha a caller validated with `GIT_SHA`,
- * never user input.
+ * `git reset --hard <ref>` then `git clean -fd`, sparing the
+ * `directory`-relative `keepPaths`, staged or not. A kept path `ref` tracks
+ * comes back at `ref`'s version. Throws with git's stderr when git fails.
+ * `ref` is a sha a caller validated with `GIT_SHA`, never user input.
  */
 export function resetWorkingTree(
   ref: string,
   keepPaths: string[],
   directory: string
 ): void {
+  // `git clean -e` takes ignore patterns, which resolve from the repository
+  // root whatever the cwd, and match at any depth when they hold no slash.
+  const prefix = getGitRootRelativePath(directory);
+  if (prefix === null) {
+    throw new Error(`${directory} is not inside a git repository.`);
+  }
+  const keepPatterns = keepPaths.map(
+    (keepPath) => `/${posix.join(prefix, keepPath).replace(/[\\*?[]/g, '\\$&')}`
+  );
   const options = {
     encoding: 'utf8' as const,
     stdio: 'pipe' as const,
     cwd: directory,
     windowsHide: true,
   };
+  // `reset --hard` deletes a kept path staged since `ref`, so its index entry
+  // goes back to `ref` first, leaving it untracked for the clean to skip.
+  execFileSync('git', ['reset', '-q', ref, '--', ...keepPaths], options);
   execFileSync('git', ['reset', '--hard', ref], options);
   execFileSync(
     'git',
-    ['clean', '-fd', ...keepPaths.flatMap((keepPath) => ['-e', keepPath])],
+    ['clean', '-fd', ...keepPatterns.flatMap((pattern) => ['-e', pattern])],
     options
   );
 }

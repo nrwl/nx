@@ -368,15 +368,20 @@ impl TuiState {
     // === Task Timing Methods ===
 
     /// Record the start time of a task (in milliseconds since epoch)
-    pub fn record_task_start(&mut self, task_id: &str) {
-        self.task_start_times
-            .insert(task_id.to_owned(), current_timestamp_millis());
+    pub fn record_task_start(&mut self, task_id: &str, start_time: Option<i64>) {
+        self.task_start_times.insert(
+            task_id.to_owned(),
+            start_time.unwrap_or_else(current_timestamp_millis),
+        );
+        self.task_end_times.remove(task_id);
     }
 
-    /// Record the end time of a task (in milliseconds since epoch)
-    pub fn record_task_end(&mut self, task_id: &str) {
-        self.task_end_times
-            .insert(task_id.to_owned(), current_timestamp_millis());
+    /// Store completed task timing in milliseconds since epoch.
+    pub fn set_task_timing(&mut self, task_id: &str, start_time: Option<i64>, end_time: i64) {
+        if let Some(start_time) = start_time {
+            self.task_start_times.insert(task_id.to_owned(), start_time);
+        }
+        self.task_end_times.insert(task_id.to_owned(), end_time);
     }
 
     /// Get the start and end times of a task (in milliseconds since epoch)
@@ -1047,7 +1052,7 @@ mod tests {
 
         // Record start
         let before_start = current_timestamp_millis();
-        state.record_task_start("app1:build");
+        state.record_task_start("app1:build", None);
         let after_start = current_timestamp_millis();
 
         // Small delay
@@ -1055,7 +1060,7 @@ mod tests {
 
         // Record end
         let before_end = current_timestamp_millis();
-        state.record_task_end("app1:build");
+        state.set_task_timing("app1:build", None, current_timestamp_millis());
         let after_end = current_timestamp_millis();
 
         // Verify timings
@@ -1088,8 +1093,8 @@ mod tests {
     fn test_get_task_start_and_end_times() {
         let mut state = create_test_state();
 
-        state.record_task_start("app1:build");
-        state.record_task_end("app1:build");
+        state.record_task_start("app1:build", None);
+        state.set_task_timing("app1:build", None, current_timestamp_millis());
 
         let start_times = state.get_task_start_times();
         let end_times = state.get_task_end_times();

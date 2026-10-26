@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import runCommands, {
   interpolateArgsIntoCommand,
   runCommands as startRunCommands,
@@ -382,6 +383,172 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
       });
+
+      it('should complete a single command when the string specified as ready condition is found in a terminal that supports a pseudo terminal', async () => {
+        const isSupported = vi
+          .spyOn(PseudoTerminal, 'isSupported')
+          .mockReturnValue(true);
+        try {
+          const f = fileSync().name;
+          const result = await runCommands(
+            {
+              command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+              readyWhen: 'READY',
+              usePty: true,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result).toEqual(expect.objectContaining({ success: true }));
+          expect(readFile(f)).toEqual('');
+          await vi.waitFor(() => expect(readFile(f)).toEqual('1'), {
+            timeout: 3000,
+          });
+        } finally {
+          isSupported.mockRestore();
+        }
+      });
+
+      it.each([
+        ['passed in', context, { id: 'app:serve', continuous: true }],
+        [
+          'resolved from the project graph',
+          {
+            projectName: 'app',
+            targetName: 'serve',
+            projectGraph: {
+              nodes: {
+                app: { data: { targets: { serve: { continuous: true } } } },
+              },
+            },
+          },
+          undefined,
+        ],
+      ])(
+        'should keep a continuous task running after the string specified as ready condition is found in a terminal that supports a pseudo terminal, with the task %s',
+        async (_, taskContext, task) => {
+          const isSupported = vi
+            .spyOn(PseudoTerminal, 'isSupported')
+            .mockReturnValue(true);
+          try {
+            const f = fileSync().name;
+            const runningTask = await startRunCommands(
+              {
+                command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+                readyWhen: 'READY',
+                usePty: true,
+                __unparsed__: [],
+              },
+              taskContext as any,
+              task
+            );
+            const result = await runningTask.getResults();
+            expect(result.code).toBe(0);
+            expect(readFile(f)).toEqual('1');
+          } finally {
+            isSupported.mockRestore();
+          }
+        }
+      );
+
+      it('should return success true when the string specified as ready condition is found on stderr', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo READY >&2',
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+      });
+
+      it.each([
+        [
+          true,
+          'in two writes',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
+          'on stderr in two writes',
+          'READY',
+          [
+            `node -e "process.stderr.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
+          'with an escape sequence inside it',
+          'READY',
+          [`node -e "process.stdout.write('RE\\u001b[1mADY')"`],
+        ],
+        [
+          true,
+          'with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [`node -e "process.stdout.write('\\u001b[1mREADY')"`],
+        ],
+        [
+          true,
+          'in two writes with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [
+            `node -e "process.stdout.write('\\u001b[1mREA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+        [
+          false,
+          'across stdout and stderr',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          false,
+          'across two commands',
+          'READY',
+          [
+            `node -e "process.stdout.write('REA')"`,
+            `node -e "setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
+        ],
+      ])(
+        'should return success %s when the string specified as ready condition is printed %s',
+        async (success, _, readyWhen, commands) => {
+          const result = await runCommands(
+            {
+              commands,
+              parallel: true,
+              readyWhen,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result.success).toBe(success);
+        }
+      );
+
+      it('should fail when every command exits before the string specified as ready condition is found', async () => {
+        const result = await runCommands(
+          {
+            commands: ['echo hi', 'echo there'],
+            parallel: true,
+            readyWhen: 'READY',
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result.success).toBe(false);
+        expect(result.terminalOutput).toContain('echo there');
+        expect(result.terminalOutput).toContain(
+          'exited before printing the readyWhen text "READY"'
+        );
+      });
     });
 
     describe('array of strings', () => {
@@ -401,26 +568,43 @@ describe('Run Commands', () => {
         expect(readFile(f)).toEqual('');
       });
 
-      it('should keep waiting when not all strings specified as ready condition were found', async () => {
+      it('should return success true when one output chunk holds every string specified as ready condition', async () => {
+        const result = await runCommands(
+          {
+            command: 'echo "READY foo"',
+            readyWhen: ['READY', 'foo'],
+            __unparsed__: [],
+          },
+          context
+        );
+        expect(result).toEqual(expect.objectContaining({ success: true }));
+      });
+
+      it('should keep waiting when not all strings specified as ready condition were found, then fail naming the missing ones', async () => {
         const f = fileSync().name;
         let result: { success: boolean } | null = null;
 
-        runCommands(
+        const run = runCommands(
           {
-            commands: [`echo 1 >> ${f} && echo READY`, `echo foo`],
+            commands: [`echo 1 >> ${f} && echo READY`, `echo foo && sleep 1`],
             parallel: true,
             readyWhen: ['READY', 'bar'],
             __unparsed__: [],
           },
 
           context
-        ).then((res) => {
+        );
+        run.then((res) => {
           result = res;
         });
 
         await new Promise((resolve) => setTimeout(resolve, 150));
         expect(readFile(f)).toEqual('1');
         expect(result).toBeNull();
+
+        const { success, terminalOutput } = await run;
+        expect(success).toBe(false);
+        expect(terminalOutput).toContain('readyWhen text "bar"');
       });
     });
   });
@@ -1287,6 +1471,109 @@ describe('Run Commands', () => {
       // Should complete quickly after failure and cleanup. The margin leaves
       // room for CPU contention in a full parallel suite run.
       expect(duration).toBeLessThan(1500);
+    });
+  });
+
+  describe('process listeners', () => {
+    const events = ['exit', 'SIGINT', 'SIGTERM', 'SIGHUP'];
+    const listenersOf = (event: string) =>
+      (process as NodeJS.EventEmitter).listeners(event);
+    let startCommands: typeof startRunCommands;
+    let initialListeners: Function[][];
+    const addedListeners = () =>
+      events.map((event, i) =>
+        listenersOf(event).filter(
+          (listener) => !initialListeners[i].includes(listener)
+        )
+      );
+    const addedListenerCounts = () =>
+      addedListeners().map((listeners) => listeners.length);
+
+    beforeEach(async () => {
+      // A readyWhen run resolves while its commands still run, so earlier
+      // tests' commands would share the listeners these tests count
+      vi.resetModules();
+      ({ runCommands: startCommands } = await import('./run-commands.impl.js'));
+      initialListeners = events.map(listenersOf);
+    });
+
+    it.each([
+      ['in the nx process', false, [1, 0, 0, 0]],
+      ['in a forked executor', true, [1, 1, 1, 1]],
+    ])(
+      'adds one listener per event %s for all running commands',
+      async (_, forked, added) => {
+        if (forked) {
+          process.env.NX_FORKED_TASK_EXECUTOR = 'true';
+        }
+        try {
+          const parallel = await startCommands(
+            {
+              commands: Array(4).fill('sleep 0.2'),
+              parallel: true,
+              __unparsed__: [],
+            },
+            context
+          );
+          const serial = await startCommands(
+            {
+              commands: ['sleep 0.5', 'sleep 0.5'],
+              parallel: false,
+              usePty: false,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(addedListenerCounts()).toEqual(added);
+
+          await parallel.getResults();
+          // The serial commands are still running
+          expect(addedListenerCounts()).toEqual(added);
+
+          await serial.getResults();
+          expect(addedListenerCounts()).toEqual([0, 0, 0, 0]);
+        } finally {
+          delete process.env.NX_FORKED_TASK_EXECUTOR;
+        }
+      }
+    );
+
+    it('stops every running command on a signal in a forked executor', async () => {
+      process.env.NX_FORKED_TASK_EXECUTOR = 'true';
+      try {
+        // Longer than the test timeout, so only the signal ends them
+        const parallel = await startCommands(
+          {
+            commands: ['sleep 60', 'sleep 60'],
+            parallel: true,
+            __unparsed__: [],
+          },
+          context
+        );
+        const serial = await startCommands(
+          {
+            commands: ['sleep 60', 'sleep 60'],
+            parallel: false,
+            usePty: false,
+            __unparsed__: [],
+          },
+          context
+        );
+
+        // Only the handlers run-commands added, not the test runner's
+        for (const listener of addedListeners()[events.indexOf('SIGTERM')]) {
+          listener('SIGTERM');
+        }
+
+        const results = await Promise.all([
+          parallel.getResults(),
+          serial.getResults(),
+        ]);
+        expect(results.map(({ code }) => code)).not.toContain(0);
+        expect(addedListenerCounts()).toEqual([0, 0, 0, 0]);
+      } finally {
+        delete process.env.NX_FORKED_TASK_EXECUTOR;
+      }
     });
   });
 });

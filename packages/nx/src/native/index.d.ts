@@ -65,7 +65,7 @@ export declare class ChildProcess {
   getPid(): number
   kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
-  onOutput(callback: (message: string) => void): void
+  onOutput(callback: (message: string, isCommandHeader: boolean) => void): void
   cleanup(): void
 }
 

@@ -169,8 +169,8 @@ pub trait TuiApp: Send {
     /// # Arguments
     ///
     /// * `tasks` - List of tasks that will be executed
-    fn start_tasks(&mut self, tasks: Vec<Task>) {
-        self.core().start_tasks(&tasks);
+    fn start_tasks(&mut self, mut tasks: Vec<Task>) {
+        self.core().start_tasks(&mut tasks);
         self.on_tasks_started(&tasks);
     }
 
@@ -194,8 +194,13 @@ pub trait TuiApp: Send {
     }
 
     /// Set the start and end time for a task (in milliseconds since epoch)
-    fn set_task_timing(&mut self, _task_id: String, _start_time: i64, _end_time: i64) {
-        // Default: no-op. Full TUI overrides to update display items.
+    fn set_task_timing(&mut self, task_id: String, start_time: i64, end_time: i64) {
+        self.core()
+            .state()
+            .lock()
+            .set_task_timing(&task_id, Some(start_time), end_time);
+        self.core()
+            .dispatch_action(Action::SetTaskTiming(task_id, start_time, end_time));
     }
 
     /// Called when tasks finish execution
@@ -205,8 +210,8 @@ pub trait TuiApp: Send {
     /// # Arguments
     ///
     /// * `task_results` - Results of all completed tasks
-    fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
-        self.core().end_tasks(&task_results);
+    fn end_tasks(&mut self, mut task_results: Vec<TaskResult>) {
+        self.core().end_tasks(&mut task_results);
         self.on_tasks_ended(&task_results);
     }
 

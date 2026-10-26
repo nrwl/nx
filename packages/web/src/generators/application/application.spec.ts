@@ -107,9 +107,11 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "module": "commonjs",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "extends": "../tsconfig.base.json",
           "include": [
@@ -1000,6 +1002,9 @@ describe('app', () => {
             "allowJs": true,
             "outDir": "out-tsc/playwright",
             "sourceMap": false,
+            "types": [
+              "node",
+            ],
           },
           "exclude": [
             "out-tsc",

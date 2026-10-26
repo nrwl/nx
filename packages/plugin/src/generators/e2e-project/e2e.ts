@@ -109,12 +109,17 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   // One manager drives workspace creation, the install and the checks, so the
   // generated e2e test cannot straddle two.
   const packageManager = options.packageManager ?? detectPackageManager();
+  const packageManagerCommands = getPackageManagerCommand(packageManager);
+  // npx otherwise runs from the enclosing workspace package instead of the requested cwd.
+  if (packageManagerCommands.dlx === 'npx') {
+    packageManagerCommands.dlx += ' --workspaces=false';
+  }
 
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
-    packageManagerCommands: getPackageManagerCommand(packageManager),
+    packageManagerCommands,
     packageManager,
     pluginPackageName,
     simplePluginName,
