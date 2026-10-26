@@ -1083,6 +1083,38 @@ describe('Eslint - Convert Executors To Plugin', () => {
     });
 
     it.each`
+      key                  | targetDefault                                                                         | expectedOutputFile                         | expectedOutput
+      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                         | ${'./reports/lint/libs/core/eslint.json'}  | ${'{projectRoot}/../../{options.output-file}'}
+      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]} | ${'./reports/lint/libs/core/eslint.json'}  | ${'{projectRoot}/../../{options.output-file}'}
+      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                      | ${'../reports/lint/libs/core/eslint.json'} | ${'{projectRoot}/../../tools/{options.output-file}'}
+    `(
+      'should rebase outputFile onto the cwd a $key target default sets',
+      async ({ key, targetDefault, expectedOutputFile, expectedOutput }) => {
+        const nxJson = readNxJson(tree);
+        nxJson.targetDefaults = { [key]: targetDefault };
+        updateNxJson(tree, nxJson);
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options.outputFile =
+          '{workspaceRoot}/reports/lint/{projectRoot}/eslint.json';
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.options).toStrictEqual({
+          'output-file': expectedOutputFile,
+        });
+        expect(updatedProject.targets.lint.outputs).toStrictEqual([
+          expectedOutput,
+          '{options.outputFile}',
+        ]);
+      }
+    );
+
+    it.each`
       option                        | value                             | expectedOptions                                     | expectedOutputs
       ${'outputFile'}               | ${'./reports/x.json'}             | ${{ 'output-file': '../../reports/x.json' }}        | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
       ${'outputFile'}               | ${'reports/x.json'}               | ${{ 'output-file': '../../reports/x.json' }}        | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}

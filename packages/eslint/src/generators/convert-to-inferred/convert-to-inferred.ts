@@ -3,6 +3,7 @@ import {
   NoTargetsToMigrateError,
   processTargetOutputs,
   interpolate,
+  readTargetDefaultsForTarget,
   resolveNxTokensInOptions,
   toProjectRelativePath,
 } from '@nx/devkit/internal';
@@ -10,11 +11,13 @@ import {
   createProjectGraphAsync,
   formatFiles,
   joinPathFragments,
+  normalizePath,
+  readNxJson,
   type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { isAbsolute } from 'node:path';
+import { isAbsolute, relative as relativePath, resolve } from 'node:path';
 import { basename, dirname, relative } from 'node:path/posix';
 import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
@@ -30,6 +33,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   assertSupportedEslintVersion(tree);
 
   const projectGraph = await createProjectGraphAsync();
+  const { targetDefaults } = readNxJson(tree) ?? {};
 
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<EslintPluginOptions>(
@@ -41,7 +45,29 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       [
         {
           executors: ['@nx/eslint:lint', '@nrwl/linter:eslint'],
-          postTargetTransformer,
+          postTargetTransformer: (
+            target,
+            tree,
+            projectDetails,
+            inferredTargetConfiguration
+          ) =>
+            postTargetTransformer(
+              target,
+              tree,
+              projectDetails,
+              inferredTargetConfiguration,
+              // Nx matches the inferred `command` target as nx:run-commands
+              readTargetDefaultsForTarget(
+                inferredTargetConfiguration.name,
+                targetDefaults,
+                'nx:run-commands',
+                {
+                  projectName: projectDetails.projectName,
+                  projectNode: projectGraph.nodes[projectDetails.projectName],
+                  sourcePlugin: '@nx/eslint/plugin',
+                }
+              )
+            ),
           targetPluginOptionMapper: (targetName) => ({ targetName }),
           skipTargetFilter,
         },
@@ -62,8 +88,17 @@ function postTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
   projectDetails: { projectName: string; root: string },
-  inferredTargetConfiguration: TargetConfiguration
+  inferredTargetConfiguration: TargetConfiguration,
+  targetDefaults: Partial<TargetConfiguration> | null
 ): TargetConfiguration {
+  // the converted target runs ESLint from the plugin's project root unless a
+  // target default or the project's own options set `cwd`
+  const cwd = resolveCwd(
+    target.options?.cwd ?? targetDefaults?.options?.cwd ?? projectDetails.root,
+    projectDetails,
+    tree.root
+  );
+
   if (target.inputs) {
     const normalizeInput = (input: string) => {
       return input
@@ -102,13 +137,13 @@ function postTargetTransformer(
   }
 
   if (target.options) {
-    handlePropertiesInOptions(target.options, projectDetails, target);
+    handlePropertiesInOptions(target.options, projectDetails, target, cwd);
   }
 
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      handlePropertiesInOptions(configuration, projectDetails, target);
+      handlePropertiesInOptions(configuration, projectDetails, target, cwd);
     }
 
     if (Object.keys(target.configurations).length !== 0) {
@@ -136,7 +171,8 @@ function postTargetTransformer(
 function handlePropertiesInOptions(
   options: Record<string, any>,
   projectDetails: { projectName: string; root: string },
-  target: TargetConfiguration
+  target: TargetConfiguration,
+  cwd: string
 ) {
   // inferred targets are only identified after known files that ESLint would
   // pick up, so we can remove the eslintConfig option
@@ -175,16 +211,17 @@ function handlePropertiesInOptions(
       delete options[option];
       continue;
     }
-    options[option] = toProjectRootPath(
+    options[option] = toCwdRelativePath(
       options[option],
       option,
-      projectDetails
+      projectDetails,
+      cwd
     );
   }
 
   if (Array.isArray(options.rulesdir)) {
     options.rulesdir = options.rulesdir.map((dir: string) =>
-      toProjectRootPath(dir, 'rulesdir', projectDetails)
+      toCwdRelativePath(dir, 'rulesdir', projectDetails, cwd)
     );
   }
 
@@ -197,10 +234,11 @@ function handlePropertiesInOptions(
     // ESLint loads a formatter from a file, resolved from its cwd, when the
     // name contains a `/` and is not a scoped package
     if (format.includes('/') && !/^@.*\//.test(format)) {
-      const formatPath = toProjectRootPath(
+      const formatPath = toCwdRelativePath(
         options.format,
         'format',
-        projectDetails
+        projectDetails,
+        cwd
       );
       options.format = /[\\/]/.test(formatPath)
         ? formatPath
@@ -211,11 +249,14 @@ function handlePropertiesInOptions(
   // Nx rejects outputs outside the workspace, so such a report is not cached
   if (
     options.outputFile &&
-    !/^\.\.(\/|$)/.test(
-      joinPathFragments(projectDetails.root, options.outputFile)
-    )
+    !/^\.\.(\/|$)/.test(joinPathFragments(cwd, options.outputFile))
   ) {
-    const output = '{projectRoot}/{options.output-file}';
+    // processTargetOutputs moves option outputs that do not start with
+    // {projectRoot} under it, so reach the cwd from there
+    const output = `{projectRoot}/${joinPathFragments(
+      relative(projectDetails.root, cwd),
+      '{options.output-file}'
+    )}`;
     target.outputs ??= [];
     if (!target.outputs.includes(output)) {
       target.outputs.push(output);
@@ -278,14 +319,32 @@ function resolveNxTokens(
 }
 
 /**
- * Rewrites a path the executor resolved from the workspace root so that ESLint
- * resolves it to the same location from the project root, where the inferred
- * target runs it.
+ * The workspace-relative directory run-commands runs the converted target in,
+ * resolved like its `calculateCwd`.
  */
-function toProjectRootPath(
+function resolveCwd(
+  cwd: string,
+  projectDetails: { projectName: string; root: string },
+  workspaceRoot: string
+): string {
+  const resolvedCwd = resolveNxTokens(cwd, 'cwd', projectDetails);
+  return (
+    normalizePath(
+      relativePath(workspaceRoot, resolve(workspaceRoot, resolvedCwd))
+    ) || '.'
+  );
+}
+
+/**
+ * Rewrites a path the executor resolved from the workspace root so that ESLint
+ * resolves it to the same location from `cwd`, where the converted target
+ * runs it.
+ */
+function toCwdRelativePath(
   value: string,
   option: string,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  cwd: string
 ): string {
   const resolvedValue = resolveNxTokens(value, option, projectDetails);
   // A relative path to an absolute location would depend on where the
@@ -295,10 +354,7 @@ function toProjectRootPath(
     return resolvedValue;
   }
 
-  return toProjectRelativePath(
-    joinPathFragments('.', resolvedValue),
-    projectDetails.root
-  );
+  return toProjectRelativePath(joinPathFragments('.', resolvedValue), cwd);
 }
 
 export default convertToInferred;
