@@ -137,6 +137,10 @@ The value is case-insensitive and maps to the [`ultracache.mode`](/docs/referenc
 | `OFF`   | Turns Ultracache off for every task.                                       |
 | Unset   | Uses the workspace setting.                                                |
 
+`NX_CLOUD_ULTRACACHE_MODE` takes precedence over [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables): with `OFF`, `WARN`, or `ERROR`, the run doesn't use recorded inputs even if `NX_CLOUD_USE_ULTRACACHE` is `true`.
+Don't combine `ON` with `NX_CLOUD_USE_ULTRACACHE=false`, because Nx 24 and later still skip Ultracache for that run.
+Any other value fails the run with an error.
+
 Set it at the job or workflow level so both `nx-cloud start-ci-run` and your Nx commands see it.
 Nx Agents pick it up automatically:
 
