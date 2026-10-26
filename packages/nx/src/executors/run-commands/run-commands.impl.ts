@@ -104,7 +104,7 @@ export default async function (
 export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
-  task?: Pick<Task, 'id' | 'ultracache'>,
+  task?: Pick<Task, 'id' | 'ultracache' | 'continuous'>,
   baseEnv?: NodeJS.ProcessEnv
 ) {
   let env: NodeJS.ProcessEnv;
@@ -160,7 +160,8 @@ export async function runCommands(
     // The orchestrator's in-process path passes the task with a stub context,
     // so prefer it. `runExecutor` can name a target the task graph does not
     // hold, hence the project lookup; `convert-nx-executor` has neither graph,
-    // and only then is the config unknowable, which counts as tracked.
+    // and only then is the config unknowable, which counts as tracked and
+    // discrete.
     const resolvedTaskId =
       task?.id ??
       createTaskId(
@@ -168,18 +169,26 @@ export async function runCommands(
         context.targetName,
         context.configurationName
       );
+    // Both graphs are typed as present, but `convert-nx-executor` passes null
+    // for each.
+    const targetConfiguration =
+      context.projectName && context.targetName
+        ? context.projectGraph?.nodes?.[context.projectName]?.data.targets?.[
+            context.targetName
+          ]
+        : undefined;
     const resolvedTask = task ??
       context.taskGraph?.tasks?.[resolvedTaskId] ?? {
         id: resolvedTaskId,
-        // Both graphs are typed as present, but `convert-nx-executor` passes
-        // null for each.
-        ultracache:
-          context.projectName && context.targetName
-            ? context.projectGraph?.nodes?.[context.projectName]?.data
-                .targets?.[context.targetName]?.ultracache
-            : undefined,
+        ultracache: targetConfiguration?.ultracache,
+        continuous: targetConfiguration?.continuous,
       };
-    const runningTask = isSingleCommandAndCanUsePseudoTerminal
+    // The pseudo terminal runner ignores readyWhen, which keeps a continuous
+    // task running past the match. A discrete task must end there.
+    const usePtyRunner =
+      isSingleCommandAndCanUsePseudoTerminal &&
+      (!normalized.readyWhenStatus.length || resolvedTask.continuous === true);
+    const runningTask = usePtyRunner
       ? await runSingleCommandWithPseudoTerminal(
           normalized,
           context,
