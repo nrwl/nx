@@ -124,7 +124,13 @@ export class SummaryTerminalOutputLifeCycle implements LifeCycle {
     );
 
     const title = this.countsLine(skipped);
-    if (this.failed.length > 0 || this.stopped.length > 0) {
+    // A discrete task that never reported was skipped, which fails the run; a
+    // continuous one nothing needed is never started
+    if (
+      this.failed.length > 0 ||
+      this.stopped.length > 0 ||
+      this.tasks.some((t) => !t.continuous && !this.completed.has(t.id))
+    ) {
       output.error({ title, bodyLines });
     } else {
       output.success({ title, bodyLines });
