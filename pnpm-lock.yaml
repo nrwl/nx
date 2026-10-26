@@ -2964,6 +2964,9 @@ importers:
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.4
       resolve.exports:
         specifier: 2.0.3
         version: 2.0.3
