@@ -1488,6 +1488,33 @@ describe('TaskOrchestrator', () => {
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).not.toHaveBeenCalled();
     });
+
+    it('folds a batch whose worker reached none of its tasks, so the error that stopped it survives', async () => {
+      const orchestrator = createOrchestrator();
+      const taskResults = ['a:build', 'b:build'].map((id) => ({
+        task: makeTask(id),
+        status: 'skipped',
+        code: 1,
+        terminalOutput: '',
+      }));
+
+      const out = await captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile(
+            "FAILURE: A problem occurred configuring project ':shared'."
+          )
+        )
+      );
+
+      // `@nx/gradle` reports every task it never reached as skipped, so no
+      // task carries the error that stopped the build
+      expect(out).toContain(
+        "A problem occurred configuring project ':shared'."
+      );
+      expect(out).toContain('::group::⏩ > batch @nx/js:tsc 1');
+    });
   });
 
   describe('runBatch failure folds', () => {
@@ -1610,41 +1637,49 @@ describe('TaskOrchestrator', () => {
     // results, so `getResults` resolves. Without the handoff in `runBatch` the
     // captured file is read by nobody here and unlinked on the way out, and a
     // unit test of the handoff alone still passes.
-    it("surfaces a reporting batch's worker log under summary", async () => {
-      const orchestrator = createOrchestrator(
-        'gradlew: OutOfMemoryError in the daemon',
-        false
-      );
-      orchestrator.resolvedOutputStyle = 'summary';
-      orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
-      orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
-        .fn()
-        .mockResolvedValue({
-          onOutput: vi.fn(),
-          onTaskResults: vi.fn(),
-          getResults: vi.fn().mockResolvedValue({
-            'a:build': { success: false, terminalOutput: 'a failed' },
-          }),
-          getCapturedOutputPath: () =>
-            capturedPath('gradlew: OutOfMemoryError in the daemon'),
-          flushCapturedOutput: async () => {},
-          discardCapturedOutput: () => {},
-        });
+    it.each([
+      ['failed', { success: false, terminalOutput: 'a failed' }, 'failure'],
+      [
+        'was never reached',
+        { success: false, status: 'skipped', terminalOutput: '' },
+        'skipped',
+      ],
+    ])(
+      "surfaces a reporting batch's worker log under summary when a task %s",
+      async (_, result, status) => {
+        const orchestrator = createOrchestrator(
+          'gradlew: OutOfMemoryError in the daemon',
+          false
+        );
+        orchestrator.resolvedOutputStyle = 'summary';
+        orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
+        orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+          .fn()
+          .mockResolvedValue({
+            onOutput: vi.fn(),
+            onTaskResults: vi.fn(),
+            getResults: vi.fn().mockResolvedValue({ 'a:build': result }),
+            getCapturedOutputPath: () =>
+              capturedPath('gradlew: OutOfMemoryError in the daemon'),
+            flushCapturedOutput: async () => {},
+            discardCapturedOutput: () => {},
+          });
 
-      const results: any = await orchestrator.runBatch(batch, {}, 0);
+        const results: any = await orchestrator.runBatch(batch, {}, 0);
 
-      // The log is addressed, not copied: one worker means one log, and it
-      // explains the batch rather than any single task.
-      expect(
-        orchestrator.options.lifeCycle.batchOutputAvailable
-      ).toHaveBeenCalledWith(
-        batch.id,
-        capturedPath('gradlew: OutOfMemoryError in the daemon')
-      );
-      expect(results[0].status).toEqual('failure');
-      expect(results[0].terminalOutput).toEqual('a failed');
-      expect(results[0].terminalOutput).not.toContain('OutOfMemoryError');
-    });
+        // The log is addressed, not copied: one worker means one log, and it
+        // explains the batch rather than any single task.
+        expect(
+          orchestrator.options.lifeCycle.batchOutputAvailable
+        ).toHaveBeenCalledWith(
+          batch.id,
+          capturedPath('gradlew: OutOfMemoryError in the daemon')
+        );
+        expect(results[0].status).toEqual(status);
+        expect(results[0].terminalOutput).toEqual(result.terminalOutput);
+        expect(results[0].terminalOutput).not.toContain('OutOfMemoryError');
+      }
+    );
 
     // The fold tests above all run under grouping, where the handoff is a no-op,
     // so none of them notice if the crash path stops calling it. Under summary

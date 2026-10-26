@@ -118,6 +118,30 @@ function resolveBatchTaskStatus(result: {
   return result.status ?? (result.success ? 'success' : 'failure');
 }
 
+/** Whether a batch task's status leaves the worker's own log to explain it. */
+function batchWorkerLogExplains(status: TaskStatus): boolean {
+  switch (status) {
+    case 'failure':
+    case 'stopped':
+    // The worker never reached it, e.g. `@nx/gradle` after a build failure
+    // outside the batch's own tasks
+    case 'skipped':
+      return true;
+    case 'success':
+    case 'local-cache':
+    case 'local-cache-kept-existing':
+    case 'remote-cache':
+      return false;
+    default: {
+      const unhandled: never = status;
+      void unhandled;
+      // Batch executors report their statuses untyped, so an unknown one can
+      // still arrive here; its log is the only explanation of it
+      return true;
+    }
+  }
+}
+
 /** Whether a path names a file with bytes in it. */
 function hasContent(path: string): boolean {
   try {
@@ -1271,9 +1295,7 @@ export class TaskOrchestrator {
     if (!capturedOutputPath || printsTaskOutput(this.resolvedOutputStyle)) {
       return;
     }
-    const failed = results.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
-    );
+    const failed = results.some((r) => batchWorkerLogExplains(r.status));
     if (!failed) {
       return;
     }
@@ -1324,8 +1346,9 @@ export class TaskOrchestrator {
    * those per-project summaries to the worker's stdio at all.
    *
    * The worker's whole captured log is rendered as a fold above them when the
-   * run asked for full output, or when any task failed or was stopped. A
-   * diagnostic that explains a failure is routinely one no task claimed:
+   * run asked for full output, or when any task failed, was stopped or was
+   * never reached.
+   * A diagnostic that explains a failure is routinely one no task claimed:
    * `@nx/maven`'s batch impl writes its exit-code dump and failed-task outputs
    * to the worker's stderr via `console.error`, and the Maven JVM it spawns
    * points slf4j at `System.out` because its own stderr carries the result
@@ -1365,8 +1388,8 @@ export class TaskOrchestrator {
       verbose: this.options.verbose,
       outputStyle: this.resolvedOutputStyle,
     });
-    const batchOwnsTheDiagnostic = taskResults.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
+    const batchOwnsTheDiagnostic = taskResults.some((r) =>
+      batchWorkerLogExplains(r.status)
     );
     if (
       printsTaskOutput(this.resolvedOutputStyle) &&
@@ -1420,7 +1443,9 @@ export class TaskOrchestrator {
       ? 'failure'
       : taskResults.some((r) => r.status === 'stopped')
         ? 'stopped'
-        : 'success';
+        : taskResults.some((r) => r.status === 'skipped')
+          ? 'skipped'
+          : 'success';
     output.logBatchGroup(label, body, worst);
     if (!redirectLines) {
       return;
