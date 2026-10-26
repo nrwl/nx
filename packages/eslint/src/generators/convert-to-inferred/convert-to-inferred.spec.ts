@@ -1088,6 +1088,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       ${'outputFile'}               | ${'reports/x.json'}               | ${{ 'output-file': '../../reports/x.json' }}        | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
       ${'outputFile'}               | ${'{projectRoot}/../report.json'} | ${{ 'output-file': '../report.json' }}              | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
       ${'outputFile'}               | ${'/abs/x.json'}                  | ${{ 'output-file': '../../abs/x.json' }}            | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
+      ${'outputFile'}               | ${'../reports/x.json'}            | ${{ 'output-file': '../../../reports/x.json' }}     | ${undefined}
       ${'outputFile'}               | ${''}                             | ${undefined}                                        | ${undefined}
       ${'ignorePath'}               | ${'.eslintignore'}                | ${{ 'ignore-path': '../../.eslintignore' }}         | ${undefined}
       ${'ignorePath'}               | ${'/abs/.eslintignore'}           | ${{ 'ignore-path': '/abs/.eslintignore' }}          | ${undefined}
