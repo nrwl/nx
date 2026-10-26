@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
 import runCommands, {
   interpolateArgsIntoCommand,
   runCommands as startRunCommands,
@@ -382,6 +383,73 @@ describe('Run Commands', () => {
         expect(result).toEqual(expect.objectContaining({ success: true }));
         expect(readFile(f)).toEqual('');
       });
+
+      it('should complete a single command when the string specified as ready condition is found in a terminal that supports a pseudo terminal', async () => {
+        const isSupported = vi
+          .spyOn(PseudoTerminal, 'isSupported')
+          .mockReturnValue(true);
+        try {
+          const f = fileSync().name;
+          const result = await runCommands(
+            {
+              command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+              readyWhen: 'READY',
+              usePty: true,
+              __unparsed__: [],
+            },
+            context
+          );
+          expect(result).toEqual(expect.objectContaining({ success: true }));
+          expect(readFile(f)).toEqual('');
+          await vi.waitFor(() => expect(readFile(f)).toEqual('1'), {
+            timeout: 3000,
+          });
+        } finally {
+          isSupported.mockRestore();
+        }
+      });
+
+      it.each([
+        ['passed in', context, { id: 'app:serve', continuous: true }],
+        [
+          'resolved from the project graph',
+          {
+            projectName: 'app',
+            targetName: 'serve',
+            projectGraph: {
+              nodes: {
+                app: { data: { targets: { serve: { continuous: true } } } },
+              },
+            },
+          },
+          undefined,
+        ],
+      ])(
+        'should keep a continuous task running after the string specified as ready condition is found in a terminal that supports a pseudo terminal, with the task %s',
+        async (_, taskContext, task) => {
+          const isSupported = vi
+            .spyOn(PseudoTerminal, 'isSupported')
+            .mockReturnValue(true);
+          try {
+            const f = fileSync().name;
+            const runningTask = await startRunCommands(
+              {
+                command: `echo READY && sleep 1 && echo 1 >> ${f}`,
+                readyWhen: 'READY',
+                usePty: true,
+                __unparsed__: [],
+              },
+              taskContext as any,
+              task
+            );
+            const result = await runningTask.getResults();
+            expect(result.code).toBe(0);
+            expect(readFile(f)).toEqual('1');
+          } finally {
+            isSupported.mockRestore();
+          }
+        }
+      );
 
       it('should return success true when the string specified as ready condition is found on stderr', async () => {
         const result = await runCommands(
