@@ -32,33 +32,40 @@ export class AngularSsrDevServer implements RspackPluginInstance {
         entryValue.import = [...entryValue.import];
       }
     });
+    let watchRunInitialized = false;
     compiler.hooks.watchRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
-        compiler.hooks.afterEmit.tapAsync(
-          PLUGIN_NAME,
-          async (compilation, callback) => {
-            await this.#attachSSRReloadClient(compilation);
+        // watchRun fires before every rebuild. Register the afterEmit hook
+        // only once, otherwise each rebuild adds another hook and the server
+        // gets killed and forked once more per rebuild.
+        if (!watchRunInitialized) {
+          watchRunInitialized = true;
+          compiler.hooks.afterEmit.tapAsync(
+            PLUGIN_NAME,
+            async (compilation, callback) => {
+              await this.#attachSSRReloadClient(compilation);
 
-            const serverPath = join(
-              this.#options.outputPath.server,
-              'server.js'
-            );
-            if (this.#devServerProcess) {
-              this.#devServerProcess.kill();
-              this.#devServerProcess = undefined;
-              await new Promise<void>((res) => setTimeout(res, 50));
+              const serverPath = join(
+                this.#options.outputPath.server,
+                'server.js'
+              );
+              if (this.#devServerProcess) {
+                this.#devServerProcess.kill();
+                this.#devServerProcess = undefined;
+                await new Promise<void>((res) => setTimeout(res, 50));
+              }
+              if (!existsSync(serverPath)) {
+                await new Promise<void>((res) => setTimeout(res, 50));
+              }
+              this.#devServerProcess = fork(serverPath);
+              this.#devServerProcess.on('spawn', () => {
+                this.#wsServer.sendReload();
+              });
+              callback();
             }
-            if (!existsSync(serverPath)) {
-              await new Promise<void>((res) => setTimeout(res, 50));
-            }
-            this.#devServerProcess = fork(serverPath);
-            this.#devServerProcess.on('spawn', () => {
-              this.#wsServer.sendReload();
-            });
-            callback();
-          }
-        );
+          );
+        }
         callback();
       }
     );
