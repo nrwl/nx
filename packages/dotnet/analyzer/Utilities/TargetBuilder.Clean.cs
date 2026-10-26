@@ -20,11 +20,11 @@ public static partial class TargetBuilder
             {
                 ["debug"] = new TargetConfiguration
                 {
-                    Args = [ "--configuration", "Debug"]
+                    Args = ["--configuration", "Debug"]
                 },
                 ["release"] = new TargetConfiguration
                 {
-                    Args = [ "--configuration", "Release"]
+                    Args = ["--configuration", "Release"]
                 }
             },
             Cache = false,
