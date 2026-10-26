@@ -169,8 +169,8 @@ export async function runCommands(
         context.targetName,
         context.configurationName
       );
-    // Both graphs are typed as present, but `convert-nx-executor` passes null
-    // for each.
+    // `projectGraph` is typed as present, but `convert-nx-executor` passes
+    // null for both graphs.
     const targetConfiguration =
       context.projectName && context.targetName
         ? context.projectGraph?.nodes?.[context.projectName]?.data.targets?.[

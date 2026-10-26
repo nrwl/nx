@@ -401,6 +401,9 @@ describe('Run Commands', () => {
           );
           expect(result).toEqual(expect.objectContaining({ success: true }));
           expect(readFile(f)).toEqual('');
+          await vi.waitFor(() => expect(readFile(f)).toEqual('1'), {
+            timeout: 3000,
+          });
         } finally {
           isSupported.mockRestore();
         }
