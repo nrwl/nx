@@ -1047,8 +1047,10 @@ async function getTestPaths(
     rootDir = tryRealpath(rootDir);
     workspaceRoot = tryRealpath(workspaceRoot);
   }
-  const getOption = async <T>(name: string, defaultValue: T): Promise<T> =>
-    (await getJestOption<T>(rawConfig, rootDir, name, presetCache)) ??
+  const preset = await loadPresetConfig(rawConfig, rootDir, presetCache);
+  // jest-config lets a key the config sets override the preset, even when empty
+  const getOption = <T>(name: string, defaultValue: T): T =>
+    (Object.hasOwn(rawConfig, name) ? rawConfig : preset)?.[name] ??
     defaultValue;
   const toArray = (value: string | string[]) =>
     Array.isArray(value) ? value : [value];
@@ -1062,36 +1064,33 @@ async function getTestPaths(
         )
       : undefined;
 
+  // jest-config reads a falsy testRegex as none
   const testRegex = toArray(
-    await getOption<string | string[]>('testRegex', [])
+    getOption<string | string[]>('testRegex', []) || []
   );
   // jest-config drops the default testMatch when testRegex is set
   const testMatch = toArray(
-    await getOption<string | string[]>(
+    getOption<string | string[]>(
       'testMatch',
       testRegex.length > 0 ? [] : DEFAULT_TEST_MATCH
     )
   );
-  const roots = (await getOption('roots', ['<rootDir>'])).map(
+  const roots = getOption('roots', ['<rootDir>']).map(
     (root) =>
       `${normalizePath(resolve(rootDir, replaceRootDirInPath(rootDir, root)))}/`
   );
   const extensions = new Set([
     'snap',
-    ...(await getOption(
-      'moduleFileExtensions',
-      DEFAULT_MODULE_FILE_EXTENSIONS
-    )),
+    ...getOption('moduleFileExtensions', DEFAULT_MODULE_FILE_EXTENSIONS),
   ]);
   // jest-config concatenates preset and config modulePathIgnorePatterns
-  const preset = await loadPresetConfig(rawConfig, rootDir, presetCache);
   const modulePathIgnorePattern = toRegExp(
     (preset?.modulePathIgnorePatterns ?? []).concat(
       rawConfig.modulePathIgnorePatterns ?? []
     )
   );
   const testPathIgnorePattern = toRegExp(
-    await getOption('testPathIgnorePatterns', ['/node_modules/'])
+    getOption('testPathIgnorePatterns', ['/node_modules/'])
   );
   const testRegexes = testRegex.map((regex) => new RegExp(regex));
   // Globbing from the project root already applies `**/` globs, so only other
@@ -1551,18 +1550,4 @@ function getTsJestMajorVersion(): number | null {
     cachedTsJestMajorVersion = null;
   }
   return cachedTsJestMajorVersion;
-}
-
-async function getJestOption<T = any>(
-  rawConfig: any,
-  rootDir: string,
-  optionName: string,
-  presetCache: Record<string, unknown>
-): Promise<T> {
-  if (rawConfig[optionName]) return rawConfig[optionName];
-
-  const preset = await loadPresetConfig(rawConfig, rootDir, presetCache);
-  if (preset?.[optionName]) return preset[optionName];
-
-  return undefined;
 }

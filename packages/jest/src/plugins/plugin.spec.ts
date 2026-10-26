@@ -644,6 +644,18 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       ['src/unit.spec.ts'],
     ],
     [
+      "an empty testRegex over a preset's",
+      { preset: '../jest.preset.js', testRegex: '' },
+      { 'jest.preset.js': `module.exports = { testRegex: 'neverMatches' };` },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      "an undefined testRegex over a preset's",
+      { preset: '../jest.preset.js', testRegex: undefined },
+      { 'jest.preset.js': `module.exports = { testRegex: 'neverMatches' };` },
+      ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
       'roots',
       { roots: ['<rootDir>/src'] },
       { 'proj/e2e/flow.spec.ts': '' },
@@ -666,6 +678,12 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       { testMatch: ['**/*.spec.*'] },
       { 'proj/src/notes.spec.md': '' },
       ['src/ignore.spec.ts', 'src/unit.spec.ts'],
+    ],
+    [
+      'moduleFileExtensions',
+      { testMatch: ['**/*.spec.*'], moduleFileExtensions: ['js', 'md'] },
+      { 'proj/src/notes.spec.md': '' },
+      ['src/notes.spec.md'],
     ],
   ])(
     'should atomize the test files Jest runs with %s',
