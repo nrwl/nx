@@ -23,7 +23,7 @@ covers the default workflow.
 ## Recognized commands
 
 The `command` must be `nx run <project>:<target>` or `nx <target> <project>`, optionally prefixed
-by `npx`, `yarn`, `bun`, `pnpm`, `pnpm exec`, or `pnpx`.
+by `npx`, `yarn`, `bun`, `bunx`, `bun x`, `pnpm`, `pnpm exec`, or `pnpx`.
 Nx doesn't recognize a command with extra arguments, such as `npx nx run my-app:serve --port=4200`,
 and infers neither the dependency nor the wait task for it.
 
