@@ -836,20 +836,27 @@ function isReady(
   return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
 }
 
-// The raw chunk still matches strings that hold escape sequences. LogMatcher,
-// absent from the WASM binding, matches text split by chunks or escapes.
+// The output as printed, kept across chunks, matches strings that hold escape
+// sequences. LogMatcher, absent from the WASM binding, matches text with
+// escapes inside it.
 function readyWhenMatcher(
   readyWhenStatus: { stringToMatch: string; found: boolean }[]
 ): (chunk: string) => boolean {
   const matchers = readyWhenStatus.map((status) => ({
     status,
     matcher: IS_WASM ? null : new LogMatcher([status.stringToMatch]),
+    tail: '',
   }));
   return (chunk) => {
-    for (const { status, matcher } of matchers) {
+    for (const entry of matchers) {
+      const { status, matcher } = entry;
       if (status.found) continue;
+      const printed = entry.tail + chunk;
       status.found =
-        chunk.includes(status.stringToMatch) || !!matcher?.feed(chunk);
+        printed.includes(status.stringToMatch) || !!matcher?.feed(chunk);
+      entry.tail = printed.slice(
+        Math.max(0, printed.length - status.stringToMatch.length + 1)
+      );
     }
     return isReady(readyWhenStatus);
   };

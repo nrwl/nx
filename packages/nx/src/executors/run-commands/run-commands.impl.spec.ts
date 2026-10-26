@@ -406,6 +406,14 @@ describe('Run Commands', () => {
         ],
         [
           true,
+          'on stderr in two writes',
+          'READY',
+          [
+            `node -e "process.stderr.write('REA');setTimeout(()=>process.stderr.write('DY'),100)"`,
+          ],
+        ],
+        [
+          true,
           'with an escape sequence inside it',
           'READY',
           [`node -e "process.stdout.write('RE\\u001b[1mADY')"`],
@@ -415,6 +423,14 @@ describe('Run Commands', () => {
           'with the escape sequence it holds',
           '\u001b[1mREADY',
           [`node -e "process.stdout.write('\\u001b[1mREADY')"`],
+        ],
+        [
+          true,
+          'in two writes with the escape sequence it holds',
+          '\u001b[1mREADY',
+          [
+            `node -e "process.stdout.write('\\u001b[1mREA');setTimeout(()=>process.stdout.write('DY'),100)"`,
+          ],
         ],
         [
           false,
