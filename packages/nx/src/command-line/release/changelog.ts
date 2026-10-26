@@ -363,10 +363,6 @@ export function createAPI(
     const workspaceChangelogChanges = await resolveWorkspaceChangelogChanges({
       releaseGraph,
       nxReleaseConfig,
-      args,
-      workspacePreid,
-      projectsPreid,
-      useAutomaticFromRef,
       toSHA,
       fromSHA,
     });
@@ -388,10 +384,6 @@ export function createAPI(
      * Create a cache for from SHA resolution to avoid duplicate git operations
      */
     const fromSHACache = new Map<string, string | null>();
-    // Cache the workspace from SHA if available
-    if (fromSHA) {
-      fromSHACache.set('workspace', fromSHA);
-    }
 
     // Helper function to get cached from SHA or resolve and cache it
     const getCachedFromSHA = async (
@@ -536,40 +528,17 @@ export function createAPI(
               project.data.root
             );
 
-            let commits: GitCommit[];
-            let fromRef = fromSHA;
-            if (!fromRef && useAutomaticFromRef) {
-              // For automatic from ref, we already have it cached
-              fromRef = fromSHACache.get(projectCacheKey);
-              if (fromRef) {
-                commits = await filterProjectCommits({
-                  fromSHA: fromRef,
-                  toSHA,
-                  projectPath: project.data.root,
-                });
-
-                fromRef = commits[0]?.shortHash;
-                if (args.verbose) {
-                  console.log(
-                    `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
-                  );
-                }
-              }
-            }
-
-            if (!fromRef && !commits) {
+            if (!fromSHA) {
               throw new Error(
                 `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 
-            if (!commits) {
-              commits = await filterProjectCommits({
-                fromSHA: fromRef,
-                toSHA,
-                projectPath: project.data.root,
-              });
-            }
+            const commits = await filterProjectCommits({
+              fromSHA,
+              toSHA,
+              projectPath: project.data.root,
+            });
 
             const { fileMap } =
               await createFileMapUsingProjectGraph(projectGraph);
@@ -1331,19 +1300,11 @@ async function promptForRemoteRelease(): Promise<boolean> {
 async function resolveWorkspaceChangelogChanges({
   releaseGraph,
   nxReleaseConfig,
-  args,
-  workspacePreid,
-  projectsPreid,
-  useAutomaticFromRef,
   toSHA,
   fromSHA,
 }: {
   releaseGraph: ReleaseGraph;
   nxReleaseConfig: NxReleaseConfig;
-  args: ChangelogOptions;
-  workspacePreid: string | undefined;
-  projectsPreid: Record<string, string | undefined>;
-  useAutomaticFromRef: boolean;
   toSHA: string;
   fromSHA: string | null;
 }): Promise<ChangelogChange[]> {
@@ -1359,10 +1320,6 @@ async function resolveWorkspaceChangelogChanges({
   // Derive changes from commits
   return resolveWorkspaceChangelogFromCommits({
     nxReleaseConfig,
-    args,
-    workspacePreid,
-    projectsPreid,
-    useAutomaticFromRef,
     toSHA,
     fromSHA,
   });
@@ -1388,18 +1345,10 @@ function resolveWorkspaceChangelogFromVersionPlans(
 
 async function resolveWorkspaceChangelogFromCommits({
   nxReleaseConfig,
-  args,
-  workspacePreid,
-  projectsPreid,
-  useAutomaticFromRef,
   toSHA,
   fromSHA,
 }: {
   nxReleaseConfig: NxReleaseConfig;
-  args: ChangelogOptions;
-  workspacePreid: string | undefined;
-  projectsPreid: Record<string, string | undefined>;
-  useAutomaticFromRef: boolean;
   toSHA: string;
   fromSHA: string | null;
 }): Promise<ChangelogChange[]> {

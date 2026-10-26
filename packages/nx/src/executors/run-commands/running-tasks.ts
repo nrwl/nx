@@ -218,8 +218,6 @@ export class ParallelRunningTasks implements RunningTask {
       let hasFailure = false;
       let failureDetails: {
         childProcess: RunningNodeProcess;
-        code: number;
-        terminalOutput: string;
       } | null = null;
       const terminalOutputs = new Map<RunningNodeProcess, string>();
 
@@ -238,7 +236,7 @@ export class ParallelRunningTasks implements RunningTask {
 
           if (code !== 0 && !hasFailure) {
             hasFailure = true;
-            failureDetails = { childProcess, code, terminalOutput };
+            failureDetails = { childProcess };
 
             // Immediately terminate all other running processes
             this.terminateRemainingProcesses(runningProcesses, childProcess);

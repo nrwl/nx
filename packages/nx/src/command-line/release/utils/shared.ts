@@ -1,10 +1,7 @@
 import * as pc from 'picocolors';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
-import { filterAffected } from '../../../project-graph/affected/affected-project-graph';
-import { calculateFileChanges } from '../../../project-graph/file-utils';
 import { interpolateReleaseConfig } from './interpolate-release-config';
-import type { NxArgs } from '../../../utils/command-line-utils';
 import { output } from '../../../utils/output';
 import { NxReleaseConfig } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';

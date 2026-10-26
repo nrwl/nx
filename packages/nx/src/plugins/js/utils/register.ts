@@ -1,4 +1,4 @@
-import { dirname, isAbsolute, join, resolve, sep } from 'path';
+import { dirname, isAbsolute, resolve, sep } from 'path';
 import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
@@ -1370,7 +1370,7 @@ function warnNoTranspiler() {
 
 function packageIsInstalled(m: string) {
   try {
-    const p = require.resolve(m);
+    require.resolve(m);
     return true;
   } catch {
     return false;

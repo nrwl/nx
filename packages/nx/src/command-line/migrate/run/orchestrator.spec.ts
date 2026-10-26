@@ -1538,14 +1538,6 @@ describe('orchestrator', () => {
     });
 
     it('reports the facts of the active run and the two ways forward, deciding nothing', async () => {
-      const plan = {
-        migrations: [
-          genMig('@nx/js', 'a'),
-          genMig('@nx/js', 'b'),
-          genMig('@nx/js', 'c'),
-          genMig('@nx/js', 'd'),
-        ],
-      };
       const dir = setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:a', 'succeeded'),
@@ -5919,7 +5911,7 @@ describe('orchestrator', () => {
       vi.spyOn(process, 'kill').mockImplementation(() => {
         throw Object.assign(new Error('no such process'), { code: 'ESRCH' });
       });
-      const dir = setupRun('run-1', {
+      setupRun('run-1', {
         steps: [
           migStep('step-1', '@nx/js:prior', 'skipped'),
           migStep('step-2', '@nx/js:gen', 'running', {

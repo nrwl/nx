@@ -916,16 +916,14 @@ function findMatchingPackageV1(
 // so we need to parse them directly from the package.json
 function getPeerDependencies(path: string): {
   peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional: boolean }>;
 } {
   const fullPath = `${workspaceRoot}/${path}/package.json`;
 
   if (existsSync(fullPath)) {
     const content = readFileSync(fullPath, 'utf-8');
-    const { peerDependencies, peerDependenciesMeta } = JSON.parse(content);
+    const { peerDependencies } = JSON.parse(content);
     return {
       ...(peerDependencies && { peerDependencies }),
-      ...(peerDependenciesMeta && { peerDependenciesMeta }),
     };
   } else {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

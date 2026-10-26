@@ -4,11 +4,7 @@ import type {
 } from '../../../config/project-graph';
 import { NxReleaseConfig } from '../config/config';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import {
-  getFirstGitCommit,
-  getFirstProjectCommit,
-  getLatestGitTagForPattern,
-} from '../utils/git';
+import { getFirstProjectCommit, getLatestGitTagForPattern } from '../utils/git';
 import { ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
 import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';

@@ -16,7 +16,6 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
-  statSync,
   type Stats,
   realpathSync,
 } from 'node:fs';

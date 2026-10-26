@@ -476,7 +476,7 @@ describe('preapproved packages with min-release-age', () => {
         windowMs: 24 * 60 * 60 * 1000,
         sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
         // isExcluded checks both exact name ('nx') and glob ('@nx/*')
-        isExcluded: (name: string, version: string) => {
+        isExcluded: (name: string) => {
           return name === 'nx' || name.startsWith('@nx/');
         },
         behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
@@ -516,7 +516,7 @@ describe('preapproved packages with min-release-age', () => {
         windowMs: 24 * 60 * 60 * 1000,
         sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
         // Only 'nx' and '@nx/*' are preapproved; other packages are not
-        isExcluded: (name: string, version: string) => {
+        isExcluded: (name: string) => {
           return name === 'nx' || name.startsWith('@nx/');
         },
         behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },

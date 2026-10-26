@@ -396,7 +396,6 @@ function getCollection(workflow: any, name: string) {
 }
 
 async function createRecorder(
-  host: NxScopedHost,
   record: {
     loggingQueue: string[];
     // Optional sink — only the migration path populates it; other callers
@@ -457,7 +456,6 @@ function emptyFileChange(
 }
 
 async function runSchematic(
-  host: NxScopedHost,
   root: string,
   workflow: import('@angular-devkit/schematics/tools').NodeWorkflow,
   logger: logging.Logger,
@@ -474,7 +472,7 @@ async function runSchematic(
     error: false,
   };
   workflow.reporter.subscribe(
-    recorder || (await createRecorder(host, record, logger))
+    recorder || (await createRecorder(record, logger))
   );
 
   try {
@@ -943,7 +941,6 @@ export async function generate(
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
     await runSchematic(
-      fsHost,
       root,
       workflow,
       logger as any,
@@ -1106,7 +1103,7 @@ export async function runMigration(
     changes: [] as FileChange[],
     error: false,
   };
-  workflow.reporter.subscribe(await createRecorder(fsHost, record, logger));
+  workflow.reporter.subscribe(await createRecorder(record, logger));
 
   await workflow
     .execute({
@@ -1164,7 +1161,6 @@ function resolveMigrationsCollection(name: string): string {
   throw new Error(`Collection cannot be resolved: "${name}"`);
 }
 
-let collectionResolutionOverrides = null;
 let mockedSchematics = null;
 
 /**
@@ -1276,22 +1272,9 @@ export function wrapAngularDevkitSchematic(
     };
     const workflow = createWorkflow(fsHost, host.root, options, projects);
 
-    // used for testing
-    if (collectionResolutionOverrides) {
-      const r = (workflow.engineHost as any).resolve;
-      (workflow.engineHost as any).resolve = (collection, b, c) => {
-        if (collectionResolutionOverrides[collection]) {
-          return collectionResolutionOverrides[collection];
-        } else {
-          return r.apply(workflow.engineHost, [collection, b, c]);
-        }
-      };
-    }
-
     const collection = getCollection(workflow, collectionName);
     const schematic = collection.createSchematic(generatorName, true);
     const res = await runSchematic(
-      fsHost,
       host.root,
       workflow,
       logger,

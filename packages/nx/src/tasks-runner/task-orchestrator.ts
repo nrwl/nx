@@ -53,7 +53,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
-import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import { READY_URL_ENV } from './readiness/ready-signal';
@@ -555,7 +554,7 @@ export class TaskOrchestrator {
         // Use a separate groupId space (parallel..parallel+N) so continuous tasks
         // don't consume discrete group slots
         const groupId = this.options.parallel + this.continuousTasksStarted++;
-        const runningTask = await this.startContinuousTask(task, groupId);
+        await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
           await this.continuousTaskExitHandled.get(task.id);

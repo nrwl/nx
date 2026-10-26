@@ -45,7 +45,7 @@ import { parse } from 'yaml';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
-import * as registryConfig from './registry-config';
+import './registry-config';
 import { mockCjsModule } from '../internal-testing-utils/cjs-mock';
 
 // package-manager.ts lazy-requires ./registry-config (CJS channel), which

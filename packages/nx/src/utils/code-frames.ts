@@ -17,7 +17,6 @@ type NodeLocation = {
 const defs = {
   gutter: pc.gray,
   marker: (text: string) => pc.red(pc.bold(text)),
-  message: (text: string) => pc.red(pc.bold(text)),
 };
 
 /**

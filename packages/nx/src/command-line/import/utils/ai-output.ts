@@ -11,7 +11,6 @@ import {
   type DetectedPlugin,
   type NextStep,
   type UserNextSteps,
-  type PluginWarning,
 } from '../../ai/ai-output';
 
 // Re-export shared utilities for convenience
