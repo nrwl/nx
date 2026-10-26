@@ -123,6 +123,50 @@ For Nx 23 and runs outside CI, see [Ultracache and Nx versions](/docs/kb/ultraca
 
 To skip Ultracache for a single run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
 
+#### Try Ultracache on one branch or workflow
+
+To trial Ultracache before turning it on for the whole workspace, set `NX_CLOUD_ULTRACACHE_MODE` for a single CI pipeline.
+It overrides the workspace setting for that pipeline only and doesn't need an Nx upgrade.
+The value is case-insensitive and maps to the [`ultracache.mode`](/docs/reference/project-configuration#ultracache) modes:
+
+| Value   | Effect                                                                     |
+| ------- | -------------------------------------------------------------------------- |
+| `ON`    | Turns Ultracache on. Targets keep their own `mode`, and the rest use `on`. |
+| `WARN`  | Applies `warn` to every task, overriding each target's `mode`.             |
+| `ERROR` | Applies `error` to every task, overriding each target's `mode`.            |
+| `OFF`   | Turns Ultracache off for every task.                                       |
+| Unset   | Uses the workspace setting.                                                |
+
+Set it at the job or workflow level so both `nx-cloud start-ci-run` and your Nx commands see it.
+Nx Agents pick it up automatically:
+
+```yaml
+# .github/workflows/ultracache-trial.yml
+on:
+  push:
+    branches: [try-ultracache]
+
+env:
+  NX_CLOUD_ULTRACACHE_MODE: 'ON'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+      - run: npm ci
+      - run: npx nx affected -t lint test build
+```
+
+It doesn't change which tasks run, so tasks that `nx affected` leaves out stay out.
+
+{% aside type="note" title="The workspace setting stays the same" %}
+`NX_CLOUD_ULTRACACHE_MODE` doesn't change the **Ultracache** setting saved in Nx Cloud. Other branches and pipelines keep using it.
+{% /aside %}
+
 ### Turn off Ultracache for a target
 
 Every target uses Ultracache by default.
