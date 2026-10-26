@@ -118,7 +118,6 @@ function resolveBatchTaskStatus(result: {
   return result.status ?? (result.success ? 'success' : 'failure');
 }
 
-/** Whether a batch task's status leaves the worker's own log to explain it. */
 function batchWorkerLogExplains(status: TaskStatus): boolean {
   switch (status) {
     case 'failure':
@@ -136,7 +135,7 @@ function batchWorkerLogExplains(status: TaskStatus): boolean {
       const unhandled: never = status;
       void unhandled;
       // Batch executors report their statuses untyped, so an unknown one can
-      // still arrive here; its log is the only explanation of it
+      // still arrive here. Nx can't tell it succeeded, so its log is shown
       return true;
     }
   }
@@ -439,8 +438,8 @@ export class TaskOrchestrator {
   ) {
     while (true) {
       if (this.stopRequested) break;
-      // On bail, start nothing new but let running tasks finish. A task that
-      // never started is skipped; with no status it reads as an interrupted run
+      // On bail, start nothing new but let running tasks finish. Unstarted
+      // discrete tasks are skipped; a missing status means an interrupted run
       if (this.bailed) {
         await Promise.allSettled(this.pendingDiscreteWorkers);
         for (const task of Object.values(this.taskGraph.tasks)) {
@@ -1155,7 +1154,8 @@ export class TaskOrchestrator {
         // When the batch is being folded, printing is deferred to batch end
         // (printGroupedBatchOutput), which always renders each task through the
         // life cycle and adds the worker's whole log as a fold when the run
-        // asked for full output or any task failed or was stopped.
+        // asked for full output or any task failed, was stopped or was never
+        // reached.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,

@@ -3492,7 +3492,7 @@ describe('TaskOrchestrator', () => {
           new Promise<void>((resolve) => {
             running.set(task.id, (status) => {
               orchestrator.completedTasks.set(task.id, status);
-              // What complete() does under --bail
+              // What complete() does under --nx-bail
               if (status === 'failure') {
                 orchestrator.bailed = true;
               }
