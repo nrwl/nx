@@ -678,13 +678,13 @@ impl TuiApp for InlineApp {
         }
     }
 
-    fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
+    fn end_tasks(&mut self, mut task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
             task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
             self.selected_item
         );
-        self.core.end_tasks(&task_results);
+        self.core.end_tasks(&mut task_results);
         if task_results.iter().any(|t| {
             self.selected_item
                 .as_ref()
@@ -1470,7 +1470,9 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Start task first
-        app.start_tasks(vec![create_test_task("app1")]);
+        let mut task = create_test_task("app1");
+        task.start_time = Some(1000);
+        app.start_tasks(vec![task]);
 
         // End task
         let results = vec![TaskResult {
@@ -1479,14 +1481,16 @@ mod tests {
             code: 0,
             terminal_output: None,
         }];
+        let before_end = crate::native::utils::time::current_timestamp_millis();
         app.end_tasks(results);
+        let after_end = crate::native::utils::time::current_timestamp_millis();
 
         // Verify timing recorded
         let state_ref = app.get_state();
         let state = state_ref.lock();
         let (start, end) = state.get_task_timing("app1:build");
-        assert!(start.is_some());
-        assert!(end.is_some());
+        assert_eq!(start, Some(1000));
+        assert!(end.is_some_and(|end| end >= before_end && end <= after_end));
     }
 
     // === Helper Method Tests ===
