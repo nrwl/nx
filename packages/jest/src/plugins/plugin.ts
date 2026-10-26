@@ -27,6 +27,7 @@ import {
 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import picomatch = require('picomatch');
+import { spawn } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import {
   dirname,
@@ -1083,6 +1084,24 @@ async function getTestPaths(
     'snap',
     ...getOption('moduleFileExtensions', DEFAULT_MODULE_FILE_EXTENSIONS),
   ]);
+  // jest-config swaps its default haste, which sets forceNodeFilesystemAPI,
+  // for any haste the config or preset sets, even an empty one
+  const hasteConfig = [rawConfig, preset].find(
+    (config) => config && Object.hasOwn(config, 'haste')
+  );
+  const useNativeFind =
+    !!hasteConfig &&
+    !hasteConfig.haste?.forceNodeFilesystemAPI &&
+    (await hasNativeFindSupport());
+  // jest-haste-map's native find crawler matches extensions as
+  // case-insensitive suffixes, its Node API crawler as the last extension
+  const suffixes = [...extensions].map((ext) => `.${ext}`.toLowerCase());
+  const hasExtension = useNativeFind
+    ? (path: string) => {
+        const lowerCasePath = path.toLowerCase();
+        return suffixes.some((suffix) => lowerCasePath.endsWith(suffix));
+      }
+    : (path: string) => extensions.has(extname(path).slice(1));
   // jest-config concatenates preset and config modulePathIgnorePatterns
   const modulePathIgnorePattern = toRegExp(
     (preset?.modulePathIgnorePatterns ?? []).concat(
@@ -1133,7 +1152,7 @@ async function getTestPaths(
   const specs = candidates.filter((file) => {
     const path = workspacePath + file;
     return (
-      extensions.has(extname(path).slice(1)) &&
+      hasExtension(path) &&
       !modulePathIgnorePattern?.test(path) &&
       roots.some((root) => path.includes(root)) &&
       (testMatchers.length === 0 || matchesGlobs(testMatchers, path)) &&
@@ -1180,6 +1199,27 @@ function tryRealpath(path: string): string {
   } catch {
     return path;
   }
+}
+
+let nativeFindSupport: Promise<boolean> | undefined;
+
+// Port of jest-haste-map's check for a find that supports -iname, cached
+// because the find on PATH doesn't change during a process lifetime
+function hasNativeFindSupport(): Promise<boolean> {
+  nativeFindSupport ??= new Promise((done) => {
+    try {
+      const child = spawn(
+        'find',
+        ['.', '-type', 'f', '(', '-iname', '*.ts', '-o', '-iname', '*.js', ')'],
+        { cwd: __dirname, stdio: 'ignore', windowsHide: true }
+      );
+      child.on('error', () => done(false));
+      child.on('exit', (code) => done(code === 0));
+    } catch {
+      done(false);
+    }
+  });
+  return nativeFindSupport;
 }
 
 /**

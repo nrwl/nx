@@ -1,6 +1,7 @@
 import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { spawnSync } from 'child_process';
 import { readdirSync, symlinkSync } from 'fs';
 import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
@@ -9,6 +10,28 @@ jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
   workspaceDataDirectory: 'tmp/project-graph-cache',
 }));
+
+// jest-config sets rootDir on the config object it reads, so each test needs
+// its own
+const suffixConfig = () => ({
+  testMatch: ['**/*.spec.*'],
+  moduleFileExtensions: ['js', 'test.ts'],
+});
+const suffixSpecs = {
+  'proj/src/keep.spec.js': '',
+  'proj/src/unit.spec.JS': '',
+  'proj/src/flow.spec.test.ts': '',
+};
+// jest-haste-map's native find crawler, used where its find probe succeeds,
+// matches extensions as case-insensitive suffixes
+const nativeFindSpecs =
+  spawnSync(
+    'find',
+    ['.', '-type', 'f', '(', '-iname', '*.ts', '-o', '-iname', '*.js', ')'],
+    { cwd: __dirname, stdio: 'ignore' }
+  ).status === 0
+    ? ['src/flow.spec.test.ts', 'src/keep.spec.js', 'src/unit.spec.JS']
+    : ['src/keep.spec.js'];
 
 describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
   let createNodesFunction = createNodesV2[1];
@@ -685,6 +708,27 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       { 'proj/src/notes.spec.md': '' },
       ['src/notes.spec.md'],
     ],
+    [
+      'uppercase and compound extensions',
+      suffixConfig(),
+      suffixSpecs,
+      ['src/keep.spec.js'],
+    ],
+    [
+      "a preset's haste",
+      { ...suffixConfig(), preset: '../jest.preset.js' },
+      { ...suffixSpecs, 'jest.preset.js': `module.exports = { haste: {} };` },
+      nativeFindSpecs,
+    ],
+    [
+      "a haste over a preset's",
+      { ...suffixConfig(), preset: '../jest.preset.js', haste: {} },
+      {
+        ...suffixSpecs,
+        'jest.preset.js': `module.exports = { haste: { forceNodeFilesystemAPI: true } };`,
+      },
+      nativeFindSpecs,
+    ],
   ])(
     'should atomize the test files Jest runs with %s',
     async (_, config, files, expected) => {
@@ -705,6 +749,44 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       ).toEqual(expected.map((file) => `test-ci--${file}`));
     }
   );
+
+  it("should atomize the test files Jest runs with a preset's haste where find fails", async () => {
+    await tempFs.createFiles({
+      ...suffixSpecs,
+      'jest.preset.js': `module.exports = { haste: {} };`,
+    });
+    mockJestConfig({ ...suffixConfig(), preset: '../jest.preset.js' }, context);
+    const childProcess =
+      jest.requireActual<typeof import('child_process')>('child_process');
+    const spawn = childProcess.spawn;
+    const spawnSpy = jest
+      .spyOn(childProcess, 'spawn')
+      .mockImplementation(((command: string, ...args: any[]) =>
+        spawn(
+          command === 'find' ? 'nx-missing-find' : command,
+          ...args
+        )) as typeof spawn);
+
+    try {
+      // A fresh plugin module has no cached find probe result
+      let isolatedCreateNodes: typeof createNodesFunction;
+      jest.isolateModules(() => {
+        isolatedCreateNodes = require('./plugin').createNodesV2[1];
+      });
+      const results = await isolatedCreateNodes(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+
+      const targets = (results[0][1] as any).projects['proj'].targets;
+      expect(
+        Object.keys(targets).filter((t) => t.startsWith('test-ci--'))
+      ).toEqual(['test-ci--src/keep.spec.js']);
+    } finally {
+      spawnSpy.mockRestore();
+    }
+  });
 
   it('should match <rootDir> testMatch globs in a workspace path with glob characters', async () => {
     const globCharsFs = new TempFs('test {a,b}');
