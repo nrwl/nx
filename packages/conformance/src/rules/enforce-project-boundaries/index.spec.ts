@@ -1,4 +1,5 @@
 import { DependencyType, type ProjectGraph } from '@nx/devkit';
+import Ajv from 'ajv';
 import type { FileMapCache } from '@nx/devkit/internal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -23,6 +24,10 @@ describe('enforce-project-boundaries', () => {
   });
 
   afterEach(() => cleanup());
+
+  it('should ship a schema that the rule resolver can compile', () => {
+    expect(() => new Ajv().compile(require('./schema.json'))).not.toThrow();
+  });
 
   describe('violation - noImportsOfApps', () => {
     it('should error when a project depends on an app project', async () => {
