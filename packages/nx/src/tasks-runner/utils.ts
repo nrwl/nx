@@ -567,7 +567,7 @@ export function getExecutorForTask(
   );
 }
 
-// TODO(v25): remove custom hasher support.
+// TODO(v25): remove custom hasher support (NXC-5052).
 export function getCustomHasher(
   task: Task,
   projects: Record<string, ProjectConfiguration>

@@ -15,7 +15,7 @@ export interface WithNxContext {
   libsDir: string;
 }
 
-// TODO(v25): remove the inert config-helper stubs in this file.
+// TODO(v25): remove the inert config-helper stubs in this file (NXC-5164).
 /**
  * @deprecated Export the Next.js config directly and compose
  * any other wrappers yourself.
