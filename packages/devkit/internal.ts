@@ -288,6 +288,7 @@ export {
   getTargetInputs,
   getPath,
   getUnparsedOverrideArgs,
+  getVcsRemoteInfo,
   getWorkspacePackagesFromGraph,
   globWithWorkspaceContext,
   handleErrors,
