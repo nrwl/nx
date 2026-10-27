@@ -12,6 +12,9 @@ import { ciWorkflowGenerator } from './ci-workflow';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
 
+const { workspaceRoot: nxWorkspaceRoot } =
+  await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+
 vi.mock('child_process', async () => {
   const cp = await vi.importActual<any>('child_process');
   return {
@@ -99,7 +102,7 @@ describe('CI Workflow generator', () => {
           } else {
             fileSys = { 'package-lock.json': '' };
           }
-          vol.fromJSON(fileSys, '');
+          vol.fromJSON(fileSys, nxWorkspaceRoot);
         });
 
         it('should generate github CI config', async () => {
