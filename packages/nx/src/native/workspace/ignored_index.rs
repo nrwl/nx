@@ -120,6 +120,7 @@ pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
 pub(crate) enum RunStage {
     NothingRan,
     ATaskMayHaveWritten,
+    SourceSnapshot,
 }
 
 impl RunStage {

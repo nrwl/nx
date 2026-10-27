@@ -21,6 +21,46 @@ import {
 } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
 import { TaskRehasher, type UltracacheRehasher } from './ultracache-rehasher';
+import type { UltracacheExecutionState } from './ultracache-rehasher';
+
+const retainedRehashers = new Set<TaskRehasher>();
+
+/** Finalize on the executing agent, persist the returned JSON, then exit. */
+export function exportUltracacheExecutionStates(
+  executedTaskHashes: Record<string, string>
+): UltracacheExecutionState[] {
+  const states = new Map<
+    UltracacheExecutionState['source'],
+    UltracacheExecutionState
+  >();
+  const observations = new Map();
+  for (const retained of [...retainedRehashers]) {
+    try {
+      const state = retained.exportExecutionState(
+        executedTaskHashes,
+        observations
+      );
+      if (Object.keys(state.taskHashes).length) {
+        const shared = states.get(state.source);
+        if (shared) {
+          Object.assign(shared.taskHashes, state.taskHashes);
+          for (const [id, context] of Object.entries(state.taskContexts)) {
+            shared.taskContexts[id] =
+              shared.taskContexts[id] === undefined ||
+              shared.taskContexts[id] === context
+                ? context
+                : ''; // Ambiguous owner context must never be promoted.
+          }
+        } else states.set(state.source, state);
+      }
+    } catch {
+      // Missing observations are a normal cache-priming skip.
+    } finally {
+      retained.dispose();
+    }
+  }
+  return [...states.values()];
+}
 
 /**
  * Call before hashing starts, on the process that hashes the executed tasks.
@@ -33,6 +73,24 @@ export function createUltracacheRehasher(
   return !IS_WASM && hasher instanceof InProcessTaskHasher
     ? hasher.createRehasher()
     : null;
+}
+
+/** Retrieves pre-hash retention; never creates a post-execution baseline. */
+export function getUltracacheRehasher(
+  hasher: TaskHasher
+): UltracacheRehasher | null {
+  return hasher instanceof InProcessTaskHasher ? hasher.getRehasher() : null;
+}
+
+/** For an agent handed an already-hashed task, before scheduling execution. */
+export function captureUltracacheExecutionHash(
+  hasher: TaskHasher,
+  task: Task,
+  graph: TaskGraph,
+  env: NodeJS.ProcessEnv
+): void {
+  if (hasher instanceof InProcessTaskHasher)
+    hasher.captureExecutionHash(task, graph, env);
 }
 
 // Re-export HashInputs from native module for public API
@@ -246,14 +304,58 @@ export class InProcessTaskHasher implements TaskHasher {
   private taskHasher: NativeTaskHasherImpl;
   private rehasher?: TaskRehasher;
 
+  getRehasher(): UltracacheRehasher | null {
+    return this.rehasher ?? null;
+  }
+
+  captureExecutionHash(
+    task: Task,
+    graph: TaskGraph,
+    env: NodeJS.ProcessEnv
+  ): void {
+    if (!this.rehasher || !task.hash) return;
+    try {
+      const plans = this.taskHasher.createRehashPlans(
+        [task],
+        graph,
+        this.ultracacheConfigurations
+      );
+      if (!this.taskHasher.rehashRequirements(plans)[task.id]?.sourceOnly)
+        return;
+      const raw = this.taskHasher.hashTasksForRehash(
+        plans,
+        graph,
+        { [task.id]: env },
+        process.cwd(),
+        []
+      );
+      if (!raw[task.id]) return;
+      const result = this.createHashDetails(task, raw[task.id]);
+      if (result.value !== task.hash) return;
+      this.rehasher.capture(
+        [task],
+        graph,
+        { [task.id]: env },
+        process.cwd(),
+        this.ultracacheConfigurations
+      )({ [task.id]: result });
+    } catch {
+      /* Optional cache priming must not affect execution. */
+    }
+  }
+
   createRehasher(): UltracacheRehasher {
-    return (this.rehasher ??= new TaskRehasher(
+    if (this.rehasher) return this.rehasher;
+    const retained = new TaskRehasher(
       this.taskHasher,
       (task, hash) => this.createHashDetails(task, hash),
       () => {
+        retainedRehashers.delete(retained);
         this.rehasher = undefined;
       }
-    ));
+    );
+    retainedRehashers.add(retained);
+    return (this.rehasher = retained);
   }
 
   constructor(
@@ -275,6 +377,15 @@ export class InProcessTaskHasher implements TaskHasher {
       },
       this.planningContext
     );
+    // An empty imported set also marks an activated native Ultracache run.
+    // Cloud credentials alone must not add workspace-wide source IO.
+    if (!IS_WASM && ultracacheConfigurations) {
+      try {
+        this.createRehasher();
+      } catch {
+        /* No retention means no promotion. */
+      }
+    }
   }
 
   async hashTasks(

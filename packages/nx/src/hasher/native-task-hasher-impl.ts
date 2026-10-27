@@ -13,7 +13,14 @@ import {
   TaskHasher,
 } from '../native';
 import type { IgnoredIndexReader } from '../native';
-import { transformProjectGraphForRust } from '../native/transform-objects';
+import {
+  transformProjectGraphForRust,
+  toRustProjectGraph,
+} from '../native/transform-objects';
+import { RehashSourceState } from './rehash-source-state';
+import { relative, isAbsolute } from 'path';
+import { nxVersion } from '../utils/versions';
+
 import type { TaskPlanningContext } from './task-planning-context';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
@@ -21,7 +28,15 @@ import { readJsonFile } from '../utils/fileutils';
 import { ultracacheEligibilityOptions } from '../ultracache/overrides';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
 
+// Keep the earliest observation while any discrete-task context uses it.
+const rehashObservations = new Map<
+  string,
+  { state: RehashSourceState; users: number }
+>();
+
 export class NativeTaskHasherImpl implements TaskHasherImpl {
+  private rehashContext?: string;
+  private readonly rehashConfiguration: object;
   hasher: TaskHasher;
   planner: HashPlanner;
   projectGraphRef: ExternalObject<NativeProjectGraph>;
@@ -40,7 +55,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   } | null = null;
 
   constructor(
-    workspaceRoot: string,
+    private readonly workspaceRoot: string,
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
@@ -82,6 +97,66 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       options,
       this.ignoredIndexRef
     );
+    this.rehashConfiguration = {
+      tsconfig,
+      paths,
+      rootTsConfigPath:
+        rootTsConfigPath && isAbsolute(rootTsConfigPath)
+          ? relative(workspaceRoot, rootTsConfigPath)
+          : rootTsConfigPath,
+      options: { ...options },
+    };
+  }
+
+  captureRehashSourceState() {
+    const canonical = (value: any): any =>
+      Array.isArray(value)
+        ? value.map(canonical)
+        : value && typeof value === 'object'
+          ? Object.fromEntries(
+              Object.keys(value)
+                .sort()
+                .map((k) => [k, canonical(value[k])])
+            )
+          : value;
+    this.rehashContext ??= JSON.stringify(
+      canonical({
+        nxVersion,
+        platform: process.platform,
+        arch: process.arch,
+        graph: toRustProjectGraph(this.projectGraph),
+        nxJson: this.nxJson,
+        ...this.rehashConfiguration,
+      })
+    );
+    const files = this.hasher
+      .getRehashFiles()
+      .sort((a, b) => a.file.localeCompare(b.file));
+    const baseline = hashArray([
+      this.rehashContext,
+      ...files.map((f) => JSON.stringify([f.file, f.hash])),
+    ]);
+    const key = JSON.stringify([this.workspaceRoot, baseline]);
+    let observation = rehashObservations.get(key);
+    if (!observation) {
+      observation = {
+        state: new RehashSourceState(this.workspaceRoot, files),
+        users: 0,
+      };
+      rehashObservations.set(key, observation);
+    }
+    observation.users++;
+    return {
+      baseline,
+      state: observation.state,
+      release: () => {
+        if (--observation.users === 0) rehashObservations.delete(key);
+      },
+    };
+  }
+
+  rehashRequirements(plans: ReturnType<HashPlanner['getPlansReference']>) {
+    return this.hasher.getRehashPlanInputs(plans);
   }
 
   async hashTask(

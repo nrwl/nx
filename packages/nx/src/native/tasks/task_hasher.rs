@@ -149,6 +149,14 @@ pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
 }
 
+#[napi(object)]
+pub struct RehashPlanInputs {
+    pub files: Vec<String>,
+    pub globs: Vec<String>,
+    pub source_only: bool,
+    pub directories: Vec<String>,
+}
+
 /// Return type of `hash_plans`. Shares JS strings for pooled detail keys and
 /// values across tasks during a single conversion. The cache owns its Arcs
 /// and is cleared before the native call's handle scope ends.
@@ -311,6 +319,92 @@ pub struct TaskHasher {
 }
 #[napi]
 impl TaskHasher {
+    #[napi]
+    pub fn get_rehash_files(&self) -> Vec<FileData> {
+        self.all_workspace_files.as_ref().clone()
+    }
+
+    /// Replay requirements, without reading the filesystem or executing inputs.
+    #[napi]
+    pub fn get_rehash_plan_inputs(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        plans: &External<HashPlans>,
+    ) -> anyhow::Result<HashMap<String, RehashPlanInputs>> {
+        let mut result = HashMap::new();
+        for (id, instructions) in &plans.plans {
+            let mut inputs = RehashPlanInputs {
+                files: vec![],
+                globs: vec![],
+                source_only: true,
+                directories: vec![],
+            };
+            for instruction in instructions {
+                match &*plans.pool.get(*instruction) {
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                    } => {
+                        inputs.globs.extend(globs.clone());
+                        inputs.directories.extend(
+                            globs
+                                .iter()
+                                .filter(|g| {
+                                    !g.starts_with('!')
+                                        && partition_glob(&normalize_glob(g)).1.is_some()
+                                })
+                                .map(|g| crate::native::tasks::hash_planner::walk_root(g)),
+                        );
+                        inputs.files.extend(
+                            crate::native::tasks::hashers::expand_source_globs(
+                                globs,
+                                project_roots,
+                                self.all_workspace_files.iter().map(|f| f.file.clone()),
+                            )?
+                            .files,
+                        );
+                    }
+                    HashInstruction::WorkspaceFileSet(globs) => {
+                        inputs.files.extend(collect_workspace_file_paths_cached(
+                            globs,
+                            &self.all_workspace_files,
+                            &self.workspace_file_indices_cache,
+                        )?)
+                    }
+                    HashInstruction::ProjectFileSet(project, globs) => {
+                        inputs.files.extend(collect_project_file_paths_cached(
+                            project,
+                            globs,
+                            &self.project_file_map,
+                            &self.project_file_indices_cache,
+                        )?)
+                    }
+                    HashInstruction::TsConfiguration(_) => {
+                        if let Some(path) = &self.root_tsconfig_path {
+                            inputs.files.push(
+                                Path::new(path)
+                                    .strip_prefix(&self.workspace_root)
+                                    .unwrap_or(Path::new(path))
+                                    .to_string_lossy()
+                                    .replace('\\', "/"),
+                            );
+                        }
+                    }
+                    HashInstruction::Environment(name) if name == "NX_CLOUD_ENCRYPTION_KEY" => {}
+                    HashInstruction::Environment(_)
+                    | HashInstruction::Runtime(_)
+                    | HashInstruction::TaskOutput(..)
+                    | HashInstruction::JsonFileSet(_)
+                    | HashInstruction::Cwd(_) => inputs.source_only = false,
+                    _ => {}
+                }
+            }
+            inputs.files.sort();
+            inputs.files.dedup();
+            result.insert(id.clone(), inputs);
+        }
+        Ok(result)
+    }
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
@@ -408,7 +502,6 @@ impl TaskHasher {
     ) -> anyhow::Result<HashMap<String, String>> {
         use crate::native::cache::expand_outputs::match_output_paths;
         use crate::native::hasher::hash_file_path;
-        use crate::native::tasks::ultracache_eligibility::is_literal_path;
         let mut skipped = HashMap::new();
         // Sharing these checks across plans avoids reading common source files
         // once per dependent. Never persist them across calls/tasks executing.
@@ -422,14 +515,26 @@ impl TaskHasher {
                     HashInstruction::Runtime(_) => reason = Some("runtime-input"),
                     HashInstruction::TaskOutput(..) => reason = Some("dependency-output"),
                     HashInstruction::JsonFileSet(_) => reason = Some("json-input"),
-                    HashInstruction::IgnoredFileSet { globs, .. } => {
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                    } => {
                         for glob in globs.iter().filter(|g| !g.starts_with('!')) {
-                            if !is_literal_path(glob) || !self.workspace_tracks_file(glob) {
+                            if partition_glob(&normalize_glob(glob)).1.is_none()
+                                && !self.workspace_tracks_file(glob)
+                            {
                                 reason = Some("non-source-input");
                                 break;
                             }
-                            files.push(glob.clone());
                         }
+                        files.extend(
+                            crate::native::tasks::hashers::expand_source_globs(
+                                globs,
+                                project_roots,
+                                self.all_workspace_files.iter().map(|f| f.file.clone()),
+                            )?
+                            .files,
+                        );
                     }
                     HashInstruction::ProjectFileSet(project, globs) => {
                         files.extend(collect_project_file_paths_cached(
@@ -562,11 +667,17 @@ impl TaskHasher {
                 anyhow::bail!("missing env entry for task {}", id);
             }
         }
-        self.hash_plans_impl(&eligible, cwd, Some(false), RunStage::NothingRan, |id| {
-            per_task_envs
-                .get(id)
-                .expect("per-task env presence verified")
-        })
+        self.hash_plans_impl(
+            &eligible,
+            cwd,
+            Some(false),
+            RunStage::SourceSnapshot,
+            |id| {
+                per_task_envs
+                    .get(id)
+                    .expect("per-task env presence verified")
+            },
+        )
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -1005,6 +1116,13 @@ impl TaskHasher {
                 };
                 let key = format!("files#{id}");
                 let expansion = expand_cached(&key, files_expansion_cache, || {
+                    if run_stage == RunStage::SourceSnapshot {
+                        return crate::native::tasks::hashers::expand_source_globs(
+                            globs,
+                            project_roots,
+                            self.all_workspace_files.iter().map(|f| f.file.clone()),
+                        );
+                    }
                     expand_globs(
                         workspace_root,
                         globs,
@@ -1019,7 +1137,7 @@ impl TaskHasher {
                     workspace_root,
                     &expansion,
                     |path| {
-                        if run_stage.nothing_ran() {
+                        if run_stage.nothing_ran() || run_stage == RunStage::SourceSnapshot {
                             self.workspace_file_hash(path)
                         } else {
                             None

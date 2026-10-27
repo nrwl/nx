@@ -7,7 +7,14 @@ import {
   connectToNxDb,
   UltracacheConfigurationStore,
 } from '../native';
-import { createUltracacheRehasher, InProcessTaskHasher } from './task-hasher';
+import {
+  createUltracacheRehasher,
+  getUltracacheRehasher,
+  exportUltracacheExecutionStates,
+  captureUltracacheExecutionHash,
+  InProcessTaskHasher,
+} from './task-hasher';
+import { linkSync, unlinkSync } from 'node:fs';
 import type { ProjectGraph } from '../config/project-graph';
 import type { TaskGraph } from '../config/task-graph';
 import type { InputDefinition } from '../config/workspace-json-project-json';
@@ -28,6 +35,7 @@ describe('Ultracache task rehashing', () => {
     });
 
   beforeEach(async () => {
+    exportUltracacheExecutionStates({});
     fs = new TempFs('ultracache-rehash');
     await fs.createFiles({
       'nx.json': '{}',
@@ -36,16 +44,21 @@ describe('Ultracache task rehashing', () => {
       'lib/source.txt': 'library',
       'tsconfig.base.json': '{"compilerOptions":{}}',
     });
-    db = connectToNxDb(join(fs.tempDir, '.nx', 'configurations'));
+    db = connectToNxDb(
+      join(fs.tempDir, '.nx', 'workspace-data', 'configurations')
+    );
   });
   afterEach(() => {
+    vi.unstubAllEnvs();
+    exportUltracacheExecutionStates({});
     closeDbConnection(db);
     fs.cleanup();
   });
 
   async function fixture(
     inputs: InputDefinition[] = ['{projectRoot}/old.txt', '^default'],
-    graph?: ProjectGraph
+    graph?: ProjectGraph,
+    activated = false
   ) {
     const projectGraph: ProjectGraph = graph ?? {
       nodes: {
@@ -97,7 +110,14 @@ describe('Ultracache task rehashing', () => {
       projectGraph,
       {},
       files.rustReferences,
-      {}
+      {},
+      undefined,
+      activated
+        ? new UltracacheConfigurationStore(db).import({
+            requestedCommit: commit,
+            configurationsJson: '{}',
+          })
+        : undefined
     );
     return {
       projectGraph,
@@ -214,7 +234,7 @@ describe('Ultracache task rehashing', () => {
   });
 
   it.each([
-    ['app/*.txt', 'non-source-input'],
+    ['app/*.txt', 'missing-source-observation'],
     ['app/missing.txt', 'non-source-input'],
     ['dist/app/result.txt', 'non-source-input'],
   ])('skips unsupported learned input %s', async (input, reason) => {
@@ -467,5 +487,291 @@ describe('Ultracache task rehashing', () => {
         )
       ).value
     );
+  });
+
+  it('retains upfront hashes automatically, exports an agent, rehashes on main, and matches a fresh normal source-glob run', async () => {
+    vi.stubEnv('CI', 'true');
+    vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
+    fs.createDirSync('dist/app');
+    // Metadata in the current timestamp tick cannot prove historical stability.
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    const owner = await fixture(undefined, undefined, true);
+    const tasks = Object.values(owner.taskGraph.tasks);
+    const original = await owner.hasher.hashTasksUpfront(
+      tasks,
+      owner.taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}])),
+      fs.tempDir
+    );
+    expect(getUltracacheRehasher(owner.hasher)).not.toBeNull();
+    await fs.createFiles({ 'dist/app/result.txt': 'completed artifact' });
+    const originalKeys = Object.fromEntries(
+      tasks.map((t) => [t.id, original[t.id].value])
+    );
+    const executionStates = JSON.parse(
+      JSON.stringify(exportUltracacheExecutionStates(originalKeys))
+    );
+    expect(executionStates[0].taskHashes).toEqual(originalKeys);
+    expect(JSON.stringify(executionStates)).not.toContain(
+      'NX_CLOUD_ACCESS_TOKEN'
+    );
+
+    const ownerFs = fs;
+    const mainFs = new TempFs('rehash-main');
+    try {
+      for (const path of [
+        'nx.json',
+        'tsconfig.base.json',
+        'app/old.txt',
+        'app/learned.txt',
+        'lib/source.txt',
+      ])
+        await mainFs.createFile(path, await ownerFs.readFile(path));
+      fs = mainFs;
+      const main = await fixture(
+        undefined,
+        structuredClone(owner.projectGraph),
+        true
+      );
+      const mainTasks = Object.values(main.taskGraph.tasks);
+      await main.hasher.hashTasksUpfront(
+        mainTasks,
+        main.taskGraph,
+        Object.fromEntries(mainTasks.map((t) => [t.id, {}])),
+        fs.tempDir
+      );
+      const retained = getUltracacheRehasher(main.hasher)!;
+
+      const learned = configuration(['app/**/*.txt', 'lib/**/*.txt']);
+      const result = await retained.rehash(learned, { executionStates });
+      expect(result.skipped).toEqual({});
+      const fresh = await fixture(
+        undefined,
+        structuredClone(owner.projectGraph)
+      );
+      const next = await fresh.hasher.hashTask(
+        fresh.task,
+        fresh.taskGraph,
+        {},
+        fs.tempDir,
+        false,
+        learned
+      );
+      expect(result.hashes[main.task.id]).toBe(next.value);
+      expect(result.hashes[main.task.id]).not.toBe(originalKeys[main.task.id]);
+      const wrong = structuredClone(executionStates);
+      wrong[0].taskHashes[main.task.id] = 'different-agent-execution-hash';
+      expect(
+        (await retained.rehash(learned, { executionStates: wrong })).hashes[
+          main.task.id
+        ]
+      ).toBeUndefined();
+      const wrongContext = structuredClone(executionStates);
+      wrongContext[0].taskContexts[main.task.id] =
+        'different-owner-planning-context';
+      expect(
+        (await retained.rehash(learned, { executionStates: wrongContext }))
+          .hashes[main.task.id]
+      ).toBeUndefined();
+      fs.writeFile('app/learned.txt', 'changed newly learned input');
+      await updateContextWithChangedFiles(
+        fs.tempDir,
+        [],
+        ['app/learned.txt'],
+        []
+      );
+      const changed = await fixture(
+        undefined,
+        structuredClone(owner.projectGraph)
+      );
+      expect(
+        (
+          await changed.hasher.hashTask(
+            changed.task,
+            changed.taskGraph,
+            {},
+            fs.tempDir,
+            false,
+            learned
+          )
+        ).value
+      ).not.toBe(next.value);
+    } finally {
+      fs = ownerFs;
+      mainFs.cleanup();
+    }
+  });
+
+  it.each([
+    'restored-write',
+    'hardlink-write',
+    'symlink-write',
+    'new-membership',
+  ] as const)('rejects owner mutation evidence: %s', async (mutation) => {
+    vi.stubEnv('CI', 'true');
+    vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
+    if (mutation === 'symlink-write')
+      fs.createSymlinkSync('app/learned.txt', 'alias', 'file');
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    const owner = await fixture(undefined, undefined, true);
+    const original = await owner.hasher.hashTask(
+      owner.task,
+      owner.taskGraph,
+      {},
+      fs.tempDir
+    );
+    if (mutation === 'hardlink-write') {
+      linkSync(join(fs.tempDir, 'app/learned.txt'), join(fs.tempDir, 'alias'));
+      fs.writeFile('alias', 'different');
+      fs.writeFile('alias', 'learned');
+      unlinkSync(join(fs.tempDir, 'alias'));
+    } else if (mutation === 'symlink-write') {
+      fs.writeFile('alias', 'different');
+      fs.writeFile('alias', 'learned');
+    } else if (mutation === 'restored-write') {
+      fs.writeFile('app/learned.txt', 'different');
+      fs.writeFile('app/learned.txt', 'learned');
+    } else {
+      await fs.createFile('app/temporary.txt', 'generated and read');
+      fs.removeFileSync('app/temporary.txt');
+    }
+    const retained = getUltracacheRehasher(owner.hasher)!;
+    const state = retained.exportExecutionState({
+      [owner.task.id]: original.value,
+    });
+    if (mutation !== 'new-membership')
+      expect(state.source.invalidFiles).toContain('app/learned.txt');
+    const result = await retained.rehash(configuration(['app/**/*.txt']), {
+      executionStates: [JSON.parse(JSON.stringify(state))],
+    });
+    expect(result.hashes[owner.task.id]).toBeUndefined();
+    expect(result.skipped[owner.task.id]).toMatch(/state-changed|membership/);
+  });
+
+  it('attaches an agent handed a prehashed task only when the local source hash matches', async () => {
+    const { hasher, taskGraph, task } = await fixture();
+    const expected = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+    const agent = await fixture();
+    createUltracacheRehasher(agent.hasher);
+    agent.task.hash = expected.value;
+    captureUltracacheExecutionHash(
+      agent.hasher,
+      agent.task,
+      agent.taskGraph,
+      {}
+    );
+    expect(
+      getUltracacheRehasher(agent.hasher)!.exportExecutionState({
+        [task.id]: expected.value,
+      }).taskHashes[task.id]
+    ).toBe(expected.value);
+    agent.task.hash = 'wrong-source-key';
+    captureUltracacheExecutionHash(
+      agent.hasher,
+      agent.task,
+      agent.taskGraph,
+      {}
+    );
+    expect(
+      getUltracacheRehasher(agent.hasher)!.exportExecutionState({
+        [task.id]: 'wrong-source-key',
+      }).taskHashes
+    ).toEqual({});
+  });
+
+  it('does not add automatic capture for Cloud credentials without native activation', async () => {
+    vi.stubEnv('CI', 'true');
+    vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
+    const { hasher } = await fixture();
+    expect(getUltracacheRehasher(hasher)).toBeNull();
+  });
+
+  it('withholds recent/coarse-tick source evidence rather than trusting unchanged final bytes', async () => {
+    const { hasher, task, taskGraph } = await fixture(
+      undefined,
+      undefined,
+      true
+    );
+    const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+    const retained = getUltracacheRehasher(hasher)!;
+    const state = retained.exportExecutionState({ [task.id]: hash.value });
+    expect(state.source.invalidFiles).toContain('app/learned.txt');
+    expect(
+      (
+        await retained.rehash(configuration(['app/**/*.txt']), {
+          executionStates: [state],
+        })
+      ).hashes
+    ).toEqual({});
+  });
+
+  it('does not export user environment inputs, and differing built-in encryption keys fail original-hash verification', async () => {
+    const user = await fixture(
+      ['{projectRoot}/old.txt', { env: 'USER_INPUT' }],
+      undefined,
+      true
+    );
+    const userHash = await user.hasher.hashTask(
+      user.task,
+      user.taskGraph,
+      { USER_INPUT: 'secret' },
+      fs.tempDir
+    );
+    expect(
+      getUltracacheRehasher(user.hasher)!.exportExecutionState({
+        [user.task.id]: userHash.value,
+      }).taskHashes
+    ).toEqual({});
+    const owner = await fixture(undefined, undefined, true);
+    const old = await owner.hasher.hashTask(
+      owner.task,
+      owner.taskGraph,
+      { NX_CLOUD_ENCRYPTION_KEY: 'owner-secret' },
+      fs.tempDir
+    );
+    const state = getUltracacheRehasher(owner.hasher)!.exportExecutionState({
+      [owner.task.id]: old.value,
+    });
+    expect(state.taskHashes[owner.task.id]).toBe(old.value);
+    expect(JSON.stringify(state)).not.toContain('owner-secret');
+    const main = await fixture(undefined, undefined, true);
+    await main.hasher.hashTask(
+      main.task,
+      main.taskGraph,
+      { NX_CLOUD_ENCRYPTION_KEY: 'other-secret' },
+      fs.tempDir
+    );
+    expect(
+      (
+        await getUltracacheRehasher(main.hasher)!.rehash(
+          configuration(['app/**/*.txt']),
+          { executionStates: [state] }
+        )
+      ).skipped[main.task.id]
+    ).toBe('owner-baseline-mismatch');
+  });
+
+  it('rejects globs overlapping a captured but unobserved ignored subtree', async () => {
+    await fs.createFiles({
+      '.gitignore': 'app/ignored/\n',
+      'app/ignored/generated.txt': 'not a source snapshot input',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    const { hasher, taskGraph, task } = await fixture(
+      undefined,
+      undefined,
+      true
+    );
+    const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+    const retained = getUltracacheRehasher(hasher)!;
+    const state = retained.exportExecutionState({ [task.id]: hash.value });
+    expect(state.source.unobserved).toContain('app/ignored');
+    expect(
+      (
+        await retained.rehash(configuration(['app/**/*.txt']), {
+          executionStates: [state],
+        })
+      ).skipped[task.id]
+    ).toBe('unobserved-membership');
   });
 });

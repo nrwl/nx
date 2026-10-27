@@ -12,7 +12,10 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
-import { TaskHasher } from '../hasher/task-hasher';
+import {
+  TaskHasher,
+  captureUltracacheExecutionHash,
+} from '../hasher/task-hasher';
 import {
   BatchStatus,
   InvocationRecord,
@@ -610,6 +613,13 @@ export class TaskOrchestrator {
         task,
         taskSpecificEnv,
         this.taskDetails
+      );
+    } else {
+      captureUltracacheExecutionHash(
+        this.hasher,
+        task,
+        this.fullTaskGraph,
+        taskSpecificEnv
       );
     }
 

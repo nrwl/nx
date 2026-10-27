@@ -7,11 +7,17 @@ export {
   openUltracacheConfigurations,
 } from './src/ultracache/store';
 
-export { createUltracacheRehasher } from './src/hasher/task-hasher';
+export {
+  createUltracacheRehasher,
+  getUltracacheRehasher,
+  captureUltracacheExecutionHash,
+  exportUltracacheExecutionStates,
+} from './src/hasher/task-hasher';
 export type {
   UltracacheRehasher,
   UltracacheRehashResult,
   UltracacheRehashEvidence,
+  UltracacheExecutionState,
 } from './src/hasher/ultracache-rehasher';
 
 // Nx Cloud reads it to pick the task-graph shape it hands this nx. Bump it when

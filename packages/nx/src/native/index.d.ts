@@ -292,6 +292,9 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
+  getRehashFiles(): Array<FileData>
+  /** Replay requirements, without reading the filesystem or executing inputs. */
+  getRehashPlanInputs(plans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, RehashPlanInputs>
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
   /**
    * Fail closed for rehash inputs whose execution-time state this hasher
@@ -1203,6 +1206,13 @@ export interface ReadinessProbeConfig {
  * the root (rooted, drive-prefixed, or climbing with `..`).
  */
 export declare function readShebangHeaders(workspaceRoot: string, files: Array<string>): Array<ShebangFile>
+
+export interface RehashPlanInputs {
+  files: Array<string>
+  globs: Array<string>
+  sourceOnly: boolean
+  directories: Array<string>
+}
 
 export declare function remove(src: string): void
 

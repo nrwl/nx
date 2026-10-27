@@ -105,6 +105,51 @@ pub(crate) fn expand_globs(
     expand_entries(workspace_root, &positives, &negations, &scope, source)
 }
 
+/// The same entry/negation/project-scope rules, over an immutable complete
+/// source file map. No directory stat or walk is permitted during replay.
+pub(crate) fn expand_source_globs(
+    globs: &[String],
+    project_roots: &[String],
+    paths: impl Iterator<Item = String>,
+) -> Result<FilesExpansion> {
+    let (positives, negations) = parse_group(globs)?;
+    let scope = ProjectScope::new(project_roots);
+    let entries = positives
+        .into_iter()
+        .map(|entry| {
+            let matcher = entry
+                .remainder
+                .as_deref()
+                .map(|g| build_glob_set(&[g]))
+                .transpose()?;
+            Ok((entry, matcher))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let mut files: Vec<String> = paths
+        .filter(|path| {
+            !negations.iter().any(|n| n.excludes(path))
+                && entries.iter().any(|(entry, matcher)| {
+                    let rest = if entry.root.is_empty() {
+                        Some(path.as_str())
+                    } else {
+                        path.strip_prefix(&entry.root).and_then(|rest| {
+                            if rest.is_empty() {
+                                Some(rest)
+                            } else {
+                                rest.strip_prefix('/')
+                            }
+                        })
+                    };
+                    rest.is_some_and(|rest| matcher.as_ref().is_none_or(|m| m.is_match(rest)))
+                        && scope.admits(entry, path)
+                })
+        })
+        .collect();
+    files.sort();
+    files.dedup();
+    Ok(FilesExpansion { files })
+}
+
 /// A group's entries split at their literal prefixes, positives then
 /// negations. Each brace group becomes one entry per alternative first, so
 /// what a parser sees never holds a `{a,b}`.
@@ -278,4 +323,58 @@ pub(crate) fn validate_files_globs(project: &str, globs: &[String]) -> Result<()
         );
     }
     globs.iter().try_for_each(|glob| validate_files_glob(glob))
+}
+
+#[cfg(test)]
+mod source_snapshot_tests {
+    use super::*;
+
+    #[test]
+    fn frozen_globs_match_normal_expansion_with_negations_and_nested_projects() {
+        let temp = tempfile::tempdir().unwrap();
+        let paths: Vec<String> = [
+            "app/src/a.ts",
+            "app/src/a.spec.ts",
+            "app/src/nested/b.ts",
+            "app/subproject/c.ts",
+            "root.json",
+        ]
+        .iter()
+        .map(|p| p.to_string())
+        .collect();
+        for path in &paths {
+            std::fs::create_dir_all(temp.path().join(path).parent().unwrap()).unwrap();
+            std::fs::write(temp.path().join(path), "source").unwrap();
+        }
+        let roots = vec!["app".to_string(), "app/subproject".to_string()];
+        let globs = vec!["app/**/*.ts".to_string(), "!app/**/*.spec.ts".to_string()];
+        let frozen = expand_source_globs(&globs, &roots, paths.clone().into_iter()).unwrap();
+        let live = expand_globs(
+            temp.path(),
+            &globs,
+            &roots,
+            &Source::fileset_from_disk(temp.path()),
+        )
+        .unwrap();
+        assert_eq!(frozen.files, live.files);
+        assert_eq!(frozen.files, vec!["app/src/a.ts", "app/src/nested/b.ts"]);
+        std::fs::write(temp.path().join("app/src/new.ts"), "generated later").unwrap();
+        assert_eq!(
+            expand_source_globs(&globs, &roots, paths.into_iter())
+                .unwrap()
+                .files,
+            frozen.files
+        );
+        assert_ne!(
+            expand_globs(
+                temp.path(),
+                &globs,
+                &roots,
+                &Source::fileset_from_disk(temp.path())
+            )
+            .unwrap()
+            .files,
+            frozen.files
+        );
+    }
 }
