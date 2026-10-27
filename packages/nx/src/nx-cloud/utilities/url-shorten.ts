@@ -16,7 +16,7 @@ export async function createNxCloudOnboardingURL(
   signal?: AbortSignal
 ) {
   const remoteInfo = getVcsRemoteInfo(directory);
-  const apiUrl = getCloudUrl();
+  const apiUrl = getCloudUrl(directory);
 
   const installationSupportsGitHub = await getInstallationSupportsGitHub(
     apiUrl,
