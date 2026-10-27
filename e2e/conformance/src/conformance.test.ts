@@ -30,10 +30,10 @@ describe('@nx/conformance', () => {
     for (const command of ['conformance', 'conformance:check']) {
       const output = stripVTControlCharacters(runCLI(command));
       expect(output).toContain(
-        `enforce-project-boundaries - maintainability | medium severity | status: enforced`
+        `@nx/conformance/enforce-project-boundaries - maintainability | medium severity | status: enforced`
       );
       expect(output).toContain(
-        `ensure-owners - consistency | medium severity | status: enforced`
+        `@nx/owners/ensure-owners - consistency | medium severity | status: enforced`
       );
       expect(output).toContain(`NX   Conformance checks passed successfully`);
       expect(output).toContain(`No violations found across 2 rules.`);

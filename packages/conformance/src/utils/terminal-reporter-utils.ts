@@ -71,7 +71,7 @@ export function printNoViolations(
   const noViolationsColor = isDisabled ? pc.gray : pc.green;
   console.log(
     ` ${noViolationsColor(BAR_START)}  ${noViolationsColor(
-      pc.bold(`${result.ruleData.name}`)
+      pc.bold(getNameToPrint(result))
     )} ${pc.dim('-')} ${result.ruleData.category}${
       result.severity ? ` ${pc.dim('|')} ${result.severity} severity` : ''
     } ${pc.dim('|')} status: ${getStatusToPrint(result)}${
@@ -89,12 +89,13 @@ export function printNoViolations(
   );
 }
 
-// Preserve the `nx-cloud:` and `@nx/conformance` namespaces in the output, if applicable, to differentiate from custom rules
+// Keep the namespace of built-in and Nx Cloud rules to tell them apart from custom rules
 export function getNameToPrint(
   result: ConformanceRuleResultWithRuleAndRunnerData
 ) {
   return result.ruleSpecifier &&
     (result.ruleSpecifier.startsWith('@nx/conformance/') ||
+      result.ruleSpecifier.startsWith('@nx/owners/') ||
       result.ruleSpecifier.startsWith('nx-cloud:'))
     ? result.ruleSpecifier
     : result.ruleData.name;

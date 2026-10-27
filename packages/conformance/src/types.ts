@@ -74,7 +74,7 @@ export interface ConformanceRuleContext<RuleOptions = undefined> {
 }
 
 /**
- * NOTE: In the case where the rule status is "disabled", the severity will be set imperatively by the rule
+ * When the rule status is "disabled", the severity will be set imperatively by the rule
  * runner to `null`, but it is not a valid severity for a rule to return, so it is not included in the type.
  */
 export type ConformanceRuleResultSeverity = 'high' | 'medium' | 'low';
@@ -104,7 +104,7 @@ export type ConformanceRule<RuleOptions = undefined> = {
     context: ConformanceRuleContext<RuleOptions>
   ) => Promise<ConformanceRuleResult>;
   /**
-   * Optional nx generator implementation intended to fix the the violations reported by the rule.
+   * Optional nx generator implementation intended to fix the violations reported by the rule.
    */
   fixGenerator?: ConformanceRuleFixGenerator<RuleOptions>;
 };

@@ -19,10 +19,6 @@ interface RuleFiles {
   ruleName: string;
 }
 
-/**
- * Ajv wouldn't give us anything beyond JSON syntax validation here (which we already get from readJsonFile),
- * so we don't bother using it and assert things manually.
- */
 function validateSchema(schemaPath: string): void {
   const schema = readJsonFile(schemaPath);
   const requiredFields = ['$schema', 'type'];
@@ -36,10 +32,6 @@ function validateSchema(schemaPath: string): void {
   if (schema.type !== 'object') {
     throw new Error(`Schema in ${schemaPath} must have "type": "object"`);
   }
-}
-
-function getExternalPatterns(): string[] {
-  return ['nx', 'nx/package.json', '@nx/*'];
 }
 
 function getNxVersionRange(): string {
@@ -83,10 +75,7 @@ function getDependenciesForRule(
   return dependencies;
 }
 
-function validateRuleDirectory(
-  rulePath: string,
-  ruleName: string
-): RuleFiles | null {
+function validateRuleDirectory(rulePath: string, ruleName: string): RuleFiles {
   const indexPath = join(rulePath, 'index.ts');
   const schemaPath = join(rulePath, 'schema.json');
   if (!existsSync(indexPath) || !existsSync(schemaPath)) {
@@ -106,11 +95,7 @@ function discoverRules(srcDir: string): RuleFiles[] {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const rulePath = join(srcDir, entry.name);
-        // This will throw if validation fails
-        const rule = validateRuleDirectory(rulePath, entry.name);
-        if (rule) {
-          rules.push(rule);
-        }
+        rules.push(validateRuleDirectory(rulePath, entry.name));
       }
     }
 
@@ -169,7 +154,7 @@ const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
         platform: 'node',
         target: 'node18',
         outfile: outFile,
-        external: getExternalPatterns(),
+        external: ['nx', 'nx/package.json', '@nx/*'],
         metafile: true,
       });
 
@@ -179,7 +164,6 @@ const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
         nxVersionRange
       );
 
-      // Generate package.json
       const packageJson = {
         private: true,
         dependencies,
@@ -189,11 +173,9 @@ const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
       const packageJsonContents = JSON.stringify(packageJson, null, 2);
       writeFileSync(packageJsonPath, packageJsonContents);
 
-      // Copy schema.json
       const schemaJsonPath = join(ruleOutDir, 'schema.json');
       cpSync(rule.schemaPath, schemaJsonPath);
 
-      // Get the actual file size
       const bundleSizeKb = (statSync(outFile).size / 1024).toFixed(2);
 
       console.log(`Rule: ${rule.ruleName}`);

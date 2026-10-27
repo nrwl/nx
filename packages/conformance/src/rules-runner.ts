@@ -60,7 +60,7 @@ export async function conformanceRulesRunner({
     detailsFixGeneratorData?: FixGeneratorData;
     // Tracks if any violation included fixGeneratorData so we can skip an unnecessary strip loop
     hasAnyViolationFixGeneratorData?: boolean;
-    // NOTE: disabled rules skip implementation and fixes
+    // Disabled rules skip implementation and fixes
     resolvedStatus: RuleStatus;
   };
 
@@ -123,8 +123,8 @@ export async function conformanceRulesRunner({
             resolvedStatus,
             runnerData: {
               status,
-              scheduledStatus: scheduledStatus ?? null,
-              scheduledStatusDate: scheduledStatusDate ?? null,
+              scheduledStatus,
+              scheduledStatusDate,
               fixGeneratorStatus,
               countOfOriginalViolations: 0,
               countOfViolationsFixedByGenerator: 0,
@@ -174,7 +174,6 @@ export async function conformanceRulesRunner({
           for (let i = 0; i < violations.length; i++) {
             const violation = violations[i];
 
-            // 1. Validation
             if (
               !violation.sourceProject &&
               !violation.file &&
@@ -187,7 +186,6 @@ export async function conformanceRulesRunner({
               );
             }
 
-            // 2. Automatic project inference
             if (!violation.sourceProject && violation.file) {
               const owningProject = fileToProject.get(violation.file);
               if (owningProject) {
@@ -202,16 +200,12 @@ export async function conformanceRulesRunner({
               hasAnyViolationFixGeneratorData = true;
             }
 
-            // 3. Project filtering
             if (allowedProjectNames) {
               if (!violation.sourceProject) {
                 processedViolations.push(violation);
                 continue;
               }
-              if (
-                violation.sourceProject &&
-                allowedProjectNames.has(violation.sourceProject)
-              ) {
+              if (allowedProjectNames.has(violation.sourceProject)) {
                 processedViolations.push(violation);
               }
             } else {
@@ -228,8 +222,8 @@ export async function conformanceRulesRunner({
           resolvedStatus,
           runnerData: {
             status,
-            scheduledStatus: scheduledStatus ?? null,
-            scheduledStatusDate: scheduledStatusDate ?? null,
+            scheduledStatus,
+            scheduledStatusDate,
             fixGeneratorStatus,
             countOfOriginalViolations,
             countOfViolationsFixedByGenerator: 0,
@@ -264,7 +258,6 @@ export async function conformanceRulesRunner({
     for (const ctx of diagnosticResults) {
       if (
         ctx.resolvedStatus !== 'disabled' &&
-        ctx.hasFixGenerator &&
         typeof ctx.fixGenerator === 'function'
       ) {
         const fixGeneratorSchemaData: Parameters<
