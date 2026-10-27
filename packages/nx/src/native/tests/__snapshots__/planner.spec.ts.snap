@@ -98,6 +98,13 @@ exports[`task planner > should deduplicate overlapping external closures for all
     ],
     "runtime": [],
   },
+  "ultracacheHashing": {
+    "configDigest": null,
+    "fallbackReason": "configs-unavailable",
+    "mode": "on",
+    "sourceCommit": null,
+    "usedDeclaredInputs": true,
+  },
   "value": "6233822002282478864",
 }
 `;
@@ -137,6 +144,13 @@ exports[`task planner > should deduplicate overlapping external closures for exe
     ],
     "runtime": [],
   },
+  "ultracacheHashing": {
+    "configDigest": null,
+    "fallbackReason": "configs-unavailable",
+    "mode": "on",
+    "sourceCommit": null,
+    "usedDeclaredInputs": true,
+  },
   "value": "235537722388302509",
 }
 `;
@@ -175,6 +189,13 @@ exports[`task planner > should deduplicate overlapping external closures for exp
       "nx.json",
     ],
     "runtime": [],
+  },
+  "ultracacheHashing": {
+    "configDigest": null,
+    "fallbackReason": "configs-unavailable",
+    "mode": "on",
+    "sourceCommit": null,
+    "usedDeclaredInputs": true,
   },
   "value": "17658889447241127891",
 }

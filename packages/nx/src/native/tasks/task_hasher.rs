@@ -8,7 +8,7 @@ use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::{HashInstruction, HashPlans},
+    tasks::types::{HashInstruction, HashPlans, TaskUltracacheHashing},
     types::{NapiDashMap, SharedStr, SharedStrMap},
 };
 use crate::native::{
@@ -135,6 +135,7 @@ impl From<HashInputsBuilder> for HashInputs {
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
+    pub ultracache_hashing: Option<TaskUltracacheHashing>,
     // Keys are indices into a shared table; values are shared Arcs. The same
     // input appears in many tasks, so retain the compact assembly entries
     // until conversion instead of materializing per-task key/value pairs.
@@ -253,6 +254,7 @@ fn assemble_ranked_hash(
     }
     HashDetails {
         value: hasher.digest().to_string(),
+        ultracache_hashing: None,
         details: SharedStrMap::from_indexed_entries(Arc::clone(keys), entries),
         inputs: inputs.into(),
     }
@@ -469,6 +471,7 @@ impl TaskHasher {
             pool: pool.clone(),
             plans,
             deferred: std::collections::HashSet::new(),
+            ultracache_hashing: Arc::clone(&hash_plans.ultracache_hashing),
         };
         // Once per run, before any hashing: the directories this run reads
         // from disk are the index's to keep from here on.
@@ -525,6 +528,7 @@ impl TaskHasher {
             pool: hash_plans.pool.clone(),
             plans,
             deferred: std::collections::HashSet::new(),
+            ultracache_hashing: Arc::clone(&hash_plans.ultracache_hashing),
         };
         self.hash_plans_impl(
             &subset,
@@ -718,7 +722,10 @@ impl TaskHasher {
             hashes.insert(
                 task_id.clone(),
                 trace_span!("Assembling hash", hash_id = task_id).in_scope(|| {
-                    assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs)
+                    let mut hash =
+                        assemble_ranked_hash(entries, &instruction_keys, &key_ranks, inputs);
+                    hash.ultracache_hashing = hash_plans.ultracache_hashing.get(task_id).cloned();
+                    hash
                 }),
             );
             Ok::<_, anyhow::Error>(())

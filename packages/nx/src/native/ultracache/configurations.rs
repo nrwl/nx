@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+
+static NEXT_HANDLE_ID: AtomicU64 = AtomicU64::new(1);
 
 use super::UltracacheConfigurationResolution;
 use super::set;
@@ -20,6 +23,7 @@ type Db = ();
 #[napi]
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub struct UltracacheConfigurations {
+    pub(crate) handle_id: u64,
     resolution: UltracacheConfigurationResolution,
     db: Db,
     entries: Mutex<HashMap<String, Option<Arc<set::UltracacheConfiguration>>>>,
@@ -33,6 +37,7 @@ impl UltracacheConfigurations {
         entries: HashMap<String, Option<Arc<set::UltracacheConfiguration>>>,
     ) -> Self {
         Self {
+            handle_id: NEXT_HANDLE_ID.fetch_add(1, Ordering::Relaxed),
             resolution,
             db,
             entries: Mutex::new(entries),

@@ -10,6 +10,13 @@ function graph(): TaskGraph {
       outputs: [],
       hash: `hash-${id}`,
       hashDetails: { command: 'build', nodes: {} },
+      ultracacheHashing: {
+        mode: 'on',
+        usedDeclaredInputs: false,
+        configDigest: 'digest',
+        sourceCommit: 'source',
+        fallbackReason: null,
+      },
       startTime: 1,
       endTime: 2,
       terminalOutput: 'output',
@@ -44,6 +51,7 @@ describe('pruneTaskGraph', () => {
     pruneTaskGraph(g);
     expect(g.tasks.a.hash).toBe('hash-a');
     expect(g.tasks.a.hashDetails).toBeDefined();
+    expect(g.tasks.a.ultracacheHashing).toBeDefined();
     expect((g.tasks.a as any).terminalOutput).toBe('output');
   });
 

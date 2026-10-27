@@ -11,6 +11,7 @@ import type { Task, TaskGraph } from '../config/task-graph';
 export const TASK_RESULT_FIELDS = [
   'hash',
   'hashDetails',
+  'ultracacheHashing',
   'startTime',
   'endTime',
   'terminalOutput',

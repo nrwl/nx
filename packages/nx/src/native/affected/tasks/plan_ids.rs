@@ -42,6 +42,7 @@ mod tests {
             ]),
             pool,
             deferred: Default::default(),
+            ultracache_hashing: Default::default(),
         };
         assert_eq!(
             referenced_ids(&plans),

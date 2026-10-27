@@ -70,6 +70,7 @@ pub(crate) fn hash_plans(entries: &[(&str, Vec<HashInstruction>)]) -> HashPlans 
             .collect(),
         pool,
         deferred: Default::default(),
+        ultracache_hashing: Default::default(),
     }
 }
 

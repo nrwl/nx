@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { TempFs } from '../internal-testing-utils/temp-fs';
 import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspace-files';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -31,7 +32,7 @@ vi.mock('../tasks-runner/utils', async () => {
 // Helper to normalize hash results for deterministic snapshot comparison
 // (parallel processing may produce inputs in arbitrary order)
 function sortHashInputs(hashResults: any[] | any): any[] | any {
-  const sortOne = (result: any) => ({
+  const sortOne = ({ ultracacheHashing, ...result }: any) => ({
     ...result,
     inputs: {
       ...result.inputs,
@@ -1510,6 +1511,301 @@ describe('native task hasher', () => {
     return { taskGraph, impl };
   }
 
+  const provenanceDigest = (inputs: string[]) =>
+    createHash('sha256')
+      .update(
+        JSON.stringify({ inputs: [...new Set(inputs)].sort(), outputs: [] })
+      )
+      .digest('hex');
+
+  it('captures the selected entry and keeps it after a newer import and rehash', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'provenance-db'),
+      'ultracache'
+    );
+    const store = new UltracacheConfigurationStore(db);
+    const task = taskGraph.tasks['child:compile'];
+    const inputs = ['libs/child/fileb.ts', 'libs/child/src/index.ts'];
+    const importEntry = (commit: string, reads: string[], outputs: string[]) =>
+      store.import({
+        requestedCommit: 'checkout',
+        configurationsJson: JSON.stringify({
+          [task.id]: { commit, inputs: reads, outputs },
+        }),
+      });
+    const first = importEntry(
+      'ancestor',
+      [...inputs].reverse().concat(inputs[0]),
+      ['old-output']
+    );
+    const pinned = store.getVersion(first.commit, first.resolution.fetchedAt);
+    const hashes = await impl.hashTasksUpfront(
+      [task],
+      taskGraph,
+      { [task.id]: {} },
+      tempFs.tempDir,
+      false,
+      pinned
+    );
+    const original = JSON.parse(JSON.stringify(hashes[task.id]));
+    expect(original.ultracacheHashing).toEqual({
+      mode: 'on',
+      usedDeclaredInputs: false,
+      configDigest: provenanceDigest(inputs),
+      sourceCommit: 'ancestor',
+      fallbackReason: null,
+    });
+    const newer = importEntry('checkout', inputs, ['different-output']);
+    expect(newer.resolution.fetchedAt).toBeGreaterThan(
+      first.resolution.fetchedAt
+    );
+    const rehash = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      pinned
+    );
+    expect(rehash).toEqual(hashes[task.id]);
+    const next = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      newer
+    );
+    expect(next.ultracacheHashing.sourceCommit).toBe('checkout');
+    expect(next.ultracacheHashing.configDigest).toBe(
+      original.ultracacheHashing.configDigest
+    );
+    // Provenance, order, duplicates and ignored learned outputs do not change the cache key.
+    expect(next.value).toBe(original.value);
+    expect(hashes[task.id]).toEqual(original);
+    closeDbConnection(db);
+  });
+
+  it('keeps the first declared-input decision when a config is learned at the same checkout', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'missing-provenance-db'),
+      'ultracache'
+    );
+    const store = new UltracacheConfigurationStore(db);
+    const task = taskGraph.tasks['child:compile'];
+    const missing = store.import({
+      requestedCommit: 'checkout',
+      configurationsJson: '{}',
+    });
+    const pinnedMissing = store.getVersion(
+      missing.commit,
+      missing.resolution.fetchedAt
+    );
+    const first = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      pinnedMissing
+    );
+    const unavailable = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false
+    );
+    expect(first.value).toBe(unavailable.value);
+    expect(first.ultracacheHashing).toEqual({
+      mode: 'on',
+      usedDeclaredInputs: true,
+      configDigest: null,
+      sourceCommit: null,
+      fallbackReason: 'missing',
+    });
+    expect(unavailable.ultracacheHashing.fallbackReason).toBe(
+      'configs-unavailable'
+    );
+    const learned = store.import({
+      requestedCommit: 'checkout',
+      configurationsJson: JSON.stringify({
+        [task.id]: { commit: 'checkout', inputs: [], outputs: [] },
+      }),
+    });
+    const next = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      learned
+    );
+    expect(next.ultracacheHashing.usedDeclaredInputs).toBe(false);
+    expect(first.ultracacheHashing.fallbackReason).toBe('missing');
+    expect(
+      (
+        await impl.hashTask(
+          task,
+          taskGraph,
+          {},
+          tempFs.tempDir,
+          false,
+          pinnedMissing
+        )
+      ).ultracacheHashing
+    ).toEqual(first.ultracacheHashing);
+    closeDbConnection(db);
+  });
+
+  it('retains deferred provenance and invalidates plans when mode or continuous changes', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'deferred-provenance-db'),
+      'ultracache'
+    );
+    const task = taskGraph.tasks['e2e:e2e'];
+    const config = new UltracacheConfigurationStore(db).import({
+      requestedCommit: 'checkout',
+      configurationsJson: JSON.stringify({
+        [task.id]: {
+          commit: 'ancestor',
+          inputs: ['dist/apps/app/index.d.ts'],
+          outputs: [],
+        },
+      }),
+    });
+    expect(
+      await impl.hashTasksUpfront(
+        [task],
+        taskGraph,
+        { [task.id]: {} },
+        tempFs.tempDir,
+        false,
+        config
+      )
+    ).toEqual({});
+    const planning = countPlanning(impl);
+    const hash = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      config
+    );
+    expect(planning.calls).toBe(0);
+    expect(hash.ultracacheHashing).toMatchObject({
+      usedDeclaredInputs: false,
+      sourceCommit: 'ancestor',
+    });
+    for (const mode of ['off', 'warn', 'error', 'on'] as const) {
+      task.ultracache = { mode };
+      const result = await impl.hashTask(
+        task,
+        taskGraph,
+        {},
+        tempFs.tempDir,
+        false,
+        config
+      );
+      expect(result.ultracacheHashing).toMatchObject({
+        mode,
+        usedDeclaredInputs: mode !== 'on',
+        fallbackReason:
+          mode === 'off'
+            ? 'disabled'
+            : mode === 'on'
+              ? null
+              : 'autofix-disabled',
+      });
+    }
+    task.continuous = true;
+    expect(
+      (await impl.hashTask(task, taskGraph, {}, tempFs.tempDir, false, config))
+        .ultracacheHashing
+    ).toEqual({
+      mode: 'on',
+      usedDeclaredInputs: true,
+      configDigest: null,
+      sourceCommit: null,
+      fallbackReason: 'continuous',
+    });
+    closeDbConnection(db);
+  });
+
+  it('records unreadable-set when the pinned lazy handle cannot read its entries', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'unreadable-provenance-db'),
+      'ultracache'
+    );
+    const store = new UltracacheConfigurationStore(db);
+    const task = taskGraph.tasks['child:compile'];
+    const imported = store.import({
+      requestedCommit: 'checkout',
+      configurationsJson: JSON.stringify({
+        [task.id]: { commit: 'ancestor', inputs: [], outputs: [] },
+      }),
+    });
+    const pinned = store.getVersion(
+      imported.commit,
+      imported.resolution.fetchedAt
+    );
+    closeDbConnection(db);
+    const hash = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      pinned
+    );
+    expect(hash.ultracacheHashing).toEqual({
+      mode: 'on',
+      usedDeclaredInputs: true,
+      configDigest: null,
+      sourceCommit: null,
+      fallbackReason: 'unreadable-set',
+    });
+  });
+
+  it.each([
+    ['libs/./child/*.gen', 'invalid-glob'],
+    ['../outside', 'escapes-workspace'],
+  ])('records the actual fallback for %s', async (glob, reason) => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'invalid-provenance-db'),
+      'ultracache'
+    );
+    const task = taskGraph.tasks['child:compile'];
+    const config = new UltracacheConfigurationStore(db).import({
+      requestedCommit: 'checkout',
+      configurationsJson: JSON.stringify({
+        [task.id]: { commit: 'ancestor', inputs: [glob], outputs: [] },
+      }),
+    });
+    const hash = await impl.hashTask(
+      task,
+      taskGraph,
+      {},
+      tempFs.tempDir,
+      false,
+      config
+    );
+    expect(hash.ultracacheHashing).toEqual({
+      mode: 'on',
+      usedDeclaredInputs: true,
+      configDigest: null,
+      sourceCommit: null,
+      fallbackReason: reason,
+    });
+    closeDbConnection(db);
+  });
+
   it('hashes up front only the tasks whose plan holds no output of another task', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     const tasks = Object.values(taskGraph.tasks);
@@ -1575,12 +1871,10 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
-  // The entry digest covers the writes, not the reads, because a read
-  // reaches the hash as the file group it becomes. That is only true while
-  // every read-driven difference has another carrier, so assert it directly
-  // rather than by reading the planner: two entries differing in one read
-  // must hash differently, with the digest identical.
-  it('moves a task hash by a changed read while the entry digest holds', async () => {
+  // The existing cache-key marker covers recording settings, not learned reads.
+  // Provenance has its own digest; a changed read moves it and the task hash
+  // while leaving the cache-key marker unchanged.
+  it('changes the hash and provenance for changed reads without changing the cache-key marker', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({
       'libs/child/one.txt': 'one',
@@ -1629,6 +1923,9 @@ describe('native task hasher', () => {
     expect(digestOf(one)).toEqual(digestOf(two));
     expect(digestOf(one)).toEqual([expect.stringMatching(/^io-snapshot:\d+$/)]);
     expect(two.value).not.toBe(one.value);
+    expect(two.ultracacheHashing.configDigest).not.toBe(
+      one.ultracacheHashing.configDigest
+    );
     expect(two.inputs.files).toContain('libs/child/two.txt');
     expect(two.inputs.files).not.toContain('libs/child/one.txt');
   });

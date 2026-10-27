@@ -53,8 +53,9 @@ impl UltracacheConfigurationStore {
                     format!("Nx Cloud returned Ultracache configurations nx cannot read: {err}"),
                 )
             })?;
-        let set = ImportedSet::new(options.requested_commit, entries);
-        self.write(&set)
+        let mut set = ImportedSet::new(options.requested_commit, entries);
+        set.resolution.fetched_at = self
+            .write(&set)
             .map_err(|err| napi::Error::new("WRITE_FAILED".to_string(), err.to_string()))?;
         let ImportedSet {
             resolution,
@@ -134,7 +135,7 @@ impl UltracacheConfigurationStore {
     /// Adds the set as a version of its commit. Versions are never pruned, so a
     /// pinned run can always read its own; `nx reset` clears them. One
     /// transaction, so a reader sees the previous set or the new one, never a gap.
-    pub(super) fn write(&self, set: &ImportedSet) -> Result<()> {
+    pub(super) fn write(&self, set: &ImportedSet) -> Result<i64> {
         let entries: Vec<(&String, String)> = set
             .entries
             .iter()
@@ -143,17 +144,19 @@ impl UltracacheConfigurationStore {
             .context("serializing Ultracache configurations")?;
         let resolution = &set.resolution;
         let commit = &resolution.requested_commit;
-        let fetched_at = resolution.fetched_at;
-        self.db.lock().unwrap().transaction(|conn| {
+        self.db.lock().unwrap().transaction_immediate(|conn| {
+            // Two imports in one millisecond must not rewrite a pinned version.
+            // Allocate under the write transaction, including across processes.
+            let latest: i64 = conn.query_row(
+                "SELECT COALESCE(MAX(fetched_at), -1) FROM io_snapshot_versions WHERE commit_sha = ?1",
+                params![commit],
+                |row| row.get(0),
+            )?;
+            let fetched_at = resolution.fetched_at.max(latest + 1);
             conn.execute(
-                "INSERT OR REPLACE INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
+                "INSERT INTO io_snapshot_versions (commit_sha, fetched_at, tasks) \
                  VALUES (?1, ?2, ?3)",
                 params![commit, fetched_at, resolution.tasks],
-            )?;
-            // A version rewritten at the same instant.
-            conn.execute(
-                "DELETE FROM io_snapshot_entries WHERE commit_sha = ?1 AND fetched_at = ?2",
-                params![commit, fetched_at],
             )?;
             let mut insert = conn.prepare(
                 "INSERT INTO io_snapshot_entries (commit_sha, fetched_at, task_id, entry) \
@@ -162,7 +165,7 @@ impl UltracacheConfigurationStore {
             for (task_id, entry) in &entries {
                 insert.execute(params![commit, fetched_at, task_id, entry])?;
             }
-            Ok(())
+            Ok(fetched_at)
         })
     }
 
@@ -261,8 +264,7 @@ mod tests {
             entries["web:build"].inputs,
             vec!["apps/web/src/**/*.ts".to_string()]
         );
-        // A second ask does not go back to the database: rewrite the version
-        // without the entry and the handle still answers from memory.
+        // Reimporting at the same instant cannot change this pinned version.
         let fetched_at = stored.resolution().fetched_at;
         store
             .write(&ImportedSet {
@@ -270,15 +272,16 @@ mod tests {
                 entries: BTreeMap::new(),
             })
             .unwrap();
-        assert!(
+        assert_eq!(
             store
                 .read_entries("head", fetched_at, &["web:build"])
                 .unwrap()
-                .is_empty()
+                .len(),
+            1
         );
         assert_eq!(
             stored.entries_for(&["web:build", "ui:test"]).unwrap().len(),
-            1
+            2
         );
         assert_eq!(stored.entries_for(&["web:build"]).unwrap().len(), 1);
     }
@@ -420,12 +423,18 @@ mod tests {
     }
 
     #[test]
-    fn rewriting_a_version_replaces_its_entries() {
+    fn same_timestamp_allocates_a_new_version_without_replacing_entries() {
         let (_dir, db) = temp_store();
         db.write(&imported("c1", 1, &["a:build", "b:build"]))
             .unwrap();
-        db.write(&imported("c1", 1, &["a:build"])).unwrap();
-        assert!(db.read_entries("c1", 1, &["b:build"]).unwrap().is_empty());
+        let next = db.write(&imported("c1", 1, &["a:build"])).unwrap();
+        assert_eq!(next, 2);
+        assert_eq!(db.read_entries("c1", 1, &["b:build"]).unwrap().len(), 1);
+        assert!(
+            db.read_entries("c1", next, &["b:build"])
+                .unwrap()
+                .is_empty()
+        );
         assert_eq!(db.read_entries("c1", 1, &["a:build"]).unwrap().len(), 1);
     }
 

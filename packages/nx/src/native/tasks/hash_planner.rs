@@ -25,7 +25,7 @@ use crate::native::tasks::hashers::{
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
 };
-use crate::native::tasks::plan_memo::PlanMemo;
+use crate::native::tasks::plan_memo::{PlanMemo, TaskPlan};
 use crate::native::tasks::ultracache_eligibility::{
     self, EligibilityInputs, UltracacheEligibilityOptions, UltracacheTask,
 };
@@ -338,13 +338,23 @@ impl HashPlanner {
         let function_start = std::time::Instant::now();
         let memo = self.plan_memo.begin(
             &task_graph,
-            configurations.map(|configurations| {
-                let resolution = configurations.resolution_ref();
-                (resolution.requested_commit.clone(), resolution.fetched_at)
-            }),
+            configurations.map(|configurations| configurations.handle_id),
             custom_hasher_task_ids,
         );
         let to_plan = memo.missing(&task_ids);
+        let eligibility_inputs = EligibilityInputs {
+            custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
+            continuous: to_plan
+                .iter()
+                .filter(|id| {
+                    task_graph
+                        .tasks
+                        .get(**id)
+                        .is_some_and(|task| task.continuous == Some(true))
+                })
+                .map(|id| id.to_string())
+                .collect(),
+        };
         let ultracache_tasks = configurations.map(|configurations| {
             ultracache_eligibility::resolve(
                 configurations,
@@ -352,22 +362,14 @@ impl HashPlanner {
                     .iter()
                     .filter_map(|id| task_graph.tasks.get_key_value(*id))
                     .map(|(id, task)| (id.as_str(), task.ultracache.as_ref())),
-                &EligibilityInputs {
-                    custom_hasher: custom_hasher_task_ids.iter().cloned().collect(),
-                    continuous: to_plan
-                        .iter()
-                        .filter(|id| {
-                            task_graph
-                                .tasks
-                                .get(**id)
-                                .is_some_and(|task| task.continuous == Some(true))
-                        })
-                        .map(|id| id.to_string())
-                        .collect(),
-                },
+                &eligibility_inputs,
             )
-            .tasks
         });
+        let fallback_reasons: HashMap<Option<&str>, &str> = ultracache_tasks
+            .iter()
+            .flat_map(|resolved| resolved.diagnostics.iter())
+            .map(|d| (d.task_id.as_deref(), d.reason.as_str()))
+            .collect();
 
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
 
@@ -380,7 +382,7 @@ impl HashPlanner {
 
         let pool = &self.instruction_pool;
         let parallel_start = std::time::Instant::now();
-        let result: anyhow::Result<HashMap<String, Vec<u32>>> = to_plan
+        let result: anyhow::Result<HashMap<String, TaskPlan>> = to_plan
             .par_iter()
             .map(|id| {
                 let task = &task_graph
@@ -418,7 +420,7 @@ impl HashPlanner {
 
                 let context = ultracache_tasks
                     .as_ref()
-                    .and_then(|tasks| tasks.get(*id))
+                    .and_then(|resolved| resolved.tasks.get(*id))
                     .map(UltracacheContext::new);
                 let mut always = AlwaysIds::collecting(context.is_some());
                 ids.extend(self.self_and_deps_inputs(
@@ -472,7 +474,23 @@ impl HashPlanner {
                 ids.sort_unstable();
                 ids.dedup();
 
-                Ok((id.to_string(), ids))
+                Ok((
+                    id.to_string(),
+                    TaskPlan {
+                        instructions: ids,
+                        ultracache_hashing: ultracache_eligibility::hashing_provenance(
+                            task,
+                            ultracache_tasks
+                                .as_ref()
+                                .and_then(|resolved| resolved.tasks.get(*id)),
+                            fallback_reasons
+                                .get(&Some(*id))
+                                .or_else(|| fallback_reasons.get(&None))
+                                .copied(),
+                            eligibility_inputs.custom_hasher.contains(*id),
+                        ),
+                    },
+                ))
             })
             .collect();
 
@@ -498,11 +516,21 @@ impl HashPlanner {
         }
 
         let result = result.map(|planned| memo.finish(planned, &task_ids));
-        result.map(|plans| {
+        result.map(|planned| {
+            let (plans, ultracache_hashing): (HashMap<_, _>, HashMap<_, _>) = planned
+                .into_iter()
+                .map(|(id, plan)| {
+                    (
+                        (id.clone(), plan.instructions),
+                        (id, plan.ultracache_hashing),
+                    )
+                })
+                .unzip();
             let deferred = deferred_tasks(&plans, pool, &task_graph);
             HashPlans {
                 pool: Arc::clone(&self.instruction_pool),
                 plans,
+                ultracache_hashing: Arc::new(ultracache_hashing),
                 deferred,
             }
         })

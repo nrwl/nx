@@ -35,6 +35,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
    */
   private upfrontPlans: {
     fingerprint: string;
+    configurations: UltracacheConfigurations | undefined;
     taskIds: Set<string>;
     plans: ReturnType<HashPlanner['getPlansReference']>;
   } | null = null;
@@ -118,6 +119,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     let unplanned = tasks.map((t) => t.id);
     if (
       this.upfrontPlans &&
+      this.upfrontPlans.configurations === ultracacheConfigurations &&
       unplanned.some((id) => this.upfrontPlans.taskIds.has(id)) &&
       this.upfrontPlans.fingerprint ===
         taskGraphFingerprint(taskGraph, ultracacheConfigurations)
@@ -154,9 +156,6 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     taskGraph: TaskGraph,
     ultracacheConfigurations?: UltracacheConfigurations
   ) {
-    if (!ultracacheConfigurations) {
-      return this.planner.getPlansReference(taskIds, taskGraph);
-    }
     return this.planner.getPlansReference(
       taskIds,
       taskGraph,
@@ -179,6 +178,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       ultracacheConfigurations
     );
     this.upfrontPlans = {
+      configurations: ultracacheConfigurations,
       fingerprint: taskGraphFingerprint(taskGraph, ultracacheConfigurations),
       taskIds: new Set(tasks.map((t) => t.id)),
       plans,
@@ -218,6 +218,8 @@ function taskGraphFingerprint(
       task.target.project,
       task.target.target,
       task.target.configuration ?? '',
+      JSON.stringify(task.ultracache ?? null),
+      String(task.continuous === true),
       (task.outputs ?? []).join(','),
       (taskGraph.dependencies[id] ?? []).map((edge) => edge.id).join(','),
       (taskGraph.continuousDependencies[id] ?? [])

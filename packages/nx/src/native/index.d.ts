@@ -891,6 +891,7 @@ export declare function hashArray(input: Array<string | undefined | null>): stri
 
 export interface HashDetails {
   value: string
+  ultracacheHashing?: TaskUltracacheHashing
   details: Record<string, string>
   /** Structured inputs used for hashing (file patterns, env vars, etc.) */
   inputs: HashInputs
@@ -1352,6 +1353,8 @@ export interface Task {
   hash?: string
   /** Details about the composition of the hash */
   hashDetails?: TaskHashDetails
+  /** The immutable Ultracache decision captured with this hash. */
+  ultracacheHashing?: TaskUltracacheHashing
   /** Unix timestamp of when a Batch Task starts */
   startTime?: number
   /** Unix timestamp of when a Batch Task ends */
@@ -1476,6 +1479,20 @@ export interface TaskTarget {
   target: string
   /** The configuration of the target which the task invokes */
   configuration?: string
+}
+
+/** Provenance of the plan actually hashed, never resolved from a later store version. */
+export interface TaskUltracacheHashing {
+  mode: 'on' | 'warn' | 'error' | 'off'
+  usedDeclaredInputs: boolean
+  /**
+   * SHA-256 of compact JSON {inputs: sorted unique strings, outputs: []}.
+   * Learned outputs are not consumed by native hashing.
+   */
+  configDigest: string | null
+  /** The selected entry's commit, which can differ from the requested checkout. */
+  sourceCommit: string | null
+  fallbackReason: string | null
 }
 
 /** Ultracache settings of a task's target */

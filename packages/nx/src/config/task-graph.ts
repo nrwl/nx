@@ -10,4 +10,5 @@ export type {
   TaskTarget,
   TaskHashDetails,
   TaskUltracacheSettings,
+  TaskUltracacheHashing,
 } from '../native';

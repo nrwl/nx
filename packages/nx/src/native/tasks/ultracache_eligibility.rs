@@ -4,8 +4,11 @@ use crate::native::cache::expand_outputs::match_output_paths;
 use crate::native::glob::expand_literal_braces;
 use crate::native::tasks::hash_planner::walk_root;
 use crate::native::tasks::hashers::{parse_group, validate_files_glob};
-use crate::native::tasks::types::{TaskGraph, TaskUltracacheSettings, UltracacheMode};
+use crate::native::tasks::types::{
+    Task, TaskGraph, TaskUltracacheHashing, TaskUltracacheSettings, UltracacheMode,
+};
 use crate::native::ultracache::{UltracacheConfigurationResolution, UltracacheConfigurations};
+use sha2::{Digest, Sha256};
 use xxhash_rust::xxh3::Xxh3;
 
 /// What the eligibility walk needs beyond each task's Ultracache settings.
@@ -51,6 +54,8 @@ impl From<UltracacheEligibilityOptions> for EligibilityInputs {
 pub(crate) struct UltracacheTask {
     pub files: Vec<String>,
     pub digest: String,
+    pub config_digest: String,
+    pub source_commit: String,
 }
 
 /// Why a task (or the whole run) hashes natively; `reason` is rendered by the
@@ -203,6 +208,8 @@ pub(crate) fn resolve<'a>(
         tasks.insert(
             task_id.to_string(),
             UltracacheTask {
+                config_digest: learned_inputs_digest(&files),
+                source_commit: entry.commit.clone(),
                 files,
                 digest: configuration_digest(ultracache),
             },
@@ -214,6 +221,55 @@ pub(crate) fn resolve<'a>(
         diagnostics,
         resolution: resolution.clone(),
     }
+}
+
+/// Captured beside the instructions from the very same eligibility result.
+pub(crate) fn hashing_provenance(
+    task: &Task,
+    entry: Option<&UltracacheTask>,
+    fallback_reason: Option<&str>,
+    custom_hasher: bool,
+) -> TaskUltracacheHashing {
+    let mode = task
+        .ultracache
+        .as_ref()
+        .and_then(|u| u.mode.clone())
+        .unwrap_or_default();
+    if let Some(entry) = entry {
+        return TaskUltracacheHashing {
+            mode,
+            used_declared_inputs: false,
+            config_digest: Some(entry.config_digest.clone()),
+            source_commit: Some(entry.source_commit.clone()),
+            fallback_reason: None,
+        };
+    }
+    let reason = fallback_reason.unwrap_or_else(|| match mode {
+        UltracacheMode::Off => "disabled",
+        UltracacheMode::Warn | UltracacheMode::Error => "autofix-disabled",
+        _ if custom_hasher => "custom-hasher",
+        _ if task.continuous == Some(true) => "continuous",
+        _ => "configs-unavailable",
+    });
+    TaskUltracacheHashing {
+        mode,
+        used_declared_inputs: true,
+        config_digest: None,
+        source_commit: None,
+        fallback_reason: Some(reason.into()),
+    }
+}
+
+fn learned_inputs_digest(inputs: &[String]) -> String {
+    let mut inputs: Vec<&str> = inputs.iter().map(String::as_str).collect();
+    // Match JavaScript's default string sort, including non-BMP paths.
+    inputs.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
+    inputs.dedup();
+    let json = serde_json::json!({ "inputs": inputs, "outputs": [] });
+    format!(
+        "{:x}",
+        Sha256::digest(serde_json::to_vec(&json).expect("string arrays serialize"))
+    )
 }
 
 /// The eligibility report, for the run summary.

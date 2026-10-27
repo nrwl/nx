@@ -4,7 +4,7 @@ import {
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskUltracacheHashing } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import type { UltracacheConfigurationVersion } from '../daemon/message-types/ultracache-configuration-version';
 import { hashArray } from './file-hasher';
@@ -27,6 +27,7 @@ export { HashInputs };
  * A data structure returned by the default hasher.
  */
 export interface PartialHash {
+  ultracacheHashing?: TaskUltracacheHashing;
   value: string;
   details: {
     [name: string]: string;
@@ -38,6 +39,7 @@ export interface PartialHash {
  * A data structure returned by the default hasher.
  */
 export interface Hash {
+  ultracacheHashing?: TaskUltracacheHashing;
   value: string;
   details: {
     command: string;
@@ -327,6 +329,7 @@ export class InProcessTaskHasher implements TaskHasher {
         runtime: {},
       },
       inputs: res.inputs,
+      ultracacheHashing: res.ultracacheHashing,
     };
   }
 

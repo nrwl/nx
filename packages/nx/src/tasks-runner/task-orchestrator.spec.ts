@@ -85,8 +85,18 @@ describe('TaskOrchestrator', () => {
       const hasher = {
         hashTasks: vi.fn(async (tasks: Task[]) => {
           hasherCallCount++;
+          for (const task of tasks) {
+            expect(task.ultracacheHashing).toBeUndefined();
+          }
           return tasks.map((t) => ({
             value: `${t.id}|call-${hasherCallCount}`,
+            ultracacheHashing: {
+              mode: 'on',
+              usedDeclaredInputs: false,
+              configDigest: `digest-${hasherCallCount}`,
+              sourceCommit: 'ancestor',
+              fallbackReason: null,
+            },
             details: {
               command: 'cmd',
               nodes: {},
@@ -165,6 +175,8 @@ describe('TaskOrchestrator', () => {
       ]);
       expect(consumer.hash).toBe('consumer:build|call-3');
       expect(dep.hash).toBe('dep:build|call-1');
+      expect(consumer.ultracacheHashing.configDigest).toBe('digest-3');
+      expect(dep.ultracacheHashing.configDigest).toBe('digest-1');
 
       // The re-hashed value is what gets cached, not the preliminary one
       expect(hashesAtCacheTime['consumer:build']).toBe('consumer:build|call-3');

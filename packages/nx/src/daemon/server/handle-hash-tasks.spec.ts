@@ -111,4 +111,25 @@ describe('handleHashTasks', () => {
       undefined
     );
   });
+  it('returns captured metadata unchanged over daemon serialization for both hashing paths', async () => {
+    const result = {
+      value: 'hash',
+      details: {},
+      ultracacheHashing: {
+        mode: 'on',
+        usedDeclaredInputs: false,
+        configDigest: 'digest',
+        sourceCommit: 'ancestor',
+        fallbackReason: null,
+      },
+    };
+    hashTasks.mockResolvedValueOnce([result]);
+    hashTasksUpfront.mockResolvedValueOnce({ 'app:build': result });
+    const normal = await handleHashTasks(base);
+    const upfront = await handleHashTasksUpfront(base);
+    expect(JSON.parse(JSON.stringify(normal.response))).toEqual([result]);
+    expect(JSON.parse(JSON.stringify(upfront.response))).toEqual({
+      'app:build': result,
+    });
+  });
 });

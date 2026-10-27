@@ -6,7 +6,9 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::native::tasks::types::{TaskGraph, TaskGraphEdge, TaskTarget, TaskUltracacheSettings};
+use crate::native::tasks::types::{
+    TaskGraph, TaskGraphEdge, TaskTarget, TaskUltracacheHashing, TaskUltracacheSettings,
+};
 
 #[derive(Default)]
 pub(super) struct PlanMemo {
@@ -17,10 +19,16 @@ pub(super) struct PlanMemo {
 /// it was when the plan was made.
 #[derive(Default)]
 struct Recorded {
-    /// The Ultracache configurations' commit and fetch time; plans made against others are dropped.
-    configurations: Option<(String, i64)>,
+    /// The exact configurations handle; decisions from another handle are dropped.
+    configurations: Option<u64>,
     tasks: HashMap<String, PlannedTask>,
-    plans: HashMap<String, Vec<u32>>,
+    plans: HashMap<String, TaskPlan>,
+}
+
+#[derive(Clone, Default)]
+pub(super) struct TaskPlan {
+    pub instructions: Vec<u32>,
+    pub ultracache_hashing: TaskUltracacheHashing,
 }
 
 /// What planning reads from one task graph node.
@@ -33,6 +41,7 @@ struct PlannedTask {
     continuous_dependencies: Vec<(String, bool)>,
     ultracache: Option<TaskUltracacheSettings>,
     custom_hasher: bool,
+    continuous: bool,
 }
 
 impl PlannedTask {
@@ -51,6 +60,7 @@ impl PlannedTask {
                 .collect(),
             ultracache: task.ultracache.clone(),
             custom_hasher: custom_hasher.contains(id),
+            continuous: task.continuous == Some(true),
         })
     }
 
@@ -75,7 +85,7 @@ impl PlanMemo {
     pub(super) fn begin(
         &self,
         task_graph: &TaskGraph,
-        configurations: Option<(String, i64)>,
+        configurations: Option<u64>,
         custom_hasher: &[String],
     ) -> PlanMemoGuard<'_> {
         let mut recorded = self.recorded.lock().expect("plan memo lock");
@@ -110,9 +120,9 @@ impl PlanMemoGuard<'_> {
     /// Keeps `planned` and returns the plans of `task_ids`.
     pub(super) fn finish(
         mut self,
-        planned: HashMap<String, Vec<u32>>,
+        planned: HashMap<String, TaskPlan>,
         task_ids: &[&str],
-    ) -> HashMap<String, Vec<u32>> {
+    ) -> HashMap<String, TaskPlan> {
         let plans = &mut self.recorded.plans;
         plans.extend(planned);
         task_ids
@@ -194,13 +204,24 @@ mod tests {
     fn plan_all_under(
         memo: &PlanMemo,
         graph: &TaskGraph,
-        configurations: Option<(String, i64)>,
+        configurations: Option<u64>,
         custom_hasher: &[String],
     ) -> Vec<String> {
         let ids: Vec<&str> = graph.tasks.keys().map(String::as_str).collect();
         let guard = memo.begin(graph, configurations, custom_hasher);
         let mut missing = guard.missing(&ids);
-        let planned = missing.iter().map(|id| (id.to_string(), vec![0])).collect();
+        let planned = missing
+            .iter()
+            .map(|id| {
+                (
+                    id.to_string(),
+                    TaskPlan {
+                        instructions: vec![0],
+                        ..Default::default()
+                    },
+                )
+            })
+            .collect();
         guard.finish(planned, &ids);
         missing.sort();
         missing.into_iter().map(String::from).collect()
@@ -309,7 +330,7 @@ mod tests {
     #[test]
     fn another_configuration_replans_everything() {
         let memo = PlanMemo::default();
-        let set = |fetched_at| Some(("abc".to_string(), fetched_at));
+        let set = |fetched_at| Some(fetched_at);
         plan_all_under(&memo, &graph(), set(1), &[]);
         assert!(plan_all_under(&memo, &graph(), set(1), &[]).is_empty());
         assert_eq!(plan_all_under(&memo, &graph(), set(2), &[]).len(), 4);

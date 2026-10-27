@@ -10,7 +10,12 @@ import { readProjectsConfigurationFromProjectGraph } from '../project-graph/proj
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { getTaskDetails, hashTask, hashTasks } from '../hasher/hash-task';
+import {
+  clearTaskHash,
+  getTaskDetails,
+  hashTask,
+  hashTasks,
+} from '../hasher/hash-task';
 import { walkTaskGraph } from './task-graph-utils';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
@@ -1097,8 +1102,7 @@ export class TaskOrchestrator {
         // hashTasks skips tasks that already have a hash — clear the
         // preliminary hashes so these tasks actually get re-hashed
         for (const task of tasksToRehash) {
-          task.hash = undefined;
-          task.hashDetails = undefined;
+          clearTaskHash(task);
         }
         await this.hashBatchTasks(tasksToRehash);
       }

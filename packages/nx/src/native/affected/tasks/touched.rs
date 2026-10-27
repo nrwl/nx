@@ -996,6 +996,7 @@ mod tests {
                 ("m:build".to_string(), vec![id]),
             ]),
             deferred: Default::default(),
+            ultracache_hashing: Default::default(),
         };
         let touched = touched_tasks(
             &g,

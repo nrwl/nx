@@ -1,6 +1,6 @@
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph, TaskUltracacheHashing } from '../config/task-graph';
 import {
   IS_WASM,
   getUltracacheDeferredTaskIds,
@@ -46,6 +46,9 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     ? new Set(getUltracacheDeferredTaskIds(ultracacheConfigurations, taskGraph))
     : null;
   const tasks = Object.values(taskGraph.tasks);
+  for (const task of tasks) {
+    clearTaskHash(task);
+  }
   // TODO(v25): remove custom hasher support.
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
@@ -83,6 +86,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     const hash = hashes[task.id];
     task.hash = hash.value;
     task.hashDetails = hash.details;
+    task.ultracacheHashing = hash.ultracacheHashing;
 
     // Notify TaskIOService of hash inputs
     if (hasInputSubscribers && hash.inputs) {
@@ -131,13 +135,17 @@ export async function hashTask(
   taskDetails: TaskDetails | null
 ) {
   performance.mark('hashSingleTask:start');
+  clearTaskHash(task);
 
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   // TODO(v25): remove custom hasher support.
   const customHasher = getCustomHasher(task, projectsConfigurations.projects);
 
-  const { value, details, inputs } = await (customHasher
+  const customProvenance = customHasher
+    ? customHasherProvenance(task)
+    : undefined;
+  const { value, details, inputs, ultracacheHashing } = await (customHasher
     ? customHasher(task, {
         hasher,
         projectGraph,
@@ -150,6 +158,7 @@ export async function hashTask(
     : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
+  task.ultracacheHashing = customProvenance ?? ultracacheHashing;
 
   // Notify TaskIOService of hash inputs
   const ioService = getTaskIOService();
@@ -208,6 +217,7 @@ export async function hashTasks(
   const tasksWithoutCustomHashers: Task[] = [];
 
   for (const task of tasks) {
+    clearTaskHash(task);
     const customHasher = getCustomHasher(task, projectsConfigurations.projects);
     if (customHasher) {
       tasksWithCustomHashers.push(task);
@@ -221,6 +231,7 @@ export async function hashTasks(
   const hasInputSubscribers = ioService.hasTaskInputSubscribers();
   const customHasherPromises = tasksWithCustomHashers.map(async (task) => {
     const customHasher = getCustomHasher(task, projectsConfigurations.projects);
+    const provenance = customHasherProvenance(task);
     const { value, details, inputs } = await customHasher(task, {
       hasher,
       projectGraph,
@@ -232,6 +243,7 @@ export async function hashTasks(
     } as any);
     task.hash = value;
     task.hashDetails = details;
+    task.ultracacheHashing = provenance;
 
     // Notify TaskIOService of hash inputs
     if (hasInputSubscribers && inputs) {
@@ -248,6 +260,8 @@ export async function hashTasks(
         for (let i = 0; i < tasksWithoutCustomHashers.length; i++) {
           tasksWithoutCustomHashers[i].hash = hashes[i].value;
           tasksWithoutCustomHashers[i].hashDetails = hashes[i].details;
+          tasksWithoutCustomHashers[i].ultracacheHashing =
+            hashes[i].ultracacheHashing;
 
           // Notify TaskIOService of hash inputs
           if (hasInputSubscribers && hashes[i].inputs) {
@@ -291,4 +305,21 @@ export async function hashTasks(
     'hashMultipleTasks:start',
     'hashMultipleTasks:end'
   );
+}
+
+/** Invalidate all data belonging to the previous hash before recomputing it. */
+export function clearTaskHash(task: Task): void {
+  delete task.hash;
+  delete task.hashDetails;
+  delete task.ultracacheHashing;
+}
+
+function customHasherProvenance(task: Task): TaskUltracacheHashing {
+  return {
+    mode: task.ultracache?.mode ?? 'on',
+    usedDeclaredInputs: true,
+    configDigest: null,
+    sourceCommit: null,
+    fallbackReason: 'custom-hasher',
+  };
 }

@@ -28,6 +28,8 @@ pub struct Task {
     pub hash: Option<String>,
     /// Details about the composition of the hash
     pub hash_details: Option<TaskHashDetails>,
+    /// The immutable Ultracache decision captured with this hash.
+    pub ultracache_hashing: Option<TaskUltracacheHashing>,
     /// Unix timestamp of when a Batch Task starts
     pub start_time: Option<i64>,
     /// Unix timestamp of when a Batch Task ends
@@ -60,6 +62,21 @@ pub enum UltracacheMode {
     Error,
     /// Record nothing, so no report is produced and nothing is applied.
     Off,
+}
+
+/// Provenance of the plan actually hashed, never resolved from a later store version.
+#[napi(object, use_nullable = true)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskUltracacheHashing {
+    #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
+    pub mode: UltracacheMode,
+    pub used_declared_inputs: bool,
+    /// SHA-256 of compact JSON {inputs: sorted unique strings, outputs: []}.
+    /// Learned outputs are not consumed by native hashing.
+    pub config_digest: Option<String>,
+    /// The selected entry's commit, which can differ from the requested checkout.
+    pub source_commit: Option<String>,
+    pub fallback_reason: Option<String>,
 }
 
 /// Ultracache settings of a task's target
@@ -342,6 +359,7 @@ impl InstructionPool {
 pub struct HashPlans {
     pub pool: Arc<InstructionPool>,
     pub plans: HashMap<String, Vec<u32>>,
+    pub ultracache_hashing: Arc<HashMap<String, TaskUltracacheHashing>>,
     /// Tasks the up-front batch leaves out: the directory a disk-backed
     /// fileset of theirs reads from contains, or sits inside, an output a
     /// task they depend on declares.
