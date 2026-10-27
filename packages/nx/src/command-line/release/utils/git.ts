@@ -631,20 +631,39 @@ export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
 function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
   const authors: GitCommitAuthor[] = [commit.author];
   // Additional authors can be specified in the commit body (depending on the VCS provider)
-  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
-    authors.push({
-      name: (match.groups.name || '').trim(),
-      email: (match.groups.email || '').trim(),
-    });
+  for (const line of commit.body.split(LineTerminatorRE)) {
+    const coAuthor = parseCoAuthoredByLine(line);
+    if (coAuthor) {
+      authors.push(coAuthor);
+    }
   }
   return authors;
+}
+
+// Parsed with string scans rather than a regex to stay linear on long lines.
+function parseCoAuthoredByLine(line: string): GitCommitAuthor | null {
+  const prefix = CoAuthoredByRE.exec(line);
+  if (!prefix) {
+    return null;
+  }
+  const value = line.slice(prefix.index + prefix[0].length);
+  const emailEnd = value.lastIndexOf('>');
+  const emailStart = emailEnd < 2 ? -1 : value.lastIndexOf('<', emailEnd - 2);
+  if (emailStart < 1) {
+    return null;
+  }
+  return {
+    name: value.slice(0, emailStart).trim(),
+    email: value.slice(emailStart + 1, emailEnd).trim(),
+  };
 }
 
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
   /^(?<type>[^\s():!]+)(?:\s*\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)$/u;
-const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
+const CoAuthoredByRE = /co-authored-by:/i;
+const LineTerminatorRE = /\r\n|[\n\r\u2028\u2029]/;
 // GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 // GitLab style merge request references

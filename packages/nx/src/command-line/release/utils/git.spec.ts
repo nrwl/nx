@@ -3,6 +3,7 @@ import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
   parseConventionalCommitsMessage,
+  parseVersionPlanCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
 import { RepoGitTags } from './repository-git-tags';
@@ -258,6 +259,58 @@ See merge request nx-release-test/nx-release-test!2`,
           },
         ]
       `);
+    });
+  });
+
+  describe('parseVersionPlanCommit', () => {
+    const author = { name: 'Test Author', email: 'test@example.com' };
+    const authorsOf = (body: string) =>
+      parseVersionPlanCommit({
+        message: 'chore: add version plan',
+        body,
+        shortHash: 'abc123',
+        author,
+      }).authors;
+
+    it('should read co-authors from Co-authored-by trailers', () => {
+      expect(
+        authorsOf(`Some description
+
+Co-authored-by: John Doe <john@example.com>
+co-authored-by:Jane Doe<jane@example.com>
+  CO-AUTHORED-BY:   Indented Person   < indented@example.com >
+Co-authored-by: <missing-name@example.com>
+Co-authored-by: No Email
+Co-authored-by: Jim <Jimbo> Doe <jim@example.com>`)
+      ).toEqual([
+        author,
+        { name: 'John Doe', email: 'john@example.com' },
+        { name: 'Jane Doe', email: 'jane@example.com' },
+        { name: 'Indented Person', email: 'indented@example.com' },
+        { name: '', email: 'missing-name@example.com' },
+        { name: 'Jim <Jimbo> Doe', email: 'jim@example.com' },
+      ]);
+    });
+
+    it('should parse long malformed Co-authored-by trailers in linear time', () => {
+      const n = 200_000;
+      const start = performance.now();
+      const authors = authorsOf(
+        [
+          `Co-authored-by: ${'<'.repeat(n)}`,
+          `Co-authored-by:${' '.repeat(n)}x`,
+          `Co-authored-by: ${'a'.repeat(n)}`,
+          'co-authored-by:'.repeat(n / 10),
+          `Co-authored-by: ${'<\r'.repeat(n / 2)}`,
+          `Co-authored-by: ${'<\u2028'.repeat(n / 2)}`,
+          'Co-authored-by: John Doe <john@example.com>',
+        ].join('\n')
+      );
+      expect(performance.now() - start).toBeLessThan(1000);
+      expect(authors).toEqual([
+        author,
+        { name: 'John Doe', email: 'john@example.com' },
+      ]);
     });
   });
 
