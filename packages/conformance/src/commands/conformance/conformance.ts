@@ -56,7 +56,7 @@ export async function conformanceHandler(
     ) => Promise<NxConformanceConfiguration>;
     ruleResolver: (rule: string) => ReturnType<typeof resolveRule>;
     postRuleResolutionHook: () => Promise<void>;
-    postResultHook: (finalResult: {
+    postResultHook: (result: {
       ruleResults: ConformanceRuleResultWithRuleAndRunnerData[];
     }) => Promise<void>;
   } = {
@@ -131,18 +131,13 @@ export async function conformanceHandler(
       !!args.verbose
     );
 
-    const initialResult = await conformanceRulesRunner({
+    const result = await conformanceRulesRunner({
       tree: conformanceTree,
       projectGraph,
       fileMapCache,
       loadedRules: validatedLoadedRules,
       applyFixGenerators: !!runFixGenerators, // Apply fixes for both true and 'silent'
     });
-
-    // Overwrite the ruleResults of any rules that were rerun after fixes
-    const finalResult: {
-      ruleResults: ConformanceRuleResultWithRuleAndRunnerData[];
-    } = initialResult;
 
     // Set the tree to writable so that the FsTree listChanges method can be called
     const treeChanges = convertToWritable(conformanceTree).listChanges();
@@ -162,27 +157,23 @@ export async function conformanceHandler(
           applyFixGenerators: false,
         });
 
-        if (resultAfterFixes.ruleResults.length) {
-          for (const ruleResult of resultAfterFixes.ruleResults) {
-            for (let i = 0; i < initialResult.ruleResults.length; i++) {
-              if (
-                initialResult.ruleResults[i].ruleData.name ===
-                ruleResult.ruleData.name
-              ) {
-                finalResult.ruleResults[i] = {
-                  ...ruleResult,
-                  runnerData: {
-                    ...finalResult.ruleResults[i].runnerData,
-                    countOfViolationsFixedByGenerator:
-                      finalResult.ruleResults[i].runnerData
-                        .countOfOriginalViolations -
-                      finalResult.ruleResults[i].runnerData
-                        .countOfViolationsFilteredByProjects -
-                      ruleResult.details.violations.length,
-                  },
-                };
-                break;
-              }
+        for (const ruleResult of resultAfterFixes.ruleResults) {
+          for (let i = 0; i < result.ruleResults.length; i++) {
+            if (
+              result.ruleResults[i].ruleData.name === ruleResult.ruleData.name
+            ) {
+              result.ruleResults[i] = {
+                ...ruleResult,
+                runnerData: {
+                  ...result.ruleResults[i].runnerData,
+                  countOfViolationsFixedByGenerator:
+                    result.ruleResults[i].runnerData.countOfOriginalViolations -
+                    result.ruleResults[i].runnerData
+                      .countOfViolationsFilteredByProjects -
+                    ruleResult.details.violations.length,
+                },
+              };
+              break;
             }
           }
         }
@@ -194,7 +185,7 @@ export async function conformanceHandler(
     let overallSeverity: 'high' | 'medium' | 'low' | null = null;
     console.log('');
 
-    finalResult.ruleResults.forEach((ruleResult) => {
+    result.ruleResults.forEach((ruleResult) => {
       // Track overall severity
       if (
         Object.keys(ruleResult.details).length === 0 ||
@@ -226,7 +217,7 @@ export async function conformanceHandler(
     });
 
     // Print the final result using the terminal reporter
-    terminalReporter(finalResult);
+    terminalReporter(result);
 
     // Write the final conformance result to disk, unless explicitly disabled by the user
     const outputFileLogs: string[] = [];
@@ -241,7 +232,7 @@ export async function conformanceHandler(
         workspaceRoot,
         workspaceRelativeConformanceResultPath
       );
-      writeJsonFile(conformanceResultPath, finalResult);
+      writeJsonFile(conformanceResultPath, result);
       outputFileLogs.push(
         '',
         pc.dim(
@@ -250,7 +241,7 @@ export async function conformanceHandler(
       );
     }
 
-    await cloudAdapter.postResultHook(finalResult);
+    await cloudAdapter.postResultHook(result);
 
     let fixGeneratorsSummaryText = '';
     // Only show fix generator summary if not in silent mode
