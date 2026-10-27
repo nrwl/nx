@@ -48,6 +48,7 @@ import {
   readNxMigrateConfig,
 } from '../../utils/package-json';
 import {
+  assertValidPackageName,
   copyPackageManagerConfigurationFiles,
   createTempNpmDirectory,
   detectPackageManager,
@@ -2310,6 +2311,7 @@ async function getPackageMigrationsUsingInstallImpl(
   packageVersion: string,
   pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
+  assertValidPackageName(packageName);
   const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;

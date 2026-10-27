@@ -5134,6 +5134,30 @@ module.exports = {
     });
   });
 
+  describe('fetched package names', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('does not fall back to installing a flag-shaped package name', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('Unable to resolve version'));
+      const createTempNpmDirectory = vi
+        .spyOn(packageMgrUtils, 'createTempNpmDirectory')
+        .mockImplementation(() => {
+          throw new Error('installed');
+        });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+
+      await expect(fetch('--userconfig=/tmp/x', 'latest')).rejects.toThrow(
+        /Invalid package name: "--userconfig=\/tmp\/x"/
+      );
+      expect(createTempNpmDirectory).not.toHaveBeenCalled();
+    });
+  });
+
   describe('fetching migrations config from the registry', () => {
     afterEach(() => {
       vi.restoreAllMocks();

@@ -64,6 +64,7 @@ beforeEach(() => {
 import { workspaceRoot } from './workspace-root';
 import {
   addPackagePathToWorkspaces,
+  assertValidPackageName,
   clearPackageManagerVersionCache,
   detectPackageManager,
   getPackageManagerCommand,
@@ -1396,6 +1397,21 @@ describe('package-manager', () => {
       ]);
     });
 
+    it.each([
+      '--userconfig=/tmp/other.npmrc',
+      '-g',
+      '../outside',
+      '/tmp/outside',
+      'https://example.com/pkg.tgz',
+      '',
+    ])('should not hand %j to the package manager', async (pkg) => {
+      await expect(
+        packageRegistryView(pkg, 'latest', ['version'])
+      ).rejects.toThrow(`Invalid package name: "${pkg}".`);
+
+      expect(execMock).not.toHaveBeenCalled();
+    });
+
     it('should keep a shell on Windows and quote every argument', async () => {
       // Node refuses to execFile the package manager's .cmd shim without a
       // shell, so the spawn stays on exec there.
@@ -1709,6 +1725,14 @@ describe('package-manager', () => {
       expect(options.env.npm_config_ignore_scripts).toBe('true');
     });
 
+    it('should not hand a flag-shaped package name to npm', async () => {
+      await expect(
+        packageRegistryPack('/tmp/pack', '--userconfig=/tmp/x', '1.0.0')
+      ).rejects.toThrow('Invalid package name: "--userconfig=/tmp/x".');
+
+      expect(execMock).not.toHaveBeenCalled();
+    });
+
     it('should leave npm min-release-age alone by default', async () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
@@ -1828,85 +1852,6 @@ describe('package-manager', () => {
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
     });
-  });
-
-  describe('resolvePackageVersionUsingInstallation', () => {
-    beforeEach(() => {
-      clearPackageManagerVersionCache();
-      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
-        cli: { packageManager: 'pnpm' },
-      });
-      (existsSync as Mock).mockReturnValue(false);
-      (statSync as Mock).mockImplementation(() => {
-        throw new Error('ENOENT: no such file or directory');
-      });
-      vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
-    });
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-      vi.clearAllMocks();
-    });
-
-    it('passes the package spec to the shell as a single argument', async () => {
-      const execMock = vi.spyOn(childProcess, 'exec').mockImplementation(((
-        _cmd: string,
-        options: any,
-        callback: any
-      ) => {
-        const cb = typeof options === 'function' ? options : callback;
-        cb(new Error('install failed'));
-        return undefined;
-      }) as any);
-      const platform = Object.getOwnPropertyDescriptor(process, 'platform');
-      Object.defineProperty(process, 'platform', { value: 'linux' });
-
-      try {
-        await expect(
-          resolvePackageVersionUsingInstallation(
-            'typescript',
-            'latest; echo x > marker'
-          )
-        ).rejects.toThrow('install failed');
-      } finally {
-        Object.defineProperty(process, 'platform', platform);
-      }
-
-      expect(execMock.mock.calls[0][0]).toContain(
-        " 'typescript@latest; echo x > marker' "
-      );
-    });
-
-    it.each([
-      ['1.22.22', 'yarn add -W mypackage@next --ignore-scripts'],
-      ['4.0.0', 'yarn add mypackage@next'],
-    ])(
-      'installs without lifecycle scripts with yarn %s',
-      async (version, expectedCommand) => {
-        clearPackageManagerVersionCache();
-        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
-          cli: { packageManager: 'yarn' },
-        });
-        (existsSync as Mock).mockReturnValue(false);
-        vi.spyOn(childProcess, 'execSync').mockReturnValue(version as any);
-        const exec = vi.spyOn(childProcess, 'exec').mockImplementation(((
-          _command: string,
-          _options: any,
-          callback: any
-        ) => {
-          callback(new Error('install stubbed'));
-          return undefined;
-        }) as any);
-
-        await expect(
-          resolvePackageVersionUsingInstallation('mypackage', 'next')
-        ).rejects.toThrow('install stubbed');
-
-        const [command, options] = exec.mock.calls[0];
-        expect(command).toBe(expectedCommand);
-        expect((options as any).env.YARN_ENABLE_SCRIPTS).toBe('false');
-      }
-    );
   });
 
   describe('resolvePackageVersionUsingRegistry', () => {
@@ -2065,6 +2010,105 @@ describe('package-manager', () => {
       await expect(
         resolvePackageVersionUsingInstallation('pkg', 'latest')
       ).rejects.toBeInstanceOf(InvalidResolvedVersionError);
+    });
+
+    it('passes the package spec to the shell as a single argument', async () => {
+      const execMock = vi.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(new Error('install failed'));
+        return undefined;
+      }) as any);
+      const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+
+      try {
+        await expect(
+          resolvePackageVersionUsingInstallation(
+            'typescript',
+            'latest; echo x > marker'
+          )
+        ).rejects.toThrow('install failed');
+      } finally {
+        Object.defineProperty(process, 'platform', platform);
+      }
+
+      expect(execMock.mock.calls[0][0]).toContain(
+        " 'typescript@latest; echo x > marker'"
+      );
+    });
+
+    it.each([
+      ['1.22.22', 'yarn add -W mypackage@next --ignore-scripts'],
+      ['4.0.0', 'yarn add mypackage@next'],
+    ])(
+      'installs without lifecycle scripts with yarn %s',
+      async (version, expectedCommand) => {
+        clearPackageManagerVersionCache();
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager: 'yarn' },
+        });
+        (existsSync as Mock).mockReturnValue(false);
+        vi.spyOn(childProcess, 'execSync').mockReturnValue(version as any);
+        const exec = vi.spyOn(childProcess, 'exec').mockImplementation(((
+          _command: string,
+          _options: any,
+          callback: any
+        ) => {
+          callback(new Error('install stubbed'));
+          return undefined;
+        }) as any);
+
+        await expect(
+          resolvePackageVersionUsingInstallation('mypackage', 'next')
+        ).rejects.toThrow('install stubbed');
+
+        const [command, options] = exec.mock.calls[0];
+        expect(command).toBe(expectedCommand);
+        expect((options as any).env.YARN_ENABLE_SCRIPTS).toBe('false');
+      }
+    );
+
+    it('should not hand a flag-shaped package name to the package manager', async () => {
+      const execMock = vi.spyOn(childProcess, 'exec');
+
+      await expect(
+        resolvePackageVersionUsingInstallation('--userconfig=/tmp/x', 'latest')
+      ).rejects.toThrow('Invalid package name: "--userconfig=/tmp/x".');
+
+      expect(execMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('assertValidPackageName', () => {
+    it.each(['nx', '@nx/js', 'JSONStream', 'lodash.merge', 'a_b-c~d', '7zip'])(
+      'should accept %j',
+      (name) => {
+        expect(() => assertValidPackageName(name)).not.toThrow();
+      }
+    );
+
+    it.each([
+      '--userconfig=/tmp/other.npmrc',
+      '-g',
+      '.hidden',
+      '_private',
+      '@scope',
+      '@scope/',
+      '@/name',
+      'name/extra',
+      '@scope/../outside',
+      'nx@latest',
+      'nx; id',
+      '$(id)',
+      '',
+    ])('should reject %j', (name) => {
+      expect(() => assertValidPackageName(name)).toThrow(
+        /Invalid package name/
+      );
     });
   });
 });

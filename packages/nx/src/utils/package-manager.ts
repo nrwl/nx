@@ -83,6 +83,22 @@ function execPackageManagerSync(
   return execFileSync(pm, args, options);
 }
 
+const PACKAGE_NAME = /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/i;
+
+/**
+ * Package managers read an argument starting with `-` as an option, and a
+ * path, URL or git remote wherever a name goes. `nx migrate` passes names
+ * read from fetched migration metadata, so only a registry-shaped name may
+ * reach a package manager command line.
+ */
+export function assertValidPackageName(packageName: string): void {
+  if (!PACKAGE_NAME.test(packageName)) {
+    throw new Error(
+      `Invalid package name: "${packageName}". Expected an npm package name such as "my-package" or "@scope/my-package".`
+    );
+  }
+}
+
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
@@ -852,6 +868,7 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
+  assertValidPackageName(packageName);
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
@@ -1044,6 +1061,7 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
+  assertValidPackageName(pkg);
   const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
     createRegistrySpawnContext(pkg);
   const { pm, env } = resolveRegistrySpawnTarget(
@@ -1103,6 +1121,7 @@ export async function packageRegistryPack(
     bypassMinReleaseAge?: boolean;
   }
 ): Promise<{ tarballPath: string }> {
+  assertValidPackageName(pkg);
   const pm = 'npm';
 
   const { configRoot, buildEnv } = createRegistrySpawnContext(pkg);
