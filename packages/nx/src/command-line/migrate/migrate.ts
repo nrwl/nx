@@ -2311,7 +2311,9 @@ async function getPackageMigrationsUsingInstallImpl(
     : packageVersion;
 
   try {
-    const addCommand = `${pmc.add} ${packageName}@${installVersion}`;
+    const addCommand = `${pmc.add} ${quoteShellArg(
+      `${packageName}@${installVersion}`
+    )}`;
     try {
       await execAsync(addCommand, {
         cwd: dir,
