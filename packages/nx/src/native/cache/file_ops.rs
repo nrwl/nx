@@ -63,7 +63,8 @@ pub(crate) fn copy_and_list(
 ) -> anyhow::Result<(i64, Written)> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
-    let src: PathBuf = src.into();
+    // A trailing `/` would resolve a link at `src` itself.
+    let src: PathBuf = src.components().collect();
 
     trace!("Copying {:?} -> {:?}", &src, &dest);
 

@@ -1153,6 +1153,76 @@ mod test {
         assert_eq!(cache.get_cache_size().unwrap(), stored_size + LOG_SIZE);
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn put_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        record_task(&cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        create_dir_all(cache.workspace_root.join("dist")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        let stored = cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(stored.expanded_outputs.is_empty());
+        assert!(stored.files.is_empty());
+        assert!(!cache.cache_path.join("1/dist").exists());
+
+        // A linked output is stored as the link, trailing `/` or not.
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert_eq!(
+            cache
+                .cache_path
+                .join("1/dist/packages")
+                .read_link()
+                .unwrap(),
+            elsewhere
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(&artifact).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, artifact.join("dist")).unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/api".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").exists());
+    }
+
     #[test]
     fn a_task_with_no_outputs_still_hits() {
         let temp = TempDir::new().unwrap();

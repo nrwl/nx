@@ -45,7 +45,7 @@ where
             .filter_map(|(entry, named)| {
                 let existing = [entry.as_str(), named.as_str()]
                     .into_iter()
-                    .find(|path| directory.join(path).exists())
+                    .find(|path| exists_below_no_link(&directory, path))
                     .map(str::to_string);
                 match &existing {
                     Some(path) => {
@@ -134,6 +134,18 @@ where
         found_paths.len()
     );
     Ok(found_paths)
+}
+
+/// Whether `path` exists under `directory` with no linked directory between
+/// them, which is where the glob walk would reach it.
+fn exists_below_no_link(directory: &Path, path: &str) -> bool {
+    let path = directory.join(path);
+    path.exists()
+        && !path
+            .ancestors()
+            .skip(1)
+            .take_while(|parent| *parent != directory && parent.starts_with(directory))
+            .any(|parent| parent.is_symlink())
 }
 
 #[napi]
@@ -240,7 +252,8 @@ pub(crate) fn output_files_via(
         .collect();
     for entry in _expand_outputs(directory, entries)? {
         let entry = Path::new(&entry).to_normalized_string();
-        let path = directory.join(&entry);
+        // A trailing `/` would resolve a linked entry.
+        let path: PathBuf = directory.join(&entry).components().collect();
         let Ok(link) = std::fs::symlink_metadata(&path) else {
             continue;
         };
@@ -620,6 +633,36 @@ mod test {
         assert_eq!(expanded, [r"dist\app"]);
         let files = get_files_for_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
         assert_eq!(files, [r"dist\app/main.js"]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn should_not_expand_a_literal_output_below_a_linked_directory() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        temp.child("packages/api/.env").write_str("SECRET").unwrap();
+        temp.child("dist/index.html").write_str("site").unwrap();
+        symlink(temp.join("packages"), temp.join("dist/packages")).unwrap();
+
+        for entry in ["dist/packages/api", "dist/packages/api/.env"] {
+            let entries = vec![entry.to_string()];
+            let expanded = _expand_outputs(temp.path(), entries.clone()).unwrap();
+            assert!(expanded.is_empty(), "{entry}: {expanded:?}");
+            let files = get_files_for_outputs(temp.path(), entries).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
+        let globbed = _expand_outputs(temp.path(), vec!["dist/packages/api/**".into()]).unwrap();
+        assert!(globbed.is_empty(), "{globbed:?}");
+
+        // The link itself is still an output, and is not entered.
+        for entry in ["dist/packages", "dist/packages/"] {
+            let entries = vec![entry.to_string()];
+            let expanded = _expand_outputs(temp.path(), entries.clone()).unwrap();
+            assert_eq!(expanded, entries);
+            let files = get_files_for_outputs(temp.path(), entries).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
     }
 
     #[test]
