@@ -1,12 +1,125 @@
 import { createHash, randomBytes } from 'crypto';
-import { existsSync, unlinkSync, writeFileSync } from 'fs';
-import { isAbsolute, join } from 'path';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
 import { homeDirIsDistinctFromSharedTmp, NX_HOME_TMP_DIR } from './nx-tmp-dir';
-import { type DirRefusal, ensureOwnedPrivateDir } from './owned-private-dir';
+import {
+  canonicalDir,
+  type DirRefusal,
+  ensureOwnedPrivateDir,
+} from './owned-private-dir';
 import { generateWorkspaceId } from './workspace-id';
 import { workspaceRoot } from './workspace-root';
+
+const S_ISVTX = 0o1000;
+
+const trustedConfiguredDirs = new Set<string>();
+
+export class UntrustedDataDirectoryError extends Error {
+  constructor(kind: string, dir: string, reason: string) {
+    super(
+      `The configured Nx ${kind} directory ${dir} is not safe to use: ${reason}. ` +
+        `Nx restores task outputs and reads cached configuration from this directory, so it must only be modifiable by you, root, or the owner of the workspace. ` +
+        `Point it at a directory you own instead, or set NX_ALLOW_INSECURE_DIRECTORIES=true to use it anyway.`
+    );
+    this.name = 'UntrustedDataDirectoryError';
+  }
+}
+
+/**
+ * Creates a configured data directory and refuses it if a user other than us,
+ * root, or the workspace owner could replace its contents. Paths inside the
+ * workspace are trusted like the workspace. Group write is an explicit grant.
+ */
+function ensureTrustedConfiguredDir(
+  dir: string,
+  root: string,
+  kind: string
+): string {
+  const key = `${dir}\0${root}`;
+  if (typeof process.getuid !== 'function' || trustedConfiguredDirs.has(key)) {
+    return dir;
+  }
+
+  if (!isWithin(resolve(dir), resolve(root))) {
+    try {
+      mkdirSync(dir, { recursive: true, mode: 0o775 });
+    } catch {}
+  }
+
+  const trusted = new Set([process.getuid(), 0]);
+  try {
+    trusted.add(statSync(root).uid);
+  } catch {}
+
+  // The path as written catches a symlink a peer could repoint; the canonical
+  // path catches the directories the symlinks lead to.
+  for (const [leaf, stop] of [
+    [resolve(dir), resolve(root)],
+    [canonicalDir(dir), canonicalDir(root)],
+  ]) {
+    if (isWithin(leaf, stop)) {
+      continue;
+    }
+    for (let p = leaf; p !== stop; p = dirname(p)) {
+      const reason = untrustedReason(p, p === leaf, trusted);
+      if (reason) {
+        if (process.env.NX_ALLOW_INSECURE_DIRECTORIES !== 'true') {
+          throw new UntrustedDataDirectoryError(kind, dir, reason);
+        }
+        console.warn(
+          `NX_ALLOW_INSECURE_DIRECTORIES is set, so Nx is using the ${kind} directory ${dir} although ${reason}.`
+        );
+        trustedConfiguredDirs.add(key);
+        return dir;
+      }
+      if (dirname(p) === p) {
+        break;
+      }
+    }
+  }
+
+  trustedConfiguredDirs.add(key);
+  return dir;
+}
+
+function isWithin(path: string, root: string): boolean {
+  const rel = relative(root, path);
+  return !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function untrustedReason(
+  path: string,
+  isLeaf: boolean,
+  trusted: Set<number>
+): string | undefined {
+  let stats: ReturnType<typeof lstatSync>;
+  try {
+    stats = lstatSync(path);
+  } catch {
+    return undefined;
+  }
+  if (!trusted.has(stats.uid)) {
+    return `${path} is owned by uid ${stats.uid}`;
+  }
+  if (!stats.isDirectory() || !(stats.mode & 0o002)) {
+    return undefined;
+  }
+  if (isLeaf) {
+    return `${path} is writable by other users`;
+  }
+  return stats.mode & S_ISVTX
+    ? undefined
+    : `${path} is writable by other users and not sticky`;
+}
 
 function absolutePath(root: string, path: string): string {
   if (isAbsolute(path)) {
@@ -22,7 +135,11 @@ function cacheDirectory(root: string, cacheDirectory: string) {
     cacheDirectory = cacheDirFromEnv;
   }
   if (cacheDirectory) {
-    return absolutePath(root, cacheDirectory);
+    return ensureTrustedConfiguredDir(
+      absolutePath(root, cacheDirectory),
+      root,
+      'cache'
+    );
   } else {
     return defaultCacheDirectory(root);
   }
@@ -95,6 +212,7 @@ const sharedRootUsable = new Map<string, SharedDataLocation>();
 /** The establish verdict is cached per process; tests need it cleared. */
 export function resetSharedRootCacheForTesting() {
   sharedRootUsable.clear();
+  trustedConfiguredDirs.clear();
   workspaceIds.clear();
   resolvedLocations.clear();
 }
@@ -359,10 +477,14 @@ export const workspaceDataDirectory =
   workspaceDataDirectoryForWorkspace(workspaceRoot);
 
 export function workspaceDataDirectoryForWorkspace(workspaceRoot: string) {
-  return absolutePath(
-    workspaceRoot,
+  const configured =
     process.env.NX_WORKSPACE_DATA_DIRECTORY ??
-      process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
-      defaultWorkspaceDataDirectory(workspaceRoot)
-  );
+    process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY;
+  return configured !== undefined
+    ? ensureTrustedConfiguredDir(
+        absolutePath(workspaceRoot, configured),
+        workspaceRoot,
+        'workspace data'
+      )
+    : defaultWorkspaceDataDirectory(workspaceRoot);
 }
