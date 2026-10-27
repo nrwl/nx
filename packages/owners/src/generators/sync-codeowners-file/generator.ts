@@ -5,9 +5,11 @@ import {
   ProjectGraph,
   readNxJson,
   Tree,
-  workspaceRoot,
 } from '@nx/devkit';
-import { findMatchingProjects } from '@nx/devkit/internal';
+import {
+  findMatchingProjects,
+  type SyncGeneratorResult,
+} from '@nx/devkit/internal';
 import {
   exitWithError,
   OwnerId,
@@ -28,12 +30,14 @@ type ProjectOwnersConfigMap = Map<
   }
 >;
 
-export async function syncCodeownersFileGenerator(tree: Tree) {
+export async function syncCodeownersFileGenerator(
+  tree: Tree
+): Promise<SyncGeneratorResult> {
   const nxJson: NxJsonConfiguration = readNxJson(tree) ?? {};
   let rootOwners = nxJson.owners;
   // Owners is not enabled at all in nx.json, do nothing
   if (!rootOwners) {
-    return {};
+    return;
   }
 
   // `true` shorthand to enable the feature but delegate to project.json
@@ -215,6 +219,10 @@ export async function syncCodeownersFileGenerator(tree: Tree) {
   tree.write(rootOwners.outputPath, codeowners);
 
   await formatFiles(tree);
+
+  return {
+    outOfSyncMessage: `${rootOwners.outputPath} does not match the Nx owners configuration.`,
+  };
 }
 
 export default syncCodeownersFileGenerator;
