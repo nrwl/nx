@@ -41,12 +41,13 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
 
   constructor(
     workspaceRoot: string,
-    nxJson: NxJsonConfiguration,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
     options: { selectivelyHashTsConfig: boolean },
     planningContext?: TaskPlanningContext
   ) {
+    this.nxJson = structuredClone(nxJson);
     // A shared planner was built over its ref, so the two stay paired.
     this.projectGraphRef =
       planningContext?.projectGraphRef ??
@@ -162,6 +163,70 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
       taskGraph,
       ultracacheConfigurations,
       ultracacheEligibilityOptions(this.projectGraph, taskGraph)
+    );
+  }
+
+  createRehashPlans(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    configurations?: UltracacheConfigurations
+  ): ReturnType<HashPlanner['getPlansReference']> {
+    // A reimport may share commit/fetch-time with an earlier handle. A fresh
+    // planner must see this exact set, without borrowing the run's plan memo.
+    return new HashPlanner(this.nxJson, this.projectGraphRef).getPlansReference(
+      tasks.map((task) => task.id),
+      taskGraph,
+      configurations,
+      ultracacheEligibilityOptions(this.projectGraph, taskGraph)
+    );
+  }
+
+  validateRehash(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    plans: ReturnType<HashPlanner['getPlansReference']>,
+    writtenFiles: string[]
+  ): Record<string, string> {
+    const eligibility = ultracacheEligibilityOptions(
+      this.projectGraph,
+      taskGraph
+    );
+    const skipped: Record<string, string> = {};
+    for (const task of tasks) {
+      if (eligibility.customHasherTaskIds?.includes(task.id))
+        skipped[task.id] = 'custom-hasher';
+      else if (task.continuous) skipped[task.id] = 'continuous';
+      else if (task.ultracache?.mode && task.ultracache.mode !== 'on')
+        skipped[task.id] = 'disabled';
+    }
+    return {
+      ...this.hasher.validateRehashPlans(
+        plans,
+        // Negations from one producer must not hide another producer's outputs.
+        Object.values(taskGraph.tasks).flatMap((task) =>
+          task.outputs.filter((output) => !output.startsWith('!'))
+        ),
+        writtenFiles
+      ),
+      ...skipped,
+    };
+  }
+
+  hashTasksForRehash(
+    plans: ReturnType<HashPlanner['getPlansReference']>,
+    taskGraph: TaskGraph,
+    perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
+    cwd: string,
+    writtenFiles: string[]
+  ): Record<string, PartialHash> {
+    return this.hasher.hashPlansForRehash(
+      plans,
+      perTaskEnvs as Record<string, Record<string, string>>,
+      cwd,
+      Object.values(taskGraph.tasks).flatMap((task) =>
+        task.outputs.filter((output) => !output.startsWith('!'))
+      ),
+      writtenFiles
     );
   }
 
