@@ -12,6 +12,7 @@ import { readNxJson } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -94,7 +95,10 @@ export async function importHandler(options: ImportOptions) {
 
     if (missingFields.length > 0) {
       writeAiOutput(
-        buildImportNeedsOptionsResult(missingFields, sourceRepository)
+        buildImportNeedsOptionsResult(
+          missingFields,
+          sourceRepository && redactUrlCredentials(sourceRepository)
+        )
       );
       process.exit(0);
     }
@@ -149,6 +153,7 @@ export async function importHandler(options: ImportOptions) {
   } catch (e) {
     // It's a remote url
   }
+  const displayRepository = redactUrlCredentials(sourceRepository);
 
   const tempImportDirectory = await mkdtemp(join(tmpdir, 'nx-import-'));
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
@@ -156,11 +161,11 @@ export async function importHandler(options: ImportOptions) {
   if (aiMode) {
     logProgress(
       'cloning',
-      `Cloning ${sourceRepository} into ${sourceTempRepoPath}...`
+      `Cloning ${displayRepository} into ${sourceTempRepoPath}...`
     );
   } else {
     spinner = createSpinner(
-      `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
+      `Cloning ${displayRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
     ).start();
   }
   let sourceGitClient: GitRepository;
@@ -176,12 +181,12 @@ export async function importHandler(options: ImportOptions) {
   } catch (e) {
     if (!aiMode) {
       spinner.fail(
-        `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
+        `Failed to clone ${displayRepository} into ${sourceTempRepoPath}`
       );
     }
-    let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
-
-    throw new Error(errorMessage);
+    throw new Error(
+      `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`
+    );
   }
   if (!aiMode) {
     spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
@@ -243,7 +248,7 @@ export async function importHandler(options: ImportOptions) {
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
   if (!aiMode) {
-    spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
+    spinner.succeed(`Fetched ${ref} from ${displayRepository}`);
     spinner.start(
       `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
     );
@@ -261,7 +266,7 @@ export async function importHandler(options: ImportOptions) {
     await stat(absSource);
   } catch (e) {
     throw new Error(
-      `The source directory ${source} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
+      `The source directory ${source} does not exist in ${displayRepository}. Please double check to make sure it exists.`
     );
   }
 
@@ -281,7 +286,7 @@ export async function importHandler(options: ImportOptions) {
     source,
     relativeDestination,
     tempImportBranch,
-    sourceRepository
+    displayRepository
   );
 
   await createTemporaryRemote(
@@ -295,7 +300,7 @@ export async function importHandler(options: ImportOptions) {
   }
   await mergeRemoteSource(
     destinationGitClient,
-    sourceRepository,
+    displayRepository,
     tempImportBranch,
     destination,
     importRemoteName,
@@ -458,7 +463,7 @@ export async function importHandler(options: ImportOptions) {
     output.log({
       title: `Check root dependencies`,
       bodyLines: [
-        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRepository}).`,
+        `"dependencies" and "devDependencies" are not imported from the source repository (${displayRepository}).`,
         `You may need to add some of those dependencies to this workspace in order to run tasks successfully.`,
       ],
     });
@@ -485,7 +490,7 @@ export async function importHandler(options: ImportOptions) {
             name,
             reason: getPluginReason(name),
           })),
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -525,7 +530,7 @@ export async function importHandler(options: ImportOptions) {
 
       writeAiOutput(
         buildImportSuccessResult({
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -614,7 +619,7 @@ async function handlePluginOnlyMode(
 
   writeAiOutput(
     buildImportSuccessResult({
-      sourceRepository: options.sourceRepository,
+      sourceRepository: redactUrlCredentials(options.sourceRepository),
       ref: options.ref,
       source: options.source || '.',
       destination: options.destination,
