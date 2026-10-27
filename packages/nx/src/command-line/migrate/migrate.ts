@@ -49,6 +49,7 @@ import {
 } from '../../utils/package-json';
 import {
   copyPackageManagerConfigurationFiles,
+  createTempInstallDirectory,
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
@@ -4281,12 +4282,13 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
 
   await ensurePackageHasProvenance('nx', version);
 
+  // Outside the try, so a missing private install root is reported rather than
+  // hidden behind the fallback to the workspace's nx.
+  const tmpDir = createTempInstallDirectory();
   try {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
 
-    const { dirSync } = require('tmp');
-    const tmpDir = dirSync().name;
     writeJsonFile(join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,

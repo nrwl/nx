@@ -8,7 +8,10 @@ import {
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
+  readdirSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'fs';
@@ -39,6 +42,12 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
+import { homeDirIsDistinctFromSharedTmp, NX_HOME_TMP_DIR } from './nx-tmp-dir';
+import {
+  describeRefusal,
+  ensureOwnedPrivateDir,
+  isOwnedRealDirectory,
+} from './owned-private-dir';
 import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
@@ -721,6 +730,105 @@ function getPackageManagerConfigRoot(): string {
 }
 
 /**
+ * Creates an empty owner-only directory for a throwaway package install.
+ *
+ * Package managers and Node read config and modules from every ancestor of
+ * the install, so it lives under `~/.nx/tmp` and never under the shared OS
+ * temp dir. Throws when `~/.nx` is unusable. The OS does not reap it, so it is
+ * removed when the process exits.
+ */
+export function createTempInstallDirectory(): string {
+  const root = ensurePrivateInstallRoot();
+  removeStaleInstallDirectories(root);
+  const dir = dirSync({ tmpdir: root }).name;
+  if (tempInstallDirectories.size === 0) {
+    process.once('exit', removeTempInstallDirectories);
+  }
+  tempInstallDirectories.add(dir);
+  return dir;
+}
+
+/**
+ * Removes this user's throwaway install dirs under `~/.nx/tmp` that are more
+ * than a day old. Best effort; creates nothing.
+ */
+export function removeStaleTempInstallDirectories(): void {
+  if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
+    return;
+  }
+  const root = join(NX_HOME_TMP_DIR, 'tmp');
+  if (isOwnedRealDirectory(NX_HOME_TMP_DIR) && isOwnedRealDirectory(root)) {
+    removeStaleInstallDirectories(root);
+  }
+}
+
+const tempInstallDirectories = new Set<string>();
+
+function removeTempInstallDirectories() {
+  for (const dir of tempInstallDirectories) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+const STALE_INSTALL_DIRECTORY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Removes install dirs left behind by processes that never reached their exit
+ * handler. A day outlasts any realistic install or `nx migrate` run, so a
+ * concurrent process's install survives.
+ */
+function removeStaleInstallDirectories(root: string) {
+  let entries: string[];
+  try {
+    entries = readdirSync(root);
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - STALE_INSTALL_DIRECTORY_MS;
+  for (const entry of entries) {
+    const path = join(root, entry);
+    try {
+      const stats = lstatSync(path);
+      if (
+        stats.isDirectory() &&
+        stats.mtimeMs < cutoff &&
+        (typeof process.getuid !== 'function' || stats.uid === process.getuid())
+      ) {
+        rmSync(path, { recursive: true, force: true });
+      }
+    } catch {}
+  }
+}
+
+function ensurePrivateInstallRoot(): string {
+  if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
+    throw new PrivateInstallRootError(
+      'there is no home directory separate from the shared temp directory'
+    );
+  }
+  const root = join(NX_HOME_TMP_DIR, 'tmp');
+  for (const dir of [NX_HOME_TMP_DIR, root]) {
+    const result = ensureOwnedPrivateDir(dir);
+    if (result.status === 'refused') {
+      throw new PrivateInstallRootError(describeRefusal(result.refusal));
+    }
+  }
+  return root;
+}
+
+class PrivateInstallRootError extends Error {
+  constructor(reason: string) {
+    super(
+      `Nx cannot install packages without a private ~/.nx directory: ${reason}.\n` +
+        'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install into the shared temp directory instead.'
+    );
+    this.name = 'PrivateInstallRootError';
+  }
+}
+
+/**
  * Creates a temporary directory where you can run package manager commands safely.
  *
  * For cases where you'd want to install packages that require an `.npmrc` set up,
@@ -732,7 +840,7 @@ function getPackageManagerConfigRoot(): string {
  *                   where no existing configuration files are available to copy.
  */
 export function createTempNpmDirectory(skipCopy = false) {
-  const dir = dirSync().name;
+  const dir = createTempInstallDirectory();
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
@@ -744,7 +852,7 @@ export function createTempNpmDirectory(skipCopy = false) {
     try {
       await rm(dir, { recursive: true, force: true });
     } catch {
-      // It's okay if this fails, the OS will clean it up eventually
+      // The exit handler retries the removal.
     }
   };
 

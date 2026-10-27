@@ -437,7 +437,9 @@ describe('shared data location', () => {
       // any local peer can create subtrees under. Build outputs get replayed
       // into the workspace, so they cannot live there.
       mockCanonicalDir.mockImplementation((dir: string) =>
-        dir === NX_HOME_TMP_DIR || dir === NX_TMP_DIR ? '/tmp/.nx' : dir
+        dir === dirname(NX_HOME_TMP_DIR) || dir === dirname(NX_TMP_DIR)
+          ? '/tmp'
+          : dir
       );
 
       expect(resolveSharedDataLocation('/worktree')).toEqual({
