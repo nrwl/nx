@@ -6,6 +6,7 @@ import { relative } from 'node:path';
 import { coerce as semverCoerce, gte as semverGte } from 'semver';
 import { interpolateReleaseConfig } from './interpolate-release-config';
 import { assertValidGitRevision } from '../../../utils/git-revision';
+import { redactUrlCredentials } from '../../../utils/redact-url-credentials';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 import type { CheckAllBranchesWhen, RepoGitTags } from './repository-git-tags';
@@ -549,7 +550,7 @@ export async function gitPush({
         ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
         : `Pushing the current branch to the remote with the following command:`
     );
-    console.log(`git ${commandArgs.join(' ')}`);
+    console.log(redactUrlCredentials(`git ${commandArgs.join(' ')}`));
   }
 
   if (dryRun) {
@@ -559,7 +560,7 @@ export async function gitPush({
   try {
     await execCommand('git', commandArgs);
   } catch (err) {
-    throw new Error(`Unexpected git push error: ${err}`);
+    throw new Error(redactUrlCredentials(`Unexpected git push error: ${err}`));
   }
 }
 

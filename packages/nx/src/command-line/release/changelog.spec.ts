@@ -72,6 +72,7 @@ const { createProjectFileMapUsingProjectGraph } =
   await import('../../project-graph/file-map-utils');
 const { resolveChangelogFromSHA } =
   await import('./changelog/version-plan-filtering');
+const { gitPush } = await import('./utils/git');
 
 describe('releaseChangelog', () => {
   let tempFs: TempFs;
@@ -215,6 +216,26 @@ describe('releaseChangelog', () => {
       );
       // file: false means nothing should have been written to disk
       await expect(tempFs.readFile('CHANGELOG.md')).rejects.toThrow();
+    });
+  });
+
+  describe('git push', () => {
+    it('should redact credentials of a remote passed as a URL when logging the push', async () => {
+      const gitRemote =
+        'https://x-access-token:s3cr3t-token@github.com/nrwl/nx.git';
+
+      await runReleaseChangelog({
+        forceChangelogGeneration: true,
+        gitPush: true,
+        gitRemote,
+      });
+
+      expect(output.logSingleLine).toHaveBeenCalledWith(
+        'Pushing to git remote "https://***@github.com/nrwl/nx.git"'
+      );
+      expect(gitPush).toHaveBeenCalledWith(
+        expect.objectContaining({ gitRemote })
+      );
     });
   });
 

@@ -11,19 +11,20 @@ vi.mock('../../../../utils/http-client', () => ({
 vi.mock('node:child_process', async () => ({
   ...require('node:child_process'),
   execFileSync: vi.fn(),
-  execSync: require('node:child_process').execSync,
+  execSync: vi.fn(require('node:child_process').execSync),
 }));
 
 vi.mock('../../../../utils/prompt-helpers', () => ({
   selectPrompt: vi.fn(),
 }));
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 
 const httpRequestMock = (await import('../../../../utils/http-client'))
   .httpRequest as Mock;
 const execFileSyncMock = execFileSync as Mock;
+const execSyncMock = execSync as Mock;
 const selectPromptMock = selectPrompt as Mock;
 
 describe('GithubRemoteReleaseClient', () => {
@@ -282,6 +283,49 @@ ghe.example.com:
         ['auth', 'token', '--hostname', 'ghe.example.com'],
         expect.any(Object)
       );
+    });
+  });
+
+  describe('resolveRepoData', () => {
+    let originalVerbose: string | undefined;
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      originalVerbose = process.env.NX_VERBOSE_LOGGING;
+      process.env.NX_VERBOSE_LOGGING = 'true';
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      if (originalVerbose === undefined) {
+        delete process.env.NX_VERBOSE_LOGGING;
+      } else {
+        process.env.NX_VERBOSE_LOGGING = originalVerbose;
+      }
+    });
+
+    it('should redact credentials of an unrecognized remote URL', () => {
+      execSyncMock.mockReturnValue(
+        'https://oauth2:s3cr3t-token@gitlab.example.com/nrwl/nx.git\n'
+      );
+
+      expect(GithubRemoteReleaseClient.resolveRepoData(false)).toBeNull();
+
+      const printed = inspect(errorSpy.mock.calls);
+      expect(printed).toContain('https://***@gitlab.example.com/nrwl/nx.git');
+      expect(printed).not.toContain('s3cr3t-token');
+    });
+
+    it('should redact credentials of a remote passed as a URL', () => {
+      expect(
+        GithubRemoteReleaseClient.resolveRepoData(
+          false,
+          'https://x-access-token:s3cr3t-token@gitlab.example.com/nrwl/nx.git'
+        )
+      ).toBeNull();
+
+      expect(errorSpy).toHaveBeenCalled();
+      expect(inspect(errorSpy.mock.calls)).not.toContain('s3cr3t-token');
     });
   });
 

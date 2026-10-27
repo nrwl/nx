@@ -2,10 +2,12 @@ import type { Mock } from 'vitest';
 import {
   extractReferencesFromCommit,
   getLatestGitTagForPattern,
+  gitPush,
   parseConventionalCommitsMessage,
   parseVersionPlanCommit,
   sanitizeProjectNameForGitTag,
 } from './git';
+import { execCommand } from './exec-command';
 import { RepoGitTags } from './repository-git-tags';
 
 vi.mock('./exec-command', () => ({
@@ -750,6 +752,46 @@ Co-authored-by: Jim <Jimbo> Doe <jim@example.com>`)
       expect(sanitizeProjectNameForGitTag(':apps:backend:api-service')).toBe(
         'apps/backend/api-service'
       );
+    });
+  });
+
+  describe('gitPush', () => {
+    const gitRemote =
+      'https://x-access-token:s3cr3t-token@github.com/nrwl/nx.git';
+
+    beforeEach(() => {
+      (execCommand as Mock).mockReset();
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should redact remote URL credentials in the verbose command echo', async () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      await gitPush({ gitRemote, dryRun: true, verbose: true });
+
+      const printed = logSpy.mock.calls.flat().join('\n');
+      expect(printed).toContain(
+        'git push --follow-tags --no-verify --atomic https://***@github.com/nrwl/nx.git'
+      );
+      expect(printed).not.toContain('s3cr3t-token');
+    });
+
+    it('should redact remote URL credentials in a push error', async () => {
+      (execCommand as Mock).mockImplementationOnce(() =>
+        Promise.reject(
+          `fatal: The current branch main has no upstream branch.\n    git push --set-upstream ${gitRemote} main\n`
+        )
+      );
+
+      const error = await gitPush({ gitRemote }).catch((e) => e);
+
+      expect(error.message).toContain(
+        'git push --set-upstream https://***@github.com/nrwl/nx.git main'
+      );
+      expect(error.message).not.toContain('s3cr3t-token');
     });
   });
 });

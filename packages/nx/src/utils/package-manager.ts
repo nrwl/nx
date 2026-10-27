@@ -43,6 +43,7 @@ import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
+import { redactUrlCredentials } from './redact-url-credentials';
 import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
@@ -805,11 +806,6 @@ export async function resolvePackageVersionUsingRegistry(
       cause: redactErrorCause(e),
     });
   }
-}
-
-// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
-function redactUrlCredentials(text: string): string {
-  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
 function redactErrorCause(error: unknown): unknown {
