@@ -283,14 +283,12 @@ export function statsWarningsToString(
         }
         output += ' - ';
       }
-      if (!/^error/i.test(warning.message)) {
-        const errorIndex = warning.message.indexOf('Error: ');
-        warning.message = warning.message.substring(errorIndex + 7);
-      }
-      if (!/^warning/i.test(warning.message)) {
+      // rspack 1.3 prefixes an Error warning with its name, e.g. "  ⚠ Error: ".
+      const message = warning.message.replace(/^\s*⚠\s*Error: /, '');
+      if (!/^warning/i.test(message)) {
         output += y('Warning: ');
       }
-      output += `${warning.message}\n\n`;
+      output += `${message}\n\n`;
     }
   }
 
