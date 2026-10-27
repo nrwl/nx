@@ -6375,6 +6375,82 @@ module.exports = {
     });
   });
 
+  describe('generateMigrationsJsonAndUpdatePackageJson (addToPackageJson)', () => {
+    let tempFs: TempFs;
+    let root: string;
+
+    beforeEach(() => {
+      tempFs = new TempFs('nx-migrate-add-to-package-json');
+      root = tempFs.tempDir;
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      delete (Object.prototype as any).polluted;
+      tempFs.cleanup();
+    });
+
+    it('only adds packages to the dependencies and devDependencies sections', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: { plugin: '1.0.0' },
+        })
+      );
+
+      const fetch = (p: string) => {
+        if (p === 'plugin') {
+          return Promise.resolve({
+            version: '2.0.0',
+            packageJsonUpdates: {
+              version2: {
+                version: '2.0.0',
+                packages: {
+                  dep: { version: '2.0.0', addToPackageJson: 'dependencies' },
+                  devDep: {
+                    version: '2.0.0',
+                    alwaysAddToPackageJson: 'devDependencies',
+                  },
+                  polluted: { version: 'yes', addToPackageJson: '__proto__' },
+                  preinstall: {
+                    version: 'echo hi',
+                    alwaysAddToPackageJson: 'scripts',
+                  },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '2.0.0' });
+      };
+
+      await generateMigrationsJsonAndUpdatePackageJson(
+        root,
+        {
+          type: 'generateMigrations',
+          targetPackage: 'plugin',
+          targetVersion: '2.0.0',
+          from: { plugin: '1.0.0' },
+          to: {},
+          interactive: false,
+        },
+        fetch as any
+      );
+
+      expect(({} as any).polluted).toBeUndefined();
+      expect(
+        JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8'))
+      ).toEqual({
+        name: 'w',
+        version: '0.0.0',
+        dependencies: { dep: '2.0.0' },
+        devDependencies: { plugin: '2.0.0', devDep: '2.0.0' },
+      });
+    });
+  });
+
   describe('writePromptMigrationFiles', () => {
     let tmpRoot: string;
 

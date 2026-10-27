@@ -2437,7 +2437,10 @@ async function updatePackageJson(
     }
 
     const dependencyType = updatedPackages[p].addToPackageJson;
-    if (typeof dependencyType === 'string') {
+    if (
+      dependencyType === 'dependencies' ||
+      dependencyType === 'devDependencies'
+    ) {
       json[dependencyType] ??= {};
       if (json[dependencyType][p] !== updatedPackages[p].version) {
         json[dependencyType][p] = updatedPackages[p].version;
