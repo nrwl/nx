@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxConformancePreset",
+  "title": "Nx workspace preset which includes a working conformance rule",
+  "description": "Create an Nx workspace preset with a working conformance rule.",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

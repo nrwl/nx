@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxOwnersInit",
+  "title": "Add Nx Owners configuration to the workspace",
+  "description": "Register the Nx Owners plugin and its CODEOWNERS sync generator in the workspace.",
+  "type": "object",
+  "cli": "nx",
+  "properties": {},
+  "additionalProperties": false,
+  "required": []
+}
