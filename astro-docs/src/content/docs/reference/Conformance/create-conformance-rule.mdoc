@@ -146,7 +146,7 @@ export default createConformanceRule<object>({
 {% /tabitem %}
 {% tabitem label="project violation" %}
 
-The `@nx/conformance:ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
+The `@nx/owners/ensure-owners` rule provides us an example of how to write a rule that reports on a project being in violation of the rule. The `@nx/owners` plugin adds an `owners` metadata property to every project node that has an owner in the project graph. This rule checks each project node metadata to make sure that each project has some owner defined.
 
 ```ts
 import { ProjectGraphProjectNode } from '@nx/devkit';

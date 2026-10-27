@@ -7,40 +7,38 @@ filter: 'type:References'
 weight: 2.1
 ---
 
-The `@nx/conformance` plugin allows [Nx Enterprise](https://nx.dev/enterprise) users to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability** and **security**.
+Use the `@nx/conformance` plugin to write and apply rules for your entire workspace that help with **consistency**, **maintainability**, **reliability**, and **security**. The plugin is open source and MIT licensed, ships with each Nx release, and doesn't need an Nx key or license.
 
 The conformance plugin allows you to encode your own organization's standards so that they can be enforced automatically. Conformance rules can also complement linting tools by enforcing that those tools are configured in the recommended way. The rules are written in TypeScript but can be applied to any language in the codebase or focus entirely on configuration files.
 
 For setup and guides, see [Run Language-Agnostic Conformance Rules](/docs/enterprise/conformance).
 
-The plugin also provides the following pre-written rules:
+The plugin also provides a pre-written [**Enforce Project Boundaries**](#enforce-project-boundaries) rule. It's similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
 
-- [**Enforce Project Boundaries**](#enforce-project-boundaries): Similar to the Nx [ESLint Enforce Module Boundaries rule](/docs/features/enforce-module-boundaries), but enforces the boundaries on every project dependency, not just those created from TypeScript imports or `package.json` dependencies.
-- [**Ensure Owners**](#ensure-owners): Require every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/owners)
-
-{% aside type="note" title="This plugin requires an active Nx Enterprise license" %}
-In order to use `@nx/conformance`, you need to have an active [Nx Enterprise license](https://nx.dev/enterprise). If you don't have a license or it has expired, the `nx conformance` command will fail.
-{% /aside %}
+The [`@nx/owners` plugin](/docs/reference/owners/overview#ensure-owners-rule) provides the `@nx/owners/ensure-owners` rule, which requires every project to have an owner.
 
 ## Set up @nx/conformance
 
-1. [Activate your license](/docs/enterprise/activate-license) if you haven't already
-2. Install the package
+1. Install the package
 
    ```shell
    nx add @nx/conformance
    ```
 
-3. Configure Conformance Rules
+2. Configure Conformance Rules
 
    Configure the `@nx/conformance` plugin in the `nx.json` file or in individual project configuration files. Consult the [Conformance Configuration Reference](#conformance-configuration-reference) section for more details.
 
-4. Run the `nx conformance` or `nx conformance:check` command
+3. Run the `nx conformance` or `nx conformance:check` command
 
 The `@nx/conformance` plugin enables two commands:
 
 - **`nx conformance`**: Evaluates rules and applies any available fix generators. Changes are written to disk and rules are evaluated once more to calculate how many violations were fixed. Use this locally while working on feature branches.
 - **`nx conformance:check`**: Evaluates rules only. Fix generators are not applied. Use this in CI to enforce conformance rules for every PR.
+
+If `@nx/conformance` isn't installed, both commands tell you to run `nx add @nx/conformance`.
+
+In a workspace connected to Nx Cloud, both commands run through the Nx Cloud client, the same as `nx-cloud conformance`. Rules configured in your Nx Cloud organization, `nx-cloud:` rules, and result reporting in CI all work from `nx conformance`. In a workspace that isn't connected, the commands run locally, and an `nx-cloud:` rule fails with a message telling you to run `nx connect`.
 
 {% tabs %}
 {% tabitem label="Local Development" %}
@@ -162,25 +160,6 @@ a given `source` project the resulting constraints would be **all** that match i
 | allSourceTags                | _Array<string>_ | List of tags the source project must contain to match the constraint               |
 | onlyDependOnProjectsWithTags | _Array<string>_ | The source **can depend only** on projects that contain at least one of these tags |
 | notDependOnProjectsWithTags  | _Array<string>_ | The source **can not depend** on projects that contain at least one of these tags  |
-
-### Ensure owners
-
-This rule requires every project to have an owner defined for the [`@nx/owners` plugin](/docs/reference/owners)
-
-Set the `rule` property to: `@nx/conformance/ensure-owners`
-
-```json
-// nx.json
-{
-  "conformance": {
-    "rules": [
-      {
-        "rule": "@nx/conformance/ensure-owners"
-      }
-    ]
-  }
-}
-```
 
 ## Next steps
 
