@@ -20,6 +20,7 @@ import { output } from '../src/utils/output';
 import {
   getNxInstallationPath,
   getNxRequirePaths,
+  resolveNxBinFrom,
 } from '../src/utils/installation-directory';
 import { major } from 'semver';
 import { stripIndents } from '../src/utils/strip-indents';
@@ -240,20 +241,16 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   const globalsRoot = join(__dirname, '../../../../');
   const root = workspace ? workspace.dir : globalsRoot;
 
-  // Use createRequire to resolve from outside the nx package,
-  // avoiding self-referencing caused by the exports field
   // prefer Nx installed in .nx/installation
   try {
     const installPath = getNxInstallationPath(root);
     if (existsSync(installPath)) {
-      const installRequire = createRequire(join(installPath, 'package.json'));
-      return installRequire.resolve('nx/bin/nx.js');
+      return resolveNxBinFrom(installPath);
     }
   } catch {}
 
   // check for root install
-  const rootRequire = createRequire(join(root, 'package.json'));
-  return rootRequire.resolve('nx/bin/nx.js');
+  return resolveNxBinFrom(root);
 }
 
 function isNxCloudCommand(command: string): boolean {

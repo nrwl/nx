@@ -14,6 +14,7 @@ vi.mock('./package-manager', () => ({
   getPackageManagerCommand: vi.fn(),
 }));
 vi.mock('./workspace-root', () => ({
+  isTrustedWorkspaceEntry: vi.fn(() => true),
   workspaceRoot: '/root',
   workspaceRootInner: vi.fn(() => '/root'),
 }));
@@ -32,6 +33,7 @@ import {
   getPackageManagerCommand,
   type PackageManagerCommands,
 } from './package-manager';
+import { isTrustedWorkspaceEntry } from './workspace-root';
 
 const realFs = require('fs') as typeof import('fs');
 
@@ -124,6 +126,20 @@ describe('getNxBin', () => {
     const root = workspace('ws');
 
     expect(getNxBin(root)).toBe(nxBin);
+  });
+
+  it('walks past an install another user planted in an ancestor', () => {
+    writeNxInstall(fixture);
+    const root = workspace('ws');
+    (isTrustedWorkspaceEntry as Mock).mockImplementationOnce(
+      (dir) => dir !== fixture
+    );
+
+    expect(getNxBin(root)).toBeNull();
+    expect(isTrustedWorkspaceEntry).toHaveBeenCalledWith(
+      fixture,
+      'node_modules'
+    );
   });
 
   it('prefers the nearest install over a hoisted one', () => {
