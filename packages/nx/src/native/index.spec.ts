@@ -1,12 +1,16 @@
 import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   copyFileSync,
+  chmodSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -226,4 +230,130 @@ try {
       source,
     };
   }
+});
+
+describe('native file cache entries', () => {
+  const bindingName = 'nx.linux-x64-gnu.node';
+  let dir: string;
+  let cacheDir: string;
+  let binding: string;
+  let cacheEntry: string;
+
+  beforeEach(() => {
+    dir = realpathSync(mkdtempSync(join(tmpdir(), 'nx-native-cache-')));
+    cacheDir = join(dir, 'cache');
+    mkdirSync(cacheDir, { mode: 0o700 });
+    mkdirSync(join(dir, 'native'));
+    mkdirSync(join(dir, 'utils'));
+    mkdirSync(join(dir, 'pkg'));
+    writeFileSync(
+      join(dir, 'native', 'index.js'),
+      readFileSync(join(__dirname, 'index.js'))
+    );
+    writeFileSync(
+      join(dir, 'native', 'native-bindings.js'),
+      'module.exports = require(process.env.TEST_BINDING);'
+    );
+    writeFileSync(
+      join(dir, 'native', 'native-file-cache-location.js'),
+      'module.exports = { ensureSecureNativeFileCacheLocation: () => process.env.TEST_CACHE_DIR };'
+    );
+    writeFileSync(
+      join(dir, 'utils', 'versions.js'),
+      "module.exports = { nxVersion: '0.0.0' };"
+    );
+    writeFileSync(
+      join(dir, 'runner.cjs'),
+      [
+        "const Module = require('node:module');",
+        "const { readFileSync } = require('node:fs');",
+        "Module._extensions['.node'] = (m, f) => { m.exports = { content: readFileSync(f, 'utf8') }; };",
+        // We cannot chown without root, so move our own uid instead.
+        'if (process.env.TEST_FOREIGN_OWNER) { const uid = process.getuid(); process.getuid = () => uid + 1; }',
+        'console.log(JSON.stringify(require(process.argv[2])));',
+      ].join('\n')
+    );
+
+    binding = join(dir, 'pkg', bindingName);
+    writeFileSync(binding, 'genuine');
+    const key = createHash('sha256')
+      .update(binding)
+      .digest('hex')
+      .substring(0, 12);
+    cacheEntry = join(cacheDir, `0.0.0-${key}-${bindingName}`);
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const load = (env: Record<string, string> = {}): string =>
+    JSON.parse(
+      execFileSync(
+        process.execPath,
+        [join(dir, 'runner.cjs'), join(dir, 'native', 'index.js')],
+        {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            NX_SKIP_NATIVE_FILE_CACHE: 'false',
+            TEST_BINDING: binding,
+            TEST_CACHE_DIR: cacheDir,
+            ...env,
+          },
+        }
+      )
+    ).content;
+
+  it('reuses a fresh entry the current user owns', () => {
+    writeFileSync(cacheEntry, 'cached!', { mode: 0o644 });
+
+    expect(load()).toBe('cached!');
+  });
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry that others can write to',
+    () => {
+      writeFileSync(cacheEntry, 'planted', { mode: 0o666 });
+      chmodSync(cacheEntry, 0o666);
+
+      expect(load()).toBe('genuine');
+      expect(readFileSync(cacheEntry, 'utf8')).toBe('genuine');
+      expect(lstatSync(cacheEntry).mode & 0o022).toBe(0);
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry another user owns',
+    () => {
+      writeFileSync(cacheEntry, 'planted', { mode: 0o644 });
+
+      expect(load({ TEST_FOREIGN_OWNER: '1' })).toBe('genuine');
+      expect(readFileSync(cacheEntry, 'utf8')).toBe('genuine');
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'replaces a fresh entry that is a symlink',
+    () => {
+      const planted = join(dir, 'planted.node');
+      writeFileSync(planted, 'planted', { mode: 0o644 });
+      symlinkSync(planted, cacheEntry);
+
+      expect(load()).toBe('genuine');
+      expect(lstatSync(cacheEntry).isSymbolicLink()).toBe(false);
+    }
+  );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'keeps its own copy owner-writable only',
+    () => {
+      chmodSync(binding, 0o666);
+
+      expect(load()).toBe('genuine');
+      expect(lstatSync(cacheEntry).mode & 0o022).toBe(0);
+      expect(load()).toBe('genuine');
+    }
+  );
 });
