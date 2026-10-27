@@ -1,10 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { major } from 'semver';
 import TOML from 'smol-toml';
 import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import { Tree } from '../../generators/tree';
-import { generateFiles } from '../../generators/utils/generate-files';
 import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import { readNxJson } from '../../generators/utils/nx-json';
 import { isAnalyticsEnabled } from '../../utils/analytics-enabled';
@@ -126,6 +125,19 @@ function normalizeOptions(
     packageVersion: options.packageVersion ?? 'latest',
     agents: options.agents ?? [...supportedAgents],
   };
+}
+
+function copyFilesVerbatim(tree: Tree, srcDir: string, destDir: string) {
+  for (const entry of readdirSync(srcDir)) {
+    const srcPath = join(srcDir, entry);
+    const destPath = join(destDir, entry);
+    const stats = lstatSync(srcPath);
+    if (stats.isDirectory()) {
+      copyFilesVerbatim(tree, srcPath, destPath);
+    } else if (stats.isFile()) {
+      tree.write(destPath, readFileSync(srcPath));
+    }
+  }
 }
 
 export async function setupAiAgentsGeneratorImpl(
@@ -336,11 +348,10 @@ export async function setupAiAgentsGeneratorImpl(
     if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
       const sharedSkillsSrc = join(repoPath, 'generated/.agents');
       if (existsSync(sharedSkillsSrc)) {
-        generateFiles(
+        copyFilesVerbatim(
           tree,
           sharedSkillsSrc,
-          join(options.directory, '.agents'),
-          {}
+          join(options.directory, '.agents')
         );
       }
     }
@@ -362,7 +373,7 @@ export async function setupAiAgentsGeneratorImpl(
       if (hasAgent(agent)) {
         const srcPath = join(repoPath, src);
         if (existsSync(srcPath)) {
-          generateFiles(tree, srcPath, join(options.directory, dest), {});
+          copyFilesVerbatim(tree, srcPath, join(options.directory, dest));
         }
       }
     }

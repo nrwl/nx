@@ -9,6 +9,8 @@ import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
 import * as fs from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 vi.mock('fs', async () => {
   const actual = await vi.importActual('fs');
@@ -1635,6 +1637,60 @@ sandbox_mode = "read-only"
         expect(content).toContain('args = ["nx", "mcp"]');
         // Should NOT have agents (fallback doesn't include them)
         expect(content).not.toContain('[agents');
+      });
+    });
+
+    describe('ai-config repo artifacts', () => {
+      let repoDir: string;
+      let getAiConfigRepoPathSpy: MockInstance;
+      let previousExistsSync: typeof fs.existsSync | undefined;
+      let previousReadFileSync: typeof fs.readFileSync | undefined;
+
+      beforeEach(async () => {
+        const actualFs = await vi.importActual<typeof fs>('fs');
+        previousExistsSync = vi.mocked(fs.existsSync).getMockImplementation();
+        previousReadFileSync = vi
+          .mocked(fs.readFileSync)
+          .getMockImplementation() as typeof fs.readFileSync | undefined;
+        vi.mocked(fs.existsSync).mockImplementation(actualFs.existsSync);
+        vi.mocked(fs.readFileSync).mockImplementation(actualFs.readFileSync);
+        repoDir = fs.mkdtempSync(join(tmpdir(), 'nx-ai-config-spec-'));
+        const skillDir = join(repoDir, 'generated/.agents/skills/demo');
+        fs.mkdirSync(skillDir, { recursive: true });
+        fs.writeFileSync(
+          join(skillDir, 'SKILL.md'),
+          '# Demo\n<% globalThis.__nxAiConfigRendered = true %>\n<%= 1 + 1 %>\n'
+        );
+        const opencodeDir = join(repoDir, 'generated/.opencode/commands');
+        fs.mkdirSync(opencodeDir, { recursive: true });
+        fs.writeFileSync(join(opencodeDir, 'demo.md'), 'Run <%= name %>\n');
+
+        getAiConfigRepoPathSpy = vi
+          .spyOn(cloneModule, 'getAiConfigRepoPath')
+          .mockReturnValue(repoDir);
+      });
+
+      afterEach(() => {
+        getAiConfigRepoPathSpy.mockRestore();
+        vi.mocked(fs.existsSync).mockImplementation(previousExistsSync);
+        vi.mocked(fs.readFileSync).mockImplementation(previousReadFileSync);
+        fs.rmSync(repoDir, { recursive: true, force: true });
+        delete (globalThis as any).__nxAiConfigRendered;
+      });
+
+      it('should copy files verbatim without evaluating template tags', async () => {
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['cursor', 'opencode'],
+        });
+
+        expect((globalThis as any).__nxAiConfigRendered).toBeUndefined();
+        expect(tree.read('.agents/skills/demo/SKILL.md', 'utf-8')).toEqual(
+          '# Demo\n<% globalThis.__nxAiConfigRendered = true %>\n<%= 1 + 1 %>\n'
+        );
+        expect(tree.read('.opencode/commands/demo.md', 'utf-8')).toEqual(
+          'Run <%= name %>\n'
+        );
       });
     });
 
