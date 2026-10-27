@@ -24,7 +24,7 @@ import {
   expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
-} from '../utils/graph-utils';
+} from '@nx/devkit/internal';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
