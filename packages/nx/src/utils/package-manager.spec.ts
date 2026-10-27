@@ -1862,10 +1862,41 @@ describe('package-manager', () => {
         Object.defineProperty(process, 'platform', platform);
       }
 
-      expect(execMock.mock.calls[0][0]).toMatch(
-        / 'typescript@latest; echo x > marker'$/
+      expect(execMock.mock.calls[0][0]).toContain(
+        " 'typescript@latest; echo x > marker' "
       );
     });
+
+    it.each([
+      ['1.22.22', 'yarn add -W mypackage@next --ignore-scripts'],
+      ['4.0.0', 'yarn add mypackage@next'],
+    ])(
+      'installs without lifecycle scripts with yarn %s',
+      async (version, expectedCommand) => {
+        clearPackageManagerVersionCache();
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager: 'yarn' },
+        });
+        (existsSync as Mock).mockReturnValue(false);
+        vi.spyOn(childProcess, 'execSync').mockReturnValue(version as any);
+        const exec = vi.spyOn(childProcess, 'exec').mockImplementation(((
+          _command: string,
+          _options: any,
+          callback: any
+        ) => {
+          callback(new Error('install stubbed'));
+          return undefined;
+        }) as any);
+
+        await expect(
+          resolvePackageVersionUsingInstallation('mypackage', 'next')
+        ).rejects.toThrow('install stubbed');
+
+        const [command, options] = exec.mock.calls[0];
+        expect(command).toBe(expectedCommand);
+        expect((options as any).env.YARN_ENABLE_SCRIPTS).toBe('false');
+      }
+    );
   });
 
   describe('resolvePackageVersionUsingRegistry', () => {

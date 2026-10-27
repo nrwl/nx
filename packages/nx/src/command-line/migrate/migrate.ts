@@ -2310,15 +2310,21 @@ async function getPackageMigrationsUsingInstallImpl(
   }
 
   try {
-    const addCommand = `${pmc.add} ${quoteShellArg(
-      `${packageName}@${packageVersion}`
-    )}`;
+    const addCommand = [
+      pmc.add,
+      quoteShellArg(`${packageName}@${packageVersion}`),
+      pmc.ignoreScriptsFlag,
+    ]
+      .filter(Boolean)
+      .join(' ');
     try {
       await execAsync(addCommand, {
         cwd: dir,
         env: {
           ...process.env,
           npm_config_legacy_peer_deps: 'true',
+          // Yarn Berry has no flag to skip lifecycle scripts.
+          YARN_ENABLE_SCRIPTS: 'false',
         },
       });
     } catch (e) {
@@ -4329,6 +4335,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       cwd: tmpDir,
       stdio,
       windowsHide: true,
+      env: { ...process.env, YARN_ENABLE_SCRIPTS: 'false' },
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution

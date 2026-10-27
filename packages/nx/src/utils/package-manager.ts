@@ -849,13 +849,19 @@ export async function resolvePackageVersionUsingInstallation(
     }
 
     const pmc = getPackageManagerCommand();
-    await execAsync(
-      `${pmc.add} ${quoteShellArg(`${packageName}@${resolvedVersion}`)}`,
-      {
-        cwd: dir,
-        windowsHide: true,
-      }
-    );
+    const addCommand = [
+      pmc.add,
+      quoteShellArg(`${packageName}@${resolvedVersion}`),
+      pmc.ignoreScriptsFlag,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    await execAsync(addCommand, {
+      cwd: dir,
+      windowsHide: true,
+      // Yarn Berry has no flag to skip lifecycle scripts.
+      env: { ...process.env, YARN_ENABLE_SCRIPTS: 'false' },
+    });
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 

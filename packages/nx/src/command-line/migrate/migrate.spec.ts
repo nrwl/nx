@@ -5269,6 +5269,52 @@ module.exports = {
         rmSync(dir, { recursive: true, force: true });
       }
     });
+
+    it('installs without lifecycle scripts when falling back to install', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('registry unavailable'));
+      const dir = mkdtempSync(join(tmpdir(), 'nx-migrate-spec-'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      writeFileSync(
+        join(dir, 'add.js'),
+        `const fs = require('fs');
+        fs.mkdirSync('node_modules/mypackage', { recursive: true });
+        fs.writeFileSync(
+          'node_modules/mypackage/package.json',
+          JSON.stringify({ name: 'mypackage', version: '2.0.1' })
+        );
+        fs.writeFileSync(
+          'call.json',
+          JSON.stringify({
+            args: process.argv.slice(2),
+            YARN_ENABLE_SCRIPTS: process.env.YARN_ENABLE_SCRIPTS,
+          })
+        );`
+      );
+
+      try {
+        const fetch = createFetcher({
+          add: 'node add.js',
+          ignoreScriptsFlag: '--ignore-scripts',
+        } as any);
+        await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+          version: '2.0.1',
+        });
+        expect(
+          JSON.parse(readFileSync(join(dir, 'call.json'), 'utf-8'))
+        ).toEqual({
+          args: ['mypackage@latest', '--ignore-scripts'],
+          YARN_ENABLE_SCRIPTS: 'false',
+        });
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
   });
 
   describe('multi-major migration prompt', () => {
