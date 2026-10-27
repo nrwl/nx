@@ -12,6 +12,7 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
+import { ensurePackageHasProvenance } from '../../../../utils/provenance';
 import { connectExistingRepoToNxCloudPrompt } from '../../../nx-cloud/connect/connect-to-nx-cloud';
 import { initCloud } from '../utils';
 import { MessageOptionKey } from '../../../../utils/ab-testing';
@@ -93,15 +94,26 @@ export async function getLegacyMigrationFunctionIfApplicable(
       : '--preserve-angular-cli-layout=false';
     legacyMigrationCommand = `ng g ${pkgName}:ng-add ${preserveAngularCliLayoutFlag}`;
   } else {
-    // use the latest Nx version that supported the Angular version
-    pkgVersion = await resolvePackageVersion(
-      'nx',
-      nxAngularLegacyVersionMap[majorAngularVersion]
-    );
+    try {
+      // use the latest Nx version that supported the Angular version
+      pkgVersion = await resolvePackageVersionUsingRegistry(
+        'nx',
+        nxAngularLegacyVersionMap[majorAngularVersion]
+      );
 
-    pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
-    unscopedPkgName = 'angular';
-    pkgName = `${pkgScope}/${unscopedPkgName}`;
+      pkgScope = gte(pkgVersion, versionWithRescopeToNx) ? '@nx' : '@nrwl';
+      unscopedPkgName = 'angular';
+      pkgName = `${pkgScope}/${unscopedPkgName}`;
+
+      for (const pkg of ['nx', `${pkgScope}/workspace`, pkgName]) {
+        await ensurePackageHasProvenance(pkg, pkgVersion);
+      }
+    } catch (e) {
+      // errors are caught in the initHandler and not logged to the user, so we
+      // log it first and then throw to ensure it is logged to the user
+      output.error({ title: e.message });
+      throw e;
+    }
 
     legacyMigrationCommand = `nx@${pkgVersion} init ${process.argv
       .slice(2)

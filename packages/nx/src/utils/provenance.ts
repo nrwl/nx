@@ -157,9 +157,14 @@ export async function ensurePackageHasProvenance(
     // master, so a tag for them does not exist and never will. Repository,
     // workflow path and the artifact digest are still checked, so this only
     // widens which ref of nrwl/nx is allowed to have built it.
+    // Some older releases were tagged `v<version>`.
+    const tagRefs = [
+      `refs/tags/${verifiedVersion}`,
+      `refs/tags/v${verifiedVersion}`,
+    ];
     const allowedRefs = isPublishedFromMaster(verifiedVersion)
-      ? [`refs/tags/${verifiedVersion}`, 'refs/heads/master']
-      : [`refs/tags/${verifiedVersion}`];
+      ? [...tagRefs, 'refs/heads/master']
+      : tagRefs;
     if (!allowedRefs.includes(workflowParameters.ref)) {
       throw new ProvenanceError(
         packageName,

@@ -251,6 +251,20 @@ describe('ensurePackageHasProvenance', () => {
       );
     });
 
+    it('accepts a tagged release built from its v-prefixed tag', async () => {
+      arrange('17.0.6', 'refs/tags/v17.0.6');
+      await expect(ensurePackageHasProvenance('nx', '17.0.6')).resolves.toBe(
+        '17.0.6'
+      );
+    });
+
+    it('rejects a v-prefixed tag for a different version', async () => {
+      arrange('17.0.6', 'refs/tags/v17.0.5');
+      await expect(ensurePackageHasProvenance('nx', '17.0.6')).rejects.toThrow(
+        'Version ref does not match'
+      );
+    });
+
     it('accepts a pr release built from master', async () => {
       arrange('23.3.0-pr.36841.f66e88b', 'refs/heads/master');
       await expect(
