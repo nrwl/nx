@@ -11,6 +11,9 @@ export type { ChangelogChange };
 // Stripped from breaking change explanations (e.g. bot/session markers).
 const HtmlCommentRegex = /<!--[\s\S]*?-->/g;
 
+// git keeps \r, U+2028 and U+2029 inside commit text, and each of them ends a line.
+const LineTerminatorRegex = /\r\n|[\n\r\u2028\u2029]/g;
+
 // Keyed on email: agent display names track model versions (e.g. "Claude Opus
 // 5 (1M context)"), and a human contributor can share a name with an agent.
 const AiAgentAuthorEmails = new Set([
@@ -377,7 +380,9 @@ export default class DefaultChangelogRenderer {
         ...authors
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((i) => {
-            const username = i.username ? ` @${i.username}` : '';
+            const username = i.username
+              ? ` @${i.username.replace(LineTerminatorRegex, ' ')}`
+              : '';
             return `- ${i.name}${username}`;
           })
       );
@@ -390,8 +395,8 @@ export default class DefaultChangelogRenderer {
     let description = change.description;
     let extraLines: string[] = [];
     let extraLinesStr = '';
-    if (description.includes('\n')) {
-      [description, ...extraLines] = description.split('\n');
+    [description, ...extraLines] = description.split(LineTerminatorRegex);
+    if (extraLines.length > 0) {
       const indentation = '  ';
       extraLinesStr = (
         this.isVersionPlans
@@ -434,7 +439,9 @@ export default class DefaultChangelogRenderer {
     }
 
     if (change.description) {
-      breakingLine += `${change.description.trim()}`;
+      breakingLine += change.description
+        .trim()
+        .replace(LineTerminatorRegex, ' ');
     }
 
     if (
@@ -525,7 +532,7 @@ export default class DefaultChangelogRenderer {
     const lines = message
       .slice(startOfBreakingChange)
       .replace(HtmlCommentRegex, '')
-      .split('\n');
+      .split(LineTerminatorRegex);
     // The rest of the "BREAKING CHANGE:" line is always kept; scan from the next.
     const explanationLines: string[] = [lines[0]];
     for (let i = 1; i < lines.length; i++) {
@@ -560,6 +567,7 @@ export default class DefaultChangelogRenderer {
 
   protected formatName(name = ''): string {
     return name
+      .replace(LineTerminatorRegex, ' ')
       .split(' ')
       .map((p) => p.trim())
       .join(' ');

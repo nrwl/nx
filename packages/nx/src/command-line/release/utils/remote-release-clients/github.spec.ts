@@ -177,6 +177,69 @@ describe('GithubRemoteReleaseClient', () => {
     expect(authors.get('Test User')?.username).toBeUndefined();
   });
 
+  it.each([
+    ['ungh', 'octocat\n\n## 1.0.2'],
+    ['ungh', '**octocat**'],
+    ['ungh', 42],
+    ['gh api', 'octocat\r## 1.0.2'],
+  ])(
+    'should ignore a username from %s that is not a GitHub login: %j',
+    async (source, username) => {
+      httpRequestMock.mockResolvedValue({
+        data: { user: source === 'ungh' ? { username } : null },
+      });
+      execFileSyncMock.mockReturnValue(
+        JSON.stringify({
+          items: source === 'gh api' ? [{ login: username }] : [],
+        })
+      );
+      const authors = new Map<
+        string,
+        { email: Set<string>; username?: string }
+      >([['Test User', { email: new Set(['test@example.com']) }]]);
+
+      await client.applyUsernameToAuthors(authors);
+
+      expect(authors.get('Test User')?.username).toBeUndefined();
+    }
+  );
+
+  it('should ignore a noreply email whose local part is not a GitHub login', async () => {
+    httpRequestMock.mockResolvedValue({ data: { user: null } });
+    execFileSyncMock.mockReturnValue(JSON.stringify({ items: [] }));
+    const authors = new Map<string, { email: Set<string>; username?: string }>([
+      [
+        'Mallory',
+        {
+          email: new Set([
+            '12345+mallory\r## 1.0.2\u2028## 1.1.0@users.noreply.github.com',
+          ]),
+        },
+      ],
+    ]);
+
+    await client.applyUsernameToAuthors(authors);
+
+    expect(authors.get('Mallory')?.username).toBeUndefined();
+  });
+
+  it.each(['octo-cat', 'octocat_corp', 'renovate[bot]'])(
+    'should accept the GitHub login %s',
+    async (login) => {
+      httpRequestMock.mockResolvedValue({
+        data: { user: { username: login } },
+      });
+      const authors = new Map<
+        string,
+        { email: Set<string>; username?: string }
+      >([['Test User', { email: new Set(['test@example.com']) }]]);
+
+      await client.applyUsernameToAuthors(authors);
+
+      expect(authors.get('Test User')?.username).toBe(login);
+    }
+  );
+
   describe('handleError', () => {
     const repoData = {
       hostname: 'github.com',

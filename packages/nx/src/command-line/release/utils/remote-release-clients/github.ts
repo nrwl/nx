@@ -46,6 +46,15 @@ interface GithubUserSearchResponse {
   }>;
 }
 
+// Logins, plus the "_shortcode" suffix of Enterprise Managed Users and "[bot]".
+const GithubUsernameRegex = /^[a-z\d_-]+(?:\[bot\])?$/i;
+
+function toGithubUsername(value: unknown): string | null {
+  return typeof value === 'string' && GithubUsernameRegex.test(value)
+    ? value
+    : null;
+}
+
 export const defaultCreateReleaseProvider: ResolvedCreateRemoteReleaseProvider =
   {
     provider: 'github',
@@ -179,16 +188,18 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             const match = email.match(
               /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
             );
-            if (match && match[2]) {
-              meta.username = match[2];
+            const usernameFromEmail = toGithubUsername(match?.[2]);
+            if (usernameFromEmail) {
+              meta.username = usernameFromEmail;
               break;
             }
           }
           const { data } = await httpRequest<UnghUserLookupResponse>(
             `https://ungh.cc/users/find/${email}`
           ).catch(() => ({ data: { user: null } }));
-          if (data?.user?.username) {
-            meta.username = data.user.username;
+          const usernameFromUngh = toGithubUsername(data?.user?.username);
+          if (usernameFromUngh) {
+            meta.username = usernameFromUngh;
             break;
           }
           const usernameFromGhCli = this.resolveUsernameFromGhCli(email);
@@ -231,7 +242,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       }
 
       const data = JSON.parse(stdout) as GithubUserSearchResponse;
-      return data.items?.[0]?.login ?? null;
+      return toGithubUsername(data.items?.[0]?.login);
     } catch (error) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(error);

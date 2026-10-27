@@ -305,6 +305,130 @@ describe('ChangelogRenderer', () => {
         `);
       });
 
+      it('should not let an author name start a new line', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [
+                {
+                  name: 'Mallory\r## 1.1.1\u2028## 1.2.0\u2029## 2.0.0',
+                  email: 'mallory@example.com',
+                },
+              ],
+              body: '"\n\nM\tpackages/pkg-a/src/index.ts\n"',
+              description: 'a change',
+              type: 'fix',
+              scope: 'pkg-a',
+              githubReferences: [{ value: 'abc1234', type: 'hash' }],
+              isBreaking: false,
+              revertedHashes: [],
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - **pkg-a:** a change
+
+          ### ❤️ Thank You
+
+          - Mallory ## 1.1.1 ## 1.2.0 ## 2.0.0"
+        `);
+      });
+
+      it('should not let a resolved username start a new line', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [{ name: 'Contributor', email: 'c@example.com' }],
+              body: '',
+              description: 'a change',
+              type: 'fix',
+              scope: 'pkg-a',
+              isBreaking: false,
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient: {
+            ...remoteReleaseClient,
+            remoteReleaseProviderName: 'GitHub',
+            getRemoteRepoData: () => ({}),
+            applyUsernameToAuthors: async (authors) => {
+              for (const meta of authors.values()) {
+                meta.username = 'octocat\n\n## 1.1.1\r## 1.2.0';
+              }
+            },
+          } as any,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+            applyUsernameToAuthors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown.split('\n').at(-1)).toBe(
+          '- Contributor @octocat  ## 1.1.1 ## 1.2.0'
+        );
+      });
+
+      it('should indent the extra lines of a description regardless of the line terminator used', async () => {
+        const renderer = new DefaultChangelogRenderer({
+          changes: [
+            {
+              shortHash: 'abc1234',
+              authors: [],
+              body: '',
+              description:
+                'a change\r\nmore details\r## 1.1.1\u2028## 1.2.0\u2029## 2.0.0',
+              type: 'fix',
+              scope: '',
+              isBreaking: false,
+              affectedProjects: ['pkg-a'],
+            },
+          ],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: true,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        });
+        const markdown = await renderer.render();
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🩹 Fixes
+
+          - a change
+            more details
+            ## 1.1.1
+            ## 1.2.0
+            ## 2.0.0"
+        `);
+      });
+
       it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
         const renderer = new DefaultChangelogRenderer({
           changes,
@@ -1246,6 +1370,56 @@ M	packages/angular/src/utils/versions.ts
           - **core:** remove the old API  ([#54321](https://example.com/example/example/pull/54321))
             The old API has been removed.
             Migrate to the new API instead.
+
+          ### ❤️ Thank You
+
+          - Test User"
+        `);
+      });
+
+      it('should split the breaking change explanation on every kind of line terminator', async () => {
+        const breakingChangeWithMixedLineTerminators: ChangelogChange = {
+          shortHash: 'def456',
+          authors: [{ name: 'Test User', email: 'test@example.com' }],
+          body:
+            'BREAKING CHANGE: The old API has been removed.\r\n' +
+            'Migrate to the new API instead.\rIt is faster.\u2028## 1.1.1\u2029## 1.2.0\n' +
+            '"\n\nM\tpackages/nx/file.ts\n"',
+          description: 'remove the old API\r## 2.0.0',
+          type: 'feat',
+          scope: 'core',
+          githubReferences: [{ value: 'def456', type: 'hash' }],
+          isBreaking: true,
+          revertedHashes: [],
+          affectedProjects: ['nx'],
+        };
+
+        const markdown = await new DefaultChangelogRenderer({
+          changes: [breakingChangeWithMixedLineTerminators],
+          remoteReleaseClient,
+          changelogEntryVersion: 'v1.1.0',
+          project: null,
+          isVersionPlans: false,
+          entryWhenNoChanges: false,
+          changelogRenderOptions: { authors: true },
+          conventionalCommitsConfig: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        }).render();
+
+        expect(markdown).toMatchInlineSnapshot(`
+          "## v1.1.0
+
+          ### 🚀 Features
+
+          - ⚠️  **core:** remove the old API
+
+            ## 2.0.0
+
+          ### ⚠️  Breaking Changes
+
+          - **core:** remove the old API ## 2.0.0
+            The old API has been removed.
+            Migrate to the new API instead.
+            It is faster.
 
           ### ❤️ Thank You
 
