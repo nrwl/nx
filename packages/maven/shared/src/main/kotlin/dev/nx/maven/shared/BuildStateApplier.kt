@@ -14,26 +14,47 @@ import java.io.File
  * because build state may reference files that don't exist yet in incremental builds,
  * or were cleaned between builds. These conditions are recoverable - Maven will rebuild
  * the missing artifacts as needed. Failing hard would break valid incremental build scenarios.
+ *
+ * The build state file can be restored from a remote cache, so its paths are only applied when
+ * they stay where the recorder would have put them: inputs inside the workspace or the project,
+ * output directories inside the build directory or where the POM already points them.
  */
 object BuildStateApplier {
     private val log: Logger = LoggerFactory.getLogger(BuildStateApplier::class.java)
+
+    private fun resolveWithin(path: String, basedir: File, roots: List<File>): String? {
+        val resolved = File(PathUtils.toAbsolutePath(path, basedir, log)).toPath().normalize()
+        if (roots.any { resolved.startsWith(it.canonicalFile.toPath()) }) {
+            return resolved.toString()
+        }
+        log.warn("    Ignoring build state path outside of ${roots.joinToString { it.path }}: $path")
+        return null
+    }
+
+    private fun resolveAllWithin(paths: Set<String>, basedir: File, roots: List<File>): Set<String> {
+        return paths.mapNotNull { resolveWithin(it, basedir, roots) }.toSet()
+    }
 
     /**
      * Apply a build state to a Maven project.
      *
      * @param project The MavenProject to apply state to
      * @param buildState The BuildState to apply
+     * @param workspaceRoot Paths Maven reads from must resolve inside this directory
      * @param projectHelper Optional MavenProjectHelper for attaching artifacts
      */
     fun applyBuildState(
         project: MavenProject,
         buildState: BuildState,
+        workspaceRoot: File,
         projectHelper: MavenProjectHelper? = null
     ) {
         val basedir = project.basedir
+        val buildDirectory = File(project.build.directory)
+        val inputRoots = listOf(workspaceRoot, basedir, buildDirectory)
 
         // Apply compile source roots
-        val compileSourceRoots = PathUtils.toAbsolutePaths(buildState.compileSourceRoots, basedir, log)
+        val compileSourceRoots = resolveAllWithin(buildState.compileSourceRoots, basedir, inputRoots)
         compileSourceRoots.forEach { path ->
             if (File(path).isDirectory) {
                 project.addCompileSourceRoot(path)
@@ -44,7 +65,7 @@ object BuildStateApplier {
         }
 
         // Apply test compile source roots
-        val testCompileSourceRoots = PathUtils.toAbsolutePaths(buildState.testCompileSourceRoots, basedir, log)
+        val testCompileSourceRoots = resolveAllWithin(buildState.testCompileSourceRoots, basedir, inputRoots)
         testCompileSourceRoots.forEach { path ->
             if (File(path).isDirectory) {
                 project.addTestCompileSourceRoot(path)
@@ -55,7 +76,7 @@ object BuildStateApplier {
         }
 
         // Apply resources
-        val resources = PathUtils.toAbsolutePaths(buildState.resources, basedir, log)
+        val resources = resolveAllWithin(buildState.resources, basedir, inputRoots)
         resources.forEach { path ->
             if (File(path).isDirectory) {
                 val resource = Resource().apply { directory = path }
@@ -67,7 +88,7 @@ object BuildStateApplier {
         }
 
         // Apply test resources
-        val testResources = PathUtils.toAbsolutePaths(buildState.testResources, basedir, log)
+        val testResources = resolveAllWithin(buildState.testResources, basedir, inputRoots)
         testResources.forEach { path ->
             if (File(path).isDirectory) {
                 val resource = Resource().apply { directory = path }
@@ -80,7 +101,8 @@ object BuildStateApplier {
 
         // Apply output directories
         buildState.outputDirectory?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+            resolveWithin(it, basedir, listOfNotNull(buildDirectory, project.build.outputDirectory?.let(::File)))
+        }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.outputDirectory = absPath
                 log.debug("    Set output directory: $absPath")
@@ -88,7 +110,8 @@ object BuildStateApplier {
         }
 
         buildState.testOutputDirectory?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+            resolveWithin(it, basedir, listOfNotNull(buildDirectory, project.build.testOutputDirectory?.let(::File)))
+        }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.testOutputDirectory = absPath
                 log.debug("    Set test output directory: $absPath")
@@ -109,8 +132,7 @@ object BuildStateApplier {
         }
 
         // Apply main artifact (only if file exists)
-        buildState.mainArtifact?.let { artifactInfo ->
-            val absPath = PathUtils.toAbsolutePath(artifactInfo.file, basedir, log)
+        buildState.mainArtifact?.let { resolveWithin(it.file, basedir, inputRoots) }?.let { absPath ->
             val file = File(absPath)
             if (file.exists()) {
                 log.debug("    Applied main artifact: ${file.name}")
@@ -123,7 +145,7 @@ object BuildStateApplier {
         // Apply attached artifacts (only if files exist and not already attached)
         var attachedCount = 0
         buildState.attachedArtifacts.forEach { artifactInfo ->
-            val absPath = PathUtils.toAbsolutePath(artifactInfo.file, basedir, log)
+            val absPath = resolveWithin(artifactInfo.file, basedir, inputRoots) ?: return@forEach
             val file = File(absPath)
             if (file.exists()) {
                 if (projectHelper != null) {
@@ -154,8 +176,7 @@ object BuildStateApplier {
         // Skip outputTimestamp - it causes cache invalidation issues
 
         // Apply pomFile if it was modified (e.g., by flatten-maven-plugin)
-        buildState.pomFile?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+        buildState.pomFile?.let { resolveWithin(it, basedir, inputRoots) }?.let { absPath ->
             val pomFile = File(absPath)
             if (pomFile.exists()) {
                 log.info("Applying modified pomFile: ${pomFile.absolutePath}")
