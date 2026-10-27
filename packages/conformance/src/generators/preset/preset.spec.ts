@@ -222,6 +222,7 @@ describe('preset', () => {
     "@swc/core": "X.X.X",
     "@swc/helpers": "X.X.X",
     "@types/node": "X.X.X",
+    "esbuild": "X.X.X",
     "prettier": "X.X.X",
     "tslib": "X.X.X",
     "typescript": "X.X.X",
