@@ -66,11 +66,10 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
       {
         "description": "A description of the rule",
         "owners": ["@joelovesrust"],
-        // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
-        // File globs
+        // File globs. Combined with `projects`, they're relative to each matched project root
         "files": [".github/workflows/**/*"],
       },
     ],
@@ -95,11 +94,10 @@ It is also often helpful to add `nx sync` as a git push hook or git commit hook.
       {
         "description": "A description of the rule",
         "owners": ["@joelovesrust"],
-        // specify either projects or files, not both
         // Can be any project specifier that could be used in `nx run-many`
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
-        // File globs
+        // File globs. Combined with `projects`, they're relative to each matched project root
         "files": [".github/workflows/**/*"],
       },
     ],
@@ -126,11 +124,10 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
       {
         "description": "A description of the rule",
         "owners": ["@joelovesrust"],
-        // Specify either `projects` or `files`, not both
         // Can be any project specifier that could be used in `nx run-many`
         // See https://nx.dev/docs/reference/nx-commands#nx-run-many
         "projects": ["my-rust-app", "rust-*", "tag:rust"],
-        // File globs
+        // File globs. Combined with `projects`, they're relative to each matched project root
         "files": [".github/workflows/**/*"],
       },
     ],
@@ -341,7 +338,7 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 
 To give the whole repository a fallback owner, use a file wildcard (`files: ["*"]`), not a project wildcard (`projects: ["*"]`). The two behave differently:
 
-- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. This pattern only covers files that live inside a project. Files outside every project root such as a top-level configuration files do not get an owner.
+- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. This pattern only covers files that live inside a project. Files outside every project root, such as top-level configuration files, do not get an owner.
 - `files: ["*"]` matches all files in the repository and emits a single entry in CODEOWNERS, `* @owner`. You can use this pattern as a repo-wide default owner. List it first and let the more specific patterns below it override since CODEOWNERS applies the last matching rule for a given file.
 
 {% aside type="note" title="Order matters" %}
@@ -361,7 +358,7 @@ CODEOWNERS resolves a file to the **last** pattern that matches it. Put the `fil
         "owners": ["@platform-team"],
       },
       {
-        "description": "The Finance team owns these projects",- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. This pattern only covers files that live inside a project. Files outside every project root such as a a top-level configuration files do not get an owner.
+        "description": "The Finance team owns these projects",
         "projects": ["finance-*"],
         "owners": ["@finance-team"],
       },
@@ -382,6 +379,108 @@ Nx generates the following CODEOWNERS file:
 ```
 
 Every file falls back to `@platform-team`, and the later, more specific rule reassigns the finance projects to `@finance-team`.
+Projects covered only by the catch-all count as owned, including for the [ensure owners rule](#ensure-owners-rule).
+
+## File pattern matching
+
+Nx writes root-level `files` patterns into CODEOWNERS unchanged, so they follow the gitignore-style matching of your Git hosting provider:
+
+- A pattern with no `/` matches at any depth. `jest.config.ts` matches that file in every project.
+- A leading `/` anchors the pattern to the workspace root. `/tools/**` only matches files under the top-level `tools` directory.
+- A trailing `/` matches a directory and everything in it. `docs/` matches any directory named `docs`.
+- Dotfiles are included.
+
+## Scope file patterns to projects
+
+When a pattern sets both `projects` and `files`, Nx evaluates the file globs relative to each matched project root instead of the workspace root.
+Use this to give a team specific files across a set of projects without changing who owns the rest of each project.
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "patterns": [
+      {
+        "projects": ["ui-*"],
+        "owners": ["@frontend-team"],
+      },
+      {
+        "projects": ["ui-*"],
+        "files": ["project.json", "tsconfig.json"],
+        "owners": ["@ops-team"],
+      },
+    ],
+  },
+}
+```
+
+```plaintext {% title=".github/CODEOWNERS" %}
+/libs/ui-buttons/ @frontend-team
+/libs/ui-buttons/project.json @ops-team
+/libs/ui-buttons/tsconfig.json @ops-team
+
+/libs/ui-dropdown/ @frontend-team
+/libs/ui-dropdown/project.json @ops-team
+/libs/ui-dropdown/tsconfig.json @ops-team
+```
+
+If a project's `project.json` sets owners for the same file pattern, the project-level entry wins.
+A `**/*` key in `project.json` replaces the owners the root config gives the whole project.
+
+## Prefix owners
+
+Set `prefix` at the root of the `owners` configuration to prepend it to every owner in `patterns`.
+Nx joins the two with a `/`, so `frontend-team` becomes `@my-org/frontend-team`:
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "prefix": "@my-org",
+    "patterns": [
+      {
+        "projects": ["ui-*"],
+        "owners": ["frontend-team"],
+      },
+      {
+        // Uses a different prefix
+        "projects": ["shared-*"],
+        "owners": ["platform-team"],
+        "prefix": "@other-org",
+      },
+      {
+        // Skips the prefix
+        "projects": ["external-*"],
+        "owners": ["external-user@example.com"],
+        "applyPrefix": false,
+      },
+    ],
+  },
+}
+```
+
+The prefix doesn't apply to owners set in `project.json` files.
+
+## Mark files as unowned
+
+Set `owners` to `false` on a `files` pattern to mark matching files as having no owner, such as files a bot maintains.
+Nx writes these entries at the end of CODEOWNERS so they override earlier patterns:
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "patterns": [
+      {
+        "files": ["**/generated/**"],
+        "owners": false,
+      },
+    ],
+  },
+}
+```
+
+Bitbucket doesn't support unowned entries, and `nx sync` fails if the `bitbucket` format uses `owners: false`.
 
 ## Ensure owners rule
 
