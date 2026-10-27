@@ -1002,11 +1002,16 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
     if (!URL.canParse(value)) {
       return null;
     }
-    const protocol = new URL(value).protocol;
-    if (protocol !== 'http:' && protocol !== 'https:') {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return null;
     }
-    return redactUrlCredentials(value);
+    if (!url.username && !url.password) {
+      return value;
+    }
+    url.username = '***';
+    url.password = '';
+    return url.href;
   }
   return null;
 }
