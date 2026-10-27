@@ -204,7 +204,7 @@ export function getTuiTerminalSummaryLifeCycle({
     failure: boolean;
     cancelled: boolean;
   }) => {
-    // Print task outputs in completion order above the summary.
+    // Print task outputs in start order above the summary.
     for (const taskId of taskIdsInTheOrderTheyStart) {
       const taskStatus = tasksToTaskStatus[taskId];
       // Skipped tasks never ran; don't print a misleading `> nx run` header.

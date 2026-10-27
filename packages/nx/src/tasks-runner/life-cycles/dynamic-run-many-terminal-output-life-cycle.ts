@@ -82,7 +82,7 @@ export async function createRunManyDynamicOutputRenderer({
     };
   });
 
-  const failedTasks = new Set();
+  const failedTasks = new Set<string>();
   const stoppedTasks = new Set<string>();
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToProcessStartTimes: Record<
@@ -410,6 +410,13 @@ export async function createRunManyDynamicOutputRenderer({
         0,
         numFailedToPrint
       );
+      const taskIdRows = (taskIds: string[]) =>
+        taskIds
+          .map(
+            (t) =>
+              `${EXTENDED_LEFT_PAD}${output.colors.red('-')} ${output.formatCommand(t)}`
+          )
+          .join('\n');
       const failureSummaryRows = [
         output.applyNxPrefix(
           'red',
@@ -437,14 +444,7 @@ export async function createRunManyDynamicOutputRenderer({
             figures.cross
           )}${SPACER}${totalFailedTasks}${`/${totalTasks}`} targets failed, including the following:`,
           '',
-          `${failedTasksForPrinting
-            .map(
-              (t) =>
-                `${EXTENDED_LEFT_PAD}${output.colors.red(
-                  '-'
-                )} ${output.formatCommand(t.toString())}`
-            )
-            .join('\n')}`
+          taskIdRows(failedTasksForPrinting)
         );
         if (failedTasks.size > numFailedToPrint) {
           failureSummaryRows.push(
@@ -461,14 +461,7 @@ export async function createRunManyDynamicOutputRenderer({
           '',
           `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${stoppedTasks.size}/${totalTasks} targets were in progress, including the following:`,
           '',
-          Array.from(stoppedTasks)
-            .map(
-              (t) =>
-                `${EXTENDED_LEFT_PAD}${output.colors.red(
-                  '-'
-                )} ${output.formatCommand(t)}`
-            )
-            .join('\n')
+          taskIdRows(Array.from(stoppedTasks))
         );
       }
       const notRunTasks = totalTasks - totalCompletedTasks;

@@ -1286,9 +1286,8 @@ export class TaskOrchestrator {
   }
 
   /**
-   * Whether a batch worker's output is written to the terminal as it streams.
-   * Under the TUI it reaches only the batch's pane, which closes with the batch
-   * (or with the TUI, if pinned), so it is captured to a file instead.
+   * Under the TUI, batch worker output reaches only the batch's pane, which
+   * closes with the batch (or the TUI, if pinned), so it is captured instead.
    */
   private printsBatchOutput(): boolean {
     return printsTaskOutput(this.resolvedOutputStyle) && !this.tuiEnabled;
