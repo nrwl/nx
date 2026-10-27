@@ -18,11 +18,6 @@ interface NxReactBabelOptions {
       };
   runtime?: string;
   useBuiltIns?: boolean | string;
-  /** @deprecated Use `loose` option instead of `classProperties.loose`
-   */
-  classProperties?: {
-    loose?: boolean;
-  };
 }
 
 module.exports = function (api: any, options: NxReactBabelOptions) {
