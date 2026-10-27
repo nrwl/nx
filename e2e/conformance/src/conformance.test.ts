@@ -1,15 +1,6 @@
 import { stripVTControlCharacters } from 'node:util';
 import { cleanupProject, newProject, runCLI, updateJson } from '@nx/e2e-utils';
 
-function runExpectingFailure(command: string): string {
-  try {
-    runCLI(command);
-  } catch (e: any) {
-    return stripVTControlCharacters(`${e.stdout ?? ''}${e.stderr ?? ''}`);
-  }
-  throw new Error(`Expected "${command}" to fail, but it succeeded.`);
-}
-
 describe('@nx/conformance', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/conformance', '@nx/owners', '@nx/js'] });
@@ -17,13 +8,14 @@ describe('@nx/conformance', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should run conformance commands successfully', () => {
-    expect(runExpectingFailure('conformance')).toContain(
-      `No "conformance" configuration found in nx.json`
-    );
-    expect(runExpectingFailure('conformance:check')).toContain(
-      `No "conformance" configuration found in nx.json`
-    );
+  it('should run conformance commands', () => {
+    for (const command of ['conformance', 'conformance:check']) {
+      const output = runCLI(command, { silenceError: true });
+      expect(runCLI.lastExitCode).not.toBe(0);
+      expect(output).toContain(
+        `No "conformance" configuration found in nx.json`
+      );
+    }
 
     updateJson('nx.json', (json) => {
       json.conformance = {
