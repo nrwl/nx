@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit';
-import type { WorkspaceFileMap } from 'nx/src/project-graph/file-map-utils';
+import type { createFileMapUsingProjectGraph } from '@nx/devkit/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProjectOwnersConfig } from '../config';
 import { createMetadata } from './plugin';
@@ -47,7 +47,9 @@ vi.mock('node:fs', async () => {
 
 describe('createMetadata()', () => {
   let projectGraph: ProjectGraph;
-  let workspaceFileMap: WorkspaceFileMap;
+  let workspaceFileMap: Awaited<
+    ReturnType<typeof createFileMapUsingProjectGraph>
+  >;
 
   afterEach(() => {
     vi.clearAllMocks();

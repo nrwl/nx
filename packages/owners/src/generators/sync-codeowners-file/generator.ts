@@ -35,7 +35,6 @@ export async function syncCodeownersFileGenerator(
 ): Promise<SyncGeneratorResult> {
   const nxJson: NxJsonConfiguration = readNxJson(tree) ?? {};
   let rootOwners = nxJson.owners;
-  // Owners is not enabled at all in nx.json, do nothing
   if (!rootOwners) {
     return;
   }
@@ -45,9 +44,8 @@ export async function syncCodeownersFileGenerator(
     rootOwners = {};
   }
 
-  // Ensure the config is valid before proceeding
   if (!validateAndSetDefaultsForRootConfig(rootOwners)) {
-    // this return won't be reached, but it lets TS know that rootOwners is a valid RootOwnersConfig outside of this block
+    // Unreachable: validation throws, but the guard narrows rootOwners
     return;
   }
 
@@ -91,21 +89,11 @@ export async function syncCodeownersFileGenerator(
       ownersFromRootConfig.length === 0 &&
       Object.keys(ownersFromProjectConfig).length === 0
     ) {
-      // No owners config for project
       continue;
     }
 
-    /**
-     * Compare owners from root config and project config and apply minimal config necessary (e.g. the project level config
-     * could override for specific paths, the root always applies to all paths from that project root).
-     *
-     * NOTE: The path needs to start with / in order to specify that path. If the path does not start with /, it will match
-     * any subpath within the workspace that starts with that path.
-     *
-     * E.g. /apps/ means the apps directory at the root of the workspace, apps/ means any apps directory at any level.
-     *
-     * Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-     */
+    // A leading / anchors the entry to the workspace root, see
+    // https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
     const projectRootWithLeadingSlash = `/${projectConfig.data.root}`;
 
     // If there is `**/*` or `*` in the project config, it means that the root config should not be applied to this project
@@ -125,7 +113,6 @@ export async function syncCodeownersFileGenerator(
       new Set(ownerIdsForProjectRootArr)
     );
 
-    // Project root
     if (dedupedOwnerIdsForProjectRoot.length > 0) {
       codeowners += createCodeownersEntry(
         `${projectRootWithLeadingSlash}/`,
@@ -213,7 +200,6 @@ export async function syncCodeownersFileGenerator(
     rootOwners.prefix
   );
 
-  // Ensure the file only ends with a single newline
   codeowners = codeowners.trimEnd() + '\n';
 
   tree.write(rootOwners.outputPath, codeowners);

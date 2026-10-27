@@ -1,5 +1,4 @@
 import type { ConformanceRule, ConformanceViolation } from '@nx/conformance';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
 
 type RuleOptions = object;
 
@@ -10,9 +9,7 @@ const rule: ConformanceRule<RuleOptions> = {
   implementation: async (context) => {
     const violations: ConformanceViolation[] = [];
 
-    for (const node of Object.values(
-      context.projectGraph.nodes
-    ) as ProjectGraphProjectNode[]) {
+    for (const node of Object.values(context.projectGraph.nodes)) {
       const metadata = node.data.metadata;
       if (!metadata?.owners || Object.keys(metadata.owners).length === 0) {
         violations.push({
