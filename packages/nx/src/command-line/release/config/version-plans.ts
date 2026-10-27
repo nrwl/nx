@@ -397,7 +397,7 @@ async function getCommitForVersionPlanFile(
       '--literal-pathspecs',
       'log',
       '--diff-filter=A',
-      '--pretty=format:%s|%h|%an|%ae|%b',
+      '--pretty=format:%s%x00%h%x00%an%x00%ae%x00%b',
       '-n',
       '1',
       '--',
@@ -412,13 +412,13 @@ async function getCommitForVersionPlanFile(
     return null;
   }
 
-  const [message, shortHash, authorName, authorEmail, ...body] = stdout
+  const [message, shortHash, authorName, authorEmail, body] = stdout
     .trim()
-    .split('|');
+    .split('\0');
   return {
     message: message || '',
     shortHash: shortHash || '',
     author: { name: authorName || '', email: authorEmail || '' },
-    body: body.join('|') || '', // Handle case where body might be empty or contain multiple '|'
+    body: body || '',
   };
 }

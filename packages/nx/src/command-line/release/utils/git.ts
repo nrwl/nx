@@ -21,6 +21,8 @@ export interface RawGitCommit {
   body: string;
   shortHash: string;
   author: GitCommitAuthor;
+  /** Git's --name-status output, free of commit-author text. */
+  nameStatus?: string;
 }
 
 export interface Reference {
@@ -277,15 +279,15 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
-  // Use unique enough separators that we can be relatively certain will not occur within the commit message itself
-  const commitMetadataSeparator = '§§§';
-  const commitsSeparator = '|@-------@|';
+  // Git rejects NUL in commit messages, so commit text cannot forge a field boundary.
+  // Each commit prints a fixed number of fields; --name-status lands in the last one.
+  const fieldsPerCommit = 6;
   // https://git-scm.com/docs/pretty-formats
   const args = [
     '--no-pager',
     'log',
     range,
-    `--pretty="${commitsSeparator}%n%s${commitMetadataSeparator}%h${commitMetadataSeparator}%an${commitMetadataSeparator}%ae%n%b"`,
+    `--pretty="%x00%s%x00%h%x00%an%x00%ae%x00%b"%x00`,
     '--name-status',
   ];
   // Support cases where the nx workspace root is located at a nested path within the git repo
@@ -296,22 +298,20 @@ export async function getGitDiff(
 
   const r = await execCommand('git', args);
 
-  return r
-    .split(`${commitsSeparator}\n`)
-    .splice(1)
-    .map((line) => {
-      const [firstLine, ..._body] = line.split('\n');
-      const [message, shortHash, authorName, authorEmail] = firstLine.split(
-        commitMetadataSeparator
-      );
-      const r: RawGitCommit = {
-        message,
-        shortHash,
-        author: { name: authorName, email: authorEmail },
-        body: _body.join('\n'),
-      };
-      return r;
+  const fields = r.split('\0').slice(1);
+  const commits: RawGitCommit[] = [];
+  for (let i = 0; i + fieldsPerCommit <= fields.length; i += fieldsPerCommit) {
+    const [message, shortHash, authorName, authorEmail, body, nameStatus] =
+      fields.slice(i, i + fieldsPerCommit);
+    commits.push({
+      message,
+      shortHash,
+      author: { name: authorName, email: authorEmail },
+      body: body + nameStatus,
+      nameStatus,
     });
+  }
+  return commits;
 }
 
 async function getChangedTrackedFiles(cwd: string): Promise<Set<string>> {
@@ -698,9 +698,8 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   // Find all authors
   const authors = getAllAuthorsForCommit(commit);
 
-  // Extract file changes from commit body
   const affectedFiles = Array.from(
-    commit.body.matchAll(ChangedFileRegex)
+    (commit.nameStatus ?? '').matchAll(ChangedFileRegex)
   ).reduce(
     (prev, [, , file1, file2]: RegExpExecArray) =>
       // file2 only exists for some change types, such as renames
