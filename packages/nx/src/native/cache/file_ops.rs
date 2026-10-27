@@ -1,4 +1,5 @@
 use std::cmp;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -8,6 +9,8 @@ use std::{fs, io};
 use fs_extra::error::ErrorKind;
 use rayon::prelude::*;
 use tracing::{debug, trace};
+
+use crate::native::glob::glob_transform::partition_glob;
 
 /// Pool for copying the entries of a directory tree in parallel, kept apart
 /// from the global rayon pool. A third of the available parallelism and never
@@ -171,12 +174,37 @@ fn remove_path(path: &Path) -> io::Result<()> {
 /// Restore the given expanded outputs from `outputs_path` into `workspace_root`.
 /// Only the listed outputs are copied (never the whole cache dir) and each copy
 /// is confined to `workspace_root`, so a malicious artifact can't write beyond
-/// the declared outputs or escape via a symlink.
+/// the declared outputs or escape via a symlink. `outputs` are the declared
+/// outputs that `expanded_outputs` was expanded from.
 pub fn copy_outputs_into_workspace(
     workspace_root: &Path,
     outputs_path: &Path,
+    outputs: &[String],
     expanded_outputs: &[String],
 ) -> anyhow::Result<(i64, Written)> {
+    let mut literal = vec![];
+    let mut glob_roots = vec![];
+    for output in outputs.iter().filter(|output| !output.starts_with('!')) {
+        match partition_glob(output) {
+            (named, None) => {
+                literal.push(PathBuf::from(output));
+                literal.push(PathBuf::from(named));
+            }
+            (root, Some(_)) => glob_roots.push(PathBuf::from(root)),
+        }
+    }
+    let expanded: HashSet<&Path> = expanded_outputs.iter().map(Path::new).collect();
+    // A parent the configuration names, or one inside a literal output, may be
+    // replaced. Below a glob's root the artifact chose the name, so whatever
+    // already sits there is not an output and is left alone.
+    let replaceable = |parent: &Path| {
+        literal
+            .iter()
+            .any(|path| path.starts_with(parent) || parent.starts_with(path))
+            || glob_roots.iter().any(|root| root.starts_with(parent))
+            || expanded.contains(parent)
+    };
+
     let mut size = 0;
     let mut written = vec![];
     for output in expanded_outputs {
@@ -185,6 +213,19 @@ pub fn copy_outputs_into_workspace(
         if fs::symlink_metadata(&from).is_err() {
             trace!("No cached artifact for output {}, skipping", output);
             continue;
+        }
+        for parent in Path::new(output).ancestors().skip(1) {
+            if replaceable(parent) {
+                continue;
+            }
+            let path = workspace_root.join(parent);
+            if fs::symlink_metadata(&path).is_ok_and(|meta| !meta.is_dir()) {
+                anyhow::bail!(
+                    "Cannot restore {} from the cache: {} exists and is not a directory",
+                    output,
+                    path.display()
+                );
+            }
         }
         let to = workspace_root.join(output);
         let (copied, wrote) = copy_and_list(&from, &to, Some(workspace_root))?;
@@ -374,6 +415,7 @@ fn copy_dir_all(
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::native::cache::expand_outputs::_expand_outputs;
     use assert_fs::TempDir;
     use assert_fs::fixture::ChildPath;
     use assert_fs::prelude::*;
@@ -523,7 +565,7 @@ mod test {
         cache.child("package.json").write_str("{evil}").unwrap();
 
         let expanded = vec!["dist/main.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded).unwrap();
 
         assert!(workspace.child("dist/main.js").exists());
         assert!(!workspace.child(".git/hooks/pre-commit").exists());
@@ -547,7 +589,7 @@ mod test {
         symlink(outside.path(), workspace.join("dist")).unwrap();
 
         let expanded = vec!["dist/payload.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded).unwrap();
 
         // The write must land in the workspace, not through the symlink.
         assert!(!outside.child("payload.js").exists());
@@ -562,6 +604,114 @@ mod test {
                 .unwrap()
                 .file_type()
                 .is_symlink()
+        );
+    }
+
+    fn restore_outputs(
+        workspace: &TempDir,
+        cache: &TempDir,
+        outputs: &[&str],
+    ) -> anyhow::Result<(i64, Written)> {
+        let outputs: Vec<String> = outputs.iter().map(|output| output.to_string()).collect();
+        let expanded = _expand_outputs(cache.path(), outputs.clone()).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &outputs, &expanded)
+    }
+
+    #[test]
+    fn restore_keeps_a_file_where_a_glob_match_needs_a_directory() {
+        let cache = TempDir::new().unwrap();
+        cache
+            .child("src/checkout.ts/x.generated.ts")
+            .write_str("generated")
+            .unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace
+            .child("src/checkout.ts")
+            .write_str("source")
+            .unwrap();
+
+        let result = restore_outputs(&workspace, &cache, &["src/**/*.generated.ts"]);
+
+        assert!(result.is_err());
+        assert_eq!(
+            fs::read_to_string(workspace.join("src/checkout.ts")).unwrap(),
+            "source"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_keeps_a_symlink_where_a_glob_match_needs_a_directory() {
+        use std::os::unix::fs::symlink;
+
+        let cache = TempDir::new().unwrap();
+        cache
+            .child("src/shared/x.generated.ts")
+            .write_str("generated")
+            .unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace.child("lib").create_dir_all().unwrap();
+        workspace.child("src").create_dir_all().unwrap();
+        symlink("../lib", workspace.join("src/shared")).unwrap();
+
+        let result = restore_outputs(&workspace, &cache, &["src/**/*.generated.ts"]);
+
+        assert!(result.is_err());
+        assert_eq!(
+            workspace.join("src/shared").read_link().unwrap(),
+            Path::new("../lib")
+        );
+        assert!(!workspace.child("lib/x.generated.ts").exists());
+    }
+
+    #[test]
+    fn restore_creates_missing_directories_below_a_glob_root() {
+        let cache = TempDir::new().unwrap();
+        cache
+            .child("src/nested/x.generated.ts")
+            .write_str("generated")
+            .unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace.child("src/a.ts").write_str("source").unwrap();
+
+        restore_outputs(&workspace, &cache, &["src/**/*.generated.ts"]).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(workspace.join("src/nested/x.generated.ts")).unwrap(),
+            "generated"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_replaces_a_symlink_at_a_glob_root() {
+        use std::os::unix::fs::symlink;
+
+        let outside = TempDir::new().unwrap();
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/a/main.js").write_str("ok").unwrap();
+        let workspace = TempDir::new().unwrap();
+        symlink(outside.path(), workspace.join("dist")).unwrap();
+
+        restore_outputs(&workspace, &cache, &["dist/**/*.js"]).unwrap();
+
+        assert_eq!(fs::read_dir(outside.path()).unwrap().count(), 0);
+        assert!(workspace.join("dist").symlink_metadata().unwrap().is_dir());
+        assert!(workspace.child("dist/a/main.js").exists());
+    }
+
+    #[test]
+    fn restore_replaces_a_stale_file_inside_a_literal_output() {
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/static/contents").write_str("ok").unwrap();
+        let workspace = TempDir::new().unwrap();
+        workspace.child("dist/static").write_str("stale").unwrap();
+
+        restore_outputs(&workspace, &cache, &["dist", "!dist/cache"]).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(workspace.join("dist/static/contents")).unwrap(),
+            "ok"
         );
     }
 
@@ -597,7 +747,7 @@ mod test {
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded).unwrap();
 
         // The symlink is recreated verbatim — a pointer outside the workspace is
         // allowed; nothing was written *through* it.
@@ -628,7 +778,7 @@ mod test {
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist/real.js".to_string(), "dist/link.js".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded).unwrap();
 
         let link = workspace.join("dist/link.js");
         assert!(
@@ -724,7 +874,8 @@ mod test {
 
         let expanded = vec!["dist".to_string()];
         let (size, _) =
-            copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+            copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded)
+                .unwrap();
 
         assert_eq!(size as u64, bytes);
         assert_eq!(
@@ -828,7 +979,7 @@ mod test {
         symlink(outside.path(), workspace.join("dist/d0/s0")).unwrap();
 
         let expanded = vec!["dist".to_string()];
-        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded, &expanded).unwrap();
 
         assert_eq!(
             tree_manifest(&workspace.join("dist")),

@@ -682,8 +682,12 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        let (size, written) =
-            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
+        let (size, written) = copy_outputs_into_workspace(
+            &self.workspace_root,
+            outputs_path,
+            &outputs,
+            &expanded_outputs,
+        )?;
         // Stamped once the copy is done: a link can be written before the
         // file it points to.
         let files = stamp_all(
@@ -1100,6 +1104,29 @@ mod test {
     }
 
     const LOG_SIZE: i64 = "log".len() as i64;
+
+    #[test]
+    fn restore_keeps_a_file_where_a_glob_match_needs_a_directory() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let source = cache.workspace_root.join("src/checkout.ts");
+        create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(&source, "source").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("src/checkout.ts")).unwrap();
+        std::fs::write(artifact.join("src/checkout.ts/x.generated.ts"), "gen").unwrap();
+
+        let result = cache.copy_files_from_cache(
+            CachedResult {
+                outputs_path: artifact.to_str().unwrap().to_string(),
+                ..Default::default()
+            },
+            vec!["src/**/*.generated.ts".to_string()],
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), "source");
+    }
 
     #[test]
     fn get_is_a_miss_once_the_artifact_directory_is_gone() {
