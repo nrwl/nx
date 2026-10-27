@@ -2,8 +2,8 @@ import * as pc from 'picocolors';
 import * as yargs from 'yargs';
 
 import { reportCommandRunEvent } from '../analytics';
-import { output } from '../utils/output';
 import { yargsAddCommand } from './add/command-object';
+import { resolveConformanceCommandObject } from './conformance/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -125,8 +125,8 @@ export const commandsObject = yargs
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(yargsCompletionCommand)
-  .command(resolveConformanceCommandObject())
-  .command(resolveConformanceCheckCommandObject())
+  .command(resolveConformanceCommandObject('conformance'))
+  .command(resolveConformanceCommandObject('conformance:check'))
   .scriptName('nx')
   .middleware((args) => {
     // Skip analytics during shell completion (defensive — bin/nx.ts exits
@@ -150,54 +150,3 @@ export const commandsObject = yargs
   // so that it shows up in help. The default yargs implementation of --version is not
   // hit, as the implementation in nx.ts is hit first and calls process.exit(0).
   .version();
-
-function createMissingConformanceCommand(
-  command: 'conformance' | 'conformance:check'
-) {
-  return {
-    command,
-    // Hide from --help output in the common case of not having the plugin installed
-    describe: false,
-    handler: () => {
-      output.error({
-        title: `${command} is not available`,
-        bodyLines: [
-          `In order to use the \`nx ${command}\` command you must have an active Nx key and the \`@nx/conformance\` plugin installed.`,
-          '',
-          'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
-        ],
-      });
-      process.exit(1);
-    },
-  };
-}
-
-function resolveConformanceCommandObject() {
-  try {
-    const { yargsConformanceCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
-    return yargsConformanceCommand;
-  } catch {
-    return createMissingConformanceCommand('conformance');
-  }
-}
-
-function resolveConformanceCheckCommandObject() {
-  try {
-    const { yargsConformanceCheckCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
-    return yargsConformanceCheckCommand;
-  } catch {
-    return createMissingConformanceCommand('conformance:check');
-  }
-}
