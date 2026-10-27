@@ -41,6 +41,7 @@ import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import * as configModule from '../../config/configuration';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
+import * as provenance from '../../utils/provenance';
 
 import {
   confirmCommitsOnDefaultBranch,
@@ -5243,6 +5244,26 @@ module.exports = {
         });
       }
     );
+
+    it('installs the exact nx version whose provenance was verified', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('registry unavailable'));
+      const provenanceSpy = vi
+        .spyOn(provenance, 'resolveVersionWithProvenance')
+        .mockResolvedValue('2.0.1');
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir: join(tmpdir(), 'nx-migrate-spec-does-not-exist'),
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+
+      await expect(fetch('nx', 'latest')).rejects.toThrow(
+        'Command failed: npm-add nx@2.0.1'
+      );
+      expect(provenanceSpy).toHaveBeenCalledWith('nx', 'latest');
+    });
   });
 
   describe('multi-major migration prompt', () => {

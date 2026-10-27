@@ -8,6 +8,8 @@ import { readJson, updateJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
+import * as provenance from '../../utils/provenance';
+import * as packageJsonUtils from '../../utils/package-json';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -78,6 +80,28 @@ describe('setup-ai-agents generator', () => {
     expect(tree.exists('custom-dir/AGENTS.md')).toBe(true);
     expect(tree.exists('custom-dir/.claude/settings.json')).toBe(true);
     expect(tree.exists('custom-dir/.gemini/settings.json')).toBe(true);
+  });
+
+  it('installs the exact version whose provenance was verified', async () => {
+    delete process.env.NX_AI_FILES_USE_LOCAL;
+    const provenanceSpy = vi
+      .spyOn(provenance, 'resolveVersionWithProvenance')
+      .mockResolvedValue('1.0.0');
+    const installSpy = vi
+      .spyOn(packageJsonUtils, 'installPackageToTmp')
+      .mockImplementation(() => {
+        throw new Error('stub: no install in tests');
+      });
+
+    try {
+      await setupAiAgentsGenerator(tree, { directory: '.' });
+
+      expect(provenanceSpy).toHaveBeenCalledWith('nx', 'latest', tree.root);
+      expect(installSpy).toHaveBeenCalledWith('nx', '1.0.0', expect.anything());
+    } finally {
+      provenanceSpy.mockRestore();
+      installSpy.mockRestore();
+    }
   });
 
   describe('outdated rules update', () => {

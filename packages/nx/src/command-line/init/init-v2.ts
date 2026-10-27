@@ -39,7 +39,7 @@ import {
   toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
@@ -82,10 +82,14 @@ export async function initHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp(
+    const version = await resolveVersionWithProvenance(
       'nx',
       'latest',
+      process.cwd()
+    );
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      version,
       detectPackageManager(process.cwd())
     );
     cleanup = packageInstallResults.cleanup;

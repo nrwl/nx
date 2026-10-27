@@ -20,7 +20,7 @@ import {
 import { installPackageToTmp } from '../../utils/package-json';
 import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
@@ -88,11 +88,15 @@ export async function setupAiAgentsGenerator(
   }
 
   try {
-    await ensurePackageHasProvenance('nx', normalizedOptions.packageVersion);
+    const version = await resolveVersionWithProvenance(
+      'nx',
+      normalizedOptions.packageVersion,
+      tree.root
+    );
 
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
-      normalizedOptions.packageVersion,
+      version,
       detectPackageManager(tree.root)
     );
 

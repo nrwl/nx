@@ -1,6 +1,11 @@
 import type { MockInstance } from 'vitest';
 import * as packageManager from './package-manager';
-import { ensurePackageHasProvenance } from './provenance';
+import * as minReleaseAgePolicy from './min-release-age/policy';
+import * as minReleaseAgeResolve from './min-release-age/resolve';
+import {
+  ensurePackageHasProvenance,
+  resolveVersionWithProvenance,
+} from './provenance';
 
 describe('ensurePackageHasProvenance', () => {
   const attestationUrl =
@@ -45,9 +50,9 @@ describe('ensurePackageHasProvenance', () => {
   it('does nothing when NX_SKIP_PROVENANCE_CHECK is true', async () => {
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
-    await expect(
-      ensurePackageHasProvenance('nx', '1.0.0')
-    ).resolves.toBeUndefined();
+    await expect(ensurePackageHasProvenance('nx', '1.0.0')).resolves.toBe(
+      '1.0.0'
+    );
     expect(packageRegistryViewSpy).not.toHaveBeenCalled();
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -101,6 +106,17 @@ describe('ensurePackageHasProvenance', () => {
 
     await expect(ensurePackageHasProvenance('nx', '^1.0.0')).rejects.toThrow(
       'Specify an exact version'
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('refuses an exact version the registry answers with another version', async () => {
+    packageRegistryViewSpy.mockResolvedValue(
+      JSON.stringify(packument('1.0.0'))
+    );
+
+    await expect(ensurePackageHasProvenance('nx', '1.0.1')).rejects.toThrow(
+      'the registry returned 1.0.0'
     );
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -230,23 +246,23 @@ describe('ensurePackageHasProvenance', () => {
 
     it('accepts a tagged release built from its own tag', async () => {
       arrange('1.0.0', 'refs/tags/1.0.0');
-      await expect(
-        ensurePackageHasProvenance('nx', '1.0.0')
-      ).resolves.toBeUndefined();
+      await expect(ensurePackageHasProvenance('nx', '1.0.0')).resolves.toBe(
+        '1.0.0'
+      );
     });
 
     it('accepts a pr release built from master', async () => {
       arrange('23.3.0-pr.36841.f66e88b', 'refs/heads/master');
       await expect(
         ensurePackageHasProvenance('nx', '23.3.0-pr.36841.f66e88b')
-      ).resolves.toBeUndefined();
+      ).resolves.toBe('23.3.0-pr.36841.f66e88b');
     });
 
     it('accepts a canary release built from master', async () => {
       arrange('23.2.0-canary.20260908-89f02c1', 'refs/heads/master');
       await expect(
         ensurePackageHasProvenance('nx', '23.2.0-canary.20260908-89f02c1')
-      ).resolves.toBeUndefined();
+      ).resolves.toBe('23.2.0-canary.20260908-89f02c1');
     });
 
     it('still rejects a tagged release built from master', async () => {
@@ -261,6 +277,48 @@ describe('ensurePackageHasProvenance', () => {
       await expect(
         ensurePackageHasProvenance('nx', '1.0.0-preview.1')
       ).rejects.toThrow('Version ref does not match refs/tags/1.0.0-preview.1');
+    });
+
+    describe('resolveVersionWithProvenance', () => {
+      it('verifies and returns the version a dist-tag resolves to', async () => {
+        vi.spyOn(
+          minReleaseAgePolicy,
+          'readMinReleaseAgePolicy'
+        ).mockResolvedValue({ outcome: 'inactive' });
+        arrange('1.1.0', 'refs/tags/1.1.0');
+
+        await expect(
+          resolveVersionWithProvenance('nx', 'latest')
+        ).resolves.toBe('1.1.0');
+      });
+
+      it('verifies the version the minimum release age lets the package manager install', async () => {
+        vi.spyOn(
+          minReleaseAgePolicy,
+          'readMinReleaseAgePolicy'
+        ).mockResolvedValue({ outcome: 'active', policy: {} as any });
+        // `latest` is 1.1.0, too new for the cooldown; the package manager
+        // would fall back to 1.0.0
+        vi.spyOn(
+          minReleaseAgeResolve,
+          'resolveCompliantVersion'
+        ).mockResolvedValue({ version: '1.0.0', unconstrained: '1.1.0' });
+        arrange('1.0.0', 'refs/tags/1.0.0');
+
+        await expect(
+          resolveVersionWithProvenance('nx', 'latest')
+        ).resolves.toBe('1.0.0');
+        expect(packageRegistryViewSpy).toHaveBeenCalledWith(
+          'nx',
+          '1.0.0',
+          expect.anything()
+        );
+        expect(packageRegistryViewSpy).not.toHaveBeenCalledWith(
+          'nx',
+          'latest',
+          expect.anything()
+        );
+      });
     });
   });
 });
