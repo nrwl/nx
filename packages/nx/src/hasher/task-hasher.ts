@@ -315,6 +315,16 @@ export class InProcessTaskHasher implements TaskHasher {
   ): void {
     if (!this.rehasher || !task.hash) return;
     try {
+      if (
+        this.rehasher.hasMatchingCapture(
+          task,
+          graph,
+          env,
+          process.cwd(),
+          this.ultracacheConfigurations
+        )
+      )
+        return;
       const plans = this.taskHasher.createRehashPlans(
         [task],
         graph,

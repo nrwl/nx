@@ -3,6 +3,7 @@ import type { UltracacheConfigurations } from '../native';
 import type { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import type { Hash } from './task-hasher';
 import { posix } from 'path';
+import { isDeepStrictEqual } from 'node:util';
 import type {
   RehashSourceObservation,
   RehashSourceState,
@@ -99,29 +100,23 @@ export class TaskRehasher implements UltracacheRehasher {
     const taskHashes: Record<string, string> = {};
     const taskContexts: Record<string, string> = {};
     if (!this.disposed)
-      for (const entries of this.groups()) {
-        const selected = entries.filter(
+      for (const selected of this.groups(Object.keys(executedTaskHashes))) {
+        const entries = selected.filter(
           (entry) => entry.hash === executedTaskHashes[entry.task.id]
         );
-        if (!selected.length) continue;
+        if (!entries.length) continue;
         try {
           const plan = this.native.createRehashPlans(
-            selected.map((entry) => entry.task),
+            entries.map((entry) => entry.task),
             entries[0].graph,
             entries[0].configurations
           );
           const requirements = this.native.rehashRequirements(plan);
-          const skipped = this.native.validateRehash(
-            selected.map((entry) => entry.task),
-            entries[0].graph,
-            plan,
-            []
-          );
-          for (const entry of selected)
-            if (
-              requirements[entry.task.id]?.sourceOnly &&
-              !skipped[entry.task.id]
-            ) {
+          // The owner metadata observation below proves source stability.
+          // Main checks both complete plans for generated/unsupported inputs.
+          // Do not reread source contents here once per completed task.
+          for (const entry of entries)
+            if (requirements[entry.task.id]?.sourceOnly) {
               taskHashes[entry.task.id] = entry.hash!;
               taskContexts[entry.task.id] = entry.context;
             }
@@ -222,6 +217,61 @@ export class TaskRehasher implements UltracacheRehasher {
       return 'unobserved-membership';
   }
 
+  hasMatchingCapture(
+    task: Task,
+    graph: TaskGraph,
+    env: NodeJS.ProcessEnv,
+    cwd: string,
+    configurations?: UltracacheConfigurations
+  ): boolean {
+    const entry = this.tasks.get(task.id);
+    return (
+      !!entry &&
+      !this.disposed &&
+      entry.hash === task.hash &&
+      entry.cwd === cwd &&
+      entry.configurations === configurations &&
+      entry.context === hashArray([this.graphFingerprint(graph)]) &&
+      isDeepStrictEqual(entry.task.target, task.target) &&
+      isDeepStrictEqual(entry.task.overrides, task.overrides) &&
+      isDeepStrictEqual(entry.env, env)
+    );
+  }
+
+  private graphFingerprint(graph: TaskGraph): string {
+    return JSON.stringify([
+      Object.values(graph.tasks)
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((task) => [
+          task.id,
+          [task.target.project, task.target.target, task.target.configuration],
+          task.outputs,
+          [
+            task.ultracache?.mode,
+            task.ultracache?.collectStats,
+            task.ultracache?.ignoreReads,
+            task.ultracache?.ignoreWrites,
+          ],
+          task.continuous,
+          task.cache,
+        ]),
+      Object.keys(graph.dependencies)
+        .sort()
+        .map((id) => [
+          id,
+          graph.dependencies[id].map((edge) => edge.id).sort(),
+        ]),
+      Object.keys(graph.continuousDependencies ?? {})
+        .sort()
+        .map((id) => [
+          id,
+          graph.continuousDependencies[id]
+            .map((edge) => [edge.id, edge.inputs !== false])
+            .sort(),
+        ]),
+    ]);
+  }
+
   capture(
     tasks: Task[],
     graph: TaskGraph,
@@ -230,41 +280,7 @@ export class TaskRehasher implements UltracacheRehasher {
     configurations?: UltracacheConfigurations
   ): (hashes: Record<string, Hash>) => void {
     try {
-      const fingerprint = JSON.stringify([
-        Object.values(graph.tasks)
-          .sort((a, b) => a.id.localeCompare(b.id))
-          .map((task) => [
-            task.id,
-            [
-              task.target.project,
-              task.target.target,
-              task.target.configuration,
-            ],
-            task.outputs,
-            [
-              task.ultracache?.mode,
-              task.ultracache?.collectStats,
-              task.ultracache?.ignoreReads,
-              task.ultracache?.ignoreWrites,
-            ],
-            task.continuous,
-            task.cache,
-          ]),
-        Object.keys(graph.dependencies)
-          .sort()
-          .map((id) => [
-            id,
-            graph.dependencies[id].map((edge) => edge.id).sort(),
-          ]),
-        Object.keys(graph.continuousDependencies ?? {})
-          .sort()
-          .map((id) => [
-            id,
-            graph.continuousDependencies[id]
-              .map((edge) => [edge.id, edge.inputs !== false])
-              .sort(),
-          ]),
-      ]);
+      const fingerprint = this.graphFingerprint(graph);
       let snapshot = this.graphs.get(graph);
       if (!snapshot || snapshot.fingerprint !== fingerprint) {
         snapshot = { fingerprint, graph: structuredClone(graph) };
@@ -437,9 +453,13 @@ export class TaskRehasher implements UltracacheRehasher {
     this.release();
   }
 
-  private groups(): CapturedTask[][] {
+  private groups(ids?: string[]): CapturedTask[][] {
     const groups: CapturedTask[][] = [];
-    for (const entry of this.tasks.values()) {
+    for (const entry of ids
+      ? ids
+          .map((id) => this.tasks.get(id))
+          .filter((entry): entry is CapturedTask => !!entry)
+      : this.tasks.values()) {
       let group = groups.find(
         (g) =>
           g[0].graph === entry.graph &&

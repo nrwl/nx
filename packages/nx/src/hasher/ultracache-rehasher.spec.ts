@@ -489,7 +489,9 @@ describe('Ultracache task rehashing', () => {
     );
   });
 
-  it.each(['owner-summary', 'per-task'] as const)(
+  it
+    .skipIf(process.platform === 'win32')
+    .each(['owner-summary', 'per-task'] as const)(
     'retains upfront hashes automatically, exports an agent, rehashes on main, and matches a fresh normal source-glob run: %s',
     async (exportMode) => {
       vi.stubEnv('CI', 'true');
@@ -618,12 +620,14 @@ describe('Ultracache task rehashing', () => {
     }
   );
 
-  it.each([
-    'restored-write',
-    'hardlink-write',
-    'symlink-write',
-    'new-membership',
-  ] as const)('rejects owner mutation evidence: %s', async (mutation) => {
+  it
+    .skipIf(process.platform === 'win32')
+    .each([
+      'restored-write',
+      'hardlink-write',
+      'symlink-write',
+      'new-membership',
+    ] as const)('rejects owner mutation evidence: %s', async (mutation) => {
     vi.stubEnv('CI', 'true');
     vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
     if (mutation === 'symlink-write')
@@ -693,6 +697,100 @@ describe('Ultracache task rehashing', () => {
         [task.id]: 'wrong-source-key',
       }).taskHashes
     ).toEqual({});
+  });
+
+  it('reuses matching upfront captures and plans only requested export tasks', async () => {
+    const { hasher, taskGraph, task } = await fixture(
+      undefined,
+      undefined,
+      true
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const hashes = await hasher.hashTasksUpfront(
+      tasks,
+      taskGraph,
+      Object.fromEntries(tasks.map((t) => [t.id, {}])),
+      fs.tempDir
+    );
+    task.hash = hashes[task.id].value;
+    const native = hasher['taskHasher'];
+    const plans = vi.spyOn(native, 'createRehashPlans');
+    const hash = vi.spyOn(native, 'hashTasksForRehash');
+    const validate = vi.spyOn(native, 'validateRehash');
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue(fs.tempDir);
+    try {
+      captureUltracacheExecutionHash(hasher, task, taskGraph, {});
+      expect(plans).not.toHaveBeenCalled();
+      expect(hash).not.toHaveBeenCalled();
+      const retained = getUltracacheRehasher(hasher)!;
+      retained.exportExecutionState({ [task.id]: task.hash });
+      expect(plans).toHaveBeenCalledOnce();
+      expect(plans.mock.calls[0][0].map((t) => t.id)).toEqual([task.id]);
+      expect(validate).not.toHaveBeenCalled();
+      // A changed composition cannot reuse an earlier capture.
+      task.overrides = { changed: true };
+      captureUltracacheExecutionHash(hasher, task, taskGraph, {});
+      expect(hash).toHaveBeenCalledOnce();
+    } finally {
+      cwd.mockRestore();
+      plans.mockRestore();
+      hash.mockRestore();
+      validate.mockRestore();
+    }
+  });
+
+  it.skipIf(process.platform === 'win32')(
+    'refreshes source observations between per-task exports',
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+      const { hasher, task, taskGraph } = await fixture(
+        undefined,
+        undefined,
+        true
+      );
+      const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+      const retained = getUltracacheRehasher(hasher)!;
+      const before = retained.exportExecutionState({ [task.id]: hash.value });
+      expect(before.source.invalidFiles).not.toContain('app/learned.txt');
+      fs.writeFile('app/learned.txt', 'mutation between completed tasks');
+      fs.writeFile('app/learned.txt', 'learned');
+      const after = retained.exportExecutionState({ [task.id]: hash.value });
+      expect(after.source.invalidFiles).toContain('app/learned.txt');
+      expect(
+        (
+          await retained.rehash(configuration(['app/**/*.txt']), {
+            executionStates: [after],
+          })
+        ).hashes[task.id]
+      ).toBeUndefined();
+    }
+  );
+
+  it('fails closed for Windows source observations', async () => {
+    const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+    let owner: Awaited<ReturnType<typeof fixture>>;
+    try {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      });
+      owner = await fixture(undefined, undefined, true);
+    } finally {
+      Object.defineProperty(process, 'platform', platform);
+    }
+    const { hasher, task, taskGraph } = owner!;
+    const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+    const retained = getUltracacheRehasher(hasher)!;
+    const state = retained.exportExecutionState({ [task.id]: hash.value });
+    expect(state.source.invalidFiles).toContain('app/learned.txt');
+    expect(state.source.invalidDirectories).toContain('');
+    expect(
+      (
+        await retained.rehash(configuration(['app/**/*.txt']), {
+          executionStates: [state],
+        })
+      ).hashes[task.id]
+    ).toBeUndefined();
   });
 
   it('does not add automatic capture for Cloud credentials without native activation', async () => {
@@ -767,27 +865,30 @@ describe('Ultracache task rehashing', () => {
     ).toBe('owner-baseline-mismatch');
   });
 
-  it('rejects globs overlapping a captured but unobserved ignored subtree', async () => {
-    await fs.createFiles({
-      '.gitignore': 'app/ignored/\n',
-      'app/ignored/generated.txt': 'not a source snapshot input',
-    });
-    await new Promise((resolve) => setTimeout(resolve, 2200));
-    const { hasher, taskGraph, task } = await fixture(
-      undefined,
-      undefined,
-      true
-    );
-    const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
-    const retained = getUltracacheRehasher(hasher)!;
-    const state = retained.exportExecutionState({ [task.id]: hash.value });
-    expect(state.source.unobserved).toContain('app/ignored');
-    expect(
-      (
-        await retained.rehash(configuration(['app/**/*.txt']), {
-          executionStates: [state],
-        })
-      ).skipped[task.id]
-    ).toBe('unobserved-membership');
-  });
+  it.skipIf(process.platform === 'win32')(
+    'rejects globs overlapping a captured but unobserved ignored subtree',
+    async () => {
+      await fs.createFiles({
+        '.gitignore': 'app/ignored/\n',
+        'app/ignored/generated.txt': 'not a source snapshot input',
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+      const { hasher, taskGraph, task } = await fixture(
+        undefined,
+        undefined,
+        true
+      );
+      const hash = await hasher.hashTask(task, taskGraph, {}, fs.tempDir);
+      const retained = getUltracacheRehasher(hasher)!;
+      const state = retained.exportExecutionState({ [task.id]: hash.value });
+      expect(state.source.unobserved).toContain('app/ignored');
+      expect(
+        (
+          await retained.rehash(configuration(['app/**/*.txt']), {
+            executionStates: [state],
+          })
+        ).skipped[task.id]
+      ).toBe('unobserved-membership');
+    }
+  );
 });
