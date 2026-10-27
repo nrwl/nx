@@ -885,6 +885,20 @@ describe('package-manager', () => {
       );
     });
 
+    it.each([
+      [
+        'a raw @',
+        'https://ci-user:Tr0ub4dor@S3cr3tTail@registry.corp.example/',
+      ],
+      ['a space', 'https://ci-user:correct horse@registry.corp.example/'],
+    ])('masks a userinfo with %s the way the URL parser reads it', (_, url) => {
+      stubPackageManagerConfig({ registry: url });
+
+      expect(getWorkspaceRegistryUrlForDisplay('nx')).toBe(
+        'https://***@registry.corp.example/'
+      );
+    });
+
     it('asks npm under the overlay the fetch runs with', () => {
       mockGetNpmSpawnRegistryEnv.mockReturnValue({
         npm_config_registry: 'https://from-overlay.example.com/',
@@ -1612,6 +1626,42 @@ describe('package-manager', () => {
       const text = [caught.message, caught.stderr, caught.stdout].join('\n');
       expect(text).not.toContain('SECRET-TOKEN-123');
       expect(text).toContain('https://***@reg.example.com/nx');
+    });
+
+    it('redacts a password with a raw @ up to the last @ of the authority', async () => {
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'npm' },
+      });
+      const leakyUrl =
+        'https://ci-user:Tr0ub4dor@S3cr3tTail@reg.example.com/nx';
+      execMock.mockImplementation(((
+        _file: string,
+        _args: string[],
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        const err: any = new Error(
+          `Command failed: npm view\nnpm error request to ${leakyUrl} failed`
+        );
+        // An `@` past the authority belongs to the package spec.
+        err.stderr = `npm error request to ${leakyUrl}@1.0.0 failed`;
+        cb(err);
+        return undefined;
+      }) as any);
+
+      let caught: any;
+      try {
+        await packageRegistryView('nx', 'latest', ['--json']);
+      } catch (e) {
+        caught = e;
+      }
+
+      expect(caught).toBeDefined();
+      const text = [caught.message, caught.stderr].join('\n');
+      expect(text).not.toContain('S3cr3tTail');
+      expect(text).toContain('https://***@reg.example.com/nx failed');
+      expect(text).toContain('https://***@reg.example.com/nx@1.0.0 failed');
     });
 
     it('should resolve config from the Nx installation directory in a non-JS workspace', async () => {
