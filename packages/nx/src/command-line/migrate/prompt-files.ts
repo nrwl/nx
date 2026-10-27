@@ -11,7 +11,11 @@ import {
   MigrationsJsonEntry,
 } from '../../config/misc-interfaces';
 import { extractFileFromTarball } from '../../utils/tar';
-import { isContainedRelativePath, joinPathFragments } from '../../utils/path';
+import {
+  isContainedRelativePath,
+  joinPathFragments,
+  normalizePath,
+} from '../../utils/path';
 
 export const AI_MIGRATIONS_DIR = joinPathFragments('tools', 'ai-migrations');
 
@@ -221,7 +225,9 @@ export function writePromptMigrationFiles(
       continue;
     }
 
-    const baseName = posix.basename(migration.prompt);
+    const baseName = posix.basename(
+      posix.normalize(normalizePath(migration.prompt))
+    );
     const ext = posix.extname(baseName);
     const stem = ext ? baseName.slice(0, -ext.length) : baseName;
     const destDir = joinPathFragments(

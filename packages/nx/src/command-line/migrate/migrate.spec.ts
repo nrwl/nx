@@ -71,6 +71,7 @@ import { applyNxJsonMigrateDefaults } from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
+  promptContentKey,
   readPromptFilesFromInstall,
   validateMigrationEntries,
   writePromptMigrationFiles,
@@ -79,6 +80,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -6189,6 +6191,8 @@ module.exports = {
       ['../../etc/passwd'],
       ['./safe/../../escape.md'],
       ['/etc/passwd'],
+      ['..\\..\\etc\\passwd'],
+      ['safe/..\\..\\escape.md'],
     ])(
       'should reject prompt path %p that escapes the migrations directory',
       async (badPath) => {
@@ -6615,6 +6619,29 @@ module.exports = {
     afterEach(() => {
       rmSync(tmpRoot, { recursive: true, force: true });
     });
+
+    it.each([
+      ['files/..\\..\\..\\..\\x.md', 'x.md'],
+      ['files\\x.md', 'x.md'],
+      ['files/x.md\\..', 'files'],
+    ])(
+      'should keep prompt %s inside the target version directory',
+      (prompt, baseName) => {
+        const migrations = [
+          { package: 'pkg', name: 'm', version: '1.0.0', prompt },
+        ];
+
+        const written = writePromptMigrationFiles(
+          tmpRoot,
+          migrations,
+          { [promptContentKey('pkg', prompt)]: 'X' },
+          '1.0.0'
+        );
+
+        expect(written).toEqual([`tools/ai-migrations/pkg/1.0.0/${baseName}`]);
+        expect(readdirSync(tmpRoot)).toEqual(['tools']);
+      }
+    );
 
     it('should write prompt files under the package and target version directories using the basename', () => {
       const migrations = [
