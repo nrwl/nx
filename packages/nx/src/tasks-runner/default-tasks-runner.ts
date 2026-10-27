@@ -9,7 +9,14 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { DaemonClient } from '../daemon/client/client';
 import { cacheDir } from '../utils/cache-directory';
-import { readFile, writeFile, mkdir, rename, readdir } from 'fs/promises';
+import {
+  lstat,
+  readFile,
+  writeFile,
+  mkdir,
+  rename,
+  readdir,
+} from 'fs/promises';
 import { join } from 'path';
 import { CachedResult } from '../native';
 
@@ -18,34 +25,47 @@ export interface RemoteCache {
   store: (hash: string, cacheDirectory: string) => Promise<boolean>;
 }
 
+async function readRegularFile(path: string): Promise<string | null> {
+  const stats = await lstat(path).catch(() => null);
+  return stats?.isFile() ? readFile(path, 'utf-8') : null;
+}
+
 export abstract class RemoteCacheV2 {
   static async fromCacheV1(cache: RemoteCache): Promise<RemoteCacheV2> {
     await mkdir(join(cacheDir, 'terminalOutputs'), { recursive: true });
 
     return {
       retrieve: async (hash, cacheDirectory) => {
-        const res = await cache.retrieve(hash, cacheDirectory);
-        if (res) {
-          const [terminalOutput, oldTerminalOutput, code] = await Promise.all([
-            readFile(
-              join(cacheDirectory, hash, 'terminalOutputs'),
-              'utf-8'
-            ).catch(() => null),
-            readFile(join(cacheDir, 'terminalOutputs', hash), 'utf-8').catch(
-              () => null
-            ),
-            readFile(join(cacheDirectory, hash, 'code'), 'utf-8').then(
-              (s) => +s
-            ),
-          ]);
-          return {
-            outputsPath: join(cacheDirectory, hash, 'outputs'),
-            terminalOutput: terminalOutput ?? oldTerminalOutput,
-            code,
-          };
-        } else {
+        if (!(await cache.retrieve(hash, cacheDirectory))) {
           return null;
         }
+        const entry = join(cacheDirectory, hash);
+        const [outputs, terminalOutputs, code] = await Promise.all(
+          ['outputs', 'terminalOutputs', 'code'].map((name) =>
+            lstat(join(entry, name)).catch(() => null)
+          )
+        );
+        if (
+          (outputs && !outputs.isDirectory()) ||
+          (terminalOutputs && !terminalOutputs.isFile()) ||
+          !code?.isFile()
+        ) {
+          return null;
+        }
+        const [terminalOutput, oldTerminalOutput, exitCode] = await Promise.all(
+          [
+            terminalOutputs
+              ? readFile(join(entry, 'terminalOutputs'), 'utf-8')
+              : null,
+            readRegularFile(join(cacheDir, 'terminalOutputs', hash)),
+            readFile(join(entry, 'code'), 'utf-8'),
+          ]
+        );
+        return {
+          outputsPath: join(entry, 'outputs'),
+          terminalOutput: terminalOutput ?? oldTerminalOutput,
+          code: +exitCode,
+        };
       },
       store: async (hash, cacheDirectory, terminalOutput, code) => {
         // The new db cache places the outputs directly into the cacheDirectory + hash.
