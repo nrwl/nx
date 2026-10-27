@@ -9,6 +9,9 @@ import {
 vi.mock('../../utils/http-client', () => ({
   httpRequest: vi.fn(),
 }));
+vi.mock('../../utils/git-utils', () => ({
+  getVcsRemoteInfo: vi.fn(() => ({ domain: 'gitlab.com', slug: 'org/repo' })),
+}));
 
 const httpRequestMock = (await import('../../utils/http-client'))
   .httpRequest as Mock;
@@ -53,12 +56,36 @@ describe('URL shorten various functions', () => {
         'https://nx-cloud.acme.example/nx-cloud/onboarding',
       ]);
     });
+
+    test('should not put the access token in the fallback URL when shortening fails', async () => {
+      fs.createFileSync(
+        'nx.json',
+        JSON.stringify({ nxCloudUrl: 'https://cloud.example.com' })
+      );
+      httpRequestMock.mockRejectedValue(new Error('503'));
+
+      const result = await withEnvironmentVariables(
+        { NX_CLOUD_API: undefined, NRWL_API: undefined },
+        () =>
+          createNxCloudOnboardingURL(
+            'nx-connect',
+            'secret-workspace-token',
+            undefined,
+            false,
+            false,
+            fs.tempDir
+          )
+      );
+
+      expect(result).toBe(
+        'https://cloud.example.com/setup/connect-workspace/manual?source=nx-connect'
+      );
+    });
   });
 
   describe('getURLifShortenFailed', () => {
     const apiUrl = 'https://example.com';
     const source = 'source-test';
-    const accessToken = 'access-token';
 
     test('should return GitHub URL with slug when usesGithub is true and githubSlug is provided', () => {
       const usesGithub = true;
@@ -102,28 +129,11 @@ describe('URL shorten various functions', () => {
         usesGithub,
         githubSlug,
         apiUrl,
-        source,
-        accessToken
-      );
-
-      expect(result).toBe(
-        `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`
-      );
-    });
-
-    test('should return manual URL when usesGithub is false and accessToken is not provided', () => {
-      const usesGithub = false;
-      const githubSlug = null;
-
-      const result = getURLifShortenFailed(
-        usesGithub,
-        githubSlug,
-        apiUrl,
         source
       );
 
       expect(result).toBe(
-        `${apiUrl}/setup/connect-workspace/manual?accessToken=undefined&source=${source}`
+        `${apiUrl}/setup/connect-workspace/manual?source=${source}`
       );
     });
   });

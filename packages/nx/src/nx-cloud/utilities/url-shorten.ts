@@ -61,8 +61,7 @@ export async function createNxCloudOnboardingURL(
       usesGithub,
       usesGithub ? remoteInfo?.slug : null,
       apiUrl,
-      source,
-      accessToken
+      source
     );
   }
 }
@@ -83,8 +82,7 @@ export function getURLifShortenFailed(
   usesGithub: boolean,
   githubSlug: string | null,
   apiUrl: string,
-  source: string,
-  accessToken?: string
+  source: string
 ) {
   if (usesGithub) {
     if (githubSlug) {
@@ -95,7 +93,7 @@ export function getURLifShortenFailed(
       return `${apiUrl}/setup/connect-workspace/github/select?source=${source}`;
     }
   }
-  return `${apiUrl}/setup/connect-workspace/manual?accessToken=${accessToken}&source=${source}`;
+  return `${apiUrl}/setup/connect-workspace/manual?source=${source}`;
 }
 
 async function getInstallationSupportsGitHub(
