@@ -33,8 +33,6 @@ vi.mock('node:child_process', async () => {
   };
 });
 
-// Only the license gate is stubbed. The rest of the module (the
-// `FeaturePermission` enum the gate is called with) stays real.
 describe('initGenerator', () => {
   let tree: Tree;
 
