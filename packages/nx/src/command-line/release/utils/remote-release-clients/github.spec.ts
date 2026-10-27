@@ -1,6 +1,7 @@
 import { inspect } from 'node:util';
 import type { Mock } from 'vitest';
 import { output } from '../../../../utils/output';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 import { GithubRemoteReleaseClient } from './github';
 
 vi.mock('../../../../utils/http-client', () => ({
@@ -239,6 +240,50 @@ describe('GithubRemoteReleaseClient', () => {
       expect(authors.get('Test User')?.username).toBe(login);
     }
   );
+
+  describe('resolveTokenData', () => {
+    let tempFs: TempFs;
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      tempFs = new TempFs('gh-cli-config', false);
+      process.env = {
+        ...originalEnv,
+        XDG_CONFIG_HOME: tempFs.tempDir,
+        PATH: tempFs.tempDir,
+      };
+      delete process.env.GITHUB_TOKEN;
+      delete process.env.GH_TOKEN;
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+      tempFs.cleanup();
+    });
+
+    it('should request the gh CLI token for the given hostname', async () => {
+      tempFs.createFileSync(
+        'gh/hosts.yml',
+        `github.com:
+    user: personal
+    git_protocol: https
+ghe.example.com:
+    user: work
+    git_protocol: https
+`
+      );
+      execFileSyncMock.mockReturnValue('gho_work\n');
+
+      await expect(
+        GithubRemoteReleaseClient.resolveTokenData('ghe.example.com')
+      ).resolves.toEqual({ token: 'gho_work', headerName: 'Authorization' });
+      expect(execFileSyncMock).toHaveBeenCalledWith(
+        'gh',
+        ['auth', 'token', '--hostname', 'ghe.example.com'],
+        expect.any(Object)
+      );
+    });
+  });
 
   describe('handleError', () => {
     const repoData = {

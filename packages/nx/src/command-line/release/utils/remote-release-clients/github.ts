@@ -138,11 +138,15 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           (ghCLIConfig[hostname].git_protocol === 'ssh' ||
             ghCLIConfig[hostname].git_protocol === 'https')
         ) {
-          const token = execSync(`gh auth token`, {
-            encoding: 'utf8',
-            stdio: 'pipe',
-            windowsHide: true,
-          }).trim();
+          const token = execFileSync(
+            'gh',
+            ['auth', 'token', '--hostname', hostname],
+            {
+              encoding: 'utf8',
+              stdio: 'pipe',
+              windowsHide: true,
+            }
+          ).trim();
           return { token, headerName: 'Authorization' };
         }
       }
