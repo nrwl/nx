@@ -16,8 +16,6 @@ const { mockCreateFileMapUsingProjectGraph, mockReadFileSync } = vi.hoisted(
 let nxJson = {};
 let projectJsonContents = JSON.stringify({});
 
-// Only the license gate is stubbed. The rest of the module (the
-// `FeaturePermission` enum the gate is called with) stays real.
 vi.mock('@nx/devkit/internal', async () => {
   return {
     ...(await vi.importActual<typeof import('@nx/devkit/internal')>(
