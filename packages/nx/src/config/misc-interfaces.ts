@@ -32,8 +32,6 @@ export interface GeneratorsJsonEntry {
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
   'x-deprecated'?: string;
-  // @todo(v17) Remove this and make it default behavior.
-  'x-use-standalone-layout'?: boolean;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';

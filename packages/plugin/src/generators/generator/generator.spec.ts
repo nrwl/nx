@@ -296,25 +296,6 @@ describe('NxPlugin Generator Generator', () => {
     });
   });
 
-  describe('preset generator', () => {
-    it('should default to standalone layout: true', async () => {
-      await generatorGenerator(tree, {
-        path: 'my-plugin/src/generators/preset/generator',
-        name: 'preset',
-        unitTestRunner: 'none',
-      });
-
-      const generatorJson = readJson<GeneratorsJson>(
-        tree,
-        'my-plugin/generators.json'
-      );
-
-      expect(
-        generatorJson.generators['preset']['x-use-standalone-layout']
-      ).toEqual(true);
-    });
-  });
-
   describe('directory path handling', () => {
     it('should create subdirectory when path looks like a directory', async () => {
       await generatorGenerator(tree, {
