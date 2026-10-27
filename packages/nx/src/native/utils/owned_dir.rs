@@ -406,6 +406,21 @@ pub fn is_peer_writable(dir: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether an existing `dir` is a real directory owned by us that no other user
+/// can write into. Judges only: nothing is created or re-locked, so a directory
+/// another program made stays as it was. Always `true` where ownership is
+/// unknowable.
+pub fn is_owned_unshared_dir(dir: &Path) -> bool {
+    if !HAS_OWNERSHIP {
+        return true;
+    }
+    std::fs::symlink_metadata(dir).is_ok_and(|metadata| {
+        metadata.is_dir()
+            && uid_of(&metadata) == current_uid()
+            && mode_of(&metadata) & PEER_WRITE_BITS == 0
+    })
+}
+
 /// Create a shared container as sticky + world-writable if it does not exist,
 /// and report whether the resulting path is safe for the current user.
 ///

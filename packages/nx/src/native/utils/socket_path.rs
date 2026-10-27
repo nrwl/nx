@@ -20,7 +20,7 @@ use sha2::{Digest, Sha256};
 
 use crate::native::utils::owned_dir::{
     DirRefusal, canonical_dir, describe_refusal, ensure_owned_private_dir, ensure_safe_shared_root,
-    is_peer_writable, not_created, remedy_for, resolve_path, user_segment,
+    is_owned_unshared_dir, is_peer_writable, not_created, remedy_for, resolve_path, user_segment,
 };
 
 /// Why a directory may not *be* the socket directory. Named rather than a
@@ -659,14 +659,27 @@ fn establish_workspace_socket_dir(
 /// the client, so without it a connect failure is indistinguishable from no IDE
 /// being present and the integration would just go quiet. Remove this, and its
 /// only caller, once the supported extension floor uses the resolver.
-pub(crate) fn legacy_nx_console_socket_path(workspace_root: &str) -> PathBuf {
-    let dir = configured_socket_dir(None).unwrap_or_else(|| {
+///
+/// `None` unless the directory is ours and no other user can write into it,
+/// because Nx sends task output to whatever listens there.
+pub(crate) fn legacy_nx_console_socket_path(
+    workspace_root: &str,
+    env: Option<&HashMap<String, String>>,
+) -> Option<PathBuf> {
+    let dir = legacy_nx_console_socket_dir(workspace_root, env);
+    is_owned_unshared_dir(&dir).then(|| to_socket_path(&dir.join("nx-console.sock")))
+}
+
+fn legacy_nx_console_socket_dir(
+    workspace_root: &str,
+    env: Option<&HashMap<String, String>>,
+) -> PathBuf {
+    configured_socket_dir(env).unwrap_or_else(|| {
         let hash = crate::native::hasher::hash(
             format!("{},nx-console", workspace_root.to_lowercase()).as_bytes(),
         );
         std::env::temp_dir().join(hash)
-    });
-    to_socket_path(&dir.join("nx-console.sock"))
+    })
 }
 
 fn to_socket_path(path: &Path) -> PathBuf {
@@ -1095,14 +1108,75 @@ mod tests {
 
     #[test]
     fn the_legacy_console_path_is_the_derivation_released_extensions_listen_on() {
-        let legacy = legacy_nx_console_socket_path("/workspace/one");
+        let legacy = legacy_nx_console_socket_dir("/workspace/one", None);
 
         assert_eq!(
             legacy,
-            std::env::temp_dir()
-                .join(crate::native::hasher::hash(b"/workspace/one,nx-console"))
-                .join("nx-console.sock")
+            std::env::temp_dir().join(crate::native::hasher::hash(b"/workspace/one,nx-console"))
         );
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    fn legacy_console_socket_in(dir: &Path) -> Option<PathBuf> {
+        let ws = workspace();
+        let env = env_with(&[("NX_SOCKET_DIR", &dir.to_string_lossy())]);
+        legacy_nx_console_socket_path(&root_of(&ws), Some(&env))
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_legacy_console_socket_is_dialed_in_a_directory_we_own() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path().join("console");
+        std::fs::create_dir(&dir).unwrap();
+        crate::native::utils::owned_dir::chmod_real_directory_for_testing(&dir, 0o755);
+
+        assert_eq!(
+            legacy_console_socket_in(&dir),
+            Some(dir.join("nx-console.sock"))
+        );
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_legacy_console_socket_is_never_dialed_in_a_directory_others_can_write() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path().join("console");
+        std::fs::create_dir(&dir).unwrap();
+        crate::native::utils::owned_dir::chmod_real_directory_for_testing(&dir, 0o777);
+
+        assert_eq!(legacy_console_socket_in(&dir), None);
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_legacy_console_socket_is_never_dialed_in_a_directory_another_user_owns() {
+        if nix::unistd::getuid().is_root() {
+            return;
+        }
+
+        assert_eq!(legacy_console_socket_in(Path::new("/")), None);
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_legacy_console_socket_is_never_dialed_through_a_symlink() {
+        let temp = TempDir::new().unwrap();
+        let target = temp.path().join("target");
+        std::fs::create_dir(&target).unwrap();
+        crate::native::utils::owned_dir::chmod_real_directory_for_testing(&target, 0o755);
+        let link = temp.path().join("console");
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+
+        assert_eq!(legacy_console_socket_in(&link), None);
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_legacy_console_socket_is_never_dialed_in_a_directory_that_does_not_exist() {
+        let temp = TempDir::new().unwrap();
+
+        assert_eq!(legacy_console_socket_in(&temp.path().join("absent")), None);
     }
 
     /// A configured directory is the one socket path built from user input, so
