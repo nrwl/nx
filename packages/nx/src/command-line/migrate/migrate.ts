@@ -52,6 +52,7 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
+  InvalidResolvedVersionError,
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
@@ -360,6 +361,11 @@ export class Migrator {
     if (!migrationConfig.version) {
       throw new Error(
         `Fetched migration metadata for ${packageName} is invalid: the target version is missing.`
+      );
+    }
+    if (!valid(migrationConfig.version)) {
+      throw new Error(
+        `Fetched migration metadata for ${packageName} is invalid: the target version "${migrationConfig.version}" is not a valid version.`
       );
     }
     return migrationConfig;
@@ -2026,9 +2032,12 @@ export function createFetcher(pmc: PackageManagerCommands) {
         });
       })
       .catch((e) => {
-        // A cooldown violation would fail an install identically (only slower),
-        // so surface it instead of retrying through the package manager.
-        if (e instanceof MinReleaseAgeViolationError) {
+        // A cooldown violation or a malformed release would reach an install
+        // unchanged, so surface it instead of retrying through the package manager.
+        if (
+          e instanceof MinReleaseAgeViolationError ||
+          e instanceof InvalidResolvedVersionError
+        ) {
           throw e;
         }
         logger.verbose(
