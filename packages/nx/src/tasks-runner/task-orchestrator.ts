@@ -1655,39 +1655,65 @@ export class TaskOrchestrator {
     );
     this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
-    this.detectTaskInvocationLoop(task);
-
-    const childProcess = await this.runTask(
-      task,
-      streamOutput,
-      env,
-      temporaryOutputPath,
-      pipeOutput
-    );
-    this.runningDiscreteTasks.set(task.id, {
-      runningTask: childProcess,
-      stopping: false,
-    });
-
-    const { code, terminalOutput } = await childProcess.getResults();
-    const isStopping =
-      this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
-    this.runningDiscreteTasks.delete(task.id);
-
-    const result: TaskResult = {
-      task,
-      code,
-      status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
-      terminalOutput,
-    };
-
     try {
+      let result: TaskResult;
+      try {
+        this.detectTaskInvocationLoop(task);
+
+        const childProcess = await this.runTask(
+          task,
+          streamOutput,
+          env,
+          temporaryOutputPath,
+          pipeOutput
+        );
+        this.runningDiscreteTasks.set(task.id, {
+          runningTask: childProcess,
+          stopping: false,
+        });
+
+        // Rejects if run-commands cannot start (it printed why) or a forked child
+        // died before writing its log, so postRunSteps writes the log instead
+        const { code, terminalOutput } = await childProcess
+          .getResults()
+          .catch((e) => {
+            this.tasksWithPersistedOutput.delete(task.id);
+            return { code: 1, terminalOutput: e?.message ?? '' };
+          });
+        const isStopping =
+          this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
+        this.runningDiscreteTasks.delete(task.id);
+
+        result = {
+          task,
+          code,
+          status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
+          terminalOutput,
+        };
+      } catch (e) {
+        // Record the failure before the exit settles, since cleanup awaits the
+        // exit to let endTasks finish before run() returns
+        await this.handleDiscreteWorkerFailure(
+          doNotSkipCache,
+          task,
+          groupId,
+          e
+        );
+        return {
+          task,
+          code: 1,
+          status: 'failure',
+          terminalOutput: e?.message ?? '',
+        };
+      }
+      // Outside the catch: dispatchDiscreteWorker handles a failed
+      // postRunSteps, and handling it here too prints the failure twice
       await this.postRunSteps([result], doNotSkipCache, groupId);
+      return result;
     } finally {
       this.discreteTaskExitHandled.delete(task.id);
       resolveDiscreteExit!();
     }
-    return result;
   }
 
   private async runTask(
