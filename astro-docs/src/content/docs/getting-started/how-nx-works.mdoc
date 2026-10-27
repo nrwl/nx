@@ -7,7 +7,7 @@ filter: 'type:Features'
 ---
 
 Nx coordinates work in your workspace through a few core concepts: the project graph, the task graph, caching, and inferred tasks.
-[Plugins](/docs/features/nx-plugins) apply these concepts to the tools and frameworks in your repository.
+[Plugins](/docs/plugin-registry) apply these concepts to the tools and frameworks in your repository.
 
 ## The project graph
 
@@ -25,7 +25,7 @@ Take a workspace with a React frontend, a Java backend, and the packages they sh
 
 {% /filetree %}
 
-Nx finds each project from its `package.json` or `project.json` file, or from a plugin that reads tool configuration, such as `vite.config.ts` for `web` or `build.gradle.kts` for `api`.
+Nx finds each project from its `package.json` or `project.json` file, or from a [plugin](/docs/plugin-registry) that reads tool configuration, such as `vite.config.ts` for `web` or `build.gradle.kts` for `api`.
 It then reads TypeScript imports, `package.json` dependencies, and Gradle project dependencies to find how the projects connect.
 Both languages end up in one graph:
 

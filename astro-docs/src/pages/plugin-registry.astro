@@ -49,5 +49,13 @@ const allPlugins: Plugin[] = [
     filter: 'type:References',
   }}
 >
+  <p>
+    An Nx plugin is an npm package that teaches Nx about one tool or framework,
+    such as Vite, Jest, or Gradle. Plugins
+    <a href="/docs/getting-started/how-nx-works#inferred-and-explicit-configuration">infer tasks</a>
+    from your tool configuration and can add generators, migrations, and executors.
+    They're optional, since Nx runs and caches your existing scripts without them.
+    Add one with <code>nx add &lt;plugin-name&gt;</code>.
+  </p>
   <PluginDirectory client:load plugins={allPlugins} />
 </StarlightPage>

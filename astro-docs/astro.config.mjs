@@ -120,7 +120,7 @@ export default defineConfig({
     '/concepts/task-pipeline-configuration':
       '/docs/features/run-tasks#defining-a-task-pipeline',
     '/concepts/types-of-configuration': '/docs/reference/project-configuration',
-    '/concepts/nx-plugins': '/docs/features/nx-plugins',
+    '/concepts/nx-plugins': '/docs/plugin-registry',
     '/concepts/ci-concepts/building-blocks-fast-ci':
       '/docs/features/ci-features#building-blocks-of-fast-ci',
     '/concepts/ci-concepts': '/docs/features/ci-features',

@@ -86,7 +86,6 @@ const learnGroups: SidebarItems = [
         label: 'Cache task results',
         link: 'features/cache-task-results',
       },
-      { label: 'Nx plugins', link: 'features/nx-plugins' },
       { label: 'Enhance your coding agent', link: 'features/enhance-ai' },
       {
         label: 'Multi-language support',
