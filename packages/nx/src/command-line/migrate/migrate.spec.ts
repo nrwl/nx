@@ -6208,6 +6208,31 @@ module.exports = {
     );
   });
 
+  describe('prompt file type', () => {
+    it.each([
+      ['./prompts/project.json'],
+      ['./prompts/vite.config.ts'],
+      ['./prompts/no-extension'],
+      ['./prompts/.md'],
+    ])(
+      'should reject prompt path %s that is not a markdown file',
+      async (badPath) => {
+        await expect(
+          readPromptFilesFromInstall(
+            'pkg',
+            '1.0.0',
+            {
+              generators: {
+                m: { version: '1.0.0', prompt: badPath },
+              },
+            },
+            '/tmp/fake-pkg/migrations.json'
+          )
+        ).rejects.toThrow(/prompt files must be markdown \(\.md\) files/);
+      }
+    );
+  });
+
   describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
     let tempFs: TempFs;
     let root: string;

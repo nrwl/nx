@@ -53,6 +53,11 @@ async function resolvePromptFiles(
       packageName,
       packageVersion
     );
+    if (!isMarkdownFile(entry.prompt)) {
+      throw new Error(
+        `Invalid prompt path "${entry.prompt}" in package "${packageName}@${packageVersion}": prompt files must be markdown (.md) files.`
+      );
+    }
     try {
       resolvedPromptFiles[entry.prompt] = await resolveContent(entry.prompt);
     } catch (e) {
@@ -80,6 +85,12 @@ function assertPromptPathWithinMigrationsDir(
   }
 }
 
+// Prompt files are copied into the workspace under their own name, so any
+// other extension could land as workspace configuration (e.g. project.json).
+function isMarkdownFile(promptPath: string): boolean {
+  return posix.extname(promptPath).toLowerCase() === '.md';
+}
+
 /**
  * Thrown when the markdown prompt file referenced by a migration cannot be
  * resolved.
@@ -103,13 +114,13 @@ export class PromptResolutionError extends Error {
  * plain markdown files referenced relative to the directory containing the
  * `migrations.json` - unlike schemas, they are not resolved through package
  * exports or `require.resolve`. The path must stay within the migrations
- * directory and point at an existing file.
+ * directory and point at an existing markdown (`.md`) file.
  */
 export function resolvePrompt(
   promptPath: string,
   migrationsDir: string
 ): string {
-  if (!isContainedRelativePath(promptPath)) {
+  if (!isContainedRelativePath(promptPath) || !isMarkdownFile(promptPath)) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   const resolvedPath = join(migrationsDir, promptPath);

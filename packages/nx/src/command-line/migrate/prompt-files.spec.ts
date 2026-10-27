@@ -40,4 +40,12 @@ describe('resolvePrompt', () => {
       resolvePrompt('/root/migrations/prompts/upgrade.md', '/root/migrations')
     ).toThrow(PromptResolutionError);
   });
+
+  it('should throw when the prompt file is not a markdown file', () => {
+    vol.fromJSON({ '/root/migrations/prompts/project.json': '{}' });
+
+    expect(() =>
+      resolvePrompt('prompts/project.json', '/root/migrations')
+    ).toThrow(PromptResolutionError);
+  });
 });
