@@ -8,6 +8,7 @@ import {
 import { join } from 'node:path';
 import {
   flushChanges,
+  handleErrors,
   readFileMapCache,
   readNxJsonFromDisk,
 } from '@nx/devkit/internal';
@@ -66,7 +67,6 @@ export async function conformanceHandler(
     postResultHook: async () => undefined,
   }
 ) {
-  const handleErrors = await resolveHandleErrors();
   return handleErrors(!!args.verbose, async () => {
     const projectGraph = await createProjectGraphAsync();
     const fileMapCache = readFileMapCache();
@@ -357,16 +357,5 @@ function validateConfiguration(conformanceConfig?: NxConformanceConfiguration) {
         )}`
       );
     }
-  }
-}
-
-async function resolveHandleErrors(): Promise<
-  typeof import('nx/src/utils/handle-errors').handleErrors
-> {
-  try {
-    return (await import('nx/src/utils/handle-errors')).handleErrors;
-  } catch {
-    // For Nx 18.x.x, fall back to its old location
-    return ((await import('nx/src/utils/params')) as any).handleErrors;
   }
 }

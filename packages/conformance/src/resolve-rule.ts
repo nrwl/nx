@@ -57,14 +57,7 @@ export async function resolveRule({
 
   try {
     const { getRootTsConfigPath } = await import('@nx/js');
-    let registerTsProject: (s: string) => () => void;
-    // v23 changed path, fallback to old path until v22 is not longer supported.
-    try {
-      registerTsProject = (await import('@nx/js/internal')).registerTsProject;
-    } catch {
-      registerTsProject = (await import('@nx/js/src/internal'))
-        .registerTsProject;
-    }
+    const { registerTsProject } = await import('@nx/js/internal');
     const rootTsconfigPath = getRootTsConfigPath();
     if (rootTsconfigPath) {
       cleanupTranspiler = registerTsProject(rootTsconfigPath);

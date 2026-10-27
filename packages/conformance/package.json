@@ -32,18 +32,8 @@
   "homepage": "https://nx.dev",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
-  "bin": {
-    "nx-conformance": "./dist/bin/conformance.js",
-    "nx-conformance-check": "./dist/bin/conformance-check.js"
-  },
   "typesVersions": {
     "*": {
-      "bin/conformance": [
-        "dist/bin/conformance.d.ts"
-      ],
-      "bin/conformance-check": [
-        "dist/bin/conformance-check.d.ts"
-      ],
       "rules-runner": [
         "dist/src/rules-runner.d.ts"
       ],
@@ -74,16 +64,6 @@
     "./executors.json": "./executors.json",
     "./generators.json": "./generators.json",
     "./migrations.json": "./migrations.json",
-    "./bin/conformance": {
-      "@nx/nx-source": "./bin/conformance.ts",
-      "types": "./dist/bin/conformance.d.ts",
-      "default": "./dist/bin/conformance.js"
-    },
-    "./bin/conformance-check": {
-      "@nx/nx-source": "./bin/conformance-check.ts",
-      "types": "./dist/bin/conformance-check.d.ts",
-      "default": "./dist/bin/conformance-check.js"
-    },
     "./rules-runner": {
       "@nx/nx-source": "./src/rules-runner.ts",
       "types": "./dist/src/rules-runner.d.ts",

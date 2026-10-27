@@ -1,5 +1,5 @@
 import type { NxJsonConfiguration, NxOwnersConfiguration } from '@nx/devkit';
-import type { CLIErrorMessageConfig } from '@nx/devkit/internal';
+import { type CLIErrorMessageConfig, SyncError } from '@nx/devkit/internal';
 
 export type OwnerId = string;
 
@@ -42,24 +42,7 @@ export function exitWithError({
   title,
   bodyLines,
 }: CLIErrorMessageConfig): never {
-  const errorData = {
-    title,
-    bodyLines,
-  };
-  let SyncError:
-    | typeof import('nx/src/utils/sync-generators').SyncError
-    | undefined = undefined;
-  try {
-    // Not all supported versions of nx have SyncError available at runtime
-    ({ SyncError } = require('nx/src/utils/sync-generators'));
-  } catch {
-    /* empty */
-  }
-  if (SyncError) {
-    throw new SyncError(errorData.title, errorData.bodyLines ?? []);
-  }
-  // Fall back to throwing a plain Error if SyncError is not available in the currently installed nx version
-  throw new Error(JSON.stringify(errorData));
+  throw new SyncError(title, bodyLines ?? []);
 }
 
 export function validateAndSetDefaultsForRootConfig(

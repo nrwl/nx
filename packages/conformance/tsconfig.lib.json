@@ -11,7 +11,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*.ts", "bin/**/*.ts", "testing/**/*.ts"],
+  "include": ["src/**/*.ts", "testing/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
