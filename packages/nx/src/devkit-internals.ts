@@ -179,7 +179,7 @@ export {
   interpolateArgsIntoCommand,
   normalizeArgs as normalizeRunCommandsArgs,
 } from './executors/run-commands/run-commands.impl';
-export { FsTree } from './generators/tree';
+export { FsTree, flushChanges } from './generators/tree';
 export { getRelativeProjectJsonSchemaPath } from './generators/utils/project-configuration';
 export { hashFile } from './hasher/file-hasher';
 export { filterUsingGlobPatterns, getTargetInputs } from './hasher/task-hasher';
@@ -246,6 +246,7 @@ export {
   readCachedProjectConfiguration,
 } from './project-graph/project-graph';
 export type { ProjectRootMappings } from './project-graph/utils/find-project-for-path';
+export { createFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 export type { BatchResults } from './tasks-runner/batch/batch-messages';
 export type { CachedResult, TaskWithCachedResult } from './tasks-runner/cache';
 export { Cache } from './tasks-runner/cache';
@@ -341,3 +342,4 @@ export {
 export { setWorkspaceRoot, workspaceRootInner } from './utils/workspace-root';
 export { safeExecFileSync, safeSpawn } from './utils/safe-spawn';
 export { resolveStartupHost } from './tasks-runner/readiness/startup-host';
+export type { ProjectMetadata } from './config/workspace-json-project-json';
