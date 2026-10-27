@@ -283,7 +283,7 @@ export async function setupAiAgentsGeneratorImpl(
     try {
       aiConfigRepoPath = getAiConfigRepoPath();
     } catch {
-      // Network/clone failure — individual consumers handle fallback
+      // Network, clone or cache dir failure — individual consumers handle fallback
     }
   }
 

@@ -1,10 +1,15 @@
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
+import { existsSync, readdirSync, renameSync, rmSync } from 'fs';
 import { join } from 'path';
+import { NX_TMP_DIR, NX_USER_TMP_DIR } from '../utils/nx-tmp-dir';
+import {
+  DirectoryRefusedError,
+  ensureOwnedPrivateDir,
+  ensureSafeSharedRoot,
+} from '../utils/owned-private-dir';
 
 const REPO_URL = 'https://github.com/nrwl/nx-ai-agents-config';
-const CACHE_DIR = join(tmpdir(), 'nx-ai-agents-config');
+const CACHE_DIR = join(NX_USER_TMP_DIR, 'nx-ai-agents-config');
 
 // `git rev-parse --local-env-vars`, plus GIT_NAMESPACE and the indexed
 // GIT_CONFIG_KEY_<n> / GIT_CONFIG_VALUE_<n> pairs. Hooks export GIT_INDEX_FILE;
@@ -85,9 +90,6 @@ function getLatestCommitHash(): string {
  */
 function cloneRepo(targetPath: string): void {
   try {
-    // Ensure parent directory exists
-    mkdirSync(CACHE_DIR, { recursive: true });
-
     // Use a temporary path first to avoid race conditions
     const tempPath = `${targetPath}.tmp.${process.pid}`;
 
@@ -174,9 +176,12 @@ function cleanupOldCaches(currentCommitHash: string): void {
  * 3. If not, clones the repository and cleans up old caches
  *
  * @returns The path to the cached repository
- * @throws Error if unable to fetch or clone the repository
+ * @throws Error if unable to fetch or clone the repository, or if the cache
+ * directory is not owner-only
  */
 export function getAiConfigRepoPath(): string {
+  ensureOwnedCacheDir();
+
   // 1. Get latest commit hash (first 10 chars)
   const commitHash = getLatestCommitHash();
 
@@ -197,6 +202,23 @@ export function getAiConfigRepoPath(): string {
   cleanupOldCaches(commitHash);
 
   return cachedPath;
+}
+
+/**
+ * The cached files are rendered as EJS templates, so the shared tmp root must
+ * be safe for private children and every directory below it owner-only.
+ */
+function ensureOwnedCacheDir(): void {
+  const shared = ensureSafeSharedRoot(NX_TMP_DIR);
+  if (shared.status !== 'ok') {
+    throw new DirectoryRefusedError(shared.refusal);
+  }
+  for (const dir of [NX_USER_TMP_DIR, CACHE_DIR]) {
+    const owned = ensureOwnedPrivateDir(dir);
+    if (owned.status !== 'ok') {
+      throw new DirectoryRefusedError(owned.refusal);
+    }
+  }
 }
 
 /**
