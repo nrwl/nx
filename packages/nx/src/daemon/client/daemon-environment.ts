@@ -329,6 +329,8 @@ export function getDaemonClientEnvGeneration(): number {
  * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
  *   here holds for the daemon's whole lifetime. Changing it therefore needs a
  *   daemon restart (`nx reset`).
+ * - TMPDIR: without it, os.tmpdir() in the daemon and every process it
+ *   starts falls back to the shared /tmp instead of the user's own.
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
@@ -340,6 +342,9 @@ export function getDaemonSpawnEnv() {
   }
   if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
     env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
+  }
+  if (process.env.TMPDIR !== undefined) {
+    env.TMPDIR = process.env.TMPDIR;
   }
   return env;
 }

@@ -295,6 +295,19 @@ describe('daemon environment', () => {
 
       expect('NX_MAX_MESSAGE_SIZE' in getDaemonSpawnEnv()).toBe(false);
     });
+
+    it('should keep TMPDIR so the daemon and its children use the spawning user temp dir', () => {
+      process.env.TMPDIR = '/private/user/tmp';
+
+      expect(getDaemonSpawnEnv().TMPDIR).toBe('/private/user/tmp');
+      expect(getDaemonEnv().TMPDIR).toBeUndefined();
+    });
+
+    it('should not add TMPDIR when the client does not have it', () => {
+      delete process.env.TMPDIR;
+
+      expect('TMPDIR' in getDaemonSpawnEnv()).toBe(false);
+    });
   });
 
   describe('applyDaemonEnvFromClient', () => {
@@ -329,6 +342,15 @@ describe('daemon environment', () => {
 
       expect(changed).not.toContain('NX_MAX_MESSAGE_SIZE');
       expect(process.env.NX_MAX_MESSAGE_SIZE).toBe('1048576');
+    });
+
+    it('should keep the spawn-time TMPDIR across clients that do not set it', () => {
+      process.env.TMPDIR = '/private/user/tmp';
+
+      const changed = applyDaemonEnvFromClient({});
+
+      expect(changed).not.toContain('TMPDIR');
+      expect(process.env.TMPDIR).toBe('/private/user/tmp');
     });
 
     it('should converge after one application of a client env payload', () => {
