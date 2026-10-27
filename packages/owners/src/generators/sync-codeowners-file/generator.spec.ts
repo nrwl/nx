@@ -66,6 +66,19 @@ describe('sync CODEOWNERS file generator', () => {
 `);
   });
 
+  it('should report which file is out of sync', async () => {
+    writeJson(tree, 'nx.json', {
+      owners: {},
+    });
+
+    const result = await syncCodeownersFileGenerator(tree);
+
+    expect(result).toEqual({
+      outOfSyncMessage:
+        '.github/CODEOWNERS does not match the Nx owners configuration.',
+    });
+  });
+
   it('should support providing a custom outputPath', async () => {
     writeJson(tree, 'nx.json', {
       owners: {
