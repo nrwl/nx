@@ -341,21 +341,16 @@ describe('waitForWebserverExecutor', () => {
 
     const request = vi.mocked(http.request);
     const actualRequest = request.getMockImplementation()!;
-    const clearWatchdog = clearTimeout;
     // Expire the fake budget if a regression prevents the connection error.
     const watchdog = setTimeout(() => vi.advanceTimersByTime(300), 10_000);
     vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
     const deadline = Date.now() + 300;
     request.mockImplementation((...args) => {
       const req = actualRequest(...args);
-      if ((args[0] as URL).port === String(deadPort)) {
-        req.on('error', (error: NodeJS.ErrnoException) => {
-          if (error.code === 'ECONNREFUSED') {
-            // Finish the real refused hop before expiring the readiness budget.
-            vi.setSystemTime(deadline);
-          }
-        });
-      }
+      req.once('error', () => {
+        // Advancing timers here would hide the connection error.
+        vi.setSystemTime(deadline);
+      });
       return req;
     });
 
@@ -372,9 +367,9 @@ describe('waitForWebserverExecutor', () => {
         expect.stringContaining('ECONNREFUSED after 1 redirects')
       );
     } finally {
-      clearWatchdog(watchdog);
       request.mockImplementation(actualRequest);
       vi.useRealTimers();
+      clearTimeout(watchdog);
     }
   });
 
