@@ -12,7 +12,9 @@ use regex::Regex;
 use rusqlite::{params, types::Value};
 
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
-use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
+use crate::native::cache::file_ops::{
+    copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
+};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
@@ -463,13 +465,16 @@ impl NxCache {
         })
     }
 
+    /// Restores and records a result fetched from a remote cache. Returns
+    /// false, discarding the artifact, when it holds a link that leaves the
+    /// output it sits in.
     #[napi]
     pub fn apply_remote_cache_results(
         &self,
         hash: String,
         result: CachedResult,
         outputs: Option<Vec<String>>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<bool> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash, &result.outputs_path
@@ -478,6 +483,16 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
+                let outputs_path = Path::new(&result.outputs_path);
+                let expanded_outputs = _expand_outputs(
+                    outputs_path,
+                    normalize_outputs(&self.workspace_root, outputs.clone())?,
+                )?;
+                if let Some(link) = find_link_leaving_output(outputs_path, &expanded_outputs)? {
+                    debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
+                    remove_items(&[self.cache_path.join(&hash)])?;
+                    return Ok(false);
+                }
                 size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             };
         }
@@ -485,7 +500,7 @@ impl NxCache {
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
-        Ok(())
+        Ok(true)
     }
 
     /// Register terminal outputs that were written without a cache entry —
@@ -1215,5 +1230,141 @@ mod test {
         assert_eq!(hit.terminal_output.as_deref(), Some("log"));
         assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
         assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    /// A remote artifact for `hash` holding `dist/app/main.js`, after `plant`
+    /// adds to its `dist/app`.
+    #[cfg(unix)]
+    fn remote_artifact(cache: &NxCache, hash: &str, plant: impl FnOnce(&Path)) -> CachedResult {
+        record_task(cache, hash);
+        let outputs_path = cache.cache_path.join(hash);
+        let app = outputs_path.join("dist/app");
+        create_dir_all(&app).unwrap();
+        std::fs::write(app.join("main.js"), b"built").unwrap();
+        plant(&app);
+        CachedResult {
+            code: 0,
+            terminal_output: Some("log".to_string()),
+            outputs_path: outputs_path.to_str().unwrap().to_string(),
+            size: None,
+        }
+    }
+
+    #[cfg(unix)]
+    fn apply_remote(cache: &NxCache, hash: &str, result: CachedResult) -> bool {
+        apply_remote_with_output(cache, hash, result, "dist/app")
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_output(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        output: &str,
+    ) -> bool {
+        cache
+            .apply_remote_cache_results(hash.to_string(), result, Some(vec![output.to_string()]))
+            .unwrap()
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_with_links_inside_its_output_is_applied() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let result = remote_artifact(&cache, "1", |app| {
+            create_dir_all(app.join("sub")).unwrap();
+            symlink("main.js", app.join("link.js")).unwrap();
+            symlink("../main.js", app.join("sub/up.js")).unwrap();
+        });
+
+        assert!(apply_remote(&cache, "1", result));
+        let app = cache.workspace_root.join("dist/app");
+        assert_eq!(std::fs::read(app.join("link.js")).unwrap(), b"built");
+        assert_eq!(std::fs::read(app.join("sub/up.js")).unwrap(), b"built");
+        assert!(record_for(&cache, "1").is_some());
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_its_output() {
+        use std::os::unix::fs::symlink;
+
+        type Plant = Box<dyn FnOnce(&Path)>;
+        let cases: Vec<(&str, Plant)> = vec![
+            (
+                "output itself",
+                Box::new(|app: &Path| {
+                    std::fs::remove_dir_all(app).unwrap();
+                    symlink("../..", app).unwrap();
+                }),
+            ),
+            (
+                "absolute",
+                Box::new(|app: &Path| symlink("/tmp", app.join("abs")).unwrap()),
+            ),
+            (
+                "to the output root",
+                Box::new(|app: &Path| symlink(".", app.join("self")).unwrap()),
+            ),
+            (
+                "nested parent",
+                Box::new(|app: &Path| {
+                    create_dir_all(app.join("a/b")).unwrap();
+                    symlink("../../../other", app.join("a/b/up")).unwrap();
+                }),
+            ),
+            (
+                "through another link",
+                Box::new(|app: &Path| {
+                    create_dir_all(app.join("a/b/c")).unwrap();
+                    create_dir_all(app.join("a/x")).unwrap();
+                    symlink("../../x", app.join("a/b/c/l")).unwrap();
+                    symlink("l/../../..", app.join("a/b/c/esc")).unwrap();
+                }),
+            ),
+        ];
+
+        for (name, plant) in cases {
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", plant);
+
+            assert!(!apply_remote(&cache, "1", result), "{name}");
+            assert_discarded(&cache, name);
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_an_output_with_a_trailing_slash_is_a_link() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        let result = remote_artifact(&cache, "1", |app: &Path| {
+            std::fs::remove_dir_all(app).unwrap();
+            symlink(&elsewhere, app).unwrap();
+        });
+
+        assert!(!apply_remote_with_output(&cache, "1", result, "dist/app/"));
+        assert_discarded(&cache, "trailing slash");
+    }
+
+    #[cfg(unix)]
+    fn assert_discarded(cache: &NxCache, name: &str) {
+        assert!(
+            std::fs::symlink_metadata(cache.workspace_root.join("dist")).is_err(),
+            "{name}: nothing is restored"
+        );
+        assert!(
+            !cache.cache_path.join("1").exists(),
+            "{name}: artifact removed"
+        );
+        assert_eq!(record_for(cache, "1"), None, "{name}: not recorded");
     }
 }

@@ -149,9 +149,7 @@ export class DbCache {
         this.cache.cacheDirectory
       );
 
-      if (res) {
-        this.applyRemoteCacheResults(task.hash, res, task.outputs);
-
+      if (res && this.applyRemoteCacheResults(task, res)) {
         return {
           ...res,
           terminalOutput: res.terminalOutput ?? '',
@@ -208,8 +206,7 @@ export class DbCache {
             task.hash,
             this.cache.cacheDirectory
           );
-          if (res) {
-            this.applyRemoteCacheResults(task.hash, res, task.outputs);
+          if (res && this.applyRemoteCacheResults(task, res)) {
             results.set(task.hash, {
               ...res,
               terminalOutput: res.terminalOutput ?? '',
@@ -227,12 +224,21 @@ export class DbCache {
     return this.cache.getCacheSize();
   }
 
-  private applyRemoteCacheResults(
-    hash: string,
-    res: NativeCacheResult,
-    outputs: string[]
-  ) {
-    return this.cache.applyRemoteCacheResults(hash, res, outputs);
+  private applyRemoteCacheResults(task: Task, res: NativeCacheResult) {
+    const applied = this.cache.applyRemoteCacheResults(
+      task.hash,
+      res,
+      task.outputs
+    );
+    if (!applied) {
+      output.warn({
+        title: `Ignoring the remote cache result for ${task.id}`,
+        bodyLines: [
+          'Its outputs contain a symlink that points outside the output it is in.',
+        ],
+      });
+    }
+    return applied;
   }
 
   async put(

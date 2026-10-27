@@ -148,7 +148,12 @@ export declare class NxCache {
    */
   getBatch(hashes: Array<string>): Array<CachedResult | undefined | null>
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): CachedOutputs
-  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
+  /**
+   * Restores and records a result fetched from a remote cache. Returns
+   * false, discarding the artifact, when it holds a link that leaves the
+   * output it sits in.
+   */
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): boolean
   /**
    * Register terminal outputs that were written without a cache entry —
    * uncacheable tasks, and cacheable ones run with `--skip-nx-cache`.

@@ -193,6 +193,68 @@ pub fn copy_outputs_into_workspace(
     Ok((size, written))
 }
 
+/// The first link among `expanded_outputs` under `outputs_path` whose target
+/// does not stay strictly inside the output it belongs to.
+pub(crate) fn find_link_leaving_output(
+    outputs_path: &Path,
+    expanded_outputs: &[String],
+) -> io::Result<Option<PathBuf>> {
+    for output in expanded_outputs {
+        let root: PathBuf = outputs_path.join(output).components().collect();
+        match fs::symlink_metadata(&root) {
+            Ok(meta) if meta.file_type().is_symlink() => return Ok(Some(root)),
+            Ok(meta) if meta.file_type().is_dir() => {
+                if let Some(link) = find_link_leaving_dir(&root, 0)? {
+                    return Ok(Some(link));
+                }
+            }
+            Ok(_) => {}
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(None)
+}
+
+/// `dir` sits `depth` real directories below its output root.
+fn find_link_leaving_dir(dir: &Path, depth: usize) -> io::Result<Option<PathBuf>> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_symlink() {
+            if !link_target_stays_inside(depth, &fs::read_link(entry.path())?) {
+                return Ok(Some(entry.path()));
+            }
+        } else if ty.is_dir()
+            && let Some(link) = find_link_leaving_dir(&entry.path(), depth + 1)?
+        {
+            return Ok(Some(link));
+        }
+    }
+    Ok(None)
+}
+
+/// Whether `target`, read from a link `depth` directories below an output
+/// root, resolves strictly inside that root. A `..` after a named component
+/// is refused, because that component may itself be a link.
+fn link_target_stays_inside(mut depth: usize, target: &Path) -> bool {
+    use std::path::Component;
+
+    let mut named = false;
+    for component in target.components() {
+        match component {
+            Component::CurDir => {}
+            Component::Normal(_) => {
+                named = true;
+                depth += 1;
+            }
+            Component::ParentDir if !named && depth > 0 => depth -= 1,
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => return false,
+        }
+    }
+    depth > 0
+}
+
 fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
     let mut components = path.as_ref().components().collect::<Vec<_>>();
 
