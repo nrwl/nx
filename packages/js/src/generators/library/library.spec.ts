@@ -1323,7 +1323,7 @@ describe('lib', () => {
           expect(nxJson.release).toEqual({
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1357,7 +1357,7 @@ describe('lib', () => {
             version: {
               ...existingReleaseConfig.version,
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1384,7 +1384,7 @@ describe('lib', () => {
             projects: '*',
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1411,7 +1411,7 @@ describe('lib', () => {
             projects: ['something-else', 'my-lib'],
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1439,7 +1439,7 @@ describe('lib', () => {
             projects: ['tag:one'],
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1467,7 +1467,7 @@ describe('lib', () => {
             projects: ['packages/*'],
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1494,7 +1494,7 @@ describe('lib', () => {
             projects: ['something-else', 'my-lib'],
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1521,7 +1521,7 @@ describe('lib', () => {
             projects: ['packages', 'my-lib'],
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1556,7 +1556,7 @@ describe('lib', () => {
             groups: existingReleaseConfig.groups,
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
@@ -1597,7 +1597,7 @@ describe('lib', () => {
             groups: existingReleaseConfig.groups,
             version: {
               preVersionCommand: `${
-                getPackageManagerCommand().dlx
+                getPackageManagerCommand().exec
               } nx run-many -t build`,
             },
           });
