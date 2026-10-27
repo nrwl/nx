@@ -22,6 +22,7 @@ import {
 import { readEnv } from '../../tasks-runner/tokens';
 import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
+import { whenStdioClosed } from '../../utils/child-process';
 import { signalToCode } from '../../utils/exit-codes';
 import { output as cliOutput } from '../../utils/output';
 import {
@@ -171,6 +172,16 @@ export class ParallelRunningTasks implements RunningTask {
                 }
               });
               childProcess.onExit((code, terminalOutput) => {
+                // A failed command reports only once its output is read, so
+                // readyWhen text a sibling prints meanwhile must not hide it.
+                if (
+                  code === 0 &&
+                  this.childProcesses.some(
+                    (p) => p !== childProcess && p.exitedWithFailure
+                  )
+                ) {
+                  return;
+                }
                 res({
                   childProcess,
                   result: { code, terminalOutput },
@@ -524,7 +535,10 @@ class RunningNodeProcess implements RunningTask {
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
   private killPromise: Promise<void> | null = null;
   private closedPromise: Promise<void>;
+  private stdioClosed: Promise<void>;
   public command: string;
+  // Set at 'exit', while the output may still be unread.
+  public exitedWithFailure = false;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -556,6 +570,7 @@ class RunningNodeProcess implements RunningTask {
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
+    this.stdioClosed = whenStdioClosed(this.childProcess);
     this.closedPromise = new Promise<void>((resolve) => {
       this.childProcess.on('close', resolve);
     });
@@ -619,13 +634,17 @@ class RunningNodeProcess implements RunningTask {
   kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.killPromise) return this.killPromise;
     if (!this.childProcess.pid) return Promise.resolve();
+    // An exited child's pid is free for reuse, so signalling it could reach an
+    // unrelated process.
+    const signalled =
+      this.childProcess.exitCode !== null ||
+      this.childProcess.signalCode !== null
+        ? Promise.resolve()
+        : killProcessTreeGraceful(this.childProcess.pid, signal);
     // Cache the promise so concurrent callers (e.g. cleanup() after a
     // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
     // same in-progress operation instead of no-oping.
-    this.killPromise = killProcessTreeGraceful(
-      this.childProcess.pid,
-      signal
-    ).then(() =>
+    this.killPromise = signalled.then(() =>
       // Wait for stdio drain and close events before the orchestrator
       // tears down the event loop via process.exit().
       Promise.race([
@@ -693,11 +712,14 @@ class RunningNodeProcess implements RunningTask {
       untrackRunningNodeProcess(this);
       this.emitExit(1, terminalOutput);
     });
-    this.childProcess.on('exit', (code, signal) => {
+    this.childProcess.on('exit', async (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
       untrackRunningNodeProcess(this);
+      this.exitedWithFailure = code !== 0;
+      // The last stdout and stderr chunks can still be unread at 'exit'.
+      await this.stdioClosed;
       if (
         code === 0 &&
         this.readyWhenStatus.length &&

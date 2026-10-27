@@ -2,6 +2,7 @@ import {
   exec,
   execSync,
   spawnSync,
+  type ChildProcess as NodeChildProcess,
   type ExecOptions,
   type ExecSyncOptions,
   type SpawnSyncOptions,
@@ -212,6 +213,24 @@ export async function runNxAsync(
       child.stdout?.pipe(process.stdout);
       child.stderr?.pipe(process.stderr);
     }
+  });
+}
+
+/**
+ * Settles once `child`'s stdio has closed, which Node reports after 'exit'.
+ * Call it at spawn time: a 'close' emitted before the call is missed. Gives up
+ * 1s after 'exit', since a descendant can keep the pipes open indefinitely.
+ */
+export function whenStdioClosed(child: NodeChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    let timeout: NodeJS.Timeout | undefined;
+    child.once('close', () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+    child.once('exit', () => {
+      timeout = setTimeout(resolve, 1000);
+    });
   });
 }
 

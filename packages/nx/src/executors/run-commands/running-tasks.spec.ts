@@ -1,6 +1,7 @@
 import * as figures from 'figures';
 import { EventEmitter } from 'events';
 import { stripVTControlCharacters } from 'util';
+import type { MockInstance } from 'vitest';
 import { output } from '../../utils/output';
 
 // Replaces the module rather than spying. A spy reaches this code only through
@@ -15,14 +16,29 @@ const mockChild = () => {
   cp.stderr.setEncoding = () => {};
   cp.pid = 4242;
   cp.kill = () => {};
+  cp.exitCode = null;
+  cp.signalCode = null;
+  cp.exit = (code: number) => {
+    cp.exitCode = code;
+    cp.emit('exit', code, null);
+  };
   return cp;
 };
 let mockSpawned: any;
+// Children for a run that spawns several, handed out in spawn order.
+let mockSpawnQueue: any[] = [];
 vi.mock('child_process', async () => ({
   ...require('child_process'),
-  spawn: () => mockSpawned,
+  spawn: () => mockSpawnQueue.shift() ?? mockSpawned,
+}));
+const mockKillProcessTreeGraceful = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock('../../native', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../native')>()),
+  killProcessTreeGraceful: mockKillProcessTreeGraceful,
 }));
 
+import { PseudoTerminal } from '../../tasks-runner/pseudo-terminal';
+import { runCommands, type RunCommandsOptions } from './run-commands.impl';
 import { ParallelRunningTasks } from './running-tasks';
 
 function captureStdout(cb: () => void): string {
@@ -131,5 +147,123 @@ describe('run-commands output routing', () => {
     } finally {
       routed.mockRestore();
     }
+  });
+});
+
+describe('run-commands completion', () => {
+  let isSupported: MockInstance;
+  beforeEach(() => {
+    // A stdout that is not a TTY, which keeps every command off the pseudo
+    // terminal and on a piped child process.
+    isSupported = vi
+      .spyOn(PseudoTerminal, 'isSupported')
+      .mockReturnValue(false);
+    mockKillProcessTreeGraceful.mockClear();
+  });
+  afterEach(() => {
+    isSupported.mockRestore();
+  });
+
+  function start(options: Partial<RunCommandsOptions>) {
+    mockSpawned = mockChild();
+    return runCommands(
+      {
+        command: 'build',
+        streamOutput: false,
+        __unparsed__: [],
+        ...options,
+      },
+      { root: '.' } as any,
+      { id: 'lib:build' }
+    );
+  }
+
+  const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
+
+  it.each([false, true])(
+    'keeps output read after the command exits (parallel: %s)',
+    async (parallel) => {
+      const task = await start({ parallel });
+      mockSpawned.stdout.emit('data', 'HEAD\n');
+      mockSpawned.exit(1);
+      await nextTurn();
+      mockSpawned.stdout.emit('data', 'LATE-OUT\n');
+      mockSpawned.stderr.emit('data', 'LATE-ERR\n');
+      mockSpawned.emit('close', 1, null);
+
+      const { code, terminalOutput } = await task.getResults();
+      expect(code).toBe(1);
+      expect(terminalOutput).toContain('LATE-OUT');
+      expect(terminalOutput).toContain('LATE-ERR');
+      expect(terminalOutput).toContain(
+        'Warning: command "build" exited with non-zero status code'
+      );
+    }
+  );
+
+  it('completes at readyWhen text read after a non-zero exit', async () => {
+    const task = await start({ parallel: true, readyWhen: 'READY' });
+    mockSpawned.exit(1);
+    await nextTurn();
+    mockSpawned.stdout.emit('data', 'READY\n');
+    mockSpawned.stderr.emit('data', 'TAIL\n');
+    mockSpawned.emit('close', 1, null);
+
+    const { code, terminalOutput } = await task.getResults();
+    expect(code).toBe(0);
+    expect(stripVTControlCharacters(terminalOutput)).toMatch(/READY\n$/);
+  });
+
+  it('fails with the late output when the readyWhen text never arrives', async () => {
+    const task = await start({ parallel: true, readyWhen: 'READY' });
+    mockSpawned.stdout.emit('data', 'HEAD\n');
+    mockSpawned.exit(1);
+    await nextTurn();
+    mockSpawned.stderr.emit('data', 'ERR\n');
+    mockSpawned.emit('close', 1, null);
+
+    const { code, terminalOutput } = await task.getResults();
+    expect(code).toBe(1);
+    expect(terminalOutput).toContain('ERR');
+    expect(terminalOutput).toContain(
+      'Warning: command "build" exited with non-zero status code'
+    );
+  });
+
+  it("keeps a failed command's exit code when a sibling's readyWhen text follows it", async () => {
+    const failing = mockChild();
+    const serving = mockChild();
+    mockSpawnQueue = [failing, serving];
+    const task = await runCommands(
+      {
+        commands: ['check', 'serve'],
+        parallel: true,
+        readyWhen: 'READY',
+        streamOutput: false,
+        __unparsed__: [],
+      },
+      { root: '.' } as any,
+      { id: 'lib:serve' }
+    );
+    failing.stdout.emit('data', 'CHECK-FAILED\n');
+    failing.exit(1);
+    await nextTurn();
+    serving.stdout.emit('data', 'READY\n');
+    failing.emit('close', 1, null);
+
+    const { code, terminalOutput } = await task.getResults();
+    expect(code).toBe(1);
+    expect(terminalOutput).toContain('CHECK-FAILED');
+  });
+
+  it('sends no signal to a command that has already exited', async () => {
+    const task = await start({ parallel: false });
+    mockSpawned.exit(1);
+    await nextTurn();
+    const killed = task.kill('SIGTERM');
+    mockSpawned.emit('close', 1, null);
+    await killed;
+
+    expect(mockKillProcessTreeGraceful).not.toHaveBeenCalled();
   });
 });
