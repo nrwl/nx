@@ -33,6 +33,7 @@ import {
 } from './default-tasks-runner';
 import { getTaskIOService } from './task-io-service';
 import { handleImport } from '../utils/handle-import';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -403,9 +404,11 @@ export class DbCache {
   }
 
   private resolvePackage(pkg: string) {
-    return require.resolve(pkg, {
-      paths: [process.cwd(), workspaceRoot, __dirname],
-    });
+    return resolveInstalledPackage(pkg, [
+      process.cwd(),
+      workspaceRoot,
+      __dirname,
+    ]);
   }
 
   private assertCacheIsValid() {
