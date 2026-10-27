@@ -78,6 +78,7 @@ import {
   packageRegistryView,
   parseRegistryViewJson,
   parseVersionFromPackageManagerField,
+  resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
   PackageManager,
 } from './package-manager';
@@ -1816,6 +1817,54 @@ describe('package-manager', () => {
       const [, , options] = execMock.mock.calls[0];
       expect(options.cwd).toBe(installationPath);
       expect(overlaySpy.mock.calls[0][1]).toBe(installationPath);
+    });
+  });
+
+  describe('resolvePackageVersionUsingInstallation', () => {
+    beforeEach(() => {
+      clearPackageManagerVersionCache();
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'pnpm' },
+      });
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+      vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.clearAllMocks();
+    });
+
+    it('passes the package spec to the shell as a single argument', async () => {
+      const execMock = vi.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(new Error('install failed'));
+        return undefined;
+      }) as any);
+      const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+
+      try {
+        await expect(
+          resolvePackageVersionUsingInstallation(
+            'typescript',
+            'latest; echo x > marker'
+          )
+        ).rejects.toThrow('install failed');
+      } finally {
+        Object.defineProperty(process, 'platform', platform);
+      }
+
+      expect(execMock.mock.calls[0][0]).toMatch(
+        / 'typescript@latest; echo x > marker'$/
+      );
     });
   });
 

@@ -849,10 +849,13 @@ export async function resolvePackageVersionUsingInstallation(
     }
 
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
-      cwd: dir,
-      windowsHide: true,
-    });
+    await execAsync(
+      `${pmc.add} ${quoteShellArg(`${packageName}@${resolvedVersion}`)}`,
+      {
+        cwd: dir,
+        windowsHide: true,
+      }
+    );
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 

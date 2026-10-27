@@ -5243,6 +5243,32 @@ module.exports = {
         });
       }
     );
+
+    it('passes the install fallback spec to the shell as a single argument', async () => {
+      const dir = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-migrate-install-spec-'))
+      );
+      const marker = join(dir, 'marker');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('No match found for version'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+      const version = `latest; echo x > ${marker}`;
+
+      try {
+        await expect(fetch('mypackage', version)).rejects.toThrow(
+          `Failed to fetch migrations for mypackage@${version}`
+        );
+        expect(existsSync(marker)).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
   });
 
   describe('multi-major migration prompt', () => {
