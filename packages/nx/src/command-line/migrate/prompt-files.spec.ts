@@ -48,4 +48,38 @@ describe('resolvePrompt', () => {
       resolvePrompt('prompts/project.json', '/root/migrations')
     ).toThrow(PromptResolutionError);
   });
+
+  it('should throw when the prompt path escapes the migrations directory through a link', () => {
+    vol.fromJSON({
+      '/root/migrations/migrations.json': '{}',
+      '/root/secret.md': '# Secret',
+    });
+    vol.symlinkSync('/root', '/root/migrations/linked');
+
+    expect(() => resolvePrompt('linked/secret.md', '/root/migrations')).toThrow(
+      PromptResolutionError
+    );
+  });
+
+  it('should throw when the prompt path points into the node_modules of the package', () => {
+    vol.fromJSON({
+      '/root/migrations/node_modules/dep/upgrade.md': '# Upgrade',
+    });
+
+    expect(() =>
+      resolvePrompt('node_modules/dep/upgrade.md', '/root/migrations')
+    ).toThrow(PromptResolutionError);
+  });
+
+  it('should resolve a prompt file when the migrations directory is reached through a link', () => {
+    vol.fromJSON({
+      '/store/pkg/prompts/upgrade.md': '# Upgrade',
+    });
+    vol.mkdirSync('/root/node_modules', { recursive: true });
+    vol.symlinkSync('/store/pkg', '/root/node_modules/pkg');
+
+    expect(resolvePrompt('prompts/upgrade.md', '/root/node_modules/pkg')).toBe(
+      '/root/node_modules/pkg/prompts/upgrade.md'
+    );
+  });
 });
