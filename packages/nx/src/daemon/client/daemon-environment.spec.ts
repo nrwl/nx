@@ -308,6 +308,18 @@ describe('daemon environment', () => {
 
       expect('TMPDIR' in getDaemonSpawnEnv()).toBe(false);
     });
+
+    it('should keep NX_ALLOW_INSECURE_DIRECTORIES in the spawn env but not reflect it', () => {
+      process.env.NX_ALLOW_INSECURE_DIRECTORIES = 'true';
+
+      expect(getDaemonSpawnEnv().NX_ALLOW_INSECURE_DIRECTORIES).toBe('true');
+      expect(getDaemonEnv().NX_ALLOW_INSECURE_DIRECTORIES).toBeUndefined();
+
+      delete process.env.NX_ALLOW_INSECURE_DIRECTORIES;
+      expect('NX_ALLOW_INSECURE_DIRECTORIES' in getDaemonSpawnEnv()).toBe(
+        false
+      );
+    });
   });
 
   describe('applyDaemonEnvFromClient', () => {
