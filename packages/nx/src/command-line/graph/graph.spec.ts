@@ -1,15 +1,21 @@
 import type { Mock } from 'vitest';
 import type { FileData } from '../../config/project-graph';
 import { expandFilesInput, HashPlanner } from '../../native';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import {
+  createProjectGraphAndSourceMapsAsync,
+  createProjectGraphAsync,
+} from '../../project-graph/project-graph';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { allFileData } from '../../utils/all-file-data';
 import {
   getExpandedTaskInputs,
   ProjectGraphClientResponse,
   selectedFor,
+  startServer,
   taskGraphForSelection,
 } from './graph';
+import { get } from 'node:http';
+import type { Server } from 'node:net';
 import type { TaskGraph } from '../../config/task-graph';
 
 vi.mock('../../native', async (importOriginal) => ({
@@ -35,6 +41,10 @@ vi.mock('../../config/configuration', () => ({
 }));
 vi.mock('../../tasks-runner/create-task-graph', () => ({
   createTaskGraph: vi.fn(),
+}));
+vi.mock('../../ultracache/ci-status', () => ({
+  isUltracacheOnInCI: vi.fn(async () => false),
+  ultracacheModeInCI: vi.fn(),
 }));
 vi.mock('../../utils/all-file-data', () => ({
   allFileData: vi.fn(),
@@ -401,4 +411,95 @@ describe('taskGraphForSelection', () => {
   it('draws the whole graph without a selection', () => {
     expect(taskGraphForSelection(() => built)).toBe(built);
   });
+});
+
+describe('graph server', () => {
+  let app: Server;
+  let url: URL;
+
+  beforeAll(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: {
+        nodes: {
+          proj: {
+            name: 'proj',
+            type: 'lib',
+            data: { root: 'libs/proj', targets: {} },
+          },
+        },
+        dependencies: { proj: [] },
+      },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer(
+      '<html></html>',
+      'window.environment = "release";',
+      '127.0.0.1',
+      0,
+      false
+    ));
+  });
+
+  afterAll(async () => {
+    await new Promise((res) => app.close(res));
+  });
+
+  const request = (path: string, headers: Record<string, string> = {}) =>
+    new Promise<number>((resolve, reject) => {
+      get(
+        {
+          host: url.hostname,
+          port: url.port,
+          path,
+          headers: { host: url.host, ...headers },
+        },
+        (res) => {
+          res.resume();
+          resolve(res.statusCode);
+        }
+      ).on('error', reject);
+    });
+
+  it('serves the bare printed URL and same-origin requests', async () => {
+    expect(await request('/')).toBe(200);
+    expect(await request('/environment.js')).toBe(200);
+    expect(await request('/project-graph.json')).toBe(200);
+    expect(
+      await request('/project-graph.json', {
+        'sec-fetch-site': 'same-origin',
+        origin: url.origin,
+      })
+    ).toBe(200);
+    expect(await request('/', { 'sec-fetch-site': 'none' })).toBe(200);
+  });
+
+  it.each(['localhost', '[::1]'])(
+    'serves the %s loopback name on its own port',
+    async (name) => {
+      expect(
+        await request('/project-graph.json', { host: `${name}:${url.port}` })
+      ).toBe(200);
+    }
+  );
+
+  it.each(['other.example', 'other.example:PORT', '127.0.0.1', 'localhost:1'])(
+    'refuses the host header %s',
+    async (host) => {
+      expect(
+        await request('/project-graph.json', {
+          host: host.replace('PORT', url.port),
+        })
+      ).toBe(403);
+    }
+  );
+
+  it.each(['/environment.js', '/help?project=proj&target=build'])(
+    'refuses cross-site requests for %s',
+    async (path) => {
+      expect(await request(path, { 'sec-fetch-site': 'cross-site' })).toBe(403);
+      expect(await request(path, { 'sec-fetch-site': 'same-site' })).toBe(403);
+      expect(await request(path, { origin: 'http://other.example' })).toBe(403);
+      expect(await request(path, { origin: 'null' })).toBe(403);
+    }
+  );
 });

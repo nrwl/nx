@@ -647,7 +647,7 @@ function findAvailablePort(
   });
 }
 
-async function startServer(
+export async function startServer(
   html: string,
   environmentJs: string,
   host: string,
@@ -689,6 +689,12 @@ async function startServer(
   isFilteredGraph = !!(focus || exclude.length > 0);
 
   const app = http.createServer(async (req, res) => {
+    if (!isSameOriginLocalRequest(req, host)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
@@ -850,6 +856,33 @@ async function startServer(
       res({ app, url: new URL(`http://${host}:${availablePort}`) });
     });
   });
+}
+
+function isSameOriginLocalRequest(
+  req: http.IncomingMessage,
+  host: string
+): boolean {
+  const port = req.socket.localPort;
+  const allowedHosts = new Set(
+    [
+      'localhost',
+      '127.0.0.1',
+      '[::1]',
+      host.includes(':') ? `[${host}]` : host,
+    ].map((name) => `${name.toLowerCase()}:${port}`)
+  );
+  const requestHost = req.headers.host?.toLowerCase();
+  if (!requestHost || !allowedHosts.has(requestHost)) {
+    return false;
+  }
+
+  const fetchSite = req.headers['sec-fetch-site'];
+  if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'none') {
+    return false;
+  }
+
+  const origin = req.headers.origin;
+  return !origin || origin.toLowerCase() === `http://${requestHost}`;
 }
 
 let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
