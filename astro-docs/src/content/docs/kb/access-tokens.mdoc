@@ -50,9 +50,8 @@ We recommend setting up a `read-write` token for you protected branches in CI an
 {% aside type="note" title="CI runs that warn about a personal access token" %}
 A CI run that prints `Personal access token used in an unattended run` sent a personal access token.
 Set `NX_CLOUD_ACCESS_TOKEN` as shown below, then drop the step that saves the personal access token.
-Keep a personal access token only for steps that run `nx-cloud onboard`,
-`nx-cloud publish-conformance-rule`, or `nx-cloud publish-conformance-rules`, which need a user's
-credential.
+Keep a personal access token only for jobs that
+[publish conformance rules](/docs/reference/nx-cloud-cli#nx-cloud-configure).
 {% /aside %}
 
 ### Azure DevOps

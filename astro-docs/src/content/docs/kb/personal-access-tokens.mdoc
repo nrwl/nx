@@ -1,6 +1,6 @@
 ---
 title: Log in to Nx Cloud from the CLI
-description: Log in to Nx Cloud from your terminal with nx login, manage your CLI sessions, and create personal access tokens for scripts
+description: Log in to Nx Cloud from your terminal with nx login, manage your CLI sessions, and use a personal access token where you can't log in
 sidebar:
   label: CLI Login
 filter: 'type:Guides'
@@ -72,21 +72,21 @@ Set both access levels in your workspace's
 
 ### Workspace ID access level
 
-This level applies to anyone who isn't logged in, or isn't a member of the workspace's Nx Cloud
-organization.
-The settings call it **Default access level**.
+The **Default access level** setting covers anyone who isn't logged in, or isn't a member of the
+workspace's Nx Cloud organization.
 It starts at `read-write`.
 Lower it to `read-only` or `none` for any repository that people outside your team can see, such as
 an open source repository or one that's visible across your organization but only editable by one team.
 
 ### Personal access token access level
 
-This level applies to workspace members who are logged in.
-The settings call it **Logged in users**.
-It decides whether they can only read from the remote cache, also write to it, or not use it.
+The **Logged in users** setting covers workspace members who ran `nx login`.
+Set it to `read-only`, `read-write`, or `no-cache`.
 
 ## Personal access tokens (PATs)
 
-For scripts and CI steps that act as you, create a personal access token under
-**Personal settings** > **Access tokens** and save it with
-[`nx-cloud configure`](/docs/reference/nx-cloud-cli#nx-cloud-configure).
+Use a personal access token only where you can't log in: scripts that call the Public API without
+the Nx Cloud CLI, and CI jobs that
+[publish conformance rules](/docs/reference/nx-cloud-cli#nx-cloud-configure).
+Other CI steps use a CI access token.
+Create a personal access token under **Personal settings** > **Access tokens**.
