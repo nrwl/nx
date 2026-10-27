@@ -14,6 +14,7 @@ use rusqlite::{params, types::Value};
 use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
 use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
+use crate::native::pseudo_terminal::strip_queries::strip_queries;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
@@ -463,29 +464,33 @@ impl NxCache {
         })
     }
 
+    /// Returns the terminal output as stored for replay.
     #[napi]
     pub fn apply_remote_cache_results(
         &self,
         hash: String,
         result: CachedResult,
         outputs: Option<Vec<String>>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<String> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash, &result.outputs_path
         );
-        let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
+        let terminal_output = String::from_utf8_lossy(&strip_queries(
+            result.terminal_output.as_deref().unwrap_or("").as_bytes(),
+        ))
+        .into_owned();
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {
                 size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             };
         }
-        write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
+        write(self.get_task_outputs_path(hash.clone()), &terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
-        Ok(())
+        Ok(terminal_output)
     }
 
     /// Register terminal outputs that were written without a cache entry —
@@ -1215,5 +1220,33 @@ mod test {
         assert_eq!(hit.terminal_output.as_deref(), Some("log"));
         assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
         assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn apply_remote_cache_results_strips_queries_and_clipboard_writes_from_terminal_output() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        record_task(&cache, "1");
+        let outputs_path = temp.path().join("cache/1");
+        create_dir_all(&outputs_path).unwrap();
+        let artifact = CachedResult {
+            code: 0,
+            terminal_output: Some(
+                "\x1b[32mPASS\x1b[0m\x1b]52;c;Y3VybA==\x07\x1b[c\x1b]11;?\x07 done\n".to_string(),
+            ),
+            outputs_path: outputs_path.to_str().unwrap().to_string(),
+            size: None,
+        };
+
+        let replayed = cache
+            .apply_remote_cache_results("1".to_string(), artifact, None)
+            .unwrap();
+
+        assert_eq!(replayed, "\x1b[32mPASS\x1b[0m done\n");
+        let local_hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(
+            local_hit.terminal_output.as_deref(),
+            Some(replayed.as_str())
+        );
     }
 }
