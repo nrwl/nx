@@ -87,9 +87,11 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
+import Module from 'node:module';
 import { dirname, join } from 'path';
 import { gt } from 'semver';
 import { logger } from '../../utils/logger';
+import { setWorkspaceRoot } from '../../utils/workspace-root';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -6154,6 +6156,139 @@ module.exports = {
       expect(updated.devDependencies.optionalChild).toBe('3.0.0');
       expect(updated.devDependencies.requiredChild).toBe('1.0.0');
       expect(updated.devDependencies.nx).toBe('0.0.0');
+    });
+  });
+
+  describe('generateMigrationsJsonAndUpdatePackageJson (installed versions)', () => {
+    let tempFs: TempFs;
+    let root: string;
+    const originalNodePath = process.env.NODE_PATH;
+
+    beforeEach(() => {
+      tempFs = new TempFs('nx-migrate-installed');
+      root = join(tempFs.tempDir, 'ws');
+      tempFs.createFileSync('ws/nx.json', '{}');
+      setWorkspaceRoot(root);
+    });
+
+    afterEach(() => {
+      if (originalNodePath === undefined) delete process.env.NODE_PATH;
+      else process.env.NODE_PATH = originalNodePath;
+      (Module as any)._initPaths();
+      tempFs.cleanup();
+    });
+
+    function writePackage(dir: string, name: string) {
+      tempFs.createFileSync(
+        `${dir}/package.json`,
+        JSON.stringify({ name, version: '1.0.0' })
+      );
+    }
+
+    // The layout pnpm's global virtual store installs.
+    function linkFromOutsideStore(name: string) {
+      writePackage(`store/${name}`, name);
+      tempFs.createSymlinkSync(
+        `store/${name}`,
+        `ws/node_modules/${name}`,
+        'dir'
+      );
+    }
+
+    async function generate(
+      devDependencies: Record<string, string>,
+      generators: Record<string, { requires?: Record<string, string> }>
+    ) {
+      tempFs.createFileSync(
+        'ws/package.json',
+        JSON.stringify({ name: 'ws', devDependencies })
+      );
+      const fetch = (pkg: string) =>
+        Promise.resolve(
+          pkg === 'nx'
+            ? {
+                version: '2.0.0',
+                packageGroup: [{ package: '@nx/js', version: '*' }],
+                generators: Object.fromEntries(
+                  Object.entries(generators).map(([name, generator]) => [
+                    name,
+                    { version: '2.0.0', factory: './unused', ...generator },
+                  ])
+                ),
+              }
+            : { version: '2.0.0' }
+        );
+
+      await generateMigrationsJsonAndUpdatePackageJson(
+        root,
+        {
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          targetVersion: '2.0.0',
+          from: {},
+          to: {},
+          interactive: false,
+        },
+        fetch as any
+      );
+
+      const migrationsPath = join(root, 'migrations.json');
+      return {
+        devDependencies: JSON.parse(
+          readFileSync(join(root, 'package.json'), 'utf-8')
+        ).devDependencies,
+        migrations: existsSync(migrationsPath)
+          ? JSON.parse(readFileSync(migrationsPath, 'utf-8')).migrations.map(
+              (m: { name: string }) => m.name
+            )
+          : [],
+      };
+    }
+
+    it('reads the versions of packages linked from a store outside the workspace', async () => {
+      linkFromOutsideStore('nx');
+      linkFromOutsideStore('@nx/js');
+      linkFromOutsideStore('store-dep');
+
+      const result = await generate(
+        { nx: '1.0.0', '@nx/js': '1.0.0', 'store-dep': '1.0.0' },
+        { 'needs-store-dep': { requires: { 'store-dep': '^1.0.0' } } }
+      );
+
+      expect(result.devDependencies['@nx/js']).toBe('2.0.0');
+      expect(result.migrations).toEqual(['needs-store-dep']);
+    });
+
+    it('treats a package installed only above the workspace as not installed', async () => {
+      writePackage('ws/node_modules/nx', 'nx');
+      writePackage('node_modules/ancestor-dep', 'ancestor-dep');
+
+      const result = await generate(
+        { nx: '1.0.0' },
+        {
+          unconditional: {},
+          'needs-ancestor-dep': { requires: { 'ancestor-dep': '^1.0.0' } },
+        }
+      );
+
+      expect(result.migrations).toEqual(['unconditional']);
+    });
+
+    it('treats a NODE_PATH package in a directory the workspace root prefixes as not installed', async () => {
+      writePackage('ws/node_modules/nx', 'nx');
+      writePackage('ws-np/node_modules/sibling-dep', 'sibling-dep');
+      process.env.NODE_PATH = join(tempFs.tempDir, 'ws-np', 'node_modules');
+      (Module as any)._initPaths();
+
+      const result = await generate(
+        { nx: '1.0.0' },
+        {
+          unconditional: {},
+          'needs-sibling-dep': { requires: { 'sibling-dep': '^1.0.0' } },
+        }
+      );
+
+      expect(result.migrations).toEqual(['unconditional']);
     });
   });
 

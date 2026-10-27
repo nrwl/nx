@@ -63,10 +63,12 @@ vi.mock('./resolve-package-version', async () => ({
 
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
+const mockRunSingleMigrationWorker = vi.fn();
 const mockHoldRunToContinue = vi.fn();
 const mockReleaseRunToHandOff = vi.fn();
 mockCjsModule(import.meta.url, './run', {
-  runSingleMigrationWorker: vi.fn(),
+  runSingleMigrationWorker: (...args: unknown[]) =>
+    mockRunSingleMigrationWorker(...args),
   runOrchestratorInit: vi.fn(),
   runOrchestratorReconcile: vi.fn(),
   holdRunToContinue: (...args: unknown[]) => mockHoldRunToContinue(...args),
@@ -100,10 +102,11 @@ import {
   mkdtempSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { output } from '../../utils/output';
 import { setWorkspaceRoot, workspaceRoot } from '../../utils/workspace-root';
 import { migrate, runMigration } from './migrate';
@@ -113,6 +116,9 @@ import { migrate, runMigration } from './migrate';
 const originalWorkspaceRoot = workspaceRoot;
 
 const ROOT = '/virtual-root';
+
+// The nx package this spec's migrate.ts runs from.
+const nxPackageDir = realpathSync(join(__dirname, '..', '..', '..'));
 
 function restoreEnv(name: string, value: string | undefined) {
   if (value === undefined) delete process.env[name];
@@ -126,6 +132,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
   beforeEach(() => {
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
     mockRunNxArgvSync.mockReset();
+    mockRunSingleMigrationWorker.mockReset();
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockHoldRunToContinue.mockReset();
     mockReleaseRunToHandOff.mockReset();
@@ -134,7 +141,7 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     vi.spyOn(output, 'warn').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
     // Force both wrapper functions into the temp-installation branch:
-    // __dirname (under the repo) must not start with workspaceRoot.
+    // __dirname (under the repo) must not sit inside workspaceRoot.
     setWorkspaceRoot('/__guard-wiring-spec-unrelated-root__');
   });
 
@@ -237,6 +244,62 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
 
       expect(exitCode).toBe(1);
       expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+    });
+
+    it('runs in place when the workspace links its nx to this installation outside the root', async () => {
+      // pnpm's global virtual store links node_modules/nx outside the root.
+      // The hand-off spawns that root copy even when `.nx/installation` holds
+      // another nx, so handing off would only respawn this installation.
+      const wsRoot = realpathSync(
+        mkdtempSync(join(tmpdir(), 'guard-wiring-ws-'))
+      );
+      const otherNx = realpathSync(
+        mkdtempSync(join(tmpdir(), 'guard-wiring-other-nx-'))
+      );
+      writeFileSync(
+        join(otherNx, 'package.json'),
+        JSON.stringify({ name: 'nx', version: '0.0.1' })
+      );
+      mkdirSync(join(wsRoot, 'node_modules'));
+      mkdirSync(join(wsRoot, '.nx', 'installation', 'node_modules'), {
+        recursive: true,
+      });
+      symlinkSync(nxPackageDir, join(wsRoot, 'node_modules', 'nx'), 'dir');
+      symlinkSync(
+        otherNx,
+        join(wsRoot, '.nx', 'installation', 'node_modules', 'nx'),
+        'dir'
+      );
+      setWorkspaceRoot(wsRoot);
+
+      try {
+        const exitCode = await migrate(
+          wsRoot,
+          { runMigration: '@nx/js:gen', skipInstall: true },
+          ['--run-migration=@nx/js:gen']
+        );
+
+        expect(exitCode).toBe(0);
+        expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+        expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
+      } finally {
+        rmSync(wsRoot, { recursive: true, force: true });
+        rmSync(otherNx, { recursive: true, force: true });
+      }
+    });
+
+    it('hands off when the workspace root is only a string prefix of this installation', async () => {
+      setWorkspaceRoot(join(dirname(nxPackageDir), 'n'));
+
+      const exitCode = await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(exitCode).toBe(0);
+      expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
+      expect(mockRunSingleMigrationWorker).not.toHaveBeenCalled();
     });
   });
 

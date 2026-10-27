@@ -1,8 +1,8 @@
 import { coerce } from 'semver';
 import { customDimensions, reportEvent } from '../../analytics';
 import { ProvenanceError } from '../../utils/provenance';
-import { workspaceRoot } from '../../utils/workspace-root';
 import type { MigrateInclude } from './command-object';
+import { isRunningWorkspaceNx } from './workspace-installation';
 
 export type MigrateIncludeSource = 'flag' | 'nx-json' | 'prompt' | 'default';
 export type MigrateMultiMajorChoice = 'gradual' | 'direct';
@@ -477,7 +477,7 @@ export function reportMigrateSingleMigrationAbandoned(opts: {
 // workspace-local installation; same signal as the run-phase re-dispatch
 // check in migrate.ts.
 function cliSource(): 'local' | 'temp-latest' {
-  return __dirname.startsWith(workspaceRoot) ? 'local' : 'temp-latest';
+  return isRunningWorkspaceNx() ? 'local' : 'temp-latest';
 }
 
 // `coerce` tolerates ranges and partial versions from package.json entries

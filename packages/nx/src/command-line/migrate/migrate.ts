@@ -130,6 +130,10 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import {
+  isRunningWorkspaceNx,
+  isWorkspaceInstalledPackage,
+} from './workspace-installation';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX, MigrateArgs } from './command-object';
 import {
@@ -1915,7 +1919,7 @@ function createInstalledPackageVersionsResolver(
           for (const req of nxRequires) {
             try {
               const packageJsonPath = req.resolve('nx/package.json');
-              if (packageJsonPath.startsWith(workspaceRoot)) {
+              if (isWorkspaceInstalledPackage('nx', packageJsonPath, root)) {
                 return readJsonFile<PackageJson>(packageJsonPath).version;
               }
             } catch {}
@@ -1939,8 +1943,8 @@ function createInstalledPackageVersionsResolver(
         );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
-        if (!path.startsWith(workspaceRoot)) {
-          throw new Error('Resolved a package outside the workspace root.');
+        if (!isWorkspaceInstalledPackage(packageName, path, root)) {
+          throw new Error('Resolved a package the workspace does not install.');
         }
         cache[packageName] = packageJson.version;
       }
@@ -3380,7 +3384,7 @@ async function runMigrations(
     }
   }
 
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
     if (isContinue) {
@@ -4076,7 +4080,7 @@ async function runOrchestratorReconcileFromCli(
   opts: OrchestratorReconcile,
   args: string[]
 ): Promise<number | void> {
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // The workspace-local nx we are about to hand off to must be new enough to
     // understand the new flags we forward to it.
     assertWorkspaceNxSupportsNewMigrateFlags({
@@ -4126,7 +4130,7 @@ async function runSingleMigrationFromCli(
     );
   }
 
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // Must stay after the pre-install: it reads the version that install may
     // have just updated, so checking earlier would falsely refuse a workspace
     // whose package.json bump was not installed yet.
