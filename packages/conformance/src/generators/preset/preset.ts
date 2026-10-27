@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -8,7 +9,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import { esbuildVersion, nxVersion } from '../../utils/versions';
 import createRuleGenerator from '../create-rule/create-rule';
 
 export default async function preset(tree: Tree): Promise<GeneratorCallback> {
@@ -80,6 +81,11 @@ export default async function preset(tree: Tree): Promise<GeneratorCallback> {
 
   const prettierTask = await setupPrettierGenerator(tree, {});
   tasks.push(prettierTask);
+
+  // The bundle-rules executor needs esbuild, which @nx/conformance only lists as an optional peer
+  tasks.push(
+    addDependenciesToPackageJson(tree, {}, { esbuild: esbuildVersion })
+  );
 
   // Delete the initial src directory to replace it with our rule
   tree.delete('packages/conformance-rules/src/lib');

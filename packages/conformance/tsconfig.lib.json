@@ -17,7 +17,6 @@
     "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "**/*.bench.ts",
     "**/files/**",
     "eslint.config.mjs"
   ],

@@ -109,16 +109,22 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "ajv": "catalog:",
-    "esbuild": "^0.25.0",
     "picocolors": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
     "yargs": "catalog:"
   },
   "peerDependencies": {
-    "@nx/js": "workspace:*"
+    "@nx/js": "workspace:*",
+    "esbuild": ">=0.19.2 <1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
     "nx": "workspace:*"
   }
 }

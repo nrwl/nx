@@ -15,12 +15,6 @@
         "{workspaceRoot}/tools/vitest/**/*",
         "{workspaceRoot}/scripts/jest-mocks/clack-prompts.js"
       ]
-    },
-    "bench": {
-      "command": "vitest bench --run",
-      "options": {
-        "cwd": "{projectRoot}"
-      }
     }
   }
 }
