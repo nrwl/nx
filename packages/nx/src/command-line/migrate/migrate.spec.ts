@@ -155,6 +155,23 @@ describe('Migration', () => {
       );
     });
 
+    it('should fail fast when a fetched migration config carries a version that is not a version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: 'git+https://git.example.com/mypackage.git',
+          }),
+        from: {},
+        to: {},
+      });
+
+      await expect(migrator.migrate('mypackage', 'latest')).rejects.toThrow(
+        'Fetched migration metadata for mypackage is invalid: the target version "git+https://git.example.com/mypackage.git" is not a valid version.'
+      );
+    });
+
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson(),
@@ -5055,6 +5072,19 @@ module.exports = {
 
     it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
       const err = violation();
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
+    });
+
+    it('the fetcher surfaces a release whose version is not a version instead of falling back to install', async () => {
+      const err = new packageMgrUtils.InvalidResolvedVersionError(
+        'mypackage',
+        'git+https://git.example.com/mypackage.git'
+      );
       vi.spyOn(
         packageMgrUtils,
         'resolvePackageVersionUsingRegistry'

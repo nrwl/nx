@@ -15,7 +15,7 @@ import {
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
-import { gte, lt, parse, satisfies } from 'semver';
+import { gte, lt, parse, satisfies, valid } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import {
@@ -751,6 +751,25 @@ export function createTempNpmDirectory(skipCopy = false) {
   return { dir, cleanup };
 }
 
+export class InvalidResolvedVersionError extends Error {
+  constructor(packageName: string, version: unknown) {
+    super(
+      `${packageName} reports "${version}" as its version, which is not a valid version.`
+    );
+    this.name = 'InvalidResolvedVersionError';
+  }
+}
+
+// A manifest's `version` is publisher-written and need not match the key it is
+// listed under. Callers reuse it after `<package>@`, where a non-version is a
+// spec of its own (git URL, tarball, path).
+function assertResolvedVersion(packageName: string, version: string): string {
+  if (!valid(version)) {
+    throw new InvalidResolvedVersionError(packageName, version);
+  }
+  return version;
+}
+
 /**
  * Returns the resolved version for a given package and version tag using the
  * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
@@ -777,7 +796,7 @@ export async function resolvePackageVersionUsingRegistry(
 
     const lines = result.split('\n');
     if (lines.length === 1) {
-      return lines[0];
+      return assertResolvedVersion(packageName, lines[0]);
     }
 
     /**
@@ -793,8 +812,11 @@ export async function resolvePackageVersionUsingRegistry(
       .pop()
       .replace(/'/g, '');
 
-    return finalResolvedVersion;
+    return assertResolvedVersion(packageName, finalResolvedVersion);
   } catch (e) {
+    if (e instanceof InvalidResolvedVersionError) {
+      throw e;
+    }
     // npm masks a URL credential only in the password position, so a bare token
     // in the registry URL survives into the error kept as the cause.
     throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
@@ -865,7 +887,7 @@ export async function resolvePackageVersionUsingInstallation(
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
-    return packageJson.version;
+    return assertResolvedVersion(packageName, packageJson.version);
   } finally {
     await cleanup();
   }
@@ -1098,6 +1120,8 @@ export async function packageRegistryPack(
           // downgrade npm's devEngines.packageManager enforcement (onFail:
           // error) to a warning so pack still runs in a non-npm workspace
           npm_config_force: 'true',
+          // callers only read files out of the tarball
+          npm_config_ignore_scripts: 'true',
           ...(options?.bypassMinReleaseAge
             ? { npm_config_min_release_age: '0' }
             : {}),

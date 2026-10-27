@@ -70,6 +70,7 @@ import {
   getPackageManagerVersion,
   getPackageWorkspaces,
   getWorkspaceRegistryUrlForDisplay,
+  InvalidResolvedVersionError,
   isWorkspacesEnabled,
   modifyPnpmWorkspaceYamlToFitNewDirectory,
   modifyYarnRcToFitNewDirectory,
@@ -1699,6 +1700,15 @@ describe('package-manager', () => {
       expect(options.env.npm_config_force).toBe('true');
     });
 
+    it('should keep npm from running scripts of what it packs', async () => {
+      vi.stubEnv('npm_config_ignore_scripts', 'false');
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+      vi.unstubAllEnvs();
+
+      const [, , options] = execMock.mock.calls[0];
+      expect(options.env.npm_config_ignore_scripts).toBe('true');
+    });
+
     it('should leave npm min-release-age alone by default', async () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
@@ -1953,6 +1963,108 @@ describe('package-manager', () => {
       ].join('\n');
       expect(causeText).not.toContain('SECRET-TOKEN-123');
       expect(causeText).toContain('https://***@reg.example.com/nx');
+    });
+
+    function mockViewOutput(stdout: string) {
+      vi.spyOn(childProcess, 'execFile').mockImplementation(((
+        _file: string,
+        _args: string[],
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout });
+        return undefined;
+      }) as any);
+    }
+
+    it('returns the version the registry reports', async () => {
+      mockViewOutput('3.0.0\n');
+
+      await expect(
+        resolvePackageVersionUsingRegistry('pkg', 'latest')
+      ).resolves.toBe('3.0.0');
+    });
+
+    it('returns the highest of the versions matching a range', async () => {
+      mockViewOutput("pkg@3.0.0 '3.0.0'\npkg@3.1.0 '3.1.0'\n");
+
+      await expect(
+        resolvePackageVersionUsingRegistry('pkg', '^3.0.0')
+      ).resolves.toBe('3.1.0');
+    });
+
+    it.each([
+      ['a single release', 'git+https://git.example.com/pkg.git\n'],
+      [
+        'one of several releases',
+        "pkg@3.0.0 '3.0.0'\npkg@3.1.0 'git+https://git.example.com/pkg.git'\n",
+      ],
+    ])(
+      'rejects a version field of %s that is not a version',
+      async (_, stdout) => {
+        mockViewOutput(stdout);
+
+        await expect(
+          resolvePackageVersionUsingRegistry('pkg', '^3.0.0')
+        ).rejects.toBeInstanceOf(InvalidResolvedVersionError);
+      }
+    );
+  });
+
+  describe('resolvePackageVersionUsingInstallation', () => {
+    beforeEach(() => {
+      clearPackageManagerVersionCache();
+      vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+        cli: { packageManager: 'yarn' },
+      });
+      (existsSync as Mock).mockReturnValue(false);
+      (statSync as Mock).mockImplementation(() => {
+        throw new Error('ENOENT: no such file or directory');
+      });
+      (readFileSync as Mock).mockImplementation(require('fs').readFileSync);
+      vi.spyOn(childProcess, 'execSync').mockReturnValue('10.0.0' as any);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.clearAllMocks();
+    });
+
+    // The add command lands the given package.json in the temp directory.
+    function mockInstalledPackageJson(packageJson: object) {
+      vi.spyOn(childProcess, 'exec').mockImplementation(((
+        _command: string,
+        options: any,
+        callback: any
+      ) => {
+        mkdirSync(join(options.cwd, 'node_modules/pkg'), { recursive: true });
+        writeFileSync(
+          join(options.cwd, 'node_modules/pkg/package.json'),
+          JSON.stringify(packageJson)
+        );
+        callback(null, { stdout: '' });
+        return undefined;
+      }) as any);
+    }
+
+    it('returns the version of the installed package', async () => {
+      mockInstalledPackageJson({ name: 'pkg', version: '4.0.0' });
+
+      await expect(
+        resolvePackageVersionUsingInstallation('pkg', 'latest')
+      ).resolves.toBe('4.0.0');
+    });
+
+    it('rejects a version of the installed package that is not a version', async () => {
+      mockInstalledPackageJson({
+        name: 'pkg',
+        version: 'git+https://git.example.com/pkg.git',
+      });
+
+      await expect(
+        resolvePackageVersionUsingInstallation('pkg', 'latest')
+      ).rejects.toBeInstanceOf(InvalidResolvedVersionError);
     });
   });
 });
