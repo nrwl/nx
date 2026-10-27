@@ -206,6 +206,7 @@ export {
   calculateReverseDeps,
   codeFrameColumns,
   combineGlobPatterns,
+  computeJsonLineNumbers,
   connectToNxCloud,
   createDirectory,
   createFileMapUsingProjectGraph,

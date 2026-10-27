@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TempFs } from '../../../testing/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import runExecutor from './executor';
 
 describe('Bundle Rules Executor', () => {
