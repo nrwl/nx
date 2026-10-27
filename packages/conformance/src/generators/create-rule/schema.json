@@ -1,6 +1,6 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "id": "NxConformanceCreateRule",
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxConformanceCreateRule",
   "title": "Create a new conformance rule",
   "description": "Create a new conformance rule.",
   "type": "object",
