@@ -1,5 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, posix } from 'path';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'fs';
+import { dirname, join, posix, relative, sep } from 'path';
 import {
   MigrationsJson,
   MigrationsJsonEntry,
@@ -113,8 +119,9 @@ export class PromptResolutionError extends Error {
  * Resolves a migration prompt file path to an absolute path. Prompt paths are
  * plain markdown files referenced relative to the directory containing the
  * `migrations.json` - unlike schemas, they are not resolved through package
- * exports or `require.resolve`. The path must stay within the migrations
- * directory and point at an existing markdown (`.md`) file.
+ * exports or `require.resolve`. The path must point at an existing markdown
+ * (`.md`) file that stays within the migrations directory after resolving
+ * links, outside any nested `node_modules`.
  */
 export function resolvePrompt(
   promptPath: string,
@@ -125,6 +132,18 @@ export function resolvePrompt(
   }
   const resolvedPath = join(migrationsDir, promptPath);
   if (!existsSync(resolvedPath)) {
+    throw new PromptResolutionError(promptPath, migrationsDir);
+  }
+  const realRelativePath = relative(
+    realpathSync(migrationsDir),
+    realpathSync(resolvedPath)
+  );
+  if (
+    !isContainedRelativePath(realRelativePath) ||
+    realRelativePath
+      .split(sep)
+      .some((segment) => segment.toLowerCase() === 'node_modules')
+  ) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   return resolvedPath;
@@ -171,7 +190,8 @@ export function readPromptFilesFromInstall(
     packageName,
     packageVersion,
     migrations,
-    (promptRelPath) => readFileSync(join(migrationsDir, promptRelPath), 'utf-8')
+    (promptRelPath) =>
+      readFileSync(resolvePrompt(promptRelPath, migrationsDir), 'utf-8')
   );
 }
 

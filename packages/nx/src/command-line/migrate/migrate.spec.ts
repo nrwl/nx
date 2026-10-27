@@ -6206,6 +6206,81 @@ module.exports = {
         ).rejects.toThrow(/Invalid prompt path/);
       }
     );
+
+    describe('in an installed package', () => {
+      let dir: string;
+      let packageDir: string;
+
+      const readPrompt = (prompt: string) =>
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          { generators: { m: { version: '1.0.0', prompt } } },
+          join(packageDir, 'migrations.json')
+        );
+
+      beforeEach(() => {
+        dir = mkdtempSync(join(tmpdir(), 'nx-prompt-install-'));
+        packageDir = join(dir, 'node_modules', 'pkg');
+        mkdirSync(join(packageDir, 'prompts'), { recursive: true });
+        writeFileSync(join(packageDir, 'prompts', 'x.md'), '# X');
+        mkdirSync(join(dir, 'outside'));
+        writeFileSync(join(dir, 'outside', 'credentials.md'), 'secret');
+      });
+
+      afterEach(() => {
+        rmSync(dir, { recursive: true, force: true });
+      });
+
+      it('should read a prompt file shipped by the package', async () => {
+        await expect(readPrompt('./prompts/x.md')).resolves.toEqual({
+          './prompts/x.md': '# X',
+        });
+      });
+
+      it('should read a prompt file when the package itself is a link', async () => {
+        const linkedPackageDir = join(dir, 'linked-pkg');
+        symlinkSync(packageDir, linkedPackageDir, 'dir');
+        packageDir = linkedPackageDir;
+
+        await expect(readPrompt('prompts/x.md')).resolves.toEqual({
+          'prompts/x.md': '# X',
+        });
+      });
+
+      it('should reject a prompt path that leaves the package through a linked dependency', async () => {
+        mkdirSync(join(packageDir, 'node_modules'));
+        symlinkSync(
+          join(dir, 'outside'),
+          join(packageDir, 'node_modules', 'pkg'),
+          'dir'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+
+      it('should reject a prompt path that leaves the package through any other link', async () => {
+        symlinkSync(join(dir, 'outside'), join(packageDir, 'linked'), 'dir');
+
+        await expect(readPrompt('linked/credentials.md')).rejects.toThrow(
+          /Could not find prompt file/
+        );
+      });
+
+      it('should reject a prompt path into a dependency copied into the package', async () => {
+        mkdirSync(join(packageDir, 'node_modules', 'pkg'), { recursive: true });
+        writeFileSync(
+          join(packageDir, 'node_modules', 'pkg', 'credentials.md'),
+          'secret'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+    });
   });
 
   describe('prompt file type', () => {
