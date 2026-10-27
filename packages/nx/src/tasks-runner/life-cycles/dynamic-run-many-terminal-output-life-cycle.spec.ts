@@ -93,7 +93,6 @@ describe('createRunManyDynamicOutputRenderer', () => {
       for (const line of notRunLines) {
         expect(out).toContain(line);
       }
-      // A count of 0 has nothing to report.
       expect(out).not.toContain('succeeded');
     }
   );
