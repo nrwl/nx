@@ -6,6 +6,7 @@ import {
   createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
+import { whenStdioClosed } from '../../utils/child-process';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 
 export interface RunScriptOptions {
@@ -59,6 +60,8 @@ function nodeProcess(
       windowsHide: true,
     });
 
+    const stdioClosed = whenStdioClosed(cp);
+
     // Forward stdout/stderr to parent process
     cp.stdout.pipe(process.stdout);
     cp.stderr.pipe(process.stderr);
@@ -67,7 +70,9 @@ function nodeProcess(
       rej(error);
     });
 
-    cp.on('exit', (code) => {
+    cp.on('exit', async (code) => {
+      // The last stdout and stderr chunks can still be unread at 'exit'.
+      await stdioClosed;
       if (code === 0) {
         res();
       } else {
@@ -76,7 +81,15 @@ function nodeProcess(
     });
 
     const exitHandler = (signal: NodeJS.Signals) => {
-      if (cp && cp.pid && !cp.killed) {
+      // An exited child's pid is free for reuse, and its exit code decides
+      // the result.
+      if (
+        cp &&
+        cp.pid &&
+        !cp.killed &&
+        cp.exitCode === null &&
+        cp.signalCode === null
+      ) {
         killProcessTreeGraceful(cp.pid, signal).finally(() => {
           res();
         });
