@@ -2,7 +2,7 @@ import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync } from 'node:fs';
 import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
-import { stat, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
@@ -133,8 +133,6 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  const tempImportDirectory = join(tmpdir, 'nx-import');
-
   if (!sourceRepository) {
     sourceRepository = await textPrompt({
       message:
@@ -152,6 +150,7 @@ export async function importHandler(options: ImportOptions) {
     // It's a remote url
   }
 
+  const tempImportDirectory = await mkdtemp(join(tmpdir, 'nx-import-'));
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
   let spinner: any;
   if (aiMode) {
@@ -164,11 +163,6 @@ export async function importHandler(options: ImportOptions) {
       `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
     ).start();
   }
-  try {
-    await rm(tempImportDirectory, { recursive: true });
-  } catch {}
-  await mkdir(tempImportDirectory, { recursive: true });
-
   let sourceGitClient: GitRepository;
   try {
     sourceGitClient = await cloneFromUpstream(
