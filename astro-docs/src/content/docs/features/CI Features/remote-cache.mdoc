@@ -126,7 +126,7 @@ To skip Ultracache for a single run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/refer
 #### Try Ultracache on one branch or workflow
 
 To trial Ultracache before turning it on for the whole workspace, set `NX_CLOUD_ULTRACACHE_MODE` for a single CI pipeline.
-It overrides the workspace setting for that pipeline only and doesn't need an Nx upgrade.
+It overrides the workspace setting for that pipeline only and doesn't need an Nx 24 upgrade.
 The value is case-insensitive and maps to the [`ultracache.mode`](/docs/reference/project-configuration#ultracache) modes:
 
 | Value   | Effect                                                                     |
@@ -141,7 +141,7 @@ The value is case-insensitive and maps to the [`ultracache.mode`](/docs/referenc
 Don't combine `ON` with `NX_CLOUD_USE_ULTRACACHE=false`, because Nx 24 and later still skip Ultracache for that run.
 Any other value fails the run with an error.
 
-Set it at the job or workflow level so both `nx-cloud start-ci-run` and your Nx commands see it.
+Set it at the job or workflow level so both `nx-cloud start-workers` and your Nx commands see it.
 Nx Cloud Workers pick it up automatically:
 
 ```yaml
@@ -160,7 +160,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+      - run: npx nx-cloud start-workers
       - run: npm ci
       - run: npx nx affected -t lint test build
 ```
