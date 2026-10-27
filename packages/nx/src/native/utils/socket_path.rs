@@ -19,8 +19,9 @@ use itertools::Itertools;
 use sha2::{Digest, Sha256};
 
 use crate::native::utils::owned_dir::{
-    DirRefusal, canonical_dir, describe_refusal, ensure_owned_private_dir, ensure_safe_shared_root,
-    is_owned_unshared_dir, is_peer_writable, not_created, remedy_for, resolve_path, user_segment,
+    DirRefusal, canonical_dir, describe_refusal, ensure_owned_private_dir, ensure_safe_ancestry,
+    ensure_safe_shared_root, is_owned_unshared_dir, is_peer_writable, not_created, remedy_for,
+    resolve_path, user_segment,
 };
 
 /// Why a directory may not *be* the socket directory. Named rather than a
@@ -571,14 +572,13 @@ fn establish_socket_dir(
 ) -> Result<EstablishedDir, SocketDirError> {
     // A default root has already had its containment established by the tier it
     // came from; a configured one is the user's to create. Its parents are made
-    // separately from the leaf: creating and locking down in one step would
-    // adopt a pre-planted symlink, which `mkdir` does not fail on.
+    // separately from the leaf, each judged before the next name is looked up
+    // in it: the leaf's own checks resolve through every level above it.
     let parents = match placement {
         Placement::Configured => {
             refuse_unusable_socket_dir(dir)?;
             dir.parent()
-                .and_then(|parent| std::fs::create_dir_all(parent).err())
-                .map(|e| not_created(dir, &e))
+                .and_then(|parent| ensure_safe_ancestry(parent).err())
         }
         Placement::DefaultRoot { .. } => None,
     };
@@ -642,10 +642,15 @@ fn establish_workspace_socket_dir(
 ) -> Result<PathBuf, SocketDirError> {
     let dir = workspace_socket_dir(workspace_root, env);
     if let Some(parent) = dir.parent() {
-        if let Err(e) = std::fs::create_dir_all(parent) {
-            return Err(SocketDirError::NothingEstablishable {
-                refusal: not_created(&dir, &e),
-            });
+        // Judged only outside the checkout, whose levels are the user's to
+        // arrange and leave this nowhere to fall.
+        let parents = if resolve_path(parent).starts_with(resolve_path(Path::new(workspace_root))) {
+            std::fs::create_dir_all(parent).map_err(|e| not_created(&dir, &e))
+        } else {
+            ensure_safe_ancestry(parent)
+        };
+        if let Err(refusal) = parents {
+            return Err(SocketDirError::NothingEstablishable { refusal });
         }
     }
     ensure_owned_private_dir(&dir)
@@ -1045,6 +1050,92 @@ mod tests {
         assert!(
             matches!(resolved.outcome, SocketDirOutcome::ConfiguredRefused { configured, .. } if configured == blocker)
         );
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    fn mode_bits(dir: &Path) -> u32 {
+        use std::os::unix::fs::MetadataExt;
+        std::fs::symlink_metadata(dir).unwrap().mode() & 0o777
+    }
+
+    /// A world-writable level holding a link to a directory of ours, so the
+    /// configured name resolves to that directory.
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    fn link_planted_above(temp: &TempDir) -> (PathBuf, PathBuf) {
+        use crate::native::utils::owned_dir::chmod_real_directory_for_testing;
+
+        let victim = temp.path().join("home").join("checkout");
+        std::fs::create_dir_all(&victim).unwrap();
+        chmod_real_directory_for_testing(&victim, 0o755);
+        let planted = temp.path().join("planted");
+        std::fs::create_dir(&planted).unwrap();
+        chmod_real_directory_for_testing(&planted, 0o777);
+        std::os::unix::fs::symlink(temp.path().join("home"), planted.join("me")).unwrap();
+        (victim, planted.join("me").join("checkout"))
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn a_configured_socket_dir_is_not_reached_through_a_link_planted_above_it() {
+        let temp = TempDir::new().unwrap();
+        let ws = workspace();
+        let (victim, configured) = link_planted_above(&temp);
+        let env = env_with(&[("NX_SOCKET_DIR", &configured.to_string_lossy())]);
+
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
+            .expect("should fall back");
+
+        assert_eq!(resolved.dir, ws.path().join(".nx/workspace-data/d"));
+        assert!(matches!(
+            resolved.refusals.as_slice(),
+            [DirRefusal::PeerWritableNotSticky { .. }]
+        ));
+        assert_eq!(mode_bits(&victim), 0o755);
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn a_configured_socket_dir_under_a_group_writable_dir_of_ours_is_used() {
+        use crate::native::utils::owned_dir::chmod_real_directory_for_testing;
+
+        let temp = TempDir::new().unwrap();
+        let ws = workspace();
+        let project = temp.path().join("proj");
+        std::fs::create_dir(&project).unwrap();
+        chmod_real_directory_for_testing(&project, 0o775);
+        let configured = project.join("sock");
+        let env = env_with(&[("NX_SOCKET_DIR", &configured.to_string_lossy())]);
+
+        let resolved = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
+            .expect("should resolve");
+
+        assert_eq!(resolved.dir, configured);
+        assert!(matches!(resolved.outcome, SocketDirOutcome::Configured));
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn the_workspace_fallback_is_not_reached_through_a_link_planted_above_a_configured_data_dir() {
+        let temp = TempDir::new().unwrap();
+        let ws = workspace();
+        let blocker = temp.path().join("not-a-dir");
+        std::fs::write(&blocker, "").unwrap();
+        let (victim, data_dir) = link_planted_above(&temp);
+        let env = env_with(&[
+            ("NX_SOCKET_DIR", &blocker.to_string_lossy()),
+            ("NX_WORKSPACE_DATA_DIRECTORY", &data_dir.to_string_lossy()),
+        ]);
+
+        let error = resolve_socket_path(SocketKind::Daemon, &root_of(&ws), Some(&env))
+            .expect_err("should refuse");
+
+        assert!(matches!(
+            error,
+            SocketDirError::NothingEstablishable {
+                refusal: DirRefusal::PeerWritableNotSticky { .. }
+            }
+        ));
+        assert!(!victim.join("d").exists());
     }
 
     #[test]

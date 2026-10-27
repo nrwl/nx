@@ -16,8 +16,10 @@ import {
   describeRefusal,
   type DirRefusal,
   ensureOwnedPrivateDir,
+  ensureSafeAncestry,
   ensureSafeSharedRoot,
   isOwnedPrivateDir,
+  isSafeAncestry,
   isSafeSharedRoot,
 } from './owned-private-dir';
 
@@ -573,4 +575,86 @@ describe('ensureOwnedPrivateDir', () => {
       expect(ensureOwnedPrivateDir(planted).status).toBe('refused');
     }
   );
+});
+
+describe('ensureSafeAncestry', () => {
+  let base: string;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'nx-ancestry-'));
+  });
+
+  afterEach(() => {
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  posixOnly('should create missing levels without peer write', () => {
+    const dir = join(base, 'one', 'two');
+
+    expect(ensureSafeAncestry(dir).status).toBe('ok');
+
+    expect(lstatSync(join(base, 'one')).mode & 0o777).toBe(0o755);
+    expect(lstatSync(dir).mode & 0o777).toBe(0o755);
+  });
+
+  posixOnly(
+    'should refuse a world-writable level without the sticky bit',
+    () => {
+      const loose = join(base, 'loose');
+      mkdirSync(loose);
+      chmodSync(loose, 0o777);
+
+      const verdict = ensureSafeAncestry(join(loose, 'one'));
+
+      expect(verdict.status === 'refused' && verdict.refusal.kind).toBe(
+        'peer-writable-not-sticky'
+      );
+      expect(() => lstatSync(join(loose, 'one'))).toThrow();
+    }
+  );
+
+  posixOnly('should accept a group-writable level of ours', () => {
+    const project = join(base, 'proj');
+    mkdirSync(project);
+    chmodSync(project, 0o775);
+
+    expect(ensureSafeAncestry(join(project, 'one')).status).toBe('ok');
+  });
+
+  posixOnly('should follow a link of ours', () => {
+    mkdirSync(join(base, 'real'));
+    mkdirSync(join(base, 'nested'));
+    symlinkSync('../real', join(base, 'nested', 'link'));
+
+    expect(ensureSafeAncestry(join(base, 'nested', 'link', 'one')).status).toBe(
+      'ok'
+    );
+    expect(lstatSync(join(base, 'real', 'one')).isDirectory()).toBe(true);
+  });
+
+  posixOnly('should judge the level a link was found in', () => {
+    const ours = join(base, 'ours');
+    mkdirSync(ours);
+    const loose = join(base, 'loose');
+    mkdirSync(loose);
+    chmodSync(loose, 0o777);
+    symlinkSync(ours, join(loose, 'link'));
+
+    expect(isSafeAncestry(join(loose, 'link')).status).toBe('refused');
+    expect(ensureSafeAncestry(join(loose, 'link', 'one')).status).toBe(
+      'refused'
+    );
+    expect(() => lstatSync(join(ours, 'one'))).toThrow();
+  });
+
+  posixOnly('should refuse a link loop', () => {
+    const link = join(base, 'link');
+    symlinkSync('link', link);
+
+    const verdict = ensureSafeAncestry(join(link, 'one'));
+
+    expect(verdict.status === 'refused' && verdict.refusal.kind).toBe(
+      'not-a-directory'
+    );
+  });
 });
