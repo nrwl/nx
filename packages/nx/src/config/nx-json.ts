@@ -748,6 +748,109 @@ export interface NxReleaseConfiguration {
   versionPlans?: NxReleaseVersionPlansConfiguration | boolean;
 }
 
+/**
+ * Configuration for the `nx conformance` command, provided by `@nx/conformance`.
+ */
+export interface NxConformanceConfiguration {
+  /**
+   * Optional path to write the conformance results to, defaults to "dist/conformance-result.json".
+   * Set to false to disable writing the conformance results to a file.
+   */
+  outputPath?: string | false;
+  rules: {
+    /**
+     * Relative path to a local rule implementation, node_module path or nx-cloud rule ID for Nx Cloud Enterprise.
+     */
+    rule: string;
+    /**
+     * Rule specific configuration options.
+     */
+    options?: Record<string, unknown>;
+    /**
+     * The projects array allows users to opt in or out of violations for specific projects being reported by the current rule.
+     * The array can contain any valid matchers for findMatchingProjects(), by default the implied value is ["*"].
+     *
+     * We additionally provide an object syntax for projects which allows users to provide by a matcher string and an
+     * explanation to communicate to their colleagues why a particular project or projects was included or excluded from
+     * consideration from the rule.
+     *
+     * The explanation currently does nothing to affect any functionality.
+     */
+    projects?: Array<string | { matcher: string; explanation: string }>;
+    /**
+     * Optional explanation field for users to be able to communicate to their colleague why a particular rule is
+     * enabled and important to the workspace in question.
+     *
+     * Currently does nothing to affect any functionality.
+     */
+    explanation?: string;
+    /**
+     * Override the default status of the rule, which is "enforced".
+     *
+     * If set to "evaluated", the rule will be reported as normal, but not enforced (will exit with code 0).
+     * If set to "disabled", the rule will not be evaluated at all.
+     */
+    status?: 'enforced' | 'evaluated' | 'disabled';
+  }[];
+}
+
+type NxOwnersPatternBase = {
+  /**
+   * Owner IDs for the matched files, or `false` to mark them as having no owners
+   * (e.g. files managed by a bot user).
+   */
+  owners: string[] | false;
+  description?: string;
+  /**
+   * Whether the root `owners.prefix` applies to this pattern. Defaults to `true`.
+   */
+  applyPrefix?: boolean;
+  /**
+   * Prefix for this pattern's owners, taking precedence over the root `owners.prefix`.
+   */
+  prefix?: string;
+};
+
+/**
+ * When both `projects` and `files` are provided, file patterns are evaluated relative to each
+ * matched project root instead of the workspace root.
+ */
+type NxOwnersPattern = NxOwnersPatternBase &
+  (
+    | { files: string[] }
+    | { projects: string[] }
+    | { projects: string[]; files: string[] }
+  );
+
+/**
+ * Configuration for CODEOWNERS generation, provided by `@nx/owners`.
+ */
+export interface NxOwnersConfiguration {
+  /**
+   * Defaults to `github`.
+   */
+  format?: 'github' | 'gitlab' | 'bitbucket';
+  /**
+   * Defaults to the format's conventional location, e.g. `.github/CODEOWNERS`.
+   */
+  outputPath?: string;
+  /**
+   * Prefix applied to owner strings, e.g. `@org`.
+   */
+  prefix?: string;
+  patterns?: NxOwnersPattern[];
+  /**
+   * GitLab only. Groups patterns with approval requirements.
+   */
+  sections?: {
+    name: string;
+    patterns: NxOwnersPattern[];
+    defaultOwners?: string[];
+    numberOfRequiredApprovals?: number;
+    optional?: boolean;
+  }[];
+}
+
 export interface NxSyncConfiguration {
   /**
    * List of workspace-wide sync generators to be run (not attached to targets).
@@ -1021,6 +1124,16 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx migrate` command.
    */
   migrate?: NxMigrateConfiguration;
+
+  /**
+   * Configuration for the `nx conformance` command.
+   */
+  conformance?: NxConformanceConfiguration;
+
+  /**
+   * Configuration for CODEOWNERS generation. Set to `true` to enable it with defaults.
+   */
+  owners?: NxOwnersConfiguration | boolean;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
