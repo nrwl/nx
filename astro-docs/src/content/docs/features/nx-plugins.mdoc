@@ -1,0 +1,84 @@
+---
+title: Nx plugins
+description: Learn what Nx plugins add to your workspace, how a plugin replaces hand-written task configuration, and how to add one with nx add.
+sidebar:
+  order: 3
+filter: 'type:Features'
+---
+
+Nx plugins add support for a tool or framework, such as Vite, Jest, Playwright, or Gradle, to your workspace.
+Nx runs and caches any script without a plugin.
+A plugin adds what Nx can't work out from a script alone, like which files a task reads and where it writes its output.
+
+## Without a plugin
+
+Take a Vite app with a `build` script.
+For Nx to cache it correctly, you declare its outputs yourself:
+
+```json
+// apps/web/package.json
+{
+  "scripts": {
+    "build": "vite build"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": ["{projectRoot}/dist"]
+      }
+    }
+  }
+}
+```
+
+That `outputs` path duplicates `build.outDir` from `vite.config.ts`.
+If you change one and forget the other, Nx caches the wrong folder.
+Every Vite project in the workspace needs the same configuration.
+
+## With a plugin
+
+With the `@nx/vite` plugin, you can delete both the script and the target.
+The plugin reads each `vite.config.ts` and [infers](/docs/features/run-tasks#inferred-tasks) `build`, `dev`, and `preview` tasks, with outputs taken from `build.outDir`.
+When you change the Vite config, the tasks follow it.
+
+Most plugins also ship [generators](/docs/features/generate-code) to scaffold projects or add the tool to an existing one, and migrations that [update the tool and its config](/docs/features/automate-updating-dependencies) when you upgrade.
+Some read files Nx doesn't understand on its own.
+The `@nx/gradle` plugin, for example, adds Gradle projects and their dependencies to the project graph.
+
+## Add a plugin
+
+Run `nx add` with the plugin package name:
+
+```shell
+nx add @nx/vite
+```
+
+`nx add` installs the plugin, using the version that matches your Nx version for official `@nx/*` plugins.
+It then registers the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "previewTargetName": "preview"
+        // ... other task names
+      }
+    }
+  ]
+}
+```
+
+The `options` set the names of the inferred tasks.
+To see a project's tasks and which plugin or file set each value, run `nx show project <project-name> --web`.
+
+## Find or build a plugin
+
+The Nx team maintains plugins for common frontend, backend, testing, and build tools, and the community publishes plugins for many others.
+Browse both in the [plugin registry](/docs/plugin-registry).
+
+If no plugin covers your tool, or your organization has its own conventions, you can [write a plugin](/docs/kb/organization-specific-plugin).
