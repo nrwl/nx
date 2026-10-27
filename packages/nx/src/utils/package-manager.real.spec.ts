@@ -1,15 +1,19 @@
 import {
+  existsSync,
+  lutimesSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
   statSync,
+  symlinkSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   detectPackageManager,
   getPackageManagerVersion,
@@ -176,3 +180,116 @@ it.each([
     }
   }
 );
+
+describe('createTempNpmDirectory', () => {
+  let root: string;
+
+  beforeEach(() => {
+    // Outside the shared temp dir, which is refused as a home.
+    const parent = join(process.cwd(), 'tmp');
+    mkdirSync(parent, { recursive: true });
+    root = realpathSync(mkdtempSync(join(parent, 'nx-temp-install-')));
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('keeps the install out of the shared temp dir, whose ancestors package managers read', async () => {
+    const sharedTmp = join(root, 'shared-tmp');
+    const home = join(root, 'home');
+    mkdirSync(sharedTmp, { mode: 0o777 });
+    mkdirSync(home);
+    writeFileSync(join(sharedTmp, '.npmrc'), 'git=./planted\n');
+    writeFileSync(
+      join(sharedTmp, 'package.json'),
+      JSON.stringify({ workspaces: ['tmp-*'] })
+    );
+    mkdirSync(join(sharedTmp, 'node_modules'));
+    vi.stubEnv('TMPDIR', sharedTmp);
+    vi.stubEnv('TMP', sharedTmp);
+    vi.stubEnv('TEMP', sharedTmp);
+    vi.stubEnv('HOME', home);
+    vi.stubEnv('USERPROFILE', home);
+    vi.resetModules();
+    const { createTempNpmDirectory } = await import('./package-manager');
+
+    const { dir, cleanup } = createTempNpmDirectory(true);
+
+    try {
+      expect(realpathSync(dir).startsWith(sharedTmp)).toBe(false);
+      expect(dirname(realpathSync(dir))).toEqual(join(home, '.nx', 'tmp'));
+      if (process.platform !== 'win32') {
+        expect(statSync(join(home, '.nx')).mode & 0o077).toBe(0);
+        expect(statSync(dir).mode & 0o077).toBe(0);
+      }
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it.skipIf(process.platform === 'win32')(
+    'refuses to install when the home directory is the shared temp dir',
+    async () => {
+      vi.stubEnv('HOME', '/tmp');
+      vi.resetModules();
+      const { createTempNpmDirectory } = await import('./package-manager');
+
+      expect(() => createTempNpmDirectory(true)).toThrow(
+        'Nx cannot install packages without a private ~/.nx directory: there is no home directory separate from the shared temp directory.'
+      );
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
+    'refuses to install when ~/.nx is not a private directory',
+    async () => {
+      const home = join(root, 'home');
+      const elsewhere = join(root, 'elsewhere');
+      mkdirSync(home);
+      mkdirSync(elsewhere);
+      symlinkSync(elsewhere, join(home, '.nx'), 'dir');
+      vi.stubEnv('HOME', home);
+      vi.resetModules();
+      const { createTempNpmDirectory } = await import('./package-manager');
+
+      expect(() => createTempNpmDirectory(true)).toThrow(
+        /^Nx cannot install packages without a private ~\/\.nx directory: .*symlink/
+      );
+      expect(readdirSync(elsewhere)).toEqual([]);
+    }
+  );
+
+  it('removes stale install dirs left in the private root, keeping fresh ones and symlink targets', async () => {
+    const home = join(root, 'home');
+    const installRoot = join(home, '.nx', 'tmp');
+    mkdirSync(installRoot, { recursive: true, mode: 0o700 });
+    const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const stale = join(installRoot, 'tmp-stale');
+    mkdirSync(join(stale, 'node_modules'), { recursive: true });
+    utimesSync(stale, old, old);
+    const fresh = join(installRoot, 'tmp-fresh');
+    mkdirSync(fresh);
+    const outside = join(root, 'outside');
+    mkdirSync(outside);
+    writeFileSync(join(outside, 'keep'), '');
+    utimesSync(outside, old, old);
+    const link = join(installRoot, 'tmp-link');
+    symlinkSync(outside, link, 'dir');
+    lutimesSync(link, old, old);
+    vi.stubEnv('HOME', home);
+    vi.stubEnv('USERPROFILE', home);
+    vi.resetModules();
+    const { createTempNpmDirectory } = await import('./package-manager');
+
+    const { cleanup } = createTempNpmDirectory(true);
+    await cleanup();
+
+    expect(existsSync(stale)).toBe(false);
+    expect(existsSync(fresh)).toBe(true);
+    expect(existsSync(link)).toBe(true);
+    expect(existsSync(join(outside, 'keep'))).toBe(true);
+  });
+});

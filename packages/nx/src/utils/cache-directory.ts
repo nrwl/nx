@@ -3,12 +3,8 @@ import { existsSync, unlinkSync, writeFileSync } from 'fs';
 import { isAbsolute, join } from 'path';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
-import { NX_HOME_TMP_DIR, NX_TMP_DIR, NX_USER_TMP_DIR } from './nx-tmp-dir';
-import {
-  canonicalDir,
-  type DirRefusal,
-  ensureOwnedPrivateDir,
-} from './owned-private-dir';
+import { homeDirIsDistinctFromSharedTmp, NX_HOME_TMP_DIR } from './nx-tmp-dir';
+import { type DirRefusal, ensureOwnedPrivateDir } from './owned-private-dir';
 import { generateWorkspaceId } from './workspace-id';
 import { workspaceRoot } from './workspace-root';
 
@@ -92,28 +88,6 @@ const SHARED_SEGMENT: Record<SharedDataKind, string> = {
 };
 
 const SHARED_DATA_KINDS = Object.keys(SHARED_SEGMENT) as SharedDataKind[];
-
-/**
- * Whether `~/.nx` is somewhere other than the shared container.
- *
- * `homedir()` honours `$HOME`, so with `HOME=/tmp` the two are one path -- and
- * that container is deliberately world-writable (`1777`) so peers can each
- * create their own subtree under it. Build outputs and the graph DB get
- * replayed into the workspace and supply target commands, so they cannot live
- * anywhere a peer can replace them.
- *
- * `daemon/tmp-dir.ts` makes the same check for the socket tier. It cannot be
- * shared from there: that module imports this one.
- */
-function homeDirIsDistinctFromSharedTmp(): boolean {
-  if (!NX_HOME_TMP_DIR) {
-    return false;
-  }
-  const home = canonicalDir(NX_HOME_TMP_DIR);
-  return ![NX_TMP_DIR, NX_USER_TMP_DIR].some(
-    (shared) => canonicalDir(shared) === home
-  );
-}
 
 /** Memoizes the verdict below, per repository. */
 const sharedRootUsable = new Map<string, SharedDataLocation>();
