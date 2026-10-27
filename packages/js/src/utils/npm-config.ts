@@ -13,7 +13,11 @@ export async function parseRegistryOptions(
     tag?: string;
   },
   logWarnFn: (message: string) => void = console.warn
-): Promise<{ registry: string; tag: string; registryConfigKey: string }> {
+): Promise<{
+  registry: string | undefined;
+  tag: string;
+  registryConfigKey: string;
+}> {
   const npmRcPath = join(pkg.packageRoot, '.npmrc');
   if (existsSync(npmRcPath)) {
     const relativeNpmRcPath = relative(cwd, npmRcPath);
@@ -71,18 +75,22 @@ export async function parseRegistryOptions(
 export async function getNpmRegistry(
   cwd: string,
   scope?: string
-): Promise<string> {
-  let registry: string | undefined;
-
+): Promise<string | undefined> {
   if (scope) {
-    registry = await getNpmConfigValue(`${scope}:registry`, cwd);
+    let scopedRegistry: string | undefined;
+    try {
+      scopedRegistry = await readNpmConfigValue(`${scope}:registry`, cwd);
+    } catch {
+      // npm refuses to print values it would redact, so the scope may still
+      // have a registry. Falling back to the unscoped one would override it.
+      return undefined;
+    }
+    if (scopedRegistry) {
+      return scopedRegistry;
+    }
   }
 
-  if (!registry) {
-    registry = await getNpmConfigValue('registry', cwd);
-  }
-
-  return registry;
+  return getNpmConfigValue('registry', cwd);
 }
 
 /**
@@ -95,13 +103,23 @@ export async function getNpmTag(cwd: string): Promise<string> {
   return getNpmConfigValue('tag', cwd);
 }
 
-async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
+async function getNpmConfigValue(
+  key: string,
+  cwd: string
+): Promise<string | undefined> {
   try {
-    const result = await npmConfigGet(key, cwd);
-    return result === 'undefined' ? undefined : result;
-  } catch (e) {
-    return Promise.resolve(undefined);
+    return await readNpmConfigValue(key, cwd);
+  } catch {
+    return undefined;
   }
+}
+
+async function readNpmConfigValue(
+  key: string,
+  cwd: string
+): Promise<string | undefined> {
+  const result = await npmConfigGet(key, cwd);
+  return result === 'undefined' ? undefined : result;
 }
 
 // `key` carries the package's own scope, so it goes to npm as an argument

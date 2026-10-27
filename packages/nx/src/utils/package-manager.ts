@@ -106,13 +106,13 @@ export interface PackageManagerCommands {
    */
   publish: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => string;
   publishArgv: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => { command: string; args: string[] };
@@ -283,7 +283,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -352,13 +352,17 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}`,
+          ...(registry
+            ? [
+                `--${
+                  configForm
+                    ? `config.${registryConfigKey}`
+                    : scopedForm
+                      ? registryConfigKey
+                      : 'registry'
+                }=${registry}`,
+              ]
+            : []),
           `--tag=${tag}`,
           '--no-git-checks',
         ],
@@ -405,7 +409,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -441,7 +445,7 @@ export function getPackageManagerCommand(
           'publish',
           `--cwd=${packageRoot}`,
           '--json',
-          `--registry=${registry}`,
+          ...(registry ? [`--registry=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
