@@ -68,6 +68,7 @@ export type DirRefusal =
   | { kind: 'foreign-owner'; dir: string; uid: number }
   | { kind: 'foreign-shared-container'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
+  | { kind: 'not-private'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
 /** A guard's verdict. */
@@ -113,6 +114,8 @@ export function describeRefusal(r: DirRefusal): string {
       return `${r.dir} is reachable by other users (mode ${asMode(
         r.mode
       )}) and could not be tightened to 0700`;
+    case 'not-private':
+      return `${r.dir} is reachable by other users (mode ${asMode(r.mode)})`;
     case 'peer-writable-not-sticky':
       return `${r.dir} is writable by other users but not sticky (mode ${asMode(
         r.mode
@@ -308,6 +311,31 @@ export function isOwnedRealDirectory(dir: string): OwnedRealDir | null {
       : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * The verdict of `ensureOwnedPrivateDir` with nothing created and nothing
+ * re-locked, for callers about to trust what is already inside. Tightening a
+ * directory that was open a moment ago says nothing about who filled it.
+ */
+export function isOwnedPrivateDir(dir: string): GuardResult<OwnedPrivateDir> {
+  try {
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return deny(notADirectory(dir, stats));
+    }
+    if (typeof process.getuid !== 'function') {
+      return allow(dir as OwnedPrivateDir);
+    }
+    if (stats.uid !== process.getuid()) {
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
+    }
+    return stats.mode & 0o077
+      ? deny({ kind: 'not-private', dir, mode: stats.mode })
+      : allow(dir as OwnedPrivateDir);
+  } catch (e: any) {
+    return deny({ kind: 'not-inspectable', dir, code: e?.code });
   }
 }
 

@@ -17,6 +17,7 @@ import {
   type DirRefusal,
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
+  isOwnedPrivateDir,
   isSafeSharedRoot,
 } from './owned-private-dir';
 
@@ -86,6 +87,11 @@ describe('describeRefusal', () => {
       '/d is reachable by other users (mode 0755) and could not be tightened to 0700',
     ],
     [
+      'not-private',
+      { kind: 'not-private', dir: '/d', mode: 0o40755 },
+      '/d is reachable by other users (mode 0755)',
+    ],
+    [
       'peer-writable-not-sticky',
       { kind: 'peer-writable-not-sticky', dir: '/d', mode: 0o41777 },
       '/d is writable by other users but not sticky (mode 1777), so a peer could replace directories inside it',
@@ -106,6 +112,79 @@ describe('describeRefusal', () => {
 
     expect(text).toContain('0755');
     expect(text).not.toContain('40755');
+  });
+});
+
+describe('isOwnedPrivateDir', () => {
+  let base: string;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'nx-is-owned-private-'));
+  });
+
+  afterEach(() => {
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('should accept a directory of ours that nobody else can reach', () => {
+    const dir = join(base, 'private');
+    mkdirSync(dir, { mode: 0o700 });
+
+    expect(isOwnedPrivateDir(dir)).toEqual({ status: 'ok', path: dir });
+  });
+
+  it('should refuse a missing directory without creating it', () => {
+    const dir = join(base, 'absent');
+
+    expect(isOwnedPrivateDir(dir)).toEqual({
+      status: 'refused',
+      refusal: { kind: 'not-inspectable', dir, code: 'ENOENT' },
+    });
+    expect(() => lstatSync(dir)).toThrow();
+  });
+
+  posixOnly.each(['0755', '0750', '0711', '0705'])(
+    'should refuse a directory of ours at mode %s and leave the mode alone',
+    (octalMode: string) => {
+      const mode = parseInt(octalMode, 8);
+      const dir = join(base, `loose-${octalMode}`);
+      mkdirSync(dir);
+      chmodSync(dir, mode);
+
+      const verdict = isOwnedPrivateDir(dir);
+
+      expect(verdict.status).toBe('refused');
+      expect((verdict as any).refusal.kind).toBe('not-private');
+      expect(lstatSync(dir).mode & 0o777).toBe(mode);
+    }
+  );
+
+  posixOnly('should refuse a directory owned by another user', () => {
+    const dir = join(base, 'foreign');
+    mkdirSync(dir, { mode: 0o700 });
+    const getuid = vi
+      .spyOn(process, 'getuid')
+      .mockReturnValue(process.getuid!() + 1);
+    try {
+      expect((isOwnedPrivateDir(dir) as any).refusal.kind).toBe(
+        'foreign-owner'
+      );
+    } finally {
+      getuid.mockRestore();
+    }
+  });
+
+  posixOnly('should refuse a symlink to a directory that would pass', () => {
+    const target = join(base, 'target');
+    mkdirSync(target, { mode: 0o700 });
+    const link = join(base, 'link');
+    symlinkSync(target, link);
+
+    expect((isOwnedPrivateDir(link) as any).refusal).toEqual({
+      kind: 'not-a-directory',
+      dir: link,
+      symlink: true,
+    });
   });
 });
 

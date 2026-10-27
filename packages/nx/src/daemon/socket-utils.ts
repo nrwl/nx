@@ -1,6 +1,7 @@
 import { unlinkSync } from 'fs';
-import type { Socket } from 'net';
+import { connect, Socket } from 'net';
 import { platform } from 'os';
+import { dirname } from 'path';
 import {
   getDaemonSocketPath,
   getForkedProcessSocketPath,
@@ -10,6 +11,7 @@ import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
 import { writeMessage } from '../utils/consume-messages-from-socket';
+import { describeRefusal, isOwnedPrivateDir } from '../utils/owned-private-dir';
 
 export const isWindows = platform() === 'win32';
 
@@ -31,6 +33,33 @@ export const getForkedProcessOsSocketPath = (id: string) =>
   getForkedProcessSocketPath(id);
 
 export const getPluginOsSocketPath = (id: string) => getPluginSocketPath(id);
+
+/**
+ * Dial a recorded daemon socket only if its directory is ours and owner-only.
+ * A refusal fails the socket like any failed connect, with the directory's
+ * errno when it cannot be inspected and ENOENT otherwise.
+ */
+export function connectToDaemonSocket(
+  socketPath: string,
+  onConnect?: () => void
+): Socket {
+  // A named pipe has no directory to judge.
+  const verdict = isWindows
+    ? undefined
+    : isOwnedPrivateDir(dirname(socketPath));
+  if (verdict?.status === 'refused') {
+    const { refusal } = verdict;
+    const code =
+      (refusal.kind === 'not-inspectable' && refusal.code) || 'ENOENT';
+    return new Socket().destroy(
+      Object.assign(
+        new Error(`connect ${code} ${socketPath}: ${describeRefusal(refusal)}`),
+        { code }
+      )
+    );
+  }
+  return connect(socketPath, onConnect);
+}
 
 export function killSocketOrPath(): void {
   try {
