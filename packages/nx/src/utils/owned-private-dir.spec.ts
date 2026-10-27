@@ -18,6 +18,7 @@ import {
   ensureOwnedPrivateDir,
   ensureSafeSharedRoot,
   isSafeSharedRoot,
+  isTrustedAncestorEntry,
 } from './owned-private-dir';
 
 vi.mock('node:fs', async () => {
@@ -106,6 +107,78 @@ describe('describeRefusal', () => {
 
     expect(text).toContain('0755');
     expect(text).not.toContain('40755');
+  });
+});
+
+describe('isTrustedAncestorEntry', () => {
+  let base: string;
+
+  function plantedBy(uid: number, path: string) {
+    const actual = lstatSync(path);
+    (lstatSync as Mock).mockImplementationOnce((p: string) => {
+      expect(p).toBe(path);
+      return Object.assign(actual, { uid });
+    });
+  }
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'nx-trusted-ancestor-entry-'));
+    writeFileSync(join(base, 'nx.json'), '{}');
+  });
+
+  afterEach(() => {
+    chmodSync(base, 0o700);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  posixOnly.each(['1777', '0777', '0757'])(
+    "refuses another user's entry in a directory at mode %s",
+    (octalMode: string) => {
+      chmodSync(base, parseInt(octalMode, 8));
+      plantedBy(process.getuid() + 1, join(base, 'nx.json'));
+
+      expect(isTrustedAncestorEntry(base, 'nx.json')).toBe(false);
+    }
+  );
+
+  posixOnly('accepts our own entry in a world-writable directory', () => {
+    chmodSync(base, 0o1777);
+
+    expect(isTrustedAncestorEntry(base, 'nx.json')).toBe(true);
+  });
+
+  posixOnly("accepts root's entry in a world-writable directory", () => {
+    chmodSync(base, 0o1777);
+    plantedBy(0, join(base, 'nx.json'));
+
+    expect(isTrustedAncestorEntry(base, 'nx.json')).toBe(true);
+  });
+
+  posixOnly.each(['0755', '0775'])(
+    'does not ask who owns an entry in a directory at mode %s',
+    (octalMode: string) => {
+      chmodSync(base, parseInt(octalMode, 8));
+      (lstatSync as Mock).mockClear();
+
+      expect(isTrustedAncestorEntry(base, 'nx.json')).toBe(true);
+      expect(lstatSync).not.toHaveBeenCalled();
+    }
+  );
+
+  posixOnly('judges a symlink by its own owner, not its target', () => {
+    chmodSync(base, 0o1777);
+    symlinkSync(join(base, 'nx.json'), join(base, 'nx'));
+    (lstatSync as Mock).mockClear();
+
+    isTrustedAncestorEntry(base, 'nx');
+
+    expect(lstatSync).toHaveBeenCalledWith(join(base, 'nx'));
+  });
+
+  posixOnly('refuses what it cannot inspect', () => {
+    chmodSync(base, 0o1777);
+
+    expect(isTrustedAncestorEntry(base, 'absent')).toBe(false);
   });
 });
 

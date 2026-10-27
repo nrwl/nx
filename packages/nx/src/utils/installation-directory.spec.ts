@@ -11,7 +11,9 @@ import { join } from 'path';
 import {
   resolveFromWorkspace,
   resolveInstalledPackage,
+  resolveNxBinFrom,
 } from './installation-directory';
+import * as ownedPrivateDir from './owned-private-dir';
 
 describe('resolveFromWorkspace', () => {
   let root: string;
@@ -137,5 +139,54 @@ describe('resolveInstalledPackage', () => {
     expect(resolveInstalledPackage('optional-package', [root], root)).toBe(
       main
     );
+  });
+});
+
+describe('resolveNxBinFrom', () => {
+  let shared: string;
+  let nxBin: string;
+  let ws: string;
+
+  beforeEach(() => {
+    shared = realpathSync(mkdtempSync(join(tmpdir(), 'nx-resolve-nx-bin-')));
+    const nxDir = join(shared, 'node_modules', 'nx');
+    mkdirSync(join(nxDir, 'bin'), { recursive: true });
+    writeFileSync(
+      join(nxDir, 'package.json'),
+      JSON.stringify({ name: 'nx', version: '1.0.0' })
+    );
+    nxBin = join(nxDir, 'bin', 'nx.js');
+    writeFileSync(nxBin, '');
+    // A fresh clone: nx.json, no node_modules of its own.
+    ws = join(shared, 'ws');
+    mkdirSync(ws);
+    writeFileSync(join(ws, 'nx.json'), '{}');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    rmSync(shared, { recursive: true, force: true });
+  });
+
+  it('resolves nx from an ancestor install we trust', () => {
+    expect(resolveNxBinFrom(ws)).toBe(nxBin);
+  });
+
+  it('refuses nx from an ancestor install another user planted', () => {
+    const trusted = vi
+      .spyOn(ownedPrivateDir, 'isTrustedAncestorEntry')
+      .mockImplementation((dir) => dir !== shared);
+
+    expect(() => resolveNxBinFrom(ws)).toThrow();
+    expect(trusted).toHaveBeenCalledWith(shared, 'node_modules');
+  });
+
+  it('judges the install nx resolves from, past an incomplete local one', () => {
+    mkdirSync(join(ws, 'node_modules', 'nx'), { recursive: true });
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow();
   });
 });
