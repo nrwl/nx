@@ -11,24 +11,21 @@ The `@nx/owners` plugin extends the CODEOWNERS functionality to allow you to def
 
 With this plugin, you can specify code ownership using the same project matcher syntax as [`nx run-many`](/docs/reference/nx-commands#nx-run-many). This allows you to easily define rules for multiple projects that may not be located in the same directory. Also, the CODEOWNERS rules will not need to be revisited if a project location is changed or a new project is added.
 
-{% aside type="note" title="This plugin requires an active Nx Enterprise license" %}
-In order to use `@nx/owners`, you need to have an active Nx Enterprise license. If you don't have a license or it has expired, the syncing process will stop working and you'll need to manually maintain your CODEOWNERS file.
-{% /aside %}
+The plugin is open source and MIT licensed, ships with each Nx release, and doesn't need an Nx key or license.
 
 ## Set up @nx/owners
 
-1. [Activate your license](/docs/enterprise/activate-license) if you haven't already
-2. Install the package
+1. Install the package
 
    ```shell
    nx add @nx/owners
    ```
 
-3. Configure Ownership
+2. Configure Ownership
 
    Configure the `@nx/owners` plugin in the `nx.json` file or in individual project configuration files. Consult the [Owners Configuration Reference](#owners-configuration-reference) section for more details.
 
-4. Configure the [Sync Generator](/docs/concepts/sync-generators) and CI
+3. Configure the [Sync Generator](/docs/concepts/sync-generators) and CI
 
 The `nx add @nx/owners` command should have registered the `@nx/owners:sync-codeowners-file` generator as a `globalGenerator` in `nx.json`. You can double check to make sure:
 
@@ -385,3 +382,24 @@ Nx generates the following CODEOWNERS file:
 ```
 
 Every file falls back to `@platform-team`, and the later, more specific rule reassigns the finance projects to `@finance-team`.
+
+## Ensure owners rule
+
+The `@nx/owners/ensure-owners` [conformance rule](/docs/reference/conformance/overview) requires every project to have an owner. It needs the [`@nx/conformance`](/docs/reference/conformance/overview) plugin to run.
+
+Set the `rule` property to `@nx/owners/ensure-owners`:
+
+```json
+// nx.json
+{
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/owners/ensure-owners"
+      }
+    ]
+  }
+}
+```
+
+If your configuration still uses `@nx/conformance/ensure-owners`, `nx migrate` rewrites it to `@nx/owners/ensure-owners`.
