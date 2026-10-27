@@ -42,7 +42,7 @@ describe('ensurePackageHasProvenance', () => {
     }
   });
 
-  it('does nothing when NX_SKIP_PROVENANCE_CHECK is set', async () => {
+  it('does nothing when NX_SKIP_PROVENANCE_CHECK is true', async () => {
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
     await expect(
@@ -51,6 +51,20 @@ describe('ensurePackageHasProvenance', () => {
     expect(packageRegistryViewSpy).not.toHaveBeenCalled();
     expect(global.fetch).not.toHaveBeenCalled();
   });
+
+  it.each(['false', '0', 'no', 'FALSE', ''])(
+    'still checks provenance when NX_SKIP_PROVENANCE_CHECK is "%s"',
+    async (value) => {
+      process.env.NX_SKIP_PROVENANCE_CHECK = value;
+      packageRegistryViewSpy.mockResolvedValue(
+        JSON.stringify(packument('1.0.0', false))
+      );
+
+      await expect(ensurePackageHasProvenance('nx', '1.0.0')).rejects.toThrow(
+        'No attestation URL found'
+      );
+    }
+  );
 
   it('locates the attestation URL when npm returns a bare object (npm <= 11)', async () => {
     packageRegistryViewSpy.mockResolvedValue(
