@@ -11,7 +11,9 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
-import { workspaceRoot as nxWorkspaceRoot } from 'nx/src/utils/workspace-root';
+
+const { workspaceRoot: nxWorkspaceRoot } =
+  await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
 
 vi.mock('child_process', async () => {
   const cp = await vi.importActual<any>('child_process');
