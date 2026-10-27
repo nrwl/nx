@@ -5,6 +5,7 @@
 import { relative } from 'node:path';
 import { coerce as semverCoerce, gte as semverGte } from 'semver';
 import { interpolateReleaseConfig } from './interpolate-release-config';
+import { assertValidGitRevision } from '../../../utils/git-revision';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 import type { CheckAllBranchesWhen, RepoGitTags } from './repository-git-tags';
@@ -264,6 +265,11 @@ export async function getGitDiff(
   from: string | undefined,
   to = 'HEAD'
 ): Promise<RawGitCommit[]> {
+  if (from) {
+    assertValidGitRevision(from);
+  }
+  assertValidGitRevision(to);
+
   let range = '';
   if (!from || from === to) {
     range = to;
@@ -716,8 +722,9 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 }
 
 export async function getCommitHash(ref: string) {
+  assertValidGitRevision(ref);
   try {
-    return (await execCommand('git', ['rev-parse', ref])).trim();
+    return (await execCommand('git', ['rev-parse', '--verify', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
   }
