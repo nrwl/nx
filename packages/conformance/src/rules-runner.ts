@@ -155,7 +155,8 @@ export async function conformanceRulesRunner({
           });
           const endTime = performance.now();
 
-          // Consolidated violation processing
+          const countOfOriginalViolations =
+            ruleResult.details.violations?.length ?? 0;
           let hasAnyViolationFixGeneratorData = false;
           if (ruleResult.details.violations) {
             const violations = ruleResult.details.violations;
@@ -238,18 +239,15 @@ export async function conformanceRulesRunner({
               scheduledStatus: scheduledStatus ?? null,
               scheduledStatusDate: scheduledStatusDate ?? null,
               fixGeneratorStatus,
-              countOfOriginalViolations:
-                ruleResult.details.violations?.length ?? 0,
+              countOfOriginalViolations,
               countOfViolationsFixedByGenerator: 0,
-              countOfViolationsFilteredByProjects: 0,
+              countOfViolationsFilteredByProjects:
+                countOfOriginalViolations -
+                (ruleResult.details.violations?.length ?? 0),
               // Execution time in whole milliseconds (peformance now has sub-ms precision)
               executionTimeMs: Math.round(endTime - startTime),
             },
           };
-
-          finalResult.runnerData.countOfViolationsFilteredByProjects =
-            finalResult.runnerData.countOfOriginalViolations -
-            ruleResult.details.violations.length;
 
           return {
             finalResult,
