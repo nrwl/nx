@@ -489,118 +489,134 @@ describe('Ultracache task rehashing', () => {
     );
   });
 
-  it('retains upfront hashes automatically, exports an agent, rehashes on main, and matches a fresh normal source-glob run', async () => {
-    vi.stubEnv('CI', 'true');
-    vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
-    fs.createDirSync('dist/app');
-    // Metadata in the current timestamp tick cannot prove historical stability.
-    await new Promise((resolve) => setTimeout(resolve, 2200));
-    const owner = await fixture(undefined, undefined, true);
-    const tasks = Object.values(owner.taskGraph.tasks);
-    const original = await owner.hasher.hashTasksUpfront(
-      tasks,
-      owner.taskGraph,
-      Object.fromEntries(tasks.map((t) => [t.id, {}])),
-      fs.tempDir
-    );
-    expect(getUltracacheRehasher(owner.hasher)).not.toBeNull();
-    await fs.createFiles({ 'dist/app/result.txt': 'completed artifact' });
-    const originalKeys = Object.fromEntries(
-      tasks.map((t) => [t.id, original[t.id].value])
-    );
-    const executionStates = JSON.parse(
-      JSON.stringify(exportUltracacheExecutionStates(originalKeys))
-    );
-    expect(executionStates[0].taskHashes).toEqual(originalKeys);
-    expect(JSON.stringify(executionStates)).not.toContain(
-      'NX_CLOUD_ACCESS_TOKEN'
-    );
-
-    const ownerFs = fs;
-    const mainFs = new TempFs('rehash-main');
-    try {
-      for (const path of [
-        'nx.json',
-        'tsconfig.base.json',
-        'app/old.txt',
-        'app/learned.txt',
-        'lib/source.txt',
-      ])
-        await mainFs.createFile(path, await ownerFs.readFile(path));
-      fs = mainFs;
-      const main = await fixture(
-        undefined,
-        structuredClone(owner.projectGraph),
-        true
-      );
-      const mainTasks = Object.values(main.taskGraph.tasks);
-      await main.hasher.hashTasksUpfront(
-        mainTasks,
-        main.taskGraph,
-        Object.fromEntries(mainTasks.map((t) => [t.id, {}])),
+  it.each(['owner-summary', 'per-task'] as const)(
+    'retains upfront hashes automatically, exports an agent, rehashes on main, and matches a fresh normal source-glob run: %s',
+    async (exportMode) => {
+      vi.stubEnv('CI', 'true');
+      vi.stubEnv('NX_CLOUD_ACCESS_TOKEN', 'test');
+      fs.createDirSync('dist/app');
+      // Metadata in the current timestamp tick cannot prove historical stability.
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+      const owner = await fixture(undefined, undefined, true);
+      const tasks = Object.values(owner.taskGraph.tasks);
+      const original = await owner.hasher.hashTasksUpfront(
+        tasks,
+        owner.taskGraph,
+        Object.fromEntries(tasks.map((t) => [t.id, {}])),
         fs.tempDir
       );
-      const retained = getUltracacheRehasher(main.hasher)!;
+      expect(getUltracacheRehasher(owner.hasher)).not.toBeNull();
+      await fs.createFiles({ 'dist/app/result.txt': 'completed artifact' });
+      const originalKeys = Object.fromEntries(
+        tasks.map((t) => [t.id, original[t.id].value])
+      );
+      const exported = [];
+      if (exportMode === 'per-task') {
+        const retained = getUltracacheRehasher(owner.hasher)!;
+        for (const task of tasks)
+          exported.push(
+            await retained.exportExecutionState({
+              [task.id]: originalKeys[task.id],
+            })
+          );
+        retained.dispose();
+      } else exported.push(...exportUltracacheExecutionStates(originalKeys));
+      const executionStates = JSON.parse(JSON.stringify(exported));
+      expect(
+        Object.assign({}, ...executionStates.map((s) => s.taskHashes))
+      ).toEqual(originalKeys);
+      expect(JSON.stringify(executionStates)).not.toContain(
+        'NX_CLOUD_ACCESS_TOKEN'
+      );
 
-      const learned = configuration(['app/**/*.txt', 'lib/**/*.txt']);
-      const result = await retained.rehash(learned, { executionStates });
-      expect(result.skipped).toEqual({});
-      const fresh = await fixture(
-        undefined,
-        structuredClone(owner.projectGraph)
-      );
-      const next = await fresh.hasher.hashTask(
-        fresh.task,
-        fresh.taskGraph,
-        {},
-        fs.tempDir,
-        false,
-        learned
-      );
-      expect(result.hashes[main.task.id]).toBe(next.value);
-      expect(result.hashes[main.task.id]).not.toBe(originalKeys[main.task.id]);
-      const wrong = structuredClone(executionStates);
-      wrong[0].taskHashes[main.task.id] = 'different-agent-execution-hash';
-      expect(
-        (await retained.rehash(learned, { executionStates: wrong })).hashes[
-          main.task.id
-        ]
-      ).toBeUndefined();
-      const wrongContext = structuredClone(executionStates);
-      wrongContext[0].taskContexts[main.task.id] =
-        'different-owner-planning-context';
-      expect(
-        (await retained.rehash(learned, { executionStates: wrongContext }))
-          .hashes[main.task.id]
-      ).toBeUndefined();
-      fs.writeFile('app/learned.txt', 'changed newly learned input');
-      await updateContextWithChangedFiles(
-        fs.tempDir,
-        [],
-        ['app/learned.txt'],
-        []
-      );
-      const changed = await fixture(
-        undefined,
-        structuredClone(owner.projectGraph)
-      );
-      expect(
-        (
-          await changed.hasher.hashTask(
-            changed.task,
-            changed.taskGraph,
-            {},
-            fs.tempDir,
-            false,
-            learned
-          )
-        ).value
-      ).not.toBe(next.value);
-    } finally {
-      fs = ownerFs;
-      mainFs.cleanup();
+      const ownerFs = fs;
+      const mainFs = new TempFs('rehash-main');
+      try {
+        for (const path of [
+          'nx.json',
+          'tsconfig.base.json',
+          'app/old.txt',
+          'app/learned.txt',
+          'lib/source.txt',
+        ])
+          await mainFs.createFile(path, await ownerFs.readFile(path));
+        fs = mainFs;
+        const main = await fixture(
+          undefined,
+          structuredClone(owner.projectGraph),
+          true
+        );
+        const mainTasks = Object.values(main.taskGraph.tasks);
+        await main.hasher.hashTasksUpfront(
+          mainTasks,
+          main.taskGraph,
+          Object.fromEntries(mainTasks.map((t) => [t.id, {}])),
+          fs.tempDir
+        );
+        const retained = getUltracacheRehasher(main.hasher)!;
+
+        const learned = configuration(['app/**/*.txt', 'lib/**/*.txt']);
+        const result = await retained.rehash(learned, { executionStates });
+        expect(result.skipped).toEqual({});
+        const fresh = await fixture(
+          undefined,
+          structuredClone(owner.projectGraph)
+        );
+        const next = await fresh.hasher.hashTask(
+          fresh.task,
+          fresh.taskGraph,
+          {},
+          fs.tempDir,
+          false,
+          learned
+        );
+        expect(result.hashes[main.task.id]).toBe(next.value);
+        expect(result.hashes[main.task.id]).not.toBe(
+          originalKeys[main.task.id]
+        );
+        const wrong = structuredClone(executionStates);
+        wrong[0].taskHashes[main.task.id] = 'different-agent-execution-hash';
+        expect(
+          (await retained.rehash(learned, { executionStates: wrong })).hashes[
+            main.task.id
+          ]
+        ).toBeUndefined();
+        const wrongContext = structuredClone(executionStates);
+        wrongContext[0].taskContexts[main.task.id] =
+          'different-owner-planning-context';
+        expect(
+          (await retained.rehash(learned, { executionStates: wrongContext }))
+            .hashes[main.task.id]
+        ).toBeUndefined();
+        fs.writeFile('app/learned.txt', 'changed newly learned input');
+        await updateContextWithChangedFiles(
+          fs.tempDir,
+          [],
+          ['app/learned.txt'],
+          []
+        );
+        const changed = await fixture(
+          undefined,
+          structuredClone(owner.projectGraph)
+        );
+        expect(
+          (
+            await changed.hasher.hashTask(
+              changed.task,
+              changed.taskGraph,
+              {},
+              fs.tempDir,
+              false,
+              learned
+            )
+          ).value
+        ).not.toBe(next.value);
+      } finally {
+        fs = ownerFs;
+        mainFs.cleanup();
+      }
     }
-  });
+  );
 
   it.each([
     'restored-write',
