@@ -2,6 +2,7 @@ import { spawnSync } from 'child_process';
 import { readNxJson } from '../../../config/nx-json';
 import { output } from '../../../utils/output';
 import { isNxCloudUsed } from '../../../utils/nx-cloud-utils';
+import { quoteShellArg } from '../../../utils/shell-quoting';
 import { executeNxCloudCommand } from '../utils';
 
 export interface RecordArgs {
@@ -14,8 +15,8 @@ export function recordHandler(args: RecordArgs): Promise<number> {
     let exitCode: number = 0;
     const commandArgs = args['--'];
     if (commandArgs && commandArgs.length > 0) {
-      const [cmd, ...cmdArgs] = commandArgs;
-      const result = spawnSync(cmd, cmdArgs, {
+      const [cmd, ...cmdArgs] = commandArgs.map(String);
+      const result = spawnSync(cmd, cmdArgs.map(quoteShellArg), {
         stdio: 'inherit',
         shell: true,
         encoding: 'utf-8',
