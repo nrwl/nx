@@ -688,7 +688,10 @@ export async function startServer(
 
   isFilteredGraph = !!(focus || exclude.length > 0);
 
-  const app = http.createServer(async (req, res) => {
+  const handleRequest = async (
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ) => {
     if (!isSameOriginLocalRequest(req, host)) {
       res.writeHead(403, { 'Content-Type': 'text/plain' });
       res.end('Forbidden');
@@ -759,7 +762,11 @@ export async function startServer(
       performance.mark('task input generation:start');
 
       const taskId = parsedUrl.searchParams.get('taskId');
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      if (!taskId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Missing taskId' }));
+        return;
+      }
       const inputs = await getExpandedTaskInputs(
         currentProjectGraphClientResponse,
         expandedTaskInputsCache,
@@ -767,6 +774,7 @@ export async function startServer(
       );
       performance.mark('task input generation:end');
 
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ [taskId]: inputs }));
       performance.measure(
         'task input generation',
@@ -828,6 +836,19 @@ export async function startServer(
       res.statusCode = 500;
       res.end(`Error getting the file: ${err}.`);
     }
+  };
+
+  const app = http.createServer((req, res) => {
+    handleRequest(req, res).catch((err) => {
+      output.error({
+        title: `Failed to handle graph request ${req.url}`,
+        bodyLines: [err?.stack ?? String(err)],
+      });
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+      }
+      res.end();
+    });
   });
 
   const handleTermination = async (exitCode: number) => {

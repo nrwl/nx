@@ -1,4 +1,6 @@
 import type { Mock } from 'vitest';
+import * as http from 'node:http';
+import type { Server } from 'node:net';
 import type { FileData } from '../../config/project-graph';
 import { expandFilesInput, HashPlanner } from '../../native';
 import {
@@ -14,8 +16,6 @@ import {
   startServer,
   taskGraphForSelection,
 } from './graph';
-import { get } from 'node:http';
-import type { Server } from 'node:net';
 import type { TaskGraph } from '../../config/task-graph';
 
 vi.mock('../../native', async (importOriginal) => ({
@@ -446,18 +446,20 @@ describe('graph server', () => {
 
   const request = (path: string, headers: Record<string, string> = {}) =>
     new Promise<number>((resolve, reject) => {
-      get(
-        {
-          host: url.hostname,
-          port: url.port,
-          path,
-          headers: { host: url.host, ...headers },
-        },
-        (res) => {
-          res.resume();
-          resolve(res.statusCode);
-        }
-      ).on('error', reject);
+      http
+        .get(
+          {
+            host: url.hostname,
+            port: url.port,
+            path,
+            headers: { host: url.host, ...headers },
+          },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode);
+          }
+        )
+        .on('error', reject);
     });
 
   it('serves the bare printed URL and same-origin requests', async () => {
@@ -502,4 +504,48 @@ describe('graph server', () => {
       expect(await request(path, { origin: 'null' })).toBe(403);
     }
   );
+});
+
+describe('startServer', () => {
+  let app: Server;
+  let url: URL;
+
+  function get(path: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      http
+        .get(
+          { host: url.hostname, port: url.port, path, timeout: 5000 },
+          (res) => {
+            res.resume();
+            res.on('end', () => resolve(res.statusCode));
+          }
+        )
+        .on('timeout', function () {
+          this.destroy(new Error(`${path} timed out`));
+        })
+        .on('error', reject);
+    });
+  }
+
+  beforeEach(async () => {
+    (createProjectGraphAndSourceMapsAsync as Mock).mockResolvedValue({
+      projectGraph: { nodes: {}, dependencies: {} },
+      sourceMaps: {},
+    });
+    ({ app, url } = await startServer('', '', '127.0.0.1', 0, false));
+  });
+
+  afterEach(async () => {
+    await new Promise((resolve) => app.close(resolve));
+  });
+
+  it('rejects a task-inputs request without a taskId', async () => {
+    expect(await get('/task-inputs.json')).toBe(400);
+    expect(await get('/currentHash')).toBe(200);
+  });
+
+  it('keeps serving after a request it cannot handle', async () => {
+    expect(await get('//')).toBe(500);
+    expect(await get('/currentHash')).toBe(200);
+  });
 });
