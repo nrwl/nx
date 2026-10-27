@@ -3,7 +3,12 @@ import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import { killProcessTree, killProcessTreeGraceful } from '../../native';
+import {
+  IS_WASM,
+  killProcessTree,
+  killProcessTreeGraceful,
+  LogMatcher,
+} from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -53,6 +58,19 @@ function streamChunk(
  */
 function commandExitedNonZeroWarning(command: string): string {
   return `Warning: command "${command}" exited with non-zero status code`;
+}
+
+function commandsExitedBeforeReadyWarning(
+  commands: RunningNodeProcess[],
+  readyWhenStatus: { stringToMatch: string; found: boolean }[]
+): string {
+  const exited =
+    commands.length === 1 ? `command "${commands[0].command}"` : 'all commands';
+  const missing = readyWhenStatus
+    .filter(({ found }) => !found)
+    .map(({ stringToMatch }) => `"${stringToMatch}"`)
+    .join(', ');
+  return `Warning: ${exited} exited before printing the readyWhen text ${missing}`;
 }
 
 export class ParallelRunningTasks implements RunningTask {
@@ -140,11 +158,8 @@ export class ParallelRunningTasks implements RunningTask {
 
   private async run() {
     if (this.readyWhenStatus.length) {
-      let {
-        childProcess,
-        result: { code, terminalOutput },
-      } = await Promise.race(
-        this.childProcesses.map(
+      const settled = await Promise.race([
+        ...this.childProcesses.map(
           (childProcess) =>
             new Promise<{
               childProcess: RunningNodeProcess;
@@ -162,8 +177,34 @@ export class ParallelRunningTasks implements RunningTask {
                 });
               });
             })
-        )
-      );
+        ),
+        Promise.all(
+          this.childProcesses.map((childProcess) =>
+            childProcess.outputWhenClosed()
+          )
+        ).then((outputs) => ({ outputsOfExitedCommands: outputs })),
+      ]);
+
+      if ('outputsOfExitedCommands' in settled) {
+        const warning = commandsExitedBeforeReadyWarning(
+          this.childProcesses,
+          this.readyWhenStatus
+        );
+        for (const cb of this.outputCallbacks) {
+          cb(warning);
+        }
+        streamChunk(warning, this.streamOutput, process.stderr);
+        this.emitExit(
+          1,
+          settled.outputsOfExitedCommands.join('\r\n') + warning
+        );
+        return;
+      }
+
+      let {
+        childProcess,
+        result: { code, terminalOutput },
+      } = settled;
 
       if (code !== 0) {
         const warning = commandExitedNonZeroWarning(childProcess.command);
@@ -555,6 +596,11 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
+  async outputWhenClosed(): Promise<string> {
+    await this.closedPromise;
+    return this.terminalOutputChunks.join('');
+  }
+
   private emitExit(code: number, terminalOutput: string): void {
     if (this.exited) return;
     this.exited = true;
@@ -602,6 +648,9 @@ class RunningNodeProcess implements RunningTask {
   private addListeners(commandConfig: RunCommandsCommandOptions) {
     this.childProcess.stdout.setEncoding('utf8');
     this.childProcess.stderr.setEncoding('utf8');
+    // Separate matchers, so a ready string never spans stdout and stderr
+    const stdoutReady = readyWhenMatcher(this.readyWhenStatus);
+    const stderrReady = readyWhenMatcher(this.readyWhenStatus);
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
@@ -610,7 +659,7 @@ class RunningNodeProcess implements RunningTask {
 
       this.stream(output);
 
-      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
+      if (this.readyWhenStatus.length && stdoutReady(data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
         }
@@ -624,7 +673,7 @@ class RunningNodeProcess implements RunningTask {
 
       this.stream(output, process.stderr);
 
-      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
+      if (this.readyWhenStatus.length && stderrReady(err)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
         }
@@ -644,16 +693,18 @@ class RunningNodeProcess implements RunningTask {
         code = signalToCode(signal);
       }
       untrackRunningNodeProcess(this);
+      if (
+        code === 0 &&
+        this.readyWhenStatus.length &&
+        !isReady(this.readyWhenStatus)
+      ) {
+        // A parallel companion may still print the readyWhen text. Keep the
+        // output for ParallelRunningTasks, which decides once all have closed.
+        return;
+      }
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
-      if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
-        this.emitExit(code, terminalOutput);
-      } else if (code !== 0) {
-        // Process crashed before readyWhen matched; surface the failure so
-        // awaiters unblock. A clean exit (code 0) is left as-is — a parallel
-        // companion command may still produce the readyWhen output.
-        this.emitExit(code, terminalOutput);
-      }
+      this.emitExit(code, terminalOutput);
     });
     trackRunningNodeProcess(this);
   }
@@ -780,18 +831,35 @@ export function processEnv(
 }
 
 function isReady(
-  readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
-  data?: string
+  readyWhenStatus: { stringToMatch: string; found: boolean }[]
 ): boolean {
-  if (data) {
-    for (const readyWhenElement of readyWhenStatus) {
-      if (data.toString().indexOf(readyWhenElement.stringToMatch) > -1) {
-        readyWhenElement.found = true;
-      }
-    }
-  }
-
   return readyWhenStatus.every((readyWhenElement) => readyWhenElement.found);
+}
+
+// The output as printed, kept across chunks, matches strings that hold escape
+// sequences. LogMatcher, absent from the WASM binding, matches text with
+// escapes inside it.
+function readyWhenMatcher(
+  readyWhenStatus: { stringToMatch: string; found: boolean }[]
+): (chunk: string) => boolean {
+  const matchers = readyWhenStatus.map((status) => ({
+    status,
+    matcher: IS_WASM ? null : new LogMatcher([status.stringToMatch]),
+    tail: '',
+  }));
+  return (chunk) => {
+    for (const entry of matchers) {
+      const { status, matcher } = entry;
+      if (status.found) continue;
+      const printed = entry.tail + chunk;
+      status.found =
+        printed.includes(status.stringToMatch) || !!matcher?.feed(chunk);
+      entry.tail = printed.slice(
+        Math.max(0, printed.length - status.stringToMatch.length + 1)
+      );
+    }
+    return isReady(readyWhenStatus);
+  };
 }
 
 function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {

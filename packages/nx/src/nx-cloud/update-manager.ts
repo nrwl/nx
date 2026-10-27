@@ -80,6 +80,8 @@ export interface NxCloudClient {
     nxCloudOptions?: CloudTaskRunnerOptions;
     timeoutMs?: number;
   }) => Promise<{ enabled: boolean }>;
+  /** Clients that dispatch a whole `nx-cloud` command line; resolves to the exit code. */
+  runCLI?: (args: string[]) => Promise<number>;
 }
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;

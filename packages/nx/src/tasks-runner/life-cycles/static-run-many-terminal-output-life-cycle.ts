@@ -88,8 +88,13 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     }
     // A stopped task was killed mid-flight, so the run did not complete even
     // though nothing outright failed. `didCommandComplete` already treats it
-    // that way; reporting "Successfully ran" here would contradict it.
-    if (this.failedTasks.length === 0 && this.stoppedTasks.length === 0) {
+    // that way; reporting "Successfully ran" here would contradict it. A
+    // discrete task that never reported was skipped, which fails the run too.
+    if (
+      this.failedTasks.length === 0 &&
+      this.stoppedTasks.length === 0 &&
+      !this.skippedTasks().some((t) => !t.continuous)
+    ) {
       output.addVerticalSeparatorWithoutNewLines('green');
 
       const bodyLines =

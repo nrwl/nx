@@ -34,14 +34,20 @@ Whenever that variable is set, the command sends it instead of your login.
 
 Run `npx nx-cloud api --help` for paths, filters, and pagination.
 
-## Check plan eligibility
+## Rate limits
 
-Public API access requires a Team, Enterprise, or OSS plan for the workspace's organization.
-Free, Pro, and Legacy plans do not include Public API access.
 The organization must be enabled, and your credential must have access to the workspace.
 
-A request from an unsupported plan returns `403` with the error code `plan_not_allowed`.
-Check the organization's plan before replacing a valid token or retrying the request.
+All workspaces and access tokens in an organization share one request quota, and the organization's plan sets its default:
+
+| Plan           | Requests per minute |
+| -------------- | ------------------- |
+| Free, Legacy   | 30                  |
+| Team, Pro, OSS | 60                  |
+| Enterprise     | 2,500               |
+
+A request over the quota returns `429` with the error code `rate_limit_exceeded`.
+Wait the number of seconds in the `Retry-After` header before you retry.
 
 ## Choose your API host
 
