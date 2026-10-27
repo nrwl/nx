@@ -28,7 +28,6 @@ export const createMetadata: CreateMetadata = async (
 ) => {
   const nxJson = context.nxJsonConfiguration;
   let rootOwners = nxJson.owners;
-  // Owners is not enabled at all in nx.json, do nothing
   if (!rootOwners) {
     return {};
   }
@@ -41,7 +40,6 @@ export const createMetadata: CreateMetadata = async (
     rootOwners = {};
   }
 
-  // Ensure the config is valid before proceeding
   if (!validateAndSetDefaultsForRootConfig(rootOwners)) {
     return {};
   }
@@ -58,7 +56,6 @@ export const createMetadata: CreateMetadata = async (
     ...fileMap.nonProjectFiles,
   ];
 
-  // nx.json level config
   if (hasRootConfig) {
     const fileToProjectMap: Record<string, string> = {};
     // Preprocess to invert the mapping to be file -> project name (only do this if "files" is used at least once)
@@ -82,7 +79,6 @@ export const createMetadata: CreateMetadata = async (
     );
   }
 
-  // project level config
   for (const [projectName, projectNode] of Object.entries(graph.nodes)) {
     applyProjectLevelConfigToProjectMetadata(
       projectName,
@@ -120,7 +116,6 @@ function applyRootConfigToProjectMetadata(
      * ownership can naturally override it.
      */
     if ('files' in pattern && !('projects' in pattern)) {
-      // Use the file patterns to resolve a list of actual files from the workspace
       const matchingFiles = allWorkspaceFiles.filter(({ file }) => {
         for (const filePattern of pattern.files) {
           if (matchesCodeownersStylePattern(file, filePattern)) {
@@ -130,7 +125,6 @@ function applyRootConfigToProjectMetadata(
         return false;
       });
 
-      // Figure out the relevant projects from the matching files for the current pattern
       const projectsToProjectFiles = new Map<string, string[]>();
       for (const file of matchingFiles) {
         const projectName = fileToProjectMap[file.file];
@@ -143,15 +137,13 @@ function applyRootConfigToProjectMetadata(
         projectsToProjectFiles.get(projectName)?.push(file.file);
       }
 
-      // Ensure there is an entry for each owner in the metadata for each of the resolved projects
       for (const [
         projectName,
         projectFiles,
       ] of projectsToProjectFiles.entries()) {
-        metadata[projectName] = metadata[projectName] || {};
-        metadata[projectName].metadata = metadata[projectName].metadata || {};
-        metadata[projectName].metadata.owners ||=
-          metadata[projectName].metadata.owners || {};
+        metadata[projectName] ??= {};
+        metadata[projectName].metadata ??= {};
+        metadata[projectName].metadata.owners ??= {};
 
         if (pattern.owners === false) {
           continue;
@@ -180,7 +172,6 @@ function applyRootConfigToProjectMetadata(
     }
 
     if ('projects' in pattern) {
-      // Convert the pattern.projects entries into an array of project names
       const projectNames = findMatchingProjects(
         pattern.projects,
         projectGraph.nodes
@@ -190,10 +181,9 @@ function applyRootConfigToProjectMetadata(
       const hasScopedFiles = 'files' in pattern;
 
       for (const projectName of projectNames) {
-        metadata[projectName] = metadata[projectName] || {};
-        metadata[projectName].metadata = metadata[projectName].metadata || {};
-        metadata[projectName].metadata.owners ||=
-          metadata[projectName].metadata.owners || {};
+        metadata[projectName] ??= {};
+        metadata[projectName].metadata ??= {};
+        metadata[projectName].metadata.owners ??= {};
 
         if (pattern.owners === false) {
           continue;
@@ -298,12 +288,10 @@ function applyProjectLevelConfigToProjectMetadata(
   if (!projectOwnersConfig) {
     return;
   }
-  metadata[projectName] = metadata[projectName] || {};
-  metadata[projectName].metadata = metadata[projectName].metadata || {};
-  metadata[projectName].metadata.owners ||=
-    metadata[projectName].metadata.owners || {};
+  metadata[projectName] ??= {};
+  metadata[projectName].metadata ??= {};
+  metadata[projectName].metadata.owners ??= {};
 
-  // TODO: Technically this could come from package.json as well?
   let projectJsonNode: Node | null = null;
   let projectJsonContents = '';
   const workspaceRelativeProjectJsonPath = joinPathFragments(
@@ -319,7 +307,6 @@ function applyProjectLevelConfigToProjectMetadata(
     projectJsonNode = getJsonNode(projectJsonContents);
   }
 
-  // Each key is a file pattern to match against
   for (const [filePattern, owners] of Object.entries(projectOwnersConfig)) {
     const ownerIds = Array.isArray(owners) ? owners : owners.owners;
     for (const ownerId of ownerIds) {
@@ -361,7 +348,6 @@ function applyProjectLevelConfigToProjectMetadata(
           joinPathFragments(projectNode.data.root, filePattern)
         );
       });
-      // Owner owns a subset of files
       metadata[projectName].metadata.owners[ownerId].ownedFiles.push({
         files: matchingProjectFiles,
         fromConfig,
