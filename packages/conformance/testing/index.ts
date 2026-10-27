@@ -8,7 +8,7 @@ export {
   applyProjectNodesAndFiles,
   createStubbedProjectGraphAndFileMapCache,
   type ProjectNodesWithFiles,
-} from './temp-fs';
+} from './project-graph';
 
 // Re-export to help with unit testing
 export { convertToReadOnly, convertToWritable } from '../src/conformance-tree';

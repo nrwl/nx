@@ -1,10 +1,13 @@
 import { workspaceRoot } from '@nx/devkit';
+import { setWorkspaceRoot } from '@nx/devkit/internal';
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   convertToReadOnly,
   ReadOnlyConformanceTree,
   WritableConformanceTree,
 } from '../src/conformance-tree';
-import { TempFs } from './temp-fs';
 
 /**
  * Creates a read-only tree based on a new temporary directory, including some basic
@@ -39,13 +42,15 @@ export async function createReadOnlyTree(
   tree: ReadOnlyConformanceTree;
   cleanup: () => void;
 }> {
-  // Implementation adapted from https://github.com/nrwl/nx/blob/b360446a51ba3b67b2baafc7cc97b26d0f7c8f24/packages/nx/src/generators/testing-utils/create-tree-with-empty-workspace.ts
+  const previousWorkspaceRoot = workspaceRoot;
+  const tempDir = realpathSync(
+    mkdtempSync(join(tmpdir(), 'nx-conformance-create-read-only-tree'))
+  );
+  writeFileSync(join(tempDir, 'nx.json'), '{}');
+  setWorkspaceRoot(tempDir);
+  process.env.INIT_CWD = tempDir;
 
-  const tempFs = new TempFs('nx-conformance-create-read-only-tree');
-  const tree = new WritableConformanceTree(tempFs.tempDir, false);
-
-  // Needed for correct path resolution in the tree (the tempFs instance will have modified the workspaceRoot already)
-  process.env.INIT_CWD = workspaceRoot;
+  const tree = new WritableConformanceTree(tempDir, false);
 
   tree.write('./.prettierrc', JSON.stringify({ singleQuote: true }));
   tree.write(
@@ -82,6 +87,9 @@ export async function createReadOnlyTree(
 
   return {
     tree: convertToReadOnly(tree),
-    cleanup: () => tempFs.cleanup(),
+    cleanup: () => {
+      rmSync(tempDir, { recursive: true, force: true });
+      setWorkspaceRoot(previousWorkspaceRoot);
+    },
   };
 }
