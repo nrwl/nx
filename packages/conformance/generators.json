@@ -1,5 +1,7 @@
 {
   "$schema": "https://json-schema.org/schema",
+  "name": "nx/conformance",
+  "version": "0.1",
   "generators": {
     "create-rule": {
       "factory": "./dist/src/generators/create-rule/create-rule",

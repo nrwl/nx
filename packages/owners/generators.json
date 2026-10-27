@@ -1,10 +1,13 @@
 {
   "$schema": "https://json-schema.org/schema",
+  "name": "nx/owners",
+  "version": "0.1",
   "generators": {
     "init": {
       "factory": "./dist/src/generators/init/init",
       "schema": "./dist/src/generators/init/schema.json",
-      "description": "Initialize Nx Owners config"
+      "description": "Initialize Nx Owners config",
+      "hidden": true
     },
     "sync-codeowners-file": {
       "factory": "./dist/src/generators/sync-codeowners-file/generator",

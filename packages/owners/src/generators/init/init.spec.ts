@@ -1,14 +1,12 @@
-import { readNxJson, Tree, writeJson } from '@nx/devkit';
+import { readJson, readNxJson, Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { initGenerator } from './init';
 
-// `vi.mock` factories are hoisted above every import, so the doubles they
-// install have to be hoisted too.
-const { mockExecSync, mockOutputWarn } = vi.hoisted(() => ({
-  mockExecSync: vi.fn(),
-  mockOutputWarn: vi.fn(),
+const { mockGetVcsRemoteInfo, mockLoggerWarn } = vi.hoisted(() => ({
+  mockGetVcsRemoteInfo: vi.fn(),
+  mockLoggerWarn: vi.fn(),
 }));
 
 vi.mock('@nx/devkit', async () => {
@@ -16,20 +14,17 @@ vi.mock('@nx/devkit', async () => {
     await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
   return {
     ...actual,
-    output: {
-      warn: mockOutputWarn,
-    },
+    logger: { ...actual.logger, warn: mockLoggerWarn },
   };
 });
 
-vi.mock('node:child_process', async () => {
-  const actualChildProcess =
-    await vi.importActual<typeof import('node:child_process')>(
-      'node:child_process'
-    );
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<typeof import('@nx/devkit/internal')>(
+    '@nx/devkit/internal'
+  );
   return {
-    ...actualChildProcess,
-    execSync: mockExecSync,
+    ...actual,
+    getVcsRemoteInfo: mockGetVcsRemoteInfo,
   };
 });
 
@@ -38,6 +33,7 @@ describe('initGenerator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    mockGetVcsRemoteInfo.mockReturnValue(null);
   });
 
   afterEach(() => vi.clearAllMocks());
@@ -100,24 +96,69 @@ describe('initGenerator', () => {
 `);
   });
 
+  it('should not duplicate the plugin or the global sync generator when run twice', async () => {
+    await initGenerator(tree);
+    await initGenerator(tree);
+
+    const nxJson = readNxJson(tree)!;
+    expect(nxJson.plugins).toEqual(['@nx/owners']);
+    expect(nxJson.sync?.globalGenerators).toEqual([
+      '@nx/owners:sync-codeowners-file',
+    ]);
+  });
+
+  it('should expand the owners: true shorthand into inferred defaults', async () => {
+    tree.write('.github/some-file.md', '');
+    writeJson(tree, 'nx.json', { owners: true });
+
+    await initGenerator(tree);
+
+    expect(readNxJson(tree)!.owners).toEqual({
+      format: 'github',
+      patterns: [],
+    });
+  });
+
   it('should set the outputPath to CODEOWNERS if the file exists, and no existing value is set', async () => {
     tree.write('CODEOWNERS', 'some-content');
 
     await initGenerator(tree);
 
-    const nxJson = readNxJson(tree) as any;
-    expect(nxJson.owners.outputPath).toBe('CODEOWNERS');
+    expect(readNxJson(tree)!.owners).toMatchObject({
+      outputPath: 'CODEOWNERS',
+    });
+  });
+
+  it('should add @nx/owners to devDependencies', async () => {
+    await initGenerator(tree);
+
+    expect(
+      readJson(tree, 'package.json').devDependencies['@nx/owners']
+    ).toBeDefined();
+  });
+
+  it('should not touch package.json when skipPackageJson is set', async () => {
+    await initGenerator(tree, { skipPackageJson: true });
+
+    expect(
+      readJson(tree, 'package.json').devDependencies?.['@nx/owners']
+    ).toBeUndefined();
+  });
+
+  it('should warn when the VCS provider cannot be inferred', async () => {
+    await initGenerator(tree);
+
+    expect(readNxJson(tree)!.owners).toEqual({ patterns: [] });
+    expect(mockLoggerWarn).toHaveBeenCalledOnce();
   });
 
   describe('inferred defaults - GitHub', () => {
-    it('should add the owners key to the nx.json with inferred defaults when a .github folder exists', async () => {
-      // Has a .github folder, default to github format
+    it('should infer the github format when a .github folder exists', async () => {
       tree.write('.github/some-file.md', '');
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "github",
   "patterns": [],
@@ -125,15 +166,15 @@ describe('initGenerator', () => {
 `);
     });
 
-    it('should add the owners key to the nx.json with inferred defaults based on inspecting git remotes', async () => {
-      mockExecSync.mockReturnValue(
-        'origin git@github.com:user/repo.git (fetch)'
-      );
+    it('should infer the github format from a github.com remote', async () => {
+      mockGetVcsRemoteInfo.mockReturnValue({
+        domain: 'github.com',
+        slug: 'user/repo',
+      });
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "github",
   "patterns": [],
@@ -143,14 +184,12 @@ describe('initGenerator', () => {
   });
 
   describe('inferred defaults - GitLab', () => {
-    it('should add the owners key to the nx.json with inferred defaults when a .gitlab folder exists', async () => {
-      // Has a .gitlab folder, default to gitlab format
+    it('should infer the gitlab format when a .gitlab folder exists', async () => {
       tree.write('.gitlab/some-file.md', '');
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "gitlab",
   "patterns": [],
@@ -159,15 +198,15 @@ describe('initGenerator', () => {
 `);
     });
 
-    it('should add the owners key to the nx.json with inferred defaults based on inspecting git remotes', async () => {
-      mockExecSync.mockReturnValue(
-        'origin git@gitlab.com:user/repo.git (fetch)'
-      );
+    it('should infer the gitlab format from a gitlab.com remote', async () => {
+      mockGetVcsRemoteInfo.mockReturnValue({
+        domain: 'gitlab.com',
+        slug: 'user/repo',
+      });
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "gitlab",
   "patterns": [],
@@ -178,14 +217,12 @@ describe('initGenerator', () => {
   });
 
   describe('inferred defaults - Bitbucket', () => {
-    it('should add the owners key to the nx.json with inferred defaults - Bitbucket', async () => {
-      // Has a .bitbucket folder, default to bitbucket format
+    it('should infer the bitbucket format when a .bitbucket folder exists', async () => {
       tree.write('.bitbucket/some-file.md', '');
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "bitbucket",
   "patterns": [],
@@ -193,15 +230,15 @@ describe('initGenerator', () => {
 `);
     });
 
-    it('should add the owners key to the nx.json with inferred defaults based on inspecting git remotes', async () => {
-      mockExecSync.mockReturnValue(
-        'origin git@bitbucket.org:user/repo.git (fetch)'
-      );
+    it('should infer the bitbucket format from a bitbucket.org remote', async () => {
+      mockGetVcsRemoteInfo.mockReturnValue({
+        domain: 'bitbucket.org',
+        slug: 'user/repo',
+      });
 
       await initGenerator(tree);
 
-      const nxJson = readNxJson(tree) as any;
-      expect(nxJson.owners).toMatchInlineSnapshot(`
+      expect(readNxJson(tree)!.owners).toMatchInlineSnapshot(`
 {
   "format": "bitbucket",
   "patterns": [],
