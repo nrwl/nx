@@ -112,6 +112,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
 import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 import * as pc from 'picocolors';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -1266,19 +1267,20 @@ function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
 }
 
 function loadTasksRunner(modulePath: string): TasksRunner {
+  const isLegacyCloudPackage =
+    modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud';
   try {
-    const maybeTasksRunner = require(modulePath) as
-      | TasksRunner
-      | { default: TasksRunner };
+    const maybeTasksRunner = require(
+      isLegacyCloudPackage
+        ? resolveInstalledPackage(modulePath, [__dirname])
+        : modulePath
+    ) as TasksRunner | { default: TasksRunner };
     // to support both babel and ts formats
     return 'default' in maybeTasksRunner
       ? maybeTasksRunner.default
       : maybeTasksRunner;
   } catch (e) {
-    if (
-      e.code === 'MODULE_NOT_FOUND' &&
-      (modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud')
-    ) {
+    if (e.code === 'MODULE_NOT_FOUND' && isLegacyCloudPackage) {
       return require('../nx-cloud/nx-cloud-tasks-runner-shell')
         .nxCloudTasksRunnerShell;
     }
