@@ -1672,8 +1672,8 @@ export class TaskOrchestrator {
           stopping: false,
         });
 
-        // Rejects if run-commands cannot start (it printed why) or a forked child
-        // died before writing its log, so postRunSteps writes the log instead
+        // Rejects if run-commands cannot start or a forked child died before
+        // writing its log, so postRunSteps writes the log instead
         const { code, terminalOutput } = await childProcess
           .getResults()
           .catch((e) => {
