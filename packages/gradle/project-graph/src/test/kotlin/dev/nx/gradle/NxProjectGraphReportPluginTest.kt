@@ -1,6 +1,8 @@
 package dev.nx.gradle
 
+import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.gradle.testfixtures.ProjectBuilder
@@ -24,6 +26,7 @@ class NxProjectGraphReportPluginTest {
     assertNotNull(task)
 
     assertEquals(project.name, task.projectName.get())
+    assertEquals(project.path, task.projectPath.get())
     assertEquals("test-hash", task.hash.get())
     assertEquals("/test/workspace", task.workspaceRoot.get())
     assertEquals(project, task.projectRef.get())
@@ -50,5 +53,46 @@ class NxProjectGraphReportPluginTest {
     val taskDependencies = task.taskDependencies.getDependencies(task)
     val compilationTasks = taskDependencies.filter { it.name.startsWith("compileTest") }
     assertTrue(compilationTasks.isEmpty())
+  }
+
+  @Test
+  fun `should use the full project path as a cache input`() {
+    val rootProject = ProjectBuilder.builder().build()
+    val projectADir = File(rootProject.projectDir, "a").apply { mkdirs() }
+    val projectBDir = File(rootProject.projectDir, "b").apply { mkdirs() }
+    val apiADir = File(projectADir, "api").apply { mkdirs() }
+    val apiBDir = File(projectBDir, "api").apply { mkdirs() }
+    val projectA =
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withName("a")
+            .withProjectDir(projectADir)
+            .build()
+    val projectB =
+        ProjectBuilder.builder()
+            .withParent(rootProject)
+            .withName("b")
+            .withProjectDir(projectBDir)
+            .build()
+    val apiA =
+        ProjectBuilder.builder()
+            .withParent(projectA)
+            .withName("api")
+            .withProjectDir(apiADir)
+            .build()
+    val apiB =
+        ProjectBuilder.builder()
+            .withParent(projectB)
+            .withName("api")
+            .withProjectDir(apiBDir)
+            .build()
+
+    apiA.pluginManager.apply(NxProjectGraphReportPlugin::class.java)
+    apiB.pluginManager.apply(NxProjectGraphReportPlugin::class.java)
+
+    val taskA = apiA.tasks.named("nxProjectReport", NxProjectReportTask::class.java).get()
+    val taskB = apiB.tasks.named("nxProjectReport", NxProjectReportTask::class.java).get()
+
+    assertNotEquals(taskA.inputs.properties["projectPath"], taskB.inputs.properties["projectPath"])
   }
 }
