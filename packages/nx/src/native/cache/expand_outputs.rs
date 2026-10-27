@@ -227,6 +227,45 @@ pub(crate) fn all_literal(entries: &[String]) -> bool {
         .all(|entry| !entry.starts_with('!') && partition_glob(entry).1.is_none())
 }
 
+/// Fails when copying `expanded` over `directory` would remove a directory
+/// holding a path that a negated entry excludes. With negations no listed
+/// output is a directory, so a copy onto one replaces it whole.
+pub(crate) fn ensure_negated_outputs_kept(
+    directory: &Path,
+    entries: &[String],
+    expanded: &[String],
+) -> anyhow::Result<()> {
+    let negated: Vec<&str> = entries.iter().filter_map(|e| e.strip_prefix('!')).collect();
+    if negated.is_empty() {
+        return Ok(());
+    }
+    let negated = build_glob_set(&negated)?;
+    for output in expanded {
+        let path = directory.join(output);
+        if !std::fs::symlink_metadata(&path).is_ok_and(|m| m.is_dir()) {
+            continue;
+        }
+        let holds_negated = walkdir::WalkDir::new(&path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter_map(|entry| {
+                entry
+                    .path()
+                    .strip_prefix(directory)
+                    .ok()
+                    .map(|p| p.to_normalized_string())
+            })
+            .any(|p| negated.is_match(&p));
+        if holds_negated {
+            anyhow::bail!(
+                "Cache output {} would replace a directory that holds excluded outputs",
+                output
+            );
+        }
+    }
+    Ok(())
+}
+
 /// Every file the cache copies for `entries`, which defines a task's output
 /// files: what `_expand_outputs` finds, each directory read through `read`
 /// (workspace-relative, as `copied_files` reads it from disk).

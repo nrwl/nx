@@ -11,7 +11,9 @@ use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
 
-use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
+use crate::native::cache::expand_outputs::{
+    _expand_outputs, all_literal, ensure_negated_outputs_kept, normalize_outputs,
+};
 use crate::native::cache::file_ops::{
     copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
 };
@@ -675,6 +677,7 @@ impl NxCache {
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let literal = all_literal(&outputs);
         let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
+        ensure_negated_outputs_kept(&self.workspace_root, &outputs, &expanded_outputs)?;
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -1463,5 +1466,85 @@ mod test {
             "{name}: artifact removed"
         );
         assert_eq!(record_for(cache, "1"), None, "{name}: not recorded");
+    }
+
+    const NEXT_OUTPUTS: [&str; 2] = ["web/.next/**", "!web/.next/cache/**"];
+
+    fn next_outputs() -> Vec<String> {
+        NEXT_OUTPUTS.iter().map(|s| s.to_string()).collect()
+    }
+
+    /// Stores a build of `web` whose `.next/cache` is excluded, and returns
+    /// the cache with its artifact directory.
+    fn put_next_build(temp: &TempDir) -> (NxCache, PathBuf) {
+        let mut cache = cache_in(temp);
+        let next = cache.workspace_root.join("web/.next");
+        create_dir_all(next.join("cache/webpack")).unwrap();
+        write(next.join("BUILD_ID"), b"1").unwrap();
+        write(next.join("cache/webpack/0.pack"), b"local").unwrap();
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), next_outputs(), 0)
+            .unwrap();
+        let artifact = cache.cache_path.join("1");
+        (cache, artifact)
+    }
+
+    fn restore_next_build(cache: &mut NxCache) -> anyhow::Result<()> {
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        cache.copy_files_from_cache(hit, next_outputs()).map(|_| ())
+    }
+
+    #[test]
+    fn put_and_restore_leave_negated_outputs_alone() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
+        assert!(!artifact.join("web/.next/cache").exists());
+
+        create_dir_all(artifact.join("web/.next/cache/webpack")).unwrap();
+        write(artifact.join("web/.next/cache/webpack/other.pack"), b"x").unwrap();
+        restore_next_build(&mut cache).unwrap();
+
+        let webpack = cache.workspace_root.join("web/.next/cache/webpack");
+        assert!(webpack.join("0.pack").is_file());
+        assert!(!webpack.join("other.pack").exists());
+    }
+
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_file() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        write(artifact.join("web/.next/cache"), b"file").unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_link() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        std::os::unix::fs::symlink("elsewhere", artifact.join("web/.next/cache")).unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[test]
+    fn restore_replaces_a_directory_without_negated_outputs() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        let id = cache.workspace_root.join("web/.next/BUILD_ID");
+        std::fs::remove_file(&id).unwrap();
+        create_dir_all(id.join("stale")).unwrap();
+        write(id.join("stale/file"), b"x").unwrap();
+
+        restore_next_build(&mut cache).unwrap();
+        assert_eq!(std::fs::read(&id).unwrap(), b"1");
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
     }
 }
