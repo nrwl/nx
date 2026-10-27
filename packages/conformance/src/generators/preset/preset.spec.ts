@@ -158,7 +158,8 @@ describe('preset', () => {
 
   beforeEach(() => {
     tree = createTree();
-    tree.delete('.prettierrc'); // still added by createTree util at time of writing
+    // createTree seeds a .prettierrc that a new workspace would not have
+    tree.delete('.prettierrc');
 
     writeJson(tree, 'package.json', {
       name: '@proj/source',
