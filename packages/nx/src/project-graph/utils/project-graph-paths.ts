@@ -1,15 +1,13 @@
-import type {
-  FileData,
-  ProjectFileMap,
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from '@nx/devkit';
-import { DependencyType } from '@nx/devkit';
 import {
+  DependencyType,
   fileDataDepTarget,
   fileDataDepType,
-  findMatchingProjects,
-} from '@nx/devkit/internal';
+  type FileData,
+  type ProjectFileMap,
+  type ProjectGraph,
+  type ProjectGraphProjectNode,
+} from '../../config/project-graph';
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 
 interface Reach {
   graph: ProjectGraph;
