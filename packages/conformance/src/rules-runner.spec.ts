@@ -868,4 +868,48 @@ describe('conformanceRulesRunner', () => {
 `);
     });
   });
+
+  describe('projects', () => {
+    it('should only report violations for matching projects and count the ones filtered out', async () => {
+      const ruleResults = await conformanceRulesRunner({
+        tree,
+        projectGraph: {
+          nodes: {
+            a: { name: 'a', type: 'lib', data: { root: 'libs/a' } },
+            b: { name: 'b', type: 'lib', data: { root: 'libs/b' } },
+          },
+          dependencies: {},
+        },
+        fileMapCache: mockFileMapCache,
+        loadedRules: [
+          {
+            ruleSpecifier: 'test',
+            ruleModule: {
+              implementation: mockRuleImplementation.mockReturnValue({
+                details: {
+                  violations: [
+                    { message: 'In a', sourceProject: 'a' },
+                    { message: 'In b', sourceProject: 'b' },
+                  ],
+                },
+              }),
+              name: 'test',
+              category: 'consistency',
+              description: 'test',
+            },
+            ruleOptions: {},
+            projects: ['a'],
+          },
+        ],
+        applyFixGenerators: false,
+      });
+
+      const [result] = ruleResults.ruleResults;
+      expect(result.details.violations).toEqual([
+        { message: 'In a', sourceProject: 'a' },
+      ]);
+      expect(result.runnerData.countOfOriginalViolations).toBe(2);
+      expect(result.runnerData.countOfViolationsFilteredByProjects).toBe(1);
+    });
+  });
 });
