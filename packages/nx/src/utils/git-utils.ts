@@ -160,7 +160,7 @@ export class GitRepository {
   }
 
   async addGitRemote(name: string, url: string) {
-    return await this.execGit(['remote', 'add', name, url]);
+    return await this.execGit(['remote', 'add', '--no-tags', name, url]);
   }
 
   async hasFilterRepoInstalled() {

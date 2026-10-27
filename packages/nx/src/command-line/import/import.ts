@@ -26,7 +26,10 @@ import { resetWorkspaceContext } from '../../utils/workspace-context';
 import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
-import { mergeRemoteSource } from './utils/merge-remote-source';
+import {
+  createTemporaryRemote,
+  mergeRemoteSource,
+} from './utils/merge-remote-source';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
@@ -255,7 +258,7 @@ export async function importHandler(options: ImportOptions) {
   }
   await sourceGitClient.checkout(tempImportBranch, {
     new: true,
-    base: `${importRemoteName}/${ref}`,
+    base: `refs/remotes/${importRemoteName}/${ref}`,
   });
 
   if (!aiMode) {
@@ -630,18 +633,6 @@ async function handlePluginOnlyMode(
 
 function getTempImportBranch(sourceBranch: string) {
   return `__nx_tmp_import__/${sourceBranch}`;
-}
-
-async function createTemporaryRemote(
-  destinationGitClient: GitRepository,
-  sourceRemoteUrl: string,
-  remoteName: string
-) {
-  try {
-    await destinationGitClient.deleteGitRemote(remoteName);
-  } catch {}
-  await destinationGitClient.addGitRemote(remoteName, sourceRemoteUrl);
-  await destinationGitClient.fetch(remoteName);
 }
 
 /**
