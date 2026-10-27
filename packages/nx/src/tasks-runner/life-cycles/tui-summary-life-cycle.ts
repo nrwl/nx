@@ -48,6 +48,7 @@ export function getTuiTerminalSummaryLifeCycle({
   let timeTakenText: string;
 
   const failedTasks = new Set<string>();
+  const skippedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
   // Tasks ended with 'stopped' status (interrupted, didn't finish — counts as failure)
   const stoppedTasks = new Set<string>();
@@ -103,6 +104,7 @@ export function getTuiTerminalSummaryLifeCycle({
       // Skipped tasks don't get an endTasks() call; clear them here so the run
       // summary doesn't treat them as still-in-progress and report Cancelled.
       tasksToTaskStatus[taskId] = 'skipped';
+      skippedTasks.add(taskId);
       inProgressTasks.delete(taskId);
     }
   };
@@ -111,6 +113,9 @@ export function getTuiTerminalSummaryLifeCycle({
     for (const { task, status, terminalOutput } of taskResults) {
       totalCompletedTasks++;
       inProgressTasks.delete(task.id);
+      // A batch that crashes after reporting the task skipped still ends it
+      // here, as failed or stopped
+      skippedTasks.delete(task.id);
       tasksToTaskStatus[task.id] = status;
       if (status === 'stopped') {
         stoppedTasks.add(task.id);
@@ -295,15 +300,20 @@ export function getTuiTerminalSummaryLifeCycle({
       messageLines.push(
         `${LEFT_PAD}${output.colors.red(
           figures.cross
-        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`
+        )}${SPACER}${totalFailedTasks}${`/${totalTasks}`} failed`
       );
       messageLines.push(
         `${LEFT_PAD}${output.dim(
           figures.tick
-        )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+        )}${SPACER}${totalSuccessfulTasks}${`/${totalTasks}`} succeeded ${output.dim(
           `[${totalCachedTasks} read from cache]`
         )}`
       );
+      if (skippedTasks.size > 0) {
+        messageLines.push(
+          `${LEFT_PAD}${pc.yellow('⏭')}${SPACER}${skippedTasks.size}/${totalTasks} skipped`
+        );
+      }
 
       if (batchWorkerLogs.length > 0) {
         messageLines.push('', ...batchWorkerLogRows());
@@ -347,8 +357,11 @@ export function getTuiTerminalSummaryLifeCycle({
     // Collect checklist lines to print after task outputs
     const checklistLines: string[] = [];
 
-    // Sort tasks by status: successful tasks first, failed tasks at the end
-    const sortedTaskIds = [...taskIdsInTheOrderTheyStart].sort((a, b) => {
+    // Sort tasks by status: successful tasks first, failed tasks at the end.
+    // A task skipped before it started never reached startTasks.
+    const sortedTaskIds = [
+      ...new Set([...taskIdsInTheOrderTheyStart, ...skippedTasks]),
+    ].sort((a, b) => {
       const statusA = tasksToTaskStatus[a];
       const statusB = tasksToTaskStatus[b];
       const isFailureA = statusA === 'failure' || !statusA ? 1 : 0;
@@ -510,87 +523,91 @@ export function getTuiTerminalSummaryLifeCycle({
 
       failureSummaryRows.push('');
 
-      if (totalCompletedTasks > 0) {
-        // For display purposes, treat stopped tasks as in-progress
-        // (they were running when the process was interrupted)
-        const displayCompleted = totalCompletedTasks - stoppedTasks.size;
-        const displayInProgress = new Set([
-          ...inProgressTasks,
-          ...stoppedTasks,
-        ]);
+      // For display purposes, treat stopped tasks as in-progress
+      // (they were running when the process was interrupted)
+      const displayCompleted = totalCompletedTasks - stoppedTasks.size;
+      const displayInProgress = new Set([...inProgressTasks, ...stoppedTasks]);
 
-        if (totalSuccessfulTasks > 0) {
+      if (totalSuccessfulTasks > 0) {
+        failureSummaryRows.push(
+          output.dim(
+            `${LEFT_PAD}${output.dim(
+              figures.tick
+            )}${SPACER}${totalSuccessfulTasks}${`/${totalTasks}`} succeeded ${output.dim(
+              `[${totalCachedTasks} read from cache]`
+            )}`
+          ),
+          ''
+        );
+      }
+      if (totalFailedTasks > 0) {
+        const numFailedToPrint = 5;
+        const failedTasksForPrinting = Array.from(failedTasks).slice(
+          0,
+          numFailedToPrint
+        );
+        failureSummaryRows.push(
+          `${LEFT_PAD}${output.colors.red(
+            figures.cross
+          )}${SPACER}${totalFailedTasks}${`/${totalTasks}`} targets failed, including the following:`,
+          '',
+          `${failedTasksForPrinting
+            .map(
+              (t) =>
+                `${EXTENDED_LEFT_PAD}${output.colors.red(
+                  '-'
+                )} ${output.formatCommand(t.toString())}`
+            )
+            .join('\n')}`,
+          ''
+        );
+        if (failedTasks.size > numFailedToPrint) {
           failureSummaryRows.push(
             output.dim(
-              `${LEFT_PAD}${output.dim(
-                figures.tick
-              )}${SPACER}${totalSuccessfulTasks}${`/${displayCompleted}`} succeeded ${output.dim(
-                `[${totalCachedTasks} read from cache]`
-              )}`
-            ),
-            ''
+              `${EXTENDED_LEFT_PAD}...and ${
+                failedTasks.size - numFailedToPrint
+              } more...`
+            )
           );
         }
-        if (totalFailedTasks > 0) {
-          const numFailedToPrint = 5;
-          const failedTasksForPrinting = Array.from(failedTasks).slice(
-            0,
-            numFailedToPrint
-          );
+      }
+      if (skippedTasks.size > 0) {
+        failureSummaryRows.push(
+          output.dim(
+            `${LEFT_PAD}${pc.yellow('⏭')}${SPACER}${skippedTasks.size}/${totalTasks} targets were skipped.`
+          ),
+          ''
+        );
+      }
+      if (displayCompleted !== totalTasks) {
+        const remainingTasks =
+          totalTasks - displayCompleted - skippedTasks.size;
+        if (displayInProgress.size) {
           failureSummaryRows.push(
-            `${LEFT_PAD}${output.colors.red(
-              figures.cross
-            )}${SPACER}${totalFailedTasks}${`/${displayCompleted}`} targets failed, including the following:`,
+            `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
+              displayInProgress.size
+            }${`/${totalTasks}`} targets were in progress, including the following:`,
             '',
-            `${failedTasksForPrinting
+            `${Array.from(displayInProgress)
               .map(
                 (t) =>
                   `${EXTENDED_LEFT_PAD}${output.colors.red(
                     '-'
                   )} ${output.formatCommand(t.toString())}`
               )
-              .join('\n')}`,
+              .join(EOL)}`,
             ''
           );
-          if (failedTasks.size > numFailedToPrint) {
-            failureSummaryRows.push(
-              output.dim(
-                `${EXTENDED_LEFT_PAD}...and ${
-                  failedTasks.size - numFailedToPrint
-                } more...`
-              )
-            );
-          }
         }
-        if (displayCompleted !== totalTasks) {
-          const remainingTasks = totalTasks - displayCompleted;
-          if (displayInProgress.size) {
-            failureSummaryRows.push(
+        if (remainingTasks - displayInProgress.size > 0) {
+          failureSummaryRows.push(
+            output.dim(
               `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                displayInProgress.size
-              }${`/${totalTasks}`} targets were in progress, including the following:`,
-              '',
-              `${Array.from(displayInProgress)
-                .map(
-                  (t) =>
-                    `${EXTENDED_LEFT_PAD}${output.colors.red(
-                      '-'
-                    )} ${output.formatCommand(t.toString())}`
-                )
-                .join(EOL)}`,
-              ''
-            );
-          }
-          if (remainingTasks - displayInProgress.size > 0) {
-            failureSummaryRows.push(
-              output.dim(
-                `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${
-                  remainingTasks - displayInProgress.size
-                }${`/${totalTasks}`} targets had not started.`
-              ),
-              ''
-            );
-          }
+                remainingTasks - displayInProgress.size
+              }${`/${totalTasks}`} targets had not started.`
+            ),
+            ''
+          );
         }
       }
 
