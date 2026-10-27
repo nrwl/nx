@@ -1,7 +1,7 @@
 use super::mouse_protocol::encode_mouse_event;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::strings::display_width;
-use super::utils::normalize_newlines;
+use super::utils::{clamp_csi_counts, normalize_newlines};
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, resize_master};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -1091,7 +1091,8 @@ impl PtyInstance {
     pub fn process_output(&self, output: &[u8]) {
         let normalized = normalize_newlines(output);
         let mut parser = self.parser.write();
-        parser.process(&normalized);
+        let (rows, cols) = parser.screen().size();
+        parser.process(&clamp_csi_counts(&normalized, rows, cols));
         if parser.get_raw_output().len() > Self::MAX_RAW_OUTPUT_BYTES {
             let screen = parser.screen();
             let (rows, cols) = screen.size();
@@ -1173,6 +1174,49 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect cursor hide as interactive"
         );
+    }
+
+    #[test]
+    fn process_output_bounds_insert_and_scroll_counts_by_the_screen() {
+        let pty = create_test_pty_instance(false);
+        pty.process_output(b"abc\r\x1b[65535@\x1b[65535L\x1b[65535;1T\x1b[65535:2@");
+
+        let parser = pty.parser.read();
+        assert_eq!(
+            parser.get_raw_output(),
+            b"abc\r\x1b[80@\x1b[24L\x1b[24;1T\x1b[80:2@"
+        );
+        assert_eq!(parser.screen().contents(), "");
+    }
+
+    #[test]
+    fn process_output_bounds_counts_with_controls_inside_the_sequence() {
+        let cases: [(&[u8], &[u8]); 6] = [
+            (b"\x1b[655\x7f35@", b"\x1b[\x7f80@"),
+            (b"\x1b[6\x005535@", b"\x1b[\x0080@"),
+            (b"\x1b\x00[65535@", b"\x1b\x00[80@"),
+            (b"\x1b[\x0065535L", b"\x1b[\x0024L"),
+            (b"\x1b[65\xc235T", b"\x1b[\xc224T"),
+            (b"\x1b[?65535@", b"\x1b[?80@"),
+        ];
+        for (input, expected) in cases {
+            let pty = create_test_pty_instance(false);
+            pty.process_output(input);
+            assert_eq!(
+                pty.parser.read().get_raw_output(),
+                expected,
+                "{}",
+                input.escape_ascii()
+            );
+        }
+    }
+
+    #[test]
+    fn process_output_leaves_abandoned_and_ignored_sequences_alone() {
+        let pty = create_test_pty_instance(false);
+        let input = b"\x1b[65535\x18@\x1b[65535\x1b@\x1b[1<65535@\x1b(65535@\x1b[;65535@";
+        pty.process_output(input);
+        assert_eq!(pty.parser.read().get_raw_output(), input);
     }
 
     #[test]
