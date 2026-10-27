@@ -291,7 +291,10 @@ function applyProjectLevelConfigToProjectMetadata(
   metadata: ProjectsMetadata,
   workspaceRoot: string
 ) {
-  if (!(projectNode.data.metadata as any)?.owners) {
+  const projectOwnersConfig = (
+    projectNode.data as { owners?: ProjectOwnersConfig }
+  ).owners;
+  if (!projectOwnersConfig) {
     return;
   }
   metadata[projectName] = metadata[projectName] || {};
@@ -314,9 +317,6 @@ function applyProjectLevelConfigToProjectMetadata(
     projectJsonContents = readFileSync(projectJsonPath, 'utf-8');
     projectJsonNode = getJsonNode(projectJsonContents);
   }
-
-  const projectOwnersConfig = (projectNode.data.metadata as any)
-    .owners as ProjectOwnersConfig;
 
   // Each key is a file pattern to match against
   for (const [filePattern, owners] of Object.entries(projectOwnersConfig)) {

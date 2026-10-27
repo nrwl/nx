@@ -977,9 +977,7 @@ function createProjectGraphAndWorkspaceFileMap(
       name: projectName,
       data: {
         root: `libs/${projectName}`,
-        metadata: projectLevelOwnersConfig
-          ? ({ owners: projectLevelOwnersConfig } as any)
-          : undefined,
+        ...(projectLevelOwnersConfig && { owners: projectLevelOwnersConfig }),
       },
     };
     workspaceFileMap.fileMap.projectFileMap[projectName] = projectFiles.map(
