@@ -56,10 +56,16 @@ export async function createRunManyDynamicOutputRenderer({
     }
   }
 
+  let stoppedBySignal = false;
+  const onSignal = () => {
+    stoppedBySignal = true;
+    clearRenderInterval();
+  };
+
   process.on('exit', () => clearRenderInterval());
-  process.on('SIGINT', () => clearRenderInterval());
-  process.on('SIGTERM', () => clearRenderInterval());
-  process.on('SIGHUP', () => clearRenderInterval());
+  process.on('SIGINT', onSignal);
+  process.on('SIGTERM', onSignal);
+  process.on('SIGHUP', onSignal);
 
   const lifeCycle = {} as Partial<LifeCycle>;
   const isVerbose = overrides.verbose === true;
@@ -77,6 +83,7 @@ export async function createRunManyDynamicOutputRenderer({
   });
 
   const failedTasks = new Set();
+  const stoppedTasks = new Set<string>();
   const tasksToTerminalOutputs: Record<string, string> = {};
   const tasksToProcessStartTimes: Record<
     string,
@@ -409,35 +416,71 @@ export async function createRunManyDynamicOutputRenderer({
           output.colors.red(text) + pc.dim(pc.white(` (${timeTakenText})`))
         ),
         ...taskOverridesRows,
-        '',
-        output.dim(
-          `${LEFT_PAD}${output.dim(
-            figures.tick
-          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-            `[${totalCachedTasks} read from cache]`
-          )}`
-        ),
-        '',
-        `${LEFT_PAD}${output.colors.red(
-          figures.cross
-        )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} targets failed, including the following:`,
-        '',
-        `${failedTasksForPrinting
-          .map(
-            (t) =>
-              `${EXTENDED_LEFT_PAD}${output.colors.red(
-                '-'
-              )} ${output.formatCommand(t.toString())}`
-          )
-          .join('\n')}`,
       ];
 
-      if (failedTasks.size > numFailedToPrint) {
+      if (totalSuccessfulTasks > 0) {
         failureSummaryRows.push(
+          '',
           output.dim(
-            `${EXTENDED_LEFT_PAD}...and ${
-              failedTasks.size - numFailedToPrint
-            } more...`
+            `${LEFT_PAD}${output.dim(
+              figures.tick
+            )}${SPACER}${totalSuccessfulTasks}${`/${totalTasks}`} succeeded ${output.dim(
+              `[${totalCachedTasks} read from cache]`
+            )}`
+          )
+        );
+      }
+      if (totalFailedTasks > 0) {
+        failureSummaryRows.push(
+          '',
+          `${LEFT_PAD}${output.colors.red(
+            figures.cross
+          )}${SPACER}${totalFailedTasks}${`/${totalTasks}`} targets failed, including the following:`,
+          '',
+          `${failedTasksForPrinting
+            .map(
+              (t) =>
+                `${EXTENDED_LEFT_PAD}${output.colors.red(
+                  '-'
+                )} ${output.formatCommand(t.toString())}`
+            )
+            .join('\n')}`
+        );
+        if (failedTasks.size > numFailedToPrint) {
+          failureSummaryRows.push(
+            output.dim(
+              `${EXTENDED_LEFT_PAD}...and ${
+                failedTasks.size - numFailedToPrint
+              } more...`
+            )
+          );
+        }
+      }
+      if (stoppedTasks.size > 0) {
+        failureSummaryRows.push(
+          '',
+          `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${stoppedTasks.size}/${totalTasks} targets were in progress, including the following:`,
+          '',
+          Array.from(stoppedTasks)
+            .map(
+              (t) =>
+                `${EXTENDED_LEFT_PAD}${output.colors.red(
+                  '-'
+                )} ${output.formatCommand(t)}`
+            )
+            .join('\n')
+        );
+      }
+      const notRunTasks = totalTasks - totalCompletedTasks;
+      // After a signal, the tasks that never ran include ones the run
+      // stopped before reaching, which "skipped" would mislabel
+      if (notRunTasks > 0) {
+        failureSummaryRows.push(
+          '',
+          output.dim(
+            stoppedBySignal
+              ? `${LEFT_PAD}${output.colors.red(figures.ellipsis)}${SPACER}${notRunTasks}/${totalTasks} targets had not started.`
+              : `${LEFT_PAD}${pc.yellow('⏭')}${SPACER}${notRunTasks}/${totalTasks} targets were skipped.`
           )
         );
       }
@@ -488,6 +531,9 @@ export async function createRunManyDynamicOutputRenderer({
         case 'failure':
           totalFailedTasks++;
           failedTasks.add(t.task.id);
+          break;
+        case 'stopped':
+          stoppedTasks.add(t.task.id);
           break;
       }
       printTaskResult(t.task, t.status);
