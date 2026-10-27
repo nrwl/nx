@@ -120,6 +120,7 @@ export {
 export { readYamlFile } from './utils/fileutils';
 export { globalSpinner } from './utils/spinner';
 export { signalToCode } from './utils/exit-codes';
+export { handleErrors } from './utils/handle-errors';
 export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
 export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
