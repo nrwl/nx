@@ -5,8 +5,8 @@ import { canonicalDir, getUserSegment } from './owned-private-dir';
 /**
  * Stable root for Nx runtime artifacts that need an OS tmp location. On POSIX a
  * literal `/tmp`, not `os.tmpdir()`, which honours `$TMPDIR` — per-user on
- * macOS, rewritten by sandboxes, stripped from the daemon env, so client and
- * daemon would disagree. Windows has no `/tmp`, and `%TMP%` is already per-user
+ * macOS, rewritten by sandboxes, fixed in the daemon at spawn and never
+ * reflected from later clients, so client and daemon would disagree. Windows has no `/tmp`, and `%TMP%` is already per-user
  * and stable, so it keeps `os.tmpdir()`.
  *
  * Consumed by the native binding loader, so keep this file limited to local
