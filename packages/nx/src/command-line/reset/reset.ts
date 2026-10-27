@@ -161,7 +161,10 @@ function removeInstalledNxCloudClient() {
     INCREMENTAL_BACKOFF_FIRST_DELAY,
     INCREMENTAL_BACKOFF_MAX_DURATION,
     () => {
-      rmSync(getCloudClientLocation(), { recursive: true, force: true });
+      const location = getCloudClientLocation();
+      if (location) {
+        rmSync(location, { recursive: true, force: true });
+      }
     }
   );
 }
