@@ -7,8 +7,8 @@ import { workspaceRoot } from '../../utils/workspace-root';
 /**
  * Whether `packageJsonPath`, resolved for `packageName` from
  * `getNxRequirePaths(root)`, is the workspace's install rather than the temp nx
- * installation on NODE_PATH. Workspace entries may link outside the root
- * (pnpm's global virtual store).
+ * installation on NODE_PATH. The install may sit in an ancestor's node_modules
+ * or link outside the root (pnpm's global virtual store).
  */
 export function isWorkspaceInstalledPackage(
   packageName: string,
@@ -18,7 +18,7 @@ export function isWorkspaceInstalledPackage(
   const resolved = realpathOrSelf(packageJsonPath);
   return (
     isInside(resolved, realpathOrSelf(workspaceRoot)) ||
-    workspaceNodeModulesEntries(packageName, root).some(
+    nodeModulesLookupEntries(packageName, root).some(
       (entry) => realpathOrNull(join(entry, 'package.json')) === resolved
     )
   );
@@ -26,15 +26,15 @@ export function isWorkspaceInstalledPackage(
 
 /**
  * Whether the running nx is the workspace's installation rather than the temp
- * one `nx migrate` runs first. Every workspace entry for nx counts, because
- * the hand-off spawns the root `node_modules/nx` even when `.nx/installation`
+ * one `nx migrate` runs first. Any nx on the lookup chain counts: the hand-off
+ * spawns the root's nearest `node_modules/nx` even when `.nx/installation`
  * holds another copy.
  */
 export function isRunningWorkspaceNx(): boolean {
   const running = realpathOrSelf(__dirname);
   return (
     isInside(running, realpathOrSelf(workspaceRoot)) ||
-    workspaceNodeModulesEntries('nx', workspaceRoot).some((entry) => {
+    nodeModulesLookupEntries('nx', workspaceRoot).some((entry) => {
       const target = realpathOrNull(entry);
       return target !== null && isInside(running, target);
     })
@@ -42,22 +42,14 @@ export function isRunningWorkspaceNx(): boolean {
 }
 
 // The `<dir>/node_modules/<packageName>` paths Node's lookup from
-// `getNxRequirePaths(root)` visits inside the workspace, wherever they link to.
-function workspaceNodeModulesEntries(
-  packageName: string,
-  root: string
-): string[] {
-  const workspaceRoots = [
-    resolve(workspaceRoot),
-    realpathOrSelf(workspaceRoot),
-  ];
+// `getNxRequirePaths(root)` visits up to the filesystem root, wherever they
+// link to.
+function nodeModulesLookupEntries(packageName: string, root: string): string[] {
   const entries = new Set<string>();
   for (const start of getNxRequirePaths(root)) {
-    let dir = resolve(start);
-    while (workspaceRoots.some((r) => isInside(dir, r))) {
+    for (let dir = resolve(start); ; dir = dirname(dir)) {
       entries.add(join(dir, 'node_modules', packageName));
       if (dir === dirname(dir)) break;
-      dir = dirname(dir);
     }
   }
   return [...entries];

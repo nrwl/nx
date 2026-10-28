@@ -6228,6 +6228,7 @@ module.exports = {
           from: {},
           to: {},
           interactive: false,
+          include: 'all',
         },
         fetch as any
       );
@@ -6245,33 +6246,26 @@ module.exports = {
       };
     }
 
-    it('reads the versions of packages linked from a store outside the workspace', async () => {
-      linkFromOutsideStore('nx');
-      linkFromOutsideStore('@nx/js');
-      linkFromOutsideStore('store-dep');
+    // The layout an outer workspace that hoists its dependencies installs.
+    function installAboveWorkspace(name: string) {
+      writePackage(`node_modules/${name}`, name);
+    }
+
+    it.each([
+      ['linked from a store outside the workspace', linkFromOutsideStore],
+      ['installed only above the workspace', installAboveWorkspace],
+    ])('reads the versions of packages %s', async (_layout, install) => {
+      install('nx');
+      install('@nx/js');
+      install('dep');
 
       const result = await generate(
-        { nx: '1.0.0', '@nx/js': '1.0.0', 'store-dep': '1.0.0' },
-        { 'needs-store-dep': { requires: { 'store-dep': '^1.0.0' } } }
+        { nx: '1.0.0', '@nx/js': '1.0.0', dep: '1.0.0' },
+        { 'needs-dep': { requires: { dep: '^1.0.0' } } }
       );
 
       expect(result.devDependencies['@nx/js']).toBe('2.0.0');
-      expect(result.migrations).toEqual(['needs-store-dep']);
-    });
-
-    it('treats a package installed only above the workspace as not installed', async () => {
-      writePackage('ws/node_modules/nx', 'nx');
-      writePackage('node_modules/ancestor-dep', 'ancestor-dep');
-
-      const result = await generate(
-        { nx: '1.0.0' },
-        {
-          unconditional: {},
-          'needs-ancestor-dep': { requires: { 'ancestor-dep': '^1.0.0' } },
-        }
-      );
-
-      expect(result.migrations).toEqual(['unconditional']);
+      expect(result.migrations).toEqual(['needs-dep']);
     });
 
     it('treats a NODE_PATH package in a directory the workspace root prefixes as not installed', async () => {
