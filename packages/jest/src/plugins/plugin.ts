@@ -12,6 +12,7 @@ import {
   globWithWorkspaceContext,
   workspaceDataDirectory,
   applyTestFileDirectives,
+  quoteShellArg,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -435,7 +436,7 @@ async function buildJestTargets(
 
         targets[targetName] = applyTestFileDirectives(
           {
-            command: `jest ${relativePath}`,
+            command: `jest --runTestsByPath ${quoteShellArg(relativePath)}`,
             cache,
             inputs,
             outputs,
@@ -585,7 +586,7 @@ async function buildJestTargets(
           });
           targets[targetName] = applyTestFileDirectives(
             {
-              command: `jest ${relativePath}`,
+              command: `jest --runTestsByPath ${quoteShellArg(relativePath)}`,
               cache,
               inputs,
               outputs,
