@@ -16,6 +16,11 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { fork } from 'child_process';
+import {
+  followsDeletesAndMovesUnderAGitignoredDirectory,
+  hashesAGeneratedInputAfterTheTaskThatWritesIt,
+  hashesGitignoredFilesFromAnIncludeIgnoredFileset,
+} from './include-ignored-cache-utils';
 
 import { readdir, stat } from 'fs/promises';
 
@@ -28,7 +33,10 @@ const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
 
 describe('cache (no daemon)', () => {
   beforeEach(() =>
-    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+    newProject({
+      keepBackup: true,
+      packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'],
+    })
   );
 
   afterEach(() => cleanupProject());
@@ -422,6 +430,26 @@ console.log('Build complete');
     );
   }, 120000);
 
+  describe('includeIgnored filesets', () => {
+    it(
+      'should hash gitignored files declared through an includeIgnored fileset',
+      () => hashesGitignoredFilesFromAnIncludeIgnoredFileset(runCLI),
+      120000
+    );
+
+    it(
+      'should hash a generated input after the task that writes it',
+      () => hashesAGeneratedInputAfterTheTaskThatWritesIt(runCLI),
+      120000
+    );
+
+    it(
+      'should follow deletes and moves under a gitignored directory',
+      () => followsDeletesAndMovesUnderAGitignoredDirectory(runCLI),
+      120000
+    );
+  });
+
   it('should support dependency filesets with ^{projectRoot} syntax', async () => {
     const parent = uniq('parent');
     const child = uniq('child');
@@ -774,7 +802,9 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s) => {
+    lines.forEach((line) => {
+      // GitHub log groups prefix the task header with a cache-status icon.
+      const s = line.replace(/^(?:::group::|##\[group\])[^>]*(?=> nx run)/, '');
       if (s.trimStart().startsWith(`> nx run`)) {
         const projectName = s
           .trimStart()

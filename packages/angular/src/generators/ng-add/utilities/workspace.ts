@@ -189,9 +189,7 @@ export async function updateRootEsLintConfig(
   existingEsLintConfig: any | undefined,
   unitTestRunner?: string
 ): Promise<void> {
-  await lintInitGenerator(tree, {
-    addPlugin: false,
-  });
+  await lintInitGenerator(tree, {});
 
   if (!existingEsLintConfig) {
     // There was no eslint config in the root, so we set it up and use it as-is

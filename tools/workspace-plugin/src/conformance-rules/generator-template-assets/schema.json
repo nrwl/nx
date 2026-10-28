@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "generator-template-assets",
+  "title": "generator-template-assets rule configuration",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

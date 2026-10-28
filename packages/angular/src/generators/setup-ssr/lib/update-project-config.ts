@@ -117,6 +117,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets['serve-ssr'] = {
     continuous: true,
+    readyWhen: { signal: true },
     executor: '@angular-devkit/build-angular:ssr-dev-server',
     configurations: {
       development: {

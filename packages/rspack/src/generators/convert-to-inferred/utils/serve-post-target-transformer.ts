@@ -4,10 +4,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   parseTargetString,
-  readJson,
-  readTargetOptions,
-  type ExecutorContext,
-  type ProjectsConfigurations,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -17,7 +13,7 @@ import * as ts from 'typescript';
 import type { RspackOptionsNormalized } from '@rspack/core';
 import { buildServePath } from '../../../executors/dev-server/lib/serve-path';
 import type { DevServerExecutorSchema as DevServerExecutorOptions } from '../../../executors/dev-server/schema';
-import { toPropertyAssignment } from './ast';
+import { hasMigratedConfigValues, toPropertyAssignment } from './ast';
 import type { MigrationContext, TransformerContext } from './types';
 
 export function servePostTargetTransformerFactory(
@@ -36,7 +32,6 @@ export function servePostTargetTransformerFactory(
     };
 
     const { devServerOptions, rspackConfigPath } = await processOptions(
-      tree,
       target,
       context
     );
@@ -54,39 +49,37 @@ export function servePostTargetTransformerFactory(
   };
 }
 
-type RspackConfigDevServerOptions = RspackOptionsNormalized['devServer'];
+type RspackConfigDevServerOptions = Exclude<
+  RspackOptionsNormalized['devServer'],
+  false
+>;
 type ExtractedOptions = {
   default: RspackConfigDevServerOptions;
   [configName: string]: RspackConfigDevServerOptions;
 };
 
 async function processOptions(
-  tree: Tree,
   target: TargetConfiguration<DevServerExecutorOptions>,
   context: TransformerContext
 ): Promise<{
   devServerOptions: ExtractedOptions;
   rspackConfigPath: string;
 }> {
-  const executorContext = {
-    cwd: process.cwd(),
-    nxJsonConfiguration: readJson(tree, 'nx.json'),
-    projectGraph: context.projectGraph,
-    projectName: context.projectName,
-    projectsConfigurations: Object.entries(context.projectGraph.nodes).reduce(
-      (acc, [projectName, project]) => {
-        acc.projects[projectName] = project.data;
-        return acc;
-      },
-      { version: 1, projects: {} } as ProjectsConfigurations
-    ),
-    root: context.workspaceRoot,
-  } as ExecutorContext;
   const buildTarget = parseTargetString(
     target.options.buildTarget,
-    executorContext
+    context.projectGraph
   );
-  const buildOptions = readTargetOptions(buildTarget, executorContext);
+  const buildConfiguration =
+    context.projectGraph.nodes[buildTarget.project].data.targets[
+      buildTarget.target
+    ];
+  // The build executor is removed in v24; do not resolve its schema.
+  const buildOptions = {
+    ...buildConfiguration.options,
+    ...buildConfiguration.configurations?.[
+      buildTarget.configuration ?? buildConfiguration.defaultConfiguration
+    ],
+  };
 
   // it must exist, we validated it in the project filter
   const rspackConfigPath = buildOptions.rspackConfig;
@@ -208,6 +201,12 @@ function updateRspackConfig(
     sourceFile = ast(rspackConfigText);
   };
   updateSources();
+
+  // A target kept on its executor is converted again on rerun, and its options
+  // are already in the config.
+  if (hasMigratedConfigValues(sourceFile, 'serve')) {
+    return;
+  }
 
   setOptionsInRspackConfig(
     tree,

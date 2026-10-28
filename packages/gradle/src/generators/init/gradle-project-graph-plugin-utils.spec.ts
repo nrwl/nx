@@ -1,26 +1,30 @@
+import type { Mock } from 'vitest';
 import { Tree } from '@nx/devkit';
 import {
   addNxProjectGraphPlugin,
   extractNxPluginVersion,
   updateNxPluginVersion,
 } from './gradle-project-graph-plugin-utils';
-import { gradleProjectGraphPluginName } from '../../utils/versions';
+import {
+  gradleProjectGraphPluginName,
+  gradleProjectGraphVersion,
+} from '../../utils/versions';
 import * as execGradle from '../../utils/exec-gradle';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { FsTree } from '@nx/devkit/internal';
 
-jest.mock('../../utils/exec-gradle', () => ({
-  findGradlewFile: jest.fn(),
-  execGradleAsync: jest.fn(),
+vi.mock('../../utils/exec-gradle', () => ({
+  findGradlewFile: vi.fn(),
+  execGradleAsync: vi.fn(),
 }));
 
-const mockFindGradlewFile = execGradle.findGradlewFile as jest.Mock;
-const mockExecGradleAsync = execGradle.execGradleAsync as jest.Mock;
+const mockFindGradlewFile = execGradle.findGradlewFile as Mock;
+const mockExecGradleAsync = execGradle.execGradleAsync as Mock;
 
 describe('Gradle Project Graph Plugin Utils', () => {
   describe('extractNxPluginVersion', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it.each([
@@ -92,7 +96,7 @@ describe('Gradle Project Graph Plugin Utils', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       process.chdir(cwd);
     });
 
@@ -268,13 +272,41 @@ allprojects {
         await addNxProjectGraphPlugin(tree);
 
         const content = tree.read('proj/build.gradle.kts', 'utf-8');
-        expect(content).toMatch(
-          /plugins\s*{\s*id\(['"]dev\.nx\.gradle\.project-graph['"]\)\s*version\(['"][^'"]+['"]\)/
-        );
-        expect(content).toMatch(
-          /allprojects\s*{\s*apply\s*plugin\(['"]dev\.nx\.gradle\.project-graph['"]\)/
-        );
-        expect(content).toContain('repositories {');
+        expect(content.replace(gradleProjectGraphVersion, '<version>'))
+          .toMatchInlineSnapshot(`
+            "plugins {
+                id("dev.nx.gradle.project-graph") version("<version>")
+                id("java")
+            }
+
+            allprojects {
+                apply(plugin = "dev.nx.gradle.project-graph")
+                repositories {
+                    mavenCentral()
+                }
+            }"
+          `);
+      });
+
+      it('should not re-apply the plugin to an allprojects block on a rerun', async () => {
+        await tempFs.createFiles({
+          'proj/settings.gradle.kts': '',
+          'proj/build.gradle.kts': `plugins {
+    id("java")
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}`,
+        });
+
+        await addNxProjectGraphPlugin(tree);
+        const firstRun = tree.read('proj/build.gradle.kts', 'utf-8');
+        await addNxProjectGraphPlugin(tree);
+
+        expect(tree.read('proj/build.gradle.kts', 'utf-8')).toEqual(firstRun);
       });
     });
 

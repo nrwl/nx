@@ -11,7 +11,6 @@ import {
   createNxJsonFile,
   initCloud,
   runInstall,
-  setNeverConnectToCloud,
   updateGitIgnore,
 } from './utils';
 import { connectExistingRepoToNxCloudPrompt } from '../../nx-cloud/connect/connect-to-nx-cloud';
@@ -97,8 +96,6 @@ export async function addNxToMonorepo(
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-monorepo');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 }
 

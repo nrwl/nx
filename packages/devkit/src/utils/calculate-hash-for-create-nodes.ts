@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join } from 'node:path/posix';
 import { CreateNodesContext, hashArray } from 'nx/src/devkit-exports';
 
 import {

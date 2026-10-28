@@ -1,20 +1,10 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { createNodes } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { mockCjsModule, TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('@rsbuild/core', () => ({
-  ...jest.requireActual('@rsbuild/core'),
-  loadConfig: jest.fn().mockResolvedValue({
-    filePath: 'my-app/rsbuild.config.ts',
-    content: {},
-  }),
-}));
-
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
-}));
+// The plugin `require`s `@rsbuild/core` lazily, which `vi.mock` cannot reach.
+const loadConfig = vi.fn();
+mockCjsModule(import.meta.url, '@rsbuild/core', { loadConfig });
 
 describe('@nx/rsbuild', () => {
   let createNodesFunction = createNodes[1];
@@ -22,7 +12,10 @@ describe('@nx/rsbuild', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    loadConfig.mockResolvedValue({
+      filePath: 'my-app/rsbuild.config.ts',
+      content: {},
+    });
     tempFs = new TempFs('rsbuild-test');
     context = {
       nxJsonConfiguration: {
@@ -43,7 +36,7 @@ describe('@nx/rsbuild', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     tempFs.cleanup();
   });
 
@@ -55,7 +48,6 @@ describe('@nx/rsbuild', () => {
         devTargetName: 'dev-serve',
         previewTargetName: 'preview-serve',
         inspectTargetName: 'inspect-serve',
-        typecheckTargetName: 'typecheck-app',
       },
       context
     );
@@ -132,6 +124,10 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'dev')" rsbuild.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "inspect-serve": {
                     "command": "rsbuild inspect",
@@ -161,6 +157,10 @@ describe('@nx/rsbuild', () => {
                       ],
                       "cwd": "my-app",
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/rsbuild/ready-check').waitForDevServer(process.argv[1], 'preview')" rsbuild.config.ts",
+                      "interval": 1000,
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -178,79 +178,36 @@ describe('@nx/rsbuild', () => {
     `);
   });
 
-  it('should infer typecheck with -p flag when not using TS solution setup', async () => {
-    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
+  it('waits for the signal when the config loads pluginNxReadySignal()', async () => {
+    // Rsbuild's plugins option nests arrays and promises
+    loadConfig.mockResolvedValueOnce({
+      filePath: 'my-app/rsbuild.config.ts',
+      content: {
+        plugins: [false, [Promise.resolve({ name: 'nx:ready-signal' })]],
+      },
+    });
 
     const nodes = await createNodesFunction(
       ['my-app/rsbuild.config.ts'],
-      { typecheckTargetName: 'typecheck' },
+      {},
       context
     );
 
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc -p tsconfig.json --noEmit`
-    );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
-      {
-        "description": "Runs type-checking for the project.",
-        "help": {
-          "command": "npx tsc -p tsconfig.json --help",
-          "example": {
-            "options": {
-              "noEmit": true,
-            },
-          },
-        },
-        "technologies": [
-          "typescript",
-        ],
-      }
-    `);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
-    ).toBeUndefined();
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toBeUndefined();
+    const targets = nodes[0][1].projects['my-app'].targets;
+    expect(targets.dev.readyWhen).toEqual({ signal: true });
+    expect(targets.preview.readyWhen).toEqual({ signal: true });
   });
 
-  it('should infer typecheck with --build flag when using TS solution setup', async () => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+  it('should not infer a typecheck target', async () => {
     tempFs.createFileSync('my-app/tsconfig.json', `{}`);
 
     const nodes = await createNodesFunction(
       ['my-app/rsbuild.config.ts'],
-      { typecheckTargetName: 'typecheck' },
+      {},
       context
     );
 
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
-      `tsc --build --emitDeclarationOnly`
-    );
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-      .toMatchInlineSnapshot(`
-      {
-        "description": "Runs type-checking for the project.",
-        "help": {
-          "command": "npx tsc --build --help",
-          "example": {
-            "args": [
-              "--force",
-            ],
-          },
-        },
-        "technologies": [
-          "typescript",
-        ],
-      }
-    `);
-    expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
-      `^typecheck`,
-    ]);
-    expect(
-      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-    ).toEqual(['@nx/js:typescript-sync']);
+    expect(nodes[0][1].projects['my-app'].targets.typecheck).toBeUndefined();
   });
 
   describe('build outputs', () => {
@@ -273,10 +230,7 @@ describe('@nx/rsbuild', () => {
         configPath,
         `export default {}; // distPath.root=${distPathRoot ?? '(unset)'}`
       );
-      // `@rsbuild/core` is `require`d lazily inside the plugin, so grab the
-      // same (mocked) module instance from the current registry.
-      const { loadConfig } = require('@rsbuild/core');
-      (loadConfig as jest.Mock).mockResolvedValueOnce({
+      loadConfig.mockResolvedValueOnce({
         filePath: configPath,
         content: distPathRoot
           ? { output: { distPath: { root: distPathRoot } } }

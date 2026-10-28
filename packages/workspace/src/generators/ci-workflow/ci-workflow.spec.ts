@@ -9,10 +9,14 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
 
-jest.mock('child_process', () => {
-  const cp = jest.requireActual('child_process');
+const { workspaceRoot: nxWorkspaceRoot } =
+  await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
+
+vi.mock('child_process', async () => {
+  const cp = await vi.importActual<any>('child_process');
   return {
     ...cp,
     execSync: (...args) => {
@@ -25,16 +29,16 @@ jest.mock('child_process', () => {
   };
 });
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   workspaceRoot: '/root',
 }));
 
-jest.mock('fs', () => {
-  const memFs = require('memfs').fs;
-  const actualFs = jest.requireActual<any>('fs');
+vi.mock('fs', async () => {
+  const memFs = (await vi.importActual<any>('memfs')).fs;
+  const actualFs = await vi.importActual<any>('fs');
   return {
-    ...jest.requireActual<any>('fs'),
+    ...actualFs,
     existsSync: (p) =>
       p.endsWith('yarn.lock') ||
       p.endsWith('pnpm-lock.yaml') ||
@@ -98,7 +102,7 @@ describe('CI Workflow generator', () => {
           } else {
             fileSys = { 'package-lock.json': '' };
           }
-          vol.fromJSON(fileSys, '');
+          vol.fromJSON(fileSys, nxWorkspaceRoot);
         });
 
         it('should generate github CI config', async () => {
@@ -220,6 +224,23 @@ describe('CI Workflow generator', () => {
           });
 
           expect(readNxJson(tree).defaultBase).toEqual('origin/my-branch');
+        });
+
+        it('should add an origin/ defaultBase when the affected block sets no defaultBase', async () => {
+          const nxJson = readNxJson(tree);
+          delete nxJson.defaultBase;
+          nxJson.affected = { legacy: true };
+          writeJson(tree, 'nx.json', nxJson);
+
+          await ciWorkflowGenerator(tree, {
+            ci: 'bitbucket-pipelines',
+            name: 'CI',
+          });
+
+          expect(readNxJson(tree).defaultBase).toEqual(
+            `origin/${deduceDefaultBase()}`
+          );
+          expect(readNxJson(tree).affected).toEqual({ legacy: true });
         });
 
         it('should generate gitlab config', async () => {

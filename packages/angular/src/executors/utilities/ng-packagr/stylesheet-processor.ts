@@ -14,12 +14,19 @@ import {
   loadPostcssConfiguration,
 } from 'ng-packagr/src/lib/styles/postcss-configuration';
 import type { NgPackageEntryConfig } from 'ng-packagr/src/ng-entrypoint.schema';
+import { lt } from 'semver';
 import { getNgPackagrVersionInfo } from './ng-packagr-version';
 
 export enum CssUrl {
   inline = 'inline',
   none = 'none',
 }
+
+type StyleConfig = {
+  postcssConfiguration: ReturnType<typeof loadPostcssConfiguration>;
+  tailwindConfiguration: ReturnType<typeof getTailwindConfig>;
+  target: string[];
+};
 
 export function getStylesheetProcessor(): new (
   projectBasePath: string,
@@ -32,7 +39,14 @@ export function getStylesheetProcessor(): new (
 ) => {
   [key: string]: any;
 } {
-  const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
+  const { major: ngPackagrMajorVersion, version: ngPackagrVersion } =
+    getNgPackagrVersionInfo();
+  // ng-packagr >= 22.2 resolves the style config once per package, older
+  // versions resolve it for each entry point
+  const resolvePerPackage = !lt(ngPackagrVersion, '22.2.0');
+  // ng-packagr calls this factory once per build, so a later build in the
+  // same process reads config changes
+  const styleConfigCache = new Map<string, StyleConfig>();
 
   class StylesheetProcessor extends ComponentStylesheetBundler {
     constructor(
@@ -54,23 +68,20 @@ export function getStylesheetProcessor(): new (
         });
       }
 
-      const browserslistData = browserslist(undefined, { path: basePath });
-      let searchDirs = generateSearchDirectories([projectBasePath]);
-      const postcssConfiguration = loadPostcssConfiguration(searchDirs);
-      // (nx-specific): we support loading the TailwindCSS config from the root of the workspace
-      searchDirs = generateSearchDirectories([projectBasePath, workspaceRoot]);
+      const { postcssConfiguration, tailwindConfiguration, target } =
+        resolvePerPackage
+          ? getPackageStyleConfig(styleConfigCache, projectBasePath)
+          : resolveStyleConfig(projectBasePath, basePath);
 
       super(
         {
           cacheDirectory: cacheDirectory,
           postcssConfiguration: postcssConfiguration,
-          tailwindConfiguration: postcssConfiguration
-            ? undefined
-            : getTailwindConfig(searchDirs, projectBasePath),
+          tailwindConfiguration: tailwindConfiguration,
           sass: sass as any,
           workspaceRoot: projectBasePath,
           cssUrl: cssUrl,
-          target: transformSupportedBrowsersToTargets(browserslistData),
+          target: target,
           includePaths: includePaths,
         },
         'css',
@@ -84,6 +95,38 @@ export function getStylesheetProcessor(): new (
   }
 
   return StylesheetProcessor;
+}
+
+function getPackageStyleConfig(
+  styleConfigCache: Map<string, StyleConfig>,
+  projectBasePath: string
+): StyleConfig {
+  let config = styleConfigCache.get(projectBasePath);
+  if (!config) {
+    config = resolveStyleConfig(projectBasePath, projectBasePath);
+    styleConfigCache.set(projectBasePath, config);
+  }
+
+  return config;
+}
+
+function resolveStyleConfig(
+  projectBasePath: string,
+  browserslistPath: string
+): StyleConfig {
+  const browserslistData = browserslist(undefined, { path: browserslistPath });
+  let searchDirs = generateSearchDirectories([projectBasePath]);
+  const postcssConfiguration = loadPostcssConfiguration(searchDirs);
+  // (nx-specific): we support loading the TailwindCSS config from the root of the workspace
+  searchDirs = generateSearchDirectories([projectBasePath, workspaceRoot]);
+
+  return {
+    postcssConfiguration,
+    tailwindConfiguration: postcssConfiguration
+      ? undefined
+      : getTailwindConfig(searchDirs, projectBasePath),
+    target: transformSupportedBrowsersToTargets(browserslistData),
+  };
 }
 
 function transformSupportedBrowsersToTargets(

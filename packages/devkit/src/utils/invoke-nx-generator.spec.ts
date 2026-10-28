@@ -1,7 +1,15 @@
 import type { Tree } from 'nx/src/generators/tree';
 import { convertNxGenerator } from './invoke-nx-generator';
 import { visitNotIgnoredFiles } from '../generators/visit-not-ignored-files';
+import { dirname, join } from 'path';
 import { lastValueFrom } from 'rxjs';
+
+// The package's exports map only exposes `./*.js`, so `collection.json` cannot
+// be resolved by specifier; find it beside the package.json instead.
+const angularSchematicsCollection = join(
+  dirname(require.resolve('@schematics/angular/package.json')),
+  'collection.json'
+);
 
 describe('Convert Nx Generator', () => {
   it('should convert an nx generator to angular schematic correctly', async () => {
@@ -12,7 +20,7 @@ describe('Convert Nx Generator', () => {
     } = require('@angular-devkit/schematics/testing');
     const ngSchematicRunner = new SchematicTestRunner(
       '@schematics/angular',
-      require.resolve('@schematics/angular/collection.json')
+      angularSchematicsCollection
     );
 
     const appTree = await ngSchematicRunner.runSchematic('workspace', {
@@ -38,7 +46,7 @@ describe('Convert Nx Generator', () => {
     } = require('@angular-devkit/schematics/testing');
     const ngSchematicRunner = new SchematicTestRunner(
       '@schematics/angular',
-      require.resolve('@schematics/angular/collection.json')
+      angularSchematicsCollection
     );
     const appTree = await ngSchematicRunner.runSchematic('workspace', {
       name: 'workspace',
@@ -72,7 +80,7 @@ describe('Convert Nx Generator', () => {
     } = require('@angular-devkit/schematics/testing');
     const ngSchematicRunner = new SchematicTestRunner(
       '@schematics/angular',
-      require.resolve('@schematics/angular/collection.json')
+      angularSchematicsCollection
     );
     const appTree = await ngSchematicRunner.runSchematic('workspace', {
       name: 'workspace',

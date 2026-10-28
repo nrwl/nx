@@ -1,10 +1,12 @@
 import {
+  acknowledgeBuildScripts,
   selectPrompt,
   forEachExecutorOptions,
   getNamedInputs,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   ensurePackage,
   formatFiles,
   joinPathFragments,
@@ -22,15 +24,18 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { RspackPluginOptions } from '@nx/rspack/plugin';
+import { isDeepStrictEqual } from 'node:util';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
+import { acknowledgeAngularBuildScripts } from '../utils/acknowledge-build-scripts';
 import { supportsSsrAllowedHosts, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { mergeServerTsConfig } from './lib/merge-server-tsconfig';
 import { updateTsconfig } from './lib/update-tsconfig';
+import { validateNoModuleFederation } from './lib/validate-no-module-federation';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
 import type { ConvertToRspackSchema } from './schema';
 
@@ -43,7 +48,6 @@ const SUPPORTED_EXECUTORS = [
   '@nx/angular:webpack-browser',
   '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
-  '@nx/angular:module-federation-dev-server',
 ];
 
 const RENAMED_OPTIONS = {
@@ -353,6 +357,7 @@ export async function convertToRspack(
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
+  validateNoModuleFederation(tree, project);
 
   let projectServePort = DEFAULT_PORT;
   const projectServeConfigurationOptions: Record<string, { port?: number }> =
@@ -408,8 +413,7 @@ export async function convertToRspack(
       targetsToRemove.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
-      target.executor === '@nx/angular:dev-server' ||
-      target.executor === '@nx/angular:module-federation-dev-server'
+      target.executor === '@nx/angular:dev-server'
     ) {
       createConfigOptions.devServer = {};
       if (target.options) {
@@ -515,7 +519,6 @@ export async function convertToRspack(
     nxVersion
   );
   await rspackInitGenerator(tree, {
-    addPlugin: true,
     framework: 'angular',
   });
 
@@ -698,6 +701,11 @@ export async function convertToRspack(
     if (serveTarget.config.continuous) {
       delete serveTarget.config.continuous;
     }
+    // Nx writes it for the dev server builders, and it would override the
+    // readyWhen inferred for the Rspack serve target
+    if (isDeepStrictEqual(serveTarget.config.readyWhen, { signal: true })) {
+      delete serveTarget.config.readyWhen;
+    }
     if (
       serveTarget.config.syncGenerators?.length === 1 &&
       serveTarget.config.syncGenerators[0] === '@nx/js:typescript-sync'
@@ -743,6 +751,14 @@ export async function convertToRspack(
 
   if (!schema.skipInstall) {
     const { webpackMergeVersion, tsNodeVersion } = versions(tree);
+    acknowledgeAngularBuildScripts(tree);
+    // @nx/angular-rspack-compiler's install script patches `@angular/build`
+    // versions below 20.2.0, so it has to run. core-js only prints a funding
+    // message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      '@nx/angular-rspack-compiler': true,
+      'core-js': false,
+    });
     const installTask = addDependenciesToPackageJson(
       tree,
       {},

@@ -4,7 +4,7 @@ import { Configuration } from 'webpack';
 
 // swc-loader is an optional peer dependency that isn't installed in this
 // workspace; stub the loader factory so tests don't depend on resolving it.
-jest.mock('./compiler-loaders', () => ({
+vi.mock('./compiler-loaders', () => ({
   createLoaderFromCompiler: () => ({ test: /\.([jt])sx?$/ }),
 }));
 

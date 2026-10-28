@@ -1,4 +1,5 @@
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import providerGenerator from './provider';
 import type { SupportedBundler } from '../_utils/normalize';
@@ -20,6 +21,32 @@ describe('@nx/react:provider', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
+  it('should deny the core-js build script pulled in by @rsbuild/core', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      providerGenerator(tree, {
+        directory: 'apps/my-provider',
+        bundler: 'rsbuild',
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?core-js['"]?: false/
+    );
+  });
+
+  it('should not record a core-js decision for the vite bundler', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      providerGenerator(tree, {
+        directory: 'apps/my-provider',
+        bundler: 'vite',
+      })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      'core-js'
+    );
+  });
+
   it.each<SupportedBundler>(['vite', 'rsbuild', 'rspack'])(
     'generates a provider for the %s bundler',
     async (bundler) => {
@@ -30,6 +57,10 @@ describe('@nx/react:provider', () => {
 
       const project = readProjectConfiguration(tree, 'my-provider');
       expect(project).toMatchSnapshot('project.json');
+      // The generated config imports the bundler's ready-signal plugin
+      expect(
+        readJson(tree, 'package.json').devDependencies[`@nx/${bundler}`]
+      ).toBeDefined();
       expect(snapshotTree(tree, 'apps/my-provider')).toMatchSnapshot(
         `${bundler} tree`
       );

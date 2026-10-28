@@ -1,10 +1,21 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { stripVTControlCharacters } from 'util';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
+import { PseudoIPCClient } from './pseudo-ipc';
+import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
+import { BatchStatus } from '../native';
+import type { TaskResult } from './life-cycle';
+import { getExecutorForTask } from './utils';
 
 performance.mark = vi.fn((name: string) => ({ name }) as PerformanceMark);
 performance.measure = vi.fn();
@@ -17,6 +28,7 @@ vi.mock('./task-env', async () => ({
 vi.mock('./utils', async () => ({
   ...(await vi.importActual('./utils')),
   getCustomHasher: vi.fn(() => null),
+  getExecutorForTask: vi.fn(() => ({ schema: { properties: {} } })),
 }));
 
 describe('TaskOrchestrator', () => {
@@ -54,16 +66,21 @@ describe('TaskOrchestrator', () => {
           consumer: node('consumer', [
             { dependentTasksOutputFiles: '**/*.jar', transitive: true },
           ]),
+          reader: node('reader'),
         },
         dependencies: {
           dep: [],
           consumer: [{ source: 'consumer', target: 'dep', type: 'static' }],
+          reader: [{ source: 'reader', target: 'dep', type: 'static' }],
         },
         externalNodes: {},
       } as unknown as ProjectGraph;
     }
 
-    function createOrchestrator(taskGraph: TaskGraph) {
+    function createOrchestrator(
+      taskGraph: TaskGraph,
+      deferredTaskIds?: Set<string>
+    ) {
       let hasherCallCount = 0;
       const hasher = {
         hashTasks: vi.fn(async (tasks: Task[]) => {
@@ -87,6 +104,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.projectGraph = createProjectGraph();
       orchestrator.taskGraph = taskGraph;
       orchestrator.fullTaskGraph = taskGraph;
+      orchestrator.hashingDeferredTaskIds = deferredTaskIds;
       orchestrator.nxJson = {};
       orchestrator.taskDetails = null;
       orchestrator.taskInvocationTracker = null;
@@ -121,11 +139,16 @@ describe('TaskOrchestrator', () => {
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher, hashesAtCacheTime } =
-        createOrchestrator(taskGraph);
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
 
       await orchestrator.applyFromCacheOrRunBatch(
         true,
@@ -148,16 +171,98 @@ describe('TaskOrchestrator', () => {
       expect(hashesAtCacheTime['dep:build']).toBe('dep:build|call-1');
     });
 
+    function createDepConsumerGraph() {
+      const dep = createTask('dep:build');
+      const consumer = createTask('consumer:build');
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': dep, 'consumer:build': consumer },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
+        continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
+      };
+      return { dep, taskGraph };
+    }
+
+    it('does not start the lifecycle of a member skipped while the cache was resolved', async () => {
+      const { dep, taskGraph } = createDepConsumerGraph();
+      const { orchestrator } = createOrchestrator(taskGraph);
+      // A failed dependency elsewhere skips the consumer mid-resolution
+      orchestrator.applyCachedResults = vi.fn(async () => {
+        orchestrator.completedTasks.set('consumer:build', 'skipped');
+        return [];
+      });
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(orchestrator.options.lifeCycle.scheduleTask).toHaveBeenCalledWith(
+        dep
+      );
+      expect(orchestrator.preRunSteps).toHaveBeenCalledWith([dep], {
+        groupId: 0,
+      });
+    });
+
+    it('drops a member skipped while the start hooks ran', async () => {
+      const { taskGraph } = createDepConsumerGraph();
+      const { orchestrator } = createOrchestrator(taskGraph);
+      orchestrator.preRunSteps = vi.fn(async () => {
+        orchestrator.completedTasks.set('consumer:build', 'skipped');
+      });
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(orchestrator.runBatch).toHaveBeenCalledTimes(1);
+      expect(
+        Object.keys(orchestrator.runBatch.mock.calls[0][0].taskGraph.tasks)
+      ).toEqual(['dep:build']);
+    });
+
+    it('does not fork a batch whose every member was skipped meanwhile', async () => {
+      const { taskGraph } = createDepConsumerGraph();
+      const { orchestrator } = createOrchestrator(taskGraph);
+      orchestrator.preRunSteps = vi.fn(async () => {
+        orchestrator.completedTasks.set('dep:build', 'skipped');
+        orchestrator.completedTasks.set('consumer:build', 'skipped');
+      });
+
+      const results = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      expect(orchestrator.postRunSteps).not.toHaveBeenCalled();
+      expect(results).toEqual([]);
+    });
+
     it('should not re-hash tasks whose deps were all cache hits', async () => {
       const dep = createTask('dep:build');
       const consumer = createTask('consumer:build');
       const taskGraph: TaskGraph = {
         roots: ['dep:build'],
         tasks: { 'dep:build': dep, 'consumer:build': consumer },
-        dependencies: { 'dep:build': [], 'consumer:build': ['dep:build'] },
+        dependencies: {
+          'dep:build': [],
+          'consumer:build': [{ id: 'dep:build' }],
+        },
         continuousDependencies: { 'dep:build': [], 'consumer:build': [] },
       };
-      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      const { orchestrator, hasher } = createOrchestrator(
+        taskGraph,
+        new Set(['consumer:build'])
+      );
       // dep resolves from cache, so its outputs are already settled on disk
       // when the consumer's hash is computed
       orchestrator.applyCachedResults = vi.fn(async (tasks: Task[]) =>
@@ -175,6 +280,314 @@ describe('TaskOrchestrator', () => {
       // dep (call 1) and consumer (call 2) — no post-execution re-hash needed
       expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
       expect(consumer.hash).toBe('consumer:build|call-2');
+    });
+
+    // `reader` stands in for any task whose plan reads `dep`'s outputs, e.g.
+    // through an includeIgnored fileset.
+    async function runReaderBatch(deferredTaskIds?: Set<string>) {
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: {
+          'dep:build': createTask('dep:build'),
+          'reader:build': createTask('reader:build'),
+        },
+        dependencies: {
+          'dep:build': [],
+          'reader:build': [{ id: 'dep:build' }],
+        },
+        continuousDependencies: { 'dep:build': [], 'reader:build': [] },
+      };
+      const { orchestrator, hasher, hashesAtCacheTime } = createOrchestrator(
+        taskGraph,
+        deferredTaskIds
+      );
+
+      await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      const lookedUp = orchestrator.applyCachedResults.mock.calls.flatMap(
+        ([tasks]: [Task[]]) => tasks.map((t: Task) => t.id)
+      );
+      return { lookedUp, hasher, hashesAtCacheTime };
+    }
+
+    it('should not look up a deferred task before its deps run in the same batch', async () => {
+      const { lookedUp, hasher, hashesAtCacheTime } = await runReaderBatch(
+        new Set(['reader:build'])
+      );
+
+      expect(lookedUp).toEqual(['dep:build']);
+      // dep (call 1), reader (call 2), reader re-hashed after the batch (call 3)
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(3);
+      expect(hashesAtCacheTime['reader:build']).toBe('reader:build|call-3');
+    });
+
+    async function runBatch(
+      deps: Record<string, string[]>,
+      opts: {
+        deferred: string[];
+        cached?: string[];
+        uncacheable?: string[];
+        uncacheableCache?: false | undefined;
+        failed?: string[];
+        bail?: boolean;
+      }
+    ) {
+      const tasks = Object.fromEntries(
+        Object.keys(deps).map((id) => {
+          const task = createTask(id);
+          if (opts.uncacheable?.includes(id))
+            task.cache =
+              'uncacheableCache' in opts ? opts.uncacheableCache : false;
+          return [id, task];
+        })
+      );
+      const taskGraph: TaskGraph = {
+        roots: Object.keys(deps).filter((id) => deps[id].length === 0),
+        tasks,
+        dependencies: Object.fromEntries(
+          Object.entries(deps).map(([id, ids]) => [
+            id,
+            ids.map((dep) => ({ id: dep })),
+          ])
+        ),
+        continuousDependencies: Object.fromEntries(
+          Object.keys(deps).map((id) => [id, []])
+        ),
+      };
+      const { orchestrator, hasher } = createOrchestrator(
+        taskGraph,
+        new Set(opts.deferred)
+      );
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
+      orchestrator.applyCachedResults = vi.fn(async (ts: Task[]) =>
+        ts
+          .filter((t) => opts.cached?.includes(t.id))
+          .map((task) => ({ task, status: 'local-cache', code: 0 }))
+      );
+      orchestrator.runBatch = vi.fn(async (batch: any) =>
+        Object.values(batch.taskGraph.tasks).map((task: Task) =>
+          opts.failed?.includes(task.id)
+            ? { task, status: 'failure', code: 1 }
+            : { task, status: 'success', code: 0 }
+        )
+      );
+      if (opts.bail) {
+        // What completeTasks does under --bail; postRunSteps is mocked here.
+        const postRunSteps = orchestrator.postRunSteps;
+        orchestrator.postRunSteps = vi.fn(
+          async (results: TaskResult[], ...rest) => {
+            await postRunSteps(results, ...rest);
+            if (results.some((r) => r.status === 'failure')) {
+              orchestrator.bailed = true;
+            }
+          }
+        );
+      }
+
+      const results: TaskResult[] = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      const ids = (calls: any[][]) =>
+        calls.map(([arg]) =>
+          (Array.isArray(arg) ? arg : Object.values(arg.taskGraph.tasks)).map(
+            (t: Task) => t.id
+          )
+        );
+      return {
+        lifeCycle: orchestrator.options.lifeCycle,
+        lookups: ids(orchestrator.applyCachedResults.mock.calls),
+        hashed: ids(hasher.hashTasks.mock.calls),
+        runs: ids(orchestrator.runBatch.mock.calls),
+        // Lookups and runs interleaved in call order
+        order: [
+          ...ids(orchestrator.applyCachedResults.mock.calls).map((t, i) => [
+            orchestrator.applyCachedResults.mock.invocationCallOrder[i],
+            `lookup ${t}`,
+          ]),
+          ...ids(orchestrator.runBatch.mock.calls).map((t, i) => [
+            orchestrator.runBatch.mock.invocationCallOrder[i],
+            `run ${t}`,
+          ]),
+        ]
+          .sort(([a], [b]) => a - b)
+          .map(([, step]) => step),
+        resultIds: results.map((r) => r.task.id),
+      };
+    }
+
+    it.each([false, undefined])(
+      'should hash and look up a deferred task behind a non-cacheable (cache: %s) task in the next wave',
+      async (cache) => {
+        const { lookups, hashed, runs, order, resultIds } = await runBatch(
+          { 'dep:install': [], 'reader:build': ['dep:install'] },
+          {
+            deferred: ['reader:build'],
+            uncacheable: ['dep:install'],
+            uncacheableCache: cache,
+            cached: ['reader:build'],
+          }
+        );
+
+        // Wave 1 runs only the install; wave 2 hashes reader after it ran and
+        // restores it.
+        expect(lookups).toEqual([['dep:install'], ['reader:build']]);
+        expect(hashed).toEqual([['dep:install'], ['reader:build']]);
+        expect(runs).toEqual([['dep:install']]);
+        expect(order).toEqual([
+          'lookup dep:install',
+          'run dep:install',
+          'lookup reader:build',
+        ]);
+        expect(resultIds.sort()).toEqual(['dep:install', 'reader:build']);
+      }
+    );
+
+    it('should hold back a task downstream of a held-back task, then restore both', async () => {
+      const { lookups, runs, resultIds } = await runBatch(
+        {
+          'dep:install': [],
+          'reader:build': ['dep:install'],
+          'reader:test': ['reader:build'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          cached: ['reader:build', 'reader:test'],
+        }
+      );
+
+      // reader:test is not deferred, but cannot run before reader:build.
+      expect(lookups).toEqual([
+        ['dep:install'],
+        ['reader:build'],
+        ['reader:test'],
+      ]);
+      expect(runs).toEqual([['dep:install']]);
+      expect(resultIds.sort()).toEqual([
+        'dep:install',
+        'reader:build',
+        'reader:test',
+      ]);
+    });
+
+    it('should not start a later wave once the run bails', async () => {
+      const { lookups, runs } = await runBatch(
+        { 'dep:install': [], 'reader:build': ['dep:install'] },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['dep:install'],
+          bail: true,
+        }
+      );
+
+      expect(lookups).toEqual([['dep:install']]);
+      expect(runs).toEqual([['dep:install']]);
+    });
+
+    it('should run a deferred task behind both a cache miss and a non-cacheable task in the first wave', async () => {
+      const { lookups, hashed, runs } = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': [],
+          'reader:build': ['dep:build', 'dep:install'],
+        },
+        { deferred: ['reader:build'], uncacheable: ['dep:install'] }
+      );
+
+      expect(lookups).toEqual([['dep:build', 'dep:install']]);
+      expect(runs).toEqual([['dep:build', 'dep:install', 'reader:build']]);
+      // Preliminary hash, then re-hashed once its deps ran.
+      expect(hashed).toEqual([
+        ['dep:build', 'dep:install'],
+        ['reader:build'],
+        ['reader:build'],
+      ]);
+    });
+
+    it('should not start a batch once the run has bailed', async () => {
+      const taskGraph: TaskGraph = {
+        roots: ['dep:build'],
+        tasks: { 'dep:build': createTask('dep:build') },
+        dependencies: { 'dep:build': [] },
+        continuousDependencies: { 'dep:build': [] },
+      };
+      const { orchestrator, hasher } = createOrchestrator(taskGraph);
+      orchestrator.options.lifeCycle.registerRunningBatch = vi.fn();
+      orchestrator.options.lifeCycle.setBatchStatus = vi.fn();
+      orchestrator.bailed = true;
+
+      const results = await orchestrator.applyFromCacheOrRunBatch(
+        true,
+        { id: 'batch-1', executorName: 'my-plugin:batch', taskGraph },
+        0
+      );
+
+      expect(results).toEqual([]);
+      expect(hasher.hashTasks).not.toHaveBeenCalled();
+      expect(orchestrator.runBatch).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.registerRunningBatch
+      ).not.toHaveBeenCalled();
+      expect(
+        orchestrator.options.lifeCycle.setBatchStatus
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should register a batch and report its status once across waves', async () => {
+      const { lifeCycle, runs } = await runBatch(
+        {
+          'dep:install': [],
+          'other:build': [],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          uncacheable: ['dep:install'],
+          failed: ['other:build'],
+        }
+      );
+
+      expect(runs).toEqual([['dep:install', 'other:build'], ['reader:build']]);
+      expect(lifeCycle.registerRunningBatch).toHaveBeenCalledTimes(1);
+      // A wave-1 failure still fails the batch after wave 2 succeeds.
+      expect(lifeCycle.setBatchStatus.mock.calls).toEqual([
+        ['batch-1', BatchStatus.Failure],
+      ]);
+    });
+
+    it('should run a deferred task in the same wave as a cache miss upstream of it', async () => {
+      const { lookups, runs } = await runBatch(
+        {
+          'dep:build': [],
+          'dep:install': ['dep:build'],
+          'reader:build': ['dep:install'],
+        },
+        {
+          deferred: ['reader:build'],
+          cached: ['dep:install'],
+          uncacheable: [],
+        }
+      );
+
+      // reader is behind dep:build through the cached dep:install.
+      expect(lookups).toEqual([['dep:build'], ['dep:install']]);
+      expect(runs).toEqual([['dep:build', 'reader:build']]);
+    });
+
+    it('should look up a task the up-front pass did not defer', async () => {
+      const { lookedUp, hasher } = await runReaderBatch(new Set());
+
+      expect(lookedUp).toEqual(['dep:build', 'reader:build']);
+      expect(hasher.hashTasks).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -210,6 +623,7 @@ describe('TaskOrchestrator', () => {
         copyFilesFromCache: vi.fn(),
       };
       orchestrator.cacheMissedHashes = new Set();
+      orchestrator.copiedOutputFiles = new Map();
       orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
         async () => new Map()
       );
@@ -269,6 +683,75 @@ describe('TaskOrchestrator', () => {
       expect(
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).toHaveBeenCalledWith(failing, 'failure', 'boom');
+    });
+  });
+
+  describe('outputs tracking', () => {
+    const files = [{ path: 'dist/app/main.js', stamp: '1:2' }];
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        put: vi.fn(async () => files),
+        copyFilesFromCache: vi.fn(async () => files),
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: vi.fn() },
+      };
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      return orchestrator;
+    }
+
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+      outputs: ['dist/app'],
+      projectRoot: 'app',
+      cache: true,
+      parallelism: true,
+      hash: 'app-build-hash',
+    } as Task;
+
+    it('records outputs after caching them, with the files the cache wrote', async () => {
+      const orchestrator = createOrchestrator();
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'ok' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
+      expect(orchestrator.cache.put.mock.invocationCallOrder[0]).toBeLessThan(
+        orchestrator.recordOutputsHashBatch.mock.invocationCallOrder[0]
+      );
+      expect(orchestrator.copiedOutputFiles.size).toBe(0);
+    });
+
+    it('records restored outputs with the files the restore wrote', async () => {
+      const orchestrator = createOrchestrator();
+      orchestrator.shouldCopyOutputsFromCacheBatch = vi.fn(
+        async () => new Map([[task.hash, true]])
+      );
+
+      const results = await orchestrator.finalizeCacheHits([
+        { task, cachedResult: { code: 0, terminalOutput: '', remote: false } },
+      ]);
+      await orchestrator.postRunSteps(results, false, 0);
+
+      expect(orchestrator.recordOutputsHashBatch).toHaveBeenCalledWith([
+        { outputs: task.outputs, hash: task.hash, files },
+      ]);
     });
   });
 
@@ -395,6 +878,294 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('terminal output persistence', () => {
+    let terminalOutputsDir: string;
+    let originalCacheFailures: string | undefined;
+
+    beforeEach(() => {
+      terminalOutputsDir = mkdtempSync(join(tmpdir(), 'nx-terminal-outputs-'));
+      // These tests assert that a FAILED task is not cached, which is only true
+      // while `NX_CACHE_FAILURES` is off - `shouldCacheTaskResult` returns true
+      // for any code when it is set. Reading it from the ambient environment
+      // makes the outcome depend on whatever else ran first: this suite passes
+      // locally and fails in CI, where something sets it. State it here rather
+      // than inherit it.
+      originalCacheFailures = process.env.NX_CACHE_FAILURES;
+      delete process.env.NX_CACHE_FAILURES;
+    });
+
+    afterEach(() => {
+      rmSync(terminalOutputsDir, { recursive: true, force: true });
+      if (originalCacheFailures === undefined) {
+        delete process.env.NX_CACHE_FAILURES;
+      } else {
+        process.env.NX_CACHE_FAILURES = originalCacheFailures;
+      }
+    });
+
+    function makeTask(id: string, overrides: Partial<Task> = {}): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        hash: `${id}-hash`,
+        ...overrides,
+      } as Task;
+    }
+
+    function createOrchestrator() {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      // Object.create bypasses field initializers.
+      orchestrator.tasksWithPersistedOutput = new Set<string>();
+      orchestrator.copiedOutputFiles = new Map();
+      orchestrator.stopRequested = false;
+      orchestrator.cache = {
+        temporaryOutputPath: (task: Task) =>
+          join(terminalOutputsDir, task.hash),
+        put: vi.fn(async (task: Task, terminalOutput: string) => {
+          // The real cache writes the same file this backstop targets.
+          writeFileSync(join(terminalOutputsDir, task.hash), terminalOutput);
+        }),
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.recordOutputsHashBatch = vi.fn();
+      orchestrator.complete = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      return orchestrator;
+    }
+
+    function readOutput(task: Task): string | null {
+      const path = join(terminalOutputsDir, task.hash);
+      return existsSync(path) ? readFileSync(path, 'utf-8') : null;
+    }
+
+    it('writes the terminal output of an uncacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('batch body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+    });
+
+    it('writes the terminal output of a failed cacheable task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'failure', terminalOutput: 'assertion failed' }],
+        true,
+        0
+      );
+
+      // Failures aren't cached (without NX_CACHE_FAILURES), so the cache would
+      // never have written this one.
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(readOutput(task)).toBe('assertion failed');
+    });
+
+    it('writes the terminal output of a stopped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'stopped', terminalOutput: 'partial output' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('partial output');
+    });
+
+    it('leaves the write to the cache when the task is cached', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+      const writes: string[] = [];
+      orchestrator.cache.put = vi.fn(
+        async (t: Task, terminalOutput: string) => {
+          writes.push(terminalOutput);
+          writeFileSync(join(terminalOutputsDir, t.hash), terminalOutput);
+        }
+      );
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      // Written once, by the cache — not twice.
+      expect(writes).toEqual(['cached body']);
+      expect(readOutput(task)).toBe('cached body');
+      expect(orchestrator.tasksWithPersistedOutput.has(task.id)).toBe(false);
+    });
+
+    it('does not rewrite output a runner already persisted', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      // The runner wrote the real PTY bytes when the process exited.
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the result' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBe('from the runner');
+    });
+
+    it('does not rewrite output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const local = makeTask('app:build');
+      const remote = makeTask('app:test');
+
+      await orchestrator.postRunSteps(
+        [
+          { task: local, status: 'local-cache', terminalOutput: 'replayed' },
+          { task: remote, status: 'remote-cache', terminalOutput: 'replayed' },
+        ],
+        false,
+        0
+      );
+
+      // The replayed output was read from these very files.
+      expect(readOutput(local)).toBeNull();
+      expect(readOutput(remote)).toBeNull();
+    });
+
+    it('writes nothing for a skipped task', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'skipped', terminalOutput: '' }],
+        true,
+        0
+      );
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('writes nothing when the result carries no terminal output', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps([{ task, status: 'success' }], true, 0);
+
+      expect(readOutput(task)).toBeNull();
+    });
+
+    it('registers an uncacheable output with the cache so the GC can collect it', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'batch body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'batch body'.length },
+      ]);
+    });
+
+    it('registers output a runner wrote, which the GC cannot see either', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build', { cache: false });
+      writeFileSync(join(terminalOutputsDir, task.hash), 'from the runner');
+      orchestrator.tasksWithPersistedOutput.add(task.id);
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'from the runner' }],
+        true,
+        0
+      );
+
+      // Skipping the write must not skip the bookkeeping.
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'from the runner'.length },
+      ]);
+    });
+
+    it('does not register output the cache recorded itself', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'cached body' }],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.put).toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('does not register output replayed from the cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      await orchestrator.postRunSteps(
+        [{ task, status: 'local-cache', terminalOutput: 'replayed' }],
+        false,
+        0
+      );
+
+      // That hash is already recorded — it is what the replay read.
+      expect(orchestrator.cache.recordTerminalOutputs).not.toHaveBeenCalled();
+    });
+
+    it('registers a cacheable task run with --skip-nx-cache', async () => {
+      const orchestrator = createOrchestrator();
+      const task = makeTask('app:build');
+
+      // shouldCache false is how --skip-nx-cache reaches postRunSteps: the
+      // output lands on disk but no artifacts do.
+      await orchestrator.postRunSteps(
+        [{ task, status: 'success', terminalOutput: 'uncached body' }],
+        false,
+        0
+      );
+
+      expect(readOutput(task)).toBe('uncached body');
+      expect(orchestrator.cache.put).not.toHaveBeenCalled();
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'uncached body'.length },
+      ]);
+    });
+
+    it('writes every task of a batch that could not be cached', async () => {
+      const orchestrator = createOrchestrator();
+      const a = makeTask('a:build', { cache: false });
+      const b = makeTask('b:build', { cache: false });
+
+      await orchestrator.postRunSteps(
+        [
+          { task: a, status: 'success', terminalOutput: 'a body' },
+          { task: b, status: 'failure', terminalOutput: 'b body' },
+        ],
+        true,
+        0
+      );
+
+      expect(readOutput(a)).toBe('a body');
+      expect(readOutput(b)).toBe('b body');
+    });
+  });
+
   describe('printGroupedBatchOutput', () => {
     // Restoring by assignment would set the string "undefined" for anything
     // that was unset, which is truthy - leaving isLogGroupingEnabled() true for
@@ -446,9 +1217,15 @@ describe('TaskOrchestrator', () => {
       // argument, sourced from `nxArgs`, while `options` is the merged runner
       // options object. Putting the style in `options` here would let a read of
       // the wrong one pass.
-      orchestrator.outputStyle = args.outputStyle;
+      // Mirrors the two constructor fields: what the user named, and what the
+      // run renders with. A fixture that set only one would let a read of the
+      // wrong field pass.
+      orchestrator.specifiedOutputStyle = args.outputStyle;
+      orchestrator.resolvedOutputStyle =
+        args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       return orchestrator;
     }
 
@@ -608,6 +1385,36 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('never folds under --output-style=summary, even when a task failed', async () => {
+      const orchestrator = createOrchestrator({ outputStyle: 'summary' });
+      const a = makeTask('a:build');
+      const b = makeTask('b:build');
+      const taskResults = [
+        { task: a, status: 'success', code: 0, terminalOutput: 'a body' },
+        { task: b, status: 'failure', code: 1, terminalOutput: 'b failed' },
+      ];
+
+      const out = await captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile('the entire gradle build log')
+        )
+      );
+
+      // summary addresses logs by path rather than printing them. The fold
+      // bypasses the life cycle and writes to `output` directly, so without an
+      // explicit check it would dump the whole worker log into exactly the run
+      // that asked not to see it.
+      expect(out).not.toContain('the entire gradle build log');
+      expect(out).not.toContain('batch @nx/js:tsc');
+      // The tasks still report themselves - the summary life cycle is what
+      // turns that into a path.
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(b, 'failure', 'b failed');
+    });
+
     it('still collapses an all-green batch on the default, captured log or not', async () => {
       const orchestrator = createOrchestrator();
       const a = makeTask('a:build');
@@ -681,6 +1488,33 @@ describe('TaskOrchestrator', () => {
         orchestrator.options.lifeCycle.printTaskTerminalOutput
       ).not.toHaveBeenCalled();
     });
+
+    it('folds a batch whose worker reached none of its tasks, so the error that stopped it survives', async () => {
+      const orchestrator = createOrchestrator();
+      const taskResults = ['a:build', 'b:build'].map((id) => ({
+        task: makeTask(id),
+        status: 'skipped',
+        code: 1,
+        terminalOutput: '',
+      }));
+
+      const out = await captureStdout(() =>
+        orchestrator.printGroupedBatchOutput(
+          BATCH,
+          taskResults,
+          capturedOutputFile(
+            "FAILURE: A problem occurred configuring project ':shared'."
+          )
+        )
+      );
+
+      // `@nx/gradle` reports every task it never reached as skipped, so no
+      // task carries the error that stopped the build
+      expect(out).toContain(
+        "A problem occurred configuring project ':shared'."
+      );
+      expect(out).toContain('::group::⏩ > batch @nx/js:tsc 1');
+    });
   });
 
   describe('runBatch failure folds', () => {
@@ -734,10 +1568,12 @@ describe('TaskOrchestrator', () => {
           printTaskTerminalOutput: vi.fn(),
           appendTaskOutput: vi.fn(),
           setTaskStatus: vi.fn(),
+          batchOutputAvailable: vi.fn(),
         },
       };
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
+      orchestrator.announcedBatchLogs = new Set();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -756,6 +1592,10 @@ describe('TaskOrchestrator', () => {
       // batches with different bodies - which is what makes the fold-count map
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
+      // Observable so a test can pin whether the log survived the run: the
+      // `finally` skips the discard for any batch whose log was announced, and
+      // that guard is the only thing keeping the file on disk for the sweep.
+      orchestrator.discardedForTest = vi.fn();
       orchestrator.forkedProcessTaskRunner = {
         forkProcessForBatch: vi.fn().mockResolvedValue({
           onOutput: vi.fn(),
@@ -765,7 +1605,8 @@ describe('TaskOrchestrator', () => {
             orchestrator.capturedForTest
               ? capturedPath(orchestrator.capturedForTest)
               : undefined,
-          discardCapturedOutput: () => {},
+          flushCapturedOutput: async () => {},
+          discardCapturedOutput: orchestrator.discardedForTest,
         }),
       };
       return orchestrator;
@@ -792,6 +1633,106 @@ describe('TaskOrchestrator', () => {
       taskGraph: { tasks: { 'a:build': {} } },
     };
 
+    // Drives the RESULTS path rather than the crash path: the worker reported
+    // results, so `getResults` resolves. Without the handoff in `runBatch` the
+    // captured file is read by nobody here and unlinked on the way out, and a
+    // unit test of the handoff alone still passes.
+    it.each([
+      ['failed', { success: false, terminalOutput: 'a failed' }, 'failure'],
+      [
+        'was never reached',
+        { success: false, status: 'skipped', terminalOutput: '' },
+        'skipped',
+      ],
+    ])(
+      "surfaces a reporting batch's worker log under summary when a task %s",
+      async (_, result, status) => {
+        const orchestrator = createOrchestrator(
+          'gradlew: OutOfMemoryError in the daemon',
+          false
+        );
+        orchestrator.resolvedOutputStyle = 'summary';
+        orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
+        orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+          .fn()
+          .mockResolvedValue({
+            onOutput: vi.fn(),
+            onTaskResults: vi.fn(),
+            getResults: vi.fn().mockResolvedValue({ 'a:build': result }),
+            getCapturedOutputPath: () =>
+              capturedPath('gradlew: OutOfMemoryError in the daemon'),
+            flushCapturedOutput: async () => {},
+            discardCapturedOutput: () => {},
+          });
+
+        const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+        // The log is addressed, not copied: one worker means one log, and it
+        // explains the batch rather than any single task.
+        expect(
+          orchestrator.options.lifeCycle.batchOutputAvailable
+        ).toHaveBeenCalledWith(
+          batch.id,
+          capturedPath('gradlew: OutOfMemoryError in the daemon')
+        );
+        expect(results[0].status).toEqual(status);
+        expect(results[0].terminalOutput).toEqual(result.terminalOutput);
+        expect(results[0].terminalOutput).not.toContain('OutOfMemoryError');
+      }
+    );
+
+    // The fold tests above all run under grouping, where the handoff is a no-op,
+    // so none of them notice if the crash path stops calling it. Under summary
+    // the results are the only route the captured log has.
+    it("carries a crashed batch's log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('FAILURE: Could not resolve all dependencies')
+      );
+      expect(results[0].status).toEqual('failure');
+      // The task's own file holds the exit error; the worker log is addressed.
+      expect(results[0].terminalOutput).toContain(EXIT_ERROR);
+      expect(results[0].terminalOutput).not.toContain('Could not resolve');
+    });
+
+    it('keeps an announced batch log rather than unlinking it', async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      // Announced, so the file has to outlive the run - the sweep collects it
+      // later. Discarding here would unlink the only copy the moment the
+      // summary printed its path.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalled();
+      expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+    });
+
+    it('discards a batch log nobody was told about', async () => {
+      const orchestrator = createOrchestrator('noisy but harmless', false);
+      // A printing style never announces, so nothing will ever read this file.
+      orchestrator.resolvedOutputStyle = 'static';
+
+      await orchestrator.runBatch(batch, {}, 0);
+
+      expect(orchestrator.discardedForTest).toHaveBeenCalled();
+    });
+
     it("surfaces a crashed batch's captured log alongside the exit error", async () => {
       const orchestrator = createOrchestrator(
         'FAILURE: Could not resolve all dependencies',
@@ -805,6 +1746,30 @@ describe('TaskOrchestrator', () => {
       expect(out).toContain('batch @nx/gradle:batch 1');
       expect(out).toContain('FAILURE: Could not resolve all dependencies');
       expect(out).toContain(EXIT_ERROR);
+    });
+
+    // The fold cannot carry it under summary, so the results are the only route
+    // and the finally would otherwise unlink the only copy.
+    it("carries a stopped batch's partial log in its results under summary", async () => {
+      const orchestrator = createOrchestrator(
+        'gradle: still resolving dependencies',
+        true
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+
+      const results: any = await orchestrator.runBatch(batch, {}, 0);
+
+      // A stopped batch's partial log is the only record of what got through,
+      // so it is still addressed - but no task's file is given a copy, which
+      // previously left every non-holder holding only a pointer sentence.
+      expect(
+        orchestrator.options.lifeCycle.batchOutputAvailable
+      ).toHaveBeenCalledWith(
+        batch.id,
+        capturedPath('gradle: still resolving dependencies')
+      );
+      expect(results[0].status).toEqual('stopped');
+      expect(results[0].terminalOutput).toEqual('');
     });
 
     it("surfaces a stopped batch's captured log, without the exit error", async () => {
@@ -867,6 +1832,137 @@ describe('TaskOrchestrator', () => {
       // Keyed per executor instead, the second batch would render as a re-run
       // of the first.
       expect(out).not.toContain('batch @nx/gradle:batch 2:2');
+    });
+  });
+
+  describe('task invocation tracking', () => {
+    const task = {
+      id: 'app:build',
+      target: { project: 'app', target: 'build' },
+      overrides: {},
+    } as Task;
+
+    function createOrchestrator(tracker: {
+      registerTask: () => unknown;
+      unregisterTask: () => void;
+    }) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.taskInvocationTracker = tracker;
+      orchestrator.registeredInvocations = new Set();
+      return orchestrator;
+    }
+
+    it('should not unregister an invocation whose registration failed', () => {
+      const tracker = {
+        registerTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
+
+    it('should not fail the task when unregistering throws', () => {
+      const tracker = {
+        registerTask: vi.fn(() => null),
+        unregisterTask: vi.fn(() => {
+          throw new Error('database is locked');
+        }),
+      };
+      const orchestrator = createOrchestrator(tracker);
+
+      orchestrator.detectTaskInvocationLoop(task);
+      expect(() => orchestrator.releaseTaskInvocation(task)).not.toThrow();
+      expect(tracker.unregisterTask).toHaveBeenCalledTimes(1);
+      expect(orchestrator.registeredInvocations.size).toBe(0);
+    });
+
+    it('should complete a task whose database is unavailable from registration through completion', async () => {
+      const unavailable = () => {
+        throw new Error('database is locked');
+      };
+      const tracker = {
+        registerTask: vi.fn(unavailable),
+        unregisterTask: vi.fn(unavailable),
+      };
+      const orchestrator = createOrchestrator(tracker);
+      orchestrator.completedTasks = new Map();
+      orchestrator.tuiEnabled = false;
+      orchestrator.tasksSchedule = { complete: vi.fn() };
+      orchestrator.options = { lifeCycle: { endTasks: vi.fn(async () => {}) } };
+
+      orchestrator.detectTaskInvocationLoop(task);
+      await expect(
+        orchestrator.completeTasks([{ task, status: 'success' }], 0)
+      ).resolves.toBeUndefined();
+
+      expect(orchestrator.completedTasks.get(task.id)).toBe('success');
+      expect(tracker.unregisterTask).not.toHaveBeenCalled();
+    });
+
+    it('should complete a task that re-invokes itself with different overrides', async () => {
+      // `app:build` running `nx run app:build --flag` terminates, so it has to
+      // get through. The fake stands in for the native tracker's ancestor rows
+      // and only rejects an exact repeat of (task id, overrides hash), which is
+      // what the orchestrator must give it. Keyed on the task id alone, the
+      // nested invocation would be rejected as a loop.
+      const registered: { taskId: string; overridesHash: string }[] = [];
+      const tracker = {
+        registerTask: vi.fn(
+          (_pid: number, taskId: string, overridesHash: string) => {
+            const repeat = registered.some(
+              (r) => r.taskId === taskId && r.overridesHash === overridesHash
+            );
+            if (repeat) {
+              return [{ pid: 1, taskId }];
+            }
+            registered.push({ taskId, overridesHash });
+            return null;
+          }
+        ),
+        unregisterTask: vi.fn(),
+      };
+      const withFlag = { ...task, overrides: { flag: true } } as Task;
+
+      const exit = vi
+        .spyOn(process, 'exit')
+        .mockImplementation((() => {}) as never);
+      try {
+        for (const invocation of [task, withFlag]) {
+          const orchestrator = createOrchestrator(tracker);
+          orchestrator.completedTasks = new Map();
+          orchestrator.tuiEnabled = false;
+          orchestrator.tasksSchedule = { complete: vi.fn() };
+          orchestrator.options = {
+            lifeCycle: { endTasks: vi.fn(async () => {}) },
+          };
+
+          orchestrator.detectTaskInvocationLoop(invocation);
+          await orchestrator.completeTasks(
+            [{ task: invocation, status: 'success' }],
+            0
+          );
+
+          expect(orchestrator.completedTasks.get(invocation.id)).toBe(
+            'success'
+          );
+        }
+
+        expect(exit).not.toHaveBeenCalled();
+      } finally {
+        exit.mockRestore();
+      }
+
+      // Two invocations of one task id, told apart by their overrides.
+      expect(
+        new Set(tracker.registerTask.mock.calls.map((call) => call[2])).size
+      ).toBe(2);
     });
   });
 
@@ -934,6 +2030,1538 @@ describe('TaskOrchestrator', () => {
         exitHandled
       );
       await orchestrator.waitForContinuousTaskExit('proj:unknown');
+    });
+  });
+
+  describe('continuous task readiness', () => {
+    function createTask(id: string, continuous = false): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: false,
+        parallelism: true,
+        continuous,
+      } as Task;
+    }
+
+    function createOrchestrator({
+      readyWhen = { logMatches: 'listening' },
+      flat = false,
+      waitFor = 'ready',
+    }: {
+      readyWhen?: unknown;
+      /** An agent's flat graph: the waiter alone, or the producer alone */
+      flat?: boolean | 'producer';
+      waitFor?: 'started' | 'ready';
+    } = {}) {
+      const serve = createTask('app:serve', true);
+      const e2e = createTask('e2e:e2e');
+      const fullTaskGraph: TaskGraph = {
+        tasks: { 'app:serve': serve, 'e2e:e2e': e2e },
+        dependencies: { 'app:serve': [], 'e2e:e2e': [] },
+        continuousDependencies: {
+          'app:serve': [],
+          'e2e:e2e': [{ id: 'app:serve', waitFor }],
+        },
+        roots: ['app:serve', 'e2e:e2e'],
+      };
+      // An Nx Cloud agent worker runs one discrete task with a flat graph
+      const taskGraph: TaskGraph =
+        flat === 'producer'
+          ? {
+              tasks: { 'app:serve': serve },
+              dependencies: { 'app:serve': [] },
+              continuousDependencies: { 'app:serve': [] },
+              roots: ['app:serve'],
+            }
+          : flat
+            ? {
+                tasks: { 'e2e:e2e': e2e },
+                dependencies: { 'e2e:e2e': [] },
+                continuousDependencies: { 'e2e:e2e': [] },
+                roots: ['e2e:e2e'],
+              }
+            : fullTaskGraph;
+
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.projectGraph = {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: {
+              root: 'app',
+              targets: {
+                serve: {
+                  continuous: true,
+                  ...(readyWhen == null ? {} : { readyWhen }),
+                },
+              },
+            },
+          },
+        },
+      } as unknown as ProjectGraph;
+      orchestrator.taskGraph = taskGraph;
+      orchestrator.fullTaskGraph = fullTaskGraph;
+      orchestrator.readiness = new Map();
+      orchestrator.readinessFailures = new Map();
+      orchestrator.readinessFailureReasons = new Map();
+      orchestrator.readyUrls = new Map();
+      orchestrator.waitingLogged = new Set();
+      const outputPath = join(mkdtempSync(join(tmpdir(), 'readiness-')), 'out');
+      orchestrator.cache = {
+        temporaryOutputPath: () => outputPath,
+        recordTerminalOutputs: vi.fn(),
+      };
+      orchestrator.tasksSchedule = {
+        markReady: vi.fn(),
+        markReadinessFailed: vi.fn(),
+        markReadinessPending: vi.fn(),
+      };
+      orchestrator.waitingForTasks = [];
+      orchestrator.tuiEnabled = true;
+      orchestrator.stopRequested = false;
+      orchestrator.bailed = false;
+      orchestrator.completedTasks = new Map();
+      orchestrator.runningContinuousTasks = new Map([
+        ['app:serve', { groupId: 1 }],
+      ]);
+      orchestrator.runningTasksService = {
+        getTaskReadiness: vi.fn(() => null),
+        setTaskReadiness: vi.fn(),
+        addRunningTask: vi.fn(),
+        removeRunningTask: vi.fn(),
+      };
+      orchestrator.options = {
+        lifeCycle: {
+          setTaskReadiness: vi.fn(),
+          appendTaskOutput: vi.fn(),
+        },
+      };
+      // Completion without the skip propagation
+      orchestrator.complete = vi.fn(async (results: any[]) => {
+        for (const { task, status } of results) {
+          orchestrator.completedTasks.set(task.id, status);
+        }
+      });
+      orchestrator.handleDiscreteWorkerFailure = vi.fn();
+      orchestrator.preRunSteps = vi.fn();
+      orchestrator.processedTasks = new Map([
+        ['e2e:e2e', Promise.resolve(process.env)],
+      ]);
+
+      const outputListeners: ((chunk: string) => void)[] = [];
+      const runningTask = {
+        onOutput: (cb: (chunk: string) => void) => outputListeners.push(cb),
+        kill: vi.fn(),
+      };
+      const emit = (chunk: string) =>
+        outputListeners.forEach((cb) => cb(chunk));
+      const settled = (promise: Promise<unknown>) =>
+        Promise.race([
+          promise.then(
+            () => 'resolved',
+            () => 'rejected'
+          ),
+          new Promise((r) => setTimeout(() => r('pending'), 20)),
+        ]);
+
+      return {
+        orchestrator,
+        serve,
+        e2e,
+        runningTask,
+        emit,
+        settled,
+        outputPath,
+      };
+    }
+
+    it('does not wait when the producer declares no readyWhen', async () => {
+      const { orchestrator, e2e, settled } = createOrchestrator({
+        readyWhen: null,
+      });
+      await expect(
+        settled(orchestrator.waitForReadyDependencies(e2e))
+      ).resolves.toBe('resolved');
+    });
+
+    it('waits until the probe of a producer this process owns passes', async () => {
+      const { orchestrator, serve, e2e, runningTask, emit, settled } =
+        createOrchestrator();
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await expect(settled(waiting)).resolves.toBe('pending');
+
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('server listening');
+      await expect(settled(waiting)).resolves.toBe('resolved');
+      expect(
+        orchestrator.runningTasksService.setTaskReadiness
+      ).toHaveBeenCalledWith('app:serve', 1, null);
+      expect(
+        orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+      ).toEqual([
+        ['app:serve', 0],
+        ['app:serve', 1],
+      ]);
+    });
+
+    it('fails the producer when its probe times out and leaves it running', async () => {
+      const { orchestrator, serve, e2e, runningTask, outputPath } =
+        createOrchestrator({
+          readyWhen: { logMatches: 'never', timeout: 20 },
+        });
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await expect(waiting).rejects.toThrow('did not become ready within 20ms');
+      const message = `Task "app:serve" did not become ready within 20ms (readyWhen: logMatches "never"). If it needs longer, set "timeout": 40 in the target's "readyWhen", as { "...": true, "timeout": 40 } to keep an inferred check. To change the check, set "readyWhen" on the target or in "targetDefaults" in nx.json, or set it to null to turn it off.`;
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [{ task: serve, status: 'failure', terminalOutput: message }],
+        1
+      );
+      expect(
+        orchestrator.options.lifeCycle.appendTaskOutput
+      ).toHaveBeenCalledWith('app:serve', `\r\n${message}\r\n`, false);
+      expect(
+        orchestrator.runningTasksService.setTaskReadiness
+      ).toHaveBeenCalledWith('app:serve', 2, null);
+      expect(runningTask.kill).not.toHaveBeenCalled();
+
+      // The runner's exit handler writes the transcript, then the reason goes in
+      writeFileSync(outputPath, 'transcript\n');
+      serve.hash = 'serve-hash';
+      orchestrator.recordContinuousTerminalOutput(serve);
+      expect(readFileSync(outputPath, 'utf8')).toBe(
+        `transcript\n\n${message}\n`
+      );
+    });
+
+    it('fails a producer alone on an agent when the full graph has a waiter', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+        flat: 'producer',
+      });
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('rejected');
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [expect.objectContaining({ task: serve, status: 'failure' })],
+        1
+      );
+    });
+
+    it('does not report the producer again when it exits during its readiness completion', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+      });
+      let finishCompletion: () => void;
+      orchestrator.complete = vi.fn(async ([{ task, status }]) => {
+        await new Promise<void>((r) => (finishCompletion = r));
+        orchestrator.completedTasks.set(task.id, status);
+      });
+      orchestrator.completeContinuousTask = vi.fn();
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await vi.waitFor(() => expect(orchestrator.complete).toHaveBeenCalled());
+      const exited = orchestrator.handleContinuousTaskExit(1, serve, 1, true);
+      await expect(settled(exited)).resolves.toBe('pending');
+
+      finishCompletion();
+      await exited;
+      expect(orchestrator.completeContinuousTask).not.toHaveBeenCalled();
+      expect(
+        orchestrator.runningTasksService.removeRunningTask
+      ).toHaveBeenCalledWith('app:serve');
+    });
+
+    it('leaves a producer nothing waits for alone when its probe times out', async () => {
+      const { orchestrator, serve, runningTask, settled } = createOrchestrator({
+        readyWhen: { logMatches: 'never', timeout: 20 },
+        waitFor: 'started',
+      });
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('rejected');
+      expect(orchestrator.complete).not.toHaveBeenCalled();
+      expect(
+        orchestrator.runningTasksService.setTaskReadiness
+      ).toHaveBeenCalledWith('app:serve', 2, null);
+    });
+
+    it('fails the waiter when the producer fails before it starts', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator();
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.failTaskBeforeStart(
+        serve,
+        1,
+        new Error('Task "db:up" did not become ready within 1ms.')
+      );
+      await expect(waiting).rejects.toThrow(
+        'Task "app:serve" failed before it became ready.'
+      );
+    });
+
+    it('re-arms readiness when the producer restarts in this process', async () => {
+      const { orchestrator, serve, runningTask, emit, settled } =
+        createOrchestrator();
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      emit('listening');
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('resolved');
+
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      await expect(
+        settled(orchestrator.readinessOf('app:serve').promise)
+      ).resolves.toBe('pending');
+      expect(
+        orchestrator.tasksSchedule.markReadinessPending
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([{ logMatches: 'listening' }, { port: 0 }])(
+      'polls the readiness row of %j when another process owns the producer',
+      async (readyWhen) => {
+        const { orchestrator, e2e, settled } = createOrchestrator({
+          flat: true,
+          readyWhen,
+        });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(0)
+          .mockReturnValueOnce(0)
+          .mockReturnValue(1);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          const waiting = orchestrator.waitForReadyDependencies(e2e);
+          await expect(settled(waiting)).resolves.toBe('pending');
+          await expect(waiting).resolves.toBeUndefined();
+          // Each row state observed is reported once, however often it is read
+          expect(
+            orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+          ).toEqual([
+            ['app:serve', 0],
+            ['app:serve', 1],
+          ]);
+
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).toHaveBeenCalledTimes(1);
+          expect(log).toHaveBeenCalledWith(
+            'Waiting for "app:serve" to be ready...'
+          );
+        } finally {
+          log.mockRestore();
+        }
+      }
+    );
+
+    it.each([
+      ['ready', 1],
+      ['absent', null],
+    ])(
+      'does not report a producer in another process whose row is %s',
+      async (_, row) => {
+        const { orchestrator, e2e } = createOrchestrator({ flat: true });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(row);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          await orchestrator.waitForReadyDependencies(e2e);
+          expect(log).not.toHaveBeenCalled();
+        } finally {
+          log.mockRestore();
+        }
+      }
+    );
+
+    it('fails the waiter when the producer row disappears mid-wait', async () => {
+      const { orchestrator, e2e } = createOrchestrator({ flat: true });
+      orchestrator.runningTasksService.getTaskReadiness
+        .mockReturnValueOnce(0)
+        .mockReturnValue(null);
+      await expect(orchestrator.waitForReadyDependencies(e2e)).rejects.toThrow(
+        'Task "app:serve" exited before it became ready.'
+      );
+    });
+
+    it('fails the waiter when the run is bailed during a row poll', async () => {
+      const { orchestrator, e2e } = createOrchestrator({ flat: true });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(0);
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      orchestrator.bailed = true;
+      await expect(waiting).rejects.toThrow(
+        'Task "app:serve" was stopped before it became ready.'
+      );
+    });
+
+    it.each([
+      [{ logMatches: 'listening' }, 'ready', 1, 'resolved', []],
+      [
+        { logMatches: 'listening' },
+        'failed',
+        2,
+        'rejected',
+        [
+          [
+            {
+              task: expect.objectContaining({ id: 'app:serve' }),
+              status: 'failure',
+              terminalOutput:
+                'Task "app:serve" failed its readiness check in the process that started it.',
+            },
+          ],
+          1,
+        ],
+      ],
+      [{ port: 0 }, 'ready', 1, 'resolved', []],
+    ])(
+      'settles waiters on %j from the row when another process runs the producer and it is %s',
+      async (readyWhen, _, status, outcome, completion) => {
+        const { orchestrator, serve, e2e, settled } = createOrchestrator({
+          readyWhen,
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(0)
+          .mockReturnValue(status);
+        orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+        orchestrator.runningContinuousTasks = new Map();
+        orchestrator.continuousTaskExitHandled = new Map();
+        orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+        orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+        orchestrator.handleContinuousTaskExit = vi.fn();
+
+        const waiting = orchestrator.waitForReadyDependencies(e2e);
+        const runningTask = await orchestrator.startContinuousTask(serve, 1);
+        await expect(settled(waiting)).resolves.toBe('pending');
+        await expect(
+          waiting.then(
+            () => 'resolved',
+            () => 'rejected'
+          )
+        ).resolves.toBe(outcome);
+        expect(orchestrator.complete.mock.calls).toEqual(
+          completion.length ? [completion] : []
+        );
+        runningTask.kill();
+      }
+    );
+
+    it('releases the running-task claim when the continuous task cannot be hashed', async () => {
+      const { orchestrator, serve } = createOrchestrator();
+      // The rows another Nx process would read
+      const claims = new Set<string>();
+      orchestrator.runningTasksService = {
+        getRunningTasks: (ids: string[]) => ids.filter((id) => claims.has(id)),
+        addRunningTask: (id: string) => claims.add(id),
+        removeRunningTask: (id: string) => claims.delete(id),
+        getTaskReadiness: () => null,
+        setTaskReadiness: vi.fn(),
+      };
+      let rejectHashing: (e: Error) => void;
+      orchestrator.processedTasks.set(
+        'app:serve',
+        new Promise((_, reject) => (rejectHashing = reject))
+      );
+
+      const starting = orchestrator.startContinuousTask(serve, 1);
+      await vi.waitFor(() => expect(claims.has('app:serve')).toBe(true));
+      rejectHashing(new Error('hash failed'));
+      const handle = await starting.catch((e: Error) => e);
+
+      expect(
+        orchestrator.runningTasksService.getRunningTasks(['app:serve'])
+      ).toEqual([]);
+      await expect(handle.getResults()).resolves.toMatchObject({
+        code: 1,
+        terminalOutput: 'hash failed',
+      });
+    });
+
+    it('fails the waiter when the shared producer exits before its first row read', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator();
+      orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+      orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+      orchestrator.runningContinuousTasks = new Map();
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      orchestrator.handleContinuousTaskExit = vi.fn();
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      const runningTask = await orchestrator.startContinuousTask(serve, 1);
+      await expect(waiting).rejects.toThrow(
+        'Task "app:serve" exited before it became ready.'
+      );
+      // Its exit handler completes it
+      expect(orchestrator.complete).not.toHaveBeenCalled();
+      runningTask.kill();
+    });
+
+    it('runs as today when no process owns the producer row', async () => {
+      const { orchestrator, e2e, settled } = createOrchestrator({ flat: true });
+      await expect(
+        settled(orchestrator.waitForReadyDependencies(e2e))
+      ).resolves.toBe('resolved');
+    });
+
+    it('waits on the row of a producer whose probe reads the env of the process running it', async () => {
+      const { orchestrator, e2e, settled } = createOrchestrator({
+        flat: true,
+        readyWhen: { url: 'http://localhost:{env.NX_READY_WHEN_UNSET}' },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(0);
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await expect(settled(waiting)).resolves.toBe('pending');
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      await expect(waiting).resolves.toBeUndefined();
+    });
+
+    it('resolves the probe of a producer it starts against the env it starts it with', async () => {
+      vi.stubEnv('NX_TASK_TARGET_PROJECT', 'ambient');
+      onTestFinished(() => {
+        vi.unstubAllEnvs();
+      });
+      const { orchestrator, serve, e2e, runningTask, emit, settled } =
+        createOrchestrator({
+          readyWhen: { logMatches: 'ready {env.NX_TASK_TARGET_PROJECT}' },
+        });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      orchestrator.runTask = vi.fn(async () =>
+        Object.assign(runningTask, { onExit: vi.fn() })
+      );
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready {env.NX_TASK_TARGET_PROJECT}');
+      await expect(settled(waiting)).resolves.toBe('pending');
+      emit('ready app');
+      await expect(settled(waiting)).resolves.toBe('resolved');
+    });
+
+    it('hands a waiter the url a producer another Nx process runs reported', async () => {
+      const { orchestrator, serve, e2e } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      // Another process owns the producer and has recorded it ready
+      orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+      onTestFinished(() => {
+        // Stop watching the other process without running exit handling
+        const shared = orchestrator.runningContinuousTasks.get('app:serve');
+        if (shared) shared.runningTask.detached = true;
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+      });
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    it('hands the url of a producer outside the task graph to the waiter', async () => {
+      const { orchestrator, e2e } = createOrchestrator({
+        flat: true,
+        readyWhen: { signal: true },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+      orchestrator.runningTasksService.getTaskReadyUrl = vi.fn(
+        () => 'http://localhost:4300/'
+      );
+
+      await orchestrator.waitForReadyDependencies(e2e);
+
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    it('hands the url a producer signals to the tasks that waited for it', async () => {
+      const { orchestrator, serve, e2e, runningTask, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      let producerEnv: NodeJS.ProcessEnv;
+      orchestrator.runTask = vi.fn(async (_task, _stream, env) => {
+        producerEnv = env;
+        return Object.assign(runningTask, { onExit: vi.fn() });
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      await orchestrator.startContinuousTask(serve, 1);
+      await expect(settled(waiting)).resolves.toBe('pending');
+
+      const client = new PseudoIPCClient(producerEnv.NX_READY_SIGNAL_SOCKET);
+      onTestFinished(() => client.close());
+      expect(producerEnv.NX_READY_SIGNAL_TASK).toBe('app:serve');
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await expect(waiting).resolves.toBeUndefined();
+      expect(orchestrator.getReadyUrlEnv(e2e)).toEqual({
+        NX_READY_URL: 'http://localhost:4300/',
+      });
+    });
+
+    function addChainedProducer(orchestrator: any, readyWhen: unknown): Task {
+      const proxy = createTask('proxy:serve', true);
+      orchestrator.projectGraph.nodes.proxy = {
+        name: 'proxy',
+        type: 'app',
+        data: {
+          root: 'proxy',
+          targets: { serve: { continuous: true, readyWhen } },
+        },
+      };
+      const graph: TaskGraph = orchestrator.fullTaskGraph;
+      graph.tasks['proxy:serve'] = proxy;
+      graph.dependencies['proxy:serve'] = [];
+      graph.continuousDependencies['proxy:serve'] = [
+        { id: 'app:serve', waitFor: 'ready' },
+      ];
+      graph.continuousDependencies['e2e:e2e'] = [
+        { id: 'proxy:serve', waitFor: 'ready' },
+      ];
+      orchestrator.processedTasks.set('proxy:serve', Promise.resolve({}));
+      return proxy;
+    }
+
+    it('resolves the probe of a producer against the url its own producer reported', async () => {
+      const { orchestrator, serve, runningTask, emit, settled } =
+        createOrchestrator({ readyWhen: { signal: true } });
+      const proxy = addChainedProducer(orchestrator, {
+        logMatches: 'proxying {env.NX_READY_URL}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return task.id === 'proxy:serve'
+          ? Object.assign(runningTask, { onExit: vi.fn() })
+          : { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+      emit('proxying http://localhost:4300/');
+      await expect(
+        settled(orchestrator.readinessOf('proxy:serve').promise)
+      ).resolves.toBe('resolved');
+    });
+
+    it('waits for its own producer before it fails a probe that only a reported url breaks', async () => {
+      const { orchestrator, serve, settled } = createOrchestrator({
+        readyWhen: { signal: true },
+      });
+      const proxy = addChainedProducer(orchestrator, {
+        port: '{env.NX_READY_URL ?? 4310}',
+      });
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set('app:serve', Promise.resolve({}));
+      const envs = new Map<string, NodeJS.ProcessEnv>();
+      orchestrator.runTask = vi.fn(async (task: Task, _stream, env) => {
+        envs.set(task.id, env);
+        return { onOutput: vi.fn(), kill: vi.fn(), onExit: vi.fn() };
+      });
+      orchestrator.options.skipNxCache = false;
+      orchestrator.continuousTaskExitHandled = new Map();
+      orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+      orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+      onTestFinished(() => orchestrator.readySignal?.close());
+
+      await orchestrator.startContinuousTask(serve, 1);
+      const proxyStarted = orchestrator.startContinuousTask(proxy, 1);
+      await expect(settled(proxyStarted)).resolves.toBe('pending');
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+
+      const client = new PseudoIPCClient(
+        envs.get('app:serve').NX_READY_SIGNAL_SOCKET
+      );
+      onTestFinished(() => client.close());
+      client.sendMessageToParent({
+        type: 'nx-ready-signal:ready',
+        taskId: 'app:serve',
+        url: 'http://localhost:4300/',
+      });
+      await proxyStarted;
+
+      expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+        false,
+        proxy,
+        1,
+        expect.objectContaining({
+          message:
+            'Task "proxy:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+        })
+      );
+      expect([...envs.keys()]).toEqual(['app:serve']);
+    });
+
+    it.each([
+      [
+        'an invalid port',
+        { logMatches: 'listening' },
+        { port: 70000 },
+        '"port" must be an integer from 0 to 65535, or "auto"',
+      ],
+      [
+        'a url its own producer cannot report',
+        { url: 'http://localhost:4300' },
+        { url: '{env.NX_READY_URL}' },
+        '"{env.NX_READY_URL}" has no value',
+      ],
+      [
+        'an unset env var, whatever url its own producer reports',
+        { signal: true },
+        { url: '{env.PROXY_URL}/health' },
+        '"{env.PROXY_URL}" has no value',
+      ],
+    ])(
+      'fails a producer with %s before it waits for its own producer',
+      async (_, producerReadyWhen, readyWhen, reason) => {
+        const { orchestrator, settled } = createOrchestrator({
+          readyWhen: producerReadyWhen,
+        });
+        const proxy = addChainedProducer(orchestrator, readyWhen);
+        orchestrator.runningTasksService.getRunningTasks = () => [];
+        orchestrator.runTask = vi.fn();
+
+        const starting = orchestrator.startContinuousTask(proxy, 1);
+
+        await expect(settled(starting)).resolves.toBe('resolved');
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          proxy,
+          1,
+          expect.objectContaining({
+            message: `Task "proxy:serve" has an invalid "readyWhen": ${reason}.`,
+          })
+        );
+        expect(orchestrator.runTask).not.toHaveBeenCalled();
+      }
+    );
+
+    it('fails the waiter when the row is still pending at its own deadline', async () => {
+      const { orchestrator, e2e } = createOrchestrator({
+        flat: true,
+        readyWhen: { url: 'http://localhost:4200', timeout: 300 },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(0);
+      await expect(orchestrator.waitForReadyDependencies(e2e)).rejects.toThrow(
+        'Task "app:serve" did not become ready within 300ms (readyWhen: url http://localhost:4200).'
+      );
+    });
+
+    it('does not run a task skipped while it waited', async () => {
+      const { orchestrator, e2e } = createOrchestrator();
+      const running = orchestrator.runTaskDirectly(true, e2e, 1);
+      orchestrator.completedTasks.set('e2e:e2e', 'skipped');
+      orchestrator.readinessOf('app:serve').resolve();
+      await expect(running).resolves.toMatchObject({
+        task: e2e,
+        status: 'skipped',
+      });
+      expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
+    });
+
+    it('does not restart the lifecycle of a skipped task whose wait then fails', async () => {
+      const { orchestrator, e2e } = createOrchestrator();
+      const running = orchestrator.runTaskDirectly(true, e2e, 1);
+      orchestrator.completedTasks.set('e2e:e2e', 'skipped');
+      orchestrator
+        .readinessOf('app:serve')
+        .reject(new Error('Task "app:serve" exited before it became ready.'));
+      await expect(running).resolves.toMatchObject({
+        task: e2e,
+        status: 'skipped',
+      });
+      expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+    });
+
+    it('does not spawn a continuous task skipped while it waited', async () => {
+      const { orchestrator, settled } = createOrchestrator();
+      const apiServe = createTask('api:serve', true);
+      orchestrator.fullTaskGraph.tasks['api:serve'] = apiServe;
+      orchestrator.fullTaskGraph.continuousDependencies['api:serve'] = [
+        { id: 'app:serve', waitFor: 'ready' },
+      ];
+      orchestrator.runningTasksService.getRunningTasks = () => [];
+      orchestrator.processedTasks.set(
+        'api:serve',
+        Promise.resolve(process.env)
+      );
+      orchestrator.runTask = vi.fn();
+
+      const starting = orchestrator.startContinuousTask(apiServe, 1);
+      await expect(settled(starting)).resolves.toBe('pending');
+      orchestrator.completedTasks.set('api:serve', 'skipped');
+      orchestrator.readinessOf('app:serve').resolve();
+      await expect(
+        starting.then((t: RunningTask) => t.getResults())
+      ).resolves.toMatchObject({ code: 1 });
+      expect(orchestrator.runTask).not.toHaveBeenCalled();
+      expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
+      expect(
+        orchestrator.runningTasksService.removeRunningTask
+      ).toHaveBeenCalledWith('api:serve');
+    });
+
+    it('settles local waiters when the readiness row cannot be written', async () => {
+      const { orchestrator, serve, e2e, runningTask, emit } =
+        createOrchestrator();
+      orchestrator.runningTasksService.setTaskReadiness.mockImplementation(
+        () => {
+          throw new Error('SQLITE_BUSY');
+        }
+      );
+      const waiting = orchestrator.waitForReadyDependencies(e2e);
+      orchestrator.startReadinessProbe(
+        serve,
+        orchestrator.getReadyWhen(serve, {}),
+        runningTask
+      );
+      emit('listening');
+      await expect(waiting).resolves.toBeUndefined();
+    });
+
+    it('skips a task from runTaskDirectly when the row says the producer failed elsewhere', async () => {
+      const { orchestrator, e2e } = createOrchestrator({
+        flat: true,
+        readyWhen: { port: '{env.NX_READY_WHEN_UNSET}' },
+      });
+      orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(2);
+      const result = await orchestrator.runTaskDirectly(true, e2e, 1);
+      expect(result).toMatchObject({ task: e2e, code: 1, status: 'skipped' });
+      expect(orchestrator.complete).toHaveBeenCalledWith(
+        [{ task: e2e, status: 'skipped' }],
+        1
+      );
+      expect(orchestrator.preRunSteps).not.toHaveBeenCalled();
+      expect(orchestrator.handleDiscreteWorkerFailure).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['pending, then failed', 0, 2, 'skipped', ''],
+      ['failed, then gone', 2, null, 'skipped', ''],
+      [
+        'pending, then gone',
+        0,
+        null,
+        'failure',
+        'Task "app:serve" exited before it became ready.',
+      ],
+      [
+        'absent',
+        null,
+        null,
+        'failure',
+        'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+      ],
+    ])(
+      'settles a waiter on a producer with an invalid readyWhen when its row is %s',
+      async (_, first, then, status, terminalOutput) => {
+        const { orchestrator, e2e } = createOrchestrator({
+          flat: true,
+          readyWhen: { port: 70000 },
+        });
+        orchestrator.runningTasksService.getTaskReadiness
+          .mockReturnValueOnce(first)
+          .mockReturnValue(then);
+        await expect(
+          orchestrator.runTaskDirectly(true, e2e, 1)
+        ).resolves.toMatchObject({ task: e2e, status, terminalOutput });
+      }
+    );
+
+    describe('dispatch', () => {
+      it('keeps the summary output style silent about the wait', () => {
+        const { orchestrator } = createOrchestrator();
+        orchestrator.tuiEnabled = false;
+        orchestrator.resolvedOutputStyle = 'summary';
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          orchestrator.onReadinessHold('app:serve');
+          expect(log).not.toHaveBeenCalled();
+        } finally {
+          log.mockRestore();
+        }
+      });
+
+      it('wakes the parked loops once when the producer is ready and not again on a later abort', async () => {
+        const { orchestrator, serve, runningTask, emit } = createOrchestrator();
+        const { markReady, markReadinessFailed } = orchestrator.tasksSchedule;
+        const parked = vi.fn();
+        orchestrator.waitingForTasks.push(parked);
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve, {}),
+          runningTask
+        );
+        expect(parked).not.toHaveBeenCalled();
+        expect(markReady).not.toHaveBeenCalled();
+
+        emit('listening');
+        await orchestrator.readinessOf('app:serve').promise;
+        expect(markReady).toHaveBeenCalledWith('app:serve');
+        expect(parked).toHaveBeenCalledTimes(1);
+        expect(orchestrator.waitingForTasks).toEqual([]);
+
+        orchestrator.waitingForTasks.push(parked);
+        orchestrator.abortReadiness('app:serve', 'exited');
+        expect(parked).toHaveBeenCalledTimes(1);
+        expect(markReadinessFailed).not.toHaveBeenCalled();
+      });
+
+      it('schedules the dependents of a verdict from the continuous loop while the coordinator is busy', async () => {
+        const { orchestrator, serve, runningTask, emit } = createOrchestrator();
+        const api = createTask('api:serve', true);
+        let admitted = false;
+        Object.assign(orchestrator.tasksSchedule, {
+          hasTasks: () => true,
+          nextTask: () => (admitted ? api : null),
+          scheduleNextTasks: async () => {
+            admitted = true;
+          },
+        });
+        orchestrator.options.parallel = 1;
+        orchestrator.continuousTasksStarted = 0;
+        orchestrator.initializingTaskIds = new Set();
+        orchestrator.processAllScheduledTasks = vi.fn();
+        orchestrator.startContinuousTask = vi.fn(async () => runningTask);
+
+        // Parks: nothing is admitted until a pass runs
+        const loop = orchestrator.executeContinuousTaskLoop(1);
+        await new Promise((r) => setTimeout(r, 0));
+        expect(orchestrator.startContinuousTask).not.toHaveBeenCalled();
+
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve, {}),
+          runningTask
+        );
+        emit('listening');
+        await Promise.race([
+          loop,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('loop stayed parked')), 200)
+          ),
+        ]);
+        expect(orchestrator.startContinuousTask).toHaveBeenCalledWith(api, 1);
+      });
+
+      it('keeps holding the dependents of an exited producer while its completion is pending', async () => {
+        const { orchestrator, serve, e2e, runningTask, emit } =
+          createOrchestrator();
+        orchestrator.tuiEnabled = false;
+        orchestrator.reverseTaskDeps = {
+          'app:serve': ['e2e:e2e'],
+          'e2e:e2e': [],
+        };
+        orchestrator.registeredInvocations = new Set();
+        orchestrator.runningDiscreteTasks = new Map();
+        orchestrator.runningContinuousTasks = new Map();
+        // The real completion, whose endTasks is where the hold is observed
+        delete orchestrator.complete;
+        Object.assign(orchestrator.tasksSchedule, {
+          complete: vi.fn(),
+          getIncompleteTasks: vi.fn(() => []),
+        });
+        const { markReady, markReadinessFailed } = orchestrator.tasksSchedule;
+        let heldDuringCompletion: boolean;
+        orchestrator.options.lifeCycle.endTasks = vi.fn(async () => {
+          // Output still arriving after the exit would pass the probe
+          emit('listening');
+          await new Promise((r) => setTimeout(r, 20));
+          heldDuringCompletion =
+            !markReady.mock.calls.length &&
+            !markReadinessFailed.mock.calls.length;
+        });
+        orchestrator.startReadinessProbe(
+          serve,
+          orchestrator.getReadyWhen(serve, {}),
+          runningTask
+        );
+        const skippedWhenRejected = orchestrator
+          .waitForReadyDependencies(e2e)
+          .then(
+            () => 'resolved',
+            (e: Error) =>
+              orchestrator.completedTasks.get('e2e:e2e') + ': ' + e.message
+          );
+
+        await orchestrator.completeContinuousTask(serve, 1, false, 'crashed');
+
+        expect(heldDuringCompletion).toBe(true);
+        expect(
+          orchestrator.runningTasksService.setTaskReadiness
+        ).not.toHaveBeenCalledWith('app:serve', 1, null);
+        await expect(skippedWhenRejected).resolves.toBe(
+          'skipped: Task "app:serve" exited before it became ready.'
+        );
+        expect(markReadinessFailed).toHaveBeenCalledWith('app:serve');
+      });
+
+      it('fails a shared producer with an invalid readyWhen the way an owned one fails', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 70000 },
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+
+        const shared = await orchestrator.startContinuousTask(serve, 1);
+
+        await expect(shared.getResults()).resolves.toMatchObject({ code: 1 });
+        expect(orchestrator.preRunSteps).toHaveBeenCalledTimes(1);
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          serve,
+          1,
+          expect.objectContaining({
+            message:
+              'Task "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto".',
+          })
+        );
+      });
+
+      it('fails a producer before it starts on an error outside its readyWhen even when nothing waits for it', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 4200 },
+          waitFor: 'started',
+        });
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+        const error = new Error('Unable to resolve @acme/plugin:serve.');
+        vi.mocked(getExecutorForTask).mockImplementationOnce(() => {
+          throw error;
+        });
+
+        const shared = await orchestrator.startContinuousTask(serve, 1);
+
+        await expect(shared.getResults()).resolves.toMatchObject({ code: 1 });
+        expect(orchestrator.handleDiscreteWorkerFailure).toHaveBeenCalledWith(
+          false,
+          serve,
+          1,
+          error
+        );
+      });
+
+      // Returns the native rows, where a claim resets readiness to Pending
+      function prepareStart(
+        { orchestrator, runningTask }: ReturnType<typeof createOrchestrator>,
+        running: string[]
+      ) {
+        Object.assign(orchestrator, {
+          runTask: vi.fn(async () => ({ ...runningTask, onExit: vi.fn() })),
+          detectTaskInvocationLoop: vi.fn(),
+          scheduleNextTasksAndReleaseThreads: vi.fn(),
+          runningContinuousTasks: new Map(),
+          continuousTaskExitHandled: new Map(),
+        });
+        orchestrator.processedTasks.set(
+          'app:serve',
+          Promise.resolve(process.env)
+        );
+        orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+        orchestrator.options.lifeCycle.setTaskStatus = vi.fn();
+        const readiness = new Map<string, number>(running.map((id) => [id, 0]));
+        Object.assign(orchestrator.runningTasksService, {
+          getRunningTasks: () => running,
+          addRunningTask: (id: string) => readiness.set(id, 0),
+          setTaskReadiness: (id: string, status: number) => {
+            if (readiness.has(id)) readiness.set(id, status);
+          },
+        });
+        return readiness;
+      }
+
+      it.each([
+        ['an owned', [], 2],
+        ['a shared', ['app:serve'], 0],
+      ])(
+        'runs %s producer with an invalid readyWhen without a check when nothing waits for it to be ready',
+        async (_, running, rowReadiness) => {
+          const harness = createOrchestrator({
+            readyWhen: { port: 70000 },
+            waitFor: 'started',
+          });
+          const { orchestrator, serve } = harness;
+          const readiness = prepareStart(harness, running);
+          const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+          try {
+            const started = await orchestrator.startContinuousTask(serve, 1);
+
+            expect(
+              orchestrator.handleDiscreteWorkerFailure
+            ).not.toHaveBeenCalled();
+            expect(orchestrator.runningContinuousTasks.has('app:serve')).toBe(
+              true
+            );
+            // A waiter in another process polls the owner's row
+            expect(readiness.get('app:serve')).toBe(rowReadiness);
+            expect(
+              orchestrator.options.lifeCycle.appendTaskOutput
+            ).toHaveBeenCalledWith(
+              'app:serve',
+              '\r\nTask "app:serve" has an invalid "readyWhen": "port" must be an integer from 0 to 65535, or "auto". Nothing in this run waits for it to be ready, so it runs without a readiness check.\r\n',
+              false
+            );
+            // The TUI replaces an owned task's terminal in runTask
+            if (running.length === 0) {
+              expect(
+                orchestrator.options.lifeCycle.appendTaskOutput.mock
+                  .invocationCallOrder[0]
+              ).toBeGreaterThan(
+                orchestrator.runTask.mock.invocationCallOrder[0]
+              );
+            }
+            // Detach without running the exit handling of a real producer
+            orchestrator.completedTasks.set('app:serve', 'stopped');
+            started.kill();
+          } finally {
+            log.mockRestore();
+          }
+        }
+      );
+
+      it('counts a producer as ready once it starts when the server picks the port', async () => {
+        const harness = createOrchestrator({
+          readyWhen: { port: '{options.port ?? 4200}' },
+        });
+        const { orchestrator, serve } = harness;
+        serve.overrides = { port: 0 };
+        const readiness = prepareStart(harness, []);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          const started = await orchestrator.startContinuousTask(serve, 1);
+
+          expect(
+            orchestrator.handleDiscreteWorkerFailure
+          ).not.toHaveBeenCalled();
+          // Releases the waiter in this run
+          expect(orchestrator.tasksSchedule.markReady).toHaveBeenCalledWith(
+            'app:serve'
+          );
+          // A waiter in another process polls the row
+          expect(readiness.get('app:serve')).toBe(1);
+          expect(
+            orchestrator.options.lifeCycle.setTaskReadiness.mock.calls
+          ).toEqual([['app:serve', 1]]);
+          expect(
+            orchestrator.options.lifeCycle.appendTaskOutput
+          ).not.toHaveBeenCalled();
+          // Detach without running the exit handling of a real producer
+          orchestrator.completedTasks.set('app:serve', 'stopped');
+          started.kill();
+        } finally {
+          log.mockRestore();
+        }
+      });
+
+      it('ignores a readiness row that turns ready after a shared producer exited', async () => {
+        const { orchestrator, serve } = createOrchestrator({
+          readyWhen: { port: 4200 },
+        });
+        orchestrator.tuiEnabled = false;
+        orchestrator.runningContinuousTasks = new Map();
+        orchestrator.continuousTaskExitHandled = new Map();
+        orchestrator.tasksSchedule.markContinuousTaskStarted = vi.fn();
+        orchestrator.scheduleNextTasksAndReleaseThreads = vi.fn();
+        orchestrator.runningTasksService.getRunningTasks = () => ['app:serve'];
+        orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(0);
+        const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+          const shared = await orchestrator.startContinuousTask(serve, 1);
+          const state = orchestrator.readinessOf('app:serve');
+          state.abort.abort();
+          orchestrator.runningTasksService.getTaskReadiness.mockReturnValue(1);
+          await new Promise((r) => setTimeout(r, 300));
+          expect(state.settled).toBe(false);
+          expect(orchestrator.tasksSchedule.markReady).not.toHaveBeenCalled();
+
+          orchestrator.abortReadiness('app:serve', 'exited');
+          await expect(state.promise).rejects.toThrow(
+            'Task "app:serve" exited before it became ready.'
+          );
+          // Detach without running the exit handling of a real producer
+          orchestrator.completedTasks.set('app:serve', 'stopped');
+          shared.kill();
+        } finally {
+          log.mockRestore();
+        }
+      });
+    });
+  });
+
+  describe('tasks admitted while the coordinator resolves the cache', () => {
+    function createTask(id: string, hash?: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        continuous: false,
+        hash,
+      } as Task;
+    }
+
+    // A continuous loop admits tasks through its own scheduling pass while
+    // the coordinator awaits the cache; the schedule is a queue the test feeds
+    function createCoordinator(
+      tasks: Task[],
+      queued: string[],
+      hits: string[]
+    ) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      const queue = [...queued];
+      const notAdmitted = new Set(
+        tasks.map((t) => t.id).filter((id) => !queued.includes(id))
+      );
+      orchestrator.taskGraph = {
+        tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
+        dependencies: Object.fromEntries(tasks.map((t) => [t.id, []])),
+        continuousDependencies: Object.fromEntries(
+          tasks.map((t) => [t.id, []])
+        ),
+        roots: tasks.map((t) => t.id),
+      };
+      orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({
+          scheduledTasks: [...queue],
+          scheduledBatches: [],
+        }),
+        nextBatch: () => null,
+        nextTask: (filter: (t: Task) => boolean) => {
+          const idx = queue.findIndex((id) =>
+            filter(orchestrator.taskGraph.tasks[id])
+          );
+          if (idx === -1) return null;
+          const [id] = queue.splice(idx, 1);
+          return orchestrator.taskGraph.tasks[id];
+        },
+        hasTasks: () => queue.length + notAdmitted.size > 0,
+        complete: (ids: string[]) => {
+          for (const id of ids) {
+            const idx = queue.indexOf(id);
+            if (idx !== -1) queue.splice(idx, 1);
+            notAdmitted.delete(id);
+          }
+        },
+        scheduleNextTasks: async () => {},
+      };
+      orchestrator.completedTasks = new Map();
+      orchestrator.cacheMissedHashes = new Set();
+      orchestrator.processedTasks = new Map();
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.waitingForTasks = [];
+      orchestrator.groups = [];
+      orchestrator.bailed = false;
+      orchestrator.stopRequested = false;
+      orchestrator.readinessSettled = false;
+      orchestrator.options = {
+        parallel: 2,
+        lifeCycle: { scheduleTask: vi.fn() },
+      };
+
+      let openGate: () => void;
+      const gate = new Promise<void>((r) => (openGate = r));
+      const queries: string[][] = [];
+      orchestrator.cache = {
+        getBatch: async (queried: Task[]) => {
+          queries.push(queried.map((t) => t.id));
+          if (queries.length === 1) await gate;
+          return new Map(
+            queried
+              .filter((t) => hits.includes(t.hash))
+              .map((t) => [
+                t.hash,
+                { code: 0, terminalOutput: '', remote: false },
+              ])
+          );
+        },
+      };
+      // What processTask does to an unhashed task
+      orchestrator.processTask = vi.fn(async (id: string) => {
+        const task = orchestrator.taskGraph.tasks[id];
+        task.hash ??= `${id}-hash`;
+        return process.env;
+      });
+      orchestrator.preRunSteps = vi.fn();
+      orchestrator.finalizeCacheHits = vi.fn(async (cacheHits: any[]) =>
+        cacheHits.map(({ task }) => ({ task, code: 0, status: 'local-cache' }))
+      );
+      const resolved: string[] = [];
+      orchestrator.postRunSteps = vi.fn(async (results: any[]) => {
+        const ids = results.map((r) => r.task.id);
+        resolved.push(...ids);
+        orchestrator.tasksSchedule.complete(ids);
+      });
+      const executed: string[] = [];
+      orchestrator.runTaskDirectly = vi.fn(async (_: boolean, task: Task) => {
+        executed.push(task.id);
+        orchestrator.tasksSchedule.complete([task.id]);
+      });
+      orchestrator.handleDiscreteWorkerFailure = vi.fn((...args: unknown[]) => {
+        throw args[3];
+      });
+
+      return {
+        orchestrator,
+        queries,
+        resolved,
+        executed,
+        admit: (id: string) => {
+          notAdmitted.delete(id);
+          queue.push(id);
+        },
+        openGate: () => openGate(),
+        queryOpened: async () => {
+          for (let i = 0; i < 50 && queries.length === 0; i++) {
+            await new Promise((r) => setTimeout(r, 1));
+          }
+          expect(queries).toHaveLength(1);
+        },
+      };
+    }
+
+    it.each([
+      ['hashed by the up-front pass', 'e2e:test-hash'],
+      ['not hashed yet', undefined],
+    ])(
+      'looks up a task admitted during a query before dispatching it (%s)',
+      async (_, hash) => {
+        const other = createTask('other:build', 'other:build-hash');
+        const e2e = createTask('e2e:test', hash);
+        const {
+          orchestrator,
+          queries,
+          resolved,
+          executed,
+          admit,
+          openGate,
+          queryOpened,
+        } = createCoordinator([other, e2e], ['other:build'], ['e2e:test-hash']);
+
+        const loop = orchestrator.executeCoordinatorLoop(true, 2);
+        await queryOpened();
+        admit('e2e:test');
+        orchestrator.processAllScheduledTasks();
+        openGate();
+        await loop;
+
+        expect(queries).toEqual([['other:build'], ['e2e:test']]);
+        expect(resolved).toEqual(['e2e:test']);
+        expect(executed).toEqual(['other:build']);
+      }
+    );
+  });
+
+  describe('bail', () => {
+    function createTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: false,
+        parallelism: true,
+        continuous: false,
+        hash: `${id}-hash`,
+      } as Task;
+    }
+
+    // Each dispatched task runs until the test settles it
+    function createCoordinator(ids: string[]) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      const queue = [...ids];
+      orchestrator.taskGraph = {
+        tasks: Object.fromEntries(ids.map((id) => [id, createTask(id)])),
+        dependencies: Object.fromEntries(ids.map((id) => [id, []])),
+        continuousDependencies: Object.fromEntries(ids.map((id) => [id, []])),
+        roots: ids,
+      };
+      orchestrator.fullTaskGraph = orchestrator.taskGraph;
+      orchestrator.tasksSchedule = {
+        getAllScheduledTasks: () => ({
+          scheduledTasks: [...queue],
+          scheduledBatches: [],
+        }),
+        nextBatch: () => null,
+        nextTask: () =>
+          queue.length > 0 ? orchestrator.taskGraph.tasks[queue.shift()] : null,
+        hasTasks: () => queue.length > 0,
+        scheduleNextTasks: async () => {},
+      };
+      orchestrator.completedTasks = new Map();
+      orchestrator.processedTasks = new Map();
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.waitingForTasks = [];
+      orchestrator.groups = [];
+      orchestrator.bailed = false;
+      orchestrator.stopRequested = false;
+      orchestrator.readinessSettled = false;
+      orchestrator.options = {
+        parallel: 2,
+        lifeCycle: { scheduleTask: vi.fn() },
+      };
+      orchestrator.processTask = vi.fn(async () => process.env);
+      const running = new Map<string, (status: TaskResult['status']) => void>();
+      orchestrator.runTaskDirectly = vi.fn(
+        (_: boolean, task: Task) =>
+          new Promise<void>((resolve) => {
+            running.set(task.id, (status) => {
+              orchestrator.completedTasks.set(task.id, status);
+              // What complete() does under --nx-bail
+              if (status === 'failure') {
+                orchestrator.bailed = true;
+              }
+              resolve();
+            });
+          })
+      );
+      orchestrator.handleDiscreteWorkerFailure = vi.fn((...args: unknown[]) => {
+        throw args[3];
+      });
+      return { orchestrator, running };
+    }
+
+    it.each([
+      ['skips the tasks it never started', false, { 'c:build': 'skipped' }],
+      ['leaves them without a status when stopped meanwhile', true, {}],
+    ])(
+      'lets a running task finish and %s',
+      async (_, stopRequested, unstarted) => {
+        const { orchestrator, running } = createCoordinator([
+          'a:build',
+          'b:build',
+          'c:build',
+        ]);
+        let finished = false;
+        const loop = orchestrator
+          .executeCoordinatorLoop(false, 2)
+          .then(() => (finished = true));
+        await vi.waitFor(() => expect(running.size).toBe(2));
+
+        running.get('a:build')('failure');
+        await new Promise((r) => setTimeout(r));
+        expect(finished).toBe(false);
+        // Stop during the wait for b:build. Any earlier, the loop-top stop
+        // check alone would leave c:build without a status
+        orchestrator.stopRequested = stopRequested;
+        running.get('b:build')('success');
+        await loop;
+
+        expect([...running.keys()]).toEqual(['a:build', 'b:build']);
+        expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
+          'a:build': 'failure',
+          'b:build': 'success',
+          ...unstarted,
+        });
+      }
+    );
+
+    it('starts nothing once a task fails while the coordinator is mid-pass', async () => {
+      const { orchestrator, running } = createCoordinator([
+        'a:build',
+        'b:build',
+      ]);
+      // A readiness verdict makes the coordinator await a scheduling pass, and
+      // a task elsewhere fails during it
+      orchestrator.readinessSettled = true;
+      orchestrator.tasksSchedule.scheduleNextTasks = async () => {
+        orchestrator.bailed = true;
+      };
+
+      const loop = orchestrator.executeCoordinatorLoop(false, 2);
+      await new Promise((r) => setTimeout(r));
+      expect(running.size).toBe(0);
+      await loop;
+
+      expect(Object.fromEntries(orchestrator.completedTasks)).toEqual({
+        'a:build': 'skipped',
+        'b:build': 'skipped',
+      });
     });
   });
 });

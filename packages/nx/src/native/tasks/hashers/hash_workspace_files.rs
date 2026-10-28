@@ -3,8 +3,8 @@ use std::sync::Arc;
 use rayon::prelude::*;
 
 use super::once_cache::OnceCache;
-use crate::native::glob::build_glob_set;
 use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::hasher::hash;
 use crate::native::types::FileData;
 use anyhow::*;
@@ -64,7 +64,7 @@ pub fn get_workspace_files<'a, 'b>(
     all_workspace_files: &'b [FileData],
 ) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
     let globs = globs_from_workspace_globs(workspace_file_sets);
-    glob_files(all_workspace_files, globs, None)
+    glob_files(all_workspace_files, build_glob_set(&globs)?, None)
 }
 
 /// Hashes workspace files without materializing the matched file list.
@@ -78,7 +78,7 @@ pub fn hash_workspace_files(
         return Ok(hash(b""));
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
 
@@ -120,7 +120,7 @@ pub fn collect_workspace_file_paths(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     Ok(all_workspace_files
         .iter()
@@ -141,7 +141,7 @@ fn collect_workspace_file_indices(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     Ok(all_workspace_files
         .iter()

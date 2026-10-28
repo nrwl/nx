@@ -55,6 +55,7 @@ import {
   excludedProjectsWarning,
   isDroppedTarget,
   keptPreMigrationTargetWarning,
+  uninferredTargetWarning,
   type MissingPair,
   retainedResidualsWarning,
   type PackageJsonIdentitySource,
@@ -1575,12 +1576,14 @@ export async function inferOncePerOptionSet<T>(
   rawMatchedConfigFiles: string[];
   inferredExecutors: Set<string>;
   inferredRoots: Set<string>;
+  createNodesErrors: CreateNodesFileError[];
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
   const erroredConfigFiles = new Set<string>();
   const inferredExecutors = new Set<string>();
+  const createNodesErrors: CreateNodesFileError[] = [];
 
   if (scope.optionSetGroups.length === 0) {
     return {
@@ -1590,6 +1593,7 @@ export async function inferOncePerOptionSet<T>(
       erroredConfigFiles: [],
       inferredExecutors,
       inferredRoots,
+      createNodesErrors,
     };
   }
 
@@ -1598,18 +1602,22 @@ export async function inferOncePerOptionSet<T>(
     for (const group of scope.optionSetGroups) {
       const inferredByRoot: InferredTargetsByRoot = new Map();
       inferredTargetsByOptionSet.set(group.id, inferredByRoot);
-      const { result, erroredConfigFiles: groupErroredConfigFiles } =
-        await getCreateNodesResultsForPlugin(
-          tree,
-          { plugin: pluginPath, options: group.options },
-          pluginPath,
-          createNodes,
-          createNodesV2,
-          nxJson
-        );
+      const {
+        result,
+        erroredConfigFiles: groupErroredConfigFiles,
+        createNodesErrors: groupCreateNodesErrors,
+      } = await getCreateNodesResultsForPlugin(
+        tree,
+        { plugin: pluginPath, options: group.options },
+        pluginPath,
+        createNodes,
+        createNodesV2,
+        nxJson
+      );
       for (const file of groupErroredConfigFiles) {
         erroredConfigFiles.add(file);
       }
+      createNodesErrors.push(...groupCreateNodesErrors);
 
       // The plugin's glob pattern is option-independent, so every option set
       // matches the same config files; union defensively.
@@ -1693,6 +1701,7 @@ export async function inferOncePerOptionSet<T>(
     erroredConfigFiles: [...erroredConfigFiles],
     inferredExecutors,
     inferredRoots,
+    createNodesErrors,
   };
 }
 
@@ -2375,6 +2384,7 @@ async function migrateProjects<T>(
     rawMatchedConfigFiles,
     inferredExecutors,
     inferredRoots,
+    createNodesErrors,
   } = await inferOncePerOptionSet(
     tree,
     pluginPath,
@@ -2383,6 +2393,18 @@ async function migrateProjects<T>(
     nxJson,
     scope
   );
+
+  // Single-project mode keeps throwing, like its skip filters do.
+  if (!specificProjectToMigrate) {
+    dropUninferredTargets(
+      scope,
+      projectGraph,
+      inferredTargetsByOptionSet,
+      inferredRoots,
+      createNodesErrors,
+      logger ?? devkitLogger
+    );
+  }
 
   // Phase 2: Per-project residual (in-memory, no re-inference). Also captures
   // `baselineFinal` (the equivalence oracle consumed in Phase 4).
@@ -2661,6 +2683,75 @@ function addPluginRegistrations<T>(
   updateNxJson(tree, nxJson);
 }
 
+interface CreateNodesFileError {
+  /** null when the plugin failed as a whole rather than on one file. */
+  file: string | null;
+  message: string;
+}
+
+/**
+ * One project the plugin cannot infer (a config file it does not match or that
+ * fails to load) must not block converting the others. Its targets keep their
+ * executor and are named in a warning.
+ */
+function dropUninferredTargets<T>(
+  scope: MigrationScope<T>,
+  projectGraph: ProjectGraph,
+  inferredTargetsByOptionSet: InferredTargetsByOptionSet,
+  inferredRoots: Set<string>,
+  createNodesErrors: CreateNodesFileError[],
+  log: typeof devkitLogger
+): void {
+  const ownerRootByPath = buildOwnerRootByPath(
+    Object.values(projectGraph.nodes).map((node) => node.data.root),
+    inferredRoots
+  );
+  const keptProjects = new Set<string>();
+  for (const executorScope of scope.executorScopes) {
+    for (const [targetName, projectNames] of executorScope.targetAndProjects) {
+      const optionSetId =
+        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
+      for (const projectName of projectNames) {
+        const root = projectGraph.nodes[projectName].data.root;
+        if (
+          inferredTargetsByOptionSet
+            .get(optionSetId)
+            ?.get(root)
+            ?.has(targetName)
+        ) {
+          keptProjects.add(projectName);
+          continue;
+        }
+        projectNames.delete(projectName);
+        log.warn(
+          uninferredTargetWarning(
+            targetName,
+            projectName,
+            root,
+            inferredRoots.has(root),
+            createNodesErrors.filter(
+              ({ file }) =>
+                file === null ||
+                findProjectForPath(file, ownerRootByPath) === root
+            )
+          )
+        );
+      }
+      if (projectNames.size === 0) {
+        executorScope.targetAndProjects.delete(targetName);
+      }
+    }
+  }
+  scope.executorScopes = scope.executorScopes.filter(
+    (executorScope) => executorScope.targetAndProjects.size > 0
+  );
+  for (const projectName of scope.pluginOptionsByProject.keys()) {
+    if (!keptProjects.has(projectName)) {
+      scope.pluginOptionsByProject.delete(projectName);
+    }
+  }
+}
+
 async function getCreateNodesResultsForPlugin(
   tree: Tree,
   pluginConfiguration: ExpandedPluginConfiguration,
@@ -2668,9 +2759,14 @@ async function getCreateNodesResultsForPlugin(
   createNodes: CreateNodes | undefined,
   createNodesV2: CreateNodes | undefined,
   nxJson: NxJsonConfiguration
-): Promise<{ result: ConfigurationResult; erroredConfigFiles: string[] }> {
+): Promise<{
+  result: ConfigurationResult;
+  erroredConfigFiles: string[];
+  createNodesErrors: CreateNodesFileError[];
+}> {
   let projectConfigs: ConfigurationResult;
   let erroredConfigFiles: string[] = [];
+  const createNodesErrors: CreateNodesFileError[] = [];
 
   try {
     const plugin = new LoadedNxPlugin(
@@ -2690,10 +2786,20 @@ async function getCreateNodesResultsForPlugin(
       // sits outside them, so the plugin is never widened to a root it would
       // fail to infer (which the verification pass would otherwise revert).
       erroredConfigFiles = harvestConfigurationErrors(e).erroredConfigFiles;
+      for (const error of e.errors) {
+        if (isAggregateCreateNodesError(error)) {
+          for (const [file, fileError] of error.errors) {
+            createNodesErrors.push({
+              file,
+              message: fileError?.message ?? String(fileError),
+            });
+          }
+        }
+      }
     } else {
       throw e;
     }
   }
 
-  return { result: projectConfigs, erroredConfigFiles };
+  return { result: projectConfigs, erroredConfigFiles, createNodesErrors };
 }

@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use hashbrown::HashSet;
 
+use crate::native::glob::{normalize_glob, partition_glob};
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
@@ -16,13 +17,16 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
-        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
-        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
+        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
+        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
+        collect_project_file_paths_cached, collect_workspace_file_paths_cached, expand_cached,
+        expand_globs, hash_all_externals, hash_external, hash_files, hash_json_files,
         hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached,
+        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
+    walker::PathPredicate,
+    workspace::ignored_index::{IgnoredIndexReader, RunStage},
     workspace::types::ProjectFiles,
 };
 use dashmap::DashMap;
@@ -94,9 +98,9 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 external: HashSet::from(["AllExternalDependencies".to_string()]),
                 ..Default::default()
             },
-            HashInstruction::ProjectConfiguration(_) | HashInstruction::Cwd(_) => {
-                HashInputsBuilder::default()
-            }
+            HashInstruction::UltracacheConfiguration(_)
+            | HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
             other => unreachable!(
@@ -193,21 +197,42 @@ fn instruction_key_ranks(keys: &[SharedStr]) -> KeyRanks {
     }
 }
 
-/// Collapses equal-ranked entries onto the LAST of each run, matching the
-/// last-value-wins behavior of the HashMap insertion this replaced. `dedup_by`
-/// drops the first argument and keeps the second, so the later value is moved
-/// backwards into the entry that survives.
-fn keep_last_per_rank(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
-    // Stable, so equal display keys keep their incoming order before deduping.
-    entries.sort_by_key(|(id, _)| ranks.of(*id));
-    entries.dedup_by(|later, earlier| {
-        if ranks.of(later.0) == ranks.of(earlier.0) {
-            std::mem::swap(&mut later.1, &mut earlier.1);
-            true
-        } else {
-            false
-        }
+/// Folds each run of equal-ranked entries into one entry whose value hashes
+/// every value in the run. Different instructions can share a label, and a
+/// task's details keep one value per label, so none of them may be dropped.
+fn fold_equal_ranks(entries: &mut Vec<(u32, SharedStr)>, ranks: &KeyRanks) {
+    // Values order each run, so the folded value does not depend on the
+    // order the entries were computed in.
+    entries.sort_unstable_by(|(left_id, left), (right_id, right)| {
+        ranks
+            .of(*left_id)
+            .cmp(&ranks.of(*right_id))
+            .then_with(|| left.cmp(right))
     });
+    let mut kept = 0;
+    let mut start = 0;
+    while start < entries.len() {
+        let rank = ranks.of(entries[start].0);
+        let end = start + entries[start..].partition_point(|(id, _)| ranks.of(*id) == rank);
+        if end - start > 1 {
+            let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+            for (index, (_, value)) in entries[start..end].iter().enumerate() {
+                if index > 0 {
+                    hasher.update(b"\0");
+                }
+                hasher.update(value.as_bytes());
+            }
+            entries[start].1 = hasher.digest().to_string().into();
+        }
+        entries.swap(kept, start);
+        kept += 1;
+        start = end;
+    }
+    if kept < entries.len() {
+        entries.truncate(kept);
+        // The result keeps this buffer, so release the folded entries' slots.
+        entries.shrink_to_fit();
+    }
 }
 
 fn assemble_ranked_hash(
@@ -217,10 +242,7 @@ fn assemble_ranked_hash(
     inputs: HashInputsBuilder,
 ) -> HashDetails {
     if ranks.has_duplicate_keys {
-        keep_last_per_rank(&mut entries, ranks);
-        // The result now keeps this buffer. Do not retain slots discarded by
-        // duplicate display-key resolution (the old materialization shrank it).
-        entries.shrink_to_fit();
+        fold_equal_ranks(&mut entries, ranks);
     } else {
         entries.sort_unstable_by_key(|(id, _)| ranks.of(*id));
     }
@@ -257,6 +279,9 @@ fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str>
 
 #[napi]
 pub struct TaskHasher {
+    /// The context\'s index of the directories hashed from disk, see
+    /// `register_prefixes`.
+    ignored_index: Arc<IgnoredIndexReader>,
     workspace_root: String,
     project_graph: Arc<ProjectGraph>,
     project_file_map: Arc<HashMap<String, Vec<FileData>>>,
@@ -278,6 +303,11 @@ pub struct TaskHasher {
     project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
+    // Disk-backed filesets (`includeIgnored` and Ultracache reads): a path index
+    // over the file map so tracked files skip the disk, built only once a plan
+    // carries a disk-backed group. Their content lives in the context's
+    // IgnoredIndex.
+    workspace_file_index: WorkspaceFileIndex,
 }
 #[napi]
 impl TaskHasher {
@@ -296,8 +326,12 @@ impl TaskHasher {
         ts_config_paths: HashMap<String, Vec<String>>,
         root_tsconfig_path: Option<String>,
         options: Option<HasherOptions>,
+        #[napi(ts_arg_type = "ExternalObject<IgnoredIndexReader>")] ignored_index: &External<
+            Arc<IgnoredIndexReader>,
+        >,
     ) -> Self {
         Self {
+            ignored_index: Arc::clone(ignored_index),
             workspace_root,
             project_graph: Arc::clone(project_graph),
             project_file_map: Arc::clone(project_file_map),
@@ -312,7 +346,53 @@ impl TaskHasher {
             workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
             project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(Arc::clone(&all_workspace_files)),
         }
+    }
+
+    /// Hands the index the directories the plans read from disk: the literal
+    /// prefix of every disk-backed glob, and every declared output root.
+    /// The index remembers hashes under all of them and lists the ones
+    /// something asks to list, which is the filesets and not the outputs.
+    /// Anything it refuses is read from disk instead.
+    fn register_prefixes(&self, hash_plans: &HashPlans) {
+        let pool = &hash_plans.pool;
+        let mut prefixes: Vec<String> = Vec::new();
+        let mut output_roots: Vec<String> = Vec::new();
+        for id in 0..pool.len() as u32 {
+            match pool.get(id).value() {
+                HashInstruction::IgnoredFileSet { globs, .. } => prefixes.extend(
+                    globs
+                        .iter()
+                        .filter(|g| !g.starts_with('!'))
+                        .filter_map(|g| {
+                            let glob = normalize_glob(g);
+                            Some(partition_glob(&glob).0)
+                        }),
+                ),
+                HashInstruction::TaskOutput(_, outputs) => {
+                    output_roots.extend(output_prefixes(outputs))
+                }
+                _ => {}
+            }
+        }
+        // Widest first, so a directory inside another is absorbed by it.
+        prefixes.extend(output_roots);
+        prefixes.sort();
+        prefixes.dedup();
+        prefixes.sort_by_key(|p| p.len());
+        let workspace_root = Path::new(&self.workspace_root);
+        for dir in prefixes {
+            self.ignored_index.track(workspace_root, &dir);
+        }
+    }
+
+    fn workspace_tracks_file(&self, path: &str) -> bool {
+        self.workspace_file_index.tracks(path)
+    }
+
+    fn workspace_file_hash(&self, path: &str) -> Option<String> {
+        self.workspace_file_index.hash_of(path)
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -335,16 +415,25 @@ impl TaskHasher {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
             }
         }
-        self.hash_plans_impl(hash_plans, cwd, collect_task_inputs, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })
+        self.hash_plans_impl(
+            hash_plans,
+            cwd,
+            collect_task_inputs,
+            RunStage::ATaskMayHaveWritten,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )
     }
 
-    /// Like `hash_plans`, but only for the plans that hold no output of another
-    /// task. The rest are left out and hash once those tasks have run; their
-    /// ids are absent from the result and need no entry in `per_task_envs`.
+    /// Like `hash_plans`, but only for the plans the planner did not defer
+    /// (`HashPlans::deferred`: a task that reads another task's outputs, or a
+    /// disk-backed fileset whose directory contains, or sits inside, an
+    /// upstream task's output). The rest are left out and hash once those
+    /// tasks have run; their ids are absent from the result and need no entry
+    /// in `per_task_envs`.
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans_upfront(
         &self,
@@ -359,10 +448,7 @@ impl TaskHasher {
         let plans: HashMap<String, Vec<u32>> = hash_plans
             .plans
             .iter()
-            .filter(|(_, ids)| {
-                !ids.iter()
-                    .any(|id| matches!(*pool.get(*id), HashInstruction::TaskOutput(_, _)))
-            })
+            .filter(|(task_id, _)| !hash_plans.deferred.contains(task_id.as_str()))
             .map(|(task_id, ids)| (task_id.clone(), ids.clone()))
             .collect();
         let partition_duration = function_start.elapsed();
@@ -382,12 +468,22 @@ impl TaskHasher {
         let upfront = HashPlans {
             pool: pool.clone(),
             plans,
+            deferred: std::collections::HashSet::new(),
         };
-        let hashes = self.hash_plans_impl(&upfront, cwd, collect_task_inputs, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })?;
+        // Once per run, before any hashing: the directories this run reads
+        // from disk are the index's to keep from here on.
+        self.register_prefixes(hash_plans);
+        let hashes = self.hash_plans_impl(
+            &upfront,
+            cwd,
+            collect_task_inputs,
+            RunStage::NothingRan,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )?;
         debug!(
             "hash_plans_upfront COMPLETED in {:?} - hashed {} of {} plans up front, {} deferred (partition: {:?}, hashing: {:?})",
             function_start.elapsed(),
@@ -428,19 +524,29 @@ impl TaskHasher {
         let subset = HashPlans {
             pool: hash_plans.pool.clone(),
             plans,
+            deferred: std::collections::HashSet::new(),
         };
-        self.hash_plans_impl(&subset, cwd, collect_task_inputs, |task_id| {
-            per_task_envs
-                .get(task_id)
-                .expect("per-task env presence verified above")
-        })
+        self.hash_plans_impl(
+            &subset,
+            cwd,
+            collect_task_inputs,
+            RunStage::ATaskMayHaveWritten,
+            |task_id| {
+                per_task_envs
+                    .get(task_id)
+                    .expect("per-task env presence verified above")
+            },
+        )
     }
 
+    /// `run_stage` says whether anything has executed yet, which is what
+    /// decides whether the file map and the index may be taken at their word.
     fn hash_plans_impl<'a, F>(
         &self,
         hash_plans: &HashPlans,
         cwd: String,
         collect_task_inputs: Option<bool>,
+        run_stage: RunStage,
         resolve_env: F,
     ) -> anyhow::Result<TaskHashes>
     where
@@ -448,9 +554,9 @@ impl TaskHasher {
     {
         // Per-invocation: these read live disk/exec state (task outputs, shell commands,
         // json file contents) that can change mid-run, so they must not persist.
-        let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
-        let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        let json_file_set_cache: DashMap<u32, JsonHashResult> = DashMap::new();
+        let files_expansion_cache = FilesExpansionCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -492,7 +598,7 @@ impl TaskHasher {
         // is an atomic load, and it lets the loop skip hash_instruction
         // entirely when inputs are not collected.
         let instruction_keys: Arc<[SharedStr]> = (0..pool.len() as u32)
-            .map(|id| SharedStr::from(pool.key(id)))
+            .map(|id| SharedStr::from(pool.label(id)))
             .collect();
         let key_ranks = instruction_key_ranks(&instruction_keys);
         // Classify once per instruction, so cache hits do not need the pool's
@@ -504,12 +610,14 @@ impl TaskHasher {
                 HashInstruction::WorkspaceFileSet(_)
                 | HashInstruction::Cwd(_)
                 | HashInstruction::ProjectFileSet(_, _)
+                | HashInstruction::IgnoredFileSet { .. }
                 | HashInstruction::ProjectConfiguration(_)
                 | HashInstruction::TsConfiguration(_)
                 | HashInstruction::TaskOutput(_, _)
                 | HashInstruction::External(_)
                 | HashInstruction::AllExternalDependencies
-                | HashInstruction::JsonFileSet(_) => Some(OnceCell::new()),
+                | HashInstruction::JsonFileSet(_)
+                | HashInstruction::UltracacheConfiguration(_) => Some(OnceCell::new()),
             })
             .collect();
         hash_plans.plans.par_iter().try_for_each(|(task_id, ids)| {
@@ -564,16 +672,18 @@ impl TaskHasher {
                                     task_id,
                                     instruction_ref.value(),
                                     HashInstructionArgs {
+                                        id,
                                         js_env,
                                         ts_config_hash: &ts_config_hash,
                                         project_root_mappings: &project_root_mappings,
                                         sorted_externals: &sorted_externals,
                                         selectively_hash_tsconfig,
-                                        task_output_cache: &task_output_cache,
                                         runtime_cache: &runtime_cache,
                                         project_file_set_cache: &self.project_file_set_cache,
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
+                                        files_expansion_cache: &files_expansion_cache,
+                                        run_stage,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
                                     },
@@ -633,16 +743,18 @@ impl TaskHasher {
         task_id: &str,
         instruction: &HashInstruction,
         HashInstructionArgs {
+            id,
             js_env,
             ts_config_hash,
             project_root_mappings,
             sorted_externals,
             selectively_hash_tsconfig,
-            task_output_cache,
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
+            files_expansion_cache,
+            run_stage,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -699,6 +811,59 @@ impl TaskHasher {
                 let hashed_cwd = hash_cwd(workspace_root, cwd, mode.clone());
                 trace!(parent: &span, "hash_cwd: {:?}", now.elapsed());
                 (hashed_cwd, empty)
+            }
+            HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+            } => {
+                let workspace_root = Path::new(&self.workspace_root);
+                // The index answers from a listing it keeps only while
+                // nothing has run, like the file map; afterwards it reads the
+                // disk for us.
+                let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
+                    self.ignored_index.files_under(
+                        workspace_root,
+                        dir,
+                        run_stage.nothing_ran(),
+                        accept,
+                        skip,
+                    )
+                };
+                let key = format!("files#{id}");
+                let expansion = expand_cached(&key, files_expansion_cache, || {
+                    expand_globs(
+                        workspace_root,
+                        globs,
+                        project_roots,
+                        &Source::fileset(
+                            &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
+                            &list_directory,
+                        ),
+                    )
+                })?;
+                let hashed = hash_files(
+                    workspace_root,
+                    &expansion,
+                    |path| {
+                        if run_stage.nothing_ran() {
+                            self.workspace_file_hash(path)
+                        } else {
+                            None
+                        }
+                    },
+                    self.ignored_index.index(),
+                    run_stage,
+                );
+                trace!(parent: &span, "hash_files: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    HashInputsBuilder {
+                        files: expansion.files.iter().cloned().collect(),
+                        ..Default::default()
+                    }
+                } else {
+                    empty
+                };
+                (hashed, inputs)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let hashed = hash_project_files_cached(
@@ -784,8 +949,13 @@ impl TaskHasher {
                 (ts_hash, inputs)
             }
             HashInstruction::TaskOutput(glob, outputs) => {
-                let result =
-                    hash_task_output(&self.workspace_root, glob, outputs, task_output_cache)?;
+                let result = hash_task_output(
+                    Path::new(&self.workspace_root),
+                    glob,
+                    outputs,
+                    files_expansion_cache,
+                    self.ignored_index.index(),
+                )?;
                 trace!(parent: &span, "hash_task_output: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     HashInputsBuilder {
@@ -812,6 +982,15 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
+            HashInstruction::UltracacheConfiguration(_) => {
+                let inputs = if collect_inputs {
+                    instruction.into()
+                } else {
+                    empty
+                };
+                // The rendered text, so the prefix lives in one place.
+                (hash(instruction.to_string().as_bytes()), inputs)
+            }
             HashInstruction::AllExternalDependencies => {
                 // Identical for every task, so fold once and reuse (individual externals
                 // are already cached in external_cache).
@@ -834,15 +1013,10 @@ impl TaskHasher {
                 (hashed_all_externals, inputs)
             }
             HashInstruction::JsonFileSet(json) => {
-                // Cache is keyed on the full instruction string so
-                // different fields/excludeFields against the same file
-                // remain distinct. `instruction.to_string()` already
-                // encodes (project_name, json_path, fields, exclude_fields)
-                // via the Display impl — see types.rs.
-                let cache_key = instruction.to_string();
+                // Keyed by pool id: Display renders fields `["a,b"]` and `["a", "b"]` alike.
                 // Clone the cached entry and drop the Ref before any
                 // subsequent insert to avoid deadlocking DashMap.
-                let cached_entry = if let Some(entry) = json_file_set_cache.get(&cache_key) {
+                let cached_entry = if let Some(entry) = json_file_set_cache.get(&id) {
                     entry.clone()
                 } else {
                     let result = hash_json_files(
@@ -854,7 +1028,7 @@ impl TaskHasher {
                         &self.project_file_map,
                         &self.all_workspace_files,
                     )?;
-                    json_file_set_cache.insert(cache_key, result.clone());
+                    json_file_set_cache.insert(id, result.clone());
                     result
                 };
                 trace!(parent: &span, "hash_json: {:?}", now.elapsed());
@@ -874,54 +1048,70 @@ impl TaskHasher {
 }
 
 struct HashInstructionArgs<'a> {
+    /// The instruction's pool id: the key disk-backed group expansions and
+    /// JSON results are shared under within one call. Labels can repeat.
+    id: u32,
     js_env: &'a HashMap<String, String>,
     ts_config_hash: &'a str,
     project_root_mappings: &'a ProjectRootMappings,
     sorted_externals: &'a [&'a String],
     selectively_hash_tsconfig: bool,
-    task_output_cache: &'a DashMap<String, CachedTaskOutput>,
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
-    json_file_set_cache: &'a DashMap<String, JsonHashResult>,
+    json_file_set_cache: &'a DashMap<u32, JsonHashResult>,
+    files_expansion_cache: &'a FilesExpansionCache,
+    run_stage: RunStage,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
 
     #[test]
-    fn ranked_assembly_matches_map_order_and_duplicate_resolution() {
-        for names in [
-            vec!["z", "a", "\u{e000}", "🤖"],
-            vec!["z", "a", "\u{e000}", "🤖", "a", "z"],
-        ] {
-            let keys: Arc<[SharedStr]> = names.into_iter().map(|s| s.to_string().into()).collect();
+    fn ranked_assembly_hashes_values_in_key_order_and_folds_shared_keys() {
+        let names = ["z", "a", "\u{e000}", "🤖", "a", "z", "a"];
+        // (pool size, task size): the middle case shares keys in the pool but
+        // not in the task.
+        for (pool_size, task_size) in [(4, 4), (7, 4), (7, 7)] {
+            let keys: Arc<[SharedStr]> = names[..pool_size]
+                .iter()
+                .map(|s| s.to_string().into())
+                .collect();
             let ranks = instruction_key_ranks(&keys);
-            for offset in 0..keys.len() {
+            let mut values_by_key: BTreeMap<&SharedStr, Vec<String>> = BTreeMap::new();
+            for id in 0..task_size {
+                values_by_key
+                    .entry(&keys[id])
+                    .or_default()
+                    .push(format!("value-{id}"));
+            }
+            let mut expected = xxhash_rust::xxh3::Xxh3::new();
+            for values in values_by_key.values_mut() {
+                values.sort();
+                let value = match values.as_slice() {
+                    [value] => value.clone(),
+                    _ => hash(values.join("\0").as_bytes()),
+                };
+                expected.update(value.as_bytes());
+            }
+            let expected = expected.digest().to_string();
+            for offset in 0..task_size {
                 for reverse in [false, true] {
-                    let mut entries: Vec<(u32, SharedStr)> = (0..keys.len())
+                    let mut entries: Vec<(u32, SharedStr)> = (0..task_size)
                         .map(|id| (id as u32, format!("value-{id}").into()))
                         .collect();
                     entries.rotate_left(offset);
                     if reverse {
                         entries.reverse();
                     }
-                    let expected: HashMap<SharedStr, SharedStr> = entries
-                        .iter()
-                        .map(|(id, value)| (keys[*id as usize].clone(), value.clone()))
-                        .collect();
-                    let mut expected_entries: Vec<_> = expected.iter().collect();
-                    expected_entries.sort_unstable_by(|(left, _), (right, _)| left.cmp(right));
-                    let mut expected_hash = xxhash_rust::xxh3::Xxh3::new();
-                    for (_, value) in expected_entries {
-                        expected_hash.update(value.as_bytes());
-                    }
                     let actual =
                         assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
-                    assert_eq!(actual.value, expected_hash.digest().to_string());
+                    assert_eq!(actual.value, expected);
                 }
             }
         }
@@ -944,7 +1134,8 @@ mod tests {
             .map(|id| (id, value.clone()))
             .collect();
         let result = assemble_ranked_hash(entries, &keys, &ranks, HashInputsBuilder::default());
-        assert_eq!(result.value, hash(value.as_bytes()));
+        let folded = hash(vec![&*value; keys.len()].join("\0").as_bytes());
+        assert_eq!(result.value, hash(folded.as_bytes()));
         assert!(
             result.details.entry_capacity() <= 2,
             "One detail retained {} entry slots",

@@ -14,6 +14,7 @@ import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 import { Stream } from 'openai/streaming';
 import { getTokenizedContext } from '../../lib/getTokenizedContext';
+import { isRestrictedRegion } from '../../lib/restricted-region';
 
 const openAiKey = process.env['NX_OPENAI_KEY'];
 
@@ -22,19 +23,8 @@ export const config = {
 };
 
 export default async function handler(request: NextRequest) {
-  const country = request.geo.country;
-  const restrictedCountries: string[] = [
-    'BY', // Belarus
-    'CN', // China
-    'CU', // Cuba
-    'IR', // Iran
-    'KP', // North Korea
-    'RU', // Russia
-    'SY', // Syria
-    'VE', // Venezuela
-  ];
   try {
-    if (restrictedCountries.includes(country)) {
+    if (isRestrictedRegion(request)) {
       throw new CustomError(
         'user_error',
         'Service is not available in your region.'

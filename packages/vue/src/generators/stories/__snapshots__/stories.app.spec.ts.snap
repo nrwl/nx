@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue:stories for applications should create the stories with interaction tests 1`] = `
+exports[`vue:stories for applications > should create the stories with interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import NxWelcome from './NxWelcome.vue';
 
@@ -27,7 +27,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:stories for applications should create the stories with interaction tests 2`] = `
+exports[`vue:stories for applications > should create the stories with interaction tests 2`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import anotherCmp from './another-cmp.vue';
 
@@ -62,7 +62,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:stories for applications should create the stories without interaction tests 1`] = `
+exports[`vue:stories for applications > should create the stories without interaction tests 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import NxWelcome from './NxWelcome.vue';
 
@@ -80,7 +80,7 @@ export const Primary = {
 "
 `;
 
-exports[`vue:stories for applications should create the stories without interaction tests 2`] = `
+exports[`vue:stories for applications > should create the stories without interaction tests 2`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import anotherCmp from './another-cmp.vue';
 
@@ -102,7 +102,7 @@ export const Primary = {
 "
 `;
 
-exports[`vue:stories for applications should not update existing stories 1`] = `
+exports[`vue:stories for applications > should not update existing stories 1`] = `
 "import { ComponentStory, ComponentMeta } from '@storybook/vue3';
 "
 `;

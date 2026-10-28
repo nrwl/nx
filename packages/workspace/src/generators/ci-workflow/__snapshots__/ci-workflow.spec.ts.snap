@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to azure CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > optional e2e > should add e2e to azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -67,7 +67,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > optional e2e > should add e2e to bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -120,7 +120,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to circleci CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > optional e2e > should add e2e to circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -164,7 +164,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to github CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > optional e2e > should add e2e to github CI config 1`] = `
 "name: CI
 
 on:
@@ -213,7 +213,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to github CI config with custom name 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > optional e2e > should add e2e to github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -262,7 +262,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate azure CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -330,7 +330,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -398,7 +398,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -453,7 +453,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -508,7 +508,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -554,7 +554,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -600,7 +600,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate github CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -645,7 +645,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -690,7 +690,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -735,7 +735,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with bun should generate gitlab config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with bun > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -771,7 +771,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate azure CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -836,7 +836,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -901,7 +901,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -952,7 +952,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -1003,7 +1003,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -1045,7 +1045,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -1087,7 +1087,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate github CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -1134,7 +1134,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -1181,7 +1181,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -1228,7 +1228,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with npm should generate gitlab config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with npm > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -1262,7 +1262,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate azure CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -1330,7 +1330,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -1398,7 +1398,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -1453,7 +1453,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -1508,7 +1508,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -1554,7 +1554,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -1600,7 +1600,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate github CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -1653,7 +1653,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -1705,7 +1705,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -1758,7 +1758,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with pnpm should generate gitlab config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with pnpm > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -1794,7 +1794,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate azure CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -1859,7 +1859,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -1924,7 +1924,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -1975,7 +1975,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -2026,7 +2026,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -2068,7 +2068,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -2110,7 +2110,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate github CI config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -2157,7 +2157,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -2206,7 +2206,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -2253,7 +2253,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator connected to nxCloud with yarn should generate gitlab config 1`] = `
+exports[`CI Workflow generator > connected to nxCloud > with yarn > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -2287,7 +2287,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to azure CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > optional e2e > should add e2e to azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -2354,7 +2354,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > optional e2e > should add e2e to bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -2408,7 +2408,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to circleci CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > optional e2e > should add e2e to circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -2452,7 +2452,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to github CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > optional e2e > should add e2e to github CI config 1`] = `
 "name: CI
 
 on:
@@ -2501,7 +2501,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to github CI config with custom name 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > optional e2e > should add e2e to github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -2550,7 +2550,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate azure CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -2618,7 +2618,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -2686,7 +2686,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -2742,7 +2742,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -2798,7 +2798,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -2844,7 +2844,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate circleci CI config when packageManager is set to bun in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -2890,7 +2890,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate github CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -2935,7 +2935,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -2980,7 +2980,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -3025,7 +3025,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with bun should generate gitlab config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with bun > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -3061,7 +3061,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate azure CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -3126,7 +3126,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -3191,7 +3191,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -3243,7 +3243,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -3295,7 +3295,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -3337,7 +3337,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate circleci CI config when packageManager is set to npm in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -3379,7 +3379,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate github CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -3426,7 +3426,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -3473,7 +3473,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -3520,7 +3520,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with npm should generate gitlab config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with npm > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -3554,7 +3554,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate azure CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -3622,7 +3622,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -3690,7 +3690,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -3746,7 +3746,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -3802,7 +3802,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -3848,7 +3848,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate circleci CI config when packageManager is set to pnpm in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -3894,7 +3894,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate github CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -3947,7 +3947,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -3999,7 +3999,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -4052,7 +4052,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with pnpm should generate gitlab config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with pnpm > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'
@@ -4088,7 +4088,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate azure CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate azure CI config 1`] = `
 "name: CI
 
 trigger:
@@ -4153,7 +4153,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate azure CI config when packageManager is set to \${packageManager} in package.json 1`] = `
 "name: CI
 
 trigger:
@@ -4218,7 +4218,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate bitbucket pipelines config 1`] = `
 "image: node:24
 
 clone:
@@ -4270,7 +4270,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
 "image: node:24
 
 clone:
@@ -4322,7 +4322,7 @@ pipelines:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate circleci CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate circleci CI config 1`] = `
 "version: 2.1
 
 orbs:
@@ -4364,7 +4364,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate circleci CI config when packageManager is set to yarn in package.json 1`] = `
 "version: 2.1
 
 orbs:
@@ -4406,7 +4406,7 @@ workflows:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate github CI config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate github CI config 1`] = `
 "name: CI
 
 on:
@@ -4453,7 +4453,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate github CI config when packageManager is defined in package.json 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate github CI config when packageManager is defined in package.json 1`] = `
 "name: CI
 
 on:
@@ -4502,7 +4502,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate github CI config with custom name 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate github CI config with custom name 1`] = `
 "name: My custom-workflow
 
 on:
@@ -4549,7 +4549,7 @@ jobs:
 "
 `;
 
-exports[`CI Workflow generator not connected to nxCloud with yarn should generate gitlab config 1`] = `
+exports[`CI Workflow generator > not connected to nxCloud > with yarn > should generate gitlab config 1`] = `
 "image: node:24
 variables:
   CI: 'true'

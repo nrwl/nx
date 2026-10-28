@@ -122,18 +122,29 @@ impl FileLock {
         Ok(())
     }
 
-    /// Takes the lock if nobody holds it, without blocking. For Rust callers on
-    /// a plain thread; the JS surface reads `locked` and calls `lock()`.
+    /// Takes the lock if nobody holds it, without blocking. On contention it
+    /// still sets `locked`, so a following `wait()` waits.
     pub fn try_lock(&mut self) -> std::io::Result<bool> {
         match self.file.try_lock_exclusive() {
             Ok(()) => {
                 self.locked = true;
                 Ok(true)
             }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Ok(false),
-            Err(e) if e.raw_os_error() == fs4::lock_contended_error().raw_os_error() => Ok(false),
+            Err(e)
+                if e.kind() == std::io::ErrorKind::WouldBlock
+                    || e.raw_os_error() == fs4::lock_contended_error().raw_os_error() =>
+            {
+                self.locked = true;
+                Ok(false)
+            }
             Err(e) => Err(e),
         }
+    }
+
+    /// Takes the lock without blocking; false means another handle holds it.
+    #[napi(js_name = "tryLock")]
+    pub fn try_lock_js(&mut self) -> napi::Result<bool> {
+        Ok(self.try_lock()?)
     }
 
     /// Blocks the calling thread until the current holder releases or

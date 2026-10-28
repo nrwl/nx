@@ -29,6 +29,13 @@ import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
+import { buildUltracacheOverrides } from '../ultracache/overrides';
+import { formatUltracacheSummary } from '../ultracache/report';
+import {
+  loadUltracacheConfigurationsForRun,
+  configurationsOf,
+  type UltracacheConfigurationOutcome,
+} from '../ultracache/store';
 import {
   createNxKeyLicenseeInformation,
   getNxKeyInformation,
@@ -50,6 +57,26 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
+import type { TaskPlanningContext } from '../hasher/task-planning-context';
+
+/** What a command runs. */
+export interface TaskSelection {
+  taskGraph: TaskGraph;
+  /**
+   * The tasks the command asked for, as opposed to ones pulled in as
+   * dependencies. A graph rebuilt after a sync is built from their projects.
+   */
+  initiatingTaskIds: string[];
+  /**
+   * What a rebuilt graph is pruned to: the selected tasks and everything they
+   * depend on. Unset keeps the whole rebuilt graph.
+   */
+  taskIds?: string[];
+  /** The planner selection used. It remembers those plans, so hashing the run reuses them. */
+  planningContext?: TaskPlanningContext;
+  /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+}
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -61,6 +88,7 @@ import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-ma
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
+import { SummaryTerminalOutputLifeCycle } from './life-cycles/summary-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
@@ -73,6 +101,7 @@ import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
+import { getReadyDependencies } from './readiness/ready-when';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
@@ -80,8 +109,8 @@ import {
   validateNoAtomizedTasks,
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { shouldStreamOutput } from './utils';
-import { signalToCode } from '../utils/exit-codes';
+import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
+import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
@@ -118,6 +147,7 @@ async function getTerminalOutputLifeCycle(
   projectNames: string[],
   tasks: Task[],
   taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
@@ -137,7 +167,7 @@ async function getTerminalOutputLifeCycle(
   }
 
   // Kick off in the background so the URL is ready by the exit report. A brief
-  // sync preamble (git remote + axios load) runs here; the network call does not.
+  // sync preamble (git remote lookup) runs here; the network call does not.
   prefetchRemoteCacheOnboardingUrl(nxJson);
 
   if (isTuiEnabled()) {
@@ -197,7 +227,7 @@ async function getTerminalOutputLifeCycle(
       const mainContinuousDependencies =
         taskGraph.continuousDependencies[mainTaskId];
       if (mainContinuousDependencies.length > 0) {
-        pinnedTasks.push(mainContinuousDependencies[0]);
+        pinnedTasks.push(mainContinuousDependencies[0].id);
       }
       const [, target] = mainTaskId.split(':');
       titleText = `1 ${target} task`;
@@ -261,6 +291,7 @@ async function getTerminalOutputLifeCycle(
         titleText,
         workspaceRoot,
         taskGraph,
+        getReadyDependencies(taskGraph, projectGraph),
         isNxCloudUsed(nxJson)
       );
       // The native endCommand renders the perf report in the exit popup; the runner
@@ -376,11 +407,18 @@ async function getTerminalOutputLifeCycle(
     };
   }
 
+  if (nxArgs.resolvedOutputStyle === 'summary') {
+    return {
+      lifeCycle: new SummaryTerminalOutputLifeCycle(tasks),
+      renderIsDone: Promise.resolve(),
+    };
+  }
+
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,
-    nxArgs.outputStyle
+    nxArgs.specifiedOutputStyle
   );
 
   if (isRunOne) {
@@ -423,17 +461,18 @@ async function getTerminalOutputLifeCycle(
   }
 }
 
-function createTaskGraphAndRunValidations(
+/**
+ * `targets` on whole projects, as `run-many` runs them: every task of the
+ * projects' targets and what they depend on, with those tasks initiating.
+ */
+export function selectTasksForProjects(
   projectGraph: ProjectGraph,
-  extraTargetDependencies: TargetDependencies,
   projectNames: string[],
   nxArgs: NxArgs,
   overrides: any,
-  extraOptions: {
-    excludeTaskDependencies: boolean;
-    loadDotEnvFiles: boolean;
-  }
-) {
+  extraTargetDependencies: TargetDependencies,
+  excludeTaskDependencies: boolean
+): TaskSelection {
   const taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
@@ -441,9 +480,26 @@ function createTaskGraphAndRunValidations(
     nxArgs.targets,
     nxArgs.configuration,
     overrides,
-    extraOptions.excludeTaskDependencies
+    excludeTaskDependencies
   );
+  const projects = new Set(projectNames);
+  return {
+    taskGraph,
+    initiatingTaskIds: Object.values(taskGraph.tasks)
+      .filter(
+        (t) =>
+          projects.has(t.target.project) &&
+          nxArgs.targets.includes(t.target.target)
+      )
+      .map((t) => t.id),
+  };
+}
 
+function runValidations(
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxArgs: NxArgs
+): TaskGraph {
   assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
 
   const cycle = findCycle(taskGraph);
@@ -475,7 +531,7 @@ function createTaskGraphAndRunValidations(
 }
 
 export async function runCommand(
-  projectsToRun: ProjectGraphProjectNode[],
+  taskSelection: TaskSelection,
   currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
@@ -496,8 +552,8 @@ export async function runCommand(
       });
 
       const startTime = Date.now();
-      const { taskResults, completed } = await runCommandForTasks(
-        projectsToRun,
+      const { taskResults, taskStatuses, completed } = await runTasksForCommand(
+        taskSelection,
         currentProjectGraph,
         { nxJson },
         {
@@ -514,15 +570,7 @@ export async function runCommand(
       );
       const endTime = Date.now();
 
-      const exitCode = !completed
-        ? signalToCode('SIGINT')
-        : Object.values(taskResults).some(
-              (taskResult) =>
-                taskResult.status === 'failure' ||
-                taskResult.status === 'skipped'
-            )
-          ? 1
-          : 0;
+      const exitCode = getRunExitCode(completed, taskResults, taskStatuses);
 
       await runPostTasksExecution({
         id,
@@ -541,8 +589,8 @@ export async function runCommand(
   return status;
 }
 
-export async function runCommandForTasks(
-  projectsToRun: ProjectGraphProjectNode[],
+export async function runTasksForCommand(
+  taskSelection: TaskSelection,
   currentProjectGraph: ProjectGraph,
   { nxJson }: { nxJson: NxJsonConfiguration },
   nxArgs: NxArgs,
@@ -550,32 +598,35 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<{ taskResults: TaskResults; completed: boolean }> {
+): Promise<{
+  taskResults: TaskResults;
+  taskStatuses?: Record<string, TaskStatus>;
+  completed: boolean;
+}> {
   // Kick off the license lookup in the background so it overlaps with task
   // execution. The log itself is deferred to the print site below so it
   // never lands in the middle of task output.
   const nxKeyPromise = getNxKeyInformation().catch(() => null);
 
-  const projectNames = projectsToRun.map((t) => t.name);
-  const projectNameSet = new Set(projectNames);
-
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
     currentProjectGraph,
     nxJson,
-    projectNames,
     nxArgs,
     overrides,
     extraTargetDependencies,
-    extraOptions
+    extraOptions,
+    taskSelection
   );
 
   const tasks = Object.values(taskGraph.tasks);
 
-  const initiatingTasks = tasks.filter(
-    (t) =>
-      projectNameSet.has(t.target.project) &&
-      nxArgs.targets.includes(t.target.target)
-  );
+  // A sync generator can remove a selected task, so absent ids are skipped.
+  const initiatingTasks = taskSelection.initiatingTaskIds
+    .map((id) => taskGraph.tasks[id])
+    .filter(Boolean);
+  const projectNames = [
+    ...new Set(initiatingTasks.map((t) => t.target.project)),
+  ];
 
   const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
@@ -584,13 +635,14 @@ export async function runCommandForTasks(
       projectNames,
       tasks,
       taskGraph,
+      projectGraph,
       nxArgs,
       nxJson,
       overrides
     );
 
   try {
-    const taskResults = await invokeTasksRunner({
+    const { taskResults, taskStatuses } = await invokeTasksRunner({
       tasks,
       projectGraph,
       taskGraph,
@@ -600,6 +652,9 @@ export async function runCommandForTasks(
       loadDotEnvFiles: extraOptions.loadDotEnvFiles,
       initiatingProject,
       initiatingTasks,
+      planningContext: taskSelection.planningContext,
+      ultracacheConfigurationOutcome:
+        taskSelection.ultracacheConfigurationOutcome,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -615,7 +670,8 @@ export async function runCommandForTasks(
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskResults),
+      taskStatuses,
+      completed: didCommandComplete(tasks, taskResults, taskStatuses),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -630,6 +686,9 @@ export async function runCommandForTasks(
 
 async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   try {
+    if (isCI()) {
+      return;
+    }
     if (!daemonClient.enabled() || !(await daemonClient.isServerAvailable())) {
       return;
     }
@@ -649,40 +708,19 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   }
 }
 
-function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
-  if (tasks.length === 0) return true;
-
-  for (const task of tasks) {
-    if (!task.continuous) {
-      // Discrete task must have a result (was started and finished)
-      if (!taskResults[task.id]) return false;
-    }
-  }
-
-  // Any stopped task means the run was interrupted
-  return !Object.values(taskResults).some((r) => r.status === 'stopped');
-}
-
 async function ensureWorkspaceIsInSyncAndGetGraphs(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  projectNames: string[],
   nxArgs: NxArgs,
   overrides: any,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
-  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean },
+  taskSelection: TaskSelection
 ): Promise<{
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
 }> {
-  let taskGraph = createTaskGraphAndRunValidations(
-    projectGraph,
-    extraTargetDependencies ?? {},
-    projectNames,
-    nxArgs,
-    overrides,
-    extraOptions
-  );
+  let taskGraph = runValidations(projectGraph, taskSelection.taskGraph, nxArgs);
 
   if (nxArgs.skipSync || isCI()) {
     return { projectGraph, taskGraph };
@@ -834,15 +872,32 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       await confirmRunningTasksWithSyncFailures();
     }
 
-    // Re-create project graph and task graph
+    // Rebuild rather than carry: a sync generator may remove tasks or move inferred
+    // outputs, so the old graph and planning context are stale.
+    taskSelection.planningContext = undefined;
+    const projectNames = [
+      ...new Set(
+        taskSelection.initiatingTaskIds
+          .filter((id) => taskGraph.tasks[id])
+          .map((id) => taskGraph.tasks[id].target.project)
+      ),
+    ];
     projectGraph = await createProjectGraphAsync();
-    taskGraph = createTaskGraphAndRunValidations(
+    const rebuilt = selectTasksForProjects(
       projectGraph,
-      extraTargetDependencies ?? {},
       projectNames,
       nxArgs,
       overrides,
-      extraOptions
+      extraTargetDependencies ?? {},
+      extraOptions.excludeTaskDependencies
+    ).taskGraph;
+    taskGraph = runValidations(
+      projectGraph,
+      // Before validation, so a cycle or atomizer error names what will actually run.
+      taskSelection.taskIds
+        ? pruneToSelectedTasks(rebuilt, taskSelection.taskIds)
+        : rebuilt,
+      nxArgs
     );
 
     const successTitle = anySyncGeneratorsFailed
@@ -946,13 +1001,13 @@ export function setEnvVarsBasedOnArgs(
   // user asked for explicitly still wins over grouping.
   const batchMode = process.env.NX_BATCH_MODE === 'true' || nxArgs.batch;
   if (
-    nxArgs.outputStyle == 'stream' ||
+    nxArgs.specifiedOutputStyle == 'stream' ||
     (batchMode && !isLogGroupingEnabled())
   ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
-  if (nxArgs.outputStyle == 'stream-without-prefixes') {
+  if (nxArgs.specifiedOutputStyle == 'stream-without-prefixes') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'false';
   }
@@ -976,6 +1031,8 @@ export async function invokeTasksRunner({
   loadDotEnvFiles,
   initiatingProject,
   initiatingTasks,
+  planningContext,
+  ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -986,7 +1043,13 @@ export async function invokeTasksRunner({
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
   initiatingTasks: Task[];
-}): Promise<{ [id: string]: TaskResult }> {
+  planningContext?: TaskPlanningContext;
+  /** Already loaded for this command; `undefined` loads it here. */
+  ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+}): Promise<{
+  taskResults: { [id: string]: TaskResult };
+  taskStatuses?: Record<string, TaskStatus>;
+}> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
   // this needs to be done before we start to run the tasks
@@ -994,18 +1057,41 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
+  // Must precede hashing: the Ultracache configurations are a source for task hashes.
+  const ultracacheConfigurationOutcome =
+    loadedUltracacheConfigurationOutcome !== undefined
+      ? loadedUltracacheConfigurationOutcome
+      : await loadUltracacheConfigurationsForRun(nxJson, runnerOptions);
+  const ultracacheConfigurations = configurationsOf(
+    ultracacheConfigurationOutcome
+  );
+
+  let hasher = createTaskHasher(
+    projectGraph,
+    nxJson,
+    runnerOptions,
+    ultracacheConfigurations,
+    planningContext
+  );
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
 
-  await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    hasher,
+  const hashingDeferredTaskIds =
+    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      hasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      taskDetails,
+      ultracacheConfigurations
+    );
+  reportUltracacheConfigurations(
+    ultracacheConfigurationOutcome,
     projectGraph,
     taskGraph,
-    nxJson,
-    taskDetails
+    nxArgs
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
@@ -1096,6 +1182,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
+      hashingDeferredTaskIds,
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1104,10 +1191,17 @@ export async function invokeTasksRunner({
     );
   }
 
-  await (promiseOrObservable as Promise<{
+  const taskStatuses = await (promiseOrObservable as Promise<{
     [id: string]: TaskStatus;
   }>);
-  return taskResultsLifecycle.getTaskResults();
+  return {
+    taskResults: taskResultsLifecycle.getTaskResults(),
+    // Custom runners are not guaranteed to resolve to a status map.
+    taskStatuses:
+      taskStatuses && typeof taskStatuses === 'object'
+        ? taskStatuses
+        : undefined,
+  };
 }
 
 export function constructLifeCycles(
@@ -1171,6 +1265,7 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (
     isStaticOutputStyle(outputStyle) ||
+    outputStyle === 'summary' ||
     outputStyle === 'stream' ||
     outputStyle === 'stream-without-prefixes'
   )
@@ -1198,6 +1293,42 @@ function loadTasksRunner(modulePath: string): TasksRunner {
     }
     throw e;
   }
+}
+
+function reportUltracacheConfigurations(
+  outcome: UltracacheConfigurationOutcome | null,
+  projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
+  nxArgs: NxArgs
+): void {
+  if (!outcome || outcome.status === 'skipped') return;
+  if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
+  const summary = formatUltracacheSummary(
+    buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
+    outcome.status
+  );
+  output.note({ title: summary.line, bodyLines: summary.bodyLines });
+}
+
+/**
+ * What affected task selection reads from the runner options, so it plans as
+ * the run hashes. The Ultracache configurations are loaded once, for selection and the run.
+ */
+export async function runnerInputsForSelection(
+  nxArgs: NxArgs,
+  nxJson: NxJsonConfiguration
+): Promise<{
+  ultracacheConfigurationOutcome: UltracacheConfigurationOutcome | null;
+  selectivelyHashTsConfig: boolean;
+}> {
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  return {
+    ultracacheConfigurationOutcome: await loadUltracacheConfigurationsForRun(
+      nxJson,
+      runnerOptions
+    ),
+    selectivelyHashTsConfig: runnerOptions?.selectivelyHashTsConfig ?? false,
+  };
 }
 
 export function getRunner(

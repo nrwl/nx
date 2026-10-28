@@ -22,7 +22,7 @@ Nx...
 - helps define clear architectural guidelines and promotes best practices to organize and scale your codebase.
 - helps integrate modern tooling by actively working with devtool authors to make sure they work well with Nx and your framework of choice.
 - is adaptable: start small with a single-project setup and grow it to a monorepo when needed.
-- speeds up CI with [Nx Cloud](/docs/getting-started/nx-cloud): remote caching, distributed task execution, and self-healing CI.
+- speeds up CI with [Nx Cloud](/docs/features/ci-features): remote caching, distributed task execution, and self-healing CI.
 - has an active community of contributors and plugin authors.
 - has been proven in large enterprise-level projects.
 
@@ -226,7 +226,7 @@ Features like
 - running [tasks in parallel](/docs/features/run-tasks#run-tasks-for-multiple-projects)
 - applying [computation caching](/docs/features/cache-task-results)
 - offering [remote caching abilities](/docs/features/ci-features/remote-cache) on CI through Nx Cloud
-- offering [task distribution across machines (Nx Agents)](/docs/features/ci-features/distribute-task-execution)
+- offering [task distribution across machines (Workers)](/docs/features/ci-features/distribute-task-execution)
 - fixing broken CI runs automatically with [self-healing CI](/docs/features/ci-features/self-healing-ci)
 
 Nx also invests in fast build tooling for Angular beyond the Angular CLI. If you rely on webpack-specific features such as Module Federation, [Angular Rspack](/docs/technologies/angular/angular-rspack/introduction) provides a fast, webpack-compatible build pipeline for Angular.
@@ -244,7 +244,6 @@ Nx is really made to scale with you. You can
 - start small with a single-project workspace
 - modularize your application into more fine-grained libraries for better maintainability as your application (and team) grows, including mechanisms to make sure [things stay within their boundaries](/docs/features/enforce-module-boundaries)
 - you can then migrate to a monorepo when you are ready and need one ([more here](/docs/kb/standalone-to-monorepo))
-- or even [adopt micro frontends](/docs/kb/angular-micro-frontends)
 
 ### Visualize your workspace
 

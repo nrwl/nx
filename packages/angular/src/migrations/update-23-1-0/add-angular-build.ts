@@ -5,7 +5,9 @@ import {
   readNxJson,
   type Tree,
 } from '@nx/devkit';
-import { angularDevkitVersion } from '../../utils/versions';
+import { getInstalledPackageVersionFromTree } from '@nx/devkit/internal';
+import { acknowledgeAngularBuildScripts } from '../../generators/utils/acknowledge-build-scripts';
+import { getInstalledAngularVersion } from '../../generators/utils/version-utils';
 
 // The `@nx/angular:application` and `@nx/angular:unit-test` executors import
 // `@angular/build` directly to run the Angular builders, and any
@@ -15,7 +17,8 @@ import { angularDevkitVersion } from '../../utils/versions';
 // `@angular-devkit/build-angular`, which isn't reliable (it can be absent from
 // node_modules, e.g. under Yarn Berry), so `require.resolve('@angular/build')`
 // fails and the build breaks. Add it as a direct dependency when an executor
-// needs it, at the version the application generator installs.
+// needs it. Match the version `@angular-devkit/build-angular` pins it to,
+// because a newer `@angular/build` breaks peers such as `@angular/ssr`.
 const angularBuildExecutors = [
   '@nx/angular:application',
   '@nx/angular:unit-test',
@@ -67,10 +70,16 @@ export default async function (tree: Tree) {
     return;
   }
 
+  acknowledgeAngularBuildScripts(tree);
+
+  const version =
+    getInstalledPackageVersionFromTree(tree, '@angular-devkit/build-angular') ??
+    getInstalledAngularVersion(tree);
+
   return addDependenciesToPackageJson(
     tree,
     {},
-    { '@angular/build': angularDevkitVersion },
+    { '@angular/build': `~${version}` },
     undefined,
     true
   );

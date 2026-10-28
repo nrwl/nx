@@ -37,7 +37,6 @@ export type MigratePromptChoices = {
   agentic: 'yes-once' | 'yes-flex' | 'yes-pin' | 'no-once' | 'no-never';
   // The chosen agent id (open-ended).
   agent_select: string;
-  ambiguous_agent_outcome: 'abort' | 'continue';
 };
 export type MigratePromptName = keyof MigratePromptChoices;
 // Underscore-shaped because the code is appended verbatim to the error event
@@ -55,6 +54,13 @@ export type MigrateRunErrorCode =
   | 'migration_exec'
   | 'agentic'
   | 'other';
+// Why a run-phase invocation stopped before running anything; appended to the
+// event name like the error codes, so it costs no GA custom dimension.
+export type MigrateRunStopReason =
+  | 'existing_run'
+  | 'declined_commits'
+  | 'aborted'
+  | 'runbook_missing';
 
 // Identifier-shaped tokens only (Node codes like ENOENT, class names like
 // TypeError). Rejects anything with a slash, space, or punctuation so a
@@ -228,8 +234,8 @@ export function reportMigrateRunComplete(opts: {
   agenticOutcome: MigrateAgenticOutcome;
   agentUsed?: string;
   migrationCount: number;
-  // Fully-completed migrations (excludes deferred prompt-halves); mirrors the
-  // user-facing tally so the metric matches what the run printed.
+  // Fully-completed migrations, excluding deferred prompt-halves and the
+  // final validation pass.
   appliedCount: number;
 }): void {
   safeReport(() => {
@@ -240,6 +246,17 @@ export function reportMigrateRunComplete(opts: {
       [customDimensions.migrationCount]: opts.migrationCount,
       [customDimensions.appliedCount]: opts.appliedCount,
     });
+  });
+}
+
+/**
+ * Closes a `migrate_run_start` whose invocation stopped before running any
+ * migration.
+ */
+export function reportMigrateRunStopped(reason: MigrateRunStopReason): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent(`migrate_run_stopped_${reason}`);
   });
 }
 
@@ -290,39 +307,115 @@ export function reportMigrateOrchestratorInit(opts: {
 }
 
 /**
- * One event per orchestrator dispense. The `action` (dispense case) is a
- * closed enum carried on a reused dimension, read conditioned on the event
- * name (the same multiplexing pattern as {@link reportMigratePrompt});
- * `attempt` rides the migration-count dimension.
+ * One event per dispense response, repeated on every reconcile until the
+ * step moves. The `action` (dispense case) is a closed enum carried on a
+ * reused dimension, read conditioned on the event name (the same
+ * multiplexing pattern as {@link reportMigratePrompt}); `attempt` rides the
+ * migration-count dimension and `ordinal` (the run's dispense count) the
+ * task-count one.
  */
 export function reportMigrateOrchestratorDispense(opts: {
   action: string;
   attempt: number;
+  ordinal?: number;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent('migrate_orchestrator_dispense', {
       [customDimensions.promptChoice]: opts.action,
       [customDimensions.migrationCount]: opts.attempt,
+      [customDimensions.taskCount]: opts.ordinal,
+    });
+  });
+}
+
+/** Once per durable dispense transition. */
+export function reportMigrateOrchestratorStepDispensed(opts: {
+  attempt: number;
+  ordinal: number;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_step_dispensed', {
+      [customDimensions.migrationCount]: opts.attempt,
+      [customDimensions.taskCount]: opts.ordinal,
+    });
+  });
+}
+
+export interface MigrateOrchestratorTallies {
+  completed: number;
+  skipped: number;
+  // Steps the agent gave up on.
+  unresolved: number;
+  dispenseCount: number;
+}
+
+/**
+ * The three step tallies and the total dispense count ride reused numeric
+ * dimensions, read conditioned on the event name.
+ */
+function orchestratorTallyParams(tallies: MigrateOrchestratorTallies) {
+  return {
+    [customDimensions.appliedCount]: tallies.completed,
+    [customDimensions.taskCount]: tallies.skipped,
+    [customDimensions.majorsCrossed]: tallies.unresolved,
+    [customDimensions.migrationCount]: tallies.dispenseCount,
+  };
+}
+
+export function reportMigrateOrchestratorComplete(
+  opts: MigrateOrchestratorTallies
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_complete', orchestratorTallyParams(opts));
+  });
+}
+
+/** The agent session nx spawned ended with the run still active. */
+export function reportMigrateOrchestratorAbandoned(
+  opts: MigrateOrchestratorTallies & { agentUsed: string }
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_abandoned', {
+      ...orchestratorTallyParams(opts),
+      [customDimensions.agentUsed]: opts.agentUsed,
     });
   });
 }
 
 /**
- * Terminal funnel event. The two step tallies and the total dispense count
- * ride reused numeric dimensions, read conditioned on the event name.
+ * An explicit continue (`--run-migrations --run-id`, or "continue" at the
+ * master prompt) took up an active run; every resume reports. A bare
+ * `--run-id` reconcile is not a resume: nothing in run state marks the first
+ * call after a lost session.
  */
-export function reportMigrateOrchestratorComplete(opts: {
-  completed: number;
-  skipped: number;
-  dispenseCount: number;
-}): void {
+export function reportMigrateOrchestratorResume(
+  opts: MigrateOrchestratorTallies
+): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_orchestrator_complete', {
-      [customDimensions.appliedCount]: opts.completed,
-      [customDimensions.taskCount]: opts.skipped,
-      [customDimensions.migrationCount]: opts.dispenseCount,
+    reportEvent('migrate_orchestrator_resume', orchestratorTallyParams(opts));
+  });
+}
+
+/**
+ * An invocation found an active run and started nothing. `activity` says
+ * whether another nx migrate process held the run; 'unknown' where nx cannot
+ * tell.
+ */
+export function reportMigrateOrchestratorExistingRun(
+  opts: MigrateOrchestratorTallies & {
+    activity: 'idle' | 'held' | 'unknown';
+  }
+): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_orchestrator_existing_run', {
+      ...orchestratorTallyParams(opts),
+      [customDimensions.promptChoice]: opts.activity,
     });
   });
 }
@@ -349,6 +442,34 @@ export function reportMigrateSingleMigrationInvocation(opts: {
         [customDimensions.promptChoice]: opts.migrationType,
       }
     );
+  });
+}
+
+/**
+ * Closes a `--run-migration` run that had an agent selected. `agentUsed` is
+ * set only when the agent started: a migration that left it no work
+ * completes without one.
+ */
+export function reportMigrateSingleMigrationComplete(opts: {
+  agentUsed?: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_complete', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
+  });
+}
+
+/** The agent session of a `--run-migration` run ended with the migration unfinished. */
+export function reportMigrateSingleMigrationAbandoned(opts: {
+  agentUsed: string;
+}): void {
+  safeReport(() => {
+    if (!customDimensions) return;
+    reportEvent('migrate_single_migration_abandoned', {
+      [customDimensions.agentUsed]: opts.agentUsed,
+    });
   });
 }
 

@@ -8,6 +8,7 @@ import {
 } from '../../utils/config';
 import {
   cypressProjectConfigs,
+  getComponentTestingPresetImport,
   getObjectProperty,
 } from '../../utils/migrations';
 
@@ -67,7 +68,10 @@ function isWebpackComponentTesting(component: PropertyAssignment): boolean {
   if (usesNxComponentTestingPreset(component)) {
     // @nx/remix is the only vite-based Nx CT preset; resolve the import bound
     // to the call so an unrelated remix reference elsewhere can't misclassify.
-    return getComponentTestingPresetImport(component) !== NX_VITE_CT_PRESET;
+    return (
+      getComponentTestingPresetImport(component.getSourceFile()) !==
+      NX_VITE_CT_PRESET
+    );
   }
 
   // Hand-written config: migrate only when it has an inline devServer framework.
@@ -107,60 +111,6 @@ function getComponentProperty(
   return query<PropertyAssignment>(component, 'PropertyAssignment').filter(
     (property) => ts.isIdentifier(property.name) && property.name.text === name
   );
-}
-
-// Resolves the module specifier that binds the `nxComponentTestingPreset`
-// identifier used inside `component`, covering both ESM `import` and CJS
-// `require` cypress configs. Returns null when no such binding is found.
-function getComponentTestingPresetImport(
-  component: PropertyAssignment
-): string | null {
-  ts ??= ensureTypescript();
-
-  for (const statement of component.getSourceFile().statements) {
-    if (ts.isImportDeclaration(statement) && statement.importClause) {
-      const namedBindings = statement.importClause.namedBindings;
-      if (
-        namedBindings &&
-        ts.isNamedImports(namedBindings) &&
-        ts.isStringLiteral(statement.moduleSpecifier) &&
-        namedBindings.elements.some(
-          (element) => element.name.text === 'nxComponentTestingPreset'
-        )
-      ) {
-        return statement.moduleSpecifier.text;
-      }
-    }
-
-    if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        const initializer = declaration.initializer;
-        if (
-          !initializer ||
-          !ts.isCallExpression(initializer) ||
-          !ts.isIdentifier(initializer.expression) ||
-          initializer.expression.text !== 'require' ||
-          !ts.isObjectBindingPattern(declaration.name)
-        ) {
-          continue;
-        }
-        const moduleSpecifier = initializer.arguments[0];
-        if (
-          moduleSpecifier &&
-          ts.isStringLiteral(moduleSpecifier) &&
-          declaration.name.elements.some(
-            (element) =>
-              ts.isIdentifier(element.name) &&
-              element.name.text === 'nxComponentTestingPreset'
-          )
-        ) {
-          return moduleSpecifier.text;
-        }
-      }
-    }
-  }
-
-  return null;
 }
 
 function setsJustInTimeCompile(component: PropertyAssignment): boolean {

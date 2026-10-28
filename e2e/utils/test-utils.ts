@@ -6,7 +6,7 @@ import {
   runCommand,
 } from './command-utils';
 import { uniq, tmpProjPath } from './create-project-utils';
-import { readFile, fileExists, updateFile } from './file-utils';
+import { readFile, fileExists, updateFile, updateJson } from './file-utils';
 
 type GeneratorsWithDefaultTests =
   | '@nx/js:lib'
@@ -64,6 +64,35 @@ export function expectNoTsJestInJestConfig(appName: string) {
     throw new Error(`Could not find jest config for app/lib: ${appName}`);
   }
   expect(jestConfig).not.toContain('ts-jest');
+}
+
+/**
+ * Adds a `check` target that waits for `serveTarget` to be ready and requests
+ * NX_READY_URL. It reaches the server only through the url the signal carried,
+ * so it passes only if Nx waited for the signal and passed the url on.
+ */
+export function addReadyUrlCheck(projectRoot: string, serveTarget: string) {
+  updateJson(`${projectRoot}/project.json`, (config) => {
+    config.targets ??= {};
+    config.targets.check = {
+      command:
+        "node -e \"const url = process.env.NX_READY_URL; console.log('URL=' + url); require('http').get(url, (r) => { console.log('STATUS=' + r.statusCode); process.exit(r.statusCode < 400 ? 0 : 1); })\"",
+      dependsOn: [{ target: serveTarget, waitFor: 'ready' }],
+    };
+    return config;
+  });
+}
+
+/**
+ * Asserts that the check from {@link addReadyUrlCheck} reached the server on
+ * `port`. The server binds whichever loopback address the platform resolves
+ * `localhost` to.
+ */
+export function expectServedOn(output: string, port: number) {
+  expect(output).toMatch(
+    new RegExp(`URL=http://(localhost|127\\.0\\.0\\.1|\\[::1\\]):${port}/`)
+  );
+  expect(output).toMatch(/STATUS=[23]\d\d/);
 }
 
 export function expectCodeIsFormatted() {

@@ -94,15 +94,15 @@ vi.doMock(workspaceContextPath, async () => {
     (...args: any[]) =>
       actual[name](...args);
   const guarded =
-    (name: string, fallback: () => any) =>
+    (name: string, fallback: (...rest: any[]) => any) =>
     (root: string, ...rest: any[]) => {
-      if (root === realWorkspaceRoot) return fallback();
+      if (root === realWorkspaceRoot) return fallback(...rest);
       return actual[name](root, ...rest);
     };
   return {
-    setupWorkspaceContext: (root: string) => {
+    setupWorkspaceContext: (root: string, ...rest: any[]) => {
       if (root === realWorkspaceRoot) return;
-      return actual.setupWorkspaceContext(root);
+      return actual.setupWorkspaceContext(root, ...rest);
     },
     refreshWorkspaceContext: guarded(
       'refreshWorkspaceContext',
@@ -138,18 +138,39 @@ vi.doMock(workspaceContextPath, async () => {
     getAllFileDataInContext: guarded('getAllFileDataInContext', () =>
       Promise.resolve([])
     ),
-    // Guarded like its siblings: a rescan against the real workspace root would
-    // re-walk this repo. Specs that exercise it point at a TempFs root.
-    rescanAndDiffInContext: guarded('rescanAndDiffInContext', () => ({
+    // Guarded like its siblings: subscribing against the real workspace root
+    // would start a watch on this repo. Specs point at a TempFs root.
+    subscribeToWorkspaceChanges: guarded(
+      'subscribeToWorkspaceChanges',
+      () => undefined
+    ),
+    subscribeToWatchEvents: guarded('subscribeToWatchEvents', () => undefined),
+    settleWorkspaceContext: guarded('settleWorkspaceContext', () => ({
+      seq: 0,
       createdFiles: [],
       updatedFiles: [],
       deletedFiles: [],
     })),
+    takeAppliedWorkspaceChanges: guarded('takeAppliedWorkspaceChanges', () => ({
+      seq: 0,
+      createdFiles: [],
+      updatedFiles: [],
+      deletedFiles: [],
+    })),
+    isEmptyBatch: realFn('isEmptyBatch'),
+    isWatchingWorkspaceContext: realFn('isWatchingWorkspaceContext'),
+    stopWatchingWorkspaceContext: realFn('stopWatchingWorkspaceContext'),
     getFilesInDirectoryUsingContext: guarded(
       'getFilesInDirectoryUsingContext',
       () => Promise.resolve([])
     ),
     updateContextWithChangedFiles: realFn('updateContextWithChangedFiles'),
+    trackedFilesInContext: guarded('trackedFilesInContext', () => []),
+    recordOutputsInContext: guarded('recordOutputsInContext', () => undefined),
+    outputsUnchangedInContext: guarded(
+      'outputsUnchangedInContext',
+      (entries: unknown[]) => entries.map(() => false)
+    ),
     updateFilesInContext: realFn('updateFilesInContext'),
     updateProjectFiles: realFn('updateProjectFiles'),
     resetWorkspaceContext: realFn('resetWorkspaceContext'),
@@ -160,13 +181,17 @@ const nativePath = nxSrcPath('native');
 vi.doMock(nativePath, async () => {
   const actual = await vi.importActual<any>(nativePath);
   const RealWorkspaceContext = actual.WorkspaceContext;
-  function GuardedWorkspaceContext(root: string, cacheDir: string) {
+  function GuardedWorkspaceContext(
+    root: string,
+    cacheDir: string,
+    ...rest: any[]
+  ) {
     if (root === realWorkspaceRoot) {
       throw new Error(
         '[vitest-setup] WorkspaceContext constructed with the real workspace root'
       );
     }
-    return new RealWorkspaceContext(root, cacheDir);
+    return new RealWorkspaceContext(root, cacheDir, ...rest);
   }
   GuardedWorkspaceContext.prototype = RealWorkspaceContext.prototype;
   const guardDirArg = (fn: any, fallback: any) =>

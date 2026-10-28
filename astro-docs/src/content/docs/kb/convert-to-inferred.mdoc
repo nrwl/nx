@@ -6,13 +6,13 @@ topics:
   - 'Tasks & caching'
 ---
 
-In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/concepts/mental-model#inferred-tasks).
+In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/docs/features/run-tasks#inferred-tasks).
 
 The main benefits of migrating to inferred tasks are
 
 - reducing the amount of configuration needed in `project.json`
 - inferring the correct cache settings based on the tool configuration files
-- [splitting tasks (Atomizer)](/docs/features/ci-features/split-e2e-tasks) for plugins that support it
+- [splitting tasks (Atomizer)](/docs/kb/split-e2e-tasks) for plugins that support it
 
 {% youtube
 src="https://youtu.be/wADNsVItnsM"
@@ -24,16 +24,6 @@ For the best experience, we recommend that you [migrate](/docs/features/automate
 ```shell
 npx nx migrate latest
 ```
-
-## Enable inferred tasks for older workspaces
-
-If your workspace was upgraded from an Nx version that predates inferred tasks, a migration may have set `useInferencePlugins` to `false` in `nx.json`.
-When `useInferencePlugins` is `false`:
-
-1. A newly generated project will have all targets defined with executors, not with inferred tasks.
-2. Running `nx add @nx/some-plugin` will not register the plugin in `nx.json`, so that plugin will not infer tasks.
-
-Remove the property, or set it to `true`, before you migrate your projects.
 
 ## Migrate all plugins
 
@@ -77,7 +67,7 @@ We recommend that you check that the configurations are correct before continuin
 
 ## Understand the migration process
 
-The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of [`@nx/vite:build`](/docs/technologies/build-tools/vite/executors#build), [`@nx/vite:dev-server`](/docs/technologies/build-tools/vite/executors#dev-server), [`@nx/vite:preview-server`](/docs/technologies/build-tools/vite/executors#preview-server), and [`@nx/vite:test`](/docs/technologies/build-tools/vite/executors#test) executors will be removed.
+The `convert-to-inferred` generator removes uses of executors from the corresponding plugin. For example, if `@nx/vite` is migrated, then uses of the `@nx/vite:build`, `@nx/vite:dev-server`, `@nx/vite:preview-server`, and `@nx/vite:test` executors will be removed.
 
 Target and configuration names are maintained for each project in their `project.json` files.
 A target may be removed from `project.json` entirely when nothing is left to store there: either
@@ -173,12 +163,11 @@ There may also be changes to the configuration files used by the underlying tool
 
 Where we have `development`, `production`, and `ci` configurations. Then running `nx g @nx/vite:convert-to-inferred` will result in these lines added to `vite.config.ts`.
 
-```ts {% meta="{7-16}" %}
+```ts {% meta="{6-15}" %}
 // vite.config.ts
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
 const configValues = { default: {}, development: {}, production: {}, ci: {} };
@@ -246,7 +235,7 @@ this plugin infers:
 ```
 
 Each project's `project.json` then keeps only the options that differ from this shared default.
-Configuration a project overrides in its own `project.json` still wins over the centralized
+Configuration a project overrides in its own `project.json` still takes precedence over the centralized
 default.
 
 Some projects are excluded from centralization: when a target's identity is authored outside the
@@ -320,7 +309,7 @@ Make sure that the tasks are all passing before migrating another plugin.
 
 ## Enable atomizer (task splitting)
 
-These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-tasks) feature.
+These plugins come with the [Atomizer](/docs/kb/split-e2e-tasks) feature.
 
 - `@nx/cypress`
 - `@nx/jest`
@@ -329,9 +318,9 @@ These plugins come with the [Atomizer](/docs/features/ci-features/split-e2e-task
 
 The Atomizer splits potentially slow tasks into separate tasks per file. This feature along with [task distribution](/docs/features/ci-features/distribute-task-execution) can speed up CI by distributing the split tasks among many agents.
 
-To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/kb/setup-ci), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/docs/plugin-registry) for more details.
+To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/getting-started/setup-ci), and that you have distribution enabled in CI. Some plugins require extra configuration to enable Atomizer, so check the [individual plugin documentation page](/docs/plugin-registry) for more details.
 
-{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/docs/kb/setup-ci" /%}
+{% call_to_action title="Connect to Nx Cloud" icon="nxcloud" description="Enable task distribution and Atomizer" url="/docs/getting-started/setup-ci" /%}
 
 ## Troubleshooting
 

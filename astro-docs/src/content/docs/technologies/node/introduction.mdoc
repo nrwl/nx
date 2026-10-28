@@ -64,6 +64,17 @@ nx g @nx/node:application apps/my-new-app
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
 
+The `serve` task comes from the first two lines of `src/main.ts`:
+
+```ts
+#!/usr/bin/env node
+// @nx-target-name: serve
+```
+
+`@nx/js/node` picks up files whose shebang names `node`, and `@nx-target-name` sets the task name. The generator adds that plugin to `nx.json` unless a registration already exists. The plugin runs scripts in watch mode by default, so `nx serve` runs the file with `node --watch` and restarts it on changes without a build step. Set `watch: false` in the plugin options to turn watch off for every script the registration covers, `serve` included. Workspace libraries the application depends on are built first, through `dependsOn` on the `serve` entry in the project configuration. Node runs the TypeScript source directly, which requires Node.js 22.18 or later. These applications are ES modules, with `"type": "module"` in their `package.json`, so relative imports name the `.ts` file (`./message.ts`). The build rewrites them to `.js`.
+
+In workspaces that use TypeScript path aliases, and for esbuild, Jest, or JavaScript (`--js`) applications, the shebang names [`tsx`](https://tsx.is/) instead, which resolves path aliases and extensionless imports. Applications that use webpack, or workspaces with [inference plugins](/docs/plugin-registry) turned off, get an explicit `serve` target in `project.json` instead.
+
 ### Creating libraries
 
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
@@ -105,7 +116,9 @@ And if you generated a library with `--buildable`, then you can build a library 
 nx build my-new-lib
 ```
 
-The output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+Applications build with `tsc` in [TypeScript workspaces that use project references](/docs/kb/switch-to-workspaces-project-references), and with [Rolldown](/docs/technologies/build-tools/rolldown/introduction) in workspaces that use TypeScript path aliases. Fastify applications use esbuild there instead. Pass `--bundler` when generating the application to choose `tsc`, `rolldown`, `esbuild`, or `webpack`. The `tsc` bundler needs project references.
+
+The output is in a `dist` folder. To change it, set `outDir` in `tsconfig.app.json` for `tsc`, or `output.dir` in `rolldown.config.ts` for Rolldown.
 
 ### Application proxies
 
@@ -116,6 +129,50 @@ nx g @nx/node:application apps/my-new-app \
 --frontendProject my-react-app
 ```
 
+### Waiting for the server to be ready
+
+Tasks that depend on `serve` with `waitFor: "ready"`, such as Playwright and Cypress e2e tasks, start once the server reports that it's listening.
+Applications generated with the Express, Fastify, Koa, or NestJS framework report it.
+Their `src/main.ts` calls `emitReadySignal` from `@nx/js/ready-signal` once the server listens, and their `serve` entry sets `"readyWhen": { "signal": true }`.
+
+To add this to an existing server, check that the root `package.json` lists `@nx/js`, so the server can import it.
+If it doesn't, add `@nx/js` at the same version as `nx`:
+
+```shell
+npm install -D @nx/js@<nx-version>
+```
+
+Call `emitReadySignal` with the server once it listens:
+
+```ts
+const server = app.listen(port, host, async () => {
+  // Set when Nx waits for this server to be ready
+  if (process.env.NX_READY_SIGNAL_SOCKET) {
+    try {
+      // Function keeps TypeScript and bundlers from rewriting or bundling the import
+      const load = new Function('s', 'return import(s)') as (
+        s: string
+      ) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+      (await load('@nx/js/ready-signal')).emitReadySignal(server);
+    } catch {
+      // @nx/js isn't installed
+    }
+  }
+});
+```
+
+Then set `readyWhen` on the `serve` entry in the project configuration:
+
+```json
+"serve": {
+  "readyWhen": { "signal": true }
+}
+```
+
+`emitReadySignal` reads the address from the server and passes it to the waiting tasks as `NX_READY_URL`.
+Without `readyWhen`, a task that waits for `serve` starts as soon as `serve` starts.
+For why the import is guarded, and for the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
+
 ### Debugging
 
 #### VSCode integration
@@ -125,7 +182,6 @@ When generating Node applications, Nx automatically creates a VSCode debugging c
 - **Automatic setup**: A `.vscode/launch.json` file is created with pre-configured debugging settings.
 - **Smart port allocation**: Debug ports are automatically assigned starting from 9229, preventing conflicts between multiple applications.
 - **Source map support**: Webpack configurations include `devtoolModuleFilenameTemplate` for accurate source mapping.
-- **Multi-format support**: Supports debugging `.js`, `.mjs`, and `.cjs` output files.
 
 To debug your Node application in VSCode:
 
@@ -139,11 +195,17 @@ The debugger will automatically:
 
 - Start your application with `nx serve`.
 - Attach to the Node.js debugger on the allocated port.
-- Map compiled JavaScript back to your TypeScript source files.
+- Stop on breakpoints in your TypeScript source files, which `nx serve` runs directly.
 
 #### Manual debugging
 
-For advanced debugging scenarios, you can manually configure the debug port by setting the port option in the `serve` target in the project.json, or by running the serve command with `--port <number>`.
+To open the debugger on a specific port, add Node's `--inspect` flag to the shebang in `src/main.ts`, after the existing `node` or `tsx`:
+
+```ts
+#!/usr/bin/env -S node --inspect=9230
+```
+
+If the application has an explicit `serve` target in `project.json`, set its `port` option or run `nx serve my-new-app --port <number>` instead.
 
 For additional information on Node.js debugging, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).
 

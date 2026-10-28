@@ -10,10 +10,12 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { relative } from 'path';
-import { assertCypressComponentTestingSupport } from '../../utils/assert-cypress-component-testing-support';
+import {
+  assertCypressComponentTestingSupport,
+  findCypressBelow,
+} from '../../utils/assert-cypress-component-testing-support';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { isZonelessApp } from '../../utils/zoneless';
 import { nxVersion } from '../../utils/versions';
@@ -26,7 +28,7 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { updateAppEditorTsConfigExcludedFiles } from '../utils/update-app-editor-tsconfig-excluded-files';
 import { CypressComponentConfigSchema } from './schema';
-import { lt } from 'semver';
+import { major } from 'semver';
 
 const webpackExecutors = new Set<string>([
   '@nx/angular:webpack-browser',
@@ -66,19 +68,25 @@ export async function cypressComponentConfiguration(
     isZoneless = getDependencyVersionFromPackageJson(tree, 'zone.js') === null;
   }
 
+  // Cypress 16 dropped `cypress/angular-zoneless`; `cypress/angular` is zoneless there.
+  let mountModule = 'cypress/angular';
   if (isZoneless) {
     const {
       getInstalledCypressVersion,
     }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
-    // Zoneless support was introduced in Cypress 15.8.0
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support
-    if (installedCypressVersion && lt(installedCypressVersion, '15.8.0')) {
-      throw new Error(
-        `Cypress Component Testing doesn't support Zoneless Angular projects for your installed Cypress version (${installedCypressVersion}). ` +
-          `The project "${options.project}" is configured without Zone.js. ` +
-          `Please upgrade Cypress to version 15.8.0 or higher.`
-      );
+    if (installedCypressVersion && major(installedCypressVersion) < 16) {
+      // Zoneless support was introduced in Cypress 15.8.0
+      const unsupportedCypressVersion = findCypressBelow(tree, '15.8.0');
+      if (unsupportedCypressVersion) {
+        throw new Error(
+          `Cypress Component Testing doesn't support Zoneless Angular projects for your Cypress version (${unsupportedCypressVersion}). ` +
+            `The project "${options.project}" is configured without Zone.js. ` +
+            `Please upgrade Cypress to version 15.8.0 or higher.`
+        );
+      }
+      mountModule = 'cypress/angular-zoneless';
     }
   }
 
@@ -87,14 +95,12 @@ export async function cypressComponentConfiguration(
     await baseCyCTConfig(tree, {
       project: options.project,
       skipFormat: true,
-      addPlugin: false,
-      addExplicitTargets: true,
       skipPackageJson: options.skipPackageJson,
     })
   );
 
   await configureCypressCT(tree, options);
-  tasks.push(await addFiles(tree, projectConfig, options, isZoneless));
+  tasks.push(await addFiles(tree, projectConfig, options, mountModule));
 
   if (projectConfig.projectType === 'application') {
     updateAppEditorTsConfigExcludedFiles(tree, projectConfig);
@@ -111,7 +117,7 @@ async function addFiles(
   tree: Tree,
   projectConfig: ProjectConfiguration,
   options: CypressComponentConfigSchema,
-  isZoneless: boolean
+  mountModule: string
 ): Promise<GeneratorCallback> {
   const componentFile = joinPathFragments(
     projectConfig.root,
@@ -127,7 +133,7 @@ async function addFiles(
   );
   tree.write(
     componentFile,
-    `import { mount } from '${isZoneless ? 'cypress/angular-zoneless' : 'cypress/angular'}';\n${updatedCmpContents}`
+    `import { mount } from '${mountModule}';\n${updatedCmpContents}`
   );
 
   if (!options.generateTests) {
@@ -220,21 +226,10 @@ async function configureCypressCT(
     }
   }
 
-  const ctConfigOptions: NxComponentTestingOptions = {};
+  const ctConfigOptions: NxComponentTestingOptions = {
+    buildTarget: found.target,
+  };
   const projectConfig = readProjectConfiguration(tree, options.project);
-  if (
-    projectConfig.targets?.['component-test']?.executor ===
-    '@nx/cypress:cypress'
-  ) {
-    projectConfig.targets['component-test'].options = {
-      ...projectConfig.targets['component-test'].options,
-      skipServe: true,
-      devServerTarget: found.target,
-    };
-    updateProjectConfiguration(tree, options.project, projectConfig);
-  } else {
-    ctConfigOptions.buildTarget = found.target;
-  }
 
   const {
     addDefaultCTConfig,

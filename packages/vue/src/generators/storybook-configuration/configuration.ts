@@ -23,10 +23,7 @@ export function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  return storybookConfigurationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return storybookConfigurationGeneratorInternal(host, schema);
 }
 
 export async function storybookConfigurationGeneratorInternal(
@@ -48,7 +45,6 @@ export async function storybookConfigurationGeneratorInternal(
     configureStaticServe: schema.configureStaticServe,
     uiFramework: '@storybook/vue3-vite',
     skipFormat: true,
-    addPlugin: schema.addPlugin,
   });
 
   if (schema.generateStories) {

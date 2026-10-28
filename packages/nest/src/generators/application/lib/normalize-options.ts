@@ -1,9 +1,8 @@
-import { Tree, readNxJson } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
@@ -22,13 +21,7 @@ export async function normalizeOptions(
     });
   options.rootProject = appProjectRoot === '.';
 
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   return {
-    addPlugin,
     ...options,
     strict: options.strict ?? false,
     appProjectName,
@@ -54,11 +47,10 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
+    enableTypedLinting: options.enableTypedLinting,
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
     isNest: true,
-    addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,
   };
 }

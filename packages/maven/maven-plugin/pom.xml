@@ -5,8 +5,8 @@
   <parent>
     <groupId>dev.nx.maven</groupId>
     <artifactId>nx-maven-parent</artifactId>
-    <version>0.0.17</version>
-    <relativePath>../pom.xml</relativePath>
+    <version>0.0.19</version>
+    <relativePath>../parent-pom/pom.xml</relativePath>
   </parent>
 
   <artifactId>nx-maven-plugin</artifactId>
@@ -174,13 +174,6 @@
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
-    </dependency>
-
-    <!-- JGit for gitignore parsing -->
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>6.8.0.202311291450-r</version>
     </dependency>
 
 

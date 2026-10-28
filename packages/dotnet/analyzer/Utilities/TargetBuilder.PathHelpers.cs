@@ -17,15 +17,6 @@ namespace MsbuildAnalyzer.Utilities;
 public static partial class TargetBuilder
 {
     /// <summary>
-    /// Checks if the project uses the new artifacts output layout.
-    /// </summary>
-    private static bool UsesArtifactsOutput(Dictionary<string, string> properties)
-    {
-        return properties.GetValueOrDefault("UseArtifactsOutput")
-            ?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    /// <summary>
     /// Resolves a raw MSBuild path string to an Nx-prefixed output path.
     /// - Relative paths are treated as project-relative (MSBuild convention)
     ///   and returned with a <c>{projectRoot}/</c> prefix.
@@ -102,9 +93,9 @@ public static partial class TargetBuilder
     /// <c>null</c> when the configured path lives outside the workspace, since
     /// Nx outputs must be expressible relative to <c>{workspaceRoot}</c>.
     /// </summary>
-    private static string? GetArtifactsRelativePath(Dictionary<string, string> properties, string workspaceRoot)
+    private static string? GetArtifactsRelativePath(EvaluatedProperties properties, string workspaceRoot)
     {
-        var artifactsPath = properties.GetValueOrDefault("ArtifactsPath") ?? "artifacts";
+        var artifactsPath = properties.ArtifactsPath ?? "artifacts";
         if (!Path.IsPathRooted(artifactsPath))
         {
             return artifactsPath.Replace('\\', '/').TrimEnd('/');
@@ -162,10 +153,9 @@ public static partial class TargetBuilder
     /// configuration. Returns <c>null</c> when the path escapes the workspace.
     /// </summary>
     private static string? GetArtifactsSubdirectory(
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string workspaceRoot,
-        string outputNameProperty,
-        string defaultOutputName,
+        string outputName,
         bool includeProjectName)
     {
         var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
@@ -174,7 +164,6 @@ public static partial class TargetBuilder
             return null;
         }
 
-        var outputName = properties.GetValueOrDefault(outputNameProperty) ?? defaultOutputName;
         var path = $"{{workspaceRoot}}/{artifactsPath}/{outputName}";
 
         if (!includeProjectName)
@@ -182,8 +171,8 @@ public static partial class TargetBuilder
             return path;
         }
 
-        var artifactsProjectName = properties.GetValueOrDefault("ArtifactsProjectName")
-            ?? properties.GetValueOrDefault("MSBuildProjectName");
+        var artifactsProjectName = properties.ArtifactsProjectName
+            ?? properties.MSBuildProjectName;
 
         return string.IsNullOrEmpty(artifactsProjectName) ? path : $"{path}/{artifactsProjectName}";
     }
@@ -193,16 +182,16 @@ public static partial class TargetBuilder
     /// Nx-prefixed string. Handles both traditional and artifacts layouts.
     /// Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetOutputPath(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    private static string? GetOutputPath(EvaluatedProperties properties, string projectDirectory, string workspaceRoot)
     {
-        var baseOutputPath = properties.GetValueOrDefault("BaseOutputPath");
+        var baseOutputPath = properties.BaseOutputPath;
         if (!string.IsNullOrEmpty(baseOutputPath))
         {
             return ResolvePath(baseOutputPath, projectDirectory, workspaceRoot);
         }
 
-        var outputPath = properties.GetValueOrDefault("OutputPath")
-            ?? properties.GetValueOrDefault("OutDir")
+        var outputPath = properties.OutputPath
+            ?? properties.OutDir
             ?? "bin";
 
         var resolved = ResolvePath(outputPath, projectDirectory, workspaceRoot);
@@ -214,43 +203,87 @@ public static partial class TargetBuilder
     /// Nx-prefixed string. Returns <c>null</c> when the path lives outside the
     /// workspace.
     /// </summary>
-    private static string? GetIntermediateOutputPath(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    private static string? GetIntermediateOutputPath(EvaluatedProperties properties, string projectDirectory, string workspaceRoot)
     {
-        var baseIntermediatePath = properties.GetValueOrDefault("BaseIntermediateOutputPath");
+        var baseIntermediatePath = properties.BaseIntermediateOutputPath;
         if (!string.IsNullOrEmpty(baseIntermediatePath))
         {
             return ResolvePath(baseIntermediatePath, projectDirectory, workspaceRoot);
         }
 
-        var intermediatePath = properties.GetValueOrDefault("IntermediateOutputPath") ?? "obj";
+        var intermediatePath = properties.IntermediateOutputPath ?? "obj";
 
         var resolved = ResolvePath(intermediatePath, projectDirectory, workspaceRoot);
         return resolved is null ? null : StripConfiguration(resolved);
     }
 
     /// <summary>
+    /// Outputs for the intermediate directory minus the files only
+    /// <c>dotnet restore</c> writes: project.assets.json, project.nuget.cache,
+    /// project.packagespec.json, and the per-project *.nuget.g.props, *.nuget.g.targets
+    /// and *.nuget.dgspec.json. restore is not cached and runs outside the task chain,
+    /// so build, publish and pack must not capture them: a cache hit would replay
+    /// another machine's project.assets.json, absolute packages path and all, over the
+    /// local restore. They are matched at any depth because NuGet writes them to
+    /// RestoreOutputPath, which defaults to MSBuildProjectExtensionsPath and can be
+    /// pointed at a subdirectory of obj. That keeps nested products out of the
+    /// dependent-output hash; the cache copy drops them only at the obj root,
+    /// because expandOutputs hands a matched directory to the copier and the copy
+    /// re-applies no globs. Everything else under obj, including the
+    /// per-configuration and per-framework build output, stays captured.
+    /// The directory is declared as a glob, not a bare path, because of how Nx
+    /// hashes dependent outputs: a bare directory is walked wholesale with nothing
+    /// subtracted, and a negated literal path is treated as a root of its own and
+    /// added back. Exclusions with a wildcard segment partition to the same root as
+    /// the glob and are the one shape that path honours.
+    /// </summary>
+    private static string[] GetIntermediateOutputs(string? intermediatePath)
+    {
+        if (intermediatePath is null)
+        {
+            return [];
+        }
+
+        var obj = intermediatePath.TrimEnd('/');
+        return
+        [
+            $"{obj}/**/*",
+            $"!{obj}/**/project.assets.json",
+            $"!{obj}/**/project.nuget.cache",
+            $"!{obj}/**/project.packagespec.json",
+            $"!{obj}/**/*.nuget.dgspec.json",
+            $"!{obj}/**/*.nuget.g.props",
+            $"!{obj}/**/*.nuget.g.targets",
+        ];
+    }
+
+    /// <summary>
     /// Gets the publish output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPublishDir(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
+    private static string? GetPublishDir(EvaluatedProperties properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
-        if (UsesArtifactsOutput(properties))
+        if (properties.UsesArtifactsOutput)
         {
             // PublishDir carries the pivot (…/publish/<project>/debug), which is
             // per-configuration. Declare its parent so one output covers every
             // configuration, as the bin and obj outputs do.
-            return GetArtifactsSubdirectory(properties, workspaceRoot, "ArtifactsPublishOutputName", "publish", includeProjectName: true);
+            return GetArtifactsSubdirectory(
+                properties,
+                workspaceRoot,
+                properties.ArtifactsPublishOutputName ?? "publish",
+                includeProjectName: true);
         }
 
         // PublishDir (e.g. "bin/Debug/publish") is evaluated by MSBuild at the
         // project's default Configuration, but the publish target runs with the
         // Configuration in `properties` (Release). Rewrite the configuration
         // segment so the declared output matches where the publish actually lands.
-        var publishDir = properties.GetValueOrDefault("PublishDir");
+        var publishDir = properties.PublishDir;
         if (!string.IsNullOrEmpty(publishDir))
         {
             var resolved = ResolvePath(publishDir, projectDirectory, workspaceRoot);
-            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.Configuration);
         }
 
         var outputPath = GetOutputPath(properties, projectDirectory, workspaceRoot);
@@ -292,23 +325,27 @@ public static partial class TargetBuilder
     /// Gets the package output directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetPackageOutputPath(Dictionary<string, string> properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
+    private static string? GetPackageOutputPath(EvaluatedProperties properties, string? defaultConfiguration, string projectDirectory, string workspaceRoot)
     {
-        if (UsesArtifactsOutput(properties))
+        if (properties.UsesArtifactsOutput)
         {
             // The package layout has no per-project segment.
-            return GetArtifactsSubdirectory(properties, workspaceRoot, "ArtifactsPackageOutputName", "package", includeProjectName: false);
+            return GetArtifactsSubdirectory(
+                properties,
+                workspaceRoot,
+                properties.ArtifactsPackageOutputName ?? "package",
+                includeProjectName: false);
         }
 
         // PackageOutputPath is evaluated at the project's default Configuration,
         // but pack runs at the Configuration in `properties` (Release). Rewrite
         // the configuration segment so the declared output matches where the
         // .nupkg lands, as GetPublishDir does for PublishDir.
-        var packageOutputPath = properties.GetValueOrDefault("PackageOutputPath");
+        var packageOutputPath = properties.PackageOutputPath;
         if (!string.IsNullOrEmpty(packageOutputPath))
         {
             var resolved = ResolvePath(packageOutputPath, projectDirectory, workspaceRoot);
-            return ApplyConfiguration(resolved, defaultConfiguration, properties.GetValueOrDefault("Configuration"));
+            return ApplyConfiguration(resolved, defaultConfiguration, properties.Configuration);
         }
 
         return GetOutputPath(properties, projectDirectory, workspaceRoot);
@@ -321,9 +358,9 @@ public static partial class TargetBuilder
     /// the other outputs. Returns <c>null</c> when the property is unset or the
     /// path lives outside the workspace.
     /// </summary>
-    private static string? GetOpenApiDocumentsDirectory(Dictionary<string, string> properties, string projectDirectory, string workspaceRoot)
+    private static string? GetOpenApiDocumentsDirectory(EvaluatedProperties properties, string projectDirectory, string workspaceRoot)
     {
-        var openApiDocumentsDirectory = properties.GetValueOrDefault("OpenApiDocumentsDirectory");
+        var openApiDocumentsDirectory = properties.OpenApiDocumentsDirectory;
         return string.IsNullOrEmpty(openApiDocumentsDirectory)
             ? null
             : ResolvePath(openApiDocumentsDirectory, projectDirectory, workspaceRoot);
@@ -342,7 +379,7 @@ public static partial class TargetBuilder
     /// Returns an empty array when the directory is already covered by an output.
     /// </summary>
     private static string[] GetOpenApiDocumentsOutputs(
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string fileName,
         string projectDirectory,
         string workspaceRoot,
@@ -377,9 +414,9 @@ public static partial class TargetBuilder
     /// name unless <c>$(OpenApiGenerateDocumentsOptions)</c> overrides it with
     /// <c>--file-name</c>.
     /// </summary>
-    private static string GetOpenApiDocumentFileName(Dictionary<string, string> properties, string fileName)
+    private static string GetOpenApiDocumentFileName(EvaluatedProperties properties, string fileName)
     {
-        var options = properties.GetValueOrDefault("OpenApiGenerateDocumentsOptions");
+        var options = properties.OpenApiGenerateDocumentsOptions;
         if (!string.IsNullOrWhiteSpace(options))
         {
             var match = OpenApiFileNameOption.Match(options);
@@ -396,15 +433,15 @@ public static partial class TargetBuilder
     /// Gets the test results directory path, as a fully-qualified Nx-prefixed
     /// string. Returns <c>null</c> when the path lives outside the workspace.
     /// </summary>
-    private static string? GetTestResultsDirectory(Dictionary<string, string> properties, string projectName, string projectDirectory, string workspaceRoot)
+    private static string? GetTestResultsDirectory(EvaluatedProperties properties, string projectName, string projectDirectory, string workspaceRoot)
     {
-        if (UsesArtifactsOutput(properties))
+        if (properties.UsesArtifactsOutput)
         {
             var artifactsPath = GetArtifactsRelativePath(properties, workspaceRoot);
             return artifactsPath is null ? null : $"{{workspaceRoot}}/{artifactsPath}/TestResults/{projectName}";
         }
 
-        var testResultsDir = properties.GetValueOrDefault("TestResultsDirectory");
+        var testResultsDir = properties.TestResultsDirectory;
         if (!string.IsNullOrEmpty(testResultsDir))
         {
             return ResolvePath(testResultsDir, projectDirectory, workspaceRoot);

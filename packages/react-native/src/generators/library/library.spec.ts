@@ -22,7 +22,6 @@ describe('lib', () => {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     strict: true,
-    addPlugin: true,
   };
 
   beforeEach(() => {

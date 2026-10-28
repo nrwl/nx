@@ -13,7 +13,10 @@ import { readNxJsonFromDisk } from '@nx/devkit/internal';
  * @param webpackConfig
  */
 export async function readWebpackOptions(
-  webpackConfig: unknown
+  webpackConfig: unknown,
+  // A function config gets the production build's env unless told otherwise
+  env: Record<string, unknown> = { production: true },
+  argv: Record<string, unknown> = {}
 ): Promise<Configuration[]> {
   const configs: Configuration[] = [];
 
@@ -45,12 +48,7 @@ export async function readWebpackOptions(
         }
       );
     } else if (typeof config === 'function') {
-      const resolved = await config(
-        {
-          production: true, // we want the production build options
-        },
-        {}
-      );
+      const resolved = await config(env, argv);
 
       // If the resolved configuration is an array, resolve each configuration
       return Array.isArray(resolved)

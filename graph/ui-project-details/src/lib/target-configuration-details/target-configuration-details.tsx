@@ -16,6 +16,7 @@ import { TargetConfigurationProperty } from './target-configuration-property';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 import { ExpandedTargetsContext } from '../expanded-targets-provider';
+import { ExternalLink } from '../tooltips/external-link';
 
 interface TargetConfigurationDetailsProps {
   projectName: string;
@@ -50,6 +51,9 @@ export default function TargetConfigurationDetails({
   collapsable,
 }: TargetConfigurationDetailsProps) {
   const isCompact = variant === 'compact';
+  const ultracacheMode = (
+    targetConfiguration as { ultracacheInCI?: UltracacheModeInCI }
+  ).ultracacheInCI;
   const [collapsed, setCollapsed] = useState(true);
   const { expandedTargets, toggleTarget } = useContext(ExpandedTargetsContext);
 
@@ -160,6 +164,44 @@ export default function TargetConfigurationDetails({
             </div>
           )}
 
+          {targetConfiguration.readyWhen !== undefined ? (
+            <div className="group mb-4">
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="readyWhen" />) as any}
+                >
+                  <span className="font-medium">
+                    <TooltipTriggerText>Ready When</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+                <span className="mb-1 ml-2 hidden group-hover:inline">
+                  <CopyToClipboardButton
+                    text={`"readyWhen": ${JSON.stringify(
+                      targetConfiguration.readyWhen
+                    )}`}
+                    tooltipText="Copy Ready When"
+                  />
+                </span>
+              </h4>
+              <div className="group/line overflow-hidden pl-5 whitespace-nowrap">
+                <TargetConfigurationProperty
+                  data={
+                    targetConfiguration.readyWhen === null
+                      ? 'off (null)'
+                      : readyWhenProperties(targetConfiguration.readyWhen)
+                  }
+                >
+                  <TargetSourceInfo
+                    className="min-w-0 flex-1 pl-4 opacity-0 transition-opacity duration-150 ease-in-out group-hover/line:opacity-100"
+                    propertyKey={`targets.${targetName}.readyWhen`}
+                    sourceMap={sourceMap}
+                  />
+                </TargetConfigurationProperty>
+              </div>
+            </div>
+          ) : null}
+
           {shouldRenderOptions || targetConfiguration.metadata?.help ? (
             <>
               <h4 className="mb-4">
@@ -201,6 +243,12 @@ export default function TargetConfigurationDetails({
             </>
           ) : null}
 
+          {ultracacheMode && (
+            <UltracacheInCINote
+              mode={ultracacheMode}
+              inputs={targetConfiguration.inputs}
+            />
+          )}
           {targetConfiguration.inputs && (
             <div className="group">
               <h4 className="mb-4">
@@ -443,5 +491,74 @@ export default function TargetConfigurationDetails({
         </div>
       )}
     </div>
+  );
+}
+
+function readyWhenProperties(
+  readyWhen: NonNullable<TargetConfiguration['readyWhen']>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(readyWhen).map(([key, value]) => [
+      key,
+      Array.isArray(value)
+        ? JSON.stringify(value)
+        : (key === 'timeout' || key === 'interval') && typeof value === 'number'
+          ? formatDuration(value)
+          : String(value),
+    ])
+  );
+}
+
+// Mirrors nx's native formatDuration, which the browser bundle can't import
+function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    const rounded = Math.round(ms);
+    return rounded === 0 ? '<1ms' : `${rounded}ms`;
+  }
+  const seconds = Math.round(ms / 100) / 10;
+  if (seconds >= 60) {
+    const total = Math.round(ms / 1000);
+    return `${Math.floor(total / 60)}m ${total % 60}s`;
+  }
+  return `${seconds.toFixed(1)}s`;
+}
+
+type UltracacheModeInCI = 'on' | 'warn' | 'error' | 'off';
+
+/** Shown on targets Nx marks `ultracacheInCI`; mirrors `ultracacheInCINotice` in nx. */
+function UltracacheInCINote({
+  mode,
+  inputs,
+}: {
+  mode: UltracacheModeInCI;
+  inputs: TargetConfiguration['inputs'];
+}) {
+  const hasAlways = inputs?.some(
+    (input) => typeof input === 'object' && 'always' in input && input.always
+  );
+  return (
+    <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      <span className="font-medium">Ultracache:</span>{' '}
+      {mode === 'on' && (
+        <>
+          In CI, file inputs are replaced by the files this task read during
+          previous runs.
+          {hasAlways && (
+            <>
+              {' '}
+              <code>always</code> inputs still count.
+            </>
+          )}
+        </>
+      )}
+      {mode === 'warn' &&
+        'In CI, Nx Cloud warns if this task reads files outside its hash or writes files outside its outputs.'}
+      {mode === 'error' &&
+        'In CI, Nx Cloud fails the run if this task reads files outside its hash or writes files outside its outputs.'}
+      {mode === 'off' && 'In CI, this task is not recorded.'}{' '}
+      <ExternalLink href="https://nx.dev/docs/reference/project-configuration#ultracache">
+        Learn more
+      </ExternalLink>
+    </p>
   );
 }

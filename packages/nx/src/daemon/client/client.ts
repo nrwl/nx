@@ -15,16 +15,22 @@ import { readNxJson } from '../../config/configuration';
 import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
+import type { UltracacheConfigurationVersion } from '../message-types/ultracache-configuration-version';
+import { pruneTaskGraph } from '../../tasks-runner/prune-task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  NxWorkspaceFiles,
+  TaskOutputs,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
-import {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from '../../project-graph/plugins/public-api';
+import { PreTasksExecutionContext } from '../../project-graph/plugins/public-api';
+import type { MaybeStubbedPostTasksExecutionContext } from '../../project-graph/plugins/task-results-stub';
 import { getPluginResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
@@ -77,6 +83,17 @@ import {
   GET_REGISTERED_SYNC_GENERATORS,
   type HandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
+import {
+  GET_PLUGIN_CAPABILITIES,
+  type HandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import {
+  SELECT_AFFECTED_TASKS,
+  type HandleSelectAffectedTasksMessage,
+  type SelectAffectedTasksResponse,
+} from '../message-types/select-affected-tasks';
+import type { AffectedTasksRequest } from '../../project-graph/affected/affected-tasks';
+import type { NxPluginCapabilities } from '../../project-graph/plugins/nx-plugin-capabilities';
 import {
   GET_SYNC_GENERATOR_CHANGES,
   type HandleGetSyncGeneratorChangesMessage,
@@ -149,7 +166,7 @@ export type ChangedFile = {
   type: 'create' | 'update' | 'delete';
 };
 
-enum DaemonStatus {
+export enum DaemonStatus {
   CONNECTING,
   DISCONNECTED,
   CONNECTED,
@@ -186,22 +203,8 @@ function withoutTaskResults(
   tasks: Task[],
   taskGraph: TaskGraph
 ): { tasks: Task[]; taskGraph: TaskGraph } {
-  const trimmedTasks: Record<string, Task> = {};
-  for (const [id, t] of Object.entries(taskGraph.tasks)) {
-    const {
-      hash,
-      hashDetails,
-      startTime,
-      endTime,
-      terminalOutput,
-      ...strippedTask
-    } = t as Task & { terminalOutput?: string };
-    trimmedTasks[id] = strippedTask as Task;
-  }
-  return {
-    tasks: tasks.map((t) => trimmedTasks[t.id]),
-    taskGraph: { ...taskGraph, tasks: trimmedTasks },
-  };
+  const pruned = pruneTaskGraph(taskGraph);
+  return { tasks: tasks.map((t) => pruned.tasks[t.id]), taskGraph: pruned };
 }
 
 export class DaemonClient {
@@ -231,12 +234,19 @@ export class DaemonClient {
   private _enabled: boolean | undefined;
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
-  private _daemonReady: () => void | null = null;
+  private _daemonReady: (() => void) | null = null;
+  private _daemonReadyFailed: ((err: Error) => void) | null = null;
+  // Terminal once set — see `handleConnectionError`.
+  private _pluginWorkerConnectionLost: Error | null = null;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
   private fileWatcherReconnecting: boolean = false;
   private fileWatcherFramingFailures = 0;
+  private fileWatcherRegistrations = new Map<
+    string,
+    { resolve: () => void; reject: (error: Error) => void }
+  >();
   private fileWatcherCallbacks: Map<
     string,
     (
@@ -321,6 +331,7 @@ export class DaemonClient {
   }
 
   reset() {
+    this.rejectFileWatcherRegistrations(new Error('Daemon client reset'));
     this.socketMessenger?.close();
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
@@ -336,9 +347,28 @@ export class DaemonClient {
     this.projectGraphListenerMessenger = undefined;
 
     this._daemonStatus = DaemonStatus.DISCONNECTED;
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._pluginWorkerConnectionLost = null;
+    this._waitForDaemonReady = this.createReadyPromise();
+  }
+
+  private createReadyPromise(): Promise<void> {
+    const promise = new Promise<void>((resolve, reject) => {
+      this._daemonReady = resolve;
+      this._daemonReadyFailed = reject;
+    });
+    // Callers don't always await — swallow the unhandled-rejection warning
+    // so a rejected ready promise that no one observes doesn't crash the
+    // process. Real awaiters still see the rejection.
+    promise.catch(() => {});
+    return promise;
+  }
+
+  // Move out of CONNECTING and surface an error to every caller parked on
+  // `_waitForDaemonReady`. Without this, a failure while CONNECTING leaves
+  // concurrent callers waiting on a promise that will never settle.
+  private failDaemonReady(err: Error) {
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this._daemonReadyFailed?.(err);
   }
 
   private getSocketPath(): string {
@@ -362,14 +392,8 @@ export class DaemonClient {
     sourceMaps: ConfigurationSourceMaps;
   }> {
     preventRecursionInGraphConstruction();
-    let spinner: DelayedSpinner;
-    // If the graph takes a while to load, we want to show a spinner.
-    spinner = new DelayedSpinner(
-      'Calculating the project graph on the Nx Daemon'
-    );
-    this.currentSpinner = spinner;
     try {
-      const response = await this.sendToDaemonViaQueue({
+      const response = await this.sendWithGraphSpinner({
         type: 'REQUEST_PROJECT_GRAPH',
       });
       return {
@@ -382,9 +406,6 @@ export class DaemonClient {
       } else {
         throw e;
       }
-    } finally {
-      spinner?.cleanup();
-      this.currentSpinner = null;
     }
   }
 
@@ -398,7 +419,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
@@ -407,6 +429,9 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      // An External cannot cross the socket: the version names the stored set
+      // to hash from. Absent means native hashing.
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -416,7 +441,8 @@ export class DaemonClient {
     taskGraph: TaskGraph,
     perTaskEnvs: Record<string, NodeJS.ProcessEnv>,
     cwd: string,
-    collectInputs?: boolean
+    collectInputs?: boolean,
+    ultracacheConfigurationsVersion?: UltracacheConfigurationVersion
   ): Promise<Record<string, Hash>> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS_UPFRONT',
@@ -425,6 +451,7 @@ export class DaemonClient {
       ...withoutTaskResults(tasks, taskGraph),
       cwd,
       collectInputs,
+      ultracacheConfigurationsVersion,
     });
   }
 
@@ -456,83 +483,91 @@ export class DaemonClient {
     // Generate unique ID for this callback
     const callbackId = Math.random().toString(36).substring(2, 11);
 
-    // Store callback and config for reconnection
-    this.fileWatcherCallbacks.set(callbackId, callback);
-    this.fileWatcherConfigs.set(callbackId, config);
-
-    await this.queue.sendToQueue(async () => {
-      // If we already have a connection, just register the new config
-      if (this.fileWatcherMessenger) {
-        this.fileWatcherMessenger.sendMessage({
-          type: 'REGISTER_FILE_WATCHER',
-          config,
-        });
-        return;
-      }
-
-      await this.startDaemonIfNecessary();
-
-      const socketPath = this.getSocketPath();
-
-      this.fileWatcherMessenger = new DaemonSocketMessenger(
-        connect(socketPath)
-      ).listen(
-        (message) => {
-          try {
-            const parsedMessage = parseMessage<any>(message);
-            // A delivered message means the stream is healthy again.
-            this.fileWatcherFramingFailures = 0;
-            if (parsedMessage?.watcherError) {
-              const error = new WatcherFailedError(parsedMessage.watcherError);
-              for (const cb of this.fileWatcherCallbacks.values()) {
-                cb(error, null);
-              }
-              return;
-            }
-            // Notify all callbacks
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb(null, parsedMessage);
-            }
-          } catch (e) {
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb(e, null);
-            }
-          }
-        },
-        () => {
-          // Connection closed - trigger reconnection
-          clientLogger.log(
-            `[FileWatcher] Socket closed, triggering reconnection`
-          );
-          this.fileWatcherMessenger = undefined;
-          for (const cb of this.fileWatcherCallbacks.values()) {
-            cb('reconnecting', null);
-          }
-          this.reconnectFileWatcher();
-        },
-        (err) => {
-          if (err instanceof VersionMismatchError) {
-            for (const cb of this.fileWatcherCallbacks.values()) {
-              cb('closed', null);
-            }
-            process.exit(1);
-          }
-          for (const cb of this.fileWatcherCallbacks.values()) {
-            cb(err, null);
-          }
-          if (err instanceof MessageFramingError) {
-            this.fileWatcherFramingFailures++;
-          }
-          // Close so 'close' fires and the reconnect path runs; a framing
-          // failure would otherwise leave this channel silent forever.
-          this.fileWatcherMessenger?.close();
+    await this.queue
+      .sendToQueue(async () => {
+        // Only registrations whose queue entry has started belong to this
+        // connection. A failed earlier entry must not reconnect a queued one.
+        this.fileWatcherCallbacks.set(callbackId, callback);
+        this.fileWatcherConfigs.set(callbackId, config);
+        // If we already have a connection, just register the new config
+        if (this.fileWatcherMessenger) {
+          await this.sendFileWatcherRegistration(callbackId);
+          return;
         }
-      );
-      this.fileWatcherMessenger.sendMessage({
-        type: 'REGISTER_FILE_WATCHER',
-        config,
+
+        await this.startDaemonIfNecessary();
+
+        const socketPath = this.getSocketPath();
+
+        this.fileWatcherMessenger = new DaemonSocketMessenger(
+          connect(socketPath)
+        ).listen(
+          (message) => {
+            try {
+              const parsedMessage = parseMessage<any>(message);
+              if (this.handleFileWatcherRegistration(parsedMessage)) return;
+              // A delivered message means the stream is healthy again.
+              this.fileWatcherFramingFailures = 0;
+              if (parsedMessage?.watcherError) {
+                const error = new WatcherFailedError(
+                  parsedMessage.watcherError
+                );
+                for (const cb of this.fileWatcherCallbacks.values()) {
+                  cb(error, null);
+                }
+                return;
+              }
+              // Notify all callbacks
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(null, parsedMessage);
+              }
+            } catch (e) {
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb(e, null);
+              }
+            }
+          },
+          () => {
+            // Connection closed - trigger reconnection
+            clientLogger.log(
+              `[FileWatcher] Socket closed, triggering reconnection`
+            );
+            this.fileWatcherMessenger = undefined;
+            this.rejectFileWatcherRegistrations(
+              new Error(
+                'Daemon disconnected before watcher registration completed'
+              )
+            );
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb('reconnecting', null);
+            }
+            this.reconnectFileWatcher();
+          },
+          (err) => {
+            if (err instanceof VersionMismatchError) {
+              for (const cb of this.fileWatcherCallbacks.values()) {
+                cb('closed', null);
+              }
+              process.exit(1);
+            }
+            for (const cb of this.fileWatcherCallbacks.values()) {
+              cb(err, null);
+            }
+            if (err instanceof MessageFramingError) {
+              this.fileWatcherFramingFailures++;
+            }
+            // Close so 'close' fires and the reconnect path runs; a framing
+            // failure would otherwise leave this channel silent forever.
+            this.fileWatcherMessenger?.close();
+          }
+        );
+        await this.sendFileWatcherRegistration(callbackId);
+      })
+      .catch((error) => {
+        this.fileWatcherCallbacks.delete(callbackId);
+        this.fileWatcherConfigs.delete(callbackId);
+        throw error;
       });
-    });
 
     // Return unregister function
     return () => {
@@ -545,6 +580,57 @@ export class DaemonClient {
         this.fileWatcherMessenger = undefined;
       }
     };
+  }
+
+  private sendFileWatcherRegistration(callbackId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        this.fileWatcherRegistrations.delete(callbackId);
+      };
+      const fail = (error: Error) => {
+        cleanup();
+        this.fileWatcherCallbacks.delete(callbackId);
+        this.fileWatcherConfigs.delete(callbackId);
+        reject(error);
+        if (this.fileWatcherCallbacks.size === 0) {
+          this.fileWatcherMessenger?.close();
+        }
+      };
+      const timeout = setTimeout(
+        () =>
+          fail(new Error('Timed out waiting for daemon watcher registration')),
+        WAIT_FOR_SERVER_CONFIG.maxAttempts * WAIT_FOR_SERVER_CONFIG.delayMs
+      );
+      this.fileWatcherRegistrations.set(callbackId, {
+        resolve: () => {
+          cleanup();
+          resolve();
+        },
+        reject: fail,
+      });
+      try {
+        this.fileWatcherMessenger.sendMessage({
+          type: 'REGISTER_FILE_WATCHER',
+          config: this.fileWatcherConfigs.get(callbackId),
+          registrationId: callbackId,
+        });
+      } catch (error) {
+        fail(error);
+      }
+    });
+  }
+
+  private handleFileWatcherRegistration(message: any): boolean {
+    if (message?.type !== 'FILE_WATCHER_REGISTERED') return false;
+    this.fileWatcherRegistrations.get(message.registrationId)?.resolve();
+    return true;
+  }
+
+  private rejectFileWatcherRegistrations(error: Error) {
+    for (const registration of [...this.fileWatcherRegistrations.values()]) {
+      registration.reject(error);
+    }
   }
 
   private async reconnectFileWatcher() {
@@ -617,6 +703,7 @@ export class DaemonClient {
         (message) => {
           try {
             const parsedMessage = parseMessage<any>(message);
+            if (this.handleFileWatcherRegistration(parsedMessage)) return;
             // A delivered message means the stream is healthy again.
             this.fileWatcherFramingFailures = 0;
             for (const cb of this.fileWatcherCallbacks.values()) {
@@ -631,6 +718,11 @@ export class DaemonClient {
         () => {
           // Connection closed - trigger reconnection again
           this.fileWatcherMessenger = undefined;
+          this.rejectFileWatcherRegistrations(
+            new Error(
+              'Daemon disconnected before watcher registration completed'
+            )
+          );
           // Reset reconnection flag before triggering reconnection
           this.fileWatcherReconnecting = false;
           for (const cb of this.fileWatcherCallbacks.values()) {
@@ -901,21 +993,14 @@ export class DaemonClient {
   }
 
   processInBackground(requirePath: string, data: any): Promise<any> {
-    return this.sendToDaemonViaQueue(
-      {
-        type: 'PROCESS_IN_BACKGROUND',
-        requirePath,
-        data,
-      },
-      // This method is sometimes passed data that cannot be serialized with v8
-      // so we force JSON serialization here
-      'json'
-    );
+    return this.sendToDaemonViaQueue({
+      type: 'PROCESS_IN_BACKGROUND',
+      requirePath,
+      data,
+    });
   }
 
-  recordOutputsHashBatch(
-    entries: { outputs: string[]; hash: string }[]
-  ): Promise<any> {
+  recordOutputsHashBatch(entries: TaskOutputs[]): Promise<any> {
     return this.sendToDaemonViaQueue({
       type: 'RECORD_OUTPUTS_HASH_BATCH',
       data: entries,
@@ -1049,6 +1134,24 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  getPluginCapabilities(): Promise<NxPluginCapabilities[]> {
+    const message: HandleGetPluginCapabilitiesMessage = {
+      type: GET_PLUGIN_CAPABILITIES,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  /** Selection runs where hashing does, so the plans it builds are reused. */
+  selectAffectedTasks(
+    request: AffectedTasksRequest
+  ): Promise<SelectAffectedTasksResponse> {
+    const message: HandleSelectAffectedTasksMessage = {
+      type: SELECT_AFFECTED_TASKS,
+      request,
+    };
+    return this.sendWithGraphSpinner(message);
+  }
+
   updateWorkspaceContext(
     createdFiles: string[],
     updatedFiles: string[],
@@ -1074,7 +1177,7 @@ export class DaemonClient {
   }
 
   async runPostTasksExecution(
-    context: PostTasksExecutionContext
+    context: MaybeStubbedPostTasksExecutionContext
   ): Promise<void> {
     const message: HandlePostTasksExecutionMessage = {
       type: POST_TASKS_EXECUTION,
@@ -1153,33 +1256,49 @@ export class DaemonClient {
   }
 
   private async startDaemonIfNecessary() {
+    if (this._pluginWorkerConnectionLost) {
+      throw this._pluginWorkerConnectionLost;
+    }
     if (this._daemonStatus == DaemonStatus.CONNECTED) {
       return;
     }
     // Ensure daemon is running and socket path is available
     if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
+      // Create a fresh ready promise for any concurrent caller that hits
+      // the CONNECTING branch below before this attempt resolves.
+      this._waitForDaemonReady = this.createReadyPromise();
       this._daemonStatus = DaemonStatus.CONNECTING;
 
       let daemonPid: number | null = null;
-      let probe: { available: boolean; refusal?: ConnectRefusal };
       try {
-        probe = await this.probeServer();
-      } catch (err) {
-        // Version mismatch - treat as server not available, start new one
-        if (err instanceof VersionMismatchError) {
-          probe = { available: false };
-        } else {
-          throw err;
+        let probe: { available: boolean; refusal?: ConnectRefusal };
+        try {
+          probe = await this.probeServer();
+        } catch (err) {
+          // Version mismatch - treat as server not available, start new one
+          if (err instanceof VersionMismatchError) {
+            probe = { available: false };
+          } else {
+            throw err;
+          }
         }
+        if (!probe.available) {
+          // Carried as a value so no other caller's probe can substitute for it.
+          daemonPid = await this.startInBackground(probe.refusal);
+        }
+        this.setUpConnection();
+        this._daemonStatus = DaemonStatus.CONNECTED;
+        this._daemonReady();
+      } catch (err) {
+        // Reset to DISCONNECTED and reject the ready promise so every
+        // concurrent caller parked on the CONNECTING branch gets the
+        // error instead of hanging forever.
+        this.failDaemonReady(err);
+        throw err;
       }
-      if (!probe.available) {
-        // Carried as a value so no other caller's probe can substitute for it.
-        daemonPid = await this.startInBackground(probe.refusal);
-      }
-      this.setUpConnection();
-      this._daemonStatus = DaemonStatus.CONNECTED;
-      this._daemonReady();
 
+      // Outside the try: the connection is established by now, and a throw
+      // from here must not undo it.
       daemonPid ??= getDaemonProcessIdSync();
       // Fire-and-forget - don't block daemon connection by waiting for metrics registration
       this.registerDaemonProcessWithMetricsService(daemonPid);
@@ -1191,16 +1310,33 @@ export class DaemonClient {
     }
   }
 
+  /** Shows the daemon's streamed graph and selection progress while waiting. */
+  private async sendWithGraphSpinner<T extends DaemonMessage>(
+    messageToDaemon: T
+  ): Promise<any> {
+    const spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    );
+    try {
+      return await this.sendToDaemonViaQueue(messageToDaemon, spinner);
+    } finally {
+      spinner.cleanup();
+    }
+  }
+
   private async sendToDaemonViaQueue<T extends DaemonMessage>(
     messageToDaemon: T,
-    parser?: 'v8' | 'json'
+    spinner?: DelayedSpinner
   ): Promise<any> {
     return this.queue.sendToQueue(async () => {
-      // Set currentSpinner inside the queued function so it's only
-      // active while this specific message is in flight — preventing
-      // concurrent callers from overwriting each other's spinner
-      // reference before their turn arrives.
-      return await this.sendMessageToDaemon(messageToDaemon, parser);
+      // Set inside the queued function so a waiting request cannot take
+      // over the in-flight request's spinner.
+      this.currentSpinner = spinner ?? null;
+      try {
+        return await this.sendMessageToDaemon(messageToDaemon);
+      } finally {
+        this.currentSpinner = null;
+      }
     });
   }
 
@@ -1276,31 +1412,38 @@ export class DaemonClient {
   private async handleConnectionError(error: Error) {
     clientLogger.log(`[Reconnect] Connection error detected: ${error.message}`);
 
+    // A plugin worker cannot bring a daemon back — `startInBackground` throws
+    // in one — and it is usually hosted by the daemon that just died, so the
+    // 60s reconnect poll almost always ends in the same failure. Make the loss
+    // terminal instead: the in-flight message and every later one fail fast
+    // with a clear error. The cost is that a CLI-hosted worker no longer
+    // survives a daemon restart, and that command fails.
+    if (global.NX_PLUGIN_WORKER) {
+      const pluginWorkerError = daemonProcessException(
+        `Plugin worker lost its daemon connection and cannot reconnect: ${error.message}`
+      );
+      this._pluginWorkerConnectionLost = pluginWorkerError;
+      if (this.currentReject) {
+        this.currentReject(pluginWorkerError);
+      }
+      this.failDaemonReady(pluginWorkerError);
+      return;
+    }
+
     // Create a new ready promise for new requests to wait on
-    this._waitForDaemonReady = new Promise<void>(
-      (resolve) => (this._daemonReady = resolve)
-    );
+    this._waitForDaemonReady = this.createReadyPromise();
 
     // Set status to CONNECTING so new requests will wait for reconnection
     this._daemonStatus = DaemonStatus.CONNECTING;
 
-    let serverAvailable: boolean;
     try {
-      ({ available: serverAvailable } = await this.waitForServerToBeAvailable({
+      const { available } = await this.waitForServerToBeAvailable({
         ignoreVersionMismatch: false,
-      }));
-    } catch (err) {
-      if (err instanceof VersionMismatchError) {
-        // New daemon has different version - reject with error so caller can handle
-        if (this.currentReject) {
-          this.currentReject(err);
-        }
-        return;
+      });
+      if (!available) {
+        // Out of reconnect attempts, so the error that started this stands.
+        throw error;
       }
-      throw err;
-    }
-
-    if (serverAvailable) {
       clientLogger.log(
         `[Reconnect] Reconnection successful, re-establishing connection`
       );
@@ -1317,11 +1460,18 @@ export class DaemonClient {
         const rej = this.currentReject;
         this.sendMessageToDaemon(msg).then(res, rej);
       }
-    } else {
-      // Failed to reconnect after all attempts, reject the pending request
-      if (this.currentReject) {
-        this.currentReject(error);
+    } catch (err) {
+      this.failDaemonReady(err);
+      // A new daemon on a different version and an exhausted reconnect are
+      // both answers for the in-flight caller; anything else is unexpected
+      // and propagates.
+      if (err instanceof VersionMismatchError || err === error) {
+        if (this.currentReject) {
+          this.currentReject(err);
+        }
+        return;
       }
+      throw err;
     }
   }
 
@@ -1397,10 +1547,7 @@ export class DaemonClient {
   }
 
   private envReflectionSent = false;
-  private async sendMessageToDaemon(
-    message: DaemonMessage,
-    force?: 'v8' | 'json'
-  ): Promise<any> {
+  private async sendMessageToDaemon(message: DaemonMessage): Promise<any> {
     // the first message sent to the daemon includes an env prop
     // that updates the process.env values on the daemon.
     if (!this.envReflectionSent && !global.NX_PLUGIN_WORKER) {
@@ -1431,7 +1578,7 @@ export class DaemonClient {
       this.currentResolve = resolve;
       this.currentReject = reject;
 
-      this.socketMessenger.sendMessage(message, force);
+      this.socketMessenger.sendMessage(message);
     }).finally(() => {
       clearTimeout(keepAlive);
     });

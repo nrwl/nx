@@ -5,11 +5,12 @@ import {
   listFiles,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCLIAsync,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Webpack', () => {
@@ -25,7 +26,7 @@ describe('Build React applications and libraries with Webpack', () => {
 
   it('should generate app with custom port', async () => {
     const appName = uniq('app');
-    const customPort = 8081;
+    const customPort = await reservePort();
 
     runCLI(
       `generate @nx/react:app apps/${appName} --bundler=webpack --port=${customPort} --unitTestRunner=none --no-interactive --e2eTestRunner=playwright`
@@ -34,12 +35,12 @@ describe('Build React applications and libraries with Webpack', () => {
     const webpackConfig = readFile(`apps/${appName}/webpack.config.js`);
     expect(webpackConfig).toContain(`port: ${customPort}`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(customPort)).toBeTruthy();
     }
   }, 300_000);
 });

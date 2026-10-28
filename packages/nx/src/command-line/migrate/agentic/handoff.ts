@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import {
   closeSync,
   constants as fsConstants,
@@ -7,30 +6,10 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
-  rmSync,
   type BigIntStats,
 } from 'fs';
 import { join } from 'path';
-import { rsort } from 'semver';
-import { normalizeVersion } from '../version-utils';
-import {
-  HANDOFFS_DIR_NAME,
-  HandoffFile,
-  MIGRATE_RUNS_RELATIVE_DIR,
-  PROMPTS_DIR_NAME,
-} from './types';
-
-/** Returns the run directory for a given workspace + run id (target version). */
-export function runDirPath(workspaceRoot: string, runId: string): string {
-  return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
-}
-
-/** The version-derived run id: the highest target version in the plan. */
-export function resolveAgenticRunId(
-  migrations: ReadonlyArray<{ version: string }>
-): string {
-  return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
-}
+import { HANDOFFS_DIR_NAME, HandoffFile } from './types';
 
 /**
  * `mkdir -p` with a contextual error wrapper. Without this, the raw
@@ -55,41 +34,8 @@ export function mkdirSafely(dir: string, purpose: string): void {
   }
 }
 
-/**
- * Wipes any prior contents for this run id and recreates an empty directory.
- *
- * Scope of the wipe is intentionally narrow (only `<run-id>/`) so that handoff
- * artifacts from prior runs targeting different versions remain on disk for
- * inspection.
- */
-export function initRunDir(workspaceRoot: string, runId: string): string {
-  const dir = runDirPath(workspaceRoot, runId);
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSafely(dir, 'nx migrate run directory');
-  return dir;
-}
-
-// Windows reserved device names fail to open even with an extension —
-// a migration named `CON` would otherwise produce a `CON.json` that the
-// agent can't write to.
-const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
-
-function sanitizeSegment(value: string): string {
-  if (value === '.' || value === '..') return '_';
-  let sanitized = value.replace(/[\x00-\x1f<>:"/\\|?*+]/g, '_');
-  // Windows forbids trailing dots/spaces on file/directory names.
-  sanitized = sanitized.replace(/[. ]+$/, '');
-  if (WINDOWS_RESERVED_NAMES.test(sanitized)) {
-    sanitized = `_${sanitized}`;
-  }
-  return sanitized || '_';
-}
-
-const STEP_NAME_PREFIX_MAX_BYTES = 64;
-
-// Cuts on code points so a multibyte character is never split, and counts
-// UTF-8 bytes because the filesystem limit is per byte, not per character.
-function truncateUtf8(value: string, maxBytes: number): string {
+// Truncates to a UTF-8 byte budget without splitting a code point.
+export function truncateUtf8(value: string, maxBytes: number): string {
   let out = '';
   let used = 0;
   for (const ch of value) {
@@ -101,41 +47,9 @@ function truncateUtf8(value: string, maxBytes: number): string {
   return out;
 }
 
-/**
- * The name a step's own files are keyed by, bounded to fit one path component.
- * Sanitizing folds many characters to `_` and the prefix is cut to fit, so the
- * SHA-256 of the raw package and name is what keeps two migrations apart.
- */
-function stepStem(migration: { package: string; name: string }): string {
-  const prefix = truncateUtf8(
-    [...migration.package.split('/'), migration.name]
-      .map(sanitizeSegment)
-      .join('+'),
-    STEP_NAME_PREFIX_MAX_BYTES
-  );
-  const hash = createHash('sha256')
-    .update(JSON.stringify([migration.package, migration.name]))
-    .digest('hex');
-  return `${prefix}-${hash}`;
-}
-
-export function stepHandoffPath(
-  runDir: string,
-  migration: { package: string; name: string }
-): string {
-  return join(runDir, HANDOFFS_DIR_NAME, `${stepStem(migration)}.json`);
-}
-
-/** Handoff path for a run step. No hash needed: step ids are unique within the run. */
+// Step ids match run-state's STEP_ID (`step-<n>`), so they are safe file names.
 export function runStepHandoffPath(runDir: string, stepId: string): string {
-  return join(runDir, HANDOFFS_DIR_NAME, `${sanitizeSegment(stepId)}.json`);
-}
-
-export function stepPromptsDir(
-  runDir: string,
-  migration: { package: string; name: string }
-): string {
-  return join(runDir, PROMPTS_DIR_NAME, stepStem(migration));
+  return join(runDir, HANDOFFS_DIR_NAME, `${stepId}.json`);
 }
 
 export type HandoffReadFailureReason =
@@ -164,6 +78,34 @@ export function handoffsDirState(
 }
 
 /**
+ * Non-recursive mkdir: the run dir exists, and a symlink created after the
+ * missing-path check fails with EEXIST instead of being followed.
+ */
+export function ensureRunSubdir(dir: string, notADirectory: () => Error): void {
+  const state = handoffsDirState(dir);
+  switch (state) {
+    case 'directory':
+      return;
+    case 'missing':
+      mkdirSync(dir);
+      return;
+    case 'other':
+      throw notADirectory();
+    default: {
+      const unhandled: never = state;
+      throw new Error(`Unhandled directory state: ${unhandled}`);
+    }
+  }
+}
+
+/**
+ * Thrown by {@link readInspectedFile} when the opened descriptor is not the
+ * file the caller's lstat described: a symlink followed on Windows, or an
+ * atomic replacement between the lstat and the open.
+ */
+export class FileReplacedDuringReadError extends Error {}
+
+/**
  * Reads the file `stat` describes, refusing a symlink swapped in after the
  * caller's lstat: O_NOFOLLOW fails the open with ELOOP, and O_NONBLOCK keeps a
  * planted FIFO from blocking it. Windows has neither flag, so there the inode
@@ -189,7 +131,7 @@ export function readInspectedFile(
       fdStat.dev !== stat.dev ||
       fdStat.ino !== stat.ino
     ) {
-      throw new Error(replacedMessage);
+      throw new FileReplacedDuringReadError(replacedMessage);
     }
     return readFileSync(fd, 'utf-8');
   } finally {
@@ -197,10 +139,47 @@ export function readInspectedFile(
   }
 }
 
+const ATOMIC_READ_ATTEMPTS = 5;
+
+/**
+ * Reads a file its owner publishes atomically (tmp + rename), with
+ * {@link readInspectedFile}'s refusal of a symlink or FIFO but tolerant of the
+ * publish: a rename swaps the inode between the lstat and the open, read as a
+ * replacement, so re-lstat and retry to read the new file. A pre-existing
+ * symlink or FIFO fails the isFile check before any open; a file that keeps
+ * changing past the retry budget is refused. Throws `notRegularMessage` for a
+ * non-regular file; ENOENT and ELOOP propagate.
+ */
+export function readAtomicallyPublishedFile(
+  filePath: string,
+  notRegularMessage: string
+): string {
+  for (let attempt = 1; ; attempt++) {
+    const stat = lstatSync(filePath, { bigint: true });
+    if (!stat.isFile()) {
+      throw new Error(notRegularMessage);
+    }
+    try {
+      return readInspectedFile(
+        filePath,
+        stat,
+        `${filePath} was replaced while being read.`
+      );
+    } catch (e) {
+      if (
+        e instanceof FileReplacedDuringReadError &&
+        attempt < ATOMIC_READ_ATTEMPTS
+      ) {
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
 /**
  * Splits "not written yet" from "written but garbage" so callers can surface a
- * malformed handoff instead of collapsing it into the generic
- * ambiguous-outcome prompt.
+ * malformed handoff instead of treating it as not written.
  */
 export function readHandoffWithReason(
   filePath: string,
@@ -277,60 +256,4 @@ export function readHandoffWithReason(
     handoff.extras = extras;
   }
   return { ok: true, handoff };
-}
-
-/**
- * Convenience wrapper preserving the original null-on-any-failure contract.
- * Used by the polling loop (`waitForValidHandoff`) where every failure mode
- * is "keep waiting" — the file may be missing, mid-write, or being rewritten.
- */
-export function readHandoff(
-  filePath: string,
-  handoffsDir: string
-): HandoffFile | null {
-  const result = readHandoffWithReason(filePath, handoffsDir);
-  return result.ok ? result.handoff : null;
-}
-
-/**
- * Polls for a valid handoff file. Resolves once `readHandoff` accepts the
- * file's contents. Used to detect when the agent has finished its work so the
- * orchestrator can close the agent's session without depending on the agent
- * exiting on its own.
- *
- * Rejects with the abort reason when `options.signal` is aborted.
- */
-export function waitForValidHandoff(
-  handoffFilePath: string,
-  handoffsDir: string,
-  options: { intervalMs?: number; signal?: AbortSignal } = {}
-): Promise<void> {
-  const intervalMs = options.intervalMs ?? 500;
-  const { signal } = options;
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(signal.reason ?? new Error('aborted'));
-      return;
-    }
-    let timer: NodeJS.Timeout | undefined;
-    const onAbort = () => {
-      if (timer) clearTimeout(timer);
-      signal?.removeEventListener('abort', onAbort);
-      reject(signal!.reason ?? new Error('aborted'));
-    };
-    const tick = () => {
-      if (signal?.aborted) {
-        onAbort();
-        return;
-      }
-      if (readHandoff(handoffFilePath, handoffsDir) !== null) {
-        signal?.removeEventListener('abort', onAbort);
-        resolve();
-        return;
-      }
-      timer = setTimeout(tick, intervalMs);
-    };
-    signal?.addEventListener('abort', onAbort);
-    timer = setTimeout(tick, intervalMs);
-  });
 }

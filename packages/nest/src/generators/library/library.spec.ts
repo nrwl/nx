@@ -1,3 +1,5 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
 import {
   getProjects,
   readJson,
@@ -17,7 +19,7 @@ describe('lib', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -32,7 +34,6 @@ describe('lib', () => {
     it('should update project configuration', async () => {
       await libraryGenerator(tree, {
         directory: 'my-lib',
-        addPlugin: true,
       });
 
       const config = readProjectConfiguration(tree, 'my-lib');
@@ -353,17 +354,16 @@ describe('lib', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files by default', async () => {
@@ -452,22 +452,6 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint",
-              },
-              "test": {
-                "executor": "@nx/jest:jest",
-                "options": {
-                  "jestConfig": "mylib/jest.config.cts",
-                },
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage",
-                ],
-              },
-            },
-          },
           "private": true,
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -587,22 +571,6 @@ describe('lib', () => {
               "default": "./dist/index.js"
             }
           },
-          "nx": {
-            "targets": {
-              "lint": {
-                "executor": "@nx/eslint:lint"
-              },
-              "test": {
-                "executor": "@nx/jest:jest",
-                "outputs": [
-                  "{projectRoot}/test-output/jest/coverage"
-                ],
-                "options": {
-                  "jestConfig": "mylib/jest.config.cts"
-                }
-              }
-            }
-          },
           "dependencies": {
             "tslib": "^2.3.0"
           }
@@ -689,20 +657,7 @@ describe('lib', () => {
           "root": "mylib",
           "sourceRoot": "mylib/src",
           "tags": [],
-          "targets": {
-            "lint": {
-              "executor": "@nx/eslint:lint",
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "mylib/jest.config.cts",
-              },
-              "outputs": [
-                "{projectRoot}/test-output/jest/coverage",
-              ],
-            },
-          },
+          "targets": {},
         }
       `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();

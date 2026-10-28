@@ -1,17 +1,36 @@
-import type {
-  PostTasksExecutionContext,
-  PreTasksExecutionContext,
-} from './public-api';
+import type { PreTasksExecutionContext } from './public-api';
 import { readNxJson } from '../../config/nx-json';
 import { getPlugins } from './get-plugins';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import { workspaceRoot } from '../../utils/workspace-root';
+import {
+  stubTerminalOutputs,
+  type MaybeStubbedPostTasksExecutionContext,
+} from './task-results-stub';
+import {
+  capabilitiesOfNxPluginsReadFromCache,
+  type NxPluginCapabilities,
+} from './nx-plugin-capabilities';
+
+/** True only when the cached graph's recorded rows show no plugin has `hook`; unknown is false. */
+function knownThatNoPluginRegisters(
+  hook: keyof Pick<
+    NxPluginCapabilities,
+    'hasPreTasksExecution' | 'hasPostTasksExecution'
+  >
+): boolean {
+  const recorded = capabilitiesOfNxPluginsReadFromCache();
+  return !!recorded && !recorded.some((capabilities) => capabilities[hook]);
+}
 
 export async function runPreTasksExecution(
   pluginContext: PreTasksExecutionContext
 ) {
   if (isOnDaemon() || !isDaemonEnabled()) {
+    if (knownThatNoPluginRegisters('hasPreTasksExecution')) {
+      return [];
+    }
     performance.mark(`preTasksExecution:start`);
     const plugins = await getPlugins(
       readNxJson(pluginContext.workspaceRoot),
@@ -60,9 +79,12 @@ function applyProcessEnvs(envs: NodeJS.ProcessEnv[]) {
 }
 
 export async function runPostTasksExecution(
-  context: PostTasksExecutionContext
+  context: MaybeStubbedPostTasksExecutionContext
 ) {
   if (isOnDaemon() || !isDaemonEnabled()) {
+    if (knownThatNoPluginRegisters('hasPostTasksExecution')) {
+      return;
+    }
     performance.mark(`postTasksExecution:start`);
     const plugins = await getPlugins(readNxJson(workspaceRoot));
     await Promise.all(
@@ -89,6 +111,6 @@ export async function runPostTasksExecution(
       `postTasksExecution:end`
     );
   } else {
-    await daemonClient.runPostTasksExecution(context);
+    await daemonClient.runPostTasksExecution(stubTerminalOutputs(context));
   }
 }

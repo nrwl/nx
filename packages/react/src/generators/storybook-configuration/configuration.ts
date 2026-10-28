@@ -3,7 +3,6 @@ import {
   ensurePackage,
   formatFiles,
   type GeneratorCallback,
-  readNxJson,
   runTasksInSerial,
   type Tree,
 } from '@nx/devkit';
@@ -17,10 +16,7 @@ export function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  return storybookConfigurationGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return storybookConfigurationGeneratorInternal(host, schema);
 }
 
 export async function storybookConfigurationGeneratorInternal(
@@ -30,11 +26,6 @@ export async function storybookConfigurationGeneratorInternal(
   assertSupportedReactVersion(host);
 
   const tasks: GeneratorCallback[] = [];
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
@@ -62,7 +53,6 @@ export async function storybookConfigurationGeneratorInternal(
     configureStaticServe: schema.configureStaticServe,
     uiFramework: uiFramework as any, // cannot import UiFramework type dynamically
     skipFormat: true,
-    addPlugin: schema.addPlugin,
   });
 
   tasks.push(installTask);

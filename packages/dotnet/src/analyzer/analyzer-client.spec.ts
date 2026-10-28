@@ -1,28 +1,32 @@
 import { EventEmitter } from 'node:events';
 
-jest.mock('node:fs', () => ({
-  ...jest.requireActual('node:fs'),
-  existsSync: jest.fn(() => true),
+vi.mock('node:fs', async () => ({
+  ...(await vi.importActual<any>('node:fs')),
+  existsSync: vi.fn(() => true),
 }));
 
 const mocks = {
-  safeSpawn: jest.fn(),
-  killChildOnHostExit: jest.fn(),
-  killProcessTreeGraceful: jest.fn(() => Promise.resolve()),
-  pluginCacheGet: jest.fn(() => undefined),
+  hashWithWorkspaceContext: vi.fn(async () => 'files-hash'),
+  safeSpawn: vi.fn(),
+  killChildOnHostExit: vi.fn(),
+  killProcessTreeGraceful: vi.fn(() => Promise.resolve()),
+  pluginCacheGet: vi.fn(() => undefined),
 };
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
   isCI: () => false,
-  hashWithWorkspaceContext: jest.fn(async () => 'files-hash'),
+  hashWithWorkspaceContext: (...args: unknown[]) =>
+    mocks.hashWithWorkspaceContext(...args),
   hashObject: () => 'options-hash',
   workspaceDataDirectory: '/tmp/workspace-data',
-  PluginCache: jest.fn(() => ({
-    get: mocks.pluginCacheGet,
-    set: jest.fn(),
-    writeToDisk: jest.fn(),
-  })),
+  PluginCache: vi.fn(function () {
+    return {
+      get: mocks.pluginCacheGet,
+      set: vi.fn(),
+      writeToDisk: vi.fn(),
+    };
+  }),
   safeSpawn: (...args: unknown[]) => mocks.safeSpawn(...args),
   killChildOnHostExit: (...args: unknown[]) =>
     mocks.killChildOnHostExit(...args),
@@ -34,11 +38,11 @@ function fakeChild(pid = 123) {
   const child: any = new EventEmitter();
   child.pid = pid;
   child.stdout = new EventEmitter();
-  child.stdout.setEncoding = jest.fn();
+  child.stdout.setEncoding = vi.fn();
   child.stderr = new EventEmitter();
-  child.stderr.setEncoding = jest.fn();
+  child.stderr.setEncoding = vi.fn();
   child.stdin = new EventEmitter();
-  child.stdin.end = jest.fn();
+  child.stdin.end = vi.fn();
   return child;
 }
 
@@ -48,16 +52,18 @@ describe('analyzeProjects', () => {
   let readCachedAnalysisResult: typeof import('./analyzer-client').readCachedAnalysisResult;
   let ANALYZER_CANCELLED_MESSAGE: string;
 
-  beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    mocks.hashWithWorkspaceContext.mockImplementation(async () => 'files-hash');
+    mocks.pluginCacheGet.mockReturnValue(undefined);
     delete process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT;
     ({
       analyzeProjects,
       getAnalysisTimeoutMs,
       readCachedAnalysisResult,
       ANALYZER_CANCELLED_MESSAGE,
-    } = require('./analyzer-client'));
+    } = await import('./analyzer-client'));
   });
 
   it('should stream the options then the file list over stdin and parse stdout', async () => {
@@ -136,14 +142,14 @@ describe('analyzeProjects', () => {
   });
 
   it('should kill the analyzer and fail with a timeout error when it hangs', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     try {
       process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT = '1';
       const child = fakeChild(456);
       mocks.safeSpawn.mockReturnValue(child);
 
       const promise = analyzeProjects(['a/a.csproj']);
-      await jest.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(1000);
 
       const result = await promise;
       expect('error' in result && result.error.message).toMatch(
@@ -151,7 +157,7 @@ describe('analyzeProjects', () => {
       );
       expect(mocks.killProcessTreeGraceful).toHaveBeenCalledWith(456);
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 
@@ -223,5 +229,61 @@ describe('analyzeProjects', () => {
     expect(getAnalysisTimeoutMs()).toBe(30_000);
     process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT = 'nope';
     expect(getAnalysisTimeoutMs()).toBe(120_000);
+  });
+
+  describe('evaluation inputs', () => {
+    const hashFileList = async (_root: string, files: string[]) =>
+      files.join('|');
+
+    it('should reuse a cached result whose evaluation inputs are unchanged', async () => {
+      mocks.hashWithWorkspaceContext.mockImplementation(hashFileList);
+      const result = {
+        nodesByFile: {},
+        referencesByRoot: {},
+        evaluationInputs: ['build/Common.Build.props'],
+      };
+      mocks.pluginCacheGet.mockReturnValue({
+        result,
+        inputsHash: 'build/Common.Build.props',
+      });
+
+      await expect(analyzeProjects(['a/a.csproj'])).resolves.toEqual(result);
+      expect(mocks.safeSpawn).not.toHaveBeenCalled();
+    });
+
+    it('should rerun the analyzer when an evaluation input changed', async () => {
+      // The glob-matched files are unchanged, so the files hash still hits;
+      // only a file MSBuild imported (outside the glob) differs.
+      mocks.hashWithWorkspaceContext.mockImplementation(hashFileList);
+      mocks.pluginCacheGet.mockReturnValue({
+        result: {
+          nodesByFile: {},
+          referencesByRoot: {},
+          evaluationInputs: ['build/Common.Build.props'],
+        },
+        inputsHash: 'stale',
+      });
+      const child = fakeChild();
+      mocks.safeSpawn.mockReturnValue(child);
+
+      const promise = analyzeProjects(['a/a.csproj']);
+      await new Promise(setImmediate);
+      child.stdout.emit(
+        'data',
+        JSON.stringify({
+          nodesByFile: {},
+          referencesByRoot: {},
+          evaluationInputs: ['build/Other.props'],
+        })
+      );
+      child.emit('close', 0);
+
+      await expect(promise).resolves.toEqual({
+        nodesByFile: {},
+        referencesByRoot: {},
+        evaluationInputs: ['build/Other.props'],
+      });
+      expect(mocks.safeSpawn).toHaveBeenCalledTimes(1);
+    });
   });
 });

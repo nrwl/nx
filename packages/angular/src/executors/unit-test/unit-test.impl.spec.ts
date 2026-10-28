@@ -1,23 +1,24 @@
+import type { MockInstance } from 'vitest';
 import * as angularVersionUtils from '../utilities/angular-version-utils';
 
 // The executor pulls in the Angular CLI adapter and esbuild plugin loaders at
 // module scope; option validation runs before any of them, so stub them out to
 // keep the spec a pure unit test of the version gates.
-jest.mock('nx/src/adapter/ngcli-adapter', () => ({
-  createBuilderContext: jest.fn().mockResolvedValue({
-    getBuilderNameForTarget: jest.fn(),
-    getTargetOptions: jest.fn(),
+vi.mock('nx/src/adapter/ngcli-adapter', () => ({
+  createBuilderContext: vi.fn().mockResolvedValue({
+    getBuilderNameForTarget: vi.fn(),
+    getTargetOptions: vi.fn(),
   }),
 }));
-jest.mock('../utilities/esbuild-extensions', () => ({
-  loadPlugins: jest.fn().mockResolvedValue([]),
-  loadIndexHtmlTransformer: jest.fn(),
+vi.mock('../utilities/esbuild-extensions', () => ({
+  loadPlugins: vi.fn().mockResolvedValue([]),
+  loadIndexHtmlTransformer: vi.fn(),
 }));
-jest.mock('../utilities/builder-package', () => ({
-  assertPackageIsInstalled: jest.fn(),
+vi.mock('../utilities/builder-package', () => ({
+  assertPackageIsInstalled: vi.fn(),
 }));
-jest.mock('@angular/build', () => ({
-  executeUnitTestBuilder: jest.fn(async function* () {
+vi.mock('@angular/build', () => ({
+  executeUnitTestBuilder: vi.fn(async function* () {
     yield { success: true };
   }),
 }));
@@ -26,7 +27,7 @@ import unitTestExecutor from './unit-test.impl';
 import type { UnitTestExecutorOptions } from './schema';
 
 describe('unitTestExecutor option validation', () => {
-  let getInstalledAngularVersionInfoSpy: jest.SpyInstance;
+  let getInstalledAngularVersionInfoSpy: MockInstance;
 
   // validateOptions runs synchronously at the top of the generator body, so the
   // first `.next()` surfaces any gate error as a rejected promise.
@@ -39,14 +40,14 @@ describe('unitTestExecutor option validation', () => {
     ).next();
 
   beforeEach(() => {
-    getInstalledAngularVersionInfoSpy = jest.spyOn(
+    getInstalledAngularVersionInfoSpy = vi.spyOn(
       angularVersionUtils,
       'getInstalledAngularVersionInfo'
     );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('throws when the Angular version is < 21', async () => {
@@ -100,6 +101,28 @@ describe('unitTestExecutor option validation', () => {
     });
 
     const { value } = await run({ isolate: true, quiet: true });
+
+    expect(value).toEqual({ success: true });
+  });
+
+  it('throws when "splitting" is set on Angular < 22.2.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.1.0',
+    });
+
+    await expect(run({ splitting: false })).rejects.toThrow(
+      'The "splitting" option requires Angular version 22.2.0 or greater. You are currently using version 22.1.0.'
+    );
+  });
+
+  it('allows "splitting" on Angular >= 22.2.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.2.0',
+    });
+
+    const { value } = await run({ splitting: false });
 
     expect(value).toEqual({ success: true });
   });

@@ -13,7 +13,8 @@ import {
   writeFileSync,
 } from 'fs';
 import { rm } from 'node:fs/promises';
-import { dirname, join, relative } from 'path';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
@@ -30,6 +31,7 @@ import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
 import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
+  fileExists,
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
@@ -98,33 +100,85 @@ export interface PackageManagerCommands {
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
+  /**
+   * @deprecated Use `publishArgv` instead, which needs no shell off Windows.
+   * This will be removed in Nx 25.
+   */
   publish: (
     packageRoot: string,
     registry: string,
     registryConfigKey: string,
     tag: string
   ) => string;
+  publishArgv: (
+    packageRoot: string,
+    registry: string,
+    registryConfigKey: string,
+    tag: string
+  ) => { command: string; args: string[] };
   // yarn berry doesn't support ignoring scripts via flag
   ignoreScriptsFlag?: string;
 }
 
 /**
- * Detects which package manager is used in the workspace based on the lock file.
+ * Detects the package manager from the CLI override or directory lockfiles.
+ * Project directories in the current workspace can fall back to its root lockfile.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(
+  dir: string = workspaceRoot
+): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
-      ? 'bun'
-      : existsSync(join(dir, 'yarn.lock'))
-        ? 'yarn'
-        : existsSync(join(dir, 'pnpm-lock.yaml'))
-          ? 'pnpm'
-          : existsSync(join(dir, 'package-lock.json'))
-            ? 'npm'
-            : detectInvokedPackageManager())
-  );
+  if (nxJson.cli?.packageManager) {
+    return nxJson.cli.packageManager;
+  }
+
+  const dirsToCheck = isCurrentWorkspaceSubdirectory(dir)
+    ? [dir, workspaceRoot]
+    : [dir];
+  for (const directory of dirsToCheck) {
+    if (
+      existsSync(join(directory, 'bun.lockb')) ||
+      existsSync(join(directory, 'bun.lock'))
+    ) {
+      return 'bun';
+    }
+    if (existsSync(join(directory, 'yarn.lock'))) {
+      return 'yarn';
+    }
+    if (existsSync(join(directory, 'pnpm-lock.yaml'))) {
+      return 'pnpm';
+    }
+    if (existsSync(join(directory, 'package-lock.json'))) {
+      return 'npm';
+    }
+  }
+
+  return detectInvokedPackageManager();
+}
+
+function isCurrentWorkspaceSubdirectory(dir: string): boolean {
+  let directory = resolve(dir);
+  const relativePath = relative(workspaceRoot, directory);
+  if (
+    !relativePath ||
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    return false;
+  }
+
+  while (relative(workspaceRoot, directory) !== '') {
+    if (
+      ['nx.json', 'nx', 'nx.bat'].some((file) =>
+        fileExists(join(directory, file))
+      )
+    ) {
+      return false;
+    }
+    directory = dirname(directory);
+  }
+  return true;
 }
 
 /**
@@ -179,6 +233,17 @@ export function isWorkspacesEnabled(
 }
 
 /**
+ * The registry and tag reach `publish` from `.npmrc`, which an install script
+ * can write, so every token is quoted before it becomes shell syntax.
+ */
+function publishCommandFromArgv({
+  command,
+  args,
+}: ReturnType<PackageManagerCommands['publishArgv']>): string {
+  return [command, ...args].map(quoteShellArg).join(' ');
+}
+
+/**
  * Returns commands for the package manager used in the workspace.
  * By default, the package manager is derived based on the lock file,
  * but it can also be passed in explicitly.
@@ -207,6 +272,22 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${registryConfigKey}=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
@@ -229,8 +310,8 @@ export function getPackageManagerCommand(
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
@@ -259,6 +340,30 @@ export function getPackageManagerCommand(
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'pnpm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${
+            configForm
+              ? `config.${registryConfigKey}`
+              : scopedForm
+                ? registryConfigKey
+                : 'registry'
+          }=${registry}`,
+          `--tag=${tag}`,
+          '--no-git-checks',
+        ],
+      });
+
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -283,18 +388,28 @@ export function getPackageManagerCommand(
         list: 'pnpm ls --depth 100',
         why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `pnpm publish "${packageRoot}" --json --"${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}" --tag=${tag} --no-git-checks`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          `--${registryConfigKey}=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       return {
         install: 'npm install',
         ciInstall: 'npm ci',
@@ -309,12 +424,28 @@ export function getPackageManagerCommand(
         list: 'npm ls',
         why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        _registryConfigKey,
+        tag
+      ) => ({
+        command: 'bun',
+        args: [
+          'publish',
+          `--cwd=${packageRoot}`,
+          '--json',
+          `--registry=${registry}`,
+          `--tag=${tag}`,
+        ],
+      });
+
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
@@ -329,8 +460,8 @@ export function getPackageManagerCommand(
         list: 'bun pm ls',
         why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
@@ -368,6 +499,11 @@ export function getPackageManagerVersion(
         cwd,
         encoding: 'utf-8',
         windowsHide: true,
+        // Store discovery creates temporary workspace files even for --version.
+        env:
+          packageManager === 'pnpm'
+            ? { ...process.env, PNPM_CONFIG_STORE_DIR: tmpdir() }
+            : undefined,
       }).trim();
     } catch {}
   }
@@ -902,6 +1038,16 @@ export async function packageRegistryView(
   } catch (e) {
     throw redactErrorCause(e);
   }
+}
+
+/**
+ * Parses `npm view --json` output. npm 12 wraps the result in an array even
+ * when a single version matches; npm <= 11 and pnpm print the bare value. A
+ * multi-version match (range spec) stays an array.
+ */
+export function parseRegistryViewJson<T = unknown>(raw: string): T {
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) && parsed.length === 1 ? parsed[0] : parsed;
 }
 
 /**

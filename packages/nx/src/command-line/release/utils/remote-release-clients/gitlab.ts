@@ -1,6 +1,7 @@
 import * as pc from 'picocolors';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execSync } from 'node:child_process';
+import { openUrl } from '../../../../native';
 import { orange, output } from '../../../../utils/output';
 import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
@@ -234,14 +235,14 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
             `---`,
             `Request Data:`,
             `Repo: ${this.getRemoteRepoData<GitLabRepoData>()?.slug}`,
-            `Token Header Data: ${this.tokenHeader}`,
+            `Token Header: ${this.getRedactedTokenHeader()}`,
             `Body: ${JSON.stringify(result.requestData)}`,
           ],
         });
       } else {
-        console.log(error);
+        console.log(this.inspectWithRedactedToken(error));
         console.error(
-          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitLab token from the error message!)`
+          `An unknown error occurred while trying to create a release on GitLab, please report this on https://github.com/nrwl/nx (NOTE: your GitLab token is redacted above, but please double-check before sharing)`
         );
       }
     }
@@ -251,24 +252,19 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       return;
     }
 
-    const { default: open } = await (new Function(
-      'return import("open")'
-    )() as Promise<typeof import('open')>);
-    await open(result.url)
-      .then(() => {
-        console.info(
-          `\nFollow up in the browser to manually create the release:\n\n` +
-            pc.underline(pc.cyan(result.url)) +
-            `\n`
-        );
-      })
-      .catch(() => {
-        console.info(
-          `Open this link to manually create a release: \n` +
-            pc.underline(pc.cyan(result.url)) +
-            '\n'
-        );
-      });
+    if (openUrl(result.url)) {
+      console.info(
+        `\nFollow up in the browser to manually create the release:\n\n` +
+          pc.underline(pc.cyan(result.url)) +
+          `\n`
+      );
+    } else {
+      console.info(
+        `Open this link to manually create a release: \n` +
+          pc.underline(pc.cyan(result.url)) +
+          '\n'
+      );
+    }
   }
 
   private async promptForContinueInGitLab(): Promise<boolean> {

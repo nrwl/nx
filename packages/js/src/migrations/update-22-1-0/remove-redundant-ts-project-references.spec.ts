@@ -4,10 +4,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './remove-redundant-ts-project-references';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
-  formatFiles: jest.fn(() => Promise.resolve()),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: vi.fn(() => Promise.resolve()),
 }));
 
 describe('remove-redundant-ts-project-references migration', () => {
@@ -58,9 +58,7 @@ describe('remove-redundant-ts-project-references migration', () => {
       dependencies: {},
     };
 
-    jest
-      .spyOn(devkit, 'formatFiles')
-      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(devkit, 'formatFiles').mockImplementation(() => Promise.resolve());
 
     writeJson(tree, 'nx.json', {
       plugins: ['@nx/js/typescript'],

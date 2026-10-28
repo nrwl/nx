@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { addProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
 import { readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import type { TargetConfiguration } from 'nx/src/config/workspace-json-project-json';
@@ -15,7 +16,7 @@ import {
 } from './executor-to-plugin-migrator.test-utils';
 
 // See the engine spec: keeps executor resolution honest to the temp workspace.
-jest.mock('nx/src/utils/has-nx-js-plugin', () => ({
+vi.mock('nx/src/utils/has-nx-js-plugin', () => ({
   hasNxJsPlugin: () => false,
 }));
 
@@ -23,12 +24,12 @@ jest.mock('nx/src/utils/has-nx-js-plugin', () => ({
 // whole-workspace project-graph build would not move them. Fail fast on any
 // graph construction instead: the contract is exact inference-pass counts WITH
 // no graph build.
-jest.mock('nx/src/project-graph/project-graph', () => {
+vi.mock('nx/src/project-graph/project-graph', async () => {
   const fail = () => {
     throw new Error('the benchmark must not build the project graph');
   };
   return {
-    ...jest.requireActual('nx/src/project-graph/project-graph'),
+    ...(await vi.importActual<any>('nx/src/project-graph/project-graph')),
     buildProjectGraphAndSourceMapsWithoutDaemon: fail,
     createProjectGraphAsync: fail,
     createProjectGraphAndSourceMapsAsync: fail,
@@ -159,7 +160,7 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     plugin: SyntheticPlugin,
     executor: string,
     targetName: string,
-    logger: { warn: jest.Mock }
+    logger: { warn: Mock }
   ) {
     return () =>
       migrateProjectExecutorsToPlugin(
@@ -176,7 +177,7 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
 
   async function runBatch(
     children: Array<() => unknown | Promise<unknown>>,
-    finalizeLogger: { warn: jest.Mock }
+    finalizeLogger: { warn: Mock }
   ) {
     const session = openBatchConversionSession(ctx.tree);
     try {
@@ -313,10 +314,10 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     ctx.tree.write('nx.json', JSON.stringify(seededNxJson));
 
     const preBytes = totalConfigBytes(ctx, roots);
-    const warnLint = jest.fn();
-    const warnTest = jest.fn();
-    const warnE2e = jest.fn();
-    const warnFinalize = jest.fn();
+    const warnLint = vi.fn();
+    const warnTest = vi.fn();
+    const warnE2e = vi.fn();
+    const warnFinalize = vi.fn();
 
     await runBatch(
       [
@@ -457,10 +458,10 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
     }
     updateNxJson(ctx.tree, seededNxJson);
 
-    const warnLint = jest.fn();
-    const warnTest = jest.fn();
-    const warnRunner = jest.fn();
-    const warnFinalize = jest.fn();
+    const warnLint = vi.fn();
+    const warnTest = vi.fn();
+    const warnRunner = vi.fn();
+    const warnFinalize = vi.fn();
 
     await runBatch(
       [

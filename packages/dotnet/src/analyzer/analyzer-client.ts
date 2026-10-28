@@ -57,6 +57,10 @@ export interface AnalysisSuccessResult {
     string,
     { refs: string[]; sourceConfigFile: string }
   >;
+  // Every workspace file MSBuild read during evaluation, workspace-relative.
+  // Arbitrary imports are only known after evaluating, so the cache key is
+  // completed from the previous result rather than from the glob.
+  evaluationInputs?: string[];
 }
 export interface AnalysisErrorResult {
   error: Error;
@@ -78,7 +82,13 @@ export interface DotNetAnalyzerOptions {
 
 interface AnalyzerCache {
   hash: string;
+  inputsHash: string;
   result: AnalysisResult;
+}
+
+interface PersistedAnalysis {
+  result: AnalysisSuccessResult;
+  inputsHash: string;
 }
 
 let cache: AnalyzerCache | null = null;
@@ -114,6 +124,30 @@ function getAnalyzerPath(): string {
  */
 async function calculateProjectFilesHash(files: string[]): Promise<string> {
   return await hashWithWorkspaceContext(workspaceRoot, files);
+}
+
+/**
+ * Hash of the files a previous evaluation reported reading. Empty when the
+ * result carries none, so a result from an older analyzer never matches and
+ * is re-run once.
+ */
+async function calculateEvaluationInputsHash(
+  result: AnalysisSuccessResult
+): Promise<string> {
+  const inputs = result.evaluationInputs ?? [];
+  return inputs.length === 0
+    ? ''
+    : await hashWithWorkspaceContext(workspaceRoot, inputs);
+}
+
+async function isStillValid(
+  entry: { result: AnalysisSuccessResult; inputsHash: string } | undefined
+): Promise<boolean> {
+  return (
+    entry?.result !== undefined &&
+    isAnalysisSuccessResult(entry.result) &&
+    entry.inputsHash === (await calculateEvaluationInputsHash(entry.result))
+  );
 }
 
 /**
@@ -289,43 +323,47 @@ export async function analyzeProjects(
 ): Promise<AnalysisResult> {
   const filesHash = await calculateProjectFilesHash(files);
 
-  // Return cached results if the hash matches
+  // Return cached results if the glob-matched files and the files the
+  // previous evaluation imported are both unchanged.
   if (
     cache &&
     cache.hash === filesHash &&
     // NOTE: We don't read from the cache here if it's an error result,
     // to allow retrying analysis in case of transient errors or errors fixed
     // that may not be reflected in the hash (like setting an env var).
-    isAnalysisSuccessResult(cache.result)
+    isAnalysisSuccessResult(cache.result) &&
+    (await isStillValid({ result: cache.result, inputsHash: cache.inputsHash }))
   ) {
     return cache.result;
   }
 
   const optionsHash = hashObject(options);
-  const analyzerCache = new PluginCache<AnalysisSuccessResult>(
+  const analyzerCache = new PluginCache<PersistedAnalysis>(
     join(workspaceDataDirectory, `dotnet-${optionsHash}.hash`)
   );
-  const cachedResult = analyzerCache.get(filesHash);
-  if (cachedResult) {
-    // Update cache
+  const persisted = analyzerCache.get(filesHash);
+  if (await isStillValid(persisted)) {
     cache = {
       hash: filesHash,
-      result: cachedResult,
+      inputsHash: persisted.inputsHash,
+      result: persisted.result,
     };
-    return cachedResult;
+    return persisted.result;
   }
 
   // Run the analyzer
   try {
     const result = await runAnalyzer(files, options);
+    const inputsHash = await calculateEvaluationInputsHash(result);
 
     // Update local cache
     cache = {
       hash: filesHash,
+      inputsHash,
       result,
     };
     // Update persistent cache
-    analyzerCache.set(filesHash, result);
+    analyzerCache.set(filesHash, { result, inputsHash });
     analyzerCache.writeToDisk();
 
     return result;
@@ -344,6 +382,7 @@ export async function analyzeProjects(
     if (err.message !== ANALYZER_CANCELLED_MESSAGE) {
       cache = {
         hash: filesHash,
+        inputsHash: '',
         result: errorResult,
       };
     }

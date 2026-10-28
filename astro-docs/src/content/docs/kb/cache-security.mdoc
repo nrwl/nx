@@ -30,9 +30,9 @@ In order to keep your cache secure, there are a few steps we recommend you take:
 
 ### Use personal access tokens to provide fine-Grained access control for local development
 
-When you use a [personal access token](/docs/kb/personal-access-tokens) to connect to Nx Cloud, you can control the level of access that your developers have to the cache after they authenticate by logging in. By default, all personal access tokens have read-write access to the cache. If you need to give a developer write access to the cache, you can do so in the workspace settings of the Nx Cloud UI.
+When you use a [personal access token](/docs/kb/personal-access-tokens) to connect to Nx Cloud, you can control the level of access that your developers have to the cache after they authenticate by logging in. By default, all personal access tokens have read-write access to the cache. If you need to give a developer write access to the cache, you can do so in the [workspace settings](https://cloud.nx.app/go/workspace/settings/access) of the Nx Cloud UI.
 
-You can strengthen your workspace security further by revoking all access to the cache for unauthenticated users. This is done by changing the ID Access Level in your workspace settings. By default this is set to `read-write`, but you can change it to `read-only` to limit access or `none` to prevent all access.
+You can strengthen your workspace security further by revoking all access to the cache for unauthenticated users. This is done by changing the ID Access Level in your [workspace settings](https://cloud.nx.app/go/workspace/settings/access). By default this is set to `read-write`, but you can change it to `read-only` to limit access or `none` to prevent all access.
 
 ### Avoid using CI access tokens in `nx.json`
 
@@ -61,7 +61,7 @@ Nx implicitly trusts the local cache which is stored by default in a per-user `~
 
 ### Configure end to end encryption
 
-Nx Cloud guarantees your cache entries will remain immutable - once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API and we have policies enabled in our cloud storage that specifically disables overwrites and deletions of cached artifacts. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/docs/guides/nx-cloud/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace.
+Nx Cloud guarantees your cache entries will remain immutable - once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API and we have policies enabled in our cloud storage that specifically disables overwrites and deletions of cached artifacts. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/docs/kb/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace.
 
 ### Use an on-Premise version of Nx Cloud if needed
 

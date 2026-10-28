@@ -1,18 +1,15 @@
 import { logger } from '@nx/devkit';
 
-// TODO(v24): Remove the @nx/remix:build and @nx/remix:serve executors. The
-// inferred plugin (@nx/remix/plugin) and the convert-to-inferred generator
-// stay supported.
-export const REMIX_BUILD_EXECUTOR_DEPRECATION_MESSAGE =
-  'The `@nx/remix:build` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/remix:convert-to-inferred` to migrate to the `@nx/remix/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.';
+// TODO(v25): Remove @nx/remix entirely - the plugin (createNodes), createWatchPaths,
+// plugins/component-testing and the convert-to-inferred generator.
+export const REMIX_DEPRECATION_MESSAGE =
+  '@nx/remix is deprecated and will be removed in Nx 25. Migrate to React Router with @nx/react. See https://nx.dev/docs/technologies/react/remix/introduction for migration instructions.';
 
-export const REMIX_SERVE_EXECUTOR_DEPRECATION_MESSAGE =
-  'The `@nx/remix:serve` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/remix:convert-to-inferred` to migrate to the `@nx/remix/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.';
+let warned = false;
 
-export function warnRemixBuildExecutorDeprecation(): void {
-  logger.warn(REMIX_BUILD_EXECUTOR_DEPRECATION_MESSAGE);
-}
-
-export function warnRemixServeExecutorDeprecation(): void {
-  logger.warn(REMIX_SERVE_EXECUTOR_DEPRECATION_MESSAGE);
+export function warnRemixDeprecation(): void {
+  if (!warned) {
+    logger.warn(REMIX_DEPRECATION_MESSAGE);
+    warned = true;
+  }
 }

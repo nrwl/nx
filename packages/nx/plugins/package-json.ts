@@ -57,7 +57,8 @@ const plugin: NxPlugin = {
             workspaceRoot,
             cache,
             isInPackageJsonWorkspaces(packageJsonPath),
-            packageManagerCommand
+            packageManagerCommand,
+            context.nxJsonConfiguration
           ),
         configFiles,
         options,

@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -9,9 +10,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
+  nxVersion,
   reactVersion,
   reactDomVersion,
   typesReactVersion,
@@ -66,6 +69,7 @@ export async function providerGenerator(
       command: BUNDLER_DEV_COMMAND[opts.bundler],
       cwd: opts.projectRoot,
     },
+    readyWhen: { signal: true },
   };
   if (schema.consumer) {
     serveTarget.dependsOn = [`${schema.consumer}:serve`];
@@ -95,6 +99,7 @@ export async function providerGenerator(
     componentName,
     versions: {
       ...mfVersions,
+      nxVersion,
       reactVersion,
       reactDomVersion,
       typesReactVersion,
@@ -121,6 +126,13 @@ export async function providerGenerator(
   // resolve when nx invokes the generated run-commands serve target. The
   // per-project package.json template still ships for pnpm-workspace setups.
   const deps = getProviderDeps(opts.bundler);
+  if (opts.bundler === 'rsbuild') {
+    // @rsbuild/core v1 depends on core-js, whose install script only prints a
+    // funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js': false,
+    });
+  }
   const installTask = addDependenciesToPackageJson(
     tree,
     deps.dependencies,

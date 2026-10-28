@@ -616,6 +616,22 @@ See merge request nx-release-test/nx-release-test!2`,
 
       expect(result).toEqual(null);
     });
+
+    it('should throw when the pattern reads an environment variable', async () => {
+      await expect(
+        getLatestGitTagForPattern(
+          'v{version}-{env.CHANNEL}',
+          {},
+          mockResolveTags,
+          {
+            requireSemver: true,
+            strictPreid: false,
+          }
+        )
+      ).rejects.toThrow(
+        "Release configuration 'v{version}-{env.CHANNEL}' is invalid. It can't read environment variables"
+      );
+    });
   });
 
   describe('sanitizeProjectNameForGitTag', () => {

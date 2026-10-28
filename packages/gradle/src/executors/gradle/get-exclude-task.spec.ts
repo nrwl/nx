@@ -21,9 +21,18 @@ function makeTaskGraph(
         },
       ])
     ),
-    dependencies,
-    continuousDependencies,
+    dependencies: toEdges(dependencies),
+    continuousDependencies: toEdges(continuousDependencies),
   };
+}
+
+function toEdges(record: Record<string, string[]>) {
+  return Object.fromEntries(
+    Object.entries(record).map(([id, deps]) => [
+      id,
+      deps.map((dep) => ({ id: dep })),
+    ])
+  );
 }
 
 function makeNodesWithTaskNames(

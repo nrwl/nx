@@ -7,13 +7,11 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
-import { ensureTypescript, isUsingTsSolutionSetup } from '@nx/js/internal';
+import { ensureTypescript } from '@nx/js/internal';
 import { type RspackExecutorSchema } from '../executors/rspack/schema';
 import { type ConfigurationSchema } from '../generators/configuration/schema';
 import { type Framework } from '../generators/init/schema';
-import { hasPlugin } from './has-plugin';
 
 export type Target = 'build' | 'serve';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -42,24 +40,8 @@ export function findExistingTargetsInProject(
   };
 
   const supportedExecutors = {
-    build: [
-      '@nxext/vite:build',
-      '@nrwl/webpack:webpack',
-      '@nrwl/rollup:rollup',
-      '@nrwl/web:rollup',
-      '@nrwl/vite:build',
-      '@nx/webpack:webpack',
-      '@nx/rollup:rollup',
-      '@nx/web:rollup',
-      '@nx/vite:build',
-    ],
-    serve: [
-      '@nxext/vite:dev',
-      '@nrwl/webpack:dev-server',
-      '@nrwl/vite:dev-server',
-      '@nx/webpack:dev-server',
-      '@nx/vite:dev-server',
-    ],
+    build: ['@nxext/vite:build'],
+    serve: ['@nxext/vite:dev'],
   };
 
   const unsupportedExecutors = [
@@ -155,98 +137,35 @@ export function findExistingTargetsInProject(
   return output;
 }
 
-export function addOrChangeBuildTarget(
-  tree: Tree,
-  options: ConfigurationSchema,
-  target: string
+// A leftover target on one of these can't run, and it shadows the inferred
+// target with the same name, so converting around it leaves a broken project.
+const removedConvertibleExecutors = [
+  '@nrwl/rollup:rollup',
+  '@nrwl/vite:build',
+  '@nrwl/vite:dev-server',
+  '@nrwl/webpack:dev-server',
+  '@nrwl/webpack:webpack',
+  '@nx/rollup:rollup',
+  '@nx/vite:build',
+  '@nx/vite:dev-server',
+  '@nx/webpack:dev-server',
+  '@nx/webpack:webpack',
+];
+
+export function assertNoRemovedExecutorTargets(
+  projectName: string,
+  targets: Record<string, TargetConfiguration> | undefined
 ) {
-  const project = readProjectConfiguration(tree, options.project);
-  const assets = [];
-  if (
-    options.target === 'web' &&
-    tree.exists(joinPathFragments(project.root, 'src/favicon.ico'))
-  ) {
-    assets.push(joinPathFragments(project.root, 'src/favicon.ico'));
+  const removedTargets = Object.entries(targets ?? {})
+    .filter(([, target]) =>
+      removedConvertibleExecutors.includes(target.executor)
+    )
+    .map(([targetName, target]) => `${targetName} (${target.executor})`);
+  if (removedTargets.length) {
+    throw new Error(
+      `The project ${projectName} has targets using removed executors: ${removedTargets.join(', ')}. Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=${projectName}".`
+    );
   }
-  if (tree.exists(joinPathFragments(project.root, 'src/assets'))) {
-    assets.push(joinPathFragments(project.root, 'src/assets'));
-  }
-
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-
-  const buildOptions: RspackExecutorSchema = {
-    target: options.target ?? 'web',
-    outputPath: isTsSolutionSetup
-      ? joinPathFragments(project.root, 'dist')
-      : joinPathFragments(
-          'dist',
-          // If standalone project then use the project's name in dist.
-          project.root === '.' ? project.name : project.root
-        ),
-    index: joinPathFragments(project.root, 'src/index.html'),
-    main: determineMain(tree, options),
-    tsConfig: determineTsConfig(tree, options),
-    rspackConfig: joinPathFragments(project.root, 'rspack.config.js'),
-    assets,
-  };
-
-  const existingProjectConfigurations = {};
-  const buildTarget = project.targets.build;
-  if (buildTarget && buildTarget.configurations) {
-    for (const [configurationName, configuration] of Object.entries(
-      buildTarget.configurations
-    )) {
-      existingProjectConfigurations[configurationName] = configuration;
-    }
-  }
-
-  project.targets ??= {};
-
-  project.targets[target] = {
-    executor: '@nx/rspack:rspack',
-    outputs: ['{options.outputPath}'],
-    defaultConfiguration: 'production',
-    options: buildOptions,
-    configurations: {
-      development: {
-        ...(existingProjectConfigurations['development'] ?? {}),
-        mode: 'development',
-      },
-      production: {
-        ...(existingProjectConfigurations['production'] ?? {}),
-        mode: 'production',
-        optimization: options.target === 'web' ? true : undefined,
-        sourceMap: false,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
-}
-
-export function addOrChangeServeTarget(
-  tree: Tree,
-  options: ConfigurationSchema,
-  target: string
-) {
-  const project = readProjectConfiguration(tree, options.project);
-
-  project.targets ??= {};
-
-  project.targets[target] = {
-    executor: '@nx/rspack:dev-server',
-    options: {
-      buildTarget: `${options.project}:build:development`,
-    },
-    configurations: {
-      development: {},
-      production: {
-        buildTarget: `${options.project}:build:production`,
-      },
-    },
-  };
-
-  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function writeRspackConfigFile(
@@ -272,14 +191,12 @@ function createConfig(
   const defaultConfig = generateDefaultConfig(project, buildOptions);
 
   if (options.framework === 'react') {
-    return generateReactConfig(options);
-  } else if (isWebFramework(options)) {
-    return generateWebConfig(tree, options, defaultConfig);
-  } else if (options.framework === 'nest') {
-    return generateNestConfig(tree, options, project, buildOptions);
-  } else {
-    return generateGenericConfig(tree, options, defaultConfig);
+    return generateReactConfig(tree, options, project, buildOptions);
+  } else if (options.framework === 'nest' && !isWebFramework(options)) {
+    return generateNestConfig(project, buildOptions);
   }
+
+  return defaultConfig;
 }
 
 function createBuildOptions(
@@ -330,61 +247,54 @@ function isWebFramework(
   return options.framework === 'web' || options.target === 'web';
 }
 
-function generateWebConfig(
+function generateReactConfig(
   tree: Tree,
   options: ConfigurationWithStylePreprocessorOptions,
-  defaultConfig: string
-): string {
-  if (hasPlugin(tree)) {
-    return defaultConfig;
-  }
+  project: ProjectConfiguration,
+  buildOptions: RspackExecutorSchema
+) {
+  const assets = ['src/favicon.ico', 'src/assets']
+    .map((asset) => joinPathFragments(project.root, asset))
+    .filter((asset) => tree.exists(asset));
 
   return `
-const { composePlugins, withNx, withWeb } = require('@nx/rspack');
-module.exports = composePlugins(withNx(), withWeb(${
-    options.stylePreprocessorOptions
-      ? `
-  {
-    stylePreprocessorOptions: ${JSON.stringify(
-      options.stylePreprocessorOptions
-    )},
-  }
-  `
-      : ''
-  }), (config) => {
-    return config;
-  });
+const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+      buildOptions.outputPath
+    }'),
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '${buildOptions.tsConfig}',
+      main: '${buildOptions.main}',
+      index: '${joinPathFragments(project.root, 'src/index.html')}',
+      assets: ${JSON.stringify(assets)},${
+        options.stylePreprocessorOptions
+          ? `
+      stylePreprocessorOptions: ${JSON.stringify(
+        options.stylePreprocessorOptions
+      )},`
+          : ''
+      }
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin(),
+  ],
+};
 `;
 }
 
-function generateReactConfig({
-  stylePreprocessorOptions,
-}: ConfigurationWithStylePreprocessorOptions) {
-  return `
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
-
-module.exports = composePlugins(withNx(), withReact(${
-    stylePreprocessorOptions
-      ? `
-  {
-    stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
-  }
-  `
-      : ''
-  }), (config) => {
-  return config;
-});
-    `;
-}
-
 function generateNestConfig(
-  tree: Tree,
-  options: ConfigurationSchema,
   project: ProjectConfiguration,
   buildOptions: RspackExecutorSchema
 ): string {
-  if (hasPlugin(tree) && options.addPlugin !== false) {
-    return `
+  return `
 const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
 const rspack = require('@rspack/core');
 const { join } = require('path');
@@ -420,61 +330,6 @@ module.exports = {
     })
   ]
 }`;
-  }
-
-  return `
-const { composePlugins, withNx } = require('@nx/rspack');
-const rspack = require('@rspack/core');
-
-module.exports = composePlugins(withNx(), (config) => {
-  config.optimization = {
-    minimizer: [
-      new rspack.SwcJsMinimizerRspackPlugin({
-        minimizerOptions: {
-          compress: {
-            keep_classnames: true,
-            keep_fnames: true,
-          },
-          mangle: {
-            keep_classnames: true,
-            keep_fnames: true,
-          },
-        },
-      }),
-    ],
-  };
-  return config;
-});
-`;
-}
-
-function generateGenericConfig(
-  tree: Tree,
-  options: ConfigurationWithStylePreprocessorOptions,
-  defaultConfig: string
-): string {
-  if (hasPlugin(tree)) {
-    return defaultConfig;
-  }
-
-  return `
-const { composePlugins, withNx${
-    options.stylePreprocessorOptions ? ', withWeb' : ''
-  } } = require('@nx/rspack');
-
-module.exports = composePlugins(withNx()${
-    options.stylePreprocessorOptions
-      ? `,
-    withWeb({
-      stylePreprocessorOptions: ${JSON.stringify(
-        options.stylePreprocessorOptions
-      )},
-    })`
-      : ''
-  }, (config) => {
-    return config;
-  });
-`;
 }
 
 export function deleteWebpackConfig(
@@ -607,8 +462,7 @@ export async function handleUnsupportedUserProvidedTargets(
     await handleUnsupportedUserProvidedTargetsErrors(
       userProvidedTargetName.build,
       validFoundTargetName.build,
-      'build',
-      'rspack'
+      'build'
     );
   }
 
@@ -620,8 +474,7 @@ export async function handleUnsupportedUserProvidedTargets(
     await handleUnsupportedUserProvidedTargetsErrors(
       userProvidedTargetName.serve,
       validFoundTargetName.serve,
-      'serve',
-      'dev-server'
+      'serve'
     );
   }
 }
@@ -629,29 +482,28 @@ export async function handleUnsupportedUserProvidedTargets(
 async function handleUnsupportedUserProvidedTargetsErrors(
   userProvidedTargetName: string,
   validFoundTargetName: string,
-  target: Target,
-  executor: 'rspack' | 'dev-server'
+  target: Target
 ) {
   logger.warn(
-    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use the @nx/rspack:${executor} executor.
+    `The custom ${target} target you provided (${userProvidedTargetName}) cannot be converted to use Rspack.
      However, we found the following ${target} target in your project that can be converted: ${validFoundTargetName}
 
-     Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
-     your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
+     Please note that converting a potentially non-compatible project to use Rspack may result in unexpected behavior. Always commit
+     your changes before converting a project to use Rspack, and test the converted project thoroughly before deploying it.
     `
   );
 
   const shouldConvert = await confirmationPrompt({
-    message: `Should we convert the ${validFoundTargetName} target to use the @nx/rspack:${executor} executor?`,
+    message: `Should we convert the ${validFoundTargetName} target to use Rspack?`,
   });
   if (!shouldConvert) {
     throw new Error(
-      `The ${target} target ${userProvidedTargetName} cannot be converted to use the @nx/rspack:${executor} executor.
+      `The ${target} target ${userProvidedTargetName} cannot be converted to use Rspack.
       Please try again, either by providing a different ${target} target or by not providing a target at all (Nx will
         convert the first one it finds, most probably this one: ${validFoundTargetName})
 
-      Please note that converting a potentially non-compatible project to use Vite may result in unexpected behavior. Always commit
-      your changes before converting a project to use Vite, and test the converted project thoroughly before deploying it.
+      Please note that converting a potentially non-compatible project to use Rspack may result in unexpected behavior. Always commit
+      your changes before converting a project to use Rspack, and test the converted project thoroughly before deploying it.
       `
     );
   }
@@ -661,23 +513,23 @@ export async function handleUnknownExecutors(projectName: string) {
   logger.warn(
     `
       We could not find any targets in project ${projectName} that use executors which
-      can be converted to the @nx/rspack executors.
+      can be converted to Rspack.
 
       This either means that your project may not have a target
       for building, serving, or testing at all, or that your targets are
       using executors that are not known to Nx.
 
-      If you still want to convert your project to use the @nx/rspack executors,
+      If you still want to convert your project to use Rspack,
       please make sure to commit your changes before running this generator.
       `
   );
 
   const shouldConvert = await confirmationPrompt({
-    message: `Should Nx convert your project to use the @nx/rspack executors?`,
+    message: `Should Nx convert your project to use Rspack?`,
   });
   if (!shouldConvert) {
     throw new Error(`
-      Nx could not verify that the executors you are using can be converted to the @nx/rspack executors.
+      Nx could not verify that the executors you are using can be converted to Rspack.
       Please try again with a different project.
     `);
   }
@@ -699,10 +551,7 @@ export function determineFrameworkAndTarget(
   if (options.target !== 'node') {
     // Try to infer from jest config if the env is node
     let jestConfigPath: string;
-    if (
-      targets?.test?.executor !== '@nx/jest:jest' &&
-      targets?.test?.options?.jestConfig
-    ) {
+    if (targets?.test?.options?.jestConfig) {
       jestConfigPath = targets?.test?.options?.jestConfig;
     } else {
       jestConfigPath = joinPathFragments(projectRoot, 'jest.config.ts');

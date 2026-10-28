@@ -42,10 +42,64 @@ pub(super) fn get_inputs<'a>(
     split_inputs_into_self_and_deps(inputs, named_inputs)
 }
 
+/// The self and dependency halves of a propagated group, or `None` when the
+/// group holds anything but `dependencies: true` filesets — those are the
+/// only inputs that resolve against a dependency as one unit, which is what
+/// lets a negation filter the positives beside it rather than alone.
+///
+/// An empty slice yields empty halves rather than `None`, and both callers
+/// treat that the same way they treat `None` today. Do not "fix" it to return
+/// `None`: the two callers read `None` differently — `memoized_dep_subtree`
+/// takes it as a settled empty subtree (`needs_legacy: false`), while the
+/// local-inputs memo takes it as a shape it cannot cache (`needs_legacy:
+/// true`). Changing the return value would move one of them.
+pub(super) fn get_inputs_for_dependency_group<'a>(
+    project: &'a Project,
+    nx_json: &'a NxJson,
+    named_inputs: &[Input<'a>],
+) -> anyhow::Result<Option<SplitInputs<'a>>> {
+    if let [named_input] = named_inputs {
+        return get_inputs_for_dependency(project, nx_json, named_input);
+    }
+
+    let mut self_inputs = Vec::with_capacity(named_inputs.len());
+    let mut deps_inputs = Vec::with_capacity(named_inputs.len());
+    for named_input in named_inputs {
+        let Input::FileSet {
+            fileset,
+            dependencies: true,
+            include_ignored,
+            ..
+        } = named_input
+        else {
+            return Ok(None);
+        };
+        self_inputs.push(Input::FileSet {
+            fileset: *fileset,
+            dependencies: false,
+            include_ignored: *include_ignored,
+            always: false,
+        });
+        deps_inputs.push(Input::FileSet {
+            fileset: *fileset,
+            dependencies: true,
+            include_ignored: *include_ignored,
+            always: false,
+        });
+    }
+
+    Ok(Some(SplitInputs {
+        deps_outputs: vec![],
+        deps_inputs,
+        self_inputs,
+        project_inputs: vec![],
+    }))
+}
+
 pub(super) fn get_inputs_for_dependency<'a>(
     project: &'a Project,
     nx_json: &'a NxJson,
-    named_input: &'a Input,
+    named_input: &Input<'a>,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
     match named_input {
         Input::Inputs { input, .. } => {
@@ -55,8 +109,9 @@ pub(super) fn get_inputs_for_dependency<'a>(
                     .into_iter()
                     .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
             let deps_inputs = vec![Input::Inputs {
-                input,
+                input: *input,
                 dependencies: true,
+                always: false,
             }];
 
             Ok(Some(SplitInputs {
@@ -69,16 +124,22 @@ pub(super) fn get_inputs_for_dependency<'a>(
         Input::FileSet {
             fileset,
             dependencies: true,
+            include_ignored,
+            ..
         } => {
             // For dependency filesets, we apply the same fileset to the dependency
             // and continue recursively with the same pattern
             let self_inputs = vec![Input::FileSet {
-                fileset,
+                fileset: *fileset,
                 dependencies: false,
+                include_ignored: *include_ignored,
+                always: false,
             }];
             let deps_inputs = vec![Input::FileSet {
-                fileset,
+                fileset: *fileset,
                 dependencies: true,
+                include_ignored: *include_ignored,
+                always: false,
             }];
 
             Ok(Some(SplitInputs {
@@ -101,10 +162,13 @@ fn split_inputs_into_self_and_deps<'a>(
             Input::FileSet {
                 fileset: "{projectRoot}/**/*",
                 dependencies: false,
+                include_ignored: false,
+                always: false,
             },
             Input::Inputs {
                 input: "default",
                 dependencies: true,
+                always: false,
             },
         ]
     });
@@ -186,21 +250,35 @@ pub(super) fn expand_single_project_inputs<'a>(
                     expanded.push(Input::FileSet {
                         fileset: s,
                         dependencies: false,
+                        include_ignored: false,
+                        always: false,
                     });
                 }
             }
             Input::Inputs {
                 input,
                 dependencies: false,
-            } => expanded.extend(expand_named_input(input, named_inputs)?),
+                always,
+            } => {
+                let inputs = expand_named_input(input, named_inputs)?;
+                if always {
+                    expanded.extend(inputs.into_iter().map(Input::into_always));
+                } else {
+                    expanded.extend(inputs);
+                }
+            }
             Input::FileSet {
                 fileset,
                 dependencies: false,
+                include_ignored,
+                always,
             } => {
                 validate_file_set(fileset)?;
                 expanded.push(Input::FileSet {
                     fileset,
                     dependencies: false,
+                    include_ignored,
+                    always,
                 });
             }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
@@ -220,12 +298,14 @@ pub(super) fn expand_single_project_inputs<'a>(
                 json,
                 fields,
                 exclude_fields,
+                always,
             } => {
                 validate_file_set(json)?;
                 expanded.push(Input::Json {
                     json,
                     fields,
                     exclude_fields,
+                    always,
                 });
             }
             Input::Projects { .. }
@@ -277,6 +357,8 @@ pub(super) fn expand_named_input<'a>(
         Some(NamedInput::BuiltInDefault) => Ok(vec![Input::FileSet {
             fileset: "{projectRoot}/**/*",
             dependencies: false,
+            include_ignored: false,
+            always: false,
         }]),
         None => anyhow::bail!("Input '{}' is not defined", input),
     }
@@ -357,6 +439,7 @@ mod tests {
                 Input::FileSet {
                     fileset,
                     dependencies: false,
+                    ..
                 } => *fileset,
                 other => panic!("Unexpected input {other:?}"),
             })
@@ -381,7 +464,9 @@ mod tests {
                 .as_slice(),
             [Input::FileSet {
                 fileset: "{projectRoot}/**/*",
-                dependencies: false
+                dependencies: false,
+                include_ignored: false,
+                always: false,
             }]
         ));
         nx_json.named_inputs = Some(HashMap::from([("default".into(), vec![])]));

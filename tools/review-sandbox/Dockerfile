@@ -56,9 +56,10 @@ RUN mise trust /work/mise.toml \
 #   pnpm-lock.yaml       what `pnpm fetch` resolves.
 #   pnpm-workspace.yaml  declares patchedDependencies (and the catalog).
 #   patches/             without it the fetch aborts: ERR_PNPM_PATCH_FILE_PATH_MISSING.
+#                        Empty when the repo patches no dependency.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /work/
 COPY patches /work/patches
 RUN corepack prepare --activate \
-    && pnpm fetch --lockfile-dir /work \
+    && pnpm fetch --dir /work \
     && rm -rf /work/node_modules \
     && pnpm store path

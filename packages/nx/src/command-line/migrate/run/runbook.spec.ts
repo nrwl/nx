@@ -13,6 +13,8 @@ function buildContext(overrides: Partial<RunbookContext> = {}): RunbookContext {
     reconcileCommand: 'npx nx migrate --run-id=run-1',
     createCommits: true,
     validate: true,
+    finalValidation: true,
+    singleMigration: false,
     ...overrides,
   };
 }
@@ -23,6 +25,9 @@ describe('renderRunbook', () => {
 
     expect(runbook).toContain('# Nx migrate run run-1');
     expect(runbook).toContain("Never infer the run's progress");
+    expect(runbook).toContain(
+      '  - Do not edit the `migrate` section of nx.json.'
+    );
     expect(runbook).toContain('    npx nx migrate --run-id=run-1');
   });
 
@@ -40,6 +45,9 @@ describe('renderRunbook', () => {
     // so the agent is never told to write one without a path.
     expect(runbook).toContain('run the\n   `next` command first');
     expect(runbook).toContain('`no-progress` action');
+    expect(runbook).toContain(
+      'An `existing-run` action means no run was started'
+    );
     expect(runbook).toContain('report the blocker to the user');
   });
 
@@ -74,6 +82,32 @@ describe('renderRunbook', () => {
     expect(runbook).toContain('give up');
   });
 
+  it('carries the failed-step guidance: diagnose first, two retries with the user asked before the last, give up when nobody can answer', () => {
+    const runbook = renderRunbook(buildContext());
+
+    expect(runbook).toContain('## Failed and died steps');
+    expect(runbook).toContain('Diagnose the failure before choosing');
+    expect(runbook).toContain('A step allows two retries');
+    expect(runbook).toContain('ask the user before using the last one');
+    expect(runbook).toContain('`unresolved`: give the migration up');
+    expect(runbook).toContain(
+      'give the step up with `unresolved` and continue the run'
+    );
+    expect(runbook).toContain(
+      "Withheld, with `skip`, when a commit of this migration's changes\n  landed, or was started and never recorded"
+    );
+    expect(runbook).toContain(
+      '`adopt` only once you have\ninspected the tree and finished the migration; otherwise stop and\nreport.'
+    );
+    // Unattended, an unfinishable prompt reaches the give-up option only
+    // through a failed handoff.
+    expect(runbook).toContain(
+      'write that failed handoff yourself with the problems'
+    );
+    expect(runbook).toContain('run `next` so the step is recorded as failed');
+    expect(runbook).toContain('a session Nx started for this run');
+  });
+
   it('carries the author scope rules, and the validation scope rules only when validation is on', () => {
     const withValidation = renderRunbook(buildContext({ validate: true }));
     const withoutValidation = renderRunbook(buildContext({ validate: false }));
@@ -85,6 +119,22 @@ describe('renderRunbook', () => {
     }
     expect(withValidation).toContain("validate the generator's changes");
     expect(withoutValidation).not.toContain("validate the generator's changes");
+  });
+
+  it('carries the final-validation scope rules only when the pass is on', () => {
+    const withPass = renderRunbook(buildContext({ finalValidation: true }));
+    const withoutPass = renderRunbook(buildContext({ finalValidation: false }));
+
+    expect(withPass).toContain('validation pass over the whole workspace');
+    expect(withPass).toContain('`nx affected --base <ref> -t <targets>`');
+    expect(withPass).toContain('carried to the final\n  validation pass');
+    expect(withoutPass).not.toContain(
+      'validation pass over the whole workspace'
+    );
+    expect(withoutPass).not.toContain('nx affected --base');
+    expect(withoutPass).toContain(
+      'carried to the completion\n  report instead'
+    );
   });
 
   it('defers the formatter command to the dispensed step and names the exact replacements', () => {
@@ -109,6 +159,22 @@ describe('renderRunbook', () => {
     );
   });
 
+  it('points a single run at the handoff summary instead of the issue ledger, and says to re-run rather than resume', () => {
+    const runbook = renderRunbook(
+      buildContext({ singleMigration: true, finalValidation: false })
+    );
+
+    expect(runbook).toContain(
+      "Nx prints the handoff's `summary` when the run ends"
+    );
+    expect(runbook).not.toMatch(/Reporting issues|recorded issues|run\s+issue/);
+    expect(runbook).not.toContain('An `existing-run` action');
+    expect(runbook).toContain(
+      'same `nx migrate --run-migration` command again afterwards'
+    );
+    expect(runbook).not.toContain('resume the run');
+  });
+
   it('carries the issue-reporting contract: shapes, mapping vocabulary, and update scoping', () => {
     const runbook = renderRunbook(buildContext());
 
@@ -119,7 +185,7 @@ describe('renderRunbook', () => {
     );
     expect(runbook).toContain('"id": "issue-<n>"');
     expect(runbook).toContain(
-      '`issueUpdates` may only reference issues the digest marks assigned to'
+      '`issueUpdates` may only reference issues the digest marks assigned or'
     );
     expect(runbook).toContain('rejected');
   });

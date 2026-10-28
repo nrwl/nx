@@ -83,7 +83,7 @@ If your repository uses package manager workspaces, Nx uses those settings to fi
 
 ### Tasks inferred from your tooling configuration
 
-Nx [plugins](/docs/concepts/nx-plugins) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/concepts/mental-model#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
+Nx [plugins](/docs/plugin-registry) for tools like TypeScript, Vite, Playwright, and Jest [infer task configuration](/docs/features/run-tasks#inferred-tasks) from your existing tooling config files, keeping those files as the single source of truth. Because a config file like `vite.config.ts` exists, Nx knows the project can run a `build` task with Vite, and it reads the config to set the correct [cache](/docs/features/cache-task-results) outputs. The TypeScript-specific inference is covered in [how the TypeScript plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 ### TypeScript project references kept in sync
 
@@ -287,7 +287,7 @@ The output location is controlled by `outDir` in your build tsconfig (defaults t
 }
 ```
 
-The plugin reads `outDir` automatically and sets the correct [task outputs](/docs/concepts/how-caching-works) for caching.
+The plugin reads `outDir` automatically and sets the correct [task outputs](/docs/features/cache-task-results#how-caching-works) for caching.
 
 If you're manually defining the `build` targets, make sure to keep the [target configuration outputs](/docs/kb/configure-outputs) in sync with where typescript is outputting the built artifacts. This ensures Nx properly restores the cache for your build tasks.
 
@@ -297,7 +297,7 @@ If you're manually defining the `build` targets, make sure to keep the [target c
 nx typecheck my-lib
 ```
 
-The `typecheck` task is automatically inferred for any project with a `tsconfig.json`.
+The `typecheck` task is inferred for projects with a `tsconfig.json`. Outside a TypeScript solution setup, it's skipped for projects whose build already typechecks them. See [how the plugin infers tasks](#how-the-typescript-plugin-infers-tasks).
 
 If you're not using inferred plugins, then you can manually define a `typecheck` target in your [projects configuration](/docs/reference/project-configuration#project-level-configuration-files).
 
@@ -311,7 +311,18 @@ Otherwise you can manually add the [plugin to your `nx.json#plugins` to enable i
 
 The `@nx/js/typescript` plugin adds tasks based on the files it finds in your project:
 
-The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`.
+The `@nx/js/typescript` plugin will add a `typecheck` task to any project that has a `tsconfig.json`. Next.js projects don't get one. It's the only plugin that infers `typecheck` for Vite, Rsbuild, Rolldown, Remix, and React Router projects, except Vue projects, which get a `vue-tsc` task from `@nx/vite/plugin`.
+
+The `typecheck` command depends on whether the workspace uses a TypeScript solution setup with [project references](#typescript-project-references-kept-in-sync):
+
+- In a TypeScript solution setup, it runs `tsc --build --emitDeclarationOnly` and depends on the `typecheck` tasks of dependency projects.
+- Otherwise, it runs `tsc -p <tsconfig> --noEmit` against the first of `tsconfig.app.json`, `tsconfig.lib.json`, and `tsconfig.json` that exists. This task has no outputs and doesn't depend on other tasks.
+
+Outside a TypeScript solution setup, the plugin skips projects whose build already typechecks them:
+
+- Projects with a `project.json` or `package.json` target that uses `@nx/js:tsc` or an Angular build executor.
+- Projects with an `@nx/js:swc` or `@nx/esbuild:esbuild` target, unless it sets `skipTypeCheck: true`.
+- Projects without one of those targets that have a `webpack.config.*`, `rspack.config.*`, or `rollup.config.*` file.
 
 The plugin also adds a `build` task for projects that meet both of the following conditions:
 
@@ -393,7 +404,7 @@ Configure `@nx/js/typescript` in the `plugins` array in `nx.json`:
 | `build.skipBuildCheck` | Allows build inference without package exports that point to compiled output. | `false`             |
 | `verboseOutput`        | Adds TypeScript's `--verbose` flag to the underlying commands.                | `false`             |
 
-The `typecheck` and `build` tasks are cached, with inputs and outputs based on your TypeScript configuration, and depend on the corresponding tasks in dependency projects.
+The `typecheck` and `build` tasks are cached. In a TypeScript solution setup, their inputs and outputs come from your TypeScript configuration, and they depend on the corresponding tasks in dependency projects. Outside one, `typecheck` uses the `production` named input, or `default` if there's no `production`.
 
 ### Exclude or include specific projects
 
