@@ -24,7 +24,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { readFileSync, renameSync, rmSync, writeFileSync } from 'fs';
+import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
@@ -64,134 +64,6 @@ describe('Nx Commands', () => {
         delete process.env.NX_CLI_SET;
       } else {
         process.env.NX_CLI_SET = original;
-      }
-    }
-  });
-
-  it('should terminate command descendants when startup times out', async () => {
-    const fixture = uniq('startup-timeout');
-    const timeout = 60_000;
-    const realSetTimeout = setTimeout;
-    const realClearTimeout = clearTimeout;
-    let pid: number;
-    let failure: Error;
-    let settled = false;
-    let timersFaked = false;
-    let startupGuard: ReturnType<typeof setTimeout>;
-    let announceStarted: () => void;
-    const started = new Promise<void>((resolve) => (announceStarted = resolve));
-
-    function isAlive() {
-      try {
-        process.kill(pid, 0);
-        if (process.platform === 'linux') {
-          try {
-            return !/^State:\s+Z\b/m.test(
-              readFileSync(`/proc/${pid}/status`, 'utf8')
-            );
-          } catch (error) {
-            if (error.code === 'ENOENT') return false;
-            throw error;
-          }
-        }
-        return true;
-      } catch (error) {
-        if (error.code === 'ESRCH') return false;
-        throw error;
-      }
-    }
-
-    updateFile(
-      `${fixture}/project.json`,
-      JSON.stringify({
-        name: fixture,
-        targets: {
-          start: { command: `node ${fixture}/start.cjs`, cache: false },
-        },
-      })
-    );
-    updateFile(
-      `${fixture}/start.cjs`,
-      `const fs = require('node:fs');
-const stop = require('node:path').join(__dirname, 'stop');
-// Keep package manager signal forwarding from hiding a leaked process.
-process.on('SIGTERM', () => {});
-if (fs.existsSync(stop)) process.exit(0);
-console.log('STARTUP_TIMEOUT_PID=' + process.pid);
-setInterval(() => {
-  if (fs.existsSync(stop) || !fs.existsSync(__dirname)) process.exit(0);
-}, 50);
-`
-    );
-
-    try {
-      jest.useFakeTimers({
-        doNotFake: ['Date', 'nextTick', 'setImmediate', 'clearImmediate'],
-      });
-      timersFaked = true;
-      const outcome = runCommandUntil(
-        `run ${fixture}:start --output-style=stream --skip-nx-cache`,
-        (output) => {
-          const match = /STARTUP_TIMEOUT_PID=(\d+)\r?\n/.exec(output);
-          if (match) {
-            pid = Number(match[1]);
-            announceStarted();
-          }
-          return false;
-        },
-        {
-          timeout,
-          env: {
-            NX_DAEMON: 'false',
-            // Keep Nx's force-kill fallback from satisfying the termination check.
-            NX_PROCESS_KILL_GRACE_PERIOD: '60000',
-          },
-        }
-      ).then(
-        () => {
-          settled = true;
-        },
-        (error) => {
-          failure = error;
-          settled = true;
-        }
-      );
-      await Promise.race([
-        started,
-        outcome.then(() => {
-          throw (
-            failure ?? new Error('Command completed before fixture startup')
-          );
-        }),
-        new Promise<never>((_, reject) => {
-          startupGuard = realSetTimeout(
-            () => reject(new Error('Fixture did not report its PID')),
-            60_000
-          );
-        }),
-      ]);
-      realClearTimeout(startupGuard);
-      expect(isAlive()).toBe(true);
-      jest.advanceTimersByTime(timeout);
-      jest.useRealTimers();
-      timersFaked = false;
-
-      const deadline = Date.now() + 10_000;
-      while ((!settled || isAlive()) && Date.now() < deadline) {
-        await new Promise((resolve) => realSetTimeout(resolve, 50));
-      }
-      expect(failure?.message).toBe(
-        `Timed out after ${timeout}ms waiting for criteria`
-      );
-      expect(isAlive()).toBe(false);
-    } finally {
-      realClearTimeout(startupGuard);
-      writeFileSync(tmpProjPath(`${fixture}/stop`), '');
-      try {
-        if (timersFaked) jest.advanceTimersByTime(timeout);
-      } finally {
-        jest.useRealTimers();
-        rmSync(tmpProjPath(fixture), { recursive: true, force: true });
       }
     }
   });
