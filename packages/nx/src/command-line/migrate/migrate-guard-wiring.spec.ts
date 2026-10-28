@@ -479,7 +479,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     mockEnsurePackageHasProvenance.mockResolvedValue(undefined);
     mockCreateTempInstallDirectory.mockImplementation(() => {
       throw new Error(
-        'Nx cannot install packages without a private ~/.nx directory: reason.\nwhy'
+        'Nx cannot install packages because it found no directory closed to other users to install into.\n  ~/.nx/tmp: reason.'
       );
     });
 
@@ -489,7 +489,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     expect(output.error).toHaveBeenCalledWith(
       expect.objectContaining({
         title:
-          'Nx cannot install packages without a private ~/.nx directory: reason.',
+          'Nx cannot install packages because it found no directory closed to other users to install into.',
       })
     );
     expect(mockExecSync).not.toHaveBeenCalled();
