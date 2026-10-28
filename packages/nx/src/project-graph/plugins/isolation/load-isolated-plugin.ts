@@ -4,39 +4,111 @@ import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 
 import { IsolatedPlugin } from './isolated-plugin';
 
-type IsolatedPluginCache = Map<string, Promise<IsolatedPlugin>>;
-
-const isolatedPluginCache: IsolatedPluginCache = (global[
-  'isolatedPluginCache'
+const loadedPlugins: Map<string, Promise<IsolatedPlugin>> = (global[
+  'nxLoadedPlugins'
 ] ??= new Map());
 
-export async function loadIsolatedNxPlugin(
+/**
+ * Keys each loader last asked for; a sweep keeps their union. Global like
+ * `loadedPlugins`, or one copy of Nx would sweep another's workers.
+ */
+const wantedBy: Map<string, Set<string>> = (global['nxWantedPlugins'] ??=
+  new Map());
+
+/**
+ * Declares a loader's plugins and disposes any no loader wants. Call before loading.
+ * Anything that makes a running worker unfit for reuse must be in its cache key.
+ */
+export function wantPlugins(
+  loader: string,
+  plugins: Array<{ plugin: PluginConfiguration; index?: number }>,
+  root: string
+): void {
+  wantedBy.set(
+    loader,
+    new Set(
+      plugins.map(({ plugin, index }) => getCacheKey(plugin, root, index))
+    )
+  );
+  sweep();
+}
+
+export function disposeIsolatedPlugins(): void {
+  wantedBy.clear();
+  sweep();
+}
+
+export function loadIsolatedNxPlugin(
   plugin: PluginConfiguration,
   root: string,
   index?: number
-): Promise<[Promise<LoadedNxPlugin>, () => void]> {
-  const cacheKey = JSON.stringify({ plugin, root });
+): Promise<LoadedNxPlugin> {
+  const cacheKey = getCacheKey(plugin, root, index);
 
-  if (isolatedPluginCache.has(cacheKey)) {
-    return [isolatedPluginCache.get(cacheKey), () => {}];
-  }
+  return (
+    loadedPlugins.get(cacheKey) ??
+    register(cacheKey, IsolatedPlugin.load(plugin, root, index))
+  );
+}
 
-  const pluginPromise = IsolatedPlugin.load(plugin, root, index).catch(
+function register(
+  cacheKey: string,
+  loading: Promise<IsolatedPlugin>
+): Promise<IsolatedPlugin> {
+  const entry = loading.then(
+    (plugin) => {
+      // Swept while loading: nothing names it any more.
+      if (!isWanted(cacheKey)) {
+        plugin.dispose();
+      }
+      return plugin;
+    },
     (err) => {
-      // Remove failed entries from cache so subsequent calls can retry
-      isolatedPluginCache.delete(cacheKey);
+      forget(cacheKey, entry);
       throw err;
     }
   );
 
-  isolatedPluginCache.set(cacheKey, pluginPromise);
+  if (isWanted(cacheKey)) {
+    loadedPlugins.set(cacheKey, entry);
+  }
+  return entry;
+}
 
-  const cleanup = async () => {
-    const instancePromise = isolatedPluginCache.get(cacheKey);
-    isolatedPluginCache.delete(cacheKey);
-    const instance = await instancePromise;
-    instance?.shutdown();
-  };
+function sweep(): void {
+  for (const [cacheKey, entry] of [...loadedPlugins]) {
+    if (isWanted(cacheKey)) {
+      continue;
+    }
+    loadedPlugins.delete(cacheKey);
+    entry.then(
+      (plugin) => plugin.dispose(),
+      // No worker to dispose; the caller reports the rejection.
+      () => {}
+    );
+  }
+}
 
-  return [pluginPromise, cleanup];
+function isWanted(cacheKey: string): boolean {
+  for (const keys of wantedBy.values()) {
+    if (keys.has(cacheKey)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Includes the index: a plugin carries its nx.json position, which exclusions and errors point at. */
+function getCacheKey(
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+): string {
+  return JSON.stringify({ plugin, root, index });
+}
+
+function forget(cacheKey: string, entry: Promise<IsolatedPlugin>): void {
+  if (loadedPlugins.get(cacheKey) === entry) {
+    loadedPlugins.delete(cacheKey);
+  }
 }

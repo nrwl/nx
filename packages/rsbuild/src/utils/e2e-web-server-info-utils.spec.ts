@@ -19,10 +19,10 @@ describe('getRsbuildE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it('should use map-shaped targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped targetDefaults when no plugin is registered', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -39,8 +39,7 @@ describe('getRsbuildE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
       tree,
       'app',
-      'app/rsbuild.config.ts',
-      false
+      'app/rsbuild.config.ts'
     );
 
     // ASSERT

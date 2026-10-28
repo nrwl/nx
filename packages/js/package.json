@@ -30,11 +30,23 @@
   "types": "./dist/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "executors": [
+        "dist/executors.d.ts"
+      ],
       "babel": [
         "dist/babel.d.ts"
       ],
       "typescript": [
         "dist/typescript.d.ts"
+      ],
+      "node": [
+        "dist/node.d.ts"
+      ],
+      "ready-signal": [
+        "dist/ready-signal.d.ts"
+      ],
+      "tsx": [
+        "dist/tsx.d.ts"
       ],
       "plugins/jest/local-registry": [
         "dist/plugins/jest/local-registry.d.ts"
@@ -78,6 +90,11 @@
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
+    "./executors": {
+      "@nx/nx-source": "./executors.ts",
+      "types": "./dist/executors.d.ts",
+      "default": "./dist/executors.js"
+    },
     "./babel": {
       "@nx/nx-source": "./babel.ts",
       "types": "./dist/babel.d.ts",
@@ -87,6 +104,21 @@
       "@nx/nx-source": "./typescript.ts",
       "types": "./dist/typescript.d.ts",
       "default": "./dist/typescript.js"
+    },
+    "./node": {
+      "@nx/nx-source": "./node.ts",
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    },
+    "./ready-signal": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
+    },
+    "./tsx": {
+      "@nx/nx-source": "./tsx.ts",
+      "types": "./dist/tsx.d.ts",
+      "default": "./dist/tsx.js"
     },
     "./plugins/jest/local-registry": {
       "@nx/nx-source": "./plugins/jest/local-registry.ts",

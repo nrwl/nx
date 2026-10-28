@@ -1,6 +1,7 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { Tree, readJson } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { reactNativeInitGenerator } from './init';
 
@@ -12,10 +13,16 @@ describe('init', () => {
     tree.write('.gitignore', '');
   });
 
+  it('should deny the build scripts pulled in through @nx/detox', async () => {
+    await withPnpm(tree, '11.2.2', () => reactNativeInitGenerator(tree, {}));
+
+    const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+    expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
+    expect(pnpmWorkspace).toMatch(/['"]?unrs-resolver['"]?: false/);
+  });
+
   it('should add react native dependencies', async () => {
-    await reactNativeInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await reactNativeInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
@@ -28,9 +35,7 @@ describe('init', () => {
 /node_modules
 `
     );
-    await reactNativeInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await reactNativeInitGenerator(tree, {});
 
     const content = tree.read('/.gitignore').toString();
 

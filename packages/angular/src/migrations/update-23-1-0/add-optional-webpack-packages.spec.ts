@@ -4,6 +4,7 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion, webpackMergeVersion } from '../../utils/versions';
 import migration from './add-optional-webpack-packages';
@@ -350,5 +351,51 @@ describe('add-optional-webpack-packages migration', () => {
       '~22.0.0'
     );
     expect(getDevDependencies()['@nx/webpack']).toBeUndefined();
+  });
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the @parcel/watcher build script when @nx/webpack is added', async () => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          build: { executor: '@nx/angular:webpack-browser', options: {} },
+        },
+      });
+
+      await withPnpm(tree, '11.2.2', () => migration(tree));
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should deny the @parcel/watcher build script when @nx/rspack is added', async () => {
+      updateJson(tree, 'nx.json', (json) => ({
+        ...json,
+        plugins: ['@nx/rspack/plugin'],
+      }));
+
+      await withPnpm(tree, '11.2.2', () => migration(tree));
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@parcel\/watcher['"]: false/
+      );
+    });
+
+    it('should not record a decision when only @nx/module-federation is added', async () => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        targets: {
+          serve: {
+            executor: '@nx/angular:module-federation-dev-server',
+            options: {},
+          },
+        },
+      });
+
+      await withPnpm(tree, '11.2.2', () => migration(tree));
+
+      expect(getDevDependencies()['@nx/module-federation']).toBe(nxVersion);
+      expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
+    });
   });
 });

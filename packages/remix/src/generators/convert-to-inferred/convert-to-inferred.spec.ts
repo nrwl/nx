@@ -14,6 +14,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'path';
+import { stripVTControlCharacters } from 'node:util';
 import { convertToInferred } from './convert-to-inferred';
 import { getLockFileName } from '@nx/js';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
@@ -21,12 +22,12 @@ import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 let fs: TempFs;
 let projectGraph: ProjectGraph;
 
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -108,7 +109,7 @@ export default config;`;
   fs.createFileSync(`${projectRoot}/remix.config.js`, remixConfigContents);
   tree.write(`${projectRoot}/package.json`, `{"type":"module"}`);
   fs.createFileSync(`${projectRoot}/package.json`, `{"type":"module"}`);
-  jest.doMock(
+  vi.doMock(
     join(fs.tempDir, projectRoot, 'remix.config.js'),
     () => remixConfig,
     { virtual: true }
@@ -178,7 +179,7 @@ describe('Remix - Convert To Inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('--project', () => {
@@ -244,7 +245,6 @@ describe('Remix - Convert To Inferred', () => {
           buildTargetName: 'build',
           devTargetName: 'custom-dev',
           startTargetName: 'start',
-          typecheckTargetName: 'typecheck',
           serveStaticTargetName: 'serve-static',
         },
       });
@@ -426,6 +426,72 @@ describe('Remix - Convert To Inferred', () => {
       );
       expect(remixPlugin).toBeTruthy();
       expect(remixPlugin.include).toBeUndefined();
+    });
+
+    it('should migrate the other projects when one config fails to load', async () => {
+      createTestProject(tree);
+      const broken = createTestProject(tree, {
+        appRoot: 'apps/broken',
+        appName: 'broken',
+        outputPath: 'dist/apps/broken',
+      });
+      vi.doUnmock(join(fs.tempDir, 'apps/broken/remix.config.js'));
+      const brokenConfig = `throw new Error('REMIX_SECRET is required');`;
+      tree.write('apps/broken/remix.config.js', brokenConfig);
+      fs.createFileSync('apps/broken/remix.config.js', brokenConfig);
+
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(
+        warn.mock.calls
+          .map(([message]) => stripVTControlCharacters(String(message)))
+          .filter((message) => message.includes('left target'))
+      ).toMatchInlineSnapshot(`
+        [
+          "convert-to-inferred left target "build" in project "broken" on its executor because the plugin failed to infer it: apps/broken/remix.config.js: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+          "convert-to-inferred left target "serve" in project "broken" on its executor because the plugin failed to infer it: apps/broken/remix.config.js: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+        ]
+      `);
+      warn.mockRestore();
+      expect(readProjectConfiguration(tree, 'app1').targets)
+        .toMatchInlineSnapshot(`
+        {
+          "serve": {
+            "options": {
+              "env": {
+                "PORT": "4200",
+              },
+            },
+          },
+        }
+      `);
+      expect(readProjectConfiguration(tree, broken.name).targets)
+        .toMatchInlineSnapshot(`
+        {
+          "build": {
+            "configurations": {},
+            "executor": "@nx/remix:build",
+            "options": {
+              "outputPath": "dist/apps/broken",
+            },
+          },
+          "serve": {
+            "configurations": {},
+            "executor": "@nx/remix:serve",
+            "options": {
+              "port": 4200,
+            },
+          },
+        }
+      `);
+      expect(
+        readNxJson(tree).plugins.find(
+          (plugin): plugin is ExpandedPluginConfiguration =>
+            typeof plugin !== 'string' && plugin.plugin === '@nx/remix/plugin'
+        ).include
+      ).toEqual(['apps/app1/**/*']);
     });
   });
 });

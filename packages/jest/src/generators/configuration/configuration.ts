@@ -11,21 +11,19 @@ import {
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { JestPluginOptions } from '../../plugins/plugin';
+import type { JestPluginOptions } from '../../plugins/plugin';
 import {
   findRootJestPreset,
   getPresetExt,
 } from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
 import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
-import { warnJestExecutorGenerating } from '../../utils/deprecation';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
 import { createJestConfig } from './lib/create-jest-config';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions';
-import { updateWorkspace } from './lib/update-workspace';
 import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
 
 const schemaDefaults = {
@@ -43,13 +41,6 @@ function normalizeOptions(
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
   }
-
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
 
   options.targetName ??= 'test';
 
@@ -78,7 +69,7 @@ function normalizeOptions(
 }
 
 export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return configurationGeneratorInternal(tree, schema);
 }
 
 export async function configurationGeneratorInternal(
@@ -113,23 +104,7 @@ export async function configurationGeneratorInternal(
     updateVsCodeRecommendedExtensions(tree);
   }
 
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) => {
-    if (typeof p === 'string') {
-      return p === '@nx/jest/plugin' && options.targetName === 'test';
-    } else {
-      return (
-        p.plugin === '@nx/jest/plugin' &&
-        ((p.options as JestPluginOptions)?.targetName ?? 'test') ===
-          options.targetName
-      );
-    }
-  });
-
-  if (!hasPlugin || options.addExplicitTargets) {
-    warnJestExecutorGenerating();
-    updateWorkspace(tree, options);
-  }
+  addPluginForTargetName(tree, options);
 
   if (options.isTsSolutionSetup) {
     ignoreTestOutput(tree);
@@ -157,6 +132,34 @@ export async function configurationGeneratorInternal(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+// The plugin only infers the target names it is registered for, so any other
+// name needs a registration scoped to this project.
+function addPluginForTargetName(
+  tree: Tree,
+  options: NormalizedJestProjectSchema
+): void {
+  const nxJson = readNxJson(tree) ?? {};
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/jest/plugin' && options.targetName === 'test'
+      : p.plugin === '@nx/jest/plugin' &&
+        ((p.options as JestPluginOptions)?.targetName ?? 'test') ===
+          options.targetName
+  );
+  if (hasPlugin) {
+    return;
+  }
+
+  const { root } = readProjectConfiguration(tree, options.project);
+  nxJson.plugins ??= [];
+  nxJson.plugins.push({
+    plugin: '@nx/jest/plugin',
+    include: [root === '.' ? '**/*' : `${root}/**/*`],
+    options: { targetName: options.targetName },
+  });
+  updateNxJson(tree, nxJson);
 }
 
 function ignoreTestOutput(tree: Tree): void {

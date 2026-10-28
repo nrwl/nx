@@ -601,6 +601,7 @@ impl TuiApp for InlineApp {
             .state()
             .lock()
             .get_dimensions()
+            .map(|(width, height)| (height, width))
             .unwrap_or_else(|| {
                 // Get terminal size
                 debug!("Getting terminal size for PTY dimensions inline_app");
@@ -677,13 +678,13 @@ impl TuiApp for InlineApp {
         }
     }
 
-    fn end_tasks(&mut self, task_results: Vec<crate::native::tasks::types::TaskResult>) {
+    fn end_tasks(&mut self, mut task_results: Vec<crate::native::tasks::types::TaskResult>) {
         debug!(
             "Ending tasks in InlineApp - {:?}. Selected task: {:?}",
             task_results.iter().map(|t| &t.task.id).collect::<Vec<_>>(),
             self.selected_item
         );
-        self.core.end_tasks(&task_results);
+        self.core.end_tasks(&mut task_results);
         if task_results.iter().any(|t| {
             self.selected_item
                 .as_ref()
@@ -1391,6 +1392,38 @@ mod tests {
     }
 
     #[test]
+    fn test_append_task_output_writes_to_a_registered_pty() {
+        let mut app = create_test_inline_app();
+        app.register_running_non_interactive_task(String::from("app1:build"));
+
+        app.append_task_output(String::from("app1:build"), String::from("streamed\n"));
+
+        let state_ref = app.get_state();
+        let state = state_ref.lock();
+        let pty = state.get_pty_instance("app1:build").unwrap();
+        assert!(pty.get_screen().unwrap().contents().contains("streamed"));
+    }
+
+    #[test]
+    fn test_registers_a_pty_with_the_terminal_dimensions_set_by_init() {
+        // The inline chrome reserves 2 rows; a smaller terminal gets the PTY minimum
+        for (terminal, expected) in [
+            (Size::new(80, 24), (22, 80)),
+            (Size::new(80, 2), (3, 80)),
+            (Size::new(10, 24), (22, 20)),
+        ] {
+            let mut app = create_test_inline_app();
+            app.init(terminal).unwrap();
+            app.register_running_non_interactive_task(String::from("app1:build"));
+
+            let state_ref = app.get_state();
+            let state = state_ref.lock();
+            let pty = state.get_pty_instance("app1:build").unwrap();
+            assert_eq!(pty.get_dimensions(), expected, "{terminal:?}");
+        }
+    }
+
+    #[test]
     fn test_calculate_pty_dimensions() {
         let app = create_test_inline_app();
         let (rows, cols) = app.calculate_pty_dimensions();
@@ -1437,7 +1470,9 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Start task first
-        app.start_tasks(vec![create_test_task("app1")]);
+        let mut task = create_test_task("app1");
+        task.start_time = Some(1000);
+        app.start_tasks(vec![task]);
 
         // End task
         let results = vec![TaskResult {
@@ -1446,14 +1481,16 @@ mod tests {
             code: 0,
             terminal_output: None,
         }];
+        let before_end = crate::native::utils::time::current_timestamp_millis();
         app.end_tasks(results);
+        let after_end = crate::native::utils::time::current_timestamp_millis();
 
         // Verify timing recorded
         let state_ref = app.get_state();
         let state = state_ref.lock();
         let (start, end) = state.get_task_timing("app1:build");
-        assert!(start.is_some());
-        assert!(end.is_some());
+        assert_eq!(start, Some(1000));
+        assert!(end.is_some_and(|end| end >= before_end && end <= after_end));
     }
 
     // === Helper Method Tests ===

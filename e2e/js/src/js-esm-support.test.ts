@@ -14,6 +14,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateMainFile,
   updateJson,
 } from '@nx/e2e-utils';
 
@@ -327,7 +328,7 @@ describe('JS ESM/CJS Support', () => {
       configureAsEsm(`apps/${nodeapp}`);
 
       // Create a simple ESM server
-      updateFile(
+      updateMainFile(
         `apps/${nodeapp}/src/main.ts`,
         stripIndents`
           import { createServer } from 'http';
@@ -358,7 +359,7 @@ describe('JS ESM/CJS Support', () => {
       );
 
       // Create a simple server that logs a message we can detect
-      updateFile(
+      updateMainFile(
         `apps/${nodeapp}/src/main.ts`,
         stripIndents`
           const http = require('http');
@@ -393,7 +394,7 @@ describe('JS ESM/CJS Support', () => {
       configureAsEsm(`apps/${nodeapp}`);
 
       // Create a simple ESM server that logs a message we can detect
-      updateFile(
+      updateMainFile(
         `apps/${nodeapp}/src/main.ts`,
         stripIndents`
           import { createServer } from 'http';

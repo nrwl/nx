@@ -22,17 +22,25 @@ export const { getStaticPaths, GET } = await OGImageRoute({
     return {
       title: page.data.title,
       description: 'Nx Documentation',
-      bgGradient: [[2, 6, 24]],
-      border: { color: [15, 23, 43], width: 20 },
+      // Nx brand neutrals: 950 canvas, 900 frame, 400 for the muted line.
+      bgGradient: [[12, 12, 13]],
+      border: { color: [25, 25, 26], width: 20 },
       padding: 120,
+      fonts: [
+        './public/fonts/instrument-sans-400.woff2',
+        './public/fonts/instrument-sans-600.woff2',
+      ],
       font: {
         title: {
           color: [255, 255, 255],
           size: 60,
+          families: ['Instrument Sans'],
+          weight: 'SemiBold',
         },
         description: {
-          color: [144, 161, 185],
+          color: [163, 163, 168],
           size: 36,
+          families: ['Instrument Sans'],
         },
       },
       logo: {

@@ -84,6 +84,19 @@
       },
       "description": "Update Jest test-setup for the Expo SDK 56 winter runtime",
       "factory": "./dist/src/migrations/update-23-1-0/update-jest-winter-runtime-for-expo-56"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/expo` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "add-eas-build-pre-install": {
+      "version": "24.0.0-beta.3",
+      "description": "Adds an `eas-build-pre-install` script to Expo apps with an `eas.json`, which copies the root dependencies and lock file into the app on EAS Build as the removed `@nx/expo:build` executor did locally.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-eas-build-pre-install",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-eas-build-pre-install.md"
     }
   },
   "packageJsonUpdates": {

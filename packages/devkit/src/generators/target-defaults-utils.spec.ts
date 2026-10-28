@@ -1,13 +1,9 @@
 // Stub out @nx/cypress/plugin so the dynamic `await import('@nx/cypress/plugin')`
 // in addE2eCiTargetDefaults doesn't pull real plugin code (which transitively
 // imports @nx/js source and inflates sandbox inputs).
-jest.mock(
-  '@nx/cypress/plugin',
-  () => ({
-    createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', jest.fn()],
-  }),
-  { virtual: true }
-);
+vi.mock('@nx/cypress/plugin', () => ({
+  createNodesV2: ['**/cypress.config.{js,ts,mjs,cjs}', vi.fn()],
+}));
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import {

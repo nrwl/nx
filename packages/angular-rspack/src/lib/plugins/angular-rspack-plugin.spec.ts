@@ -29,15 +29,13 @@ const {
 
 vi.mock('@nx/angular-rspack-compiler', () => ({
   buildAndAnalyze: buildAndAnalyzeMock,
+  createJavaScriptTransformer: (...args: unknown[]) => {
+    transformerCtorMock(...args);
+    return { close: transformerCloseMock };
+  },
   createJavascriptTransformerCache: createJavascriptTransformerCacheMock,
   DiagnosticModes: { All: 7, Semantic: 4 },
   disposeComponentStylesheetBundler: disposeComponentStylesheetBundlerMock,
-  JavaScriptTransformer: class {
-    close = transformerCloseMock;
-    constructor(...args: unknown[]) {
-      transformerCtorMock(...args);
-    }
-  },
   SourceFileCache: class {
     typeScriptFileCache = new Map<string, unknown>();
     babelFileCache = new Map<string, string>();
@@ -589,11 +587,7 @@ describe('AngularRspackPlugin', () => {
     expect(createJavascriptTransformerCacheMock).toHaveBeenCalledWith(
       expect.stringContaining(join('app', 'angular-rspack'))
     );
-    expect(transformerCtorMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      cache
-    );
+    expect(transformerCtorMock).toHaveBeenCalledWith(expect.anything(), cache);
 
     const compiler = createFakeCompiler();
     plugin.apply(compiler as never);
@@ -608,7 +602,6 @@ describe('AngularRspackPlugin', () => {
 
     expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();
     expect(transformerCtorMock).toHaveBeenCalledWith(
-      expect.anything(),
       expect.anything(),
       undefined
     );

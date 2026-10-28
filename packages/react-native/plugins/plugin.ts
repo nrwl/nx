@@ -16,12 +16,13 @@ import {
   detectPackageManager,
   joinPathFragments,
   NxJsonConfiguration,
+  offsetFromRoot,
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;
@@ -138,11 +139,7 @@ function buildReactNativeTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {
-    [options.startTargetName]: {
-      command: `react-native start`,
-      continuous: true,
-      options: { cwd: projectRoot },
-    },
+    [options.startTargetName]: getStartTarget(projectRoot, context),
     [options.podInstallTargetName]: {
       command: `pod install`,
       options: { cwd: joinPathFragments(projectRoot, 'ios') },
@@ -191,6 +188,31 @@ function buildReactNativeTargets(
   };
 
   return targets;
+}
+
+const METRO_REPORTER_PATH =
+  'node_modules/@nx/react-native/dist/plugins/metro-reporter.js';
+
+function getStartTarget(
+  projectRoot: string,
+  context: CreateNodesContext
+): TargetConfiguration {
+  const target: TargetConfiguration = {
+    command: `react-native start`,
+    continuous: true,
+    options: { cwd: projectRoot },
+  };
+  // react-native start fails on a missing reporter, as when the plugin is
+  // installed outside the root node_modules (e.g. .nx/installation)
+  if (!existsSync(join(context.workspaceRoot, METRO_REPORTER_PATH))) {
+    return target;
+  }
+  return {
+    ...target,
+    // Relative to the task's cwd, so the graph holds no machine-specific path
+    command: `react-native start --custom-log-reporter-path ${offsetFromRoot(projectRoot)}${METRO_REPORTER_PATH}`,
+    readyWhen: { signal: true },
+  };
 }
 
 function getAppConfig(

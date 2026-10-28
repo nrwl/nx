@@ -647,4 +647,30 @@ describe('buildEsbuildOptions', () => {
       },
     });
   });
+
+  it('should write the bundled entry file to an overridden outputPath', () => {
+    // e.g. `nx build myapp --output-path=dist/override/myapp`: the override
+    // lands in the options, while the target keeps the project configuration.
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/override/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: [],
+          excludeFromExternal: [],
+          userDefinedBuildOptions: {},
+        },
+        context
+      )
+    ).toEqual(
+      expect.objectContaining({ outfile: 'dist/override/myapp/index.js' })
+    );
+  });
 });

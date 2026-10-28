@@ -4,7 +4,7 @@ import {
   ExecutorContext,
   readJsonFile,
 } from '@nx/devkit';
-import { execSync } from 'child_process';
+import { safeExecFileSync } from '@nx/devkit/internal';
 import { statSync } from 'fs';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { join } from 'path';
@@ -56,6 +56,23 @@ function isAlreadyPublishedPublishError(
   );
 }
 
+function isNpmViewNotFoundError(err: any): boolean {
+  if (err.code === 'ENOBUFS' || err.signal) {
+    return false;
+  }
+
+  try {
+    const errorCode = JSON.parse(err.stdout?.toString() || '{}').error?.code;
+    if (errorCode) {
+      return errorCode === 'E404';
+    }
+  } catch {}
+
+  return /(?:^|\n)npm (?:ERR!|error) code E404(?:\n|$)/i.test(
+    err.stderr?.toString() || ''
+  );
+}
+
 export default async function runExecutor(
   options: PublishExecutorSchema,
   context: ExecutorContext
@@ -66,9 +83,7 @@ export default async function runExecutor(
   let isNpmInstalled = false;
   try {
     isNpmInstalled =
-      execSync('npm --version', {
-        encoding: 'utf-8',
-        windowsHide: true,
+      safeExecFileSync('npm', ['--version'], {
         stdio: ['ignore', 'pipe', 'ignore'],
       }).trim() !== '';
   } catch {
@@ -196,15 +211,40 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
 
   // Use bun info when bun is the package manager, otherwise use npm view
   // (npm view works across npm/pnpm/yarn environments and is the established default)
-  const npmViewCommandSegments =
+  const npmViewDistTagField = `dist-tags[${tag}]`;
+  const npmViewCommand =
     pm === 'bun'
-      ? ['bun info', packageName, `--json --"${registryConfigKey}=${registry}"`]
-      : [
-          `npm view ${packageName} versions dist-tags --json --"${registryConfigKey}=${registry}"`,
-        ];
-  const npmDistTagAddCommandSegments = [
-    `npm dist-tag add ${packageName}@${packageJson.version} ${tag} --"${registryConfigKey}=${registry}"`,
-  ];
+      ? {
+          command: 'bun',
+          args: [
+            'info',
+            packageName,
+            '--json',
+            `--${registryConfigKey}=${registry}`,
+          ],
+        }
+      : {
+          command: 'npm',
+          args: [
+            'view',
+            `${packageName}@${packageJson.version}`,
+            'name',
+            'version',
+            npmViewDistTagField,
+            '--json',
+            `--${registryConfigKey}=${registry}`,
+          ],
+        };
+  const npmDistTagAddCommand = {
+    command: 'npm',
+    args: [
+      'dist-tag',
+      'add',
+      `${packageName}@${packageJson.version}`,
+      tag,
+      `--${registryConfigKey}=${registry}`,
+    ],
+  };
 
   /**
    * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
@@ -217,19 +257,60 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   if (!isDryRun && !options.firstRelease) {
     const currentVersion = packageJson.version;
     try {
-      const result = execSync(npmViewCommandSegments.join(' '), {
-        env: processEnv(true),
-        cwd: context.root,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-      });
+      const result = safeExecFileSync(
+        npmViewCommand.command,
+        npmViewCommand.args,
+        {
+          env: processEnv(true),
+          cwd: context.root,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }
+      );
 
       // `npm view`/`bun info` can exit 0 with empty stdout when the package exists in the registry but has
-      // no published versions or dist-tags yet (e.g. GitHub packages). Treat empty output the samme as
+      // no published versions or dist-tags yet (e.g. GitHub packages). Treat empty output the same as
       // package not existing yet and continue to the publish step.
-      const resultJson = JSON.parse(result.toString().trim() || '{}');
-      const distTags = resultJson['dist-tags'] || {};
-      if (distTags[tag] === currentVersion) {
+      const output = result.trim();
+      let distTagVersion: string | undefined;
+      let versionExists: boolean;
+
+      if (!output) {
+        versionExists = false;
+      } else {
+        const resultJson = JSON.parse(output);
+
+        if (pm === 'bun') {
+          distTagVersion = resultJson['dist-tags']?.[tag];
+          versionExists = (
+            Array.isArray(resultJson.versions)
+              ? resultJson.versions
+              : [resultJson.versions]
+          ).includes(currentVersion);
+        } else {
+          const metadataEntries = Array.isArray(resultJson)
+            ? resultJson
+            : [resultJson];
+          const currentVersionMetadata = metadataEntries.find(
+            (metadata) =>
+              metadata?.name === packageName &&
+              metadata?.version === currentVersion
+          );
+
+          if (!currentVersionMetadata) {
+            console.error(
+              `Something unexpected went wrong when checking for existing dist-tags. The registry returned metadata that did not match ${packageName}@${currentVersion}.`
+            );
+            return {
+              success: false,
+            };
+          }
+
+          distTagVersion = currentVersionMetadata[npmViewDistTagField];
+          versionExists = true;
+        }
+      }
+
+      if (distTagVersion === currentVersion) {
         console.warn(
           `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
         );
@@ -239,20 +320,18 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       }
 
       if (isNpmInstalled) {
-        // If only one version of a package exists in the registry, versions will be a string instead of an array.
-        const versions = Array.isArray(resultJson.versions)
-          ? resultJson.versions
-          : [resultJson.versions];
-
-        if (versions.includes(currentVersion)) {
+        if (versionExists) {
           try {
             if (!isDryRun) {
-              execSync(npmDistTagAddCommandSegments.join(' '), {
-                env: processEnv(true),
-                cwd: context.root,
-                stdio: 'ignore',
-                windowsHide: true,
-              });
+              safeExecFileSync(
+                npmDistTagAddCommand.command,
+                npmDistTagAddCommand.args,
+                {
+                  env: processEnv(true),
+                  cwd: context.root,
+                  stdio: 'ignore',
+                }
+              );
               console.log(
                 `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
               );
@@ -320,52 +399,23 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
         }
       }
     } catch (err) {
-      try {
-        const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-        // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
-        if (
-          !(
-            stdoutData.error?.code?.includes('E404') &&
-            stdoutData.error?.summary?.toLowerCase().includes('not found')
-          ) &&
-          !(
-            err.stderr?.toString().includes('E404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          ) &&
-          // bun uses plain '404' instead of 'E404'
-          !(
-            err.stderr?.toString().includes('404') &&
-            err.stderr?.toString().toLowerCase().includes('not found')
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
-        }
-      } catch {
-        // JSON parse failed entirely — check stderr/stdout for plain 404
-        const stderrStr = err.stderr?.toString() || '';
-        const stdoutStr = err.stdout?.toString() || '';
-        if (
-          !(
-            (stderrStr.includes('404') &&
-              stderrStr.toLowerCase().includes('not found')) ||
-            (stdoutStr.includes('404') &&
-              stdoutStr.toLowerCase().includes('not found'))
-          )
-        ) {
-          console.error(
-            `Something unexpected went wrong when checking for existing dist-tags.\n`,
-            err
-          );
-          return {
-            success: false,
-          };
-        }
+      const isNotFound =
+        pm === 'bun'
+          ? [err.stderr?.toString(), err.stdout?.toString()].some(
+              (output) =>
+                output?.includes('404') &&
+                output.toLowerCase().includes('not found')
+            )
+          : isNpmViewNotFoundError(err);
+
+      if (!isNotFound) {
+        console.error(
+          `Something unexpected went wrong when checking for existing dist-tags.\n`,
+          err
+        );
+        return {
+          success: false,
+        };
       }
     }
   }
@@ -423,29 +473,31 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     packageTxt,
   } = ctx;
   const pmCommand = getPackageManagerCommand(pm);
-  const publishCommandSegments = [
-    pmCommand.publish(packageRoot, registry, registryConfigKey, tag),
-  ];
+  const { command: publishCommand, args: publishArgs } = pmCommand.publishArgv(
+    packageRoot,
+    registry,
+    registryConfigKey,
+    tag
+  );
 
   if (options.otp) {
-    publishCommandSegments.push(`--otp=${options.otp}`);
+    publishArgs.push(`--otp=${options.otp}`);
   }
 
   if (options.access) {
-    publishCommandSegments.push(`--access=${options.access}`);
+    publishArgs.push(`--access=${options.access}`);
   }
 
   if (isDryRun) {
-    publishCommandSegments.push(`--dry-run`);
+    publishArgs.push(`--dry-run`);
   }
 
   try {
-    const output = execSync(publishCommandSegments.join(' '), {
+    const output = safeExecFileSync(publishCommand, publishArgs, {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(true),
       cwd: context.root,
       stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
     });
     // If in dry-run mode, the version on disk will not represent the version that would be published, so we scrub it from the output to avoid confusion.
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
@@ -458,7 +510,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
 
     // bun publish does not support outputting JSON, so we need to modify and print the output string directly
     if (pm === 'bun') {
-      let outputStr = output.toString();
+      let outputStr = output;
       if (isDryRun) {
         outputStr = outputStr.replace(
           new RegExp(`${packageJson.name}@${packageJson.version}`, 'g'),
@@ -477,7 +529,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
      * Additionally, we want to capture and show the lifecycle script outputs as beforeJsonData and afterJsonData and print them accordingly below.
      */
     const { beforeJsonData, jsonData, afterJsonData } =
-      extractNpmPublishJsonData(output.toString());
+      extractNpmPublishJsonData(output);
     if (!jsonData) {
       console.error(
         `The ${pm} publish output data could not be extracted. Please report this issue on https://github.com/nrwl/nx`

@@ -93,6 +93,8 @@ comments as well as for reviewing them, and it is not loaded automatically, so y
 
 After code changes are made, please make sure to format the files with oxfmt via `npx oxfmt FILE_NAME`
 
+oxfmt skips `.mdoc` files, so format edited docs content with `pnpm nx run astro-docs:format:write` instead.
+
 ### Pre-push Validation
 
 ```bash

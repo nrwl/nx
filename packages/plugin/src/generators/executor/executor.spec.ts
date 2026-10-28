@@ -153,7 +153,7 @@ describe('NxPlugin Executor Generator', () => {
       name: 'my-executor',
       path: 'my-plugin/src/executors/my-executor/my-custom-executor',
       unitTestRunner: 'jest',
-      includeHasher: true,
+      includeHasher: false,
     });
 
     expect(
@@ -170,12 +170,6 @@ describe('NxPlugin Executor Generator', () => {
         'my-plugin/src/executors/my-executor/my-custom-executor.spec.ts'
       )
     ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/hasher.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
-    ).toBeTruthy();
     expect(tree.read('my-plugin/executors.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "{
@@ -183,8 +177,7 @@ describe('NxPlugin Executor Generator', () => {
           "my-executor": {
             "implementation": "./src/executors/my-executor/my-custom-executor",
             "schema": "./src/executors/my-executor/schema.json",
-            "description": "my-executor executor",
-            "hasher": "./src/executors/my-executor/hasher"
+            "description": "my-executor executor"
           }
         }
       }
@@ -205,55 +198,25 @@ describe('NxPlugin Executor Generator', () => {
         expect(
           tree.exists('my-plugin/src/executors/my-executor/executor.spec.ts')
         ).toBeFalsy();
-        expect(
-          tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
-        ).toBeFalsy();
       });
     });
   });
 
   describe('--includeHasher', () => {
-    it('should generate hasher files', async () => {
-      await executorGenerator(tree, {
-        name: 'my-executor',
-        path: 'my-plugin/src/executors/my-executor/executor',
-        unitTestRunner: 'jest',
-        includeHasher: true,
-      });
+    it('should throw instead of generating a custom hasher', async () => {
+      await expect(
+        executorGenerator(tree, {
+          name: 'my-executor',
+          path: 'my-plugin/src/executors/my-executor/executor',
+          unitTestRunner: 'jest',
+          includeHasher: true,
+        })
+      ).rejects.toThrow(/Custom hashers are deprecated.*Nx 25/s);
+
       expect(
-        tree.exists('my-plugin/src/executors/my-executor/hasher.spec.ts')
-      ).toBeTruthy();
-      expect(
-        tree.read('my-plugin/src/executors/my-executor/hasher.ts').toString()
-      ).toMatchInlineSnapshot(`
-        "import type { CustomHasher } from '@nx/devkit';
-
-        /**
-         * This is a boilerplate custom hasher that matches
-         * the default Nx hasher. If you need to extend the behavior,
-         * you can consume workspace details from the context.
-         */
-        export const myExecutorHasher: CustomHasher = async (task, context) => {
-          return context.hasher.hashTask(task, context.taskGraph);
-        };
-
-        export default myExecutorHasher;
-        "
-      `);
-    });
-
-    it('should update executors.json', async () => {
-      await executorGenerator(tree, {
-        name: 'my-executor',
-        path: 'my-plugin/src/executors/my-executor/executor',
-        unitTestRunner: 'jest',
-        includeHasher: true,
-      });
-
-      const executorsJson = readJson(tree, 'my-plugin/executors.json');
-      expect(executorsJson.executors['my-executor'].hasher).toEqual(
-        './src/executors/my-executor/hasher'
-      );
+        tree.exists('my-plugin/src/executors/my-executor/executor.ts')
+      ).toBe(false);
+      expect(tree.exists('my-plugin/executors.json')).toBe(false);
     });
   });
 

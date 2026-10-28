@@ -124,6 +124,7 @@ export const installNxConsole = __napiModule.exports.installNxConsole
 export const IS_WASM = __napiModule.exports.IS_WASM
 export const isAiAgent = __napiModule.exports.isAiAgent
 export const logDebug = __napiModule.exports.logDebug
+export const openUrl = __napiModule.exports.openUrl
 export const remove = __napiModule.exports.remove
 export const testOnlyTransferFileMap = __napiModule.exports.testOnlyTransferFileMap
 export const transferProjectGraph = __napiModule.exports.transferProjectGraph

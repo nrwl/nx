@@ -23,7 +23,7 @@ type AngularCliProjectConfiguration = Omit<ProjectConfiguration, 'targets'> & {
   };
 };
 
-const mockedLogger = { warn: jest.fn() };
+const mockedLogger = { warn: vi.fn() };
 
 describe('app migrator', () => {
   let tree: Tree;
@@ -49,7 +49,7 @@ describe('app migrator', () => {
     // already been run, so we make some adjustments to match that state
     writeJson(tree, 'angular.json', { version: 2, projects: {} });
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not migrate project when validation fails', async () => {
@@ -982,10 +982,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
-        },
+        command: `eslint "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
 
@@ -1008,10 +1005,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomLintTarget).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
-        },
+        command: `eslint "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
 
@@ -1035,11 +1029,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nx/eslint:lint',
-        options: {
-          eslintConfig: 'apps/app1/.eslintrc.json',
-          lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
-        },
+        command: `eslint --config apps/app1/.eslintrc.json "apps/app1/**/*.ts" "apps/app1/**/*.html"`,
       });
     });
 
@@ -1431,6 +1421,28 @@ describe('app migrator', () => {
         },
       });
     });
+
+    it.each([
+      ['serve', '@angular/build:dev-server'],
+      ['serve', '@angular-devkit/build-angular:dev-server'],
+      ['serve-ssr', '@angular-devkit/build-angular:ssr-dev-server'],
+    ])(
+      'should make the %s target using %s continuous with a readyWhen',
+      async (targetName, builder) => {
+        const project = addProject('app1', {
+          root: '',
+          sourceRoot: 'src',
+          architect: { [targetName]: { builder } },
+        });
+        const migrator = new AppMigrator(tree, {}, project);
+
+        await migrator.migrate();
+
+        const { targets } = readProjectConfiguration(tree, 'app1');
+        expect(targets[targetName].continuous).toBe(true);
+        expect(targets[targetName].readyWhen).toStrictEqual({ signal: true });
+      }
+    );
   });
 
   describe('tsConfig', () => {

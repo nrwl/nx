@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:References'
 ---
 
-When Nx [computes the hash for a given operation](/docs/concepts/how-caching-works), it takes into account the `inputs` of the target.
+When Nx [computes the hash for a given operation](/docs/features/cache-task-results#how-caching-works), it takes into account the `inputs` of the target.
 The `inputs` are a list of **file sets**, **runtime** inputs, **environment variables**, and **working directory** that affect the output of the target.
 If any of the `inputs` change, the cache is invalidated and the target is re-run.
 
@@ -49,6 +49,24 @@ Alternatively, you can use the object format with the `fileset` property:
   "inputs": [{ "fileset": "{projectRoot}/**/*" }],
 }
 ```
+
+#### Glob syntax
+
+Write globs with `/` as the separator on every operating system, including Windows.
+A `\` escapes the character after it, so that character matches literally.
+Use it for names that contain glob characters, such as a Next.js route group:
+
+```jsonc
+{
+  "inputs": [
+    "{projectRoot}/app/\\(marketing\\)/**/*", // the app/(marketing) directory
+    "{projectRoot}/src/\\[id\\].ts", // a file named [id].ts
+  ],
+}
+```
+
+JSON strings need `\\` to write a single `\`.
+A Windows-style glob such as `{projectRoot}\src\**` matches nothing, because `\s` reads as a plain `s`.
 
 #### Directory paths
 
@@ -134,6 +152,11 @@ A glob such as `{workspaceRoot}/**` is allowed, but it covers every gitignored f
 A new matching file counts without a configuration change.
 A path can name a file that doesn't exist yet: the cache key changes when the file appears or is removed.
 
+Like a `{projectRoot}` fileset, a glob doesn't reach into projects nested inside the project it reads from.
+`{projectRoot}/**/*` on `packages/app` matches the gitignored files of `packages/app`, but no file of a project at `packages/app/plugin`.
+A glob that starts inside the nested project, such as `{projectRoot}/plugin/dist/**`, matches that project's files.
+A glob that starts outside every project, such as `{workspaceRoot}/dist/**`, matches every file it names.
+
 A `!` negation with `includeIgnored: true` filters every `includeIgnored` glob resolved with it.
 For a fileset on the project itself, that's the project's other `includeIgnored` globs.
 For one with `dependencies: true`, it's the globs carrying that flag, applied together to each dependency:
@@ -162,6 +185,12 @@ A negation with nothing to filter is a configuration error.
 A glob never walks into `node_modules`, `.git`, `.nx/cache`, `.nx/workspace-data`, or `.yarn/cache` unless it names a path inside one of them.
 It also skips the timestamp files Vite and Vitest write beside their config, such as `vite.config.ts.timestamp-1700000000000.mjs`.
 Nx reads a symlinked file where it points, even outside the workspace, so a `dist` linked into a build cache is hashed. A glob doesn't walk into a symlinked directory unless it names that directory. A glob that climbs out with `..`, or names an absolute path, is a configuration error.
+
+In CI, [Ultracache](/docs/features/ci-features/remote-cache#ultracache) hashes a task from the files it read on a recorded run.
+To turn this off for a run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
+Those reads replace its declared filesets, `includeIgnored` ones included, so a matching file the recorded run didn't read doesn't change the hash.
+An input with `"always": true` keeps its files in the hash, as [inputs kept under Ultracache](#inputs-kept-under-ultracache) describes.
+To keep a target's declared inputs authoritative, set [`ultracache.mode: "warn"`](/docs/reference/project-configuration#ultracache) on it.
 
 ### JSON files
 
@@ -289,15 +318,73 @@ When a task depends on another task, it is possible that the outputs of the depe
 ```
 
 The glob pattern is matched against the file paths resolved from workspace root. For example, if a dependent task has `outputs: ["{workspaceRoot}/dist/{projectRoot}"]` and the project root is `libs/my-lib`, the output path becomes `dist/libs/my-lib`.
-Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/concepts/task-pipeline-configuration). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
+Files such as `dist/libs/my-lib/index.d.ts` would be matched by patterns `**/*.d.ts`, `dist/**/*.d.ts`, or `dist/libs/my-lib/**/*.d.ts`. Setting `transitive` to `true` will also include outputs of all task dependencies of this task in the [task pipeline](/docs/features/run-tasks#defining-a-task-pipeline). It's possible the dependent tasks can change over time, so be careful to not overly scope the matching glob to prevent accidental false cache hits.
 
 ### Inputs of continuous dependencies
 
 A [continuous task](/docs/kb/defining-task-pipeline#continuous-task-dependencies), such as the `serve` task an `e2e` task depends on, runs in its own process, yet what it reads still decides what the task it serves observes.
 A task therefore also hashes the declared inputs of every continuous dependency it has, and of the servers those depend on in turn: files, environment variables, runtime commands and external dependencies alike.
+This holds even when the task hashes from its [Ultracache configuration](/docs/reference/project-configuration#ultracache): continuous tasks never get one, because what a server reads depends on which of its clients ran.
 There's nothing to declare, and only continuous dependencies count.
 A server that declares no inputs contributes its whole project, so declare inputs on servers that live at the workspace root, such as a local registry.
 When a server reads the outputs of its own build dependencies, Nx hashes the task it serves once the server is running, so those outputs count too.
+
+Set `"inputs": false` on a `dependsOn` entry when the task needs the server running but doesn't depend on what it serves.
+For example, an `e2e` task that tests one feature of an app shouldn't rerun whenever another library bundled into the app changes:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        { "projects": "myapp", "target": "serve", "inputs": false },
+      ],
+    },
+  },
+}
+```
+
+The task still depends on the server, but this entry doesn't include the server's inputs in the hash.
+Nx also leaves out the servers that entry reaches, unless another entry with inputs reaches them.
+The option has no effect on dependencies that aren't continuous.
+The Playwright and Cypress plugins set it for the atomized task of a test file with an
+`@nx-depends-on` or `@nx-ignore-server-inputs` directive.
+They set it only when Nx runs the server as a task.
+For more information, see [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
+
+`nx affected` selects tasks by their inputs.
+With [`affected.legacy`](/docs/reference/nx-json#affected), it selects whole projects, regardless of `"inputs": false`.
+
+### Inputs kept under Ultracache
+
+When a task hashes from an [Ultracache](/docs/features/ci-features/remote-cache#ultracache) recording, its declared filesets give way to the files it read.
+An `e2e` task usually doesn't read the libraries its app serves, so a library listed in its inputs drops out of the hash.
+Add `"always": true` to an input to keep the files it resolves to:
+
+```jsonc
+// apps/myapp-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "inputs": [
+        "default",
+        { "input": "production", "projects": ["checkout"], "always": true },
+      ],
+    },
+  },
+}
+```
+
+The task's hash covers the files it read plus the files of every `always` input.
+To hash a target from its declared inputs alone, set its [`ultracache` mode](/docs/reference/project-configuration#ultracache) to `warn` or `off` instead.
+
+The `fileset`, `json`, and `input` forms accept `always`, including `{ "input": "production", "dependencies": true, "always": true }`, which keeps every dependency in the chain.
+A task hashed from its declared inputs hashes the same with or without it.
+With `always`, a `projects` pattern that matches no project is a configuration error, so a misspelled name can't drop a project unnoticed.
+
+For the atomized task of an e2e test file, the `@nx-depends-on` directive sets `always` inputs for
+the projects it lists.
 
 ### A subset of the root `tsconfig.json` or `tsconfig.base.json`
 
@@ -328,6 +415,19 @@ You can reference named inputs from specific projects or from project dependenci
 ```
 
 The `projects` property can be a string or an array of strings specifying which project(s) to reference the named input from. Using just the string name (e.g., `"production"`) is shorthand for referencing the named input from the current project. Prefixing with `^` (e.g., `"^production"`) references the named input from all project dependencies.
+
+Add `"dependencies": true` to a `projects` input to reference the named input from the dependencies of those projects.
+For each listed project, these are the files its own `^production` covers.
+The listed projects themselves don't count, so pair it with the plain form to cover a project and everything it depends on:
+
+```jsonc
+{
+  "inputs": [
+    { "input": "production", "projects": "myapp" },
+    { "input": "production", "projects": "myapp", "dependencies": true },
+  ],
+}
+```
 
 {% aside type="note" title="^ with filesets vs named inputs" %}
 The `^` prefix behaves differently depending on what follows it:

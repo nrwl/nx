@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   calculateHashesForCreateNodes,
   PluginCache,
   hashObject,
@@ -16,22 +17,18 @@ import {
   joinPathFragments,
   getPackageManagerCommand,
   detectPackageManager,
+  normalizePath,
 } from '@nx/devkit';
-import {
-  isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
-  addBuildAndWatchDepsTargets,
-} from '@nx/js/internal';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { join, dirname, isAbsolute, relative } from 'path';
-import { minimatch } from 'minimatch';
+import { basename, dirname, isAbsolute, join, relative } from 'path';
 import type { RsbuildConfig } from '@rsbuild/core';
 export interface RsbuildPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   previewTargetName?: string;
   inspectTargetName?: string;
-  typecheckTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -49,7 +46,6 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
       `rsbuild-${optionsHash}.hash`
     );
     const targetsCache = new PluginCache<RsbuildTargets>(cachePath);
-    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
@@ -63,7 +59,7 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        { ...normalizedOptions, isUsingTsSolutionSetup },
+        normalizedOptions,
         context,
         entries.map(() => [lockFileName])
       );
@@ -78,9 +74,7 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
               normalizedOptions,
               ctx,
               targetsCache,
-              isUsingTsSolutionSetup,
               pmc,
-              entries[idx].tsConfigFiles,
               projectHashes[idx]
             ),
           entries.map((e) => e.configFile),
@@ -117,9 +111,7 @@ async function createNodesInternal(
   normalizedOptions: RsbuildPluginOptions,
   context: CreateNodesContext,
   targetsCache: PluginCache<RsbuildTargets>,
-  isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  tsConfigFiles: string[],
   hash: string
 ) {
   const projectRoot = dirname(configFilePath);
@@ -131,8 +123,6 @@ async function createNodesInternal(
         configFilePath,
         projectRoot,
         normalizedOptions,
-        tsConfigFiles,
-        isUsingTsSolutionSetup,
         context,
         pmc
       )
@@ -156,8 +146,6 @@ async function createRsbuildTargets(
   configFilePath: string,
   projectRoot: string,
   options: RsbuildPluginOptions,
-  tsConfigFiles: string[],
-  isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<RsbuildTargets> {
@@ -219,6 +207,8 @@ async function createRsbuildTargets(
     },
   };
 
+  const signals = await loadsReadySignalPlugin(rsbuildConfig.content.plugins);
+
   targets[options.devTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -227,6 +217,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=development'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'dev', signals),
   };
 
   targets[options.previewTargetName] = {
@@ -238,6 +229,7 @@ async function createRsbuildTargets(
       cwd: projectRoot,
       args: ['--mode=production'],
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'preview', signals),
   };
 
   targets[options.inspectTargetName] = {
@@ -246,47 +238,6 @@ async function createRsbuildTargets(
       cwd: projectRoot,
     },
   };
-
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: ['typescript'] },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly`
-        : `tsc -p ${tsConfigToUse} --noEmit`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} tsc --build --help`
-            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
-    }
-  }
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
@@ -307,8 +258,10 @@ function getOutputs(
   // `output.distPath.root` is the directory Rsbuild emits the build into, so
   // it is the build output as-is. (Don't take its `dirname` - that points at
   // the parent directory, which can capture sibling projects' outputs.)
+  // Rsbuild 2 also accepts `distPath` as a string, shorthand for `distPath.root`.
+  const distPath = rsbuildConfig?.output?.distPath;
   const buildOutputPath = normalizeOutputPath(
-    rsbuildConfig?.output?.distPath?.root,
+    typeof distPath === 'string' ? distPath : distPath?.root,
     projectRoot,
     workspaceRoot,
     'dist'
@@ -333,12 +286,12 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
@@ -347,7 +300,6 @@ function normalizeOutputPath(
 interface RsbuildEntry {
   configFile: string;
   projectRoot: string;
-  tsConfigFiles: string[];
 }
 
 async function filterRsbuildConfigs(
@@ -371,11 +323,7 @@ async function filterRsbuildConfigs(
         ) {
           return null;
         }
-        const tsConfigFiles =
-          siblingFiles.filter((p) =>
-            minimatch(p, 'tsconfig*{.json,.*.json}')
-          ) ?? [];
-        return { configFile, projectRoot, tsConfigFiles };
+        return { configFile, projectRoot };
       } catch (e) {
         preErrors.push([configFile, e as Error]);
         return null;
@@ -394,6 +342,34 @@ function normalizeOptions(options: RsbuildPluginOptions): RsbuildPluginOptions {
   options.devTargetName ??= 'dev';
   options.previewTargetName ??= 'preview';
   options.inspectTargetName ??= 'inspect';
-  options.typecheckTargetName ??= 'typecheck';
   return options;
+}
+
+// A config that loads pluginNxReadySignal() reports when the server listens.
+// Otherwise the check loads the config when the task runs, with the task's
+// env and options, and waits for the server's port.
+function getServerReadyWhen(
+  configFilePath: string,
+  command: 'dev' | 'preview',
+  signals: boolean
+): TargetConfiguration['readyWhen'] {
+  return signals
+    ? { signal: true }
+    : getReadyCheckReadyWhen(
+        '@nx/rsbuild/ready-check',
+        basename(configFilePath),
+        command
+      );
+}
+
+// Rsbuild's plugins option nests arrays and promises, and allows falsy entries
+async function loadsReadySignalPlugin(plugins: unknown): Promise<boolean> {
+  const plugin = await plugins;
+  if (Array.isArray(plugin)) {
+    for (const entry of plugin) {
+      if (await loadsReadySignalPlugin(entry)) return true;
+    }
+    return false;
+  }
+  return (plugin as { name?: unknown } | null)?.name === 'nx:ready-signal';
 }

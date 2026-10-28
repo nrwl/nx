@@ -20,3 +20,5 @@ export {
   babelCoreVersion,
   babelPresetReactVersion,
 } from './src/utils/versions';
+
+export { applyReactConfig } from './plugins/nx-react-webpack-plugin/lib/apply-react-config';

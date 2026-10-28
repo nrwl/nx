@@ -9,8 +9,18 @@ import {
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
-import { loadIsolatedNxPlugin } from './isolation';
+import {
+  disposeIsolatedPlugins,
+  loadIsolatedNxPlugin,
+  wantPlugins,
+} from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
+import { isOnDaemon } from '../../daemon/is-on-daemon';
+import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
+import {
+  capabilitiesOfNxPluginsReadFromCache,
+  type NxPluginCapabilities,
+} from './nx-plugin-capabilities';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import {
@@ -31,10 +41,16 @@ import {
  * Stuff for specified NX Plugins.
  */
 let currentPluginsConfigurationHash: string;
-let loadedPlugins: LoadedNxPlugin[];
 let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
-let cleanupSpecifiedPlugins: () => void | undefined;
+
+/** Workers aren't disposed here; the next load's `wantPlugins` sweeps the ones it no longer names. */
+function forgetSpecifiedPlugins(): void {
+  if (pluginTranspilerIsRegistered()) {
+    cleanupPluginTSTranspiler();
+  }
+  pendingPluginsPromise = undefined;
+}
 
 // In-flight separated-plugins load, tagged with its hash. Two roles: a
 // concurrent caller for the same set shares this load instead of racing a
@@ -90,21 +106,15 @@ export const loadingMethod = async (
   plugin: PluginConfiguration,
   root: string,
   index?: number
-): Promise<readonly [Promise<LoadedNxPlugin>, () => void]> => {
+): Promise<LoadedNxPlugin> => {
   if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
     return loadNxPlugin(plugin, root, index);
   }
 
-  const [isolatedPlugin, cleanup] = await loadIsolatedNxPlugin(
-    plugin,
-    root,
-    index
-  );
-
   // Awaited here rather than handed on, because the worker failure surfaces on
   // this promise and the fallback has to happen before the caller sees it.
   try {
-    return [Promise.resolve(await isolatedPlugin), cleanup] as const;
+    return await loadIsolatedNxPlugin(plugin, root, index);
   } catch (e) {
     // Proof, kept separate from policy. The errno the worker saw is what makes
     // the message certain; whether that errno is also grounds for degrading is a
@@ -119,8 +129,6 @@ export const loadingMethod = async (
     ) {
       throw e;
     }
-
-    cleanup();
 
     // Read and set in one synchronous step. Concurrently loaded plugins each
     // arrive here with their own failure, so testing the latch after setting it
@@ -197,13 +205,9 @@ export async function getPluginsSeparated(
     return pendingSeparatedPlugins.promise;
   }
 
-  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
-  // cached SeparatedPlugins is invalidated by the early-return above, but
-  // pendingPluginsPromise — the in-flight load — would otherwise be reused
-  // by the `??=` below and serve the previous plugin set forever. Tear
-  // down the old workers and force a fresh load.
-  cleanupSpecifiedPlugins?.();
-  pendingPluginsPromise = undefined;
+  // Plugins config changed (e.g. `nx add @nx/maven`): drop the in-flight load,
+  // or the `??=` below would serve the previous plugin set forever.
+  forgetSpecifiedPlugins();
 
   const loadPromise = (async (): Promise<SeparatedPlugins> => {
     const results = await Promise.allSettled([
@@ -241,7 +245,6 @@ export async function getPluginsSeparated(
     if (pendingSeparatedPlugins?.promise === loadPromise) {
       cachedSeparatedPlugins = separatedPlugins;
       currentPluginsConfigurationHash = pluginsConfigurationHash;
-      loadedPlugins = specifiedPlugins.concat(defaultPlugins);
     }
 
     return separatedPlugins;
@@ -269,10 +272,7 @@ export async function getPluginsSeparated(
 
 let loadedDefaultPlugins: LoadedNxPlugin[];
 let loadedDefaultPluginsHash: string;
-let cleanupDefaultPlugins: () => void;
-let pendingDefaultPluginPromise:
-  | Promise<readonly [LoadedNxPlugin[], () => void]>
-  | undefined;
+let pendingDefaultPluginPromise: Promise<LoadedNxPlugin[]> | undefined;
 
 export async function getOnlyDefaultPlugins(root = workspaceRoot) {
   const hash = root;
@@ -281,23 +281,16 @@ export async function getOnlyDefaultPlugins(root = workspaceRoot) {
     return loadedDefaultPlugins;
   }
 
-  // Cleanup current plugins before loading new ones
-  if (cleanupDefaultPlugins) {
-    cleanupDefaultPlugins();
+  const loadPromise = (pendingDefaultPluginPromise ??=
+    loadDefaultNxPlugins(workspaceRoot));
+  const result = await loadPromise;
+
+  // Commit only while this is still the registered load, so a set released while
+  // it was loading is not handed back out as the current one.
+  if (pendingDefaultPluginPromise === loadPromise) {
+    loadedDefaultPlugins = result;
+    loadedDefaultPluginsHash = hash;
   }
-
-  pendingDefaultPluginPromise ??= loadDefaultNxPlugins(workspaceRoot);
-
-  const [result, cleanupFn] = await pendingDefaultPluginPromise;
-
-  cleanupDefaultPlugins = () => {
-    loadedDefaultPlugins = undefined;
-    pendingDefaultPluginPromise = undefined;
-    cleanupFn();
-  };
-
-  loadedDefaultPlugins = result;
-  loadedDefaultPluginsHash = hash;
   return result;
 }
 
@@ -324,9 +317,9 @@ export function getPluginsIfLoadedOrLoading():
 }
 
 export function cleanupPlugins() {
-  cleanupSpecifiedPlugins?.();
-  cleanupDefaultPlugins?.();
-  pendingPluginsPromise = undefined;
+  disposeIsolatedPlugins();
+  forgetSpecifiedPlugins();
+  loadedDefaultPlugins = undefined;
   pendingDefaultPluginPromise = undefined;
   cachedSeparatedPlugins = undefined;
   // Drop the in-flight load too: clearing the marker flips its commit gate to
@@ -338,30 +331,65 @@ export function cleanupPlugins() {
  * Stuff for generic loading
  */
 
-async function loadDefaultNxPlugins(root = workspaceRoot) {
-  performance.mark('loadDefaultNxPlugins:start');
+function pluginLabel(plugin: PluginConfiguration): string {
+  return typeof plugin === 'string' ? plugin : plugin.plugin;
+}
 
-  const plugins = getDefaultPlugins(root);
+async function loadPlugins(
+  loader: string,
+  pluginConfigurations: PluginConfiguration[],
+  root: string,
+  assignIndexes: boolean
+): Promise<PromiseSettledResult<LoadedNxPlugin>[]> {
+  const loads = pluginConfigurations.map((plugin, index) => ({
+    plugin,
+    index: assignIndexes ? index : undefined,
+  }));
 
-  const cleanupFunctions: Array<() => void> = [];
-  const results = await Promise.allSettled(
-    plugins.map(async (plugin) => {
-      performance.mark(`Load Nx Plugin: ${plugin} - start`);
+  wantPlugins(loader, loads, root);
 
-      const [loadedPluginPromise, cleanup] = await loadingMethod(plugin, root);
+  return Promise.allSettled(
+    loads.map(async ({ plugin, index }) => {
+      const label = pluginLabel(plugin);
+      performance.mark(`Load Nx Plugin: ${label} - start`);
 
-      cleanupFunctions.push(cleanup);
-      const res = await loadedPluginPromise;
-      performance.mark(`Load Nx Plugin: ${plugin} - end`);
+      const res = await loadingMethod(plugin, root, index);
+      performance.mark(`Load Nx Plugin: ${label} - end`);
       performance.measure(
-        `Load Nx Plugin: ${plugin}`,
-        `Load Nx Plugin: ${plugin} - start`,
-        `Load Nx Plugin: ${plugin} - end`
+        `Load Nx Plugin: ${label}`,
+        `Load Nx Plugin: ${label} - start`,
+        `Load Nx Plugin: ${label} - end`
       );
 
       return res;
     })
   );
+}
+
+export async function capabilitiesOfConfiguredPlugins(
+  nxJson: NxJsonConfiguration,
+  root = workspaceRoot
+): Promise<NxPluginCapabilities[]> {
+  if (!isOnDaemon() && isDaemonEnabled()) {
+    return daemonClient.getPluginCapabilities();
+  }
+  const recorded = capabilitiesOfNxPluginsReadFromCache();
+  if (recorded) {
+    return recorded;
+  }
+  return (await getPlugins(nxJson, root)).map((plugin) =>
+    plugin.capabilities()
+  );
+}
+
+async function loadDefaultNxPlugins(
+  root = workspaceRoot
+): Promise<LoadedNxPlugin[]> {
+  performance.mark('loadDefaultNxPlugins:start');
+
+  const plugins = getDefaultPlugins(root);
+
+  const results = await loadPlugins('default', plugins, root, false);
 
   const defaultPluginResults: LoadedNxPlugin[] = [];
   const errors: Array<{ pluginName: string; error: Error }> = [];
@@ -379,9 +407,8 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
   }
 
   if (errors.length > 0) {
-    for (const fn of cleanupFunctions) {
-      fn();
-    }
+    // Cleared so the next call retries instead of re-awaiting this rejection.
+    pendingDefaultPluginPromise = undefined;
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');
@@ -391,36 +418,19 @@ async function loadDefaultNxPlugins(root = workspaceRoot) {
     );
   }
 
-  const ret = [
-    defaultPluginResults,
-    () => {
-      for (const fn of cleanupFunctions) {
-        fn();
-      }
-      if (pluginTranspilerIsRegistered()) {
-        cleanupPluginTSTranspiler();
-      }
-    },
-  ] as const;
   performance.mark('loadDefaultNxPlugins:end');
   performance.measure(
     'loadDefaultNxPlugins',
     'loadDefaultNxPlugins:start',
     'loadDefaultNxPlugins:end'
   );
-  return ret;
+  return defaultPluginResults;
 }
 
 async function loadSpecifiedNxPlugins(
   pluginsConfigurations: PluginConfiguration[],
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  // Returning existing plugins is handled by getPlugins,
-  // so, if we are here and there are existing plugins, they are stale
-  if (cleanupSpecifiedPlugins) {
-    cleanupSpecifiedPlugins();
-  }
-
   performance.mark('loadSpecifiedNxPlugins:start');
 
   pluginsConfigurations ??= [];
@@ -430,29 +440,11 @@ async function loadSpecifiedNxPlugins(
   // resolve it to the workspace root. Runs only when the plugin set changed.
   resetResolvePluginCache();
 
-  const cleanupFunctions: Array<() => void> = [];
-  const results = await Promise.allSettled(
-    pluginsConfigurations.map(async (plugin, index) => {
-      const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
-      performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
-
-      const [loadedPluginPromise, cleanup] = await loadingMethod(
-        plugin,
-        root,
-        index
-      );
-
-      cleanupFunctions.push(cleanup);
-      const res = await loadedPluginPromise;
-      performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
-      performance.measure(
-        `Load Nx Plugin: ${pluginPath}`,
-        `Load Nx Plugin: ${pluginPath} - start`,
-        `Load Nx Plugin: ${pluginPath} - end`
-      );
-
-      return res;
-    })
+  const results = await loadPlugins(
+    'specified',
+    pluginsConfigurations,
+    root,
+    true
   );
   performance.mark('loadSpecifiedNxPlugins:end');
   performance.measure(
@@ -480,9 +472,7 @@ async function loadSpecifiedNxPlugins(
   }
 
   if (errors.length > 0) {
-    for (const fn of cleanupFunctions) {
-      fn();
-    }
+    // Wants are not retracted: a newer load may own the declaration by now.
     const errorMessage = errors
       .map((e) => `  - ${e.pluginName}: ${e.error.message}`)
       .join('\n');
@@ -491,16 +481,6 @@ async function loadSpecifiedNxPlugins(
       `Failed to load ${errors.length} Nx plugin(s):\n${errorMessage}`
     );
   }
-
-  cleanupSpecifiedPlugins = () => {
-    for (const fn of cleanupFunctions) {
-      fn();
-    }
-    if (pluginTranspilerIsRegistered()) {
-      cleanupPluginTSTranspiler();
-    }
-    pendingPluginsPromise = undefined;
-  };
 
   return plugins;
 }

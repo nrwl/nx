@@ -1,15 +1,15 @@
 // Needed so the current environment is not used
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  getPackageManagerCommand: jest.fn(() => ({
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  getPackageManagerCommand: vi.fn(() => ({
     exec: 'npx',
   })),
 }));
 
 // Needed so the current environment is not used
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(() => false),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(() => false),
 }));
 
 import { CreateNodesContext } from '@nx/devkit';
@@ -21,7 +21,11 @@ import { hashObject, workspaceDataDirectory } from '@nx/devkit/internal';
 import { rmSync } from 'fs';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 
 describe('@nx/webpack/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -52,7 +56,8 @@ describe('@nx/webpack/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
     tempFs.cleanup();
     if (originalCacheProjectGraph !== undefined) {
       process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
@@ -196,6 +201,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "development",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "preview-site": {
                     "command": "webpack-cli serve",
@@ -240,6 +249,10 @@ describe('@nx/webpack/plugin', () => {
                         "NODE_ENV": "production",
                       },
                     },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js",
+                      "interval": 1000,
+                    },
                   },
                   "serve-static": {
                     "continuous": true,
@@ -269,6 +282,9 @@ describe('@nx/webpack/plugin', () => {
                       "port": 9000,
                       "spa": true,
                     },
+                    "readyWhen": {
+                      "signal": true,
+                    },
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -284,6 +300,62 @@ describe('@nx/webpack/plugin', () => {
         ],
       ]
     `);
+  });
+
+  describe('readyWhen', () => {
+    // NxAppWebpackPlugin and NxReadySignalPlugin carry this marker
+    const signallingPlugin = {
+      [Symbol.for('@nx/ready-signal-plugin')]: true,
+      apply() {},
+    };
+    const readyWhen = async () => {
+      const [[, { projects }]] = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        {},
+        context
+      );
+      const { targets } = projects['my-app'];
+      return [targets.serve.readyWhen, targets.preview.readyWhen];
+    };
+
+    it('waits for the signal when the config loads a plugin that sends it', async () => {
+      mockWebpackConfig({
+        devServer: { port: 9000 },
+        plugins: [signallingPlugin],
+      });
+
+      expect(await readyWhen()).toEqual([{ signal: true }, { signal: true }]);
+    });
+
+    it('checks the port at task time when nothing in the config signals', async () => {
+      mockWebpackConfig({ devServer: { port: 9000 }, plugins: [{}] });
+      const check = {
+        command: `node -e "require('@nx/webpack/ready-check').waitForDevServer(process.argv[1])" webpack.config.js`,
+        interval: 1000,
+      };
+
+      expect(await readyWhen()).toEqual([check, check]);
+    });
+
+    it('checks every port when several configs start a dev server', async () => {
+      // Only the first dev server to listen would signal
+      mockWebpackConfig([
+        { devServer: { port: 9000 }, plugins: [signallingPlugin] },
+        { devServer: { port: 9001 }, plugins: [signallingPlugin] },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
+
+    it('checks the port when a dev server config lacks the plugin', async () => {
+      // The plugin only wraps an existing devServer object
+      mockWebpackConfig([
+        { plugins: [signallingPlugin] },
+        { devServer: { port: 9000 } },
+      ]);
+
+      expect((await readyWhen())[0]).toHaveProperty('command');
+    });
   });
 
   it('adds the pnpm install settings inputs in a pnpm workspace', async () => {
@@ -402,8 +474,11 @@ describe('@nx/webpack/plugin', () => {
   });
 
   function mockWebpackConfig(config: any) {
-    jest.mock(join(tempFs.tempDir, 'my-app/webpack.config.js'), () => config, {
-      virtual: true,
-    });
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
+      join(tempFs.tempDir, 'my-app/webpack.config.js'),
+      config
+    );
   }
 });

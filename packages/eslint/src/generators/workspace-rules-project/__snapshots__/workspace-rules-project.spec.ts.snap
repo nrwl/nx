@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/eslint:workspace-rules-project should generate the required files 1`] = `
+exports[`@nx/eslint:workspace-rules-project > should generate the required files 1`] = `
 "/**
  * Import your custom workspace rules at the top of this file.
  *
@@ -31,7 +31,7 @@ module.exports = {
 "
 `;
 
-exports[`@nx/eslint:workspace-rules-project should generate the required files 2`] = `
+exports[`@nx/eslint:workspace-rules-project > should generate the required files 2`] = `
 "{
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
@@ -52,7 +52,7 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 2
 "
 `;
 
-exports[`@nx/eslint:workspace-rules-project should generate the required files 3`] = `
+exports[`@nx/eslint:workspace-rules-project > should generate the required files 3`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -65,7 +65,7 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 3
 "
 `;
 
-exports[`@nx/eslint:workspace-rules-project should generate the required files 4`] = `
+exports[`@nx/eslint:workspace-rules-project > should generate the required files 4`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -78,7 +78,7 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 4
 "
 `;
 
-exports[`@nx/eslint:workspace-rules-project should generate the required files 5`] = `
+exports[`@nx/eslint:workspace-rules-project > should generate the required files 5`] = `
 "module.exports = {
   displayName: 'eslint-rules',
   preset: '../../jest.preset.js',

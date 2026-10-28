@@ -337,6 +337,39 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('a load that fails', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('puts the worker down instead of leaving it loading', async () => {
+      const shutdown = vi.spyOn(IsolatedPlugin.prototype as any, 'shutdown');
+      vi.spyOn(
+        IsolatedPlugin.prototype as any,
+        'spawnAndConnect'
+      ).mockRejectedValue(new Error('Loading "test-plugin" timed out'));
+
+      await expect(IsolatedPlugin.load('test-plugin', '/root')).rejects.toThrow(
+        'timed out'
+      );
+
+      expect(shutdown).toHaveBeenCalled();
+    });
+
+    it('ends the socket of a worker that never answered a load', () => {
+      const plugin: any = Object.create(IsolatedPlugin.prototype);
+      const socket = { end: vi.fn() };
+      // What a load timeout leaves behind: connected, never alive.
+      plugin._alive = false;
+      plugin.worker = null;
+      plugin.socket = socket;
+
+      plugin.shutdown();
+
+      expect(socket.end).toHaveBeenCalled();
+    });
+  });
+
   describe('lifecycle integration', () => {
     it('should shutdown after single-hook plugin completes', async () => {
       const { plugin, shutdown } = createTestPlugin(
@@ -398,6 +431,57 @@ describe('IsolatedPlugin', () => {
     });
   });
 
+  describe('environment updates during worker restart', () => {
+    it('forwards an update to a worker whose restart is still connecting', async () => {
+      const loadResult = createLoadResult({
+        createNodesPattern: '**/*.json',
+        hasCreateDependencies: true,
+      });
+      const { plugin, spawnAndConnect, sendRequest } =
+        createTestPlugin(loadResult);
+      await plugin.shutdown();
+
+      let finishConnecting: () => void;
+      spawnAndConnect.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishConnecting = () => {
+              plugin._alive = true;
+              resolve(loadResult);
+            };
+          })
+      );
+      sendRequest.mockImplementation((type: string) =>
+        type === 'setWorkerEnv'
+          ? { success: true }
+          : { success: true, result: [] }
+      );
+
+      const hook = plugin.createNodes[1]([], {});
+      const env = { BASE_URL: 'http://localhost:4301' };
+      const update = plugin.setWorkerEnv(env);
+      expect(sendRequest).not.toHaveBeenCalled();
+
+      finishConnecting();
+      await Promise.all([hook, update]);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      expect(sendRequest).toHaveBeenCalledWith('setWorkerEnv', env);
+    });
+
+    it('does not start a stopped worker just to update its environment', async () => {
+      const { plugin, spawnAndConnect, sendRequest } = createTestPlugin(
+        createLoadResult({ createNodesPattern: '**/*.json' })
+      );
+      await plugin.shutdown();
+
+      await plugin.setWorkerEnv({ BASE_URL: 'http://localhost:4301' });
+
+      expect(spawnAndConnect).not.toHaveBeenCalled();
+      expect(sendRequest).not.toHaveBeenCalled();
+    });
+  });
+
   describe('restart on hook call after shutdown', () => {
     it('should restart worker when calling hook after shutdown', async () => {
       const { plugin, spawnAndConnect, shutdown } = createTestPlugin(
@@ -454,6 +538,42 @@ describe('IsolatedPlugin', () => {
 
       // Now should shutdown
       expect(shutdown).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('a released plugin', () => {
+    // Later hooks in the phase, so only the release can shut the worker down.
+    const graphHooks = {
+      createNodesPattern: '**/*.json',
+      hasCreateDependencies: true,
+      hasCreateMetadata: true,
+    };
+
+    it('answers a straggling call and then puts the worker back down', async () => {
+      const { plugin, spawnAndConnect, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      plugin.dispose();
+      expect(shutdown).toHaveBeenCalledTimes(1);
+
+      // A caller that took this plugin while it was still the current one.
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(spawnAndConnect).toHaveBeenCalledTimes(1);
+      expect(shutdown).toHaveBeenCalledTimes(2);
+      expect(plugin._alive).toBe(false);
+    });
+
+    it('keeps the worker up for the rest of the phase while it is still held', async () => {
+      const { plugin, shutdown } = createTestPlugin(
+        createLoadResult(graphHooks)
+      );
+
+      await plugin.createNodes![1]([], {} as any);
+
+      expect(shutdown).not.toHaveBeenCalled();
+      expect(plugin._alive).toBe(true);
     });
   });
 

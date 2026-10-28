@@ -1,9 +1,8 @@
-import { Tree, readNxJson } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import {
   getNpmScope,
   isUsingTsSolutionSetup,
@@ -28,13 +27,6 @@ export async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
   });
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  options.addPlugin ??= addPlugin;
-
   const fileName = projectNames.projectFileName;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -44,8 +36,7 @@ export async function normalizeOptions(
   // TS solution setup is not configured, we additionally check if the TS
   // solution setup will be configured by the jsLibraryGenerator
   const isUsingTsSolutionsConfig =
-    isUsingTsSolutionSetup(tree) ||
-    shouldConfigureTsSolutionSetup(tree, addPlugin);
+    isUsingTsSolutionSetup(tree) || shouldConfigureTsSolutionSetup(tree);
   const normalized: NormalizedOptions = {
     ...options,
     strict: options.strict ?? true,
@@ -90,8 +81,7 @@ export function toJsLibraryGeneratorOptions(
     // `deleteFiles` drops the generated spec, and a library without a
     // controller or service is left with none at all.
     passWithNoTests: true,
-    enableTypedLinting: isTypedLintingEnabled(options),
-    addPlugin: options.addPlugin,
+    enableTypedLinting: options.enableTypedLinting,
     useProjectJson: options.useProjectJson,
   };
 }

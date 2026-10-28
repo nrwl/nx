@@ -1,19 +1,21 @@
 import { CreateNodesContext } from '@nx/devkit';
+import { loadConfigFile } from '@nx/devkit/internal';
 import { createNodes } from './plugin';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { nxReadySignal } from '../utils/ready-signal';
 
-jest.mock('@nx/devkit/internal', () => ({
-  ...jest.requireActual('@nx/devkit/internal'),
-  loadConfigFile: jest.fn().mockImplementation(() => {
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  loadConfigFile: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       buildDir: '../dist/my-app/.nuxt',
     });
   }),
 }));
 
-jest.mock('../utils/executor-utils', () => ({
-  loadNuxtKitDynamicImport: jest.fn().mockResolvedValue({
-    loadNuxtConfig: jest.fn().mockResolvedValue({
+vi.mock('../utils/executor-utils', () => ({
+  loadNuxtKitDynamicImport: vi.fn().mockResolvedValue({
+    loadNuxtConfig: vi.fn().mockResolvedValue({
       buildDir: '../dist/my-app/.nuxt',
     }),
   }),
@@ -48,7 +50,7 @@ describe('@nx/nuxt/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -90,7 +92,7 @@ describe('@nx/nuxt/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {
@@ -107,5 +109,50 @@ describe('@nx/nuxt/plugin', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+  });
+
+  describe('dev server readiness', () => {
+    let tempFs: TempFs;
+
+    afterEach(() => {
+      tempFs.cleanup();
+    });
+
+    it.each([
+      [`'@nx/nuxt/ready-signal'`, ['@nx/nuxt/ready-signal'], { signal: true }],
+      ['nxReadySignal', [nxReadySignal], { signal: true }],
+      ['[nxReadySignal, {}]', [[nxReadySignal, {}]], { signal: true }],
+      [
+        `'@nuxt/devtools'`,
+        ['@nuxt/devtools'],
+        {
+          command: `node -e "require('@nx/nuxt/ready-check').waitForDevServer()"`,
+          interval: 1000,
+        },
+      ],
+    ])(
+      'infers the serve readyWhen for modules: [%s]',
+      async (source, modules, readyWhen) => {
+        // Targets are cached by a hash of the project's files
+        tempFs = new TempFs('nuxt-ready-signal');
+        tempFs.createFileSync('my-app/project.json', '{}');
+        tempFs.createFileSync(
+          'my-app/nuxt.config.ts',
+          `export default defineNuxtConfig({ modules: [${source}] });`
+        );
+        tempFs.createFileSync('package-lock.json', '{}');
+        vi.mocked(loadConfigFile).mockResolvedValueOnce({ modules });
+
+        const nodes = await createNodesFunction(
+          ['my-app/nuxt.config.ts'],
+          {},
+          { nxJsonConfiguration: {}, workspaceRoot: tempFs.tempDir }
+        );
+
+        expect(nodes[0][1].projects['my-app'].targets.serve.readyWhen).toEqual(
+          readyWhen
+        );
+      }
+    );
   });
 });

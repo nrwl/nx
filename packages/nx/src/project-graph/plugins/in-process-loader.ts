@@ -59,11 +59,8 @@ export function loadNxPlugin(
   plugin: PluginConfiguration,
   root: string,
   index?: number
-) {
-  return [
-    loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index),
-    () => {},
-  ] as const;
+): Promise<LoadedNxPlugin> {
+  return loadNxPluginAsync(plugin, getNxRequirePaths(root), root, index);
 }
 
 export async function loadNxPluginAsync(

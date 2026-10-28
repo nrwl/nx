@@ -60,7 +60,7 @@ describe('run-commands output routing', () => {
           parallel: true,
         } as any,
         { root: '.' } as any,
-        'lib:dev'
+        { id: 'lib:dev' }
       );
       // Establish a known line start; the chunk below is what has to move it.
       output.addNewline();
@@ -99,7 +99,7 @@ describe('run-commands output routing', () => {
           parallel: true,
         } as any,
         { root: '.' } as any,
-        'lib:dev'
+        { id: 'lib:dev' }
       );
       // 1. the command header, written at construction, on stdout
       const headerCall = routed.mock.calls.find((c) =>

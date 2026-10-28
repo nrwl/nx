@@ -372,6 +372,28 @@
       "description": "Add optional webpack, Module Federation, and Rspack packages when existing targets require them.",
       "factory": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages",
       "documentation": "./dist/src/migrations/update-23-1-0/add-optional-webpack-packages.md"
+    },
+    "update-24-0-0-upgrade-to-angular-22-2": {
+      "version": "24.0.0-beta.4",
+      "requires": {
+        "@angular/core": ">=22.1.0 <22.2.0"
+      },
+      "optionalUpdate": true,
+      "description": "Update the Angular packages to 22.2 unless the workspace uses Cypress component testing or webpack Module Federation in an Angular project, which break with the webpack-dev-server and webpack versions Angular 22.2 installs.",
+      "factory": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2",
+      "documentation": "./dist/src/migrations/update-24-0-0/upgrade-to-angular-22-2.md"
+    },
+    "update-24-0-0-add-ready-when-signal": {
+      "version": "24.0.0-beta.5",
+      "description": "Sets `readyWhen: { signal: true }` on `@angular/build:dev-server`, `@angular-devkit/build-angular:dev-server`, `@angular-devkit/build-angular:ssr-dev-server` and `@nx/angular:dev-server` targets that get no `readyWhen` from their own configuration or `targetDefaults`, so tasks that depend on them with `waitFor: 'ready'` start once the server is listening.",
+      "implementation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal",
+      "documentation": "./dist/src/migrations/update-24-0-0/add-ready-when-signal.md"
+    },
+    "update-24-0-0-remove-scam-generator-defaults": {
+      "version": "24.0.0-beta.5",
+      "description": "Removes generator defaults for the removed `@nx/angular:scam`, `@nx/angular:scam-directive`, `@nx/angular:scam-pipe`, and `@nx/angular:scam-to-standalone` generators from `nx.json` and project configurations.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-scam-generator-defaults",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-scam-generator-defaults.md"
     }
   },
   "packageJsonUpdates": {
@@ -2320,6 +2342,93 @@
       "packages": {
         "@ngrx/store": {
           "version": "^22.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.0-angular-eslint": {
+      "version": "24.0.0-beta.4",
+      "requires": {
+        "@angular/core": ">= 22.0.0 < 23.0.0",
+        "typescript-eslint": "^8.0.0",
+        "eslint": "^9.0.0 || ^10.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.0-@angular-eslint": {
+      "version": "24.0.0-beta.4",
+      "requires": {
+        "@angular/core": ">= 22.0.0 < 23.0.0",
+        "eslint": "^9.0.0 || ^10.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^22.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^22.5.0",
           "alwaysAddToPackageJson": false
         }
       }

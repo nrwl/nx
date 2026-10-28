@@ -4,28 +4,34 @@ import {
   addProjectConfiguration as _addProjectConfiguration,
   type ExpandedPluginConfiguration,
   joinPathFragments,
+  logger,
   type ProjectConfiguration,
   type ProjectGraph,
   readNxJson,
   readProjectConfiguration,
+  type TargetConfiguration,
   type Tree,
   updateNxJson,
   writeJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -143,17 +149,16 @@ export default defineConfig({
     `${projectOpts.appRoot}/cypress.config.ts`,
     cypressConfigContents
   );
-  jest.doMock(
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
     join(fs.tempDir, `${projectOpts.appRoot}/cypress.config.ts`),
-    () => ({
+    {
       default: {
         e2e: {
           baseUrl: 'http://localhost:4200',
         },
       },
-    }),
-    {
-      virtual: true,
     }
   );
 
@@ -163,6 +168,45 @@ export default defineConfig({
     JSON.stringify(project)
   );
   return project;
+}
+
+function createComponentTestingProject(
+  tree: Tree,
+  component: string,
+  target: Partial<TargetConfiguration> = {}
+) {
+  const cypressConfigContents = `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: ${component},
+});`;
+  tree.write('mylib/cypress.config.ts', cypressConfigContents);
+  fs.createFileSync('mylib/cypress.config.ts', cypressConfigContents);
+  mockCjsModule(import.meta.url, join(fs.tempDir, 'mylib/cypress.config.ts'), {
+    default: { component: {} },
+  });
+
+  const project: ProjectConfiguration = {
+    name: 'mylib',
+    root: 'mylib',
+    projectType: 'library',
+    targets: {
+      'component-test': {
+        executor: '@nx/cypress:cypress',
+        ...target,
+        options: {
+          cypressConfig: 'mylib/cypress.config.ts',
+          testingType: 'component',
+          skipServe: true,
+          devServerTarget: 'myapp:build',
+          ...target.options,
+        },
+      },
+    },
+  };
+  addProjectConfiguration(tree, project.name, project);
+  fs.createFileSync('mylib/project.json', JSON.stringify(project));
 }
 
 describe('Cypress - Convert Executors To Plugin', () => {
@@ -182,6 +226,8 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
   afterEach(() => {
     fs.reset();
+    resetCjsMocks();
+    vi.restoreAllMocks();
   });
 
   describe('--project', () => {
@@ -573,6 +619,177 @@ describe('Cypress - Convert Executors To Plugin', () => {
           );
         });
       }
+    });
+
+    it.each([
+      [
+        'nxComponentTestingPreset(__filename)',
+        'nxComponentTestingPreset(__filename, { buildTarget: "myapp:build" })',
+        false,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { bundler: 'webpack' })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: "myapp:build", bundler: 'webpack' })`,
+        false,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build' })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build' })`,
+        false,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { buildTarget: process.env.CT_BUILD_TARGET })',
+        'nxComponentTestingPreset(__filename, { buildTarget: process.env.CT_BUILD_TARGET || "myapp:build" })',
+        false,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { buildTarget: <string>'other:build' })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: <string>'other:build' || "myapp:build" })`,
+        false,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { buildTarget })',
+        'nxComponentTestingPreset(__filename, { buildTarget: buildTarget || "myapp:build" })',
+        false,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { buildTarget: process.env.A ?? process.env.B })',
+        'nxComponentTestingPreset(__filename, { buildTarget: (process.env.A ?? process.env.B) || "myapp:build" })',
+        false,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { buildTarget: process.env.CI ? 'myapp:build:ci' : process.env.B })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: (process.env.CI ? 'myapp:build:ci' : process.env.B) || "myapp:build" })`,
+        false,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { ...shared })',
+        'nxComponentTestingPreset(__filename, { ...shared })',
+        true,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build', ...shared })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build', ...shared })`,
+        true,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { ...shared, buildTarget: 'other:build' })`,
+        `nxComponentTestingPreset(__filename, { ...shared, buildTarget: 'other:build' })`,
+        false,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { [optionName]: process.env.CT_BUILD_TARGET })',
+        'nxComponentTestingPreset(__filename, { [optionName]: process.env.CT_BUILD_TARGET })',
+        true,
+      ],
+      [
+        'nxComponentTestingPreset(__filename, { __proto__: shared })',
+        'nxComponentTestingPreset(__filename, { __proto__: shared })',
+        true,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { ['__proto__']: shared })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: "myapp:build", ['__proto__']: shared })`,
+        false,
+      ],
+      [
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build', __proto__: shared })`,
+        `nxComponentTestingPreset(__filename, { buildTarget: 'other:build', __proto__: shared })`,
+        false,
+      ],
+    ])(
+      'should convert the component testing devServerTarget for %s',
+      async (component, expected, warns) => {
+        createComponentTestingProject(tree, component);
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        expect(tree.read('mylib/cypress.config.ts', 'utf-8')).toContain(
+          `component: ${expected},`
+        );
+        expect(
+          readProjectConfiguration(tree, 'mylib').targets['component-test']
+        ).toStrictEqual({ options: { 'config-file': './cypress.config.ts' } });
+        expect(warn.mock.calls.map(([message]) => message)).toEqual(
+          warns
+            ? [
+                expect.stringContaining(
+                  'Pass it to nxComponentTestingPreset as buildTarget: "myapp:build".'
+                ),
+              ]
+            : []
+        );
+      }
+    );
+
+    it.each([
+      [
+        'only the default configuration',
+        { devServerTarget: undefined },
+        [] as string[],
+      ],
+      [
+        'both the options and the default configuration',
+        {},
+        [
+          'Removed devServerTarget "myapp:build" from the options of project "mylib".',
+        ],
+      ],
+    ])(
+      'should move the default configuration devServerTarget when it is set in %s',
+      async (_, options, warnings) => {
+        createComponentTestingProject(
+          tree,
+          'nxComponentTestingPreset(__filename)',
+          {
+            options,
+            defaultConfiguration: 'ci',
+            configurations: { ci: { devServerTarget: 'myapp:build:ci' } },
+          }
+        );
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        expect(tree.read('mylib/cypress.config.ts', 'utf-8')).toContain(
+          'component: nxComponentTestingPreset(__filename, { buildTarget: "myapp:build:ci" }),'
+        );
+        expect(
+          readProjectConfiguration(tree, 'mylib').targets['component-test']
+        ).toStrictEqual({
+          defaultConfiguration: 'ci',
+          options: { 'config-file': './cypress.config.ts' },
+        });
+        expect(warn.mock.calls.map(([message]) => message)).toEqual(
+          warnings.map((warning) => expect.stringContaining(warning))
+        );
+      }
+    );
+
+    it('should warn about component testing build targets it cannot move', async () => {
+      createComponentTestingProject(tree, '{}', {
+        configurations: {
+          production: { devServerTarget: 'myapp:build:production' },
+        },
+      });
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Pass it to nxComponentTestingPreset as buildTarget: "myapp:build".'
+        )
+      );
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Removed devServerTarget "myapp:build:production" from the "production" configuration of project "mylib".'
+        )
+      );
+      expect(
+        readProjectConfiguration(tree, 'mylib').targets['component-test']
+      ).toStrictEqual({ options: { 'config-file': './cypress.config.ts' } });
     });
 
     it('should add Cypress options found in targetDefaults for the executor to the project.json', async () => {

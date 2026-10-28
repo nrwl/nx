@@ -52,12 +52,13 @@
   "devDependencies": {
     "jsonc-eslint-parser": "^2.4.0",
     "vitest": "catalog:vite",
-    "memfs": "^4.17.0"
+    "memfs": "^4.17.0",
+    "@rsbuild/core": "2.0.15"
   },
   "peerDependencies": {
     "@angular/build": "catalog:angular-supported-versions",
     "@angular/compiler-cli": "catalog:angular-supported-versions",
-    "@rsbuild/core": ">=1.0.5 <2.0.0"
+    "@rsbuild/core": ">=1.0.5 <3.0.0"
   },
   "nx": {
     "sourceRoot": "packages/angular-rspack-compiler/src",

@@ -1,5 +1,7 @@
 import {
+  type ChildProcess,
   ExecFileOptions,
+  exec,
   execFile,
   execFileSync,
   execSync,
@@ -8,6 +10,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { dirname, join, posix, relative, resolve, sep } from 'path';
 import { isOwnedRealDirectory } from './owned-private-dir';
+import { spawnWithoutTerminal } from './spawn-without-terminal';
 
 function execFileAsync(
   file: string,
@@ -773,6 +776,8 @@ export type WorkingTreeStatus = 'dirty' | 'clean' | 'unknown';
 // `excludePaths` are left out of the probe the way `tryCommitChanges` leaves
 // them out of the commit, so a tree dirty only under them reads as clean. An
 // exclude-only pathspec still covers the whole tree, matching `git add -A`.
+// The untracked mode is explicit because `status.showUntrackedFiles=no` would
+// hide new files that `git add -A` still stages.
 export function getWorkingTreeStatus(
   directory?: string,
   excludePaths: string[] = []
@@ -782,7 +787,7 @@ export function getWorkingTreeStatus(
     .join('');
   try {
     const out = execSync(
-      `git status --porcelain${pathspecs ? ` --${pathspecs}` : ''}`,
+      `git status --porcelain --untracked-files=normal${pathspecs ? ` --${pathspecs}` : ''}`,
       {
         encoding: 'utf8',
         cwd: directory,
@@ -853,6 +858,38 @@ export function getPathCommitExposure(
     // check-ignore exits 1 for "not ignored"; anything else is a probe
     // failure.
     return (e as { status?: number })?.status === 1 ? 'unignored' : 'unknown';
+  }
+}
+
+export type PathHeadStatus = 'committed' | 'absent' | 'unknown';
+
+// Whether HEAD's tree, not the index, has an entry at the `directory`-relative
+// `path`. An unborn HEAD has none; 'unknown' means git failed.
+export function getPathHeadStatus(
+  path: string,
+  directory: string
+): PathHeadStatus {
+  const options = {
+    encoding: 'utf8' as const,
+    cwd: directory,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  };
+  try {
+    execFileSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], options);
+  } catch (e) {
+    // --verify -q exits 1 for a ref that does not resolve: an unborn HEAD.
+    return (e as { status?: number })?.status === 1 ? 'absent' : 'unknown';
+  }
+  try {
+    const entries = execFileSync(
+      'git',
+      ['ls-tree', '--name-only', 'HEAD', '--', path],
+      options
+    );
+    return entries.trim() === '' ? 'absent' : 'committed';
+  } catch {
+    return 'unknown';
   }
 }
 
@@ -984,48 +1021,167 @@ export function tryCommitChanges(
   excludePaths: string[] = []
 ): string | null {
   try {
-    execSync('git add -A', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      cwd: directory,
-      windowsHide: true,
-    });
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      execSync(command, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        input,
+        cwd: directory,
+        windowsHide: true,
+      });
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+/**
+ * `tryCommitChanges` for a process that has to stay responsive while git
+ * runs: a signing prompt or a hook can hold the commit for minutes.
+ * `withoutTerminal` is for a caller sharing the terminal with another program:
+ * git runs without it (see `spawnWithoutTerminal`), so such a prompt fails the
+ * commit instead.
+ */
+export async function tryCommitChangesAsync(
+  commitMessage: string,
+  directory: string,
+  excludePaths: string[] = [],
+  { withoutTerminal = false }: { withoutTerminal?: boolean } = {}
+): Promise<string | null> {
+  try {
+    for (const { command, input } of commitCommands(
+      commitMessage,
+      excludePaths
+    )) {
+      await execAsync(command, directory, input, withoutTerminal);
+    }
+  } catch (err) {
+    throw commitFailure(err);
+  }
+  return getLatestCommitSha(directory);
+}
+
+function commitCommands(
+  commitMessage: string,
+  excludePaths: string[]
+): { command: string; input?: string }[] {
+  return [
+    { command: 'git add -A' },
     // Exclusion happens as an unstage rather than an add-time pathspec:
     // `git add` refuses a pathspec naming an ignored directory (exit 1) even
     // as an exclusion, and an add-time pathspec cannot cover entries that
     // were already staged before this call. The reset is relative to cwd, so
     // a workspace nested inside a larger repo excludes its own path; a path
     // with no index entry is a quiet no-op, unborn HEAD included.
-    for (const excludePath of excludePaths) {
-      execSync(`git reset -q -- "${excludePath}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: directory,
-        windowsHide: true,
-      });
-    }
-    execSync('git commit --no-verify -F -', {
-      encoding: 'utf8',
-      stdio: 'pipe',
-      input: commitMessage,
-      cwd: directory,
-      windowsHide: true,
-    });
-  } catch (err) {
-    const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
-    const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
-    const detail = [stderr, stdout]
-      .map((s) => s?.trim())
-      .filter(Boolean)
-      .join('\n');
-    // `{ cause }` preserves structured fields (.signal, .status, .code)
-    // for callers to inspect; otherwise only stderr/stdout text survives.
-    throw new Error(
-      detail || (err instanceof Error ? err.message : String(err)),
-      { cause: err }
-    );
+    ...excludePaths.map((excludePath) => ({
+      command: `git reset -q -- "${excludePath}"`,
+    })),
+    { command: 'git commit --no-verify -F -', input: commitMessage },
+  ];
+}
+
+function commitFailure(err: unknown): Error {
+  const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
+  const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
+  const detail = [stderr, stdout]
+    .map((s) => s?.trim())
+    .filter(Boolean)
+    .join('\n');
+  // `{ cause }` preserves structured fields (.signal, .status, .code)
+  // for callers to inspect; otherwise only stderr/stdout text survives.
+  return new Error(
+    detail || (err instanceof Error ? err.message : String(err)),
+    { cause: err }
+  );
+}
+
+function execAsync(
+  command: string,
+  cwd: string,
+  input: string | undefined,
+  withoutTerminal: boolean
+) {
+  return new Promise<void>((res, rej) => {
+    // The streams ride on the error as `execSync` reports them, so
+    // `commitFailure` shapes both the same way.
+    const settle = (err: Error | null, stdout: string, stderr: string) =>
+      err ? rej(Object.assign(err, { stdout, stderr })) : res();
+    const child = withoutTerminal
+      ? collectOutput(spawnWithoutTerminal(command, { cwd }), command, settle)
+      : exec(command, { encoding: 'utf8', cwd, windowsHide: true }, settle);
+    // Closed for every command, since `git commit -F -` reads to end of
+    // input. A child that exits before reading raises EPIPE here, which the
+    // exit callback already reports.
+    child.stdin?.on('error', () => {});
+    child.stdin?.end(input ?? '');
+  });
+}
+
+// What `exec` reports through its callback; `exec` itself ignores `detached`.
+function collectOutput(
+  child: ChildProcess,
+  command: string,
+  done: (err: Error | null, stdout: string, stderr: string) => void
+): ChildProcess {
+  let stdout = '';
+  let stderr = '';
+  child.stdout?.setEncoding('utf8').on('data', (chunk) => (stdout += chunk));
+  child.stderr?.setEncoding('utf8').on('data', (chunk) => (stderr += chunk));
+  child.once('error', (err) => done(err, stdout, stderr));
+  child.once('close', (code, signal) =>
+    done(
+      code === 0
+        ? null
+        : Object.assign(new Error(`Command failed: ${command}`), {
+            code,
+            signal,
+          }),
+      stdout,
+      stderr
+    )
+  );
+  return child;
+}
+
+/**
+ * `git reset --hard <ref>` then `git clean -fd`, sparing the
+ * `directory`-relative `keepPaths`, staged or not. A kept path `ref` tracks
+ * comes back at `ref`'s version. Throws with git's stderr when git fails.
+ * `ref` is a sha a caller validated with `GIT_SHA`, never user input.
+ */
+export function resetWorkingTree(
+  ref: string,
+  keepPaths: string[],
+  directory: string
+): void {
+  // `git clean -e` takes ignore patterns, which resolve from the repository
+  // root whatever the cwd, and match at any depth when they hold no slash.
+  const prefix = getGitRootRelativePath(directory);
+  if (prefix === null) {
+    throw new Error(`${directory} is not inside a git repository.`);
   }
-  return getLatestCommitSha(directory);
+  const keepPatterns = keepPaths.map(
+    (keepPath) => `/${posix.join(prefix, keepPath).replace(/[\\*?[]/g, '\\$&')}`
+  );
+  const options = {
+    encoding: 'utf8' as const,
+    stdio: 'pipe' as const,
+    cwd: directory,
+    windowsHide: true,
+  };
+  // `reset --hard` deletes a kept path staged since `ref`, so its index entry
+  // goes back to `ref` first, leaving it untracked for the clean to skip.
+  execFileSync('git', ['reset', '-q', ref, '--', ...keepPaths], options);
+  execFileSync('git', ['reset', '--hard', ref], options);
+  execFileSync(
+    'git',
+    ['clean', '-fd', ...keepPatterns.flatMap((pattern) => ['-e', pattern])],
+    options
+  );
 }
 
 export function getLatestCommitSha(directory?: string): string | null {
@@ -1048,6 +1204,36 @@ export function getLatestCommitSha(directory?: string): string | null {
  */
 export const GIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 
+export type AncestorStatus = 'ancestor' | 'not-ancestor' | 'unknown';
+
+/**
+ * Whether `ancestor` is reachable from `descendant`. 'unknown' means the
+ * answer could not be established (invalid input, not a repository, a commit
+ * git does not know), which is distinct from a verified 'not-ancestor'.
+ */
+export function getAncestorStatus(
+  ancestor: string,
+  descendant: string,
+  directory?: string
+): AncestorStatus {
+  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
+    return 'unknown';
+  }
+  try {
+    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    });
+    return 'ancestor';
+  } catch (e) {
+    // Exit 1 is git's verified "no"; anything else is a failed probe.
+    return (e as { status?: number })?.status === 1
+      ? 'not-ancestor'
+      : 'unknown';
+  }
+}
+
 /**
  * Whether `ancestor` is reachable from `descendant`, i.e. resetting to
  * `descendant` keeps `ancestor` in history. Returns false when the answer
@@ -1059,17 +1245,5 @@ export function isAncestorCommit(
   descendant: string,
   directory?: string
 ): boolean {
-  if (!GIT_SHA.test(ancestor) || !GIT_SHA.test(descendant)) {
-    return false;
-  }
-  try {
-    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, {
-      stdio: 'pipe',
-      windowsHide: true,
-      cwd: directory,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return getAncestorStatus(ancestor, descendant, directory) === 'ancestor';
 }

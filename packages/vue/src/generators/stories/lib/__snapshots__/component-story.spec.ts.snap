@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue:component-story default setup component with other syntax of props defined should create a story with controls 1`] = `
+exports[`vue:component-story > default setup > component with other syntax of props defined > should create a story with controls 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 
@@ -36,7 +36,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:component-story default setup component with props defined should create a story with controls 1`] = `
+exports[`vue:component-story > default setup > component with props defined > should create a story with controls 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 
@@ -72,7 +72,7 @@ export const Heading = {
 "
 `;
 
-exports[`vue:component-story default setup default component setup should properly set up the story 1`] = `
+exports[`vue:component-story > default setup > default component setup > should properly set up the story 1`] = `
 "import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import testUiLib from './test-ui-lib.vue';
 

@@ -62,7 +62,6 @@
     "@nestjs/schematics": "^11.0.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/eslint": "workspace:*",
     "@nx/node": "workspace:*",
     "semver": "catalog:",
     "tslib": "catalog:typescript"

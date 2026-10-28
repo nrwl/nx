@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
+exports[`@nx/nuxt/plugin > not root project > should create nodes 1`] = `
 [
   [
     "my-app/nuxt.config.ts",
@@ -53,6 +53,9 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
                 "spa": false,
                 "staticFilePath": "{projectRoot}/dist",
               },
+              "readyWhen": {
+                "signal": true,
+              },
             },
             "build-deps": {
               "dependsOn": [
@@ -97,6 +100,10 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/nuxt/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
             },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
@@ -113,7 +120,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
+exports[`@nx/nuxt/plugin > root project > should create nodes 1`] = `
 [
   [
     "nuxt.config.ts",
@@ -188,6 +195,10 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/nuxt/ready-check').waitForDevServer()"",
+                "interval": 1000,
+              },
             },
             "serve-static": {
               "continuous": true,
@@ -209,6 +220,9 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
                 "port": 4200,
                 "spa": false,
                 "staticFilePath": "{projectRoot}/dist",
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "watch-deps": {

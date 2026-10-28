@@ -20,7 +20,7 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
   return {
     invoke: (command: string, exit = true) => {
       if (command in nxCloudClient.commands) {
-        nxCloudClient.commands[command]()
+        return nxCloudClient.commands[command]()
           .then(() => {
             if (exit) {
               process.exit(0);
@@ -41,5 +41,11 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
       }
     },
     availableCommands: Object.keys(nxCloudClient.commands),
+    // Bundles that export runCLI own dispatch, help, output and the exit code.
+    // Older bundles only export `commands`.
+    runCLI:
+      typeof nxCloudClient.runCLI === 'function'
+        ? (args: string[]) => nxCloudClient.runCLI(args)
+        : undefined,
   };
 }

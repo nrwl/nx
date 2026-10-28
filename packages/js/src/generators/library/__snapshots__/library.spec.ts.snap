@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
+exports[`lib > --unit-test-runner jest > should generate test configuration with swc and js 1`] = `
 "/* eslint-disable */
 const { readFileSync } = require('fs');
 

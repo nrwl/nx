@@ -11,9 +11,12 @@ import {
   type ProjectGraph,
   type Tree,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
@@ -21,12 +24,12 @@ import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi
     .fn()
     .mockImplementation(() => Promise.resolve(projectGraph)),
-  updateProjectConfiguration: jest
+  updateProjectConfiguration: vi
     .fn()
     .mockImplementation((tree, projectName, projectConfiguration) => {
       function handleEmptyTargets(
@@ -67,39 +70,15 @@ jest.mock('@nx/devkit', () => ({
       projectGraph.nodes[projectName].data = projectConfiguration;
     }),
 }));
-jest.mock('nx/src/devkit-internals', () => {
-  // Use a proxy to lazily access the actual module to avoid initialization timing issues with SWC
-  const getActual = () =>
-    jest.requireActual('nx/src/project-graph/utils/retrieve-workspace-files');
-  const getActualDevkitInternals = () =>
-    jest.requireActual('nx/src/devkit-internals');
-
-  return new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (prop === 'getExecutorInformation') {
-          // Read the executor schema from source so this unit test does not
-          // depend on @nx/webpack being built. executors.json points `schema`
-          // at ./dist (only present after copy-assets); readTargetOptions only
-          // consumes `schema`.
-          return jest.fn().mockImplementation((_pkg, executorName) => ({
-            schema: JSON.parse(
-              readFileSync(
-                join(__dirname, '../../executors', executorName, 'schema.json'),
-                'utf-8'
-              )
-            ),
-          }));
-        }
-        if (prop === 'retrieveProjectConfigurations') {
-          return getActual().retrieveProjectConfigurations;
-        }
-        // For all other properties, return from the actual module
-        return getActualDevkitInternals()[prop];
-      },
-    }
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
+  const { retrieveProjectConfigurations } = await vi.importActual<any>(
+    'nx/src/project-graph/utils/retrieve-workspace-files'
   );
+  return {
+    ...actual,
+    retrieveProjectConfigurations,
+  };
 });
 
 function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
@@ -165,9 +144,12 @@ function writeWebpackConfig(
 ) {
   tree.write(`${projectRoot}/webpack.config.js`, webpackConfig);
   fs.createFileSync(`${projectRoot}/webpack.config.js`, webpackConfig);
-  jest.doMock(join(fs.tempDir, projectRoot, 'webpack.config.js'), () => ({}), {
-    virtual: true,
-  });
+  // loadConfigFile `require`s the config, which `vi.doMock` cannot reach.
+  mockCjsModule(
+    import.meta.url,
+    join(fs.tempDir, projectRoot, 'webpack.config.js'),
+    {}
+  );
 }
 
 function createProject(
@@ -285,7 +267,8 @@ describe('convert-to-inferred', () => {
 
   afterEach(() => {
     fs.cleanup();
-    jest.resetModules();
+    resetCjsMocks();
+    vi.resetModules();
   });
 
   describe('--project', () => {
@@ -369,6 +352,29 @@ describe('convert-to-inferred', () => {
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
+    });
+
+    it('should convert native configs without legacy wrappers or executor registrations', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(
+        tree,
+        project.root,
+        `
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        module.exports = { plugins: [new NxAppWebpackPlugin({ baseHref: '/custom/' })] };
+      `
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = readProjectConfiguration(tree, project.name);
+      expect(config.targets.build?.executor).not.toBe('@nx/webpack:webpack');
+      expect(config.targets.serve?.executor).not.toBe('@nx/webpack:dev-server');
+      const content = tree.read(`${project.root}/webpack.config.js`, 'utf-8');
+      expect(content).toContain('/custom/');
+      expect(content).toContain('src/main.tsx');
+      expect(content).toContain('devServer');
+      expect(content).not.toContain('useLegacyNxPlugin');
     });
 
     it('should register plugin in nx.json', async () => {
@@ -741,6 +747,163 @@ describe('convert-to-inferred', () => {
       // assert other projects were not modified
       const updatedProject2 = readProjectConfiguration(tree, project2.name);
       expect(updatedProject2.targets.build).toStrictEqual(project2BuildTarget);
+    });
+
+    it('should keep build outputs resolvable once outputPath moves into the webpack config', async () => {
+      const project = createProject(tree);
+      project.targets.build.outputs = [
+        '{options.outputPath}',
+        '{workspaceRoot}/{options.outputPath}/stats',
+        '{workspaceRoot}/reports/{projectName}',
+      ];
+      updateProjectConfiguration(tree, project.name, project);
+      writeWebpackConfig(tree, project.root);
+
+      await convertToInferred(tree, { project: project.name });
+
+      expect(readProjectConfiguration(tree, project.name).targets.build)
+        .toMatchInlineSnapshot(`
+          {
+            "configurations": {
+              "development": {},
+              "production": {},
+            },
+            "defaultConfiguration": "production",
+            "outputs": [
+              "{workspaceRoot}/dist/apps/app1",
+              "{workspaceRoot}/dist/apps/app1/stats",
+              "{workspaceRoot}/reports/{projectName}",
+            ],
+          }
+        `);
+    });
+
+    it('should not add the options to the webpack config again when a kept target is converted twice', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(tree, project.root);
+      // Same-name package.json scripts keep the targets on their executors.
+      writeJson(tree, `${project.root}/package.json`, {
+        name: project.name,
+        scripts: { build: 'webpack build', serve: 'webpack serve' },
+      });
+
+      await convertToInferred(tree, { project: project.name });
+      await convertToInferred(tree, { project: project.name });
+
+      expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+          const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+          const { useLegacyNxPlugin } = require('@nx/webpack');
+
+          // These options were migrated by @nx/webpack:convert-to-inferred from
+          // the project.json file and merged with the options in this file
+          const configValues = {
+            build: {
+              default: {
+                compiler: 'babel',
+                outputPath: '../../dist/apps/app1',
+                index: './src/index.html',
+                baseHref: '/',
+                main: './src/main.tsx',
+                tsConfig: './tsconfig.app.json',
+                assets: ['./src/favicon.ico', './src/assets'],
+                styles: ['./src/styles.scss'],
+              },
+              development: {
+                extractLicenses: false,
+                optimization: false,
+                sourceMap: true,
+                vendorChunk: true,
+              },
+              production: {
+                fileReplacements: [
+                  {
+                    replace: './src/environments/environment.ts',
+                    with: './src/environments/environment.prod.ts',
+                  },
+                ],
+                optimization: true,
+                outputHashing: 'all',
+                sourceMap: false,
+                namedChunks: false,
+                extractLicenses: true,
+                vendorChunk: false,
+              },
+            },
+            serve: {
+              default: {
+                hot: true,
+                liveReload: false,
+                server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
+                proxy: { '/api': { target: 'http://localhost:3333', secure: false } },
+                port: 4200,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                historyApiFallback: {
+                  index: '/index.html',
+                  disableDotRule: true,
+                  htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+                },
+              },
+              development: { open: true },
+              production: { hot: false },
+            },
+          };
+
+          // Determine the correct configValue to use based on the configuration
+          const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+          const buildOptions = {
+            ...configValues.build.default,
+            ...configValues.build[configuration],
+          };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
+
+          /**
+           * @type{import('webpack').WebpackOptionsNormalized}
+           */
+          module.exports = async () => ({
+            devServer: devServerOptions,
+            plugins: [
+              new NxAppWebpackPlugin(buildOptions),
+              new NxReactWebpackPlugin({
+                // Uncomment this line if you don't want to use SVGR
+                // See: https://react-svgr.com/
+                // svgr: false
+              }),
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              await useLegacyNxPlugin(require('./webpack.config.old'), buildOptions),
+            ],
+          });
+          "
+        `);
+    });
+
+    it('should add the options when the webpack config declares its own configValues or devServerOptions', async () => {
+      const project = createProject(tree);
+      writeWebpackConfig(tree, project.root);
+      const configPath = `${project.root}/webpack.config.js`;
+      tree.write(
+        configPath,
+        `${tree.read(configPath, 'utf-8')}
+function makeDevServer() {
+  const configValues = {};
+  const devServerOptions = { ...configValues };
+  return devServerOptions;
+}
+`
+      );
+
+      await convertToInferred(tree, { project: project.name });
+
+      const config = tree.read(configPath, 'utf-8');
+      expect(config).toContain('...configValues.build.default');
+      expect(config).toContain('...configValues.serve.default');
+      expect(config).toContain('port: 4200');
+      expect(config).toContain('devServer: devServerOptions');
     });
 
     it('should not touch the existing "devServer" option', async () => {

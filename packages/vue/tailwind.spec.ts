@@ -1,9 +1,10 @@
+import type { MockInstance } from 'vitest';
 describe('@nx/vue/tailwind deprecation warning', () => {
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: MockInstance;
 
   beforeEach(() => {
-    jest.resetModules();
-    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.resetModules();
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {

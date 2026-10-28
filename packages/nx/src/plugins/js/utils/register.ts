@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { readJsonFile } from '../../../utils/fileutils';
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -778,7 +779,7 @@ export function getTranspiler(
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   compilerOptions.lib = ['es2021'];
@@ -874,11 +875,17 @@ export function isNativeTypeStripError(err: unknown): boolean {
  * Module resolution failures - typically a tsconfig path alias that hasn't
  * been registered yet, or a workspace lib not surfaced via package manager
  * symlinks. CJS uses `MODULE_NOT_FOUND`, ESM uses `ERR_MODULE_NOT_FOUND`.
+ * `ERR_PACKAGE_PATH_NOT_EXPORTED` covers a linked package shadowing a path
+ * alias for a subpath its `exports` doesn't list.
  */
 function isModuleNotFoundError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const code = (err as { code?: string }).code;
-  return code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND';
+  return (
+    code === 'MODULE_NOT_FOUND' ||
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
 }
 
 /**
@@ -992,6 +999,14 @@ export function loadTsFile<T = any>(
     return require(filePath) as T;
   }
 
+  // Executors and generators load in processes that never loaded a plugin
+  // (batch workers, forked tasks), so the NodeNext `.js` -> `.ts` resolvers the
+  // plugin loader installs are not there yet. Both are idempotent.
+  ensureCjsResolverPatched();
+  if (preferNodeStripTypes) {
+    ensureNodeNextEsmResolverRegistered();
+  }
+
   if (!preferNodeStripTypes) {
     if (!resolvedTsConfigPath) {
       throw new Error(
@@ -1006,9 +1021,10 @@ export function loadTsFile<T = any>(
     }
   }
 
-  // Native strip path: no registration up front. pnpm/npm/yarn workspaces
-  // resolve aliases without tsconfig-paths. On failure, lazy-register what
-  // the specific error code indicates is needed and retry:
+  // Native strip path: no tsconfig-paths or transpiler registration up
+  // front. pnpm/npm/yarn workspaces resolve aliases without tsconfig-paths.
+  // On failure, lazy-register what the specific error code indicates is
+  // needed and retry:
   //   - MODULE_NOT_FOUND -> first try tsconfig-paths (alias resolution).
   //     If that still fails (e.g. extensionless `import './foo'` when
   //     `foo.ts` is adjacent - Node's resolver doesn't add `.ts`), escalate
@@ -1168,8 +1184,8 @@ export function requireWithTsconfigFallback<T = any>(
  *   - ESM-redispatch signals callers expect to handle
  *     (`ERR_REQUIRE_ESM`, `ERR_REQUIRE_ASYNC_MODULE`)
  *   - plain module-resolution failures (`MODULE_NOT_FOUND`,
- *     `ERR_MODULE_NOT_FOUND`) - disabling strip-types doesn't fix a missing
- *     module, the hint just misleads.
+ *     `ERR_MODULE_NOT_FOUND`, `ERR_PACKAGE_PATH_NOT_EXPORTED`) - disabling
+ *     strip-types doesn't fix a missing module, the hint just misleads.
  */
 function augmentLoadFailure(filePath: string, err: unknown): unknown {
   if (!(err instanceof Error)) return err;
@@ -1178,7 +1194,8 @@ function augmentLoadFailure(filePath: string, err: unknown): unknown {
     code === 'ERR_REQUIRE_ESM' ||
     code === 'ERR_REQUIRE_ASYNC_MODULE' ||
     code === 'MODULE_NOT_FOUND' ||
-    code === 'ERR_MODULE_NOT_FOUND'
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
   ) {
     return err;
   }
@@ -1367,7 +1384,7 @@ function packageIsInstalled(m: string) {
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   const flagMap: Partial<{

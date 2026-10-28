@@ -1,10 +1,10 @@
 import {
   runCLI,
-  runE2ETests,
   cleanupProject,
   newProject,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Next Playwright e2e tests', () => {
@@ -25,7 +25,7 @@ describe('Next Playwright e2e tests', () => {
   afterAll(() => cleanupProject());
 
   it('should execute e2e tests using playwright', async () => {
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
@@ -53,7 +53,7 @@ describe('Next Playwright e2e tests', () => {
       `
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`

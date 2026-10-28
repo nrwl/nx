@@ -6,7 +6,7 @@ description: >-
   same review lanes as review-pr — implementation, verification, approach, security — against the
   local checkout through the sandbox CLI, and saves a draft to ~/.nx-branch-reviews/<branch>.md.
   Use when asked to review "this branch", "my changes", or work that is not yet on GitHub.
-allowed-tools: Bash(.claude/tools/sandbox *), Bash(git -C *), Bash(git rev-parse *), Bash(git merge-base *), Bash(git diff *), Bash(git status *), Bash(git log *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(mkdir -p *), Bash(rm -f /tmp/branch-*), Bash(mv /tmp/*), Bash(ls *), Bash(printf *), Bash(date *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-branch-reviews/**), Write(/tmp/**), Edit(~/.nx-branch-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
+allowed-tools: Bash(tools/review-sandbox/sandbox *), Bash(git -C *), Bash(git rev-parse *), Bash(git merge-base *), Bash(git diff *), Bash(git status *), Bash(git log *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(mkdir -p *), Bash(rm -f /tmp/branch-*), Bash(mv /tmp/*), Bash(ls *), Bash(printf *), Bash(date *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-branch-reviews/**), Write(/tmp/**), Edit(~/.nx-branch-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '[--base <rev>] [--level quick|standard|deep] [--agents a,b,c]'
 ---
 
@@ -77,10 +77,10 @@ Write-then-verify-then-move, for the same reason `review-pr` does it: a bare `>`
 ## Step 2: Start the sandbox
 
 ```bash
-SANDBOX=$(.claude/tools/sandbox start --local "$ROOT" --base "$BASE" | head -1)
+SANDBOX=$(tools/review-sandbox/sandbox start --local "$ROOT" --base "$BASE" | head -1)
 
 # Read-only view for the lanes that must not run anything.
-READONLY_SANDBOX=$(.claude/tools/sandbox view "$SANDBOX" --exec none | head -1)
+READONLY_SANDBOX=$(tools/review-sandbox/sandbox view "$SANDBOX" --exec none | head -1)
 ```
 
 `--base "$BASE"` is what makes `sandbox read <id> <path> --ref base` work: it resolves to `git show $BASE:<path>` in your own checkout, so "was this already true before my branch?" is answerable with no second worktree and no second clone.
@@ -166,7 +166,7 @@ the diff below is authoritative and already covers commits, staged and unstaged 
 
 - REVIEW TARGET: /tmp/branch-<SLUG>.diff  (host file — read it with `Read`; this is what you review)
 - CHANGED FILES: /tmp/branch-<SLUG>.files  (host file — one path per line; `Read` it)
-- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `.claude/tools/sandbox`)
+- SANDBOX: <SANDBOX>  (the checkout under review; reach it only with `tools/review-sandbox/sandbox`)
 - BASE_REF: <BASE>  (read base state with `sandbox read <SANDBOX> <path> --ref base`)
 
 Read /tmp/branch-<SLUG>.review-charter.md (host file) FIRST. It carries this run's scope, what is
@@ -217,7 +217,7 @@ Sections: `## Summary`, `## Critical`, `## Important`, `## Maintainer calls`, `#
 ## Step 7: Clean up, then offer the rest
 
 ```bash
-.claude/tools/sandbox stop "$SANDBOX"    # also drops the read-only view
+tools/review-sandbox/sandbox stop "$SANDBOX"    # also drops the read-only view
 ```
 
 Then **name the agents that did not run** and offer to dispatch them against the same diff:

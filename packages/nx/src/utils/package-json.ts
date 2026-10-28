@@ -481,11 +481,19 @@ function preparePackageInstallation(
   // npm needs `--legacy-peer-deps` rather than `--omit=peer`: npm marks a package
   // as a peer if anything in the tree peer-depends on it, so `--omit=peer` also
   // prunes packages that are real dependencies. Bun's `--omit=peer` does not.
+  //
+  // pnpm has no plain flag for it. Up to 11 it takes `--config.<setting>`;
+  // pnpm 12 gave `--config` a meaning of its own and takes the setting from
+  // the environment instead.
   const skipPeerDependenciesFlags: Partial<Record<PackageManager, string>> = {
     npm: '--legacy-peer-deps',
     bun: '--omit=peer',
     pnpm: '--config.auto-install-peers=false',
   };
+  const skipPeerDependenciesEnv: NodeJS.ProcessEnv =
+    packageManager === 'pnpm'
+      ? { PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false' }
+      : {};
   const installCommand = [
     pmCommands.addDev,
     `${pkg}@${requiredVersion}`,
@@ -504,6 +512,7 @@ function preparePackageInstallation(
     env: {
       ...process.env,
       YARN_ENABLE_SCRIPTS: 'false',
+      ...skipPeerDependenciesEnv,
     },
   } as const;
 

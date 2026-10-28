@@ -7,7 +7,8 @@ import {
   uniq,
 } from '@nx/e2e-utils';
 
-describe('NgRx', () => {
+// TODO(leosvelperez): Re-enable once an Angular release includes https://github.com/angular/angular-cli/pull/34329.
+xdescribe('NgRx', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular', '@nx/playwright', '@nx/vitest'] });
   });

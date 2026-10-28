@@ -33,7 +33,10 @@ const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
 
 describe('cache (no daemon)', () => {
   beforeEach(() =>
-    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+    newProject({
+      keepBackup: true,
+      packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'],
+    })
   );
 
   afterEach(() => cleanupProject());
@@ -799,7 +802,9 @@ console.log('Build complete');
   ) {
     const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s) => {
+    lines.forEach((line) => {
+      // GitHub log groups prefix the task header with a cache-status icon.
+      const s = line.replace(/^(?:::group::|##\[group\])[^>]*(?=> nx run)/, '');
       if (s.trimStart().startsWith(`> nx run`)) {
         const projectName = s
           .trimStart()

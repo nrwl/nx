@@ -7,13 +7,11 @@ test('should apply system theme by default', async ({ page }) => {
     page.getByRole('heading', { name: 'What is Nx?' })
   ).toBeVisible();
 
-  const themeSelector = page.getByRole('combobox', {
-    name: /theme/i,
-  });
+  const systemTheme = page.getByRole('button', { name: 'Use system theme' });
 
-  await expect(themeSelector).toBeVisible();
+  await expect(systemTheme).toBeVisible();
 
-  await expect(themeSelector).toHaveValue('auto');
+  await expect(systemTheme).toHaveAttribute('aria-pressed', 'true');
 
   const dataTheme = await page.evaluate(
     () => document.documentElement.dataset.theme
@@ -30,16 +28,21 @@ test('should switch to between light and dark theme', async ({ page }) => {
     page.getByRole('heading', { name: 'What is Nx?' })
   ).toBeVisible();
 
-  const themeSelector = page.getByRole('combobox', {
-    name: /theme/i,
+  const lightTheme = page.getByRole('button', {
+    name: 'Switch to light theme',
   });
+  const darkTheme = page.getByRole('button', { name: 'Switch to dark theme' });
+  const systemTheme = page.getByRole('button', { name: 'Use system theme' });
+  // Only the active theme's icon shows until the group is hovered or focused.
+  const themeToggle = page.getByRole('group', { name: 'Theme' });
 
   await test.step('light theme renders', async () => {
-    await expect(themeSelector).toBeVisible();
+    await themeToggle.hover();
+    await expect(lightTheme).toBeVisible();
 
-    await themeSelector.selectOption('light');
+    await lightTheme.click();
 
-    await expect(themeSelector).toHaveValue('light');
+    await expect(lightTheme).toHaveAttribute('aria-pressed', 'true');
 
     const dataTheme = await page.evaluate(
       () => document.documentElement.dataset.theme
@@ -48,9 +51,11 @@ test('should switch to between light and dark theme', async ({ page }) => {
   });
 
   await test.step('dark theme renders', async () => {
-    await themeSelector.selectOption('dark');
+    await themeToggle.hover();
+    await darkTheme.click();
 
-    await expect(themeSelector).toHaveValue('dark');
+    await expect(darkTheme).toHaveAttribute('aria-pressed', 'true');
+    await expect(lightTheme).toHaveAttribute('aria-pressed', 'false');
 
     const dataTheme = await page.evaluate(
       () => document.documentElement.dataset.theme
@@ -59,9 +64,10 @@ test('should switch to between light and dark theme', async ({ page }) => {
   });
 
   await test.step('switch back to auto', async () => {
-    await themeSelector.selectOption('auto');
+    await themeToggle.hover();
+    await systemTheme.click();
 
-    await expect(themeSelector).toHaveValue('auto');
+    await expect(systemTheme).toHaveAttribute('aria-pressed', 'true');
 
     const dataTheme = await page.evaluate(
       () => document.documentElement.dataset.theme

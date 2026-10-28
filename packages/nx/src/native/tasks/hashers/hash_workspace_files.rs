@@ -64,7 +64,7 @@ pub fn get_workspace_files<'a, 'b>(
     all_workspace_files: &'b [FileData],
 ) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
     let globs = globs_from_workspace_globs(workspace_file_sets);
-    glob_files(all_workspace_files, globs, None)
+    glob_files(all_workspace_files, build_glob_set(&globs)?, None)
 }
 
 /// Hashes workspace files without materializing the matched file list.

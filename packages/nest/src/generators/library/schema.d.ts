@@ -29,12 +29,7 @@ export interface LibraryGeneratorOptions {
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
-  addPlugin?: boolean;
   isUsingTsSolutionsConfig?: boolean;
   useProjectJson?: boolean;
 }

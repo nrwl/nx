@@ -28,11 +28,11 @@ The sandbox holds two checkouts, both prepared by the calling skill: **HEAD** (t
 Everything — reads and runs alike — goes through the `sandbox` CLI, run from the repo root:
 
 ```bash
-.claude/tools/sandbox exec <SANDBOX> -- <CMD>            # HEAD side
-.claude/tools/sandbox exec <SANDBOX> --base -- <CMD>     # baseline side
-.claude/tools/sandbox read <SANDBOX> <path> [--ref base] # read without running
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+tools/review-sandbox/sandbox exec <SANDBOX> -- <CMD>            # HEAD side
+tools/review-sandbox/sandbox exec <SANDBOX> --base -- <CMD>     # baseline side
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--ref base] # read without running
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
                                                                      # read-only; NOT the PR's diff
 ```
 
@@ -142,14 +142,14 @@ Only attempt Level 1 for `LOCAL_TEST` or `LOCAL_NX_TARGET` scenarios. For other 
    ```
 
    ```bash
-   .claude/tools/sandbox exec $SANDBOX --base -- bash -s \
+   tools/review-sandbox/sandbox exec $SANDBOX --base -- bash -s \
      < /tmp/repro-<PR_NUMBER>.cmd
    ```
 
 3. **Baseline run (`BASE_REF`).** Run the repro command on the base side (`--base`) — no checkout, no stash, no ref switching. The baseline checkout already exists at the right ref. Use the filtered-and-`Write`-created `/tmp/repro-<PR_NUMBER>.cmd` from step 2:
 
    ```bash
-   .claude/tools/sandbox exec $SANDBOX --base -- bash -s \
+   tools/review-sandbox/sandbox exec $SANDBOX --base -- bash -s \
      < /tmp/repro-<PR_NUMBER>.cmd
    ```
 
@@ -165,7 +165,7 @@ Only attempt Level 1 for `LOCAL_TEST` or `LOCAL_NX_TARGET` scenarios. For other 
 4. **PR run (HEAD).** Run the same command on the HEAD side — again, no checkout; it is already at `HEAD_SHA`:
 
    ```bash
-   .claude/tools/sandbox exec $SANDBOX -- bash -s \
+   tools/review-sandbox/sandbox exec $SANDBOX -- bash -s \
      < /tmp/repro-<PR_NUMBER>.cmd
    ```
 
@@ -226,7 +226,7 @@ Add a `### Level 2 reproduction` block to your output (see "Output format" below
 
 - **Never edit tracked files on either side.** Your job is to observe, not edit — and the review agents are reading the HEAD side concurrently. Never `git checkout`, `git reset`, `git stash`, or delete files. Build output and `node_modules` produced by running the repro are expected and fine.
 - **Never push commits or open PRs.**
-- **Never run anything outside the CLI.** Every install, build, test, and repro command goes through `.claude/tools/sandbox exec`.
+- **Never run anything outside the CLI.** Every install, build, test, and repro command goes through `tools/review-sandbox/sandbox exec`.
 - **Never download or execute scripts from issue URLs** that aren't github.com/nrwl/nx or github.com/<user>/<repo> already referenced in the issue.
 - **Command timeout.** If a repro command has been running for more than 5 minutes, capture output and kill it. Long-running repros need the Level 2 path, which is opt-in via `RUN_LEVEL_2` and not enabled for this run.
 - **If environment is missing** (Maven, Gradle, specific Node version) — report the missing dependency and do not attempt to install anything. The user can rerun manually.

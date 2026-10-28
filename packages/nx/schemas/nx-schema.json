@@ -15,11 +15,16 @@
       "properties": {
         "defaultBase": {
           "type": "string",
-          "description": "Default based branch used by affected commands."
+          "description": "Default based branch used by affected commands.",
+          "deprecated": "Use the top-level `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 25."
+        },
+        "legacy": {
+          "type": "boolean",
+          "default": false,
+          "description": "Select every task of each affected project, instead of only the tasks whose inputs a change reaches."
         }
       },
-      "additionalProperties": false,
-      "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
+      "additionalProperties": false
     },
     "extends": {
       "type": "string",
@@ -150,7 +155,7 @@
     },
     "useInferencePlugins": {
       "type": "boolean",
-      "description": "Specifies whether to add inference plugins when generating new projects."
+      "description": "When `false`, `nx add` does not update package.json scripts by default and `nx init` uses its legacy setup. Generators ignore this setting and always add their inference plugin."
     },
     "analytics": {
       "type": "boolean",
@@ -424,7 +429,7 @@
       "properties": {
         "createCommits": {
           "type": "boolean",
-          "description": "Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `false`."
+          "description": "Whether to automatically create a git commit after each migration runs. Equivalent to the `--create-commits` flag. Defaults to `true` when the agentic flow runs the migrations in a Git repository, and `false` otherwise."
         },
         "commitPrefix": {
           "type": "string",
@@ -442,7 +447,7 @@
         },
         "useRegistryResolution": {
           "type": "boolean",
-          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION env var takes precedence over this.",
           "default": true
         },
         "agentic": {
@@ -459,7 +464,11 @@
         },
         "validate": {
           "type": "boolean",
-          "description": "Whether to run agent-driven validation after generator-only migrations when the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults to `true` when the agentic flow is enabled."
+          "description": "Whether the AI agent driving a migrate run reviews the changes of generator-only migrations. Equivalent to the `--validate` flag. Defaults to `true`."
+        },
+        "finalValidation": {
+          "type": "boolean",
+          "description": "Whether a migrate run an AI agent drives ends with a final check, where the agent makes sure the projects the run touched still lint, build, and pass their unit tests. Equivalent to the `--final-validation` flag. Defaults to `true`."
         }
       },
       "additionalProperties": false
@@ -615,6 +624,76 @@
     }
   },
   "definitions": {
+    "readyWhen": {
+      "description": "How Nx detects that this continuous target is ready. Dependents opt in with \"waitFor\": \"ready\" on their dependsOn entry. Strings may use the {workspaceRoot}, {projectRoot}, {projectName}, {options.*}, and {env.*} placeholders, resolved against the options and environment the task runs with. A placeholder can list fallbacks, as in {options.port ?? env.PORT ?? 4200}. Set it to null to turn off a check inherited from a plugin or targetDefaults.",
+      "type": "object",
+      "properties": {
+        "...": {
+          "type": "boolean",
+          "const": true,
+          "description": "Merges with the inherited readyWhen instead of replacing it, so { \"...\": true, \"timeout\": 1200000 } keeps an inferred check and only gives it more time. Keys before this token defer to the inherited value; keys after it win."
+        },
+        "url": {
+          "type": "string",
+          "description": "Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A redirect counts as ready and is not followed"
+        },
+        "port": {
+          "type": ["integer", "string"],
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Ready when a TCP connection to this port succeeds. A string can be a port number, auto, or a placeholder such as {options.port}. With 0 or auto the server picks its port, so Nx runs no check and the target counts as ready once it starts"
+        },
+        "host": {
+          "type": "string",
+          "description": "Host to connect to with port. By default 127.0.0.1 and ::1 are both tried"
+        },
+        "command": {
+          "type": "string",
+          "description": "Ready when this command, run through the shell at the workspace root, exits with code 0. It runs with the environment the task runs with, and the task's options as JSON in NX_TASK_OPTIONS"
+        },
+        "logMatches": {
+          "description": "Ready when every one of these substrings has appeared in the task's output",
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          ]
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 600000,
+          "description": "Milliseconds to wait for readiness before failing dependents that wait for it. Defaults to 10 minutes"
+        },
+        "interval": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 250,
+          "description": "Milliseconds between probe attempts. Unused by logMatches and signal"
+        },
+        "signal": {
+          "const": true,
+          "description": "Ready when the task reports it, through emitReadySignal from @nx/devkit. The webpack, Rspack, Vite and Rsbuild plugins of Nx report it once their dev server listens"
+        }
+      },
+      "oneOf": [
+        { "required": ["..."] },
+        {
+          "not": { "required": ["..."] },
+          "oneOf": [
+            { "required": ["url"] },
+            { "required": ["port"] },
+            { "required": ["command"] },
+            { "required": ["logMatches"] },
+            { "required": ["signal"] }
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
     "ownersPattern": {
       "type": "object",
       "properties": {
@@ -668,6 +747,10 @@
               "includeIgnored": {
                 "type": "boolean",
                 "description": "Hash the glob straight from disk instead of the workspace file map, so gitignored or generated files can be inputs. A missing exact path still takes part in the hash. A ! negation only filters includeIgnored matches when it also sets includeIgnored: true."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the files this input resolves to in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "required": ["fileset"],
@@ -693,11 +776,15 @@
               },
               "dependencies": {
                 "type": "boolean",
-                "description": "Include files belonging to the input for all the project dependencies of this target."
+                "description": "Include files belonging to the input for all the project dependencies of this target. With projects, include them for the dependencies of the selected projects instead of the projects themselves."
               },
               "input": {
                 "type": "string",
                 "description": "The name of the input."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the files this input resolves to in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "oneOf": [
@@ -705,7 +792,10 @@
                 "required": ["projects", "input"]
               },
               {
-                "required": ["dependencies", "input"]
+                "required": ["dependencies", "input"],
+                "not": {
+                  "required": ["projects"]
+                }
               },
               {
                 "required": ["input"],
@@ -791,6 +881,10 @@
                   "type": "string"
                 },
                 "description": "Denylist of fields to exclude from the hash. Supports dot notation for nested paths."
+              },
+              "always": {
+                "type": "boolean",
+                "description": "Keep the file in the hash even when the task is hashed from its ultracache recording."
               }
             },
             "required": ["json"],
@@ -912,6 +1006,9 @@
         "continuous": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
         },
+        "readyWhen": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/readyWhen"
+        },
         "parallelism": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
         },
@@ -923,6 +1020,9 @@
         },
         "cache": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "ultracache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/ultracache"
         },
         "syncGenerators": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
@@ -972,6 +1072,9 @@
           "default": false,
           "description": "Whether this target runs continuously until stopped"
         },
+        "readyWhen": {
+          "oneOf": [{ "$ref": "#/definitions/readyWhen" }, { "type": "null" }]
+        },
         "parallelism": {
           "type": "boolean",
           "default": true,
@@ -1018,6 +1121,23 @@
                     "description": "Configuration for params handling.",
                     "enum": ["ignore", "forward"],
                     "default": "ignore"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Whether to forward task options to the dependency target.",
+                    "enum": ["ignore", "forward"],
+                    "default": "ignore"
+                  },
+                  "inputs": {
+                    "type": "boolean",
+                    "description": "Set to false to keep a continuous dependency's inputs out of this target's hash and affected calculation. Has no effect on dependencies that are not continuous.",
+                    "default": true
+                  },
+                  "waitFor": {
+                    "type": "string",
+                    "description": "For a continuous dependency, whether to wait until it has started or until it is ready per its readyWhen. Ignored when the dependency is not continuous or has no readyWhen.",
+                    "enum": ["started", "ready"],
+                    "default": "started"
                   }
                 },
                 "oneOf": [
@@ -1049,6 +1169,42 @@
         "cache": {
           "type": "boolean",
           "description": "Specifies if the given target should be cacheable"
+        },
+        "ultracache": {
+          "type": "object",
+          "description": "Configures ultracache for tasks of this target. Nx Cloud only.",
+          "properties": {
+            "...": {
+              "type": "boolean",
+              "const": true,
+              "description": "Merges with the inherited ultracache configuration instead of replacing it. Keys before this token defer to the inherited value; keys after it win."
+            },
+            "mode": {
+              "enum": ["on", "warn", "error", "off"],
+              "default": "on",
+              "description": "How this target's tasks participate. 'on' records IO and lets the recording stand in for the declared inputs and outputs. 'warn' records and reports undeclared reads and writes without applying them. 'error' is reserved for failing the task on an undeclared read or write; until per-target enforcement lands it behaves as 'warn'. 'off' records nothing."
+            },
+            "collectStats": {
+              "type": "boolean",
+              "default": false,
+              "description": "Collect successful stat metadata accesses as inputs. Missing-path probes are tracked independently of this setting."
+            },
+            "ignoreReads": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for reads excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            },
+            "ignoreWrites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Workspace-relative glob patterns for writes excluded from ultracache reports. The first path segment cannot contain '*', and '?', '!', '[', ']' and extglobs are not supported; anchor the pattern to a directory instead of leading with '**'."
+            }
+          },
+          "additionalProperties": false
         },
         "syncGenerators": {
           "type": "array",

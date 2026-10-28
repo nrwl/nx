@@ -63,7 +63,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
       tsConfigTaskInfoMap,
       tasksOptions,
       context,
-      context.taskGraph.dependencies[taskName],
+      context.taskGraph.dependencies[taskName].map((edge) => edge.id),
       taskInMemoryTsConfigMap
     );
   }
