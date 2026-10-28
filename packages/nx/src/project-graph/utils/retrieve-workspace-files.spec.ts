@@ -2,6 +2,7 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
   retrieveProjectConfigurationPaths,
   retrieveProjectConfigurations,
+  retrieveProjectConfigurationsWithAngularProjects,
 } from './retrieve-workspace-files';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { ProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
@@ -215,6 +216,48 @@ describe('retrieve-workspace-files', () => {
       );
 
       expect(result.projects['libs/a'].name).toEqual('@scope/a');
+    });
+  });
+
+  describe('retrieveProjectConfigurationsWithAngularProjects', () => {
+    let fs: TempFs;
+    let isolatePlugins: string | undefined;
+    beforeAll(() => {
+      // Keep workspaceRoot on this repo: default plugins read it, and with
+      // @nx/angular resolvable here they would add angular.json themselves.
+      fs = new TempFs(
+        'retrieveProjectConfigurationsWithAngularProjects',
+        false
+      );
+      isolatePlugins = process.env.NX_ISOLATE_PLUGINS;
+      process.env.NX_ISOLATE_PLUGINS = 'false';
+    });
+    afterAll(() => {
+      fs.cleanup();
+      if (isolatePlugins === undefined) {
+        delete process.env.NX_ISOLATE_PLUGINS;
+      } else {
+        process.env.NX_ISOLATE_PLUGINS = isolatePlugins;
+      }
+    });
+
+    it('should include angular.json projects when nx.json has no plugins', async () => {
+      await fs.createFile(
+        'angular.json',
+        JSON.stringify({
+          version: 1,
+          projects: {
+            'my-app': { root: 'projects/my-app', architect: {} },
+          },
+        })
+      );
+
+      const result = await retrieveProjectConfigurationsWithAngularProjects(
+        fs.tempDir,
+        {}
+      );
+
+      expect(result.projects['projects/my-app']?.name).toEqual('my-app');
     });
   });
 });
