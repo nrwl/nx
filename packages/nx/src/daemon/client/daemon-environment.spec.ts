@@ -1,4 +1,12 @@
-import { delimiter } from 'node:path';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import {
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
@@ -8,6 +16,8 @@ import {
   getDaemonSpawnEnv,
   hashDaemonClientEnv,
   normalizeDaemonEnvironmentForGraph,
+  withoutBerryBinFolders,
+  withTrustedBerryBinFolders,
 } from './daemon-environment';
 
 describe('daemon environment', () => {
@@ -636,4 +646,99 @@ describe('daemon environment', () => {
       ).toEqual(['A', 'C', 'D']);
     });
   });
+
+  describe.skipIf(process.platform === 'win32')(
+    'Yarn Berry bin folders on PATH',
+    () => {
+      let root: string;
+
+      beforeEach(() => {
+        root = mkdtempSync(join(tmpdir(), 'nx-berry-'));
+      });
+
+      afterEach(() => {
+        vi.restoreAllMocks();
+        rmSync(root, { recursive: true, force: true });
+      });
+
+      function berryFolder(name: string, mode = 0o755): string {
+        const dir = join(root, name);
+        mkdirSync(dir);
+        chmodSync(dir, mode);
+        return dir;
+      }
+
+      function yarnEnv(folder: string, ...rest: string[]) {
+        return {
+          BERRY_BIN_FOLDER: folder,
+          PATH: [folder, ...rest, '/usr/bin'].join(delimiter),
+        };
+      }
+
+      it('spawns the daemon without any Berry folder on PATH', () => {
+        const inner = berryFolder('xfs-0000000a');
+        const outer = berryFolder('xfs-0000000b');
+        Object.assign(process.env, yarnEnv(inner, outer));
+
+        const env = getDaemonSpawnEnv();
+
+        expect(env.PATH).toEqual('/usr/bin');
+        expect(env.BERRY_BIN_FOLDER).toEqual(inner);
+      });
+
+      it('strips every Berry folder for work that outlives the client', () => {
+        const folder = berryFolder('xfs-1a2b3c4d');
+
+        const env = withoutBerryBinFolders(yarnEnv(folder));
+
+        expect(env).toEqual({ PATH: '/usr/bin' });
+      });
+
+      it('keeps an owner-only folder for a live client', () => {
+        const folder = berryFolder('xfs-1a2b3c4d');
+
+        expect(withTrustedBerryBinFolders(yarnEnv(folder))).toEqual(
+          yarnEnv(folder)
+        );
+      });
+
+      it.each([
+        ['deleted', () => join(root, 'xfs-1a2b3c4d')],
+        ['group-writable', () => berryFolder('xfs-1a2b3c4d', 0o775)],
+        ['world-writable', () => berryFolder('xfs-1a2b3c4d', 0o777)],
+        [
+          'a symlink',
+          () => {
+            const link = join(root, 'xfs-1a2b3c4d');
+            symlinkSync(berryFolder('elsewhere'), link);
+            return link;
+          },
+        ],
+      ])('drops a live client folder that is %s', (_, makeFolder) => {
+        const env = withTrustedBerryBinFolders(yarnEnv(makeFolder()));
+
+        expect(env).toEqual({ PATH: '/usr/bin' });
+      });
+
+      it('drops a live client folder owned by another user', () => {
+        const folder = berryFolder('xfs-1a2b3c4d');
+        const uid = process.getuid();
+        vi.spyOn(process, 'getuid').mockReturnValue(uid + 1);
+
+        const env = withTrustedBerryBinFolders(yarnEnv(folder));
+
+        expect(env).toEqual({ PATH: '/usr/bin' });
+      });
+
+      it("checks enclosing Yarn invocations' folders too", () => {
+        const inner = berryFolder('xfs-0000000a');
+        const outer = join(root, 'xfs-0000000b');
+        const notBerry = berryFolder('xfs-tools', 0o777);
+
+        const env = withTrustedBerryBinFolders(yarnEnv(inner, outer, notBerry));
+
+        expect(env.PATH).toEqual([inner, notBerry, '/usr/bin'].join(delimiter));
+      });
+    }
+  );
 });
