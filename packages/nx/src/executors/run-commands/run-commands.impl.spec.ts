@@ -1374,6 +1374,49 @@ describe('Run Commands', () => {
         );
       }
     });
+
+    it.each([
+      { streamOutput: true, streamed: 1 },
+      // The default export rethrows the error for its caller to print
+      { streamOutput: undefined, streamed: 0 },
+    ])(
+      'should report a non-zero exit code and the error if the specified .env file does not exist, with streamOutput $streamOutput',
+      async ({ streamOutput, streamed }) => {
+        const error = `no such file or directory, open '/somePath/.fakeEnv'`;
+        const stderrWrite = vi
+          .spyOn(process.stderr, 'write')
+          .mockImplementation(() => true);
+        try {
+          const task = await startRunCommands(
+            {
+              command: 'echo hi',
+              envFile: '/somePath/.fakeEnv',
+              streamOutput,
+              __unparsed__: [],
+            },
+            context
+          );
+          const output: string[] = [];
+          task.onOutput((chunk) => output.push(chunk));
+          const { code, terminalOutput } = await new Promise<{
+            code: number;
+            terminalOutput: string;
+          }>((res) =>
+            task.onExit((code, terminalOutput) => res({ code, terminalOutput }))
+          );
+          expect(code).toBe(1);
+          expect(terminalOutput).toContain(error);
+          expect(output).toEqual([expect.stringContaining(error)]);
+          expect(
+            stderrWrite.mock.calls.filter(([chunk]) =>
+              String(chunk).includes(error)
+            )
+          ).toHaveLength(streamed);
+        } finally {
+          stderrWrite.mockRestore();
+        }
+      }
+    );
   });
 
   describe('fail-fast behavior in parallel execution', () => {
