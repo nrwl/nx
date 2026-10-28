@@ -491,9 +491,10 @@ fn classify_osc(s: &[u8], body: usize) -> Classification {
 }
 
 /// Color and other reads have a lone `?` field (e.g. `OSC 11;?`,
-/// `OSC 10;?;?`), and `OSC 52` reads or writes the clipboard. Terminals skip
-/// C0 controls inside the string and read the number with any leading zeros,
-/// and some skip a `;` before it.
+/// `OSC 10;?;?`), and `OSC 52` and kitty's `OSC 5522` read or write the
+/// clipboard. Terminals skip C0 controls inside the string and read the number
+/// with any leading zeros, and some skip a `;` before it. kitty takes only the
+/// leading digits as the number, so `OSC 52c;...` is a clipboard write there.
 fn osc_is_query(payload: &[u8]) -> bool {
     let payload: Vec<u8> = payload.iter().copied().filter(|b| *b >= 0x20).collect();
     let mut fields = payload.split(|b| *b == b';');
@@ -503,7 +504,9 @@ fn osc_is_query(payload: &[u8]) -> bool {
     } else {
         first
     };
-    number.iter().skip_while(|b| **b == b'0').eq(b"52") || fields.any(|f| f == b"?")
+    let digits = number.iter().take_while(|b| b.is_ascii_digit());
+    let command: Vec<u8> = digits.skip_while(|b| **b == b'0').copied().collect();
+    matches!(command.as_slice(), b"52" | b"5522") || fields.any(|f| f == b"?")
 }
 
 fn classify_dcs(s: &[u8], body: usize) -> Classification {
@@ -587,6 +590,18 @@ mod tests {
     fn strips_osc_52_clipboard_writes() {
         assert_eq!(strip(b"a\x1b]52;c;Y3VybA==\x07b"), b"ab");
         assert_eq!(strip(b"a\x1b]52;;Y3VybA==\x1b\\b"), b"ab");
+    }
+
+    #[test]
+    fn strips_clipboard_writes_without_a_separator_after_the_number() {
+        assert_eq!(strip(b"a\x1b]52c;Y3VybA==\x07b"), b"ab");
+        assert_eq!(strip(b"a\x1b]52p;Y3VybA==\x07b"), b"ab");
+        assert_eq!(strip(b"a\x1b]5522;type=write\x07b"), b"ab");
+    }
+
+    #[test]
+    fn keeps_osc_commands_that_only_start_with_52() {
+        assert_eq!(strip(b"a\x1b]520;x\x07b"), b"a\x1b]520;x\x07b");
     }
 
     #[test]
