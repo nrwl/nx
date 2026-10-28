@@ -77,12 +77,36 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
 - **Trace the whole path, then sweep same-class siblings.** Do not stop at the sink. Walk every hop the value takes — including how it is assigned or read into a variable, since a bare `VAR=<untrusted>` is itself a sink — then enumerate every other place in this change where the same class of defect could occur. A fix that closes a hole at the sink routinely leaves the identical class open one hop upstream.
 - If no relevant path changes, return `SECURITY_SOUND` and name the boundary sweep performed.
 
+### Attackers that are easy to miss
+
+- **Another user on the same machine.** Shared CI runners and multi-user hosts are supported, and another local user controls the shared temp dir and every directory above the workspace root. "Another local user pre-creates `<path>`" is a default-configuration TRIGGER. Flag:
+  - a fixed or predictable path under `os.tmpdir()` or `std::env::temp_dir()` that nx creates, reuses, reads, runs code from, or deletes without proving it owns it
+  - an ownership check on the final path component only, when a parent directory can be swapped
+  - a lookup that walks up past the workspace root (module resolution, package manager config, `nx.json`, `node_modules/.bin`), or a `PATH` entry inside the shared temp dir
+  - a long-lived process (the daemon, plugin workers) that keeps a client's temp path or env after that path may have been deleted
+  - a socket or pid path read from a file whose directory another user can recreate
+
+  The fix reuses `packages/nx/src/utils/owned-private-dir.ts` or `packages/nx/src/native/utils/owned_dir.rs`. A new ownership check is itself a finding.
+
+- **A package publisher, before the user approves anything.** Versions, package names, `packageJsonUpdates` keys, prompt paths and manifests that nx fetches or installs while it plans a migration are untrusted. Flag them when they reach a shell string, package manager argv, an object key, or a path inside the workspace, and flag installs that run lifecycle scripts.
+- **A remote cache artifact, even from the org's own cache.** The artifact chooses file names, directory names, symlinks and terminal output. Restoring it is one sink. A later build writing through a restored symlink, a plugin reading a path out of a restored file, and replaying stored terminal output are others.
+- **Other contributors' git data reaching a parser.** A separator inside a commit message can forge records, U+2028 and U+2029 break line-based formats, and a regex with overlapping greedy groups can stall on long text. Pass untrusted values to git or a package manager after `--` or reject a leading `-`. A `name@version` spec is injection when the version can be a URL, a path or a tag.
+
+### Sinks that are easy to miss
+
+- **Security gates that fail open.** A fallback path that skips the gate, an env opt-out that accepts any non-empty value, a check on one value while the code uses a value resolved again later, and a lookup error read as "not set".
+- **Credentials leaving their host.** Telemetry fields, commit messages, process argv (other users can read it with `ps`), `Debug` output of a Rust `Command` (it prints the env), URL userinfo, a token sent to a host it wasn't issued for, and redaction that breaks on an `@` or a space in a password.
+- **Template rendering of fetched content.** `generateFiles` renders EJS, so pointing it at fetched or cached files runs their code.
+- **Local HTTP servers.** A server that exposes workspace data checks `Host` and `Origin`, and one malformed request must not crash it.
+
 ### Standing maintainer calibrations
 
 These encode this repo's review culture. A finding matching one of them is advisory at most — never a blocker, and never the driver of your verdict:
 
-- **`migrations.json` is already inside the migration trust boundary.** Flag it only when the diff creates a _new_ external boundary — HTTP, or runtime input.
-- **`nx migrate` and `nx release` temp directories are intentional post-mortem artifacts**, not leaks.
+- **Migrations the user approved run as trusted code.** The publisher input above, which nx reads before that approval, is not covered by this calibration.
+- **`nx migrate` and `nx release` keep their temp directories on purpose**, so leaving them behind is not a leak. Where they are created, and who owns them, is still in scope.
+- **A contributor crafting content whose hash collides with another file's is out of scope.**
+- **Open CORS on a dev server that only serves build output is not a finding.**
 - **An Important finding must be net-new** versus base/sibling behavior. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 
 ## Verdicts

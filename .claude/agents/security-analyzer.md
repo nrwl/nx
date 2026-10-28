@@ -55,9 +55,9 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 **Trusted** (attacker controlling these already owns the machine — never a finding):
 
 - The workspace itself: `nx.json`, `project.json`, `package.json`, workspace source files, local plugins, executor/generator options, CLI arguments typed by the user.
-- Migration metadata and `migrations.json` — `nx migrate` runs migrations as arbitrary code by explicit design.
+- Migrations the user approved, because `nx migrate --run-migrations` runs them as arbitrary code by design. Metadata nx reads while it plans the migration is not covered (see Untrusted below).
 - Installed node_modules content and the plugins nx loads from them.
-- The local nx cache directory and daemon socket (same-user filesystem access).
+- The local nx cache directory and daemon socket, when they live in a directory only this user can write.
 
 **Untrusted** (data crossing from here into a sink IS a finding):
 
@@ -66,6 +66,8 @@ This applies to an endorsement exactly as it applies to a finding, and matters m
 - Git data that originates from other people: commit messages, tag names, branch names, author fields (these flow into changelogs, release bodies, and shell commands).
 - Cloned reproduction repos or template repos (`create-nx-workspace` presets fetched from the network).
 - Environment content on shared CI only when the PR newly writes it somewhere privileged.
+- Other users on the same machine. They control the shared temp dir and every directory above the workspace root. A fixed or predictable path under `os.tmpdir()` that nx creates, reuses, reads, runs code from, or deletes without proving it owns it is a sink, and so is a lookup that walks up past the workspace root or a `PATH` entry inside the shared temp dir. The fix reuses `packages/nx/src/utils/owned-private-dir.ts` or `packages/nx/src/native/utils/owned_dir.rs`.
+- Package publishers while nx plans a migration: versions, package names, `packageJsonUpdates` keys, prompt paths and manifests read before the user approves anything, and installs that run lifecycle scripts.
 
 When in doubt whether a source is trusted, trace where it enters the process. "Comes from a function parameter" is not an answer — walk the callers to the origin.
 
@@ -89,7 +91,11 @@ When in doubt whether a source is trusted, trace where it enters the process. "C
      - **`find -exec` / `xargs`** — RCE only if untrusted controls the _command string_; when it is merely a filename argument it is arg-injection, not execution.
 
 3. **Hunt data-exposure sinks.** In changed code, look for:
-   - **Credential leakage:** tokens/auth headers written to logs, error messages, changelogs, cache keys, or telemetry; secrets interpolated into URLs that get logged.
+   - **Credential leakage:** tokens/auth headers written to logs, error messages, changelogs, commit messages, cache keys, or telemetry; secrets interpolated into URLs that get logged; secrets in process argv (readable with `ps`) or in `Debug` output of a Rust `Command`; a token sent to a host it wasn't issued for; redaction that breaks on an `@` or a space in a password.
+   - **Security gates that fail open:** a fallback path that skips the gate, an env opt-out that accepts any non-empty value, a check on one value while the code uses a value resolved again later, a lookup error read as "not set".
+   - **Parsing untrusted git text:** separators inside a commit message that forge records, U+2028/U+2029 in a line-based format, regexes with overlapping greedy groups on unbounded text.
+   - **Template rendering of fetched content:** `generateFiles` renders EJS, so fetched or cached files passed to it run as code.
+   - **Local HTTP servers** exposing workspace data without `Host`/`Origin` checks, or crashing on one malformed request.
    - **SSRF / URL injection:** untrusted strings composed into fetch/axios URLs (registry endpoints, webhook targets) without scheme/host validation, especially when the response is then trusted.
    - **Injection into rendered output:** untrusted text (commit messages, issue titles) placed into HTML, markdown link targets, or terminal escape sequences without escaping.
 
@@ -101,6 +107,8 @@ When in doubt whether a source is trusted, trace where it enters the process. "C
 
 - **Untrusted source → sink, chain verified** → report (critical if exploitation is plausible in a default setup; important if it needs a nonstandard configuration).
 - **Sink fed only by trusted workspace data** → not a finding, even for `execSync` with interpolation. Nx executes workspace code by design.
+- **Hash collisions crafted by a contributor** to reuse another file's cache entry → out of scope.
+- **Open CORS on a dev server that only serves build output** → not a finding.
 - **Hardening suggestions** (add validation "just in case", defense-in-depth without a traced attack path) → never a finding; the repo rejects speculative guards.
 - **Dependency CVEs / version bumps** → out of scope; dependabot's beat, not yours.
 - A finding without a complete origin-to-sink chain is a hunch — drop it.
