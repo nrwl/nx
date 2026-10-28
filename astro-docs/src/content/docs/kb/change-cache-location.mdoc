@@ -43,4 +43,6 @@ When Nx cannot use `~/.nx`, the checkout keeps its own `.nx` directories instead
 
 Nx tells the second case apart by writing a marker file rather than by recognizing the caller, so a sandbox Nx has never heard of is covered as long as it denies the write. A sandbox that permits writes to `~/.nx` is not falling back, and does not need to.
 
+Temporary package installs, which `nx add`, `nx migrate`, `nx init`, and `create-nx-workspace` make, never fall back to the checkout. They use your per-user temp directory instead, but only when that directory and every directory above it can be written by no one but you and root. macOS gives each user such a directory, and a sandbox can set `TMPDIR` to one. Otherwise, such as with a shared `/tmp` on Linux, Nx stops with an error.
+
 `nx reset` clears both the shared directory for the current workspace and the checkout's own. Nothing reclaims the directory belonging to a workspace you no longer have checked out anywhere, so remove those by hand.
