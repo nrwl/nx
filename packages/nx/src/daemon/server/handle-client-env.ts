@@ -1,10 +1,16 @@
+import type { EventEmitter } from 'node:events';
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
   getChangedEnvKeys,
+  hasBerryBinFolders,
   normalizeDaemonEnvironmentForGraph,
+  setLiveClientBerryEnv,
+  withoutBerryBinFolders,
+  withoutBerryBinFoldersOnPath,
+  withTrustedBerryBinFolders,
 } from '../client/daemon-environment';
 import { serverLogger } from '../logger';
 import { invalidateGraphCache } from './project-graph-incremental-recomputation';
@@ -20,6 +26,7 @@ export function _setEnvForwardTimeoutMs(ms: number): void {
 }
 
 let inFlightApply: Promise<void> | undefined;
+let liveClient: EventEmitter | undefined;
 
 /**
  * Applies an env-carrying client message to the daemon. Must be awaited
@@ -28,7 +35,8 @@ let inFlightApply: Promise<void> | undefined;
  * whose env still reflects the previous client.
  */
 export async function handleClientEnv(
-  env: Record<string, string>
+  env: Record<string, string>,
+  client?: EventEmitter
 ): Promise<void> {
   // A client whose env matches one an in-flight apply already wrote to
   // process.env sees zero changed keys, yet the graph cache is only discarded
@@ -37,9 +45,13 @@ export async function handleClientEnv(
   while (inFlightApply) {
     await inFlightApply;
   }
+  trackLiveClient(env, client);
+  // Yarn Berry's bin folders outlive neither the client nor its request, while
+  // the daemon and anything it starts in the background do.
+  const daemonEnv = withoutBerryBinFoldersOnPath(env);
   const graphEnvBefore = normalizeDaemonEnvironmentForGraph(process.env);
   const previousClientEnv = getAppliedDaemonClientEnv()?.env;
-  const changedEnvKeys = applyDaemonEnvFromClient(env);
+  const changedEnvKeys = applyDaemonEnvFromClient(daemonEnv);
   if (changedEnvKeys.length === 0) {
     return;
   }
@@ -54,7 +66,7 @@ export async function handleClientEnv(
     ...(previousClientEnv
       ? getChangedEnvKeys(
           normalizeDaemonEnvironmentForGraph(previousClientEnv),
-          normalizeDaemonEnvironmentForGraph(env)
+          normalizeDaemonEnvironmentForGraph(daemonEnv)
         )
       : []),
   ]);
@@ -71,7 +83,12 @@ export async function handleClientEnv(
       )}); graph identity is unchanged, keeping the cached graph.`
     );
   }
-  const apply = applyEnvChange(env, graphChangedKeys.size > 0);
+  await runApply(
+    applyEnvChange(withTrustedBerryBinFolders(env), graphChangedKeys.size > 0)
+  );
+}
+
+async function runApply(apply: Promise<void>): Promise<void> {
   inFlightApply = apply;
   try {
     await apply;
@@ -80,6 +97,49 @@ export async function handleClientEnv(
       inFlightApply = undefined;
     }
   }
+}
+
+function trackLiveClient(
+  env: Record<string, string>,
+  client: EventEmitter | undefined
+): void {
+  liveClient = client;
+  setLiveClientBerryEnv(client ? env : undefined);
+  if (client && hasBerryBinFolders(env)) {
+    client.once('close', () => {
+      handleClientDisconnected(client).catch((e) => {
+        serverLogger.log(
+          `Failed to drop Yarn Berry bin folders from plugin workers: ${e.message}`
+        );
+      });
+    });
+  }
+}
+
+/**
+ * Once the client whose env was applied last disconnects, its Yarn command is
+ * about to delete its bin folders, so plugin workers stop resolving through
+ * them. A newer client's apply either lands after this forward or, if it ran
+ * while this waited, has already forwarded its own env and is left in place.
+ */
+async function handleClientDisconnected(client: EventEmitter): Promise<void> {
+  if (client !== liveClient) {
+    return;
+  }
+  liveClient = undefined;
+  setLiveClientBerryEnv(undefined);
+  while (inFlightApply) {
+    await inFlightApply;
+  }
+  const appliedEnv = getAppliedDaemonClientEnv()?.env;
+  if (!appliedEnv || liveClient) {
+    return;
+  }
+  await runApply(
+    forwardEnvToPluginWorkers(
+      withoutBerryBinFolders(appliedEnv) as Record<string, string>
+    )
+  );
 }
 
 async function applyEnvChange(
