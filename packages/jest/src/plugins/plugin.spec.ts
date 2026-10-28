@@ -2,7 +2,7 @@ import { AggregateCreateNodesError, CreateNodesContext } from '@nx/devkit';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { spawnSync } from 'child_process';
-import { readdirSync, symlinkSync } from 'fs';
+import { readdirSync, realpathSync, symlinkSync } from 'fs';
 import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
@@ -278,7 +278,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                   },
                   "test-ci--src/unit.spec.ts": {
                     "cache": true,
-                    "command": "jest src/unit.spec.ts",
+                    "command": "jest --runTestsByPath src/unit.spec.ts",
                     "inputs": [
                       "default",
                       "^production",
@@ -371,6 +371,44 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
       'test-ci--src/unit.spec.ts',
     ]);
   });
+
+  it.each(['src/app/(auth)/[id]/page.spec.ts', 'src/unit.spec.ts'])(
+    'should run only the atomized test file %s',
+    async (testFile) => {
+      const config = { testMatch: ['**/*.spec.ts'] };
+      mockJestConfig(config, context);
+      // the Jest subprocess reads the real config, not the mock
+      await tempFs.createFiles({
+        'proj/jest.config.js': `module.exports = ${JSON.stringify(config)};`,
+        'proj/src/app/(auth)/[id]/page.spec.ts': '',
+        // a regex for src/unit.spec.ts also matches this file
+        'proj/lib/src/unit.spec.ts': '',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/jest.config.js'],
+        { targetName: 'test', ciTargetName: 'test-ci', disableJestRuntime },
+        context
+      );
+      const { command, options } =
+        results[0][1].projects!['proj'].targets![`test-ci--${testFile}`];
+      const jestCli = `"${process.execPath}" "${require.resolve('jest/bin/jest')}"`;
+      const run = spawnSync(
+        `${command.replace(/^jest /, `${jestCli} `)} --listTests --no-watchman`,
+        {
+          cwd: join(tempFs.tempDir, options.cwd),
+          shell: true,
+          encoding: 'utf8',
+          windowsHide: true,
+        }
+      );
+
+      expect(run).toEqual(expect.objectContaining({ status: 0 }));
+      expect(run.stdout.trim().split(/\r?\n/)).toEqual([
+        realpathSync(join(tempFs.tempDir, 'proj', testFile)),
+      ]);
+    }
+  );
 
   it('should add preset to the inputs', async () => {
     mockJestConfig(
@@ -1080,7 +1118,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     },
                     "test-ci--src/unit.spec.ts": {
                       "cache": true,
-                      "command": "jest src/unit.spec.ts",
+                      "command": "jest --runTestsByPath src/unit.spec.ts",
                       "inputs": [
                         "default",
                         "^production",
@@ -1234,7 +1272,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     },
                     "test-ci--src/unit.spec.ts": {
                       "cache": true,
-                      "command": "jest src/unit.spec.ts",
+                      "command": "jest --runTestsByPath src/unit.spec.ts",
                       "inputs": [
                         "default",
                         "^production",
@@ -1388,7 +1426,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                     },
                     "testci--src/unit.spec.ts": {
                       "cache": true,
-                      "command": "jest src/unit.spec.ts",
+                      "command": "jest --runTestsByPath src/unit.spec.ts",
                       "inputs": [
                         "default",
                         "^production",
