@@ -1555,7 +1555,7 @@ export class TaskOrchestrator {
     e: any
   ): Promise<void> {
     if (this.completedTasks.has(task.id)) return;
-    const terminalOutput = e?.message ?? '';
+    const terminalOutput = e?.message ?? String(e);
     // The worker rejected, so whatever the runner was going to leave on disk
     // either never landed or can't be trusted. Hand the file back to
     // postRunSteps so the failure itself is what the task's output path holds.
@@ -1678,7 +1678,7 @@ export class TaskOrchestrator {
           .getResults()
           .catch((e) => {
             this.tasksWithPersistedOutput.delete(task.id);
-            return { code: 1, terminalOutput: e?.message ?? '' };
+            return { code: 1, terminalOutput: e?.message ?? String(e) };
           });
         const isStopping =
           this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
@@ -1703,11 +1703,11 @@ export class TaskOrchestrator {
           task,
           code: 1,
           status: 'failure',
-          terminalOutput: e?.message ?? '',
+          terminalOutput: e?.message ?? String(e),
         };
       }
-      // Outside the catch: dispatchDiscreteWorker handles a failed
-      // postRunSteps, and handling it here too prints the failure twice
+      // A failed postRunSteps rejects to the caller. dispatchDiscreteWorker
+      // handles it, and handling it here too prints the failure twice
       await this.postRunSteps([result], doNotSkipCache, groupId);
       return result;
     } finally {
