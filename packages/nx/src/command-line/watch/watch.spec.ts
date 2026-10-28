@@ -9,6 +9,7 @@ import {
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { daemonClient } from '../../daemon/client/client';
+import { quoteShellArg } from '../../utils/shell-quoting';
 import { watch } from './watch';
 
 vi.mock('child_process', { spy: true });
@@ -48,10 +49,9 @@ describe('watch', () => {
       return child;
     });
 
-    type FileWatcherCallback = Parameters<
-      typeof daemonClient.registerFileWatcher
-    >[1];
-    const registered = new Promise<FileWatcherCallback>((resolve) => {
+    const registered = new Promise<
+      Parameters<typeof daemonClient.registerFileWatcher>[1]
+    >((resolve) => {
       vi.mocked(daemonClient.registerFileWatcher).mockImplementation(
         async (_config, callback) => {
           resolve(callback);
@@ -97,7 +97,7 @@ describe('watch', () => {
             join(__dirname, '__fixtures__/watch-command.fixture.js'),
             directory,
           ]
-            .map(quoteShellArgument)
+            .map(quoteShellArg)
             .join(' ') +
           (process.platform === 'win32'
             ? ' "%NX_PROJECT_NAME%"'
@@ -151,9 +151,3 @@ describe('watch', () => {
     }
   });
 });
-
-function quoteShellArgument(value: string) {
-  return process.platform === 'win32'
-    ? `"${value}"`
-    : `'${value.replace(/'/g, "'\\''")}'`;
-}
