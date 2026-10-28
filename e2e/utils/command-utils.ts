@@ -24,6 +24,7 @@ import {
   isVerboseE2ERun,
 } from './get-env-info';
 import { logError, logInfo, secondsSince } from './log-utils';
+import { promisifiedTreeKill } from './process-utils';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -330,10 +331,23 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       if (!complete) {
         complete = true;
-        p.kill();
+        if (
+          p.pid !== undefined &&
+          p.exitCode === null &&
+          p.signalCode === null
+        ) {
+          try {
+            await promisifiedTreeKill(p.pid, 'SIGKILL');
+          } catch (error) {
+            logError(
+              'Failed to terminate command after startup timeout',
+              String(error)
+            );
+          }
+        }
         logError(
           `Output did not meet the criteria:`,
           output
@@ -346,6 +360,7 @@ export function runCommandUntil(
     }, timeout);
 
     function checkCriteria(c) {
+      if (complete) return;
       output += c.toString();
       const strippedOutput = stripVTControlCharacters(output);
       if (criteria(strippedOutput) && !complete) {
