@@ -424,17 +424,10 @@ function getProjectUsingESLintConfig(
   ].find((f) => existsSync(join(context.workspaceRoot, f)));
 
   // Add a lint target for each child project without an eslint config, with the root level config as an input
-  let standaloneSrcPath: string | undefined;
-  if (
-    projectRoot === '.' &&
-    existsSync(join(context.workspaceRoot, projectRoot, 'package.json'))
-  ) {
-    if (existsSync(join(context.workspaceRoot, projectRoot, 'src'))) {
-      standaloneSrcPath = 'src';
-    } else if (existsSync(join(context.workspaceRoot, projectRoot, 'lib'))) {
-      standaloneSrcPath = 'lib';
-    }
-  }
+  const standaloneSrcPath = getStandaloneSrcPath(
+    projectRoot,
+    context.workspaceRoot
+  );
   if (projectRoot === '.' && !standaloneSrcPath) {
     return null;
   }
@@ -458,6 +451,34 @@ function getProjectUsingESLintConfig(
   };
 }
 
+export function getStandaloneSrcPath(
+  projectRoot: string,
+  workspaceRoot: string
+): string | undefined {
+  if (
+    projectRoot !== '.' ||
+    !existsSync(join(workspaceRoot, projectRoot, 'package.json'))
+  ) {
+    return undefined;
+  }
+  if (existsSync(join(workspaceRoot, projectRoot, 'src'))) {
+    return 'src';
+  }
+  if (existsSync(join(workspaceRoot, projectRoot, 'lib'))) {
+    return 'lib';
+  }
+  return undefined;
+}
+
+export function getLintCommand(
+  projectRoot: string,
+  standaloneSrcPath: string | undefined
+): string {
+  return `eslint ${
+    projectRoot === '.' && standaloneSrcPath ? `./${standaloneSrcPath}` : '.'
+  }`;
+}
+
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
@@ -467,13 +488,10 @@ function buildEslintTargets(
   standaloneSrcPath?: string,
   tsconfigChainOutsideProjectRoot: string[] = []
 ) {
-  const isRootProject = projectRoot === '.';
   const targets: Record<string, TargetConfiguration> = {};
 
   const targetConfig: TargetConfiguration = {
-    command: `eslint ${
-      isRootProject && standaloneSrcPath ? `./${standaloneSrcPath}` : '.'
-    }`,
+    command: getLintCommand(projectRoot, standaloneSrcPath),
     cache: true,
     options: {
       cwd: projectRoot,

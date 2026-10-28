@@ -1,9 +1,11 @@
 import {
+  createTargetDefaultsResults,
   migrateProjectExecutorsToPlugin,
+  mergeTargetConfigurations,
   NoTargetsToMigrateError,
   processTargetOutputs,
   interpolate,
-  readTargetDefaultsForTarget,
+  resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
   toProjectRelativePath,
 } from '@nx/devkit/internal';
@@ -13,13 +15,20 @@ import {
   joinPathFragments,
   normalizePath,
   readNxJson,
+  type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { isAbsolute, relative as relativePath, resolve } from 'node:path';
 import { basename, dirname, relative } from 'node:path/posix';
-import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
+import { isDeepStrictEqual } from 'node:util';
+import {
+  createNodes,
+  getLintCommand,
+  getStandaloneSrcPath,
+  type EslintPluginOptions,
+} from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 import { targetOptionsToCliMap } from './lib/target-options-map';
@@ -33,7 +42,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   assertSupportedEslintVersion(tree);
 
   const projectGraph = await createProjectGraphAsync();
-  const { targetDefaults } = readNxJson(tree) ?? {};
+  const nxJson = readNxJson(tree) ?? {};
 
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<EslintPluginOptions>(
@@ -50,24 +59,27 @@ export async function convertToInferred(tree: Tree, options: Schema) {
             tree,
             projectDetails,
             inferredTargetConfiguration
-          ) =>
-            postTargetTransformer(
+          ) => {
+            const projectNode = projectGraph.nodes[projectDetails.projectName];
+            return postTargetTransformer(
               target,
               tree,
               projectDetails,
               inferredTargetConfiguration,
-              // Nx matches the inferred `command` target as nx:run-commands
-              readTargetDefaultsForTarget(
+              getConvertedTarget(
+                target,
+                tree,
+                projectDetails,
                 inferredTargetConfiguration.name,
-                targetDefaults,
-                'nx:run-commands',
-                {
-                  projectName: projectDetails.projectName,
-                  projectNode: projectGraph.nodes[projectDetails.projectName],
-                  sourcePlugin: '@nx/eslint/plugin',
-                }
-              )
-            ),
+                nxJson,
+                projectNode.data.tags
+              ),
+              // the migrator already dropped outputs equal to the plugin's, so
+              // read the ones Nx resolved before the conversion
+              projectNode.data.targets?.[inferredTargetConfiguration.name]
+                ?.outputs ?? []
+            );
+          },
           targetPluginOptionMapper: (targetName) => ({ targetName }),
           skipTargetFilter,
         },
@@ -84,21 +96,58 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   }
 }
 
+/**
+ * The target Nx runs after the conversion: the plugin's command and cwd, then
+ * the matching target defaults, then the converted project target.
+ */
+function getConvertedTarget(
+  target: TargetConfiguration,
+  tree: Tree,
+  projectDetails: { projectName: string; root: string },
+  targetName: string,
+  nxJson: NxJsonConfiguration,
+  tags: string[] | undefined
+): TargetConfiguration {
+  const { root, projectName } = projectDetails;
+  const pluginTarget: TargetConfiguration = {
+    command: getLintCommand(root, getStandaloneSrcPath(root, tree.root)),
+    options: { cwd: root },
+  };
+  let convertedTarget = resolveCommandSyntacticSugar(pluginTarget, root);
+  for (const [, , { projects }] of createTargetDefaultsResults(
+    { [root]: { root, targets: { [targetName]: pluginTarget } } },
+    {
+      [root]: {
+        root,
+        name: projectName,
+        tags,
+        targets: { [targetName]: target },
+      },
+    },
+    nxJson,
+    // lets `filter.plugin` entries match the plugin's target
+    {
+      [root]: {
+        [`targets.${targetName}.command`]: [null, '@nx/eslint/plugin'],
+      },
+    }
+  )) {
+    convertedTarget = mergeTargetConfigurations(
+      resolveCommandSyntacticSugar(projects[root].targets[targetName], root),
+      convertedTarget
+    );
+  }
+  return mergeTargetConfigurations(structuredClone(target), convertedTarget);
+}
+
 function postTargetTransformer(
   target: TargetConfiguration,
   tree: Tree,
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration,
-  targetDefaults: Partial<TargetConfiguration> | null
+  convertedTarget: TargetConfiguration,
+  originalOutputs: string[]
 ): TargetConfiguration {
-  // the converted target runs ESLint from the plugin's project root unless a
-  // target default or the project's own options set `cwd`
-  const cwd = resolveCwd(
-    target.options?.cwd ?? targetDefaults?.options?.cwd ?? projectDetails.root,
-    projectDetails,
-    tree.root
-  );
-
   if (target.inputs) {
     const normalizeInput = (input: string) => {
       return input
@@ -136,16 +185,58 @@ function postTargetTransformer(
     }
   }
 
+  const cwd = resolveCwd(
+    convertedTarget.options?.cwd,
+    projectDetails,
+    tree.root
+  );
+  const baseOptions = structuredClone(target.options ?? {});
+
   if (target.options) {
-    handlePropertiesInOptions(target.options, projectDetails, target, cwd);
+    handlePropertiesInOptions(target.options, projectDetails, cwd, false);
+  }
+
+  for (const configurationName in convertedTarget.configurations) {
+    const configurationCwd = resolveCwd(
+      {
+        ...convertedTarget.options,
+        ...convertedTarget.configurations[configurationName],
+      }.cwd,
+      projectDetails,
+      tree.root
+    );
+    const configuration = target.configurations?.[configurationName] ?? {};
+    handlePropertiesInOptions(
+      configuration,
+      projectDetails,
+      configurationCwd,
+      true
+    );
+    // the base options were rebased onto the base cwd
+    if (configurationCwd !== cwd) {
+      const inheritedOptions = structuredClone(baseOptions);
+      handlePropertiesInOptions(
+        inheritedOptions,
+        projectDetails,
+        configurationCwd,
+        false
+      );
+      for (const [option, value] of Object.entries(inheritedOptions)) {
+        if (
+          !(option in configuration) &&
+          !isDeepStrictEqual(value, target.options?.[option])
+        ) {
+          configuration[option] = value;
+        }
+      }
+    }
+    if (Object.keys(configuration).length !== 0) {
+      target.configurations ??= {};
+      target.configurations[configurationName] = configuration;
+    }
   }
 
   if (target.configurations) {
-    for (const configurationName in target.configurations) {
-      const configuration = target.configurations[configurationName];
-      handlePropertiesInOptions(configuration, projectDetails, target, cwd);
-    }
-
     if (Object.keys(target.configurations).length !== 0) {
       for (const configuration in target.configurations) {
         if (Object.keys(target.configurations[configuration]).length === 0) {
@@ -158,21 +249,39 @@ function postTargetTransformer(
     }
   }
 
+  const isReportOutput = (output: string) => output.includes(reportOutputToken);
+
   if (target.outputs) {
+    target.outputs = target.outputs.filter((output) => !isReportOutput(output));
     processTargetOutputs(target, [], inferredTargetConfiguration, {
       projectName: projectDetails.projectName,
       projectRoot: projectDetails.root,
     });
   }
 
+  // added after processTargetOutputs, which would root them at the project
+  const declaredReportOutputs = originalOutputs.filter(isReportOutput);
+  if (declaredReportOutputs.length !== 0) {
+    target.outputs = [
+      ...(target.outputs ?? []).filter((output) => !isReportOutput(output)),
+      ...declaredReportOutputs.map((output) =>
+        output.replaceAll(reportOutputToken, convertedReportOutput)
+      ),
+    ];
+  }
+
   return target;
 }
+
+const reportOutputToken = '{options.outputFile}';
+// ESLint resolves `output-file` from the cwd run-commands runs it in
+const convertedReportOutput = '{options.cwd ?? .}/{options.output-file}';
 
 function handlePropertiesInOptions(
   options: Record<string, any>,
   projectDetails: { projectName: string; root: string },
-  target: TargetConfiguration,
-  cwd: string
+  cwd: string,
+  isConfiguration: boolean
 ) {
   // inferred targets are only identified after known files that ESLint would
   // pick up, so we can remove the eslintConfig option
@@ -206,9 +315,14 @@ function handlePropertiesInOptions(
     if (!(option in options)) {
       continue;
     }
-    // the executor treated an empty value as unset
+    // The executor treated an empty value as unset. ESLint rejects an empty
+    // path, and run-commands skips `null`, which still overrides the base.
     if (!options[option]) {
-      delete options[option];
+      if (isConfiguration) {
+        options[option] = null;
+      } else {
+        delete options[option];
+      }
       continue;
     }
     options[option] = toCwdRelativePath(
@@ -246,25 +360,8 @@ function handlePropertiesInOptions(
     }
   }
 
-  // Nx rejects outputs outside the workspace, so such a report is not cached
-  if (
-    options.outputFile &&
-    !/^\.\.(\/|$)/.test(joinPathFragments(cwd, options.outputFile))
-  ) {
-    // processTargetOutputs moves option outputs that do not start with
-    // {projectRoot} under it, so reach the cwd from there
-    const output = `{projectRoot}/${joinPathFragments(
-      relative(projectDetails.root, cwd),
-      '{options.output-file}'
-    )}`;
-    target.outputs ??= [];
-    if (!target.outputs.includes(output)) {
-      target.outputs.push(output);
-    }
-  }
-
   for (const key in targetOptionsToCliMap) {
-    if (options[key]) {
+    if (options[key] || options[key] === null) {
       const prevValue = options[key];
       delete options[key];
       options[targetOptionsToCliMap[key]] = prevValue;
@@ -323,10 +420,13 @@ function resolveNxTokens(
  * resolved like its `calculateCwd`.
  */
 function resolveCwd(
-  cwd: string,
+  cwd: string | undefined,
   projectDetails: { projectName: string; root: string },
   workspaceRoot: string
 ): string {
+  if (!cwd) {
+    return '.';
+  }
   const resolvedCwd = resolveNxTokens(cwd, 'cwd', projectDetails);
   return (
     normalizePath(

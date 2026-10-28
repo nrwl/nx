@@ -1071,25 +1071,18 @@ describe('Eslint - Convert Executors To Plugin', () => {
         format: 'json',
         'output-file': '../../reports/lint/libs/core/eslint.json',
       });
-      expect(updatedProject.targets.lint.outputs).toContain(
-        '{projectRoot}/{options.output-file}'
-      );
-      expect(updatedProject.targets.lint.outputs).not.toContain(
-        '{workspaceRoot}/reports/lint/{projectRoot}/eslint.json'
-      );
-      expect(updatedProject.targets.lint.outputs).not.toContain(
-        '{options.output-file}'
-      );
     });
 
     it.each`
-      key                  | targetDefault                                                                         | expectedOutputFile                         | expectedOutput
-      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                         | ${'./reports/lint/libs/core/eslint.json'}  | ${'{projectRoot}/../../{options.output-file}'}
-      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]} | ${'./reports/lint/libs/core/eslint.json'}  | ${'{projectRoot}/../../{options.output-file}'}
-      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                      | ${'../reports/lint/libs/core/eslint.json'} | ${'{projectRoot}/../../tools/{options.output-file}'}
+      key                  | targetDefault                                                                         | expectedOutputFile
+      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                         | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]} | ${'./reports/lint/libs/core/eslint.json'}
+      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                      | ${'../reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ options: { command: 'eslint src' } }}                                             | ${'../../reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ executor: 'nx:run-commands', options: { command: 'eslint src' } }}                | ${'./reports/lint/libs/core/eslint.json'}
     `(
-      'should rebase outputFile onto the cwd a $key target default sets',
-      async ({ key, targetDefault, expectedOutputFile, expectedOutput }) => {
+      'should rebase outputFile onto the cwd Nx runs the target in with the $key target default $targetDefault',
+      async ({ key, targetDefault, expectedOutputFile }) => {
         const nxJson = readNxJson(tree);
         nxJson.targetDefaults = { [key]: targetDefault };
         updateNxJson(tree, nxJson);
@@ -1107,33 +1100,70 @@ describe('Eslint - Convert Executors To Plugin', () => {
         expect(updatedProject.targets.lint.options).toStrictEqual({
           'output-file': expectedOutputFile,
         });
-        expect(updatedProject.targets.lint.outputs).toStrictEqual([
-          expectedOutput,
-          '{options.outputFile}',
-        ]);
       }
     );
 
+    it('should rebase inherited outputFile onto the cwd of a configuration', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        lint: { configurations: { root: { cwd: '{workspaceRoot}' } } },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.outputFile = 'reports/x.json';
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        'output-file': '../../reports/x.json',
+      });
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        root: { 'output-file': './reports/x.json' },
+      });
+    });
+
+    it('should keep an empty outputFile in a configuration disabling the inherited report', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.outputFile = 'reports/x.json';
+      project.targets.lint.configurations = { dev: { outputFile: '' } };
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        dev: { 'output-file': null },
+      });
+    });
+
     it.each`
-      option                        | value                             | expectedOptions                                     | expectedOutputs
-      ${'outputFile'}               | ${'./reports/x.json'}             | ${{ 'output-file': '../../reports/x.json' }}        | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
-      ${'outputFile'}               | ${'reports/x.json'}               | ${{ 'output-file': '../../reports/x.json' }}        | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
-      ${'outputFile'}               | ${'{projectRoot}/../report.json'} | ${{ 'output-file': '../report.json' }}              | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
-      ${'outputFile'}               | ${'/abs/x.json'}                  | ${{ 'output-file': '../../abs/x.json' }}            | ${['{projectRoot}/{options.output-file}', '{options.outputFile}']}
-      ${'outputFile'}               | ${'../reports/x.json'}            | ${{ 'output-file': '../../../reports/x.json' }}     | ${undefined}
-      ${'outputFile'}               | ${''}                             | ${undefined}                                        | ${undefined}
-      ${'ignorePath'}               | ${'.eslintignore'}                | ${{ 'ignore-path': '../../.eslintignore' }}         | ${undefined}
-      ${'ignorePath'}               | ${'/abs/.eslintignore'}           | ${{ 'ignore-path': '/abs/.eslintignore' }}          | ${undefined}
-      ${'resolvePluginsRelativeTo'} | ${'tools'}                        | ${{ 'resolve-plugins-relative-to': '../../tools' }} | ${undefined}
-      ${'printConfig'}              | ${'{projectRoot}/src/foo.ts'}     | ${{ 'print-config': './src/foo.ts' }}               | ${undefined}
-      ${'rulesdir'}                 | ${['tools/eslint-rules']}         | ${{ rulesdir: ['../../tools/eslint-rules'] }}       | ${undefined}
-      ${'format'}                   | ${'./tools/formatter.js'}         | ${{ format: '../../tools/formatter.js' }}           | ${undefined}
-      ${'format'}                   | ${'{projectRoot}/.formatter.js'}  | ${{ format: './.formatter.js' }}                    | ${undefined}
-      ${'format'}                   | ${'json'}                         | ${{ format: 'json' }}                               | ${undefined}
-      ${'format'}                   | ${'@scope/eslint-formatter-x'}    | ${{ format: '@scope/eslint-formatter-x' }}          | ${undefined}
+      option                        | value                             | expectedOptions
+      ${'outputFile'}               | ${'./reports/x.json'}             | ${{ 'output-file': '../../reports/x.json' }}
+      ${'outputFile'}               | ${'reports/x.json'}               | ${{ 'output-file': '../../reports/x.json' }}
+      ${'outputFile'}               | ${'{projectRoot}/../report.json'} | ${{ 'output-file': '../report.json' }}
+      ${'outputFile'}               | ${'/abs/x.json'}                  | ${{ 'output-file': '../../abs/x.json' }}
+      ${'outputFile'}               | ${'../reports/x.json'}            | ${{ 'output-file': '../../../reports/x.json' }}
+      ${'outputFile'}               | ${''}                             | ${undefined}
+      ${'ignorePath'}               | ${'.eslintignore'}                | ${{ 'ignore-path': '../../.eslintignore' }}
+      ${'ignorePath'}               | ${'/abs/.eslintignore'}           | ${{ 'ignore-path': '/abs/.eslintignore' }}
+      ${'resolvePluginsRelativeTo'} | ${'tools'}                        | ${{ 'resolve-plugins-relative-to': '../../tools' }}
+      ${'printConfig'}              | ${'{projectRoot}/src/foo.ts'}     | ${{ 'print-config': './src/foo.ts' }}
+      ${'rulesdir'}                 | ${['tools/eslint-rules']}         | ${{ rulesdir: ['../../tools/eslint-rules'] }}
+      ${'format'}                   | ${'./tools/formatter.js'}         | ${{ format: '../../tools/formatter.js' }}
+      ${'format'}                   | ${'{projectRoot}/.formatter.js'}  | ${{ format: './.formatter.js' }}
+      ${'format'}                   | ${'json'}                         | ${{ format: 'json' }}
+      ${'format'}                   | ${'@scope/eslint-formatter-x'}    | ${{ format: '@scope/eslint-formatter-x' }}
     `(
       'should keep the location the executor resolved for $option: $value',
-      async ({ option, value, expectedOptions, expectedOutputs }) => {
+      async ({ option, value, expectedOptions }) => {
         const project = createTestProject(tree, {
           appName: 'core',
           appRoot: 'libs/core',
@@ -1147,7 +1177,32 @@ describe('Eslint - Convert Executors To Plugin', () => {
         expect(updatedProject.targets?.lint?.options).toStrictEqual(
           expectedOptions
         );
-        expect(updatedProject.targets?.lint?.outputs).toStrictEqual(
+      }
+    );
+
+    it.each`
+      outputs                                                 | expectedOutputs
+      ${['{options.outputFile}']}                             | ${['{options.cwd ?? .}/{options.output-file}']}
+      ${['{projectRoot}/other', '{options.outputFile}']}      | ${['{projectRoot}/other', '{options.cwd ?? .}/{options.output-file}']}
+      ${['{workspaceRoot}/reports', '!{options.outputFile}']} | ${['{workspaceRoot}/reports', '!{options.cwd ?? .}/{options.output-file}']}
+      ${['{options.outputFile}.meta']}                        | ${['{options.cwd ?? .}/{options.output-file}.meta']}
+      ${undefined}                                            | ${undefined}
+      ${[]}                                                   | ${undefined}
+    `(
+      'should rewrite only a declared report output: $outputs',
+      async ({ outputs, expectedOutputs }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options.outputFile = 'reports/x.json';
+        project.targets.lint.outputs = outputs;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.outputs).toStrictEqual(
           expectedOutputs
         );
       }
