@@ -91,6 +91,7 @@ import Module from 'node:module';
 import { dirname, join } from 'path';
 import { gt } from 'semver';
 import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
 import { setWorkspaceRoot } from '../../utils/workspace-root';
 
 const createPackageJson = (
@@ -2070,6 +2071,7 @@ describe('Migration', () => {
           child: { version: '2.0.0', addToPackageJson: false },
           newChild: { version: '3.0.0', addToPackageJson: false },
         },
+        uninstalledDeclaredPackages: ['newChild'],
       });
     });
 
@@ -6175,6 +6177,7 @@ module.exports = {
       if (originalNodePath === undefined) delete process.env.NODE_PATH;
       else process.env.NODE_PATH = originalNodePath;
       (Module as any)._initPaths();
+      vi.restoreAllMocks();
       tempFs.cleanup();
     });
 
@@ -6266,6 +6269,19 @@ module.exports = {
 
       expect(result.devDependencies['@nx/js']).toBe('2.0.0');
       expect(result.migrations).toEqual(['needs-dep']);
+    });
+
+    it('warns about declared packages it cannot find installed', async () => {
+      const warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+      writePackage('ws/node_modules/nx', 'nx');
+
+      await generate({ nx: '1.0.0', '@nx/js': '1.0.0' }, {});
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('installed: @nx/js'),
+        })
+      );
     });
 
     it('treats a NODE_PATH package in a directory the workspace root prefixes as not installed', async () => {

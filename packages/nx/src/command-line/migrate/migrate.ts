@@ -326,6 +326,7 @@ export class Migrator {
     PendingPackageJsonUpdate
   >();
   private readonly appliedPackageJsonUpdates = new Set<string>();
+  private readonly uninstalledDeclaredPackages = new Set<string>();
   private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
   private minVersionWithSkippedUpdates: string | undefined;
 
@@ -378,7 +379,19 @@ export class Migrator {
       packageUpdates: this.packageUpdates,
       migrations,
       ...(Object.keys(promptContents).length > 0 ? { promptContents } : {}),
+      ...(this.uninstalledDeclaredPackages.size > 0
+        ? { uninstalledDeclaredPackages: [...this.uninstalledDeclaredPackages] }
+        : {}),
       minVersionWithSkippedUpdates: this.minVersionWithSkippedUpdates,
+    };
+  }
+
+  private getDeclaredDependencies(): Record<string, string> {
+    return {
+      ...this.packageJson?.dependencies,
+      ...this.packageJson?.devDependencies,
+      ...this.nxInstallation?.plugins,
+      ...(this.nxInstallation && { nx: this.nxInstallation.version }),
     };
   }
 
@@ -600,6 +613,9 @@ export class Migrator {
     }
 
     if (!this.getPkgVersion(targetPackage)) {
+      if (this.getDeclaredDependencies()[targetPackage]) {
+        this.uninstalledDeclaredPackages.add(targetPackage);
+      }
       this.addPackageUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
@@ -804,12 +820,7 @@ export class Migrator {
         continue;
       }
 
-      const dependencies: Record<string, string> = {
-        ...this.packageJson?.dependencies,
-        ...this.packageJson?.devDependencies,
-        ...this.nxInstallation?.plugins,
-        ...(this.nxInstallation && { nx: this.nxInstallation.version }),
-      };
+      const dependencies = this.getDeclaredDependencies();
 
       const filtered: Record<string, PackageUpdate> = {};
       for (const [packageName, packageUpdate] of Object.entries(
@@ -2621,7 +2632,18 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
       packageUpdates,
       promptContents,
       minVersionWithSkippedUpdates,
+      uninstalledDeclaredPackages,
     } = await migrator.migrate(walkedTargetPackage, opts.targetVersion);
+
+    if (uninstalledDeclaredPackages) {
+      output.warn({
+        title: `nx migrate could not find these declared packages installed: ${uninstalledDeclaredPackages.join(', ')}`,
+        bodyLines: [
+          `- Their package groups and migrations were skipped.`,
+          `- Undo this run's changes, install the workspace's dependencies and run nx migrate again.`,
+        ],
+      });
+    }
 
     // The cascade collects packageJsonUpdates entries against the cascade
     // root's installed version, but inner per-package pins are only gated
