@@ -160,6 +160,16 @@ function handlePropertiesInOptions(
   if ('outputFile' in options) {
     target.outputs ??= [];
     target.outputs.push(options.outputFile);
+    // The executor resolved outputFile from the workspace root, but the
+    // inferred target runs ESLint from the project root.
+    options.outputFile = relative(
+      projectDetails.root,
+      interpolate(options.outputFile, {
+        workspaceRoot: '',
+        projectRoot: projectDetails.root,
+        projectName: projectDetails.projectName,
+      }).replace(/^\//, '')
+    );
   }
 
   for (const key in targetOptionsToCliMap) {

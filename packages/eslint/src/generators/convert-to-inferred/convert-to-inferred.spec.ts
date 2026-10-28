@@ -1086,5 +1086,42 @@ describe('Eslint - Convert Executors To Plugin', () => {
         });
       }
     });
+
+    it('should make outputFile relative to the project root', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/eslint:lint'] = {
+        configurations: {
+          ci: {
+            format: 'json',
+            outputFile:
+              '{workspaceRoot}/reports/lint/{projectRoot}/eslint.json',
+          },
+        },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readProjectConfiguration(tree, project.name).targets.lint)
+        .toMatchInlineSnapshot(`
+          {
+            "configurations": {
+              "ci": {
+                "format": "json",
+                "output-file": "../../reports/lint/libs/core/eslint.json",
+              },
+            },
+            "outputs": [
+              "{workspaceRoot}/reports/lint/{projectRoot}/eslint.json",
+              "{options.outputFile}",
+            ],
+          }
+        `);
+    });
   });
 });
