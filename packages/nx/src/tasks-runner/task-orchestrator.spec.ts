@@ -13,7 +13,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { PseudoIPCClient } from './pseudo-ipc';
 import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
-import { BatchStatus } from '../native';
+import { BatchStatus, TaskStatus as NativeTaskStatus } from '../native';
 import type { TaskResult } from './life-cycle';
 import { getExecutorForTask } from './utils';
 
@@ -377,7 +377,7 @@ describe('TaskOrchestrator', () => {
         )
       );
       if (opts.bail) {
-        // What completeTasks does under --bail; postRunSteps is mocked here.
+        // What completeTasks does under --nx-bail; postRunSteps is mocked here.
         const postRunSteps = orchestrator.postRunSteps;
         orchestrator.postRunSteps = vi.fn(
           async (results: TaskResult[], ...rest) => {
@@ -1225,7 +1225,6 @@ describe('TaskOrchestrator', () => {
         args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
-      orchestrator.announcedBatchLogs = new Set();
       return orchestrator;
     }
 
@@ -1573,7 +1572,6 @@ describe('TaskOrchestrator', () => {
       };
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
-      orchestrator.announcedBatchLogs = new Set();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -1593,7 +1591,7 @@ describe('TaskOrchestrator', () => {
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
       // Observable so a test can pin whether the log survived the run: the
-      // `finally` skips the discard for any batch whose log was announced, and
+      // `finally` skips the discard for a worker whose log was announced, and
       // that guard is the only thing keeping the file on disk for the sweep.
       orchestrator.discardedForTest = vi.fn();
       orchestrator.forkedProcessTaskRunner = {
@@ -1638,20 +1636,36 @@ describe('TaskOrchestrator', () => {
     // captured file is read by nobody here and unlinked on the way out, and a
     // unit test of the handoff alone still passes.
     it.each([
-      ['failed', { success: false, terminalOutput: 'a failed' }, 'failure'],
       [
+        'summary',
+        'failed',
+        { success: false, terminalOutput: 'a failed' },
+        'failure',
+      ],
+      [
+        'summary',
+        'was never reached',
+        { success: false, status: 'skipped', terminalOutput: '' },
+        'skipped',
+      ],
+      [
+        'tui',
         'was never reached',
         { success: false, status: 'skipped', terminalOutput: '' },
         'skipped',
       ],
     ])(
-      "surfaces a reporting batch's worker log under summary when a task %s",
-      async (_, result, status) => {
+      "surfaces a reporting batch's worker log under %s when a task %s",
+      async (outputStyle, _, result, status) => {
         const orchestrator = createOrchestrator(
           'gradlew: OutOfMemoryError in the daemon',
           false
         );
-        orchestrator.resolvedOutputStyle = 'summary';
+        orchestrator.resolvedOutputStyle = outputStyle;
+        if (outputStyle === 'tui') {
+          orchestrator.tuiEnabled = true;
+          delete process.env.GITHUB_ACTIONS;
+        }
         orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
         orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
           .fn()
@@ -1667,6 +1681,12 @@ describe('TaskOrchestrator', () => {
 
         const results: any = await orchestrator.runBatch(batch, {}, 0);
 
+        // Neither style writes the worker's output to the terminal, so the
+        // batch process captures it to the file
+        expect(
+          orchestrator.forkedProcessTaskRunner.forkProcessForBatch.mock
+            .calls[0][4]
+        ).toBe(false);
         // The log is addressed, not copied: one worker means one log, and it
         // explains the batch rather than any single task.
         expect(
@@ -1721,6 +1741,35 @@ describe('TaskOrchestrator', () => {
         orchestrator.options.lifeCycle.batchOutputAvailable
       ).toHaveBeenCalled();
       expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+    });
+
+    it("discards a green wave's log after an earlier wave's log was announced", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+      await orchestrator.runBatch(batch, {}, 0);
+
+      // A batch that reports a strict subset of its tasks re-runs the rest
+      // under the same id, in a new worker with its own log.
+      const discardSecondWave = vi.fn();
+      orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+        .fn()
+        .mockResolvedValue({
+          onOutput: vi.fn(),
+          onTaskResults: vi.fn(),
+          getResults: vi.fn().mockResolvedValue({
+            'a:build': { success: true, terminalOutput: '' },
+          }),
+          getCapturedOutputPath: () => capturedPath('BUILD SUCCESSFUL'),
+          flushCapturedOutput: async () => {},
+          discardCapturedOutput: discardSecondWave,
+        });
+      await orchestrator.runBatch(batch, {}, 0);
+
+      expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+      expect(discardSecondWave).toHaveBeenCalled();
     });
 
     it('discards a batch log nobody was told about', async () => {
@@ -3483,7 +3532,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readinessSettled = false;
       orchestrator.options = {
         parallel: 2,
-        lifeCycle: { scheduleTask: vi.fn() },
+        lifeCycle: { scheduleTask: vi.fn(), setTaskStatus: vi.fn() },
       };
       orchestrator.processTask = vi.fn(async () => process.env);
       const running = new Map<string, (status: TaskResult['status']) => void>();
@@ -3507,16 +3556,22 @@ describe('TaskOrchestrator', () => {
     }
 
     it.each([
-      ['skips the tasks it never started', false, { 'c:build': 'skipped' }],
-      ['leaves them without a status when stopped meanwhile', true, {}],
+      [
+        'skips the tasks it never started',
+        false,
+        { 'c:build': 'skipped' },
+        [['c:build', NativeTaskStatus.Skipped]],
+      ],
+      ['leaves them without a status when stopped meanwhile', true, {}, []],
     ])(
       'lets a running task finish and %s',
-      async (_, stopRequested, unstarted) => {
+      async (_, stopRequested, unstarted, tuiStatuses) => {
         const { orchestrator, running } = createCoordinator([
           'a:build',
           'b:build',
           'c:build',
         ]);
+        orchestrator.tuiEnabled = true;
         let finished = false;
         const loop = orchestrator
           .executeCoordinatorLoop(false, 2)
@@ -3538,6 +3593,9 @@ describe('TaskOrchestrator', () => {
           'b:build': 'success',
           ...unstarted,
         });
+        expect(orchestrator.options.lifeCycle.setTaskStatus.mock.calls).toEqual(
+          tuiStatuses
+        );
       }
     );
 
