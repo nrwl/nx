@@ -304,6 +304,13 @@ export class SeriallyRunningTasks implements RunningTask {
     this.run(options, context)
       .catch((e) => {
         this.error = e;
+        this.code = 1;
+        const message = e?.message ?? String(e);
+        this.terminalOutputChunks.push(message);
+        for (const cb of this.outputCallbacks) {
+          cb(message);
+        }
+        streamChunk(message, options.streamOutput, process.stderr);
       })
       .finally(() => {
         const terminalOutput = this.terminalOutputChunks.join('');
