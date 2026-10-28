@@ -178,6 +178,27 @@ dte:
 To bring your own compute instead of using Workers, set `distribute-on: manual`.
 See [bring your own compute](/docs/kb/bring-your-own-compute).
 
+### `dte.main-job-worker`
+
+Run distributed tasks on a persistent worker in the main CI job, sharing its checkout and resources without changing the remote worker count.
+Omitted or `false` disables it; on Nx Cloud CI, `true` automatically starts it with the usual worker CPU and memory detection.
+External CI requires explicit resources:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  main-job-worker:
+    cpu: 4
+    memory: 12GiB
+overrides:
+  windows:
+    dte:
+      main-job-worker: false
+```
+
+`nx-cloud start-workers` (legacy alias: `start-nx-agents`) initializes both remote workers and the main-job worker; managed distributed jobs already invoke it, so no user command is needed there.
+The override above disables the worker when `NX_CI_EXECUTION_ENV=windows`; assignment rules can select an enabled main-job worker with `agent: main`.
+
 ### `dte.scheduling-constraints`
 
 Tasks that must never run on the same agent at the same time, for example because they share a port or a database.
