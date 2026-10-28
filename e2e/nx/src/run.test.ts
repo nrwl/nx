@@ -1096,7 +1096,7 @@ describe('Nx Running Tests', () => {
           );
           expect(output).toMatch(
             new RegExp(
-              `Tasks not run because their dependencies failed or --nx-bail=true:\\s+- ${mylib1}:check`
+              `Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:\\s+- ${mylib1}:check`
             )
           );
         }, 60000);
@@ -1186,7 +1186,7 @@ describe('Nx Running Tests', () => {
           );
           expect(output).toMatch(
             new RegExp(
-              `Tasks not run because their dependencies failed or --nx-bail=true:\\s+- ${mylib1}:check`
+              `Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:\\s+- ${mylib1}:check`
             )
           );
         }, 60000);

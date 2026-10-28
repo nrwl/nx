@@ -13,7 +13,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { PseudoIPCClient } from './pseudo-ipc';
 import type { RunningTask } from './running-tasks/running-task';
 import { TaskOrchestrator } from './task-orchestrator';
-import { BatchStatus } from '../native';
+import { BatchStatus, TaskStatus as NativeTaskStatus } from '../native';
 import type { TaskResult } from './life-cycle';
 import { getExecutorForTask } from './utils';
 
@@ -377,7 +377,7 @@ describe('TaskOrchestrator', () => {
         )
       );
       if (opts.bail) {
-        // What completeTasks does under --bail; postRunSteps is mocked here.
+        // What completeTasks does under --nx-bail; postRunSteps is mocked here.
         const postRunSteps = orchestrator.postRunSteps;
         orchestrator.postRunSteps = vi.fn(
           async (results: TaskResult[], ...rest) => {
@@ -1225,7 +1225,6 @@ describe('TaskOrchestrator', () => {
         args.outputStyle ?? 'static-failures-only';
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
-      orchestrator.announcedBatchLogs = new Set();
       return orchestrator;
     }
 
@@ -1573,7 +1572,6 @@ describe('TaskOrchestrator', () => {
       };
       // Object.create bypasses field initializers.
       orchestrator.batchFoldRenders = new Map();
-      orchestrator.announcedBatchLogs = new Set();
       orchestrator.stopRequested = stopRequested;
       orchestrator.projectGraph = {} as ProjectGraph;
       orchestrator.taskGraph = {
@@ -1593,7 +1591,7 @@ describe('TaskOrchestrator', () => {
       // key load-bearing in `labels each fold with the batch it came from`.
       orchestrator.capturedForTest = captured;
       // Observable so a test can pin whether the log survived the run: the
-      // `finally` skips the discard for any batch whose log was announced, and
+      // `finally` skips the discard for a worker whose log was announced, and
       // that guard is the only thing keeping the file on disk for the sweep.
       orchestrator.discardedForTest = vi.fn();
       orchestrator.forkedProcessTaskRunner = {
@@ -1638,20 +1636,36 @@ describe('TaskOrchestrator', () => {
     // captured file is read by nobody here and unlinked on the way out, and a
     // unit test of the handoff alone still passes.
     it.each([
-      ['failed', { success: false, terminalOutput: 'a failed' }, 'failure'],
       [
+        'summary',
+        'failed',
+        { success: false, terminalOutput: 'a failed' },
+        'failure',
+      ],
+      [
+        'summary',
+        'was never reached',
+        { success: false, status: 'skipped', terminalOutput: '' },
+        'skipped',
+      ],
+      [
+        'tui',
         'was never reached',
         { success: false, status: 'skipped', terminalOutput: '' },
         'skipped',
       ],
     ])(
-      "surfaces a reporting batch's worker log under summary when a task %s",
-      async (_, result, status) => {
+      "surfaces a reporting batch's worker log under %s when a task %s",
+      async (outputStyle, _, result, status) => {
         const orchestrator = createOrchestrator(
           'gradlew: OutOfMemoryError in the daemon',
           false
         );
-        orchestrator.resolvedOutputStyle = 'summary';
+        orchestrator.resolvedOutputStyle = outputStyle;
+        if (outputStyle === 'tui') {
+          orchestrator.tuiEnabled = true;
+          delete process.env.GITHUB_ACTIONS;
+        }
         orchestrator.taskGraph.tasks['a:build'].hash = 'hash-a';
         orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
           .fn()
@@ -1667,6 +1681,12 @@ describe('TaskOrchestrator', () => {
 
         const results: any = await orchestrator.runBatch(batch, {}, 0);
 
+        // Neither style writes the worker's output to the terminal, so the
+        // batch process captures it to the file
+        expect(
+          orchestrator.forkedProcessTaskRunner.forkProcessForBatch.mock
+            .calls[0][4]
+        ).toBe(false);
         // The log is addressed, not copied: one worker means one log, and it
         // explains the batch rather than any single task.
         expect(
@@ -1721,6 +1741,35 @@ describe('TaskOrchestrator', () => {
         orchestrator.options.lifeCycle.batchOutputAvailable
       ).toHaveBeenCalled();
       expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+    });
+
+    it("discards a green wave's log after an earlier wave's log was announced", async () => {
+      const orchestrator = createOrchestrator(
+        'FAILURE: Could not resolve all dependencies',
+        false
+      );
+      orchestrator.resolvedOutputStyle = 'summary';
+      await orchestrator.runBatch(batch, {}, 0);
+
+      // A batch that reports a strict subset of its tasks re-runs the rest
+      // under the same id, in a new worker with its own log.
+      const discardSecondWave = vi.fn();
+      orchestrator.forkedProcessTaskRunner.forkProcessForBatch = vi
+        .fn()
+        .mockResolvedValue({
+          onOutput: vi.fn(),
+          onTaskResults: vi.fn(),
+          getResults: vi.fn().mockResolvedValue({
+            'a:build': { success: true, terminalOutput: '' },
+          }),
+          getCapturedOutputPath: () => capturedPath('BUILD SUCCESSFUL'),
+          flushCapturedOutput: async () => {},
+          discardCapturedOutput: discardSecondWave,
+        });
+      await orchestrator.runBatch(batch, {}, 0);
+
+      expect(orchestrator.discardedForTest).not.toHaveBeenCalled();
+      expect(discardSecondWave).toHaveBeenCalled();
     });
 
     it('discards a batch log nobody was told about', async () => {
@@ -3483,7 +3532,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.readinessSettled = false;
       orchestrator.options = {
         parallel: 2,
-        lifeCycle: { scheduleTask: vi.fn() },
+        lifeCycle: { scheduleTask: vi.fn(), setTaskStatus: vi.fn() },
       };
       orchestrator.processTask = vi.fn(async () => process.env);
       const running = new Map<string, (status: TaskResult['status']) => void>();
@@ -3507,16 +3556,22 @@ describe('TaskOrchestrator', () => {
     }
 
     it.each([
-      ['skips the tasks it never started', false, { 'c:build': 'skipped' }],
-      ['leaves them without a status when stopped meanwhile', true, {}],
+      [
+        'skips the tasks it never started',
+        false,
+        { 'c:build': 'skipped' },
+        [['c:build', NativeTaskStatus.Skipped]],
+      ],
+      ['leaves them without a status when stopped meanwhile', true, {}, []],
     ])(
       'lets a running task finish and %s',
-      async (_, stopRequested, unstarted) => {
+      async (_, stopRequested, unstarted, tuiStatuses) => {
         const { orchestrator, running } = createCoordinator([
           'a:build',
           'b:build',
           'c:build',
         ]);
+        orchestrator.tuiEnabled = true;
         let finished = false;
         const loop = orchestrator
           .executeCoordinatorLoop(false, 2)
@@ -3538,6 +3593,9 @@ describe('TaskOrchestrator', () => {
           'b:build': 'success',
           ...unstarted,
         });
+        expect(orchestrator.options.lifeCycle.setTaskStatus.mock.calls).toEqual(
+          tuiStatuses
+        );
       }
     );
 
@@ -3562,6 +3620,191 @@ describe('TaskOrchestrator', () => {
         'a:build': 'skipped',
         'b:build': 'skipped',
       });
+    });
+  });
+
+  describe('discrete task whose run fails', () => {
+    async function useRealExecutorSchema() {
+      const actualUtils =
+        await vi.importActual<typeof import('./utils')>('./utils');
+      vi.mocked(getExecutorForTask).mockImplementationOnce(
+        actualUtils.getExecutorForTask
+      );
+    }
+
+    function createOrchestrator() {
+      const dir = mkdtempSync(join(tmpdir(), 'nx-start-error-'));
+      onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+      const task = {
+        id: 'app:build',
+        target: { project: 'app', target: 'build' },
+        overrides: { __overrides_unparsed__: [] },
+        outputs: [],
+        projectRoot: 'app',
+        cache: false,
+        parallelism: true,
+      } as Task;
+      const build = {
+        executor: 'nx:run-commands',
+        options: { command: 'echo hi', envFile: join(dir, 'missing.env') },
+      };
+      const taskGraph: TaskGraph = {
+        tasks: { 'app:build': task },
+        dependencies: { 'app:build': [] },
+        continuousDependencies: { 'app:build': [] },
+        roots: ['app:build'],
+      };
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.projectGraph = {
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'lib',
+            data: { root: 'app', targets: { build } },
+          },
+        },
+      };
+      orchestrator.projects = { app: { root: 'app', targets: { build } } };
+      orchestrator.taskGraph = taskGraph;
+      orchestrator.fullTaskGraph = taskGraph;
+      orchestrator.readyUrls = new Map();
+      orchestrator.processedTasks = new Map([
+        ['app:build', Promise.resolve(process.env)],
+      ]);
+      orchestrator.completedTasks = new Map();
+      orchestrator.tasksWithPersistedOutput = new Set();
+      orchestrator.specifiedOutputStyle = 'static';
+      orchestrator.tuiEnabled = false;
+      orchestrator.cache = { temporaryOutputPath: () => join(dir, 'out') };
+      orchestrator.tasksSchedule = { hasTasks: () => true };
+      orchestrator.runningContinuousTasks = new Map();
+      orchestrator.runningDiscreteTasks = new Map();
+      orchestrator.runningRunCommandsTasks = new Map();
+      orchestrator.discreteTaskExitHandled = new Map();
+      orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.groups = [];
+      orchestrator.waitingForTasks = [];
+      orchestrator.options = {
+        lifeCycle: {
+          printTaskTerminalOutput: vi.fn(),
+          registerRunningTaskWithEmptyParser: vi.fn(),
+          appendTaskOutput: vi.fn(),
+        },
+      };
+      orchestrator.preRunSteps = vi.fn();
+      return { orchestrator, task };
+    }
+
+    it.each([
+      {
+        name: 'run-commands cannot start its command',
+        setup: useRealExecutorSchema,
+        error: 'no such file or directory',
+        printed: true,
+        appended: false,
+      },
+      {
+        name: 'run-commands cannot start in the TUI',
+        // The TUI runs a single command in a pseudo terminal
+        setup: async (orchestrator: any) => {
+          await useRealExecutorSchema();
+          orchestrator.tuiEnabled = true;
+          const build = orchestrator.projects.app.targets.build;
+          build.options = {
+            commands: ['echo hi', 'echo there'],
+            parallel: false,
+            envFile: build.options.envFile,
+          };
+        },
+        error: 'no such file or directory',
+        printed: true,
+        appended: true,
+      },
+      {
+        name: 'a forked child died with no log',
+        // What runTask does for a forked task, whose runner writes the log
+        setup: (orchestrator: any) => {
+          orchestrator.runTask = vi.fn(async (task: Task) => {
+            orchestrator.tasksWithPersistedOutput.add(task.id);
+            return {
+              getResults: () =>
+                Promise.reject(
+                  new Error("ENOENT: no such file or directory, open 'out'")
+                ),
+            };
+          });
+        },
+        error: 'no such file or directory',
+        printed: false,
+        appended: false,
+      },
+      {
+        name: 'the task cannot be started',
+        setup: (orchestrator: any) => {
+          orchestrator.projectGraph = { nodes: {} };
+        },
+        error: 'which does not exist in the project graph',
+        printed: true,
+        appended: false,
+      },
+    ])(
+      'fails the task once and settles its exit when $name',
+      async ({ setup, error, printed, appended }) => {
+        const { orchestrator, task } = createOrchestrator();
+        let exitPendingDuringPostRunSteps: boolean;
+        orchestrator.postRunSteps = vi.fn(async () => {
+          exitPendingDuringPostRunSteps =
+            orchestrator.discreteTaskExitHandled.has(task.id);
+        });
+        await setup(orchestrator);
+
+        orchestrator.dispatchDiscreteWorker(true, task, 0);
+        await Promise.all(orchestrator.pendingDiscreteWorkers);
+
+        expect(orchestrator.postRunSteps).toHaveBeenCalledWith(
+          [
+            expect.objectContaining({
+              task,
+              status: 'failure',
+              terminalOutput: expect.stringContaining(error),
+            }),
+          ],
+          true,
+          0
+        );
+        expect(orchestrator.runningDiscreteTasks.size).toBe(0);
+        // Cleanup awaits each exit so endTasks runs before the run returns
+        expect(exitPendingDuringPostRunSteps).toBe(true);
+        expect(orchestrator.discreteTaskExitHandled.size).toBe(0);
+        expect(orchestrator.tasksWithPersistedOutput.has(task.id)).toBe(false);
+        expect(
+          orchestrator.options.lifeCycle.printTaskTerminalOutput.mock.calls
+        ).toEqual(
+          printed ? [[task, 'failure', expect.stringContaining(error)]] : []
+        );
+        expect(
+          orchestrator.options.lifeCycle.appendTaskOutput.mock.calls
+        ).toEqual(
+          appended ? [[task.id, expect.stringContaining(error), false]] : []
+        );
+      }
+    );
+
+    it('prints a failure of the post-run steps once', async () => {
+      const { orchestrator, task } = createOrchestrator();
+      orchestrator.runTask = vi.fn(async () => ({
+        getResults: async () => ({ code: 0, terminalOutput: '' }),
+      }));
+      orchestrator.postRunSteps = vi.fn(async () => {
+        throw new Error('cache write failed');
+      });
+
+      orchestrator.dispatchDiscreteWorker(true, task, 0);
+      await Promise.allSettled(orchestrator.pendingDiscreteWorkers);
+
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput.mock.calls
+      ).toEqual([[task, 'failure', 'cache write failed']]);
     });
   });
 });

@@ -334,12 +334,7 @@ export async function generate(args: { [k: string]: any }) {
       normalizedGeneratorName,
       schema,
       implementationFactory,
-      generatorConfiguration: {
-        aliases,
-        hidden,
-        ['x-deprecated']: deprecated,
-        ['x-use-standalone-layout']: isStandalonePreset,
-      },
+      generatorConfiguration: { aliases, hidden, ['x-deprecated']: deprecated },
     } = getGeneratorInformation(
       opts.collectionName,
       opts.generatorName,
@@ -404,12 +399,6 @@ export async function generate(args: { [k: string]: any }) {
         `generating (${opts.collectionName}:${normalizedGeneratorName})`
       );
       const implementation = implementationFactory();
-
-      // @todo(v17): Remove this, isStandalonePreset property is defunct.
-      if (normalizedGeneratorName === 'preset' && !isStandalonePreset) {
-        host.write('apps/.gitkeep', '');
-        host.write('libs/.gitkeep', '');
-      }
 
       const task = await implementation(host, combinedOpts);
       host.lock();

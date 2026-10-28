@@ -186,7 +186,7 @@ function applyNxIndependentConfig(
     poll: options.poll,
   };
 
-  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // TODO(v25): drop once @rspack/core v1 is out of the support window (NXC-5161).
   // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (options.statsJson && installedRspackMajor < 2) {
     (config as { profile?: boolean }).profile = true;

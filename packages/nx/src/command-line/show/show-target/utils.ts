@@ -200,7 +200,7 @@ function validateConfiguration(
 
 // ── Custom hasher detection ──────────────────────────────────────────
 
-// TODO(v25): remove custom hasher support.
+// TODO(v25): remove custom hasher support (NXC-5052).
 /**
  * Checks whether a target's executor defines a custom hasher.
  * Returns true if the executor has a hasherFactory — meaning the

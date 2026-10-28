@@ -1503,7 +1503,7 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
             )
           : null;
 
-        // TODO(v25): remove custom hasher support.
+        // TODO(v25): remove custom hasher support (NXC-5052).
         const hasherFactory = executorConfig.hasher
           ? this.getImplementationFactory<CustomHasher>(
               executorConfig.hasher,

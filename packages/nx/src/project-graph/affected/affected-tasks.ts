@@ -327,7 +327,7 @@ async function matchAffectedTasks(
   const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const customHashed = new Set(
     taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
   );

@@ -508,13 +508,13 @@ impl<'a> DependencyView<'a> {
 
     /// Render the no dependencies message
     fn render_no_dependencies(&self, state: &DependencyViewState, area: Rect, buf: &mut Buffer) {
-        let base_style = Style::default().fg(THEME.success);
-        let no_deps_style = Self::apply_focus_styling(base_style, state.is_focused);
+        let (message, color) = match state.task_status {
+            TaskStatus::Skipped => ("Skipped.", THEME.warning),
+            _ => ("Waiting for available thread...", THEME.success),
+        };
+        let no_deps_style = Self::apply_focus_styling(Style::default().fg(color), state.is_focused);
 
-        let no_deps_message = vec![Line::from(vec![Span::styled(
-            "Waiting for available thread...",
-            no_deps_style,
-        )])];
+        let no_deps_message = vec![Line::from(vec![Span::styled(message, no_deps_style)])];
 
         let paragraph = NxParagraph::new(no_deps_message)
             .alignment(Alignment::Center)
@@ -555,7 +555,8 @@ impl<'a> DependencyView<'a> {
                 if let Some((root_task, _)) = root_causes.first() {
                     format!("Skipped because {} failed.", root_task)
                 } else {
-                    "Skipped due to dependency failures.".to_string()
+                    // --nx-bail and a batch that ends early skip tasks with no failed dependency
+                    "Skipped.".to_string()
                 }
             }
             _ => "Dependencies:".to_string(),
@@ -823,7 +824,8 @@ impl<'a> StatefulWidget for DependencyView<'a> {
 mod tests {
     use super::*;
     use crate::native::tasks::types::TaskGraph;
-    use ratatui::buffer::Buffer;
+    use crate::native::test_utils::edges_to;
+    use ratatui::buffer::{Buffer, Cell};
     use std::collections::HashMap;
 
     fn empty_task_graph() -> TaskGraph {
@@ -1216,13 +1218,13 @@ mod tests {
         }
     }
 
-    fn render_rows(
+    fn render_view(
+        task_graph: &TaskGraph,
         state: &mut DependencyViewState,
         status_map: &HashMap<String, TaskStatus>,
         readiness_map: &HashMap<String, TaskReadiness>,
         ready_dependencies: &HashMap<String, Vec<String>>,
-    ) -> Vec<String> {
-        let task_graph = readiness_task_graph();
+    ) -> Buffer {
         let area = Rect {
             x: 0,
             y: 0,
@@ -1230,8 +1232,13 @@ mod tests {
             height: 12,
         };
         let mut buf = Buffer::empty(area);
-        let view = DependencyView::new(status_map, &task_graph, readiness_map, ready_dependencies);
+        let view = DependencyView::new(status_map, task_graph, readiness_map, ready_dependencies);
         StatefulWidget::render(view, area, &mut buf, state);
+        buf
+    }
+
+    fn rows_of(buf: &Buffer) -> Vec<String> {
+        let area = buf.area();
         (0..area.height)
             .map(|y| {
                 (1..area.width - 1)
@@ -1241,6 +1248,28 @@ mod tests {
                     .to_string()
             })
             .collect()
+    }
+
+    fn first_text_cell(buf: &Buffer, y: u16) -> &Cell {
+        let x = (1..buf.area().width - 1)
+            .find(|&x| buf[(x, y)].symbol() != " ")
+            .expect("row has text");
+        &buf[(x, y)]
+    }
+
+    fn render_rows(
+        state: &mut DependencyViewState,
+        status_map: &HashMap<String, TaskStatus>,
+        readiness_map: &HashMap<String, TaskReadiness>,
+        ready_dependencies: &HashMap<String, Vec<String>>,
+    ) -> Vec<String> {
+        rows_of(&render_view(
+            &readiness_task_graph(),
+            state,
+            status_map,
+            readiness_map,
+            ready_dependencies,
+        ))
     }
 
     fn ready_edges(edges: &[&str]) -> HashMap<String, Vec<String>> {
@@ -1384,5 +1413,56 @@ mod tests {
             ReadinessLabel::for_producer(TaskStatus::InProgress, None),
             None
         );
+    }
+
+    #[test]
+    fn test_skipped_header_names_a_failed_dependency_only() {
+        let task_graph = TaskGraph {
+            dependencies: HashMap::from([("app:e2e".to_string(), edges_to(&["lib:build"]))]),
+            ..empty_task_graph()
+        };
+        for (dependency_status, header) in [
+            (TaskStatus::Failure, "Skipped because lib:build failed."),
+            (TaskStatus::Success, "Skipped."),
+        ] {
+            let mut state = readiness_state(&["lib:build"]);
+            state.task_status = TaskStatus::Skipped;
+            let status_map = HashMap::from([("lib:build".to_string(), dependency_status)]);
+
+            let buf = render_view(
+                &task_graph,
+                &mut state,
+                &status_map,
+                &HashMap::new(),
+                &HashMap::new(),
+            );
+            assert_eq!(rows_of(&buf)[2], header);
+            assert_eq!(first_text_cell(&buf, 2).fg, THEME.warning, "{header}");
+        }
+    }
+
+    #[test]
+    fn test_task_without_dependencies_shows_its_status() {
+        for (status, message, color) in [
+            (TaskStatus::Skipped, "Skipped.", THEME.warning),
+            (
+                TaskStatus::NotStarted,
+                "Waiting for available thread...",
+                THEME.success,
+            ),
+        ] {
+            let mut state = readiness_state(&[]);
+            state.task_status = status;
+
+            let buf = render_view(
+                &empty_task_graph(),
+                &mut state,
+                &HashMap::new(),
+                &HashMap::new(),
+                &HashMap::new(),
+            );
+            assert_eq!(rows_of(&buf)[2], message);
+            assert_eq!(first_text_cell(&buf, 2).fg, color, "{message}");
+        }
     }
 }

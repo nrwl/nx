@@ -1342,7 +1342,7 @@ to = "/docs/reference/project-configuration"
 
 [[redirects]]
 from = "/docs/concepts/nx-plugins"
-to = "/docs/plugin-registry"
+to = "/docs/features/nx-plugins"
 
 [[redirects]]
 from = "/docs/concepts/ci-concepts/building-blocks-fast-ci"

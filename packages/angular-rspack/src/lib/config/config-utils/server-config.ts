@@ -220,8 +220,8 @@ function installedSsrUsesCriticalCssPlans(root: string): boolean {
   return major > 22 || (major === 22 && minor >= 2);
 }
 
-// TODO(v24): drop the probe and the loader's inline fallback once
-// @rspack/core v1 is out of the support window.
+// TODO(v25): drop the probe and the loader's inline fallback once
+// @rspack/core v1 is out of the support window (NXC-5161).
 function installedRspackSupportsVirtualModules(root: string): boolean {
   const version = getInstalledPackageVersionFromRoot(root, '@rspack/core');
   if (!version) {
