@@ -7,8 +7,9 @@ filter: 'type:Features'
 ---
 
 Nx plugins add support for a tool or framework, such as Vite, Jest, Playwright, or Gradle, to your workspace.
-Nx runs and caches any script without a plugin.
-A plugin adds what Nx can't work out from a script alone, like which files a task reads and where it writes its output.
+A plugin works out which files a task reads and where it writes output.
+Otherwise you write that configuration yourself and keep it in sync with the tool's own config.
+Plugins are completely optional, and you can add them incrementally, one tool at a time.
 
 ## Without a plugin
 
@@ -31,19 +32,17 @@ For Nx to cache it correctly, you declare its outputs yourself:
 }
 ```
 
-That `outputs` path duplicates `build.outDir` from `vite.config.ts`.
-If you change one and forget the other, Nx caches the wrong folder.
-Every Vite project in the workspace needs the same configuration.
+That `outputs` path repeats `build.outDir` from `vite.config.ts`, and every Vite project in the workspace repeats it again.
+When the two drift apart, Nx caches the wrong folder.
 
 ## With a plugin
 
 With the `@nx/vite` plugin, you can delete both the script and the target.
-The plugin reads each `vite.config.ts` and [infers](/docs/features/run-tasks#inferred-tasks) `build`, `dev`, and `preview` tasks, with outputs taken from `build.outDir`.
-When you change the Vite config, the tasks follow it.
+It reads each `vite.config.ts` and [infers](/docs/features/run-tasks#inferred-tasks) `build`, `dev`, and `preview` tasks with outputs taken from `build.outDir`.
+Edit the Vite config and the tasks change with it.
 
 Most plugins also ship [generators](/docs/features/generate-code) to scaffold projects or add the tool to an existing one, and migrations that [update the tool and its config](/docs/features/automate-updating-dependencies) when you upgrade.
-Some read files Nx doesn't understand on its own.
-The `@nx/gradle` plugin, for example, adds Gradle projects and their dependencies to the project graph.
+Some read files Nx doesn't understand on its own (`@nx/gradle` adds Gradle projects and their dependencies to the project graph).
 
 ## Add a plugin
 
