@@ -10,7 +10,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
+import {
+  setCwd,
+  withEnvironmentVariables,
+} from '@nx/devkit/internal-testing-utils';
 import { tsLibVersion } from '@nx/js/internal';
 import { PackageJson, nxVersion } from '@nx/devkit/internal';
 import { sep } from 'node:path';
@@ -260,34 +263,66 @@ describe('NxPlugin Create Package Generator', () => {
     );
   });
 
-  it('should budget the e2e test for a cold package manager cache', async () => {
-    await pluginGenerator(tree, {
-      name: 'with-e2e',
-      directory: 'packages/with-e2e',
-      compiler: 'tsc',
-      skipTsConfig: false,
-      skipFormat: false,
-      skipLintChecks: false,
-      linter: 'eslint',
-      unitTestRunner: 'jest',
-      e2eTestRunner: 'jest',
-    });
+  it.each([
+    {
+      packageManager: 'npm',
+      dlx: /npx create-a-workspace@e2e/,
+      list: /npm ls .*with-e2e/,
+    },
+    {
+      packageManager: 'pnpm',
+      dlx: /pnpm dlx create-a-workspace@e2e/,
+      list: /pnpm ls --depth 100 .*with-e2e/,
+    },
+    {
+      packageManager: 'yarn',
+      dlx: /(?:npx|yarn dlx) create-a-workspace@e2e/,
+      list: /(?:yarn list|yarn info --name-only) .*with-e2e/,
+    },
+    {
+      packageManager: 'bun',
+      dlx: /bunx create-a-workspace@e2e/,
+      list: /bun pm ls .*with-e2e/,
+    },
+  ])(
+    'should use $packageManager consistently and budget the e2e test for installation',
+    async ({ packageManager, dlx, list }) => {
+      const spec = await withEnvironmentVariables(
+        { npm_config_user_agent: `${packageManager}/1.0.0` },
+        async () => {
+          await pluginGenerator(tree, {
+            name: 'with-e2e',
+            directory: 'packages/with-e2e',
+            compiler: 'tsc',
+            skipTsConfig: false,
+            skipFormat: false,
+            skipLintChecks: false,
+            linter: 'eslint',
+            unitTestRunner: 'jest',
+            e2eTestRunner: 'jest',
+          });
 
-    await createPackageGenerator(
-      tree,
-      getSchema({ project: 'with-e2e', e2eProject: 'with-e2e-e2e' })
-    );
+          await createPackageGenerator(
+            tree,
+            getSchema({ project: 'with-e2e', e2eProject: 'with-e2e-e2e' })
+          );
 
-    // The test shells out synchronously, which jest cannot interrupt but vitest
-    // fails after the fact, so an under-budgeted test is an intermittent
-    // failure rather than a consistent one.
-    const spec = tree.read(
-      'packages/with-e2e-e2e/src/create-a-workspace.spec.ts',
-      'utf-8'
-    );
-    const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+          return tree.read(
+            'packages/with-e2e-e2e/src/create-a-workspace.spec.ts',
+            'utf-8'
+          );
+        }
+      );
 
-    expect(budget).not.toBeNull();
-    expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(120_000);
-  });
+      expect(spec).toContain(`--packageManager=${packageManager}`);
+      expect(spec).toMatch(dlx);
+      expect(spec).toMatch(list);
+
+      const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+      expect(budget).not.toBeNull();
+      expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(
+        120_000
+      );
+    }
+  );
 });
