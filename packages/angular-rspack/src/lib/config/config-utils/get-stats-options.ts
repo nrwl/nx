@@ -12,8 +12,6 @@ export function getStatsOptions(verbose = false): StatsOptions {
     errors: true,
     assets: true, // required by custom stat output
     cachedAssets: true, // required for bundle size calculators
-
-    // Needed for markAsyncChunksNonInitial.
     ids: true,
     entrypoints: true,
   };
