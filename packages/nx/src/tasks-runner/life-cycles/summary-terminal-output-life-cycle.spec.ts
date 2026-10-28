@@ -231,7 +231,7 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).not.toContain('full log');
   });
 
-  it('addresses the batch worker log it was told about', () => {
+  it('addresses every batch worker log it was told about', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
 
@@ -240,12 +240,19 @@ describe('SummaryTerminalOutputLifeCycle', () => {
         '@nx/gradle:batch 1',
         '/cache/batchOutputs/g.log'
       );
+      // A batch that reports a strict subset of its tasks re-runs the rest
+      // under the same id, in a new worker with its own log.
+      lifeCycle.batchOutputAvailable(
+        '@nx/gradle:batch 1',
+        '/cache/batchOutputs/g-2.log'
+      );
       lifeCycle.endTasks([result(a, 'stopped')]);
       lifeCycle.endCommand();
     });
 
     expect(out).toContain('Batch worker logs:');
     expect(out).toContain('@nx/gradle:batch 1: /cache/batchOutputs/g.log');
+    expect(out).toContain('@nx/gradle:batch 1: /cache/batchOutputs/g-2.log');
   });
 
   it('renders the cloud link when one is set', () => {

@@ -136,7 +136,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       if (skippedTasks.length > 0) {
         bodyLines.push(
           output.dim(
-            'Tasks not run because their dependencies failed or --nx-bail=true:'
+            'Tasks not run because their dependencies failed, --nx-bail=true, or their batch ended before reaching them:'
           ),
           '',
           ...skippedTasks.map((task) => `${output.dim('-')} ${task.id}`),
