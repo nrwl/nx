@@ -24,6 +24,13 @@ export function isWorkspaceInstalledPackage(
   );
 }
 
+export function shouldSkipTempMigrateCli(): boolean {
+  return (
+    process.env.NX_USE_LOCAL === 'true' ||
+    process.env.NX_MIGRATE_USE_LOCAL !== undefined
+  );
+}
+
 /**
  * Whether the running nx is the workspace's installation rather than the temp
  * one `nx migrate` runs first. Any nx on the lookup chain counts: the hand-off
@@ -31,6 +38,11 @@ export function isWorkspaceInstalledPackage(
  * holds another copy.
  */
 export function isRunningWorkspaceNx(): boolean {
+  // The wrapper never starts the temp nx under these variables, and the hand-off
+  // sets one for its child, so a misjudged location cannot respawn without end.
+  if (shouldSkipTempMigrateCli()) {
+    return true;
+  }
   const running = realpathOrSelf(__dirname);
   return (
     isInside(running, realpathOrSelf(workspaceRoot)) ||

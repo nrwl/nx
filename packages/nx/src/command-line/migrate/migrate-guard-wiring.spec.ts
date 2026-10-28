@@ -128,6 +128,8 @@ function restoreEnv(name: string, value: string | undefined) {
 describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () => {
   const originalArgv = process.argv;
   const originalSkipInstall = process.env.NX_MIGRATE_SKIP_INSTALL;
+  const originalUseLocal = process.env.NX_USE_LOCAL;
+  const originalMigrateUseLocal = process.env.NX_MIGRATE_USE_LOCAL;
 
   beforeEach(() => {
     mockAssertWorkspaceNx.mockReset().mockReturnValue(undefined);
@@ -137,6 +139,8 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     mockHoldRunToContinue.mockReset();
     mockReleaseRunToHandOff.mockReset();
     delete process.env.NX_MIGRATE_SKIP_INSTALL;
+    delete process.env.NX_USE_LOCAL;
+    delete process.env.NX_MIGRATE_USE_LOCAL;
     vi.spyOn(output, 'log').mockImplementation(() => {});
     vi.spyOn(output, 'warn').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
@@ -150,6 +154,8 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
     setWorkspaceRoot(originalWorkspaceRoot);
     process.argv = originalArgv;
     restoreEnv('NX_MIGRATE_SKIP_INSTALL', originalSkipInstall);
+    restoreEnv('NX_USE_LOCAL', originalUseLocal);
+    restoreEnv('NX_MIGRATE_USE_LOCAL', originalMigrateUseLocal);
   });
 
   describe('runSingleMigrationFromCli', () => {
@@ -300,6 +306,22 @@ describe('migrate() version-skew-guard wiring (temp-installation hand-off)', () 
       expect(exitCode).toBe(0);
       expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
       expect(mockRunSingleMigrationWorker).not.toHaveBeenCalled();
+    });
+
+    it('runs in place when the wrapper started it without the temp installation', async () => {
+      // What the hand-off sets for its child, so a misjudged location cannot
+      // hand off again.
+      process.env.NX_MIGRATE_USE_LOCAL = 'true';
+
+      const exitCode = await migrate(
+        ROOT,
+        { runMigration: '@nx/js:gen', skipInstall: true },
+        ['--run-migration=@nx/js:gen']
+      );
+
+      expect(exitCode).toBe(0);
+      expect(mockRunNxArgvSync).not.toHaveBeenCalled();
+      expect(mockRunSingleMigrationWorker).toHaveBeenCalledTimes(1);
     });
   });
 

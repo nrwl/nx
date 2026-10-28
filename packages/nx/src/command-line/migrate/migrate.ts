@@ -133,6 +133,7 @@ import {
 import {
   isRunningWorkspaceNx,
   isWorkspaceInstalledPackage,
+  shouldSkipTempMigrateCli,
 } from './workspace-installation';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX, MigrateArgs } from './command-object';
@@ -4212,8 +4213,7 @@ export async function runMigration() {
 
     if (
       !targetsExistingRun(process.argv.slice(3)) &&
-      process.env.NX_USE_LOCAL !== 'true' &&
-      process.env.NX_MIGRATE_USE_LOCAL === undefined
+      !shouldSkipTempMigrateCli()
     ) {
       // The version spec mirrors nxCliPath's; keep the two in sync.
       const cliVersionSpec = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
