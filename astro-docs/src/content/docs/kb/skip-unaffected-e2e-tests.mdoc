@@ -14,26 +14,32 @@ topics:
 You are scoping split (atomized) e2e test files in an Nx workspace so that each test file's task reruns only when the code it tests changes. Read this guide first: {pageUrl}
 
 1. Find the e2e projects and their split targets with `nx show project <e2e-project> --json`. Split targets are named `e2e-ci--<test file path>`. If there are none, stop. Cypress creates them only when the `nxE2EPreset` options set `ciWebServerCommand`, and Vitest and Cypress component tests don't read the directives.
-2. Pick a directive for each test file:
-   - `// @nx-ignore-server-inputs` when the workspace has Ultracache turned on in Nx Cloud, the runner is Playwright or Cypress, and everything the test checks is in modules the test file can import.
-   - `// @nx-depends-on: <project>, <project>` otherwise. List every project the test exercises. The projects they depend on are included automatically. Don't list the app project, because that puts the whole app back in the hash.
+2. Before editing any files, ask the user to choose a scoping approach and wait for their answer:
+   - **A. Project-based scoping with `@nx-depends-on` (recommended).** Explicitly list the projects each test exercises. The projects they depend on are included automatically.
+   - **B. Import-based scoping with `@nx-ignore-server-inputs` (advanced).** Use only when we understand exactly what each test depends on, Ultracache is enabled in Nx Cloud, the runner is Playwright or Cypress, and the imports capture everything needed to invalidate its cached result.
+   - Explain that `@nx-ignore-server-inputs` can replay stale results when dependencies are missed. Do not select it automatically.
+3. Inspect each test and identify its dependencies before recommending `@nx-ignore-server-inputs`. Call out anything imports cannot reliably capture, including CSS, assets, API servers, app shell code, configuration, environment variables, and runtime inputs. If coverage is uncertain, recommend `@nx-depends-on` or leave the test unscoped.
+   - For project-based scoping, use `// @nx-depends-on: <project>, <project>`. List every project the test exercises. Don't list the app project just to cover missing dependencies, because that puts the whole app back in the hash; leave whole-app tests unscoped instead.
    - Use `@nx-depends-on` when the test depends on stylesheets (screenshots, visibility checks) outside Cypress with the Vite preprocessor, on files loaded by path (`templateUrl`, `styleUrl`, static assets, fetched data), on the app shell, layouts or shared providers, on an API server, or on the server task's environment variables, runtime inputs or external dependencies.
    - Leave smoke tests that exercise the whole app unscoped.
-3. Put the directive at the top of the file, before the first line of code, at the start of a comment line. `@nx-depends-on` needs the colon right after its name.
-4. With `@nx-ignore-server-inputs`, add bare imports (`import '<path>'`) of the feature's own page or component module:
-   - Not route tables, the app entry point, or barrel files. They pull every feature into the hash.
+4. Put the directive at the top of the file, before the first line of code, at the start of a comment line. `@nx-depends-on` needs the colon right after its name.
+5. With `@nx-ignore-server-inputs`, add bare library subpath imports of the actual feature modules, such as `import '@myorg/checkout/checkout-page';`:
+   - Avoid relative cross-project imports, route tables, application entry points, and barrels. Route tables, application entry points, and barrels pull unrelated features into the hash.
+   - If a needed subpath is not exported, explain the required package-export change instead of using a relative cross-project import.
    - For lazy-loaded features, import the feature module directly. Playwright doesn't read modules that a dynamic `import()` loads.
    - Playwright loads imports in Node. A module that uses `window` or `document` at the top level, a stylesheet in an ECMAScript module package, or a `.vue` file fails the whole test file. Cypress with webpack fails to bundle stylesheets and `.vue` files. If a feature won't load, import the TypeScript modules it uses, or switch the file to `@nx-depends-on`.
-   - When unsure, import more. An extra import costs extra reruns. A missing one replays a stale result.
-5. Fix the tooling errors the imports cause:
+   - If importing the available modules cannot reliably cover the test's dependencies, recommend `@nx-depends-on` or leave the test unscoped.
+
+6. Fix the tooling errors the imports cause:
    - `@nx/enforce-module-boundaries` skips most checks for bare imports in files with `@nx-ignore-server-inputs`, but still checks imports that name values or types.
    - Disable `import/no-unassigned-import` (eslint-plugin-import or the Oxlint import plugin) for the e2e test files instead of removing the imports.
    - If a test file imports `.tsx` files, set `jsx` (for example `"react-jsx"`) in the e2e project's TypeScript configuration. A missing `jsx` shows up as TS6305 with project references or TS6142 with path aliases.
-6. Verify with `nx show target inputs <e2e-project>:<split target> --check <file the test exercises> <file it doesn't>`. With `@nx-depends-on`, the first file is an input and the second isn't. For `@nx-ignore-server-inputs`, run the target in CI, then inspect its Ultracache configuration in the Nx Cloud UI. Check that it includes the files the test exercises and excludes unrelated files. If the configuration isn't scoped as expected:
+7. Verify with `nx show target inputs <e2e-project>:<split target> --check <file the test exercises> <file it doesn't>`. With `@nx-depends-on`, the first file is an input and the second isn't. For `@nx-ignore-server-inputs`, run the target in CI, then inspect its Ultracache configuration in the Nx Cloud UI. Check that it includes the files the test exercises and excludes unrelated files. If the configuration isn't scoped as expected:
    - Playwright: Nx runs the `webServer` as a task only when `reuseExistingServer` is `true`, the entry sets no `wait` or `env`, and `command` is `nx run <project>:<target>` or `nx <target> <project>` with no other arguments. Nx evaluates the config with its own environment, so `reuseExistingServer: !process.env.CI` is `false` in CI. Without a server task, `@nx-ignore-server-inputs` has no effect.
    - An `nx.json` target default that matches the split target, such as one keyed `e2e-ci--*`, replaces the inferred `inputs` and `dependsOn`. Add `"..."` to each array it sets, and set `"inputs": false` on any server dependency it adds.
-   - If the test needs some of the server task's environment variables, runtime inputs or external dependencies, add them to the test file's target in `project.json`, with `"..."` in `inputs`.
-7. Prefer directives over `project.json` entries. A `project.json` entry under the split target's name replaces the inferred `inputs` and `dependsOn`, so copy every entry you keep and don't add `"..."`. The entry stops matching when the test file moves.
+   - If the test needs server environment variables, runtime inputs or external dependencies that the imports do not capture, report the limitation and recommend `@nx-depends-on` only if it covers those dependencies; otherwise leave the test unscoped.
+8. Do not create shared dependency groups, named inputs, target defaults, or blanket dependency lists to compensate for missing coverage. For example, do not introduce a `shopE2eRuntime` input. Report the limitation instead of inventing shared configuration.
+9. Prefer directives over `project.json` entries. A `project.json` entry under the split target's name replaces the inferred `inputs` and `dependsOn`, so copy every entry you keep and don't add `"..."`. The entry stops matching when the test file moves.
 
 Notes:
 
@@ -77,8 +83,9 @@ It works in Playwright and Cypress test files.
 
 Without Ultracache, each test also hashes every file in the e2e project, so an edit to any test file still reruns it.
 
-Use `@nx-ignore-server-inputs` when Ultracache is on and the application code your test exercises is in TypeScript or JavaScript files the test can import, such as React components.
-Use `@nx-depends-on` in other cases, such as applications that use external templates.
+Start with `@nx-depends-on` to explicitly scope each test to the projects it exercises and their dependencies.
+Use `@nx-ignore-server-inputs` only when Ultracache is on and you have verified that imports capture everything needed to invalidate the test's cached result. Missing dependencies can cause stale results to be replayed.
+If you cannot establish complete coverage with either directive, leave the test unscoped.
 
 ## Examples
 
@@ -147,7 +154,7 @@ import { test } from '@playwright/test';
  * Checkout flow tests.
  * @nx-ignore-server-inputs
  */
-import '../../shop/src/app/checkout/checkout-page';
+import '@myorg/checkout/checkout-page';
 ```
 
 `@nx-depends-on` takes a colon and a comma-separated list of project names or patterns, such as `tag:scope:shared`.
@@ -208,8 +215,9 @@ Use `@nx-depends-on` instead when the test's results depend on something the tes
 
 The test runner reads each module the test file imports, and each module those modules import.
 
-Decide what each test file is meant to test, then import the modules that cover that scope.
-This may require multiple imports.
+Decide what each test file is meant to test, then use bare library subpath imports of the actual feature modules that cover that scope, such as `import '@myorg/checkout/checkout-page';`.
+This may require multiple imports. Avoid relative cross-project imports, route tables, application entry points, and barrels.
+If a needed subpath is not exported by the library, explain the required package-export change before using it.
 
 Lazy-loaded modules sometimes belong in that scope, but often represent other parts of the app that the test doesn't exercise.
 Include them only when they are part of what the test is meant to cover.
