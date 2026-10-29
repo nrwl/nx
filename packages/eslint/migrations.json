@@ -54,15 +54,15 @@
       "implementation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule",
       "documentation": "./dist/src/migrations/update-24-1-0/add-directive-checks-rule.md"
     },
-    "update-23-2-0-migrate-to-eslint-v10": {
-      "version": "23.2.0-beta.5",
+    "update-24-1-0-migrate-to-eslint-v10": {
+      "version": "24.1.0-beta.0",
       "requires": {
         "eslint": ">=10.0.0"
       },
       "description": "Prepare the workspace for ESLint v10: convert eslintrc configs to flat config, since v10 removed the eslintrc format, and replace the ESLint plugins that have no v10 release.",
-      "implementation": "./dist/src/migrations/update-23-2-0/migrate-to-eslint-v10",
-      "prompt": "./dist/src/migrations/update-23-2-0/finish-eslint-v10-migration.md",
-      "documentation": "./dist/src/migrations/update-23-2-0/migrate-to-eslint-v10.md"
+      "implementation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10",
+      "prompt": "./dist/src/migrations/update-24-1-0/finish-eslint-v10-migration.md",
+      "documentation": "./dist/src/migrations/update-24-1-0/migrate-to-eslint-v10.md"
     }
   },
   "packageJsonUpdates": {
@@ -306,8 +306,8 @@
         }
       }
     },
-    "23.2.0": {
-      "version": "23.2.0-beta.5",
+    "24.1.0": {
+      "version": "24.1.0-beta.0",
       "requires": {
         "eslint": ">=9.0.0 <10.0.0"
       },
