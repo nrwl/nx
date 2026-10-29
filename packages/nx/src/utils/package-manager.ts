@@ -734,9 +734,9 @@ function getPackageManagerConfigRoot(): string {
  * Creates an empty owner-only directory for a throwaway package install.
  *
  * Package managers and Node read config and modules from every ancestor of
- * the install, so it lives under `~/.nx/tmp` and never under the shared OS
- * temp dir. Throws when `~/.nx` is unusable. The OS does not reap it, so it is
- * removed when the process exits.
+ * the install, so it lives under `~/.nx/tmp`, or under the OS temp dir when it
+ * and all of its ancestors are closed to other users. Throws when neither
+ * qualifies. The OS does not reap it, so it is removed when the process exits.
  */
 export function createTempInstallDirectory(): string {
   const root = ensurePrivateInstallRoot();
