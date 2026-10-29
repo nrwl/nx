@@ -75,8 +75,8 @@ export async function prefetchRemoteCacheOnboardingUrl(
         }, ONBOARDING_URL_TIMEOUT).unref();
       }),
     ]);
-    // createNxCloudOnboardingURL never throws - on an unreachable API it returns a
-    // paste-a-token URL. Only accept a real short link.
+    // On an unreachable API createNxCloudOnboardingURL returns a paste-a-token
+    // URL. Only accept a real short link.
     if (url?.startsWith(`${getCloudUrl()}/connect/`)) {
       remoteCacheLink = url;
     } else {
