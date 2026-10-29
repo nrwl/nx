@@ -432,6 +432,44 @@ fn pad_symbol(symbol: &str, padding: usize) -> String {
 mod tests {
     use super::*;
 
+    #[test]
+    fn clamp_csi_counts_bounds_insert_and_scroll_counts_by_the_screen() {
+        assert_eq!(
+            &*clamp_csi_counts(
+                b"abc\r\x1b[65535@\x1b[65535L\x1b[65535;1T\x1b[65535:2@",
+                24,
+                80
+            ),
+            b"abc\r\x1b[80@\x1b[24L\x1b[24;1T\x1b[80:2@"
+        );
+    }
+
+    #[test]
+    fn clamp_csi_counts_bounds_counts_with_controls_inside_the_sequence() {
+        let cases: [(&[u8], &[u8]); 6] = [
+            (b"\x1b[655\x7f35@", b"\x1b[\x7f80@"),
+            (b"\x1b[6\x005535@", b"\x1b[\x0080@"),
+            (b"\x1b\x00[65535@", b"\x1b\x00[80@"),
+            (b"\x1b[\x0065535L", b"\x1b[\x0024L"),
+            (b"\x1b[65\xc235T", b"\x1b[\xc224T"),
+            (b"\x1b[?65535@", b"\x1b[?80@"),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(
+                &*clamp_csi_counts(input, 24, 80),
+                expected,
+                "{}",
+                input.escape_ascii()
+            );
+        }
+    }
+
+    #[test]
+    fn clamp_csi_counts_leaves_abandoned_and_ignored_sequences_alone() {
+        let input = b"\x1b[65535\x18@\x1b[65535\x1b@\x1b[1<65535@\x1b(65535@\x1b[;65535@";
+        assert_eq!(&*clamp_csi_counts(input, 24, 80), input);
+    }
+
     // Kept in lockstep with the TS formatDuration; drift would make the popup and
     // the terminal report disagree.
     #[test]
