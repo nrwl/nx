@@ -492,13 +492,12 @@ fn classify_osc(s: &[u8], body: usize) -> Classification {
 
 /// Color and other reads have a lone `?` field (e.g. `OSC 11;?`,
 /// `OSC 10;?;?`), and `OSC 52` and kitty's `OSC 5522` read or write the
-/// clipboard. Terminals skip C0 controls inside the string and read the number
-/// with any leading zeros, and some skip a `;` before it. kitty reads at most
-/// five leading digits and skips a following `;` only if present, so
-/// `OSC 52c;...` is a clipboard write there. foot wraps the number at 32 bits,
-/// so any digit run longer than five is dropped.
+/// clipboard. Terminals read the number with any leading zeros, and some skip
+/// a `;` before it. Some skip C0 controls or other non-digits in the number and
+/// others stop the number at them, so any non-digit in the number field drops
+/// the sequence. kitty reads at most five digits and foot wraps the number at
+/// 32 bits, so a number longer than five digits is dropped too.
 fn osc_is_query(payload: &[u8]) -> bool {
-    let payload: Vec<u8> = payload.iter().copied().filter(|b| *b >= 0x20).collect();
     let mut fields = payload.split(|b| *b == b';');
     let first = fields.next().unwrap_or_default();
     let number = if first.is_empty() {
@@ -506,9 +505,11 @@ fn osc_is_query(payload: &[u8]) -> bool {
     } else {
         first
     };
-    let digits = &number[..number.iter().take_while(|b| b.is_ascii_digit()).count()];
-    let command = &digits[digits.iter().take_while(|b| **b == b'0').count()..];
-    digits.len() > 5 || matches!(command, b"52" | b"5522") || fields.any(|f| f == b"?")
+    let command = &number[number.iter().take_while(|b| **b == b'0').count()..];
+    !number.iter().all(u8::is_ascii_digit)
+        || number.len() > 5
+        || matches!(command, b"52" | b"5522")
+        || fields.any(|f| f.iter().copied().filter(|b| *b >= 0x20).eq(*b"?"))
 }
 
 fn classify_dcs(s: &[u8], body: usize) -> Classification {
@@ -601,6 +602,9 @@ mod tests {
         assert_eq!(strip(b"a\x1b]5522;type=write\x07b"), b"ab");
         assert_eq!(strip(b"a\x1b]000521c;Y3VybA==\x07b"), b"ab");
         assert_eq!(strip(b"a\x1b]4294967348;c;Y3VybA==\x07b"), b"ab");
+        assert_eq!(strip(b"a\x1b]52\x0199c;Y3VybA==\x07b"), b"ab");
+        assert_eq!(strip(b"a\x1b]x52;c;Y3VybA==\x07b"), b"ab");
+        assert_eq!(strip(b"a\x1b]5 2;c;Y3VybA==\x07b"), b"ab");
     }
 
     #[test]
