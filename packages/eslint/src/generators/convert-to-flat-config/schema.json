@@ -20,7 +20,7 @@
     },
     "keepExistingVersions": {
       "type": "boolean",
-      "description": "Keep the existing versions of any ESLint-related packages already declared in `package.json` instead of overwriting them. Only newly added packages are installed at the latest supported versions.",
+      "description": "Keep the existing versions of any ESLint-related packages already declared in `package.json` instead of overwriting them. Only newly added packages are installed, at the versions for the ESLint major the workspace declares (v9 when it declares none).",
       "default": false,
       "x-priority": "internal"
     }
