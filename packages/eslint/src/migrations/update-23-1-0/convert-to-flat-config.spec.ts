@@ -122,9 +122,41 @@ describe('convert-to-flat-config migration', () => {
   });
 
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(
-    'should route a %s root config to the prompt without converting',
+    'should convert a %s root config built from literals',
     async (jsConfig) => {
       tree.write(jsConfig, 'module.exports = { root: true };');
+
+      const result = await update(tree);
+
+      expect(tree.exists('eslint.config.mjs')).toBe(true);
+      expect(tree.exists(jsConfig)).toBe(false);
+      expect(result!.agentContext.join('\n')).not.toContain(
+        'root ESLint config is JavaScript-based'
+      );
+    }
+  );
+
+  it('should route a JavaScript root config the generator does not read to the prompt', async () => {
+    // The generator converts `.eslintrc.base.json` here and never opens the
+    // JavaScript root config beside it.
+    tree.write('.eslintrc.base.json', JSON.stringify({ rules: {} }));
+    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+
+    const result = await update(tree);
+
+    expect(tree.exists('.eslintrc.js')).toBe(true);
+    expect(result!.agentContext.join('\n')).toContain(
+      'root ESLint config is JavaScript-based'
+    );
+  });
+
+  it.each(['.eslintrc.js', '.eslintrc.cjs'])(
+    'should route a %s root config that computes its values to the prompt without converting',
+    async (jsConfig) => {
+      tree.write(
+        jsConfig,
+        "module.exports = { root: true, rules: require('./rules.js') };"
+      );
 
       const result = await update(tree);
 
@@ -268,9 +300,13 @@ export default [
       };
       return json;
     });
-    // A JavaScript-based root config makes rootState 'js', so the generator does
-    // not run; a project already on flat config must still be reconciled.
-    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+    // A JavaScript-based root config it cannot read makes rootState 'js', so the
+    // generator does not run; a project already on flat config must still be
+    // reconciled.
+    tree.write(
+      '.eslintrc.js',
+      "module.exports = { root: true, rules: require('./rules.js') };"
+    );
     tree.write(
       'apps/app/eslint.config.mjs',
       `export default [

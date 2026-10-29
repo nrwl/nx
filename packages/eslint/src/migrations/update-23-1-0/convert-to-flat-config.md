@@ -17,7 +17,7 @@ Work systematically through each section below.
 
 The pre-pass handled, mechanically:
 
-- Converted the root and per-project JSON/YAML eslintrc files to `eslint.config.mjs`:
+- Converted the root and per-project eslintrc files to `eslint.config.mjs`, including JavaScript-based ones (`.eslintrc.js`, `.eslintrc.cjs`) whose exported object is built from literal values:
   - `eslint:recommended` to `js.configs.recommended`
   - `@nx/*` presets to their flat-config equivalents
   - `env` to `languageOptions.globals`
@@ -29,7 +29,7 @@ The pre-pass handled, mechanically:
 
 The pre-pass does NOT:
 
-- Convert JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`). It cannot evaluate them safely.
+- Convert a JavaScript-based eslintrc file that computes its values. It reads these files statically and never runs them.
 - Change the output formatter a lint target uses.
 - Decide whether a generated `FlatCompat` shim should become flat-native config.
 - Make the workspace pass lint after ESLint v9 changed which rules its preset defaults enable.
@@ -89,7 +89,7 @@ If the workspace already uses `eslint.config.*` at the root and in every project
 
 **Search pattern**: `.eslintrc.js` and `.eslintrc.cjs` files (forwarded in `impl.agentContext`).
 
-**What changed**: the pre-pass only converts JSON and YAML eslintrc files. JavaScript-based configs run arbitrary code, so they need manual conversion.
+**What changed**: the pre-pass reads JavaScript-based configs statically, so it converts only the ones whose exported object is built from literal values. A config that computes its values (a `require`, a spread, a function call) needs manual conversion.
 
 ```js
 // BEFORE (.eslintrc.js)
