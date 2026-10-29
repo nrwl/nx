@@ -114,6 +114,17 @@ function startVerdaccio(
     childProcess.on('error', (err) => {
       reject(err);
     });
+    childProcess.on('message', (message: { verdaccio_started?: boolean }) => {
+      if (
+        message?.verdaccio_started === true &&
+        process.env.NX_READY_SIGNAL_SOCKET
+      ) {
+        // Nx versions without signal readiness do not export this API.
+        const { emitReadySignal } =
+          require('@nx/devkit') as typeof import('@nx/devkit');
+        emitReadySignal(getVerdaccioListeningUrl(options));
+      }
+    });
     childProcess.on('disconnect', (err) => {
       reject(err);
     });
@@ -126,6 +137,26 @@ function startVerdaccio(
       }
     });
   });
+}
+
+function getVerdaccioListeningUrl(options: VerdaccioExecutorSchema) {
+  const listenAddress = options.listenAddress
+    ? `${options.listenAddress}:${options.port}`
+    : String(options.port);
+  // Verdaccio accepts protocol prefixes without "//" and an empty host.
+  const address =
+    /^(?:(https?):(?:\/\/)?)?(?:([^/:]*|\[[^\[\]]+\]):)?(\d+)\/?$/.exec(
+      listenAddress
+    );
+  if (!address) return undefined;
+
+  const endpoint = `${address[1] ?? 'http'}://${address[2] || 'localhost'}:${address[3]}/`;
+  if (!URL.canParse(endpoint)) return undefined;
+
+  const url = new URL(endpoint);
+  if (url.hostname === '0.0.0.0') url.hostname = '127.0.0.1';
+  if (url.hostname === '[::]') url.hostname = '[::1]';
+  return url.href;
 }
 
 function createVerdaccioOptions(
