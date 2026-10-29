@@ -270,6 +270,7 @@ describe('createTempNpmDirectory', () => {
     vi.stubEnv('TEMP', sharedTmp);
     vi.stubEnv('HOME', home);
     vi.stubEnv('USERPROFILE', home);
+    await treatDirsAboveRootAsSystemDirs();
     vi.resetModules();
     const { createTempNpmDirectory } = await import('./package-manager');
 
@@ -339,6 +340,56 @@ describe('createTempNpmDirectory', () => {
         expect(statSync(dir).mode & 0o077).toBe(0);
       } finally {
         await cleanup();
+      }
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
+    'falls back to a private temp dir when the home is under a directory other users can write to',
+    async () => {
+      const shared = join(root, 'shared');
+      const home = join(shared, 'home');
+      mkdirSync(home, { recursive: true });
+      chmodSync(shared, 0o1777);
+      const privateTmp = join(root, 'private-tmp');
+      mkdirSync(privateTmp, { mode: 0o700 });
+      stubTmpDir(privateTmp);
+      vi.stubEnv('HOME', home);
+      await treatDirsAboveRootAsSystemDirs();
+      vi.resetModules();
+      const { createTempNpmDirectory } = await import('./package-manager');
+
+      const { dir, cleanup } = createTempNpmDirectory(true);
+
+      try {
+        expect(dirname(dir)).toEqual(join(privateTmp, 'nx-installs'));
+      } finally {
+        await cleanup();
+      }
+    }
+  );
+
+  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+    'falls back to a private temp dir when ~/.nx/tmp exists but cannot be written',
+    async () => {
+      const home = join(root, 'home');
+      const homeInstallRoot = join(home, '.nx', 'tmp');
+      mkdirSync(homeInstallRoot, { recursive: true, mode: 0o700 });
+      chmodSync(homeInstallRoot, 0o500);
+      const privateTmp = join(root, 'private-tmp');
+      mkdirSync(privateTmp, { mode: 0o700 });
+      stubTmpDir(privateTmp);
+      vi.stubEnv('HOME', home);
+      await treatDirsAboveRootAsSystemDirs();
+      vi.resetModules();
+      const { createTempNpmDirectory } = await import('./package-manager');
+
+      try {
+        const { dir, cleanup } = createTempNpmDirectory(true);
+        await cleanup();
+        expect(dirname(dir)).toEqual(join(privateTmp, 'nx-installs'));
+      } finally {
+        chmodSync(homeInstallRoot, 0o700);
       }
     }
   );
@@ -460,6 +511,7 @@ describe('createTempNpmDirectory', () => {
     lutimesSync(link, old, old);
     vi.stubEnv('HOME', home);
     vi.stubEnv('USERPROFILE', home);
+    await treatDirsAboveRootAsSystemDirs();
     vi.resetModules();
     const { createTempNpmDirectory } = await import('./package-manager');
 

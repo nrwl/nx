@@ -734,14 +734,13 @@ function getPackageManagerConfigRoot(): string {
  * Creates an empty owner-only directory for a throwaway package install.
  *
  * Package managers and Node read config and modules from every ancestor of
- * the install, so it lives under `~/.nx/tmp`, or under the OS temp dir when it
- * and all of its ancestors are closed to other users. Throws when neither
- * qualifies. The OS does not reap it, so it is removed when the process exits.
+ * the install, so it lives under `~/.nx/tmp`, else under the OS temp dir, and
+ * only where that root and all of its ancestors are closed to other users.
+ * Throws when neither root qualifies or can be written. The OS does not reap
+ * it, so it is removed when the process exits.
  */
 export function createTempInstallDirectory(): string {
-  const root = ensurePrivateInstallRoot();
-  removeStaleInstallDirectories(root);
-  const dir = dirSync({ tmpdir: root }).name;
+  const dir = createInPrivateInstallRoot();
   if (tempInstallDirectories.size === 0) {
     process.once('exit', removeTempInstallDirectories);
   }
@@ -809,14 +808,19 @@ function removeStaleInstallDirectories(root: string) {
 const TMPDIR_INSTALL_ROOT = 'nx-installs';
 
 /**
- * Package managers and Node read config and modules from every ancestor of
- * the install dir, so installs go under `~/.nx/tmp`, or under the OS temp dir
- * when it and all of its ancestors are closed to other users.
+/**
+ * An existing `~/.nx/tmp` can still refuse writes, for example under an agent
+ * sandbox, so a failed create there moves on to the OS temp dir.
  */
-function ensurePrivateInstallRoot(): string {
-  const homeRefusal = homeInstallRootRefusal();
+function createInPrivateInstallRoot(): string {
+  let homeRefusal = homeInstallRootRefusal();
   if (!homeRefusal) {
-    return join(NX_HOME_TMP_DIR, 'tmp');
+    const root = join(NX_HOME_TMP_DIR, 'tmp');
+    try {
+      return createInstallDirectory(root);
+    } catch (e: any) {
+      homeRefusal = `${root} is not writable${e?.code ? ` (${e.code})` : ''}`;
+    }
   }
   const tmp = tmpdir();
   const fallbackRoot = join(tmp, TMPDIR_INSTALL_ROOT);
@@ -824,11 +828,16 @@ function ensurePrivateInstallRoot(): string {
   if (!tmpRefusal) {
     const result = ensureOwnedPrivateDir(fallbackRoot);
     if (result.status === 'ok') {
-      return fallbackRoot;
+      return createInstallDirectory(fallbackRoot);
     }
     tmpRefusal = describeRefusal(result.refusal);
   }
   throw new PrivateInstallRootError(homeRefusal, tmpRefusal);
+}
+
+function createInstallDirectory(root: string): string {
+  removeStaleInstallDirectories(root);
+  return dirSync({ tmpdir: root }).name;
 }
 
 function homeInstallRootRefusal(): string | undefined {
@@ -841,7 +850,7 @@ function homeInstallRootRefusal(): string | undefined {
       return describeRefusal(result.refusal);
     }
   }
-  return undefined;
+  return privateTreeRefusal(join(NX_HOME_TMP_DIR, 'tmp'));
 }
 
 /**
