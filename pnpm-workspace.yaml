@@ -52,6 +52,10 @@ overrides:
   # nest 9 / express 4.18 pin body-parser below the DoS fix (GHSA-qwcr-r2fm-qrc7);
   # express 5 pulls the 2.x line, which the advisory does not cover.
   'body-parser@<1.20.3': '^1.20.3'
+  # remix 2 and module-federation pin undici 6.x / 7.24.7 below the fixes for
+  # GHSA-rfgv-xxqx-mfg5 and GHSA-w293-vg96-wgc3; 5.x and 8.x are not affected.
+  'undici@>=6.7.0 <6.28.1': '^6.28.1'
+  'undici@>=7.0.0 <7.29.1': '^7.29.1'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
