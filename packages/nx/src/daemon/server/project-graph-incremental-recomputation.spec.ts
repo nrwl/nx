@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -114,7 +108,7 @@ describe('invalidateGraphCache', () => {
   });
 });
 
-describe('external nodes after configuration errors', () => {
+describe('dependencies after configuration errors', () => {
   let fs: TempFs;
   let cleanupPlugins: (() => void) | undefined;
 
@@ -221,6 +215,123 @@ describe('external nodes after configuration errors', () => {
     expect(recovered.projectGraph.dependencies['npm:first']).toEqual([
       { source: 'npm:first', target: 'npm:second', type: 'static' },
     ]);
+  });
+
+  it('recovers project dependencies after repairing a partial configuration', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ cli: { packageManager: 'npm' } }),
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/a/project.json': JSON.stringify({ name: 'a' }),
+      'packages/a/package.json': JSON.stringify({
+        name: '@proj/a',
+        version: '0.0.0',
+        dependencies: { '@proj/b': 'workspace:*' },
+      }),
+      'packages/b/project.json': JSON.stringify({ name: 'b' }),
+      'packages/b/package.json': JSON.stringify({
+        name: '@proj/b',
+        version: '0.0.0',
+      }),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    cleanupPlugins = undefined;
+    const { LoadedNxPlugin } =
+      await import('../../project-graph/plugins/loaded-nx-plugin');
+    const packageJsonPlugin = new LoadedNxPlugin(
+      await import('../../plugins/package-json'),
+      'nx/core/package-json'
+    );
+    const createPackageNodes = packageJsonPlugin.createNodes![1];
+    let configurationFails = false;
+    packageJsonPlugin.createNodes![1] = async (...args) => {
+      if (configurationFails) {
+        throw new Error('Invalid package metadata configuration');
+      }
+      return createPackageNodes(...args);
+    };
+    const defaultPlugins = [
+      new LoadedNxPlugin(
+        await import('../../plugins/js'),
+        'nx/js/dependencies-and-lockfile'
+      ),
+      packageJsonPlugin,
+      new LoadedNxPlugin(
+        (await import('../../plugins/project-json/build-nodes/project-json'))
+          .ProjectJsonProjectsPlugin,
+        'nx/core/project-json'
+      ),
+    ];
+    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
+      getPlugins: async () => defaultPlugins,
+      getPluginsSeparated: async () => ({
+        specifiedPlugins: [],
+        defaultPlugins,
+      }),
+    }));
+
+    try {
+      const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+        await import('./project-graph-incremental-recomputation');
+      const { updateFilesInContext } =
+        await import('../../utils/workspace-context');
+      const healthy = await getCachedSerializedProjectGraphPromise();
+      expect(healthy.error).toBeNull();
+      expect(healthy.projectGraph.dependencies.a).toContainEqual({
+        source: 'a',
+        target: 'b',
+        type: 'static',
+      });
+
+      fs.writeFile(
+        'packages/a/package.json',
+        JSON.stringify({
+          name: '@proj/a',
+          version: '0.0.1',
+          dependencies: { '@proj/b': 'workspace:*' },
+        })
+      );
+      updateFilesInContext(fs.tempDir, ['packages/a/package.json'], []);
+      configurationFails = true;
+      invalidateGraphCache();
+      const failed = await getCachedSerializedProjectGraphPromise();
+      expect(failed.error).toMatchObject({
+        name: 'DaemonProjectGraphError',
+        errors: [
+          expect.objectContaining({
+            errors: [
+              [
+                null,
+                expect.objectContaining({
+                  message: 'Invalid package metadata configuration',
+                }),
+              ],
+            ],
+          }),
+        ],
+      });
+
+      configurationFails = false;
+      const recovered = await getCachedSerializedProjectGraphPromise();
+      expect(recovered.error).toBeNull();
+      expect(recovered.projectGraph.nodes.b.data.metadata.js.packageName).toBe(
+        '@proj/b'
+      );
+      expect(recovered.projectGraph.dependencies.a).toContainEqual({
+        source: 'a',
+        target: 'b',
+        type: 'static',
+      });
+    } finally {
+      vi.doUnmock('../../project-graph/plugins/get-plugins');
+    }
   });
 });
 

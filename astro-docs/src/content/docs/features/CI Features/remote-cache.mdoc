@@ -116,12 +116,60 @@ Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batc
 ### Turn on Ultracache
 
 New Nx Cloud workspaces start with Ultracache on.
-For an existing workspace, open the workspace's **Settings** page in Nx Cloud and set **Ultracache** to **On**.
+For an existing workspace, open the workspace's [**Settings**](https://cloud.nx.app/go/workspace/settings) page in Nx Cloud and set **Ultracache** to **On**.
 
 Ultracache requires Nx 24.0.0 or later, which uses it in CI by default.
 For Nx 23 and runs outside CI, see [Ultracache and Nx versions](/docs/kb/ultracache-nx-versions).
 
 To skip Ultracache for a single run, set [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables) to `false`.
+
+#### Try Ultracache on one branch or workflow
+
+To trial Ultracache before turning it on for the whole workspace, set `NX_CLOUD_ULTRACACHE_MODE` for a single CI pipeline.
+It overrides the workspace setting for that pipeline only and doesn't need an Nx 24 upgrade.
+The value is case-insensitive and maps to the [`ultracache.mode`](/docs/reference/project-configuration#ultracache) modes:
+
+| Value   | Effect                                                                     |
+| ------- | -------------------------------------------------------------------------- |
+| `ON`    | Turns Ultracache on. Targets keep their own `mode`, and the rest use `on`. |
+| `WARN`  | Applies `warn` to every task, overriding each target's `mode`.             |
+| `ERROR` | Applies `error` to every task, overriding each target's `mode`.            |
+| `OFF`   | Turns Ultracache off for every task.                                       |
+| Unset   | Uses the workspace setting.                                                |
+
+`NX_CLOUD_ULTRACACHE_MODE` takes precedence over [`NX_CLOUD_USE_ULTRACACHE`](/docs/reference/environment-variables): with `OFF`, `WARN`, or `ERROR`, the run doesn't use recorded inputs even if `NX_CLOUD_USE_ULTRACACHE` is `true`.
+Don't combine `ON` with `NX_CLOUD_USE_ULTRACACHE=false`, because Nx 24 and later still skip Ultracache for that run.
+Any other value fails the run with an error.
+
+Set it at the job or workflow level so both `nx-cloud start-workers` and your Nx commands see it.
+Nx Cloud Workers pick it up automatically:
+
+```yaml
+# .github/workflows/ultracache-trial.yml
+on:
+  push:
+    branches: [try-ultracache]
+
+env:
+  NX_CLOUD_ULTRACACHE_MODE: 'ON'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: npx nx-cloud start-workers
+      - run: npm ci
+      - run: npx nx affected -t lint test build
+```
+
+It doesn't change which tasks run, so tasks that `nx affected` leaves out stay out.
+
+{% aside type="note" title="The workspace setting stays the same" %}
+`NX_CLOUD_ULTRACACHE_MODE` doesn't change the **Ultracache** setting saved in Nx Cloud. Other branches and pipelines keep using it.
+{% /aside %}
 
 ### Turn off Ultracache for a target
 
@@ -163,7 +211,10 @@ Nx Cloud guards against it in several ways:
 - Cache entries are immutable. Once Nx Cloud stores an entry, no later run can overwrite it.
 - CI writes are scoped by token. Use a [read-write token](/docs/kb/access-tokens#read-write-access) only on protected branches, such as `main`. On other branches, a [read-only token](/docs/kb/access-tokens#read-only-access) reads the shared cache and writes to a cache isolated to that run, so a pull request can't change what `main` restores.
 - Nx Cloud protects against [CREEP (CVE-2025-36852)](https://nx.dev/blog/creep-vulnerability-build-cache-security#the-creep-vulnerability), where an untrusted pull request writes a poisoned artifact that a trusted build later restores. With the token setup above, pull request writes stay isolated from the cache used by protected branches.
-- Developers authenticate with [personal access tokens](/docs/kb/personal-access-tokens). [Workspace settings](https://cloud.nx.app/go/workspace/settings/access) decide whether each developer can write to the cache, and whether unauthenticated machines get read-write, read-only, or no access.
+- Developers [log in to Nx Cloud](/docs/kb/personal-access-tokens).
+  [Workspace settings](https://cloud.nx.app/go/workspace/settings/access) decide whether each
+  developer can write to the cache, and whether unauthenticated machines get read-write, read-only,
+  or no access.
 - [End-to-end encryption](/docs/kb/encryption) encrypts artifacts on your machines before they're uploaded, with a key Nx Cloud never sees.
 
 To keep a poisoned entry from ever reaching your users, [skip the cache](/docs/kb/skipping-cache) when you build the artifact you deploy.

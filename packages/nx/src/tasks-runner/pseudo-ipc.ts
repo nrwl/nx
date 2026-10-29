@@ -21,7 +21,6 @@ import { connect, Server, Socket } from 'net';
 import { unlinkSync } from 'fs';
 import {
   consumeMessagesFromSocket,
-  writeMessage,
   parseMessage,
 } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';

@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { Mock } from 'vitest';
 import { ProvenanceError } from '../../utils/provenance';
 import {
@@ -203,6 +206,44 @@ describe('migrate-analytics events', () => {
         excludeAppliedMigrations: true,
       });
     });
+
+    it.each([
+      ['local', 'links its nx to this installation outside the root', true],
+      ['temp-latest', 'does not install this nx', false],
+    ])(
+      'reports the %s CLI source when the workspace %s',
+      async (cliSource, _workspace, linksNx) => {
+        const wsRoot = realpathSync(
+          mkdtempSync(join(tmpdir(), 'migrate-analytics-ws-'))
+        );
+        if (linksNx) {
+          mkdirSync(join(wsRoot, 'node_modules'));
+          symlinkSync(
+            realpathSync(join(__dirname, '..', '..', '..')),
+            join(wsRoot, 'node_modules', 'nx'),
+            'dir'
+          );
+        }
+        // load() re-imports workspace-root, so set the root through the env
+        // var it reads; setWorkspaceRoot would not reach the fresh instance.
+        const originalRootEnv = process.env.NX_WORKSPACE_ROOT_PATH;
+        process.env.NX_WORKSPACE_ROOT_PATH = wsRoot;
+        try {
+          const a = await load();
+          a.reportMigrateGenerateStart({ targetPackage: 'nx' });
+          expect(paramsFor('migrate_generate_start')).toMatchObject({
+            cliSource,
+          });
+        } finally {
+          if (originalRootEnv === undefined) {
+            delete process.env.NX_WORKSPACE_ROOT_PATH;
+          } else {
+            process.env.NX_WORKSPACE_ROOT_PATH = originalRootEnv;
+          }
+          rmSync(wsRoot, { recursive: true, force: true });
+        }
+      }
+    );
   });
 
   describe('reportMigrateGenerateComplete', () => {

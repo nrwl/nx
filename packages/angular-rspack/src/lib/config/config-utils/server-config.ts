@@ -21,6 +21,7 @@ import {
 import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
+import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
 import {
@@ -39,7 +40,8 @@ export async function getServerConfig(
   swcTranspilationTransform: SwcTranspilationTransform,
   sharedLicenseInputs?: SharedLicenseInputs,
   sharedAngularPlugin?: AngularRspackPlugin,
-  serverRenderingInputs?: SharedServerRenderingInputs
+  serverRenderingInputs?: SharedServerRenderingInputs,
+  ssrReloadServer?: SsrReloadServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -199,6 +201,7 @@ export async function getServerConfig(
         platform: 'server',
         sharedLicenseInputs,
         sharedAngularPlugin,
+        ssrReloadServer,
       }),
       ...(normalizedOptions.prerender ||
       (normalizedOptions.appShell && !isDevServer)
@@ -217,8 +220,8 @@ function installedSsrUsesCriticalCssPlans(root: string): boolean {
   return major > 22 || (major === 22 && minor >= 2);
 }
 
-// TODO(v24): drop the probe and the loader's inline fallback once
-// @rspack/core v1 is out of the support window.
+// TODO(v25): drop the probe and the loader's inline fallback once
+// @rspack/core v1 is out of the support window (NXC-5161).
 function installedRspackSupportsVirtualModules(root: string): boolean {
   const version = getInstalledPackageVersionFromRoot(root, '@rspack/core');
   if (!version) {

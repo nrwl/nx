@@ -31,3 +31,29 @@ describe('@nx/next/tailwind deprecation warning', () => {
     expect(deprecationWarnings).toHaveLength(1);
   });
 });
+
+describe('@nx/next/tailwind with Tailwind v4', () => {
+  afterEach(() => {
+    vi.doUnmock('@nx/js/internal');
+    vi.restoreAllMocks();
+  });
+
+  it('should keep negated patterns from the dependency globs', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.doMock('@nx/js/internal', () => ({
+      createGlobPatternsForDependencies: (dirPath: string, pattern: string) => [
+        `${dirPath}/../../libs/ui${pattern}`,
+        `!${dirPath}/../../libs/ui/**/node_modules/**`,
+      ],
+    }));
+    const { createGlobPatternsForDependencies } = await import('./tailwind');
+
+    expect(createGlobPatternsForDependencies(__dirname)).toMatchInlineSnapshot(`
+      [
+        "../../libs/ui/**/*.{tsx,ts,jsx,js,html}",
+        "!../../libs/ui/**/node_modules/**",
+        "!../../libs/ui/**/*.{stories,spec}.{tsx,ts,jsx,js,html}",
+      ]
+    `);
+  });
+});

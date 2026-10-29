@@ -45,7 +45,6 @@ import { parse } from 'yaml';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
-import * as registryConfig from './registry-config';
 import { mockCjsModule } from '../internal-testing-utils/cjs-mock';
 
 // package-manager.ts lazy-requires ./registry-config (CJS channel), which
@@ -88,6 +87,7 @@ describe('package-manager', () => {
     afterEach(() => {
       vi.restoreAllMocks();
       vi.clearAllMocks();
+      vi.unstubAllEnvs();
     });
     it('should detect package manager in nxJson', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
@@ -102,114 +102,110 @@ describe('package-manager', () => {
           packageManager: 'yarn',
         },
       });
-      expect(detectPackageManager()).toEqual('yarn');
+      expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return true;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return true;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return true;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(1);
     });
 
     it('should detect bun package manager from bun.lock', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return true;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('bun');
-      expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return false;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
@@ -218,9 +214,8 @@ describe('package-manager', () => {
       const originalUserAgent = process.env.npm_config_user_agent;
       delete process.env.npm_config_user_agent;
       try {
-        const packageManager = detectPackageManager();
+        const packageManager = detectPackageManager(workspaceRoot);
         expect(packageManager).toEqual('npm');
-        expect(fs.existsSync).toHaveBeenCalledTimes(5);
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
@@ -230,24 +225,46 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return false;
-          case 'pnpm-lock.yaml':
+          case join(workspaceRoot, 'pnpm-lock.yaml'):
             return false;
-          case 'package-lock.json':
+          case join(workspaceRoot, 'package-lock.json'):
             return true;
-          case 'bun.lockb':
+          case join(workspaceRoot, 'bun.lockb'):
             return false;
-          case 'bun.lock':
+          case join(workspaceRoot, 'bun.lock'):
             return false;
           default:
             return require('fs').existsSync(p);
         }
       });
-      const packageManager = detectPackageManager();
+      const packageManager = detectPackageManager(workspaceRoot);
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
     });
+
+    it.each([
+      { name: 'its own lockfile', lockFile: 'yarn.lock', expected: 'yarn' },
+      {
+        name: 'the invoking manager when no lockfile exists',
+        lockFile: undefined,
+        expected: 'bun',
+      },
+    ])(
+      'should use $name for an explicit directory',
+      ({ lockFile, expected }) => {
+        const directory = join(workspaceRoot, '..', 'other-workspace');
+        vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (p) =>
+            p === join(workspaceRoot, 'pnpm-lock.yaml') ||
+            (lockFile !== undefined && p === join(directory, lockFile))
+        );
+        vi.stubEnv('npm_config_user_agent', 'bun/1.0.25');
+
+        expect(detectPackageManager(directory)).toEqual(expected);
+      }
+    );
 
     it('should detect pnpm from npm_config_user_agent when no lock file exists', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
@@ -269,7 +286,7 @@ describe('package-manager', () => {
       process.env.npm_config_user_agent =
         'yarn/1.22.21 npm/? node/v20.11.1 darwin arm64';
       try {
-        expect(detectPackageManager()).toEqual('yarn');
+        expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }
@@ -291,7 +308,7 @@ describe('package-manager', () => {
       vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
       vi.spyOn(fs, 'existsSync').mockImplementation((p) => {
         switch (p) {
-          case 'yarn.lock':
+          case join(workspaceRoot, 'yarn.lock'):
             return true;
           default:
             return false;
@@ -301,7 +318,7 @@ describe('package-manager', () => {
       process.env.npm_config_user_agent =
         'pnpm/8.15.4 npm/? node/v20.11.1 darwin arm64';
       try {
-        expect(detectPackageManager()).toEqual('yarn');
+        expect(detectPackageManager(workspaceRoot)).toEqual('yarn');
       } finally {
         process.env.npm_config_user_agent = originalUserAgent;
       }

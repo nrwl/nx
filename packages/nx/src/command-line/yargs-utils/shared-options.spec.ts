@@ -365,7 +365,7 @@ describe('shared-options', () => {
         },
         async () => {
           const command = withOutputStyleOption(argv);
-          const result = await command.parseAsync([]);
+          await command.parseAsync([]);
           expect(process.env.NX_TUI).toEqual('true');
         }
       ));
@@ -381,10 +381,7 @@ describe('shared-options', () => {
           },
           async () => {
             const command = withOutputStyleOption(argv);
-            const result = await command.parseAsync([
-              '--output-style',
-              'dynamic',
-            ]);
+            await command.parseAsync(['--output-style', 'dynamic']);
             expect(process.env.NX_TUI).toEqual('true');
           }
         )

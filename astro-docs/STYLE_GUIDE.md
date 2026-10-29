@@ -557,6 +557,7 @@ Use these terms consistently. When writing about Nx concepts, use the exact term
 | Nx Replay            | Remote caching product. Always capitalized.                                                               |
 | dynamic task packing | How Nx Agents fill each agent by CPU and memory use. Lowercase. Italicize the first mention on a page.    |
 | Ultracache           | Nx Cloud recording of each task's real inputs. Product name, one word. Not "UltraCache" or "Ultra Cache". |
+| pnpm                 | The package manager. Always lowercase, even at the start of a sentence. Not "PNPM" or "Pnpm".             |
 | `nx.json`            | Always in code style.                                                                                     |
 | `project.json`       | Always in code style.                                                                                     |
 

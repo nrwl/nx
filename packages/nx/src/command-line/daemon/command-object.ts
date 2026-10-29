@@ -1,4 +1,4 @@
-import { CommandModule, Argv } from 'yargs';
+import { Argv } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { handleErrors } from '../../utils/handle-errors';
 import { handleImport } from '../../utils/handle-import';

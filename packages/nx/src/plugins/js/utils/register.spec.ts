@@ -4,7 +4,6 @@ import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import { join } from 'path';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import {
-  getTranspiler,
   loadTsFile,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,

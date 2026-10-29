@@ -1,6 +1,4 @@
 import { createRequire } from 'module';
-import { join } from 'path';
-import { promisify } from 'util';
 import { readJsonFile } from './fileutils';
 import {
   getWorkspaceRegistryUrlForDisplay,

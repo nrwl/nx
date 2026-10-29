@@ -28,7 +28,7 @@ export function warnRspackComposeHelpersDeprecation(): void {
   logger.warn(RSPACK_COMPOSE_HELPERS_DEPRECATION_MESSAGE);
 }
 
-// TODO(v25): remove with the deprecated ssr-dev-server executor
+// TODO(v25): remove with the deprecated ssr-dev-server executor (NXC-5167)
 export const RSPACK_SSR_DEV_SERVER_EXECUTOR_DEPRECATION_MESSAGE =
   'The `@nx/rspack:ssr-dev-server` executor is deprecated and will be removed in Nx v25. Run the server from source with the `@nx/js/tsx` plugin, with the browser build in watch mode as a continuous dependency. See https://nx.dev/docs/kb/replace-ssr-dev-server.';
 

@@ -482,6 +482,14 @@ function isOxlintTerminalRun(argv: string[]): boolean {
   return !!argv[1].match(OXLINT_REGEX) && !argv.includes('--lsp');
 }
 
+// `bun lint` hosts ESLint plugins itself, so argv[0] is the bun executable and
+// argv[1] is the `lint` subcommand rather than a script path.
+const BUN_REGEX = /(?:^|[\/\\])bun(?:\.exe)?$/;
+
+function isBunLintRun(argv: string[]): boolean {
+  return !!argv[0].match(BUN_REGEX) && argv[1] === 'lint';
+}
+
 export function isTerminalRun(): boolean {
   return (
     process.argv.length > 1 &&
@@ -490,6 +498,7 @@ export function isTerminalRun(): boolean {
       !!process.argv[1].match(ESLINT_REGEX) ||
       !!process.argv[1].match(ESLINT_WORKER_REGEX) ||
       isOxlintTerminalRun(process.argv) ||
+      isBunLintRun(process.argv) ||
       !!process.argv[1].endsWith('/bin/jest.js'))
   );
 }

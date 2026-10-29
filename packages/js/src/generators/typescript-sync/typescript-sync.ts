@@ -179,12 +179,13 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     if (changedFiles.size > 0) {
       const updatedReferences = Array.from(referencesSet)
-        // Check composite is true in the internal reference before proceeding
+        // Check composite is true in the internal reference before proceeding.
+        // A reference can name a tsconfig file directly rather than a directory.
         .filter((ref) =>
           hasCompositeEnabled(
             tsSysFromTree,
             tsconfigInfoCaches,
-            joinPathFragments(ref, 'tsconfig.json')
+            toFullProjectReferencePath(ref)
           )
         )
         .map((ref) => ({

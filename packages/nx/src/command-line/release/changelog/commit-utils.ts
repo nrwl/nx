@@ -1,15 +1,15 @@
-import { GitCommit } from "../utils/git";
+import { GitCommit } from '../utils/git';
 import {
   FileData,
   ProjectFileMap,
   ProjectGraph,
-} from "../../../config/project-graph";
-import { NxReleaseConfig } from "../config/config";
-import { ChangelogChange } from "./version-plan-utils";
+} from '../../../config/project-graph';
+import { NxReleaseConfig } from '../config/config';
+import { ChangelogChange } from './version-plan-utils';
 
 export function mapCommitToChange(
   commit: GitCommit,
-  affectedProjects: string[] | "*",
+  affectedProjects: string[] | '*'
 ): ChangelogChange {
   return {
     type: commit.type,
@@ -29,25 +29,25 @@ export function createChangesFromCommits(
   commits: GitCommit[],
   fileMap: { projectFileMap: ProjectFileMap; nonProjectFiles: FileData[] },
   fileToProjectMap: Record<string, string>,
-  conventionalCommitsConfig: NxReleaseConfig["conventionalCommits"],
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): ChangelogChange[] {
   return filterHiddenChanges(
     commits.map((c) => {
       const affectedProjects = commitChangesNonProjectFiles(
         c,
-        fileMap.nonProjectFiles,
+        fileMap.nonProjectFiles
       )
-        ? "*"
+        ? '*'
         : getProjectsAffectedByCommit(c, fileToProjectMap);
       return mapCommitToChange(c, affectedProjects);
     }),
-    conventionalCommitsConfig,
+    conventionalCommitsConfig
   );
 }
 
 export function filterHiddenChanges(
   changes: ChangelogChange[],
-  conventionalCommitsConfig: NxReleaseConfig["conventionalCommits"],
+  conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): ChangelogChange[] {
   return changes.filter((change) => {
     const type = change.type;
@@ -63,7 +63,7 @@ export function filterHiddenChanges(
 
 export function getProjectsAffectedByCommit(
   commit: GitCommit,
-  fileToProjectMap: Record<string, string>,
+  fileToProjectMap: Record<string, string>
 ): string[] {
   const affectedProjects = new Set<string>();
   for (const affectedFile of commit.affectedFiles) {
@@ -77,15 +77,15 @@ export function getProjectsAffectedByCommit(
 
 export function commitChangesNonProjectFiles(
   commit: GitCommit,
-  nonProjectFiles: FileData[],
+  nonProjectFiles: FileData[]
 ): boolean {
   return nonProjectFiles.some((fileData) =>
-    commit.affectedFiles.includes(fileData.file),
+    commit.affectedFiles.includes(fileData.file)
   );
 }
 
 export function createFileToProjectMap(
-  projectFileMap: ProjectFileMap,
+  projectFileMap: ProjectFileMap
 ): Record<string, string> {
   const fileToProjectMap = {};
   for (const [projectName, projectFiles] of Object.entries(projectFileMap)) {
@@ -109,7 +109,7 @@ export function createFileToProjectMap(
 export function getNonReleasableDependencies(
   projectName: string,
   projectGraph: ProjectGraph,
-  releasableProjects: Set<string>,
+  releasableProjects: Set<string>
 ): string[] {
   const result = new Set<string>();
   const queue = [projectName];
@@ -140,7 +140,7 @@ export function getNonReleasableDependencies(
 export function attributeDependencyChangesToProject(
   changes: ChangelogChange[],
   projectName: string,
-  dependencies: string[],
+  dependencies: string[]
 ): ChangelogChange[] {
   if (!dependencies.length) {
     return changes;
@@ -148,7 +148,7 @@ export function attributeDependencyChangesToProject(
   const dependencySet = new Set(dependencies);
   return changes.map((change) => {
     if (
-      change.affectedProjects === "*" ||
+      change.affectedProjects === '*' ||
       change.affectedProjects.includes(projectName) ||
       !change.affectedProjects.some((p) => dependencySet.has(p))
     ) {

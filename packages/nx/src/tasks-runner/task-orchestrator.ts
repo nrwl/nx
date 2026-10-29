@@ -53,7 +53,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
-import { terminalOutputPathForHash } from './terminal-output-path';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { waitForReadiness } from './readiness/probes';
 import { READY_URL_ENV } from './readiness/ready-signal';
@@ -116,6 +115,29 @@ function resolveBatchTaskStatus(result: {
   status?: TaskStatus;
 }): TaskStatus {
   return result.status ?? (result.success ? 'success' : 'failure');
+}
+
+function batchWorkerLogExplains(status: TaskStatus): boolean {
+  switch (status) {
+    case 'failure':
+    case 'stopped':
+    // The worker never reached it, e.g. `@nx/gradle` after a build failure
+    // outside the batch's own tasks
+    case 'skipped':
+      return true;
+    case 'success':
+    case 'local-cache':
+    case 'local-cache-kept-existing':
+    case 'remote-cache':
+      return false;
+    default: {
+      const unhandled: never = status;
+      void unhandled;
+      // Batch executors report their statuses untyped, so an unknown one can
+      // still arrive here. Nx can't tell it succeeded, so its log is shown
+      return true;
+    }
+  }
 }
 
 /** Whether a path names a file with bytes in it. */
@@ -285,8 +307,6 @@ export class TaskOrchestrator {
   // exit, and the paths that never spawn one write it inline. The backstop in
   // postRunSteps consults this so a task's output is written exactly once.
   private tasksWithPersistedOutput = new Set<string>();
-  /** Batches whose worker log was handed to the life cycle, so it must survive. */
-  private announcedBatchLogs = new Set<string>();
   // endregion internal state
 
   constructor(
@@ -414,7 +434,25 @@ export class TaskOrchestrator {
     parallelism: number
   ) {
     while (true) {
-      if (this.bailed || this.stopRequested) break;
+      if (this.stopRequested) break;
+      // On bail, start nothing new but let running tasks finish. Skip unstarted
+      // discrete tasks unless stopped, so the run still reads as interrupted
+      if (this.bailed) {
+        await Promise.allSettled(this.pendingDiscreteWorkers);
+        if (this.stopRequested) break;
+        for (const task of Object.values(this.taskGraph.tasks)) {
+          if (!task.continuous && !this.completedTasks.has(task.id)) {
+            this.completedTasks.set(task.id, 'skipped');
+            if (this.tuiEnabled) {
+              this.options.lifeCycle.setTaskStatus(
+                task.id,
+                NativeTaskStatus.Skipped
+              );
+            }
+          }
+        }
+        break;
+      }
 
       await this.scheduleAfterReadiness();
 
@@ -474,6 +512,9 @@ export class TaskOrchestrator {
         continue;
       }
 
+      // A task may have failed during one of the awaits above
+      if (this.bailed) continue;
+
       // 5. Dispatch cache misses as individual workers
       while (this.pendingDiscreteWorkers.size < parallelism) {
         const task = this.tasksSchedule.nextTask((t) => !t.continuous);
@@ -513,7 +554,7 @@ export class TaskOrchestrator {
         // Use a separate groupId space (parallel..parallel+N) so continuous tasks
         // don't consume discrete group slots
         const groupId = this.options.parallel + this.continuousTasksStarted++;
-        const runningTask = await this.startContinuousTask(task, groupId);
+        await this.startContinuousTask(task, groupId);
 
         if (this.initializingTaskIds.has(task.id)) {
           await this.continuousTaskExitHandled.get(task.id);
@@ -1080,13 +1121,14 @@ export class TaskOrchestrator {
   ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     let batchProcess: BatchProcess | undefined;
+    let workerLogAnnounced = false;
     try {
       batchProcess = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
         this.projectGraph,
         this.fullTaskGraph,
         env,
-        printsTaskOutput(this.resolvedOutputStyle)
+        this.printsBatchOutput()
       );
 
       // Stream output from batch process to the batch
@@ -1117,7 +1159,8 @@ export class TaskOrchestrator {
         // When the batch is being folded, printing is deferred to batch end
         // (printGroupedBatchOutput), which always renders each task through the
         // life cycle and adds the worker's whole log as a fold when the run
-        // asked for full output or any task failed or was stopped.
+        // asked for full output or any task failed, was stopped or was never
+        // reached.
         if (status !== 'skipped' && !shouldGroupBatchOutput()) {
           this.options.lifeCycle.printTaskTerminalOutput(
             task,
@@ -1169,7 +1212,7 @@ export class TaskOrchestrator {
         );
       }
 
-      this.announceBatchWorkerLog(
+      workerLogAnnounced = this.announceBatchWorkerLog(
         batch.id,
         taskResults,
         batchProcess.getCapturedOutputPath()
@@ -1193,7 +1236,7 @@ export class TaskOrchestrator {
 
       await batchProcess?.flushCapturedOutput();
 
-      this.announceBatchWorkerLog(
+      workerLogAnnounced = this.announceBatchWorkerLog(
         batch.id,
         taskResults,
         batchProcess?.getCapturedOutputPath()
@@ -1229,7 +1272,7 @@ export class TaskOrchestrator {
       // Kept only when something failed and the log was announced; an all-green
       // batch's chatter explains nothing and would sit in `batchOutputs/` until
       // the sweep.
-      if (!this.announcedBatchLogs.has(batch.id)) {
+      if (!workerLogAnnounced) {
         batchProcess?.discardCapturedOutput();
       }
       const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
@@ -1242,8 +1285,16 @@ export class TaskOrchestrator {
   }
 
   /**
+   * Under the TUI, batch worker output reaches only the batch's pane, which
+   * closes with the batch (or the TUI, if pinned), so it is captured instead.
+   */
+  private printsBatchOutput(): boolean {
+    return printsTaskOutput(this.resolvedOutputStyle) && !this.tuiEnabled;
+  }
+
+  /**
    * Tells the life cycle where the batch worker's own log is, when something
-   * failed and a style that prints nothing would otherwise leave it unread.
+   * failed and its output was not printed as it streamed.
    *
    * The path is announced rather than the bytes copied into a task: one worker
    * produces one log, it explains the batch rather than any single task, and a
@@ -1253,25 +1304,23 @@ export class TaskOrchestrator {
     batchId: string,
     results: { status: TaskStatus }[],
     capturedOutputPath: string | undefined
-  ): void {
-    if (!capturedOutputPath || printsTaskOutput(this.resolvedOutputStyle)) {
-      return;
+  ): boolean {
+    if (!capturedOutputPath || this.printsBatchOutput()) {
+      return false;
     }
-    const failed = results.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
-    );
+    const failed = results.some((r) => batchWorkerLogExplains(r.status));
     if (!failed) {
-      return;
+      return false;
     }
     // The path is minted when the file is opened, before any byte reaches it,
     // so a capture that failed on its first write leaves one that exists and is
     // empty. Announcing that offers the reader an address holding nothing.
     // Checked after the flush, so the size is what a reader will actually see.
     if (!hasContent(capturedOutputPath)) {
-      return;
+      return false;
     }
-    this.announcedBatchLogs.add(batchId);
     this.options.lifeCycle.batchOutputAvailable?.(batchId, capturedOutputPath);
+    return true;
   }
 
   /**
@@ -1310,8 +1359,9 @@ export class TaskOrchestrator {
    * those per-project summaries to the worker's stdio at all.
    *
    * The worker's whole captured log is rendered as a fold above them when the
-   * run asked for full output, or when any task failed or was stopped. A
-   * diagnostic that explains a failure is routinely one no task claimed:
+   * run asked for full output, or when any task failed, was stopped or was
+   * never reached.
+   * A diagnostic that explains a failure is routinely one no task claimed:
    * `@nx/maven`'s batch impl writes its exit-code dump and failed-task outputs
    * to the worker's stderr via `console.error`, and the Maven JVM it spawns
    * points slf4j at `System.out` because its own stderr carries the result
@@ -1351,8 +1401,8 @@ export class TaskOrchestrator {
       verbose: this.options.verbose,
       outputStyle: this.resolvedOutputStyle,
     });
-    const batchOwnsTheDiagnostic = taskResults.some(
-      (r) => r.status === 'failure' || r.status === 'stopped'
+    const batchOwnsTheDiagnostic = taskResults.some((r) =>
+      batchWorkerLogExplains(r.status)
     );
     if (
       printsTaskOutput(this.resolvedOutputStyle) &&
@@ -1406,7 +1456,9 @@ export class TaskOrchestrator {
       ? 'failure'
       : taskResults.some((r) => r.status === 'stopped')
         ? 'stopped'
-        : 'success';
+        : taskResults.some((r) => r.status === 'skipped')
+          ? 'skipped'
+          : 'success';
     output.logBatchGroup(label, body, worst);
     if (!redirectLines) {
       return;
@@ -1515,7 +1567,7 @@ export class TaskOrchestrator {
     e: any
   ): Promise<void> {
     if (this.completedTasks.has(task.id)) return;
-    const terminalOutput = e?.message ?? '';
+    const terminalOutput = e?.message ?? String(e);
     // The worker rejected, so whatever the runner was going to leave on disk
     // either never landed or can't be trusted. Hand the file back to
     // postRunSteps so the failure itself is what the task's output path holds.
@@ -1615,39 +1667,65 @@ export class TaskOrchestrator {
     );
     this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
-    this.detectTaskInvocationLoop(task);
-
-    const childProcess = await this.runTask(
-      task,
-      streamOutput,
-      env,
-      temporaryOutputPath,
-      pipeOutput
-    );
-    this.runningDiscreteTasks.set(task.id, {
-      runningTask: childProcess,
-      stopping: false,
-    });
-
-    const { code, terminalOutput } = await childProcess.getResults();
-    const isStopping =
-      this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
-    this.runningDiscreteTasks.delete(task.id);
-
-    const result: TaskResult = {
-      task,
-      code,
-      status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
-      terminalOutput,
-    };
-
     try {
+      let result: TaskResult;
+      try {
+        this.detectTaskInvocationLoop(task);
+
+        const childProcess = await this.runTask(
+          task,
+          streamOutput,
+          env,
+          temporaryOutputPath,
+          pipeOutput
+        );
+        this.runningDiscreteTasks.set(task.id, {
+          runningTask: childProcess,
+          stopping: false,
+        });
+
+        // Rejects if run-commands cannot start or a forked child died before
+        // writing its log, so postRunSteps writes the log instead
+        const { code, terminalOutput } = await childProcess
+          .getResults()
+          .catch((e) => {
+            this.tasksWithPersistedOutput.delete(task.id);
+            return { code: 1, terminalOutput: e?.message ?? String(e) };
+          });
+        const isStopping =
+          this.runningDiscreteTasks.get(task.id)?.stopping ?? false;
+        this.runningDiscreteTasks.delete(task.id);
+
+        result = {
+          task,
+          code,
+          status: isStopping ? 'stopped' : code === 0 ? 'success' : 'failure',
+          terminalOutput,
+        };
+      } catch (e) {
+        // Record the failure before the exit settles, since cleanup awaits the
+        // exit to let endTasks finish before run() returns
+        await this.handleDiscreteWorkerFailure(
+          doNotSkipCache,
+          task,
+          groupId,
+          e
+        );
+        return {
+          task,
+          code: 1,
+          status: 'failure',
+          terminalOutput: e?.message ?? String(e),
+        };
+      }
+      // A failed postRunSteps rejects to the caller. dispatchDiscreteWorker
+      // handles it, and handling it here too prints the failure twice
       await this.postRunSteps([result], doNotSkipCache, groupId);
+      return result;
     } finally {
       this.discreteTaskExitHandled.delete(task.id);
       resolveDiscreteExit!();
     }
-    return result;
   }
 
   private async runTask(
