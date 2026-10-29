@@ -181,6 +181,18 @@ describe('resolveNxBinFrom', () => {
     expect(trusted).toHaveBeenCalledWith(shared, 'node_modules');
   });
 
+  it('refuses an untrusted install whose bin/nx.js links outside it', () => {
+    const elsewhere = join(shared, 'elsewhere.js');
+    writeFileSync(elsewhere, '');
+    rmSync(nxBin);
+    symlinkSync(elsewhere, nxBin);
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow();
+  });
+
   it('judges the install nx resolves from, past an incomplete local one', () => {
     mkdirSync(join(ws, 'node_modules', 'nx'), { recursive: true });
     vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
