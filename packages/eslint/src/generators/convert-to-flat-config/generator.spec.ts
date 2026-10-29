@@ -1665,7 +1665,7 @@ describe('convert-to-flat-config generator', () => {
           skipFormat: false,
           linter: 'eslint',
           project: 'test-lib',
-          setParserOptionsProject: false,
+          enableTypedLinting: false,
           eslintConfigFormat: 'cjs',
         });
         // Swap the project's JSON config for a JS one that computes its values.
@@ -1740,7 +1740,7 @@ describe('convert-to-flat-config generator', () => {
         skipFormat: false,
         linter: 'eslint',
         project: 'test-lib',
-        setParserOptionsProject: false,
+        enableTypedLinting: false,
         eslintConfigFormat: 'cjs',
       });
       tree.delete('libs/test-lib/.eslintrc.json');
