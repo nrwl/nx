@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { Socket } from 'node:net';
 import { delimiter, join } from 'node:path';
 import type { Mock } from 'vitest';
 import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
@@ -340,6 +341,36 @@ describe('handleClientEnv', () => {
         await flushMicrotasks();
 
         expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it('withholds them from workers when the client closed before its env was applied', async () => {
+        const client = new Socket();
+        client.destroy();
+        await flushMicrotasks();
+
+        await handleClientEnv(yarnEnv, client);
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it('withholds them from workers when the client closes while queued behind another apply', async () => {
+        let releaseFirstForward: () => void;
+        setWorkerEnv.mockImplementationOnce(
+          () => new Promise<void>((r) => (releaseFirstForward = r))
+        );
+        const firstApply = handleClientEnv(env, new EventEmitter());
+        await flushMicrotasks();
+        const queued = new Socket();
+        const queuedApply = handleClientEnv(yarnEnv, queued);
+        queued.destroy();
+        await flushMicrotasks();
+        releaseFirstForward();
+        await Promise.all([firstApply, queuedApply]);
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenLastCalledWith({ PATH: '/usr/bin' });
         expect(getLiveClientBerryEnv()).toEqual({});
       });
 
