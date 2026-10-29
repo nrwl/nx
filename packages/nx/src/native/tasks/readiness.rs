@@ -1004,7 +1004,7 @@ mod tests {
                     "--exact",
                     "native::tasks::readiness::tests::url_wait_with_env_proxy",
                 ])
-                .env("NX_READINESS_TEST_URL", "http://app.example.invalid:8080/")
+                .env("READINESS_TEST_URL", "http://app.example.invalid:8080/")
                 .env("HTTP_PROXY", &proxy)
                 .env("NO_PROXY", no_proxy)
                 .status()
@@ -1022,7 +1022,7 @@ mod tests {
     #[ignore]
     async fn url_wait_with_env_proxy() {
         let config = ReadinessProbeConfig {
-            url: Some(std::env::var("NX_READINESS_TEST_URL").unwrap()),
+            url: Some(std::env::var("READINESS_TEST_URL").unwrap()),
             port: None,
             host: None,
             command: None,
@@ -1123,7 +1123,7 @@ mod tests {
                     "--exact",
                     "native::tasks::readiness::tests::url_wait_with_env_proxy",
                 ])
-                .env("NX_READINESS_TEST_URL", "https://app.example.invalid/")
+                .env("READINESS_TEST_URL", "https://app.example.invalid/")
                 .env("HTTPS_PROXY", &proxy)
                 .env("NO_PROXY", "")
                 .env_remove("NODE_EXTRA_CA_CERTS");
