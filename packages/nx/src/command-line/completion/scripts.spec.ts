@@ -1,4 +1,4 @@
-import { execFileSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import {
   chmodSync,
   mkdirSync,
@@ -110,7 +110,8 @@ describe('completion/scripts', () => {
   });
 
   describe('_nx_trusted_entry', () => {
-    const posixOnly = platform() === 'win32' ? it.skip : it;
+    const runs = (shell: string) =>
+      platform() !== 'win32' && spawnSync(shell, ['-c', 'true']).status === 0;
     let base: string;
 
     beforeEach(() => {
@@ -138,13 +139,18 @@ describe('completion/scripts', () => {
           { stdio: 'ignore' }
         );
         return true;
-      } catch {
+      } catch (e) {
+        if (typeof e.status !== 'number') {
+          throw e;
+        }
         return false;
       }
     }
 
     for (const shell of ['bash', 'zsh'] as const) {
-      posixOnly(
+      const posixShell = it.skipIf(!runs(shell));
+
+      posixShell(
         `${shell}: trusts our own entry in a world-writable directory`,
         () => {
           chmodSync(base, 0o1777);
@@ -152,7 +158,7 @@ describe('completion/scripts', () => {
         }
       );
 
-      posixOnly(
+      posixShell(
         `${shell}: refuses an entry it cannot find an owner for in a world-writable directory`,
         () => {
           chmodSync(base, 0o1777);
