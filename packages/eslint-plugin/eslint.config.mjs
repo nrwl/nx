@@ -22,6 +22,7 @@ export default [
             'typescript-eslint',
             '@eslint/js',
             'eslint-plugin-import',
+            'eslint-plugin-import-x',
             'eslint-plugin-jsx-a11y',
             'eslint-plugin-react',
             'eslint-plugin-react-hooks',
