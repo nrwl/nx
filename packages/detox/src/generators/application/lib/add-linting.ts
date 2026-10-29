@@ -1,11 +1,10 @@
 import {
-  addDependenciesToPackageJson,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { getExtraEslintDependencies } from '@nx/react';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
@@ -60,15 +59,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   }
 
-  const eslintDependencies = getExtraEslintDependencies(host);
-  const installTask = addDependenciesToPackageJson(
-    host,
-    eslintDependencies.dependencies,
-    eslintDependencies.devDependencies,
-    undefined,
-    true
-  );
-  tasks.push(installTask);
+  tasks.push(addExtraEslintDependencies(host));
 
   return runTasksInSerial(...tasks);
 }

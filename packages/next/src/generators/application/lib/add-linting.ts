@@ -7,7 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
-import { getExtraEslintDependencies } from '@nx/react';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
@@ -139,7 +139,6 @@ export async function addLinting(
   if (options.linter === 'eslint' && !options.skipPackageJson) {
     const eslintConfigNextVersion =
       await getEslintConfigNextDependenciesVersionsToInstall(host);
-    const eslintDependencies = getExtraEslintDependencies(host);
 
     // eslint-config-next pulls in unrs-resolver via
     // eslint-import-resolver-typescript, whose postinstall only fetches a
@@ -149,17 +148,10 @@ export async function addLinting(
     });
 
     tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        eslintDependencies.dependencies,
-        {
-          ...eslintDependencies.devDependencies,
-          'eslint-config-next': eslintConfigNextVersion,
-          '@next/eslint-plugin-next': eslintConfigNextVersion,
-        },
-        undefined,
-        true
-      )
+      addExtraEslintDependencies(host, {
+        'eslint-config-next': eslintConfigNextVersion,
+        '@next/eslint-plugin-next': eslintConfigNextVersion,
+      })
     );
   }
 

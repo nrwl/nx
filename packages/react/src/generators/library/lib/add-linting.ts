@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   GeneratorCallback,
   runTasksInSerial,
   Tree,
@@ -8,7 +7,7 @@ import {
 import { addLintingToProject } from '@nx/js/internal';
 
 import { NormalizedSchema } from '../schema';
-import { getExtraEslintDependencies } from '../../../utils/lint';
+import { addExtraEslintDependencies } from '../../../utils/lint';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -73,16 +72,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
 
     if (!options.skipPackageJson) {
-      const eslintDependencies = getExtraEslintDependencies(host);
-      tasks.push(
-        addDependenciesToPackageJson(
-          host,
-          eslintDependencies.dependencies,
-          eslintDependencies.devDependencies,
-          undefined,
-          true
-        )
-      );
+      tasks.push(addExtraEslintDependencies(host));
     }
   }
 
