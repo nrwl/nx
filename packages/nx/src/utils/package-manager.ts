@@ -83,7 +83,9 @@ function execPackageManagerSync(
   return execFileSync(pm, args, options);
 }
 
-const PACKAGE_NAME = /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/i;
+// The `@` keeps a scoped name from reading as an option, so its parts may start with `-` or `_`.
+const PACKAGE_NAME =
+  /^(?:@[a-z0-9~_-][a-z0-9-._~]*\/[a-z0-9~_-]|[a-z0-9~])[a-z0-9-._~]*$/i;
 
 /**
  * Package managers read an argument starting with `-` as an option, and a

@@ -2134,18 +2134,27 @@ describe('package-manager', () => {
   });
 
   describe('assertValidPackageName', () => {
-    it.each(['nx', '@nx/js', 'JSONStream', 'lodash.merge', 'a_b-c~d', '7zip'])(
-      'should accept %j',
-      (name) => {
-        expect(() => assertValidPackageName(name)).not.toThrow();
-      }
-    );
+    it.each([
+      'nx',
+      '@nx/js',
+      'JSONStream',
+      'lodash.merge',
+      'a_b-c~d',
+      '7zip',
+      '@scope/_plugin',
+      '@scope/-plugin',
+      '@_scope/plugin',
+      '@-scope/plugin',
+    ])('should accept %j', (name) => {
+      expect(() => assertValidPackageName(name)).not.toThrow();
+    });
 
     it.each([
       '--userconfig=/tmp/other.npmrc',
       '-g',
       '.hidden',
       '_private',
+      '@scope/.plugin',
       '@scope',
       '@scope/',
       '@/name',
