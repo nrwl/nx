@@ -24,6 +24,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { dirname, join, relative } from 'path';
+import type { CnwError } from './utils/error-utils';
 
 describe('createSandbox', () => {
   let root: string;
@@ -105,6 +106,7 @@ describe('createSandbox', () => {
     vi.stubEnv('TEMP', sharedTmp);
     vi.stubEnv('HOME', home);
     vi.stubEnv('USERPROFILE', home);
+    await treatDirsAboveRootAsSystemDirs();
     const { createSandbox } = await import('./create-sandbox');
 
     const dir = realpathSync(await createSandbox('npm'));
@@ -190,6 +192,86 @@ describe('createSandbox', () => {
       expect(mockExecAndWait).toHaveBeenCalledWith(expect.any(String), dir);
     }
   );
+
+  it.skipIf(process.platform === 'win32')(
+    'falls back to a private temp dir when the home is under a directory other users can write to',
+    async () => {
+      const shared = join(root, 'shared');
+      const home = join(shared, 'home');
+      mkdirSync(home, { recursive: true });
+      chmodSync(shared, 0o1777);
+      const privateTmp = join(root, 'private-tmp');
+      mkdirSync(privateTmp, { mode: 0o700 });
+      stubTmpDir(privateTmp);
+      vi.stubEnv('HOME', home);
+      await treatDirsAboveRootAsSystemDirs();
+      const { createSandbox } = await import('./create-sandbox');
+
+      const dir = await createSandbox('npm');
+
+      expect(dirname(dir)).toEqual(join(privateTmp, 'nx-installs'));
+    }
+  );
+
+  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+    'falls back to a private temp dir when ~/.nx/tmp exists but cannot be written',
+    async () => {
+      const home = join(root, 'home');
+      const homeInstallRoot = join(home, '.nx', 'tmp');
+      mkdirSync(homeInstallRoot, { recursive: true, mode: 0o700 });
+      chmodSync(homeInstallRoot, 0o500);
+      const privateTmp = join(root, 'private-tmp');
+      mkdirSync(privateTmp, { mode: 0o700 });
+      stubTmpDir(privateTmp);
+      vi.stubEnv('HOME', home);
+      await treatDirsAboveRootAsSystemDirs();
+      const { createSandbox } = await import('./create-sandbox');
+
+      try {
+        const dir = await createSandbox('npm');
+        expect(dirname(dir)).toEqual(join(privateTmp, 'nx-installs'));
+      } finally {
+        chmodSync(homeInstallRoot, 0o700);
+      }
+    }
+  );
+
+  it('keeps a failed install dir at exit so its error log can be read', async () => {
+    const home = join(root, 'home');
+    vi.stubEnv('HOME', home);
+    vi.stubEnv('USERPROFILE', home);
+    await treatDirsAboveRootAsSystemDirs();
+    const once = vi.spyOn(process, 'once');
+    vi.resetModules();
+    const { CnwError } = await import('./utils/error-utils');
+    const { createSandbox } = await import('./create-sandbox');
+    mockExecAndWait.mockImplementation(
+      async (_command: string, cwd: string) => {
+        const logFile = join(cwd, 'error.log');
+        writeFileSync(logFile, 'install failed');
+        throw new CnwError(
+          'UNKNOWN',
+          `See ${logFile} for details.`,
+          logFile,
+          1
+        );
+      }
+    );
+
+    const error = await createSandbox('npm').catch((e: CnwError) => e);
+    for (const [event, listener] of once.mock.calls) {
+      if (event === 'exit') {
+        (listener as () => void)();
+      }
+    }
+    once.mockRestore();
+
+    expect(error).toMatchObject({
+      code: 'SANDBOX_FAILED',
+      logFile: expect.stringMatching(/error\.log$/),
+    });
+    expect(existsSync((error as CnwError).logFile)).toBe(true);
+  });
 
   it.skipIf(process.platform === 'win32')(
     'removes stale install dirs left in the temp dir fallback',
@@ -302,6 +384,7 @@ describe('createSandbox', () => {
     lutimesSync(link, old, old);
     vi.stubEnv('HOME', home);
     vi.stubEnv('USERPROFILE', home);
+    await treatDirsAboveRootAsSystemDirs();
     const { createSandbox } = await import('./create-sandbox');
 
     await createSandbox('npm');
