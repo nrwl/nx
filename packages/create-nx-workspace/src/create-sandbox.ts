@@ -10,7 +10,10 @@ import {
 import { execAndWait } from './utils/child-process-utils';
 import { nxVersion } from './utils/nx/nx-version';
 import { CnwError } from './utils/error-utils';
-import { createTempInstallDirectory } from './utils/temp-install-directory';
+import {
+  createTempInstallDirectory,
+  keepTempInstallDirectory,
+} from './utils/temp-install-directory';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -59,6 +62,7 @@ export async function createSandbox(packageManager: PackageManager) {
       lines.push(`Exit code: ${exitCode}`);
     }
     if (logFile) {
+      keepTempInstallDirectory(tmpDir);
       lines.push(`Log file: ${logFile}`);
     }
     lines.push(

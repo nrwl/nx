@@ -16,22 +16,30 @@ import { CnwError } from './error-utils';
  * Creates an empty owner-only directory for a throwaway package install.
  *
  * Package managers and Node read config and modules from every ancestor of
- * the install, so it lives under `~/.nx/tmp`, or under the OS temp dir when it
- * and all of its ancestors are closed to other users. Throws when neither
- * qualifies. The OS does not reap it, so it is removed when the process exits.
+ * the install, so it lives under `~/.nx/tmp`, else under the OS temp dir, and
+ * only where that root and all of its ancestors are closed to other users.
+ * Throws when neither root qualifies or can be written. The OS does not reap
+ * it, so it is removed when the process exits unless `keepTempInstallDirectory`
+ * is called.
  *
  * Mirrors `createTempInstallDirectory` in packages/nx/src/utils/package-manager.ts;
  * create-nx-workspace cannot depend on nx.
  */
 export function createTempInstallDirectory(): string {
-  const root = ensurePrivateInstallRoot();
-  removeStaleInstallDirectories(root);
-  const dir = dirSync({ tmpdir: root }).name;
+  const dir = createInPrivateInstallRoot();
   if (tempInstallDirectories.size === 0) {
     process.once('exit', removeTempInstallDirectories);
   }
   tempInstallDirectories.add(dir);
   return dir;
+}
+
+/**
+ * Leaves `dir` in place at exit, for a failed install whose log the user is
+ * pointed at. The stale sweep removes it a day later.
+ */
+export function keepTempInstallDirectory(dir: string): void {
+  tempInstallDirectories.delete(dir);
 }
 
 const tempInstallDirectories = new Set<string>();
@@ -76,17 +84,27 @@ function removeStaleInstallDirectories(root: string) {
 
 const TMPDIR_INSTALL_ROOT = 'nx-installs';
 
-function ensurePrivateInstallRoot(): string {
-  const homeRefusal = homeInstallRootRefusal();
+/**
+ * An existing `~/.nx/tmp` can still refuse writes, for example under an agent
+ * sandbox, so a failed create there moves on to the OS temp dir.
+ */
+function createInPrivateInstallRoot(): string {
+  let homeRefusal = homeInstallRootRefusal();
   if (typeof homeRefusal !== 'string') {
-    return homeRefusal.root;
+    const { root } = homeRefusal;
+    try {
+      return createInstallDirectory(root);
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException)?.code;
+      homeRefusal = `${root} is not writable${code ? ` (${code})` : ''}`;
+    }
   }
   const tmp = tmpdir();
   const fallbackRoot = join(tmp, TMPDIR_INSTALL_ROOT);
   let tmpRefusal = privateTreeRefusal(tmp);
   if (!tmpRefusal) {
     if (isOwnDirClosedToOthers(fallbackRoot)) {
-      return fallbackRoot;
+      return createInstallDirectory(fallbackRoot);
     }
     tmpRefusal = `${fallbackRoot} is not a directory owned by you and closed to other users`;
   }
@@ -97,6 +115,11 @@ function ensurePrivateInstallRoot(): string {
       `  The OS temp directory: ${tmpRefusal}.\n` +
       'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install where another user could write to it or to any of its parents.'
   );
+}
+
+function createInstallDirectory(root: string): string {
+  removeStaleInstallDirectories(root);
+  return dirSync({ tmpdir: root }).name;
 }
 
 function homeInstallRootRefusal(): { root: string } | string {
@@ -114,7 +137,7 @@ function homeInstallRootRefusal(): { root: string } | string {
       return `${dir} is not a directory owned by you and closed to other users`;
     }
   }
-  return { root };
+  return privateTreeRefusal(root) ?? { root };
 }
 
 /**
