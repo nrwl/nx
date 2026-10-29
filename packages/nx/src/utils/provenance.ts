@@ -4,6 +4,7 @@ import { readJsonFile } from './fileutils';
 import { readMinReleaseAgePolicy } from './min-release-age/policy';
 import { resolveCompliantVersion } from './min-release-age/resolve';
 import {
+  getPackageManagerConfigRoot,
   getWorkspaceRegistryUrlForDisplay,
   packageRegistryView,
 } from './package-manager';
@@ -31,7 +32,9 @@ export async function resolveVersionWithProvenance(
 ): Promise<string> {
   let version = spec;
   if (!valid(spec)) {
-    const policy = await readMinReleaseAgePolicy(root);
+    const policy = await readMinReleaseAgePolicy(
+      getPackageManagerConfigRoot(root)
+    );
     if (policy.outcome === 'active') {
       version = (
         await resolveCompliantVersion(packageName, spec, policy.policy)

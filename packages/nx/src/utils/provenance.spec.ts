@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { MockInstance } from 'vitest';
 import * as packageManager from './package-manager';
 import * as minReleaseAgePolicy from './min-release-age/policy';
@@ -304,6 +307,40 @@ describe('ensurePackageHasProvenance', () => {
         await expect(
           resolveVersionWithProvenance('nx', 'latest')
         ).resolves.toBe('1.1.0');
+      });
+
+      describe('reads the cooldown policy where the installer reads its config', () => {
+        let root: string;
+        let policySpy: MockInstance;
+
+        beforeEach(() => {
+          root = mkdtempSync(join(tmpdir(), 'nx-provenance-'));
+          mkdirSync(join(root, '.nx', 'installation'), { recursive: true });
+          policySpy = vi
+            .spyOn(minReleaseAgePolicy, 'readMinReleaseAgePolicy')
+            .mockResolvedValue({ outcome: 'inactive' });
+          arrange('1.1.0', 'refs/tags/1.1.0');
+        });
+
+        afterEach(() => {
+          rmSync(root, { recursive: true, force: true });
+        });
+
+        it('uses the Nx installation directory in a non-JS workspace', async () => {
+          await resolveVersionWithProvenance('nx', 'latest', root);
+
+          expect(policySpy).toHaveBeenCalledWith(
+            join(root, '.nx', 'installation')
+          );
+        });
+
+        it('uses the workspace root when it has a package.json', async () => {
+          writeFileSync(join(root, 'package.json'), '{}');
+
+          await resolveVersionWithProvenance('nx', 'latest', root);
+
+          expect(policySpy).toHaveBeenCalledWith(root);
+        });
       });
 
       it('verifies the version the minimum release age lets the package manager install', async () => {
