@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import { createRequire } from 'module';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'path';
 import { isTrustedWorkspaceEntry, workspaceRoot } from './workspace-root';
@@ -100,25 +99,30 @@ export function resolveInstalledPackage(
 }
 
 /**
- * Resolves `nx/bin/nx.js` from `dir` as Node would, refusing it when it comes
- * from an ancestor's `node_modules` that fails `isTrustedWorkspaceEntry`.
+ * Resolves `nx/bin/nx.js` from the first `node_modules` Node searches from `dir`
+ * that holds it, refusing it when that directory fails `isTrustedWorkspaceEntry`.
  */
 export function resolveNxBinFrom(dir: string): string {
   // createRequire avoids nx's own exports field answering by self-reference.
   const dirRequire = createRequire(join(dir, 'package.json'));
-  const nxBin = dirRequire.resolve('nx/bin/nx.js');
-  const nodeModules = dirRequire.resolve
-    .paths('nx')
-    ?.find(
-      (p) =>
-        existsSync(join(p, 'nx', 'package.json')) ||
-        existsSync(join(p, 'nx', 'bin', 'nx.js'))
-    );
-  if (!nodeModules) {
-    throw new Error(`Could not find the nx installation for ${nxBin}`);
+  if (process.versions.pnp) {
+    return dirRequire.resolve('nx/bin/nx.js');
   }
-  if (!isTrustedWorkspaceEntry(dirname(nodeModules), basename(nodeModules))) {
-    throw new Error(`Refusing the nx installed in ${nodeModules}`);
+
+  const Module = require('node:module');
+  for (const nodeModules of dirRequire.resolve.paths('nx') ?? []) {
+    const nxBin: string | false = Module._findPath('nx/bin/nx.js', [
+      nodeModules,
+    ]);
+    if (!nxBin) {
+      continue;
+    }
+    if (!isTrustedWorkspaceEntry(dirname(nodeModules), basename(nodeModules))) {
+      throw new Error(`Refusing the nx installed in ${nodeModules}`);
+    }
+    return nxBin;
   }
-  return nxBin;
+  throw Object.assign(new Error(`Cannot find module 'nx/bin/nx.js'`), {
+    code: 'MODULE_NOT_FOUND',
+  });
 }
