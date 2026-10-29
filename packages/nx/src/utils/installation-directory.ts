@@ -1,6 +1,6 @@
 import { createRequire } from 'module';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'path';
-import { isTrustedWorkspaceEntry, workspaceRoot } from './workspace-root';
+import { isTrustedNxInstall, workspaceRoot } from './workspace-root';
 
 export function getNxInstallationPath(root: string = workspaceRoot) {
   return join(root, '.nx', 'installation');
@@ -100,9 +100,10 @@ export function resolveInstalledPackage(
 
 /**
  * Resolves `nx/bin/nx.js` from the first `node_modules` Node searches from `dir`
- * that holds it, refusing it when that directory fails `isTrustedWorkspaceEntry`.
+ * that holds it, refusing it when it fails `isTrustedNxInstall` for the
+ * workspace at `root`.
  */
-export function resolveNxBinFrom(dir: string): string {
+export function resolveNxBinFrom(dir: string, root: string = dir): string {
   // createRequire avoids nx's own exports field answering by self-reference.
   const dirRequire = createRequire(join(dir, 'package.json'));
   if (process.versions.pnp) {
@@ -117,7 +118,7 @@ export function resolveNxBinFrom(dir: string): string {
     if (!nxBin) {
       continue;
     }
-    if (!isTrustedWorkspaceEntry(dirname(nodeModules), basename(nodeModules))) {
+    if (!isTrustedNxInstall(nodeModules, root)) {
       throw new Error(`Refusing the nx installed in ${nodeModules}`);
     }
     return nxBin;

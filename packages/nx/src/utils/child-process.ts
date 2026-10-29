@@ -14,7 +14,7 @@ import {
   PackageManagerCommands,
 } from './package-manager';
 import {
-  isTrustedWorkspaceEntry,
+  isTrustedNxInstall,
   workspaceRoot,
   workspaceRootInner,
 } from './workspace-root';
@@ -111,7 +111,7 @@ function findInstalledNxBin(root: string): string | null {
     // rather than deferring to an ancestor.
     if (
       existsSync(join(dir, 'node_modules', 'nx', 'package.json')) &&
-      isTrustedWorkspaceEntry(dir, 'node_modules')
+      isTrustedNxInstall(join(dir, 'node_modules'), root)
     ) {
       return readInstalledNxBin(dir);
     }

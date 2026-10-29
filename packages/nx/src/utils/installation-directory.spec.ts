@@ -220,6 +220,34 @@ describe('resolveNxBinFrom', () => {
     expect(resolveNxBinFrom(ws)).toBe(localBin);
   });
 
+  it('judges every directory between the workspace root and its .nx/installation', () => {
+    const installation = join(shared, '.nx', 'installation');
+    const installedBin = join(
+      installation,
+      'node_modules',
+      'nx',
+      'bin',
+      'nx.js'
+    );
+    mkdirSync(dirname(installedBin), { recursive: true });
+    writeFileSync(installedBin, '');
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir, name) => !(dir === shared && name === '.nx')
+    );
+
+    expect(() => resolveNxBinFrom(installation, shared)).toThrow(
+      /Refusing the nx installed in/
+    );
+  });
+
+  it('does not judge the directories above the workspace root', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== dirname(shared)
+    );
+
+    expect(resolveNxBinFrom(shared)).toBe(nxBin);
+  });
+
   it('throws MODULE_NOT_FOUND when no install holds nx', () => {
     rmSync(join(shared, 'node_modules'), { recursive: true });
 

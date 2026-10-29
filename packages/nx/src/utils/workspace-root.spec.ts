@@ -1,7 +1,11 @@
 import * as path from 'path';
 import * as fileUtils from './fileutils';
 import * as ownedPrivateDir from './owned-private-dir';
-import { isTrustedWorkspaceEntry, workspaceRootInner } from './workspace-root';
+import {
+  isTrustedNxInstall,
+  isTrustedWorkspaceEntry,
+  workspaceRootInner,
+} from './workspace-root';
 
 const rootMarkers = ['nx.json', 'nx', 'nx.bat'];
 
@@ -166,5 +170,59 @@ describe('isTrustedWorkspaceEntry', () => {
 
     expect(isTrustedWorkspaceEntry('/tmp/shared', 'node_modules')).toBe(true);
     expect(isTrustedWorkspaceEntry('/tmp', 'node_modules')).toBe(false);
+  });
+});
+
+describe('isTrustedNxInstall', () => {
+  const original = process.env.NX_WORKSPACE_ROOT_PATH;
+
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(console.warn).mockClear();
+  });
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.NX_WORKSPACE_ROOT_PATH;
+    else process.env.NX_WORKSPACE_ROOT_PATH = original;
+  });
+
+  it('should point at the workspace, not the ancestor, when refusing an install', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockReturnValue(false);
+
+    expect(isTrustedNxInstall('/shared/node_modules', '/shared/ws-a')).toBe(
+      false
+    );
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Install nx in the workspace')
+    );
+    expect(console.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('NX_WORKSPACE_ROOT_PATH')
+    );
+  });
+
+  it('should judge each directory down to the install', () => {
+    const trusted = vi
+      .spyOn(ownedPrivateDir, 'isTrustedAncestorEntry')
+      .mockImplementation((dir, name) => !(dir === '/tmp' && name === '.nx'));
+
+    expect(
+      isTrustedNxInstall('/tmp/.nx/installation/node_modules', '/tmp')
+    ).toBe(false);
+    expect(trusted).toHaveBeenCalledWith(
+      '/tmp/.nx/installation',
+      'node_modules'
+    );
+    expect(trusted).toHaveBeenCalledWith('/tmp/.nx', 'installation');
+    expect(trusted).not.toHaveBeenCalledWith('/', 'tmp');
+  });
+
+  it('should trust everything inside NX_WORKSPACE_ROOT_PATH', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockReturnValue(false);
+    process.env.NX_WORKSPACE_ROOT_PATH = '/tmp/ws';
+
+    expect(
+      isTrustedNxInstall('/tmp/ws/.nx/installation/node_modules', '/tmp/ws')
+    ).toBe(true);
+    expect(isTrustedNxInstall('/tmp/node_modules', '/tmp/ws')).toBe(false);
   });
 });
