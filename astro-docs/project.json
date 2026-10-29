@@ -21,6 +21,11 @@
     },
     "serve": {
       "continuous": true,
+      "readyWhen": {
+        "command": "node astro-docs/scripts/check-server.mjs http://localhost:{options.port ?? 4321}/docs",
+        "timeout": 120000,
+        "interval": 1000
+      },
       "dependsOn": [
         "prebuild-banner",
         {
@@ -113,6 +118,11 @@
         { "dependentTasksOutputFiles": "**/*" }
       ],
       "continuous": true,
+      "readyWhen": {
+        "command": "node astro-docs/scripts/check-server.mjs http://localhost:{options.port ?? 4321}/docs",
+        "timeout": 120000,
+        "interval": 1000
+      },
       "options": {
         "cwd": "astro-docs"
       }
@@ -124,11 +134,11 @@
       }
     },
     "pw-e2e": {
-      "dependsOn": ["serve"],
+      "dependsOn": [{ "target": "serve", "waitFor": "ready" }],
       "parallelism": true
     },
     "e2e-ci--**/*": {
-      "dependsOn": ["preview"],
+      "dependsOn": [{ "target": "preview", "waitFor": "ready" }],
       "parallelism": true,
       "options": {
         "args": []
