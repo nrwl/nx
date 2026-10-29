@@ -26,9 +26,11 @@ export function _setEnvForwardTimeoutMs(ms: number): void {
   envForwardTimeoutMs = ms;
 }
 
+type ClientSocket = EventEmitter & { destroyed?: boolean };
+
 let inFlightApply: Promise<void> | undefined;
 // Connected clients that carry Yarn Berry bin folders, by BERRY_BIN_FOLDER.
-const liveBerryClients = new Map<EventEmitter, string | undefined>();
+const liveBerryClients = new Map<ClientSocket, string | undefined>();
 let workersHoldBerryFolders = false;
 
 /**
@@ -39,7 +41,7 @@ let workersHoldBerryFolders = false;
  */
 export async function handleClientEnv(
   env: Record<string, string>,
-  client?: EventEmitter
+  client?: ClientSocket
 ): Promise<void> {
   // A client whose env matches one an in-flight apply already wrote to
   // process.env sees zero changed keys, yet the graph cache is only discarded
@@ -110,9 +112,15 @@ async function runApply(apply: Promise<void>): Promise<void> {
 
 function trackLiveClient(
   env: Record<string, string>,
-  client: EventEmitter | undefined
+  client: ClientSocket | undefined
 ): void {
-  if (!client || !hasBerryBinFolders(env) || liveBerryClients.has(client)) {
+  // A socket that closed while this message waited will not emit 'close' again.
+  if (
+    !client ||
+    client.destroyed ||
+    !hasBerryBinFolders(env) ||
+    liveBerryClients.has(client)
+  ) {
     return;
   }
   liveBerryClients.set(client, env.BERRY_BIN_FOLDER);
