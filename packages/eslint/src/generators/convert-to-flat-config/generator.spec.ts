@@ -18,6 +18,7 @@ import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { eslintrcVersion } from '../../utils/versions';
+import { ESLINT_FLAT_CONFIG_FILENAMES } from '../../utils/config-file';
 import { dump } from '@zkochan/js-yaml';
 
 function getLintInputs(nxJson: NxJsonConfiguration): string[] {
@@ -1714,26 +1715,28 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.exists('.eslintrc.js')).toBeTruthy();
     });
 
-    it('should silently skip a project already on a JavaScript flat config', async () => {
-      await lintProjectGenerator(tree, {
-        skipFormat: false,
-        linter: 'eslint',
-        project: 'test-lib',
-        enableTypedLinting: false,
-        eslintConfigFormat: 'cjs',
-      });
-      // An already-flat project must not be reported as "cannot be converted".
-      tree.delete('libs/test-lib/.eslintrc.json');
-      tree.write('libs/test-lib/eslint.config.js', 'module.exports = [];');
+    it.each(ESLINT_FLAT_CONFIG_FILENAMES)(
+      'should silently skip a project already on a flat config: %s',
+      async (filename) => {
+        await lintProjectGenerator(tree, {
+          skipFormat: false,
+          linter: 'eslint',
+          project: 'test-lib',
+          enableTypedLinting: false,
+          eslintConfigFormat: 'cjs',
+        });
+        tree.delete('libs/test-lib/.eslintrc.json');
+        tree.write(`libs/test-lib/${filename}`, 'export default [];');
 
-      const warnSpy = vi.spyOn(logger, 'warn');
-      await convertToFlatConfigGenerator(tree, options);
+        const warnSpy = vi.spyOn(logger, 'warn');
+        await convertToFlatConfigGenerator(tree, options);
 
-      expect(warnSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('Skipping "test-lib"')
-      );
-      warnSpy.mockRestore();
-    });
+        expect(warnSpy).not.toHaveBeenCalledWith(
+          expect.stringContaining('Skipping')
+        );
+        warnSpy.mockRestore();
+      }
+    );
 
     it('should report an eslintrc that parses to nothing instead of skipping it silently', async () => {
       await lintProjectGenerator(tree, {
