@@ -1643,7 +1643,7 @@ describe('convert-to-flat-config generator', () => {
           `module.exports = { rules: { 'no-console': 'error' } };`
         );
 
-        const warnSpy = jest.spyOn(logger, 'warn');
+        const warnSpy = vi.spyOn(logger, 'warn');
         await convertToFlatConfigGenerator(tree, options);
 
         expect(warnSpy).not.toHaveBeenCalledWith(
@@ -1747,7 +1747,7 @@ describe('convert-to-flat-config generator', () => {
       tree.write('libs/test-lib/.eslintrc.yaml', '# nothing here\n');
       tree.write('libs/test-lib/.eslintignore', 'dist\n');
 
-      const warnSpy = jest.spyOn(logger, 'warn');
+      const warnSpy = vi.spyOn(logger, 'warn');
       await convertToFlatConfigGenerator(tree, options);
 
       expect(warnSpy).toHaveBeenCalledWith(

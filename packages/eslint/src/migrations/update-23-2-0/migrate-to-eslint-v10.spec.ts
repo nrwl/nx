@@ -10,7 +10,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-// jest.spyOn must target the module the code under test binds (packages/devkit
+// vi.spyOn must target the module the code under test binds (packages/devkit
 // imports nx/src/devkit-internals directly); spying on the @nx/devkit/internal
 // barrel re-export would not intercept it.
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -31,15 +31,15 @@ describe('migrate-to-eslint-v10 migration', () => {
     tree = createTreeWithEmptyWorkspace();
     // The peer scan resolves manifests from the real workspace; leave it blind
     // unless a test opts in, so nothing depends on what is installed here.
-    jest
-      .spyOn(devkitInternals, 'readModulePackageJson')
-      .mockImplementation(() => {
+    vi.spyOn(devkitInternals, 'readModulePackageJson').mockImplementation(
+      () => {
         throw new Error('not installed');
-      });
+      }
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   function setDevDependencies(deps: Record<string, string>): void {
@@ -64,9 +64,8 @@ describe('migrate-to-eslint-v10 migration', () => {
       ...dependencies,
       ...devDependencies,
     };
-    jest
-      .spyOn(devkitInternals, 'readModulePackageJson')
-      .mockImplementation((name: string) => {
+    vi.spyOn(devkitInternals, 'readModulePackageJson').mockImplementation(
+      (name: string) => {
         if (name === 'eslint') {
           if (!installedEslintVersion) {
             throw new Error(`Cannot find module '${name}'`);
@@ -87,7 +86,8 @@ describe('migrate-to-eslint-v10 migration', () => {
             peerDependencies: { eslint: peers[name] },
           },
         };
-      });
+      }
+    );
   }
 
   it('should be a no-op on a flat-config workspace with no v9-only plugins', async () => {

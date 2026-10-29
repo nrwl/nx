@@ -1,19 +1,24 @@
-function loadRuleNames(): string[] {
+import {
+  mockCjsModule,
+  resetCjsMocks,
+} from '@nx/devkit/internal-testing-utils';
+
+function loadRuleNames(eslintVersion: string): string[] {
+  mockCjsModule(import.meta.url, 'eslint/package.json', {
+    version: eslintVersion,
+  });
+  delete require.cache[require.resolve('./react-jsx')];
   const config = require('./react-jsx').default;
   return config.flatMap((entry) => Object.keys(entry.rules ?? {}));
 }
 
 describe('flat/react-jsx config', () => {
   afterEach(() => {
-    jest.resetModules();
-    jest.dontMock('eslint/package.json');
+    resetCjsMocks();
   });
 
   it('applies react, jsx-a11y and react-hooks rules on ESLint <10', () => {
-    jest.resetModules();
-    jest.doMock('eslint/package.json', () => ({ version: '9.30.0' }));
-
-    const ruleNames = loadRuleNames();
+    const ruleNames = loadRuleNames('9.30.0');
 
     expect(ruleNames).toContain('react-hooks/rules-of-hooks');
     expect(ruleNames).toContain('react/jsx-no-undef');
@@ -21,10 +26,7 @@ describe('flat/react-jsx config', () => {
   });
 
   it('drops react and jsx-a11y and pins the classic react-hooks rules on ESLint v10', () => {
-    jest.resetModules();
-    jest.doMock('eslint/package.json', () => ({ version: '10.0.0' }));
-
-    const ruleNames = loadRuleNames();
+    const ruleNames = loadRuleNames('10.0.0');
 
     expect(ruleNames).toContain('react-hooks/rules-of-hooks');
     expect(ruleNames).toContain('react-hooks/exhaustive-deps');
