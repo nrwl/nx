@@ -485,11 +485,8 @@ impl NxCache {
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs.filter(|outputs| !outputs.is_empty()) {
             let outputs_path = Path::new(&result.outputs_path);
-            let expanded_outputs = _expand_outputs(
-                outputs_path,
-                normalize_outputs(&self.workspace_root, outputs.clone())?,
-            )?;
-            if let Some(link) = find_link_leaving_output(outputs_path, &expanded_outputs)? {
+            let normalized = normalize_outputs(&self.workspace_root, outputs.clone())?;
+            if let Some(link) = find_link_leaving_output(outputs_path, &normalized)? {
                 debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
                 remove_items(&[self.cache_path.join(&hash)])?;
                 return Ok(false);
@@ -1362,29 +1359,87 @@ mod test {
         result: CachedResult,
         output: &str,
     ) -> bool {
+        apply_remote_with_outputs(cache, hash, result, &[output])
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_outputs(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        outputs: &[&str],
+    ) -> bool {
+        let outputs = outputs.iter().map(|output| output.to_string()).collect();
         cache
-            .apply_remote_cache_results(hash.to_string(), result, Some(vec![output.to_string()]))
+            .apply_remote_cache_results(hash.to_string(), result, Some(outputs))
             .unwrap()
     }
+
+    /// Output sets whose roots are `dist/app` or one of its ancestors.
+    #[cfg(unix)]
+    const REMOTE_OUTPUTS: [&[&str]; 4] = [
+        &["dist/app"],
+        &["dist/app/**"],
+        &["dist/app/**", "!dist/app/cache/**"],
+        &["dist/**/*.js"],
+    ];
 
     #[test]
     #[cfg(unix)]
     fn remote_result_with_links_inside_its_output_is_applied() {
         use std::os::unix::fs::symlink;
 
-        let temp = TempDir::new().unwrap();
-        let cache = cache_in(&temp);
-        let result = remote_artifact(&cache, "1", |app| {
-            create_dir_all(app.join("sub")).unwrap();
-            symlink("main.js", app.join("link.js")).unwrap();
-            symlink("../main.js", app.join("sub/up.js")).unwrap();
-        });
+        for outputs in REMOTE_OUTPUTS {
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("main.js", app.join("link.js")).unwrap();
+                symlink("../main.js", app.join("sub/up.js")).unwrap();
+            });
 
-        assert!(apply_remote(&cache, "1", result));
-        let app = cache.workspace_root.join("dist/app");
-        assert_eq!(std::fs::read(app.join("link.js")).unwrap(), b"built");
-        assert_eq!(std::fs::read(app.join("sub/up.js")).unwrap(), b"built");
-        assert!(record_for(&cache, "1").is_some());
+            assert!(
+                apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{outputs:?}"
+            );
+            let app = cache.workspace_root.join("dist/app");
+            assert_eq!(std::fs::read(app.join("link.js")).unwrap(), b"built");
+            assert_eq!(std::fs::read(app.join("sub/up.js")).unwrap(), b"built");
+            assert!(record_for(&cache, "1").is_some(), "{outputs:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_a_glob_output_root() {
+        use std::os::unix::fs::symlink;
+
+        let cases: [(&[&str], fn(&Path)); 3] = [
+            (&["dist/app/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/app/**", "!dist/app/cache/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/**/*.js"], |app| {
+                symlink("../../other.js", app.join("out.js")).unwrap();
+            }),
+        ];
+
+        for (outputs, plant) in cases {
+            let name = format!("{outputs:?}");
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", plant);
+
+            assert!(
+                !apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{name}"
+            );
+            assert_discarded(&cache, &name);
+        }
     }
 
     #[test]

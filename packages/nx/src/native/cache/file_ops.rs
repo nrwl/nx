@@ -235,14 +235,25 @@ pub fn copy_outputs_into_workspace(
     Ok((size, written))
 }
 
-/// The first link among `expanded_outputs` under `outputs_path` whose target
-/// does not stay strictly inside the output it belongs to.
+/// The first link under `outputs_path` whose target does not stay strictly
+/// inside the root of the declared output it sits under. A glob's root is its
+/// literal directory; with only negated outputs it is `outputs_path` itself.
 pub(crate) fn find_link_leaving_output(
     outputs_path: &Path,
-    expanded_outputs: &[String],
+    outputs: &[String],
 ) -> io::Result<Option<PathBuf>> {
-    for output in expanded_outputs {
-        let root: PathBuf = outputs_path.join(output).components().collect();
+    let mut roots = vec![];
+    for output in outputs.iter().filter(|output| !output.starts_with('!')) {
+        match partition_glob(output) {
+            (named, None) if named != *output => roots.extend([output.clone(), named]),
+            (root, _) => roots.push(root),
+        }
+    }
+    if roots.is_empty() {
+        roots.push(String::new());
+    }
+    for root in roots {
+        let root: PathBuf = outputs_path.join(root).components().collect();
         match fs::symlink_metadata(&root) {
             Ok(meta) if meta.file_type().is_symlink() => return Ok(Some(root)),
             Ok(meta) if meta.file_type().is_dir() => {
