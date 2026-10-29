@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   getDependencyVersionFromPackageJson,
   getProjects,
@@ -10,7 +11,10 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { basename } from 'node:path/posix';
-import { readModulePackageJson } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  readModulePackageJson,
+} from '@nx/devkit/internal';
 import { coerce, gt, satisfies, subset, validRange, type SemVer } from 'semver';
 import * as ts from 'typescript';
 import {
@@ -350,6 +354,13 @@ function replaceV9OnlyPlugins(
   }
   if (Object.keys(devDependencies).length > 0) {
     addDependenciesToPackageJson(tree, {}, devDependencies);
+  }
+  if (devDependencies['eslint-plugin-import-x']) {
+    // eslint-plugin-import-x depends on unrs-resolver, whose postinstall only
+    // fetches a fallback binding for platforms its prebuilt bindings miss.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'unrs-resolver': false,
+    });
   }
 
   const changes: string[] = [];

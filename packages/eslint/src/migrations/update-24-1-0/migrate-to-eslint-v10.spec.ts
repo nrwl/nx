@@ -6,6 +6,7 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ast, query } from '@phenomnomnominal/tsquery';
 import { readFileSync } from 'node:fs';
@@ -376,6 +377,28 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
       'eslint-plugin-import-x': '^4.10.0',
     });
+  });
+
+  it('should deny the unrs-resolver build script when it installs eslint-plugin-import-x', async () => {
+    tree.write('eslint.config.mjs', 'export default [];');
+    setDevDependencies({ 'eslint-plugin-import': '2.31.0' });
+
+    await withPnpm(tree, '11.2.2', () => update(tree));
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]?unrs-resolver['"]?: false/
+    );
+  });
+
+  it('should not record an unrs-resolver decision when it installs no eslint-plugin-import-x', async () => {
+    tree.write('eslint.config.mjs', 'export default [];');
+    setDevDependencies({ 'eslint-plugin-react-hooks': '5.0.0' });
+
+    await withPnpm(tree, '11.2.2', () => update(tree));
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      'unrs-resolver'
+    );
   });
 
   it('should report configs that reference a removed plugin', async () => {
