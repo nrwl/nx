@@ -51,7 +51,7 @@ Comments in the original config are not carried over, since the converted file i
 
 ##### Replacing the plugins with no ESLint v10 release
 
-`eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` peer-depend on ESLint v9 or lower and have no v10 release, and `eslint-plugin-react-hooks` only supports v10 from version 7. The migration removes the first three from `package.json`, installs `eslint-plugin-import-x` when `eslint-plugin-import` was there, and updates `eslint-plugin-react-hooks` to `7.1.1`.
+`eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` peer-depend on ESLint v9 or lower and have no v10 release. The migration removes them from `package.json` and installs `eslint-plugin-import-x` when `eslint-plugin-import` was there. `eslint-plugin-import-x` supports v10 from 4.16.2 and `eslint-plugin-react-hooks` from 7.1.0, so a workspace that declares an older release gets `eslint-plugin-import-x` `^4.17.1` or `eslint-plugin-react-hooks` `7.1.1`.
 
 Two of those removals lose rules outright. `eslint-plugin-import` has a maintained fork in `eslint-plugin-import-x`, so its rules move across, but `eslint-plugin-react` and `eslint-plugin-jsx-a11y` have no equivalent: every `react/` and `jsx-a11y/` rule the workspace was enforcing stops being enforced, and nothing is installed in their place. They are removed rather than left alone because no published release of either declares support for ESLint v10, so keeping them would leave the workspace on plugins its ESLint is outside the supported range of. A workspace that depends on those rules should stay on ESLint v9, which Nx still supports, and move to v10 once the plugins publish a release that supports it.
 
