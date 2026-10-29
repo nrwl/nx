@@ -417,8 +417,8 @@ const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
 
 /**
  * Yarn Berry creates a fresh BERRY_BIN_FOLDER for every invocation and puts it
- * first on PATH. The daemon keeps it off its own PATH, and plugin workers get
- * its wrappers only while a connected client carries it. Its random name is not
+ * first on PATH. Plugin workers, and the daemon's own PATH when it runs plugins
+ * itself, get its wrappers only while a connected client carries it. Its random name is not
  * project-graph identity: two invocations whose environments differ only by it
  * would compute the same graph. Strips the folder from PATH and pins the var to a sentinel so such
  * environments compare equal. Returns a copy; never mutates runtime env.
@@ -506,13 +506,14 @@ function filterBerryBinFoldersOnPath(
 }
 
 export function hasBerryBinFolders(env: NodeJS.ProcessEnv): boolean {
-  return (
-    env.BERRY_BIN_FOLDER !== undefined ||
-    Object.keys(env).some(
-      (key) =>
-        key.toUpperCase() === 'PATH' &&
-        !!env[key]?.split(delimiter).some(isBerryBinFolder)
-    )
+  return env.BERRY_BIN_FOLDER !== undefined || hasBerryBinFoldersOnPath(env);
+}
+
+function hasBerryBinFoldersOnPath(env: NodeJS.ProcessEnv): boolean {
+  return Object.keys(env).some(
+    (key) =>
+      key.toUpperCase() === 'PATH' &&
+      !!env[key]?.split(delimiter).some(isBerryBinFolder)
   );
 }
 
@@ -577,8 +578,8 @@ let liveClientBerryEnv: NodeJS.ProcessEnv = {};
 /**
  * The PATH and BERRY_BIN_FOLDER of the env the daemon applied last, keeping
  * only the bin folders a connected client still carries. The daemon's own PATH
- * lacks the client's bin folders, so workers spawned for that client's request
- * take them here.
+ * lacks the client's bin folders, so workers spawned for that client's request,
+ * and a daemon that starts running plugins itself, take them here.
  */
 export function setLiveClientBerryEnv(env: NodeJS.ProcessEnv | undefined) {
   liveClientBerryEnv = {};
@@ -594,4 +595,19 @@ export function setLiveClientBerryEnv(env: NodeJS.ProcessEnv | undefined) {
 
 export function getLiveClientBerryEnv(): NodeJS.ProcessEnv {
   return { ...liveClientBerryEnv };
+}
+
+/**
+ * Replaces the bin folders on this process's PATH with those on `env`'s PATH,
+ * for a daemon that runs plugins itself rather than in workers.
+ */
+export function adoptBerryBinFoldersOnPath(env: NodeJS.ProcessEnv): void {
+  const source = hasBerryBinFoldersOnPath(env)
+    ? env
+    : withoutBerryBinFoldersOnPath(process.env);
+  for (const key of Object.keys(source)) {
+    if (key.toUpperCase() === 'PATH') {
+      process.env[key] = source[key];
+    }
+  }
 }
