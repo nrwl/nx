@@ -417,10 +417,10 @@ const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
 
 /**
  * Yarn Berry creates a fresh BERRY_BIN_FOLDER for every invocation and puts it
- * first on PATH. The wrappers inside are runtime state the daemon and workers
- * must receive, but the folder's random name is not project-graph identity:
- * two invocations whose environments differ only by it would compute the same
- * graph. Strips the folder from PATH and pins the var to a sentinel so such
+ * first on PATH. The daemon keeps it off its own PATH, and plugin workers get
+ * its wrappers only while a connected client carries it. Its random name is not
+ * project-graph identity: two invocations whose environments differ only by it
+ * would compute the same graph. Strips the folder from PATH and pins the var to a sentinel so such
  * environments compare equal. Returns a copy; never mutates runtime env.
  */
 export function normalizeDaemonEnvironmentForGraph(
