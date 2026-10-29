@@ -93,7 +93,10 @@ describe('socket paths', () => {
     });
 
     it('should not dial a socket whose directory belongs to another user', async () => {
-      const socketPath = await listenIn(base);
+      // Every level above it must stay acceptable under the faked uid, so this
+      // reaches the directory's own check: root owns /tmp.
+      const dir = mkdtempSync('/tmp/nx-dial-');
+      const socketPath = await listenIn(dir);
       const getuid = vi
         .spyOn(process, 'getuid')
         .mockReturnValue(process.getuid!() + 1);
@@ -109,6 +112,7 @@ describe('socket paths', () => {
         expect(accepted).toBe(0);
       } finally {
         getuid.mockRestore();
+        rmSync(dir, { recursive: true, force: true });
       }
     });
 
@@ -128,6 +132,29 @@ describe('socket paths', () => {
 
       expect((await dial(join(base, 'link', 'd.sock')))?.code).toBe('ENOENT');
       expect(accepted).toBe(0);
+    });
+
+    it('should not dial when another user can swap a level above the directory', async () => {
+      const shared = join(base, 'shared');
+      const dir = join(shared, 'd');
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      chmodSync(shared, 0o777);
+      const socketPath = await listenIn(dir);
+
+      const error = await dial(socketPath);
+
+      expect(error?.code).toBe('ENOENT');
+      expect(error?.message).toContain(`${shared} is writable by other users`);
+      expect(accepted).toBe(0);
+    });
+
+    it('should dial under a sticky level others can write, as in /tmp', async () => {
+      const shared = join(base, 'shared');
+      const dir = join(shared, 'd');
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      chmodSync(shared, 0o1777);
+
+      expect(await dial(await listenIn(dir))).toBeNull();
     });
 
     it('should report a directory that is gone as ENOENT', async () => {
