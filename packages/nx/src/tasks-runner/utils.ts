@@ -238,21 +238,6 @@ export function normalizeTargetDependencyWithStringProjects(
   };
 }
 
-class InvalidOutputsError extends Error {
-  constructor(
-    public outputs: string[],
-    public invalidOutputs: Set<string>
-  ) {
-    super(InvalidOutputsError.createMessage(invalidOutputs));
-  }
-
-  private static createMessage(invalidOutputs: Set<string>) {
-    const invalidOutputsList =
-      '\n - ' + Array.from(invalidOutputs).join('\n - ');
-    return `The following outputs are invalid:${invalidOutputsList}\nPlease run "nx repair" to repair your configuration`;
-  }
-}
-
 function assertOutputsAreValidType(outputs: unknown) {
   if (!Array.isArray(outputs)) {
     throw new Error("The 'outputs' field must be an array");

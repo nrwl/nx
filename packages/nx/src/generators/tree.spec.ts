@@ -6,7 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { dirSync, file } from 'tmp';
+import { dirSync } from 'tmp';
 import * as path from 'path';
 import {
   FileChange,

@@ -7,9 +7,6 @@ const mocks = {
 };
 
 // Aliases for test usage
-const mockDeriveSpecifierFromConventionalCommits =
-  mocks.deriveSpecifierFromConventionalCommits;
-const mockDeriveSpecifierFromVersionPlan = mocks.deriveSpecifierFromVersionPlan;
 const mockResolveVersionActionsForProject =
   mocks.resolveVersionActionsForProject;
 const mockPrompt = mocks.prompt;

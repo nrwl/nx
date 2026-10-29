@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { ReleaseType } from 'semver';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {

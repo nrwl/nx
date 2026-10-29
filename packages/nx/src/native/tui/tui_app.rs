@@ -244,7 +244,6 @@ pub trait TuiApp: Send {
     ///
     /// Override this to perform mode-specific post-registration logic:
     /// - Full-screen: debounce PTY resize, update status
-    /// - Inline: initialize scrollback tracking
     ///
     /// Default implementation does nothing.
     fn on_pty_registered(&mut self, _task_id: &str) {

@@ -1,4 +1,3 @@
-import type { MockInstance } from 'vitest';
 const mocks = {
   prompt: vi.fn(),
   getInstalledNxVersion: vi.fn(),
@@ -77,7 +76,6 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -622,6 +620,7 @@ describe('Migration', () => {
               ],
             };
           }
+          // A reverse package-group edge must not pull this package into the update.
           if (pkg === '@my-company/lib-6') {
             return {
               version: '2.0.0',
@@ -2032,6 +2031,7 @@ describe('Migration', () => {
               },
             });
           } else if (p === 'newChild') {
+            // Uninstalled packages must contribute no migrations even when metadata exists.
             return Promise.resolve({
               version: '3.0.0',
               generators: {
@@ -4297,7 +4297,7 @@ module.exports = {
       vi.spyOn(
         packageMgrUtils,
         'resolvePackageVersionUsingRegistry'
-      ).mockImplementation((pkg, version) => {
+      ).mockImplementation(() => {
         return Promise.resolve('12.3.0');
       });
       const r = await parseMigrationsOptions({
@@ -6114,7 +6114,7 @@ module.exports = {
 
       // `packageGroup` puts `requiredChild` in nx's required closure; both `nx`
       // and `requiredChild` are dropped under optional, leaving `optionalChild`.
-      const fetch = (p: string, version: string) => {
+      const fetch = (p: string) => {
         if (p === 'nx') {
           return Promise.resolve({
             version: '23.0.0',

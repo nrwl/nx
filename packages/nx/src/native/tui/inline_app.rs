@@ -71,8 +71,6 @@ pub struct InlineApp {
     is_interactive: bool,
 
     // === Scrollback Rendering ===
-    /// Track scrollback line count per task for incremental rendering
-    task_scrollback_lines: HashMap<String, usize>,
     /// Counter for buffering scrollback renders (render every 20th iteration)
     scrollback_render_counter: u32,
     /// Total lines inserted above TUI (for cleanup on exit)
@@ -122,8 +120,6 @@ impl InlineApp {
             selected_item: None, // Will auto-select first running item on render
             countdown_popup: CountdownPopup::new(),
             is_interactive: false,
-            task_scrollback_lines: HashMap::new(),
-
             scrollback_render_counter: 0,
             total_inserted_lines: 0,
             status_message: None,
@@ -150,10 +146,6 @@ impl InlineApp {
             selected_item, // Use the provided selection from mode switch
             countdown_popup: CountdownPopup::new(),
             is_interactive: false, // Always start non-interactive when switching modes
-            // Reset all scrollback tracking when mode switching
-            // PTYs will be resized in init(), which changes scrollback calculations
-            task_scrollback_lines: HashMap::new(),
-
             // Start at 19 so the first render (increment to 20) will trigger scrollback rendering
             // This ensures existing PTY content from full-screen mode is immediately displayed
             scrollback_render_counter: 19,
@@ -620,11 +612,6 @@ impl TuiApp for InlineApp {
         (content_height, cols)
     }
 
-    fn on_pty_registered(&mut self, task_id: &str) {
-        // Initialize scrollback tracking for inline mode
-        self.task_scrollback_lines.insert(task_id.to_string(), 0);
-    }
-
     /// Override to resize interactive PTYs to inline dimensions
     ///
     /// Inline mode needs smaller PTYs to fit the compact viewport,
@@ -767,9 +754,6 @@ impl InlineApp {
                 // MAX_LINES_PER_RENDER per frame — the rest stay in pending_lines.
                 let (buffered_scrollback_lines, current_scrollback_lines) =
                     pty.get_buffered_scrollback_content_for_inline(MAX_LINES_PER_RENDER);
-
-                self.task_scrollback_lines
-                    .insert(current_task.clone(), current_scrollback_lines);
 
                 // Render buffered scrollback above TUI using terminal.insert_before
                 if !buffered_scrollback_lines.is_empty() {
@@ -1376,14 +1360,11 @@ mod tests {
     // === PTY Registration Tests ===
 
     #[test]
-    fn test_register_pty_initializes_scrollback() {
+    fn test_register_pty_stores_instance_in_state() {
         let mut app = create_test_inline_app();
 
         // Register non-interactive PTY (simpler test)
         app.register_running_non_interactive_task(String::from("app1:build"));
-
-        // Verify scrollback tracking initialized
-        assert_eq!(app.task_scrollback_lines.get("app1:build"), Some(&0));
 
         // Verify PTY registered in state
         let state_ref = app.get_state();

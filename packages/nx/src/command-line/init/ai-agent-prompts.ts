@@ -2,7 +2,6 @@ import { multiselectPrompt } from '../../utils/prompt-helpers';
 import { isCI } from '../../utils/is-ci';
 import { Agent, agentDisplayMap, supportedAgents } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
-import * as pc from 'picocolors';
 
 export async function determineAiAgents(
   aiAgents?: (Agent | 'none')[],

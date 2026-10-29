@@ -21,7 +21,6 @@ import {
 } from '../../project-graph/file-utils';
 import { filterNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
 import {
   NxArgs,
   parseFiles,

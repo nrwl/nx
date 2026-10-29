@@ -27,7 +27,6 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   fileExists,
   JsonReadOptions,
-  JsonWriteOptions,
   readJsonFile,
   writeJsonFile,
 } from '../../utils/fileutils';
@@ -2037,7 +2036,6 @@ export function createFetcher(pmc: PackageManagerCommands) {
       return migrationsCache[`${packageName}-${packageVersion}`];
     }
 
-    let resolvedVersion: string = packageVersion;
     let migrations: Promise<ResolvedMigrationConfiguration>;
 
     function setCache(packageName: string, packageVersion: string) {
@@ -2063,7 +2061,6 @@ export function createFetcher(pmc: PackageManagerCommands) {
           result.generators = { ...result.schematics, ...result.generators };
           delete result.schematics;
         }
-        resolvedVersion = result.version;
         return result;
       }
     );
@@ -2547,7 +2544,7 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
   let phase: MigrateGenerateErrorCode = 'fetch_migrations';
   try {
     const rootPkgJsonPath = join(root, 'package.json');
-    let originalPackageJson = existsSync(rootPkgJsonPath)
+    const originalPackageJson = existsSync(rootPkgJsonPath)
       ? readJsonFile<PackageJson>(rootPkgJsonPath)
       : null;
     const originalNxJson = readNxJson();
@@ -2746,9 +2743,6 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
           ],
         });
         await connectToNxCloudWithPrompt('migrate');
-        originalPackageJson = readJsonFile<PackageJson>(
-          join(root, 'package.json')
-        );
       }
     } catch {
       // The above code is to remind folks when updating to a new major and not currently using Nx cloud.
