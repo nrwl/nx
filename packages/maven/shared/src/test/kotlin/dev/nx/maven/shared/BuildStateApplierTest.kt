@@ -5,6 +5,7 @@ import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.model.Build
 import org.apache.maven.model.Model
 import org.apache.maven.project.MavenProject
+import org.apache.maven.project.MavenProjectHelper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -51,7 +52,29 @@ class BuildStateApplierTest {
 
   private fun artifactInfo(file: String) = ArtifactInfo(file, "jar", null, "com.example", "app", "1.0.0")
 
-  private fun apply(buildState: BuildState) = BuildStateApplier.applyBuildState(project, buildState, workspaceRoot)
+  private val recordingHelper = object : MavenProjectHelper {
+    override fun attachArtifact(project: MavenProject, artifactFile: File, artifactClassifier: String?) =
+      attachArtifact(project, "jar", artifactClassifier, artifactFile)
+
+    override fun attachArtifact(project: MavenProject, artifactType: String, artifactFile: File) =
+      attachArtifact(project, artifactType, null, artifactFile)
+
+    override fun attachArtifact(project: MavenProject, artifactType: String, artifactClassifier: String?, artifactFile: File) {
+      project.addAttachedArtifact(
+        DefaultArtifact("com.example", "app", "1.0.0", "compile", artifactType, artifactClassifier, DefaultArtifactHandler(artifactType))
+          .apply { file = artifactFile }
+      )
+    }
+
+    override fun addResource(project: MavenProject, resourceDirectory: String, includes: List<String>, excludes: List<String>) =
+      throw UnsupportedOperationException()
+
+    override fun addTestResource(project: MavenProject, resourceDirectory: String, includes: List<String>, excludes: List<String>) =
+      throw UnsupportedOperationException()
+  }
+
+  private fun apply(buildState: BuildState, root: File = workspaceRoot) =
+    BuildStateApplier.applyBuildState(project, buildState, root, recordingHelper)
 
   private fun stateWithEveryPath(dir: String) = BuildState(
     compileSourceRoots = setOf(dir),
@@ -88,7 +111,7 @@ class BuildStateApplierTest {
         outputDirectory = "target/generated-sources",
         testOutputDirectory = "target/test-classes",
         mainArtifact = artifactInfo("target/app.jar"),
-        attachedArtifacts = emptyList(),
+        attachedArtifacts = listOf(ArtifactInfo("target/app.jar", "jar", "sources", "com.example", "app", "1.0.0")),
         pomFile = ".flattened-pom.xml"
       )
     )
@@ -103,7 +126,26 @@ class BuildStateApplierTest {
     assertEquals(File(projectRoot, "target/generated-sources").path, project.build.outputDirectory)
     assertEquals(File(projectRoot, "target/test-classes").path, project.build.testOutputDirectory)
     assertEquals(File(projectRoot, "target/app.jar"), project.artifact.file)
+    assertEquals(listOf(File(projectRoot, "target/app.jar")), project.attachedArtifacts.map { it.file })
     assertEquals(File(projectRoot, ".flattened-pom.xml"), project.file)
+  }
+
+  @Test
+  fun `applies workspace paths when the workspace root is reached through a symlink`() {
+    val workspaceLink = File(tempDir.canonicalFile, "workspace-link")
+    Files.createSymbolicLink(workspaceLink.toPath(), workspaceRoot.toPath())
+
+    apply(
+      BuildState(
+        compileSourceRoots = setOf("../shared-resources"),
+        testCompileSourceRoots = emptySet(),
+        mainArtifact = null,
+        attachedArtifacts = emptyList()
+      ),
+      workspaceLink
+    )
+
+    assertEquals(listOf(File(workspaceRoot, "shared-resources").path), project.compileSourceRoots)
   }
 
   @Test

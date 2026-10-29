@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 
 /**
  * Utility for applying build state to Maven projects.
@@ -21,7 +22,10 @@ import java.nio.file.NoSuchFileException
 object BuildStateApplier {
     private val log: Logger = LoggerFactory.getLogger(BuildStateApplier::class.java)
 
-    private fun resolveWithin(path: String, basedir: File, roots: List<File>): String? {
+    private fun realPath(root: File): Path =
+        runCatching { root.toPath().toRealPath() }.getOrElse { root.canonicalFile.toPath() }
+
+    private fun resolveWithin(path: String, basedir: File, roots: List<Path>): String? {
         val resolved = try {
             File(path).let { if (it.isAbsolute) it else File(basedir, path) }.toPath().toRealPath()
         } catch (_: NoSuchFileException) {
@@ -30,14 +34,14 @@ object BuildStateApplier {
         } catch (_: Exception) {
             null
         }
-        if (resolved != null && roots.any { resolved.startsWith(it.canonicalFile.toPath()) }) {
+        if (resolved != null && roots.any { resolved.startsWith(it) }) {
             return resolved.toString()
         }
-        log.warn("    Ignoring build state path outside of ${roots.joinToString { it.path }}: $path")
+        log.warn("    Ignoring build state path outside of ${roots.joinToString()}: $path")
         return null
     }
 
-    private fun resolveAllWithin(paths: Set<String>, basedir: File, roots: List<File>): Set<String> {
+    private fun resolveAllWithin(paths: Set<String>, basedir: File, roots: List<Path>): Set<String> {
         return paths.mapNotNull { resolveWithin(it, basedir, roots) }.toSet()
     }
 
@@ -57,7 +61,8 @@ object BuildStateApplier {
     ) {
         val basedir = project.basedir
         val buildDirectory = File(project.build.directory)
-        val inputRoots = listOf(workspaceRoot, basedir, buildDirectory)
+        val buildRoot = realPath(buildDirectory)
+        val inputRoots = listOf(realPath(workspaceRoot), realPath(basedir), buildRoot)
 
         // Apply compile source roots
         val compileSourceRoots = resolveAllWithin(buildState.compileSourceRoots, basedir, inputRoots)
@@ -107,7 +112,7 @@ object BuildStateApplier {
 
         // Apply output directories
         buildState.outputDirectory?.let {
-            resolveWithin(it, basedir, listOfNotNull(buildDirectory, project.build.outputDirectory?.let(::File)))
+            resolveWithin(it, basedir, listOfNotNull(buildRoot, project.build.outputDirectory?.let { dir -> realPath(File(dir)) }))
         }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.outputDirectory = absPath
@@ -116,7 +121,7 @@ object BuildStateApplier {
         }
 
         buildState.testOutputDirectory?.let {
-            resolveWithin(it, basedir, listOfNotNull(buildDirectory, project.build.testOutputDirectory?.let(::File)))
+            resolveWithin(it, basedir, listOfNotNull(buildRoot, project.build.testOutputDirectory?.let { dir -> realPath(File(dir)) }))
         }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.testOutputDirectory = absPath
