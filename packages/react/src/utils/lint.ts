@@ -43,7 +43,8 @@ const eslint10Dependencies: EslintDependencies = {
 /**
  * @deprecated Use {@link getExtraEslintDependencies}, which resolves the plugin
  * set for the workspace's ESLint version. This static set targets ESLint v9 and
- * earlier; on ESLint v10 it installs plugins that have no v10 release.
+ * earlier; on ESLint v10 it installs plugins that have no v10 release. This
+ * will be removed in Nx v25.
  */
 export const extraEslintDependencies: EslintDependencies =
   eslintLegacyDependencies;
@@ -88,7 +89,8 @@ export function addExtraEslintDependencies(
 }
 
 /**
- * @deprecated Use `addExtendsToLintConfig` from `@nx/eslint` instead.
+ * @deprecated Use `addExtendsToLintConfig` from `@nx/eslint` instead. This will
+ * be removed in Nx v25.
  */
 export const extendReactEslintJson = (
   json: Linter.LegacyConfig
