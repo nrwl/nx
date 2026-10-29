@@ -310,6 +310,39 @@ describe('handleClientEnv', () => {
         expect(getLiveClientBerryEnv()).toEqual({});
       });
 
+      it('gives them back to a later client from the same Yarn command', async () => {
+        const first = new EventEmitter();
+        await handleClientEnv(yarnEnv, first);
+        first.emit('close');
+        await flushMicrotasks();
+        setWorkerEnv.mockClear();
+
+        await handleClientEnv(yarnEnv, new EventEmitter());
+
+        expect(setWorkerEnv).toHaveBeenCalledWith(yarnEnv);
+        expect(getLiveClientBerryEnv()).toEqual(yarnEnv);
+      });
+
+      it('keeps them while another client from the same Yarn command is connected', async () => {
+        const outer = new EventEmitter();
+        const inner = new EventEmitter();
+        await handleClientEnv(yarnEnv, outer);
+        await handleClientEnv(yarnEnv, inner);
+        setWorkerEnv.mockClear();
+
+        inner.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).not.toHaveBeenCalled();
+        expect(getLiveClientBerryEnv()).toEqual(yarnEnv);
+
+        outer.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
       it("leaves a newer client's folders alone when an older client disconnects", async () => {
         const older = new EventEmitter();
         await handleClientEnv(yarnEnv, older);
