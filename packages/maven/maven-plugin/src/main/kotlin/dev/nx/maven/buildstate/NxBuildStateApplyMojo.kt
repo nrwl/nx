@@ -59,7 +59,10 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
         if (projectsToApply.isNotEmpty()) {
             log.info("Applying build state to ${projectsToApply.size} projects...")
-            val workspaceRoot = File(session.executionRootDirectory)
+            // `-f` moves the execution root to the selected POM's directory.
+            val workspaceRoot = File(
+                session.systemProperties.getProperty("env.NX_WORKSPACE_ROOT") ?: session.executionRootDirectory
+            )
             projectsToApply.forEach { (depProject, stateFile) ->
                 try {
                     val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
