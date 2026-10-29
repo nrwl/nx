@@ -28,7 +28,7 @@ export const backwardCompatibleVersions: VersionMap = {
     expressVersion: '^4.21.2',
     typesExpressVersion: '^4.17.21',
     browserSyncVersion: '^3.0.0',
-    angularEslintVersion: '^21.2.0',
+    angularEslintVersion: '^21.3.0',
     typescriptEslintVersion: '^7.16.0',
     postcssVersion: '^8.4.5',
     postcssUrlVersion: '~10.1.3',
