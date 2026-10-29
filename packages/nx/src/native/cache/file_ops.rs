@@ -214,18 +214,29 @@ pub fn copy_outputs_into_workspace(
             trace!("No cached artifact for output {}, skipping", output);
             continue;
         }
-        for parent in Path::new(output).ancestors().skip(1) {
-            if replaceable(parent) {
+        // Root first, stopping where the copy creates or replaces a directory,
+        // so no link is followed to judge what lies below it.
+        let parents: Vec<&Path> = Path::new(output)
+            .ancestors()
+            .skip(1)
+            .filter(|parent| !parent.as_os_str().is_empty())
+            .collect();
+        for parent in parents.into_iter().rev() {
+            let path = workspace_root.join(parent);
+            let Ok(meta) = fs::symlink_metadata(&path) else {
+                break;
+            };
+            if meta.is_dir() {
                 continue;
             }
-            let path = workspace_root.join(parent);
-            if fs::symlink_metadata(&path).is_ok_and(|meta| !meta.is_dir()) {
-                anyhow::bail!(
-                    "Cannot restore {} from the cache: {} exists and is not a directory",
-                    output,
-                    path.display()
-                );
+            if replaceable(parent) {
+                break;
             }
+            anyhow::bail!(
+                "Cannot restore {} from the cache: {} exists and is not a directory",
+                output,
+                path.display()
+            );
         }
         let to = workspace_root.join(output);
         let (copied, wrote) = copy_and_list(&from, &to, Some(workspace_root))?;

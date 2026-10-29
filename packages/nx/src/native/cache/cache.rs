@@ -1128,6 +1128,40 @@ mod test {
         assert_eq!(std::fs::read_to_string(&source).unwrap(), "source");
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn restore_replaces_a_linked_glob_root_without_reading_through_it() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        std::fs::write(elsewhere.join("a"), "outside").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist")).unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("dist/a")).unwrap();
+        std::fs::write(artifact.join("dist/a/main.js"), "built").unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/**/*.js".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").is_symlink());
+        assert_eq!(
+            std::fs::read_to_string(cache.workspace_root.join("dist/a/main.js")).unwrap(),
+            "built"
+        );
+        assert_eq!(
+            std::fs::read_to_string(elsewhere.join("a")).unwrap(),
+            "outside"
+        );
+    }
+
     #[test]
     fn get_is_a_miss_once_the_artifact_directory_is_gone() {
         let temp = TempDir::new().unwrap();
