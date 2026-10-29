@@ -27,7 +27,7 @@ export interface RemoteCache {
 
 async function readRegularFile(path: string): Promise<string | null> {
   const stats = await lstat(path).catch(() => null);
-  return stats?.isFile() ? readFile(path, 'utf-8') : null;
+  return stats?.isFile() ? readFile(path, 'utf-8').catch(() => null) : null;
 }
 
 export abstract class RemoteCacheV2 {
@@ -54,9 +54,7 @@ export abstract class RemoteCacheV2 {
         }
         const [terminalOutput, oldTerminalOutput, exitCode] = await Promise.all(
           [
-            terminalOutputs
-              ? readFile(join(entry, 'terminalOutputs'), 'utf-8')
-              : null,
+            readRegularFile(join(entry, 'terminalOutputs')),
             readRegularFile(join(cacheDir, 'terminalOutputs', hash)),
             readFile(join(entry, 'code'), 'utf-8'),
           ]

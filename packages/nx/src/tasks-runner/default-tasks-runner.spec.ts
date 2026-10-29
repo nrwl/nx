@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'fs';
+import { chmodSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { RemoteCacheV2, type RemoteCache } from './default-tasks-runner';
 
@@ -85,6 +85,58 @@ describe('RemoteCacheV2.fromCacheV1', () => {
     expect(await cache.retrieve(hash, cacheDirectory)).toEqual({
       outputsPath: join(entry, 'outputs'),
       terminalOutput: null,
+      code: 0,
+    });
+  });
+
+  it('keeps a valid result when a terminal output cannot be read', async () => {
+    const localTerminalOutput = join(
+      root,
+      'local-cache',
+      'terminalOutputs',
+      hash
+    );
+    const cache = await RemoteCacheV2.fromCacheV1(
+      v1Cache(() => {
+        writeFileSync(join(entry, 'code'), '0');
+        writeFileSync(join(entry, 'terminalOutputs'), 'built');
+        rmSync(localTerminalOutput, { recursive: true, force: true });
+        writeFileSync(localTerminalOutput, 'old');
+        chmodSync(localTerminalOutput, 0);
+      })
+    );
+
+    try {
+      expect(await cache.retrieve(hash, cacheDirectory)).toEqual({
+        outputsPath: join(entry, 'outputs'),
+        terminalOutput: 'built',
+        code: 0,
+      });
+    } finally {
+      rmSync(localTerminalOutput, { force: true });
+    }
+  });
+
+  it('falls back to the local terminal output when the remote one cannot be read', async () => {
+    const localTerminalOutput = join(
+      root,
+      'local-cache',
+      'terminalOutputs',
+      hash
+    );
+    const cache = await RemoteCacheV2.fromCacheV1(
+      v1Cache(() => {
+        writeFileSync(join(entry, 'code'), '0');
+        writeFileSync(join(entry, 'terminalOutputs'), 'built');
+        chmodSync(join(entry, 'terminalOutputs'), 0);
+        rmSync(localTerminalOutput, { recursive: true, force: true });
+        writeFileSync(localTerminalOutput, 'old');
+      })
+    );
+
+    expect(await cache.retrieve(hash, cacheDirectory)).toEqual({
+      outputsPath: join(entry, 'outputs'),
+      terminalOutput: 'old',
       code: 0,
     });
   });
