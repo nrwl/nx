@@ -129,7 +129,7 @@ export default [
 
 **Search pattern**: the config files forwarded in `<advisory_context>`, plus `eslint-plugin-import`, `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and the `import/`, `react/`, `jsx-a11y/` rule prefixes across all ESLint configs.
 
-**What changed**: those three plugins have no ESLint v10 release, so the pre-pass removed them from `package.json`. A config that still imports one, registers it under `plugins`, or configures its rules now fails to load with `Could not find plugin` or a module resolution error.
+**What changed**: those three plugins have no ESLint v10 release, so the pre-pass removed them from `package.json`. A config that still imports one, registers it under `plugins`, extends one of its configs (`plugin:react/recommended`), or configures its rules now fails to load with `Could not find plugin` or a module resolution error.
 
 `eslint-plugin-import` has a maintained fork, `eslint-plugin-import-x`, which the pre-pass installed. Its plugin key and rule prefix are both `import-x`.
 
@@ -163,8 +163,8 @@ export default [
 
 **Action items**:
 
-- [ ] Rewrite every `eslint-plugin-import` usage to `eslint-plugin-import-x`, including the plugin key and each `import/` rule prefix.
-- [ ] Delete `eslint-plugin-react` and `eslint-plugin-jsx-a11y` registrations and every `react/` and `jsx-a11y/` rule.
+- [ ] Rewrite every `eslint-plugin-import` usage to `eslint-plugin-import-x`, including the plugin key and each `import/` rule prefix. A `plugin:import/<name>` config a flat config extends becomes `importX.flatConfigs.<name>`.
+- [ ] Delete `eslint-plugin-react` and `eslint-plugin-jsx-a11y` registrations, the `plugin:react/` and `plugin:jsx-a11y/` configs a config extends, and every `react/` and `jsx-a11y/` rule.
 - [ ] Fix the ESLint directive comments in source files that name a rule the workspace can no longer resolve: rewrite an `import/` prefix to `import-x/`, and delete the ones naming a `react/` or `jsx-a11y/` rule, including the inline `/* eslint react/no-danger: "error" */` form. A directive for an undefined rule is a lint error in itself (`Definition for rule '...' was not found`), so lint cannot pass while one is left. This is the one source-file edit this migration allows.
 - [ ] Leave configs that get these rules from an Nx preset alone. `@nx/eslint-plugin`'s `flat/react`, `flat/react-base` and `flat/react-jsx` already resolve the right plugin set for the running ESLint major. Their directives are not exempt: on ESLint v10 the presets register the fork under the `import-x` key, so an `import/` directive in source still has to be rewritten.
 - [ ] Report the dropped `react/` and `jsx-a11y/` rules in your handoff summary so the loss of coverage is visible.
