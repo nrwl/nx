@@ -879,21 +879,18 @@ export async function startServer(
   });
 }
 
-function isSameOriginLocalRequest(
-  req: http.IncomingMessage,
+export function isSameOriginLocalRequest(
+  req: Pick<http.IncomingMessage, 'headers'> & {
+    socket: Pick<net.Socket, 'localPort'>;
+  },
   host: string
 ): boolean {
-  const port = req.socket.localPort;
-  const allowedHosts = new Set(
-    [
-      'localhost',
-      '127.0.0.1',
-      '[::1]',
-      host.includes(':') ? `[${host}]` : host,
-    ].map((name) => `${name.toLowerCase()}:${port}`)
-  );
-  const requestHost = req.headers.host?.toLowerCase();
-  if (!requestHost || !allowedHosts.has(requestHost)) {
+  const authority = parseHostHeader(req.headers.host);
+  if (
+    !authority ||
+    Number(authority.port || 80) !== req.socket.localPort ||
+    !isAllowedHostname(authority.hostname.replace(/^\[|\]$/g, ''), host)
+  ) {
     return false;
   }
 
@@ -903,7 +900,30 @@ function isSameOriginLocalRequest(
   }
 
   const origin = req.headers.origin;
-  return !origin || origin.toLowerCase() === `http://${requestHost}`;
+  return !origin || origin.toLowerCase() === authority.origin;
+}
+
+function parseHostHeader(hostHeader: string | undefined): URL | null {
+  if (!hostHeader || /[/\\@?#]/.test(hostHeader)) {
+    return null;
+  }
+  try {
+    return new URL(`http://${hostHeader}`);
+  } catch {
+    return null;
+  }
+}
+
+const loopbackHostnames = new Set(['localhost', '127.0.0.1', '::1']);
+
+function isAllowedHostname(hostname: string, boundHost: string): boolean {
+  const bound = boundHost.toLowerCase();
+  if (loopbackHostnames.has(hostname) || hostname === bound) {
+    return true;
+  }
+  // DNS rebinding needs a domain name, so an IP literal is safe to accept
+  // once the user binds a non-loopback interface.
+  return !loopbackHostnames.has(bound) && net.isIP(hostname) !== 0;
 }
 
 let currentProjectGraphClientResponse: ProjectGraphClientResponse = {
