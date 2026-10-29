@@ -185,6 +185,9 @@ describe('@nx/storybook/plugin', () => {
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -207,6 +210,9 @@ describe('@nx/storybook/plugin', () => {
                     "continuous": true,
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -230,6 +236,9 @@ describe('@nx/storybook/plugin', () => {
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -307,6 +316,9 @@ export default config;
                     "executor": "@storybook/angular:build-storybook",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -333,6 +345,9 @@ export default config;
                     "executor": "@storybook/angular:start-storybook",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -360,6 +375,9 @@ export default config;
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -587,6 +605,9 @@ export default config;
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -609,6 +630,9 @@ export default config;
                     "continuous": true,
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [
@@ -632,6 +656,9 @@ export default config;
                     "executor": "@nx/web:file-server",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
                       {
                         "externalDependencies": [

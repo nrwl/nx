@@ -25,7 +25,10 @@ import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
-import { findStorybookAndBuildTargetsAndCompiler } from '../utils/utilities';
+import {
+  findStorybookAndBuildTargetsAndCompiler,
+  storybookFilePatterns,
+} from '../utils/utilities';
 import { getStartStorybookReadyWhen } from '../utils/dev-server-ready-check';
 
 export interface StorybookPluginOptions {
@@ -40,6 +43,12 @@ export interface StorybookPluginOptions {
 type StorybookTargets = Record<string, TargetConfiguration>;
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
+
+// `production` usually excludes these files. Its `!{projectRoot}/` exclusions
+// don't filter `{workspaceRoot}/` filesets, so these keep the files hashed.
+const storybookFileInputs = Object.values(storybookFilePatterns).map(
+  (pattern) => `{workspaceRoot}/{projectRoot}/${pattern}`
+);
 
 // Vite-builder frameworks we infer the addon target for. The addon itself only
 // checks that the resolved builder is Vite, so this list is conservative rather
@@ -288,7 +297,7 @@ function storybookInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['production', '^production']
+      ? ['production', ...storybookFileInputs, '^production']
       : ['default', '^default']),
     {
       externalDependencies: [
