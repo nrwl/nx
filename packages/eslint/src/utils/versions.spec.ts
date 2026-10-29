@@ -31,6 +31,14 @@ describe('versions(tree)', () => {
     expect(versions(tree).eslintVersion).toMatch(/^\^9\./);
   });
 
+  it('should pin ESLint v9 for fresh installs in a workspace with a root eslintrc', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    tree.write('.eslintrc.json', '{}');
+
+    expect(versions(tree).eslintVersion).toMatch(/^\^9\./);
+  });
+
   it('should throw when ESLint v10+ is installed and eslintrc is explicitly requested', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'package.json', (json) => {
