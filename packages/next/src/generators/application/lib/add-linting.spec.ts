@@ -169,6 +169,24 @@ describe('updateEslint', () => {
     expect(devDependencies['eslint']).toBe('^9.0.0');
   });
 
+  it.each(['none', 'oxlint'] as const)(
+    'should not install ESLint on Next.js 15 when the linter is %s',
+    async (linter) => {
+      projectGraph.externalNodes = {
+        'npm:next': {
+          type: 'npm',
+          name: 'npm:next',
+          data: { packageName: 'next', version: '15.2.4' },
+        },
+      };
+
+      await addLinting(tree, { ...schema, linter });
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies?.['eslint']).toBeUndefined();
+    }
+  );
+
   it('should not pin ESLint v9 when the workspace uses the latest Next.js version', async () => {
     tree.write('eslint.config.cjs', `module.exports = []`);
 
