@@ -108,6 +108,39 @@ describe('app', () => {
         '@parcel/watcher'
       );
     });
+
+    it('should deny the unrs-resolver build script pulled in by eslint-plugin-import-x', async () => {
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?unrs-resolver['"]?: false/
+      );
+    });
+
+    it('should not record an unrs-resolver decision on ESLint v9', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, eslint: '^9.39.0' },
+      }));
+
+      await withPnpm(appTree, '11.2.2', () =>
+        applicationGenerator(appTree, {
+          ...schema,
+          unitTestRunner: 'none',
+          e2eTestRunner: 'none',
+        })
+      );
+
+      expect(appTree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+        'unrs-resolver'
+      );
+    });
   });
 
   describe('not nested', () => {

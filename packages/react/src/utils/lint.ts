@@ -1,4 +1,10 @@
-import { type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  type GeneratorCallback,
+  type Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { versions as eslintVersions } from '@nx/eslint/internal';
 import { Linter } from 'eslint';
 import { coerce } from 'semver';
@@ -54,6 +60,31 @@ export function getExtraEslintDependencies(tree: Tree): EslintDependencies {
   const isLegacyEslint = (coerce(eslintVersion)?.major ?? 10) < 10;
 
   return isLegacyEslint ? eslintLegacyDependencies : eslint10Dependencies;
+}
+
+/**
+ * Adds the plugin set {@link getExtraEslintDependencies} resolves, plus
+ * `extraDevDependencies`, keeping versions the workspace already declares.
+ */
+export function addExtraEslintDependencies(
+  tree: Tree,
+  extraDevDependencies: Record<string, string> = {}
+): GeneratorCallback {
+  const { dependencies, devDependencies } = getExtraEslintDependencies(tree);
+  if ('eslint-plugin-import-x' in devDependencies) {
+    // eslint-plugin-import-x depends on unrs-resolver, whose postinstall only
+    // fetches a fallback binding for platforms its prebuilt bindings miss.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'unrs-resolver': false,
+    });
+  }
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    { ...devDependencies, ...extraDevDependencies },
+    undefined,
+    true
+  );
 }
 
 /**
