@@ -554,6 +554,7 @@ describe('app', () => {
         await applicationGenerator(tree, {
           directory: name,
           style: 'css',
+          linter: 'eslint',
         });
 
         const packageJson = readJson(tree, '/package.json');
