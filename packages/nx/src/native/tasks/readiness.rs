@@ -34,6 +34,7 @@ pub struct ReadinessProbeConfig {
 enum Probe {
     Url {
         url: Url,
+        direct: bool,
         // Chosen on the first attempt, within the probe's deadline
         client: OnceCell<Client>,
     },
@@ -76,10 +77,15 @@ fn system_resolver() -> anyhow::Result<TokioResolver> {
 impl Probe {
     fn from_config(config: &ReadinessProbeConfig, cwd: String) -> anyhow::Result<Self> {
         match (&config.url, config.port, &config.command) {
-            (Some(url), None, None) => Ok(Self::Url {
-                url: connect_url(url)?,
-                client: OnceCell::new(),
-            }),
+            (Some(url), None, None) => {
+                let url = connect_url(url)?;
+                Ok(Self::Url {
+                    // Read on the JS thread, which a `process.env` write cannot race
+                    direct: no_proxy_matches(&no_proxy_env(), &url),
+                    url,
+                    client: OnceCell::new(),
+                })
+            }
             (None, Some(port), None) => Ok(Self::Port {
                 port: u16::try_from(port)?,
                 host: PortHost::parse(config.host.as_deref())?,
@@ -97,12 +103,16 @@ impl Probe {
     // its process tree running
     async fn run(&self, deadline: Instant, token: &CancellationToken) -> anyhow::Result<bool> {
         Ok(match self {
-            Self::Url { url, client } => token
+            Self::Url {
+                url,
+                direct,
+                client,
+            } => token
                 .run_until_cancelled(async {
                     let client = match client.get() {
                         Some(client) => client,
                         None => {
-                            let built = http_client(url, deadline).await?;
+                            let built = http_client(url, *direct, deadline).await?;
                             client.get_or_init(|| built)
                         }
                     };
@@ -122,19 +132,81 @@ impl Probe {
     }
 }
 
-// The verifying client is built once per process: loading the system
+// The verifying clients are built once per process: loading the system
 // certificate store takes about 100 ms. A loopback client never verifies, so
 // it loads no store and is built per probe, pinned to the checked addresses
 // so the request cannot go where a later resolution points. It skips proxies
 // too, so the request cannot leave the machine
-async fn http_client(url: &Url, deadline: Instant) -> anyhow::Result<Client> {
+async fn http_client(url: &Url, direct: bool, deadline: Instant) -> anyhow::Result<Client> {
     static VERIFYING: OnceCell<Client> = OnceCell::new();
+    static VERIFYING_DIRECT: OnceCell<Client> = OnceCell::new();
     Ok(match loopback_addrs(url, deadline).await {
-        Some(addrs) => build_http_client(Some((url.host_str().unwrap_or_default(), &addrs)))?,
+        Some(addrs) => {
+            build_http_client(Route::Loopback(url.host_str().unwrap_or_default(), &addrs))?
+        }
+        None if direct => VERIFYING_DIRECT
+            .get_or_try_init(|| build_http_client(Route::Direct))?
+            .clone(),
         None => VERIFYING
-            .get_or_try_init(|| build_http_client(None))?
+            .get_or_try_init(|| build_http_client(Route::FromEnv))?
             .clone(),
     })
+}
+
+// The order reqwest reads them in
+fn no_proxy_env() -> String {
+    std::env::var("NO_PROXY")
+        .or_else(|_| std::env::var("no_proxy"))
+        .unwrap_or_default()
+}
+
+// reqwest's own NO_PROXY match misses `*.domain`, `host:port` and `*` for an IP
+// address. CIDR ranges are left to it
+fn no_proxy_matches(no_proxy: &str, url: &Url) -> bool {
+    let (Some(host), Some(port)) = (url.host_str(), url.port_or_known_default()) else {
+        return false;
+    };
+    let ip = unbracketed(host).parse::<IpAddr>().ok();
+    no_proxy.split(',').map(str::trim).any(|entry| {
+        let (pattern, entry_port) = split_port(entry);
+        if entry_port.is_some_and(|entry_port| entry_port != port) {
+            return false;
+        }
+        if pattern == "*" {
+            return true;
+        }
+        match ip {
+            Some(ip) => unbracketed(pattern)
+                .parse::<IpAddr>()
+                .is_ok_and(|entry_ip| entry_ip == ip),
+            None => match pattern.strip_prefix("*.") {
+                Some(domain) => is_subdomain(host, domain),
+                None => {
+                    let domain = pattern.strip_prefix('.').unwrap_or(pattern);
+                    host.eq_ignore_ascii_case(domain) || is_subdomain(host, domain)
+                }
+            },
+        }
+    })
+}
+
+// An unbracketed IPv6 address has no port: its last group would read as one
+fn split_port(entry: &str) -> (&str, Option<u16>) {
+    match entry.rsplit_once(':') {
+        Some((host, port)) if host.starts_with('[') || !host.contains(':') => match port.parse() {
+            Ok(port) => (host, Some(port)),
+            Err(_) => (entry, None),
+        },
+        _ => (entry, None),
+    }
+}
+
+fn is_subdomain(host: &str, domain: &str) -> bool {
+    let (host, domain) = (host.to_ascii_lowercase(), domain.to_ascii_lowercase());
+    !domain.is_empty()
+        && host
+            .strip_suffix(&domain)
+            .is_some_and(|rest| rest.ends_with('.'))
 }
 
 // An IP literal is loopback by its value. Only `localhost` and `*.localhost`
@@ -173,7 +245,14 @@ fn ip_is_loopback(ip: IpAddr) -> bool {
 #[cfg(test)]
 static SETUP_DELAY_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-fn build_http_client(loopback: Option<(&str, &[IpAddr])>) -> reqwest::Result<Client> {
+enum Route<'a> {
+    // Through the proxy the environment configures, if any
+    FromEnv,
+    Direct,
+    Loopback(&'a str, &'a [IpAddr]),
+}
+
+fn build_http_client(route: Route) -> reqwest::Result<Client> {
     #[cfg(test)]
     std::thread::sleep(Duration::from_millis(
         SETUP_DELAY_MS.load(std::sync::atomic::Ordering::Relaxed),
@@ -182,8 +261,8 @@ fn build_http_client(loopback: Option<(&str, &[IpAddr])>) -> reqwest::Result<Cli
         // A redirect already proves the server is up, and following it would
         // let the server pick the next request's destination
         .redirect(reqwest::redirect::Policy::none());
-    match loopback {
-        Some((host, addrs)) => {
+    match route {
+        Route::Loopback(host, addrs) => {
             // Port 0: the url's own port applies
             let pinned: Vec<SocketAddr> = addrs.iter().map(|ip| SocketAddr::new(*ip, 0)).collect();
             builder
@@ -192,7 +271,8 @@ fn build_http_client(loopback: Option<(&str, &[IpAddr])>) -> reqwest::Result<Cli
                 .no_proxy()
                 .resolve_to_addrs(host, &pinned)
         }
-        None => builder,
+        Route::Direct => builder.no_proxy(),
+        Route::FromEnv => builder,
     }
     .build()
 }
@@ -815,6 +895,99 @@ mod tests {
         let cancelled_at = cancelled.await.unwrap();
         assert!(cancelled_at.elapsed() < Duration::from_millis(2000));
         drop(release);
+    }
+
+    #[test]
+    fn no_proxy_matches_wildcard_subdomains_ports_and_any_ip() {
+        for (no_proxy, url, matches) in [
+            ("*.example.com", "http://app.example.com/", true),
+            ("localhost, *.Example.COM", "http://a.b.example.com/", true),
+            ("*.example.com", "http://example.com/", false),
+            ("*.example.com", "http://badexample.com/", false),
+            ("app.example.com:8080", "http://app.example.com:8080/", true),
+            (".example.com:8080", "http://app.example.com:8080/", true),
+            ("*.example.com:8080", "http://app.example.com:9090/", false),
+            ("app.example.com:443", "https://app.example.com/", true),
+            ("app.example.com:80", "https://app.example.com/", false),
+            ("10.0.0.5:8080", "http://10.0.0.5:8080/", true),
+            ("10.0.0.5:8080", "http://10.0.0.6:8080/", false),
+            ("[fd00::1]:8080", "http://[fd00::1]:8080/", true),
+            ("fd00::1:2:3", "http://[fd00::1:2]:3/", false),
+            ("*", "http://10.0.0.5/", true),
+            ("a.test, ", "http://app.example.com./", false),
+        ] {
+            assert_eq!(
+                no_proxy_matches(no_proxy, &Url::parse(url).unwrap()),
+                matches,
+                "{no_proxy} {url}"
+            );
+        }
+    }
+
+    // reqwest reads the proxy variables once per process, so each case runs in a fresh one
+    #[test]
+    fn url_skips_the_proxy_for_a_no_proxy_form_reqwest_misses() {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        let requests = Arc::new(AtomicUsize::new(0));
+        let seen = requests.clone();
+        // Only the proxy can answer: the target name never resolves
+        std::thread::spawn(move || {
+            for mut stream in listener.incoming().flatten() {
+                seen.fetch_add(1, Ordering::SeqCst);
+                let mut request = Vec::new();
+                let mut byte = [0u8; 1];
+                while std::io::Read::read(&mut stream, &mut byte).is_ok_and(|n| n == 1) {
+                    request.push(byte[0]);
+                    if request.ends_with(b"\r\n\r\n") {
+                        break;
+                    }
+                }
+                let _ = std::io::Write::write_all(
+                    &mut stream,
+                    b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n",
+                );
+            }
+        });
+        for (no_proxy, proxied) in [
+            ("*.example.invalid", false),
+            ("app.example.invalid:9090", true),
+        ] {
+            let before = requests.load(Ordering::SeqCst);
+            let status = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--ignored",
+                    "--exact",
+                    "native::tasks::readiness::tests::url_wait_with_env_proxy",
+                ])
+                .env("HTTP_PROXY", &proxy)
+                .env("NO_PROXY", no_proxy)
+                .status()
+                .unwrap();
+            assert!(status.success(), "{no_proxy}");
+            assert_eq!(
+                requests.load(Ordering::SeqCst) > before,
+                proxied,
+                "{no_proxy}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn url_wait_with_env_proxy() {
+        let config = ReadinessProbeConfig {
+            url: Some("http://app.example.invalid:8080/".into()),
+            port: None,
+            host: None,
+            command: None,
+            timeout: 300,
+            env: None,
+            interval: None,
+        };
+        probe(config).wait().await.unwrap();
     }
 
     // Runs the ignored test in a fresh process so the shared client is still unbuilt
