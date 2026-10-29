@@ -6287,29 +6287,34 @@ module.exports = {
     });
   });
 
-  describe('prompt file type', () => {
+  describe('prompt file name', () => {
     it.each([
       ['./prompts/project.json'],
       ['./prompts/vite.config.ts'],
       ['./prompts/no-extension'],
       ['./prompts/.md'],
-    ])(
-      'should reject prompt path %s that is not a markdown file',
-      async (badPath) => {
-        await expect(
-          readPromptFilesFromInstall(
-            'pkg',
-            '1.0.0',
-            {
-              generators: {
-                m: { version: '1.0.0', prompt: badPath },
-              },
+      ['./prompts/project.json:x.md'],
+      ['./prompts/a|b.md'],
+      ['./prompts/a?.md'],
+      ['./prompts/a*.md'],
+      ['./prompts/a<b>.md'],
+      ['./prompts/a"b.md'],
+      ['./prompts/a\nb.md'],
+      ['./pro:mpts/x.md'],
+    ])('should reject prompt path %s', async (badPath) => {
+      await expect(
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          {
+            generators: {
+              m: { version: '1.0.0', prompt: badPath },
             },
-            '/tmp/fake-pkg/migrations.json'
-          )
-        ).rejects.toThrow(/prompt files must be markdown \(\.md\) files/);
-      }
-    );
+          },
+          '/tmp/fake-pkg/migrations.json'
+        )
+      ).rejects.toThrow(/prompt files must be markdown \(\.md\) files/);
+    });
   });
 
   describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {

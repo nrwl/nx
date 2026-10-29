@@ -63,9 +63,9 @@ async function resolvePromptFiles(
       packageName,
       packageVersion
     );
-    if (!isMarkdownFile(entry.prompt)) {
+    if (!isPortableMarkdownPath(entry.prompt)) {
       throw new Error(
-        `Invalid prompt path "${entry.prompt}" in package "${packageName}@${packageVersion}": prompt files must be markdown (.md) files.`
+        `Invalid prompt path "${entry.prompt}" in package "${packageName}@${packageVersion}": prompt files must be markdown (.md) files whose path has no characters reserved on Windows (<>:"|?*).`
       );
     }
     try {
@@ -97,8 +97,13 @@ function assertPromptPathWithinMigrationsDir(
 
 // Prompt files are copied into the workspace under their own name, so any
 // other extension could land as workspace configuration (e.g. project.json).
-function isMarkdownFile(promptPath: string): boolean {
-  return posix.extname(promptPath).toLowerCase() === '.md';
+// Windows reads `:` as an NTFS stream separator, so `project.json:x.md` would
+// write project.json.
+function isPortableMarkdownPath(promptPath: string): boolean {
+  return (
+    !/[<>:"|?*\x00-\x1f]/.test(promptPath) &&
+    posix.extname(promptPath).toLowerCase() === '.md'
+  );
 }
 
 /**
@@ -124,14 +129,18 @@ export class PromptResolutionError extends Error {
  * plain markdown files referenced relative to the directory containing the
  * `migrations.json` - unlike schemas, they are not resolved through package
  * exports or `require.resolve`. The path must point at an existing markdown
- * (`.md`) file that stays within the migrations directory after resolving
- * links, outside any nested `node_modules`.
+ * (`.md`) file, free of characters reserved on Windows, that stays within the
+ * migrations directory after resolving links, outside any nested
+ * `node_modules`.
  */
 export function resolvePrompt(
   promptPath: string,
   migrationsDir: string
 ): string {
-  if (!isContainedRelativePath(promptPath) || !isMarkdownFile(promptPath)) {
+  if (
+    !isContainedRelativePath(promptPath) ||
+    !isPortableMarkdownPath(promptPath)
+  ) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   const resolvedPath = join(migrationsDir, promptPath);
