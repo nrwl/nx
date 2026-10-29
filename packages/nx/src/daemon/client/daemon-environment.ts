@@ -557,8 +557,8 @@ export function withTrustedBerryBinFolders(
 let liveClientBerryEnv: NodeJS.ProcessEnv = {};
 
 /**
- * The PATH and BERRY_BIN_FOLDER of the connected client whose env the daemon
- * applied last, or nothing once that client disconnects. The daemon's own PATH
+ * The PATH and BERRY_BIN_FOLDER of the env the daemon applied last, or nothing
+ * once no connected client carries those bin folders. The daemon's own PATH
  * lacks the client's bin folders, so workers spawned for that client's request
  * take them here.
  */

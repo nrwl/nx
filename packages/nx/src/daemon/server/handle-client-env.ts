@@ -5,6 +5,7 @@ import {
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
   getChangedEnvKeys,
+  getLiveClientBerryEnv,
   hasBerryBinFolders,
   normalizeDaemonEnvironmentForGraph,
   setLiveClientBerryEnv,
@@ -26,7 +27,9 @@ export function _setEnvForwardTimeoutMs(ms: number): void {
 }
 
 let inFlightApply: Promise<void> | undefined;
-let liveClient: EventEmitter | undefined;
+// Connected clients that carry Yarn Berry bin folders, by BERRY_BIN_FOLDER.
+const liveBerryClients = new Map<EventEmitter, string | undefined>();
+let workersHoldBerryFolders = false;
 
 /**
  * Applies an env-carrying client message to the daemon. Must be awaited
@@ -46,6 +49,8 @@ export async function handleClientEnv(
     await inFlightApply;
   }
   trackLiveClient(env, client);
+  const keepBerryFolders = isBerryFolderLive(env);
+  setLiveClientBerryEnv(keepBerryFolders ? env : undefined);
   // Yarn Berry's bin folders outlive neither the client nor its request, while
   // the daemon and anything it starts in the background do.
   const daemonEnv = withoutBerryBinFoldersOnPath(env);
@@ -53,6 +58,10 @@ export async function handleClientEnv(
   const previousClientEnv = getAppliedDaemonClientEnv()?.env;
   const changedEnvKeys = applyDaemonEnvFromClient(daemonEnv);
   if (changedEnvKeys.length === 0) {
+    // An unchanged env can still owe workers the folders a disconnect took.
+    if (keepBerryFolders && !workersHoldBerryFolders) {
+      await runApply(forwardEnvToPluginWorkers(workerEnv(env, true)));
+    }
     return;
   }
   // Runtime changes always reach the workers, but only changes that survive
@@ -84,7 +93,7 @@ export async function handleClientEnv(
     );
   }
   await runApply(
-    applyEnvChange(withTrustedBerryBinFolders(env), graphChangedKeys.size > 0)
+    applyEnvChange(workerEnv(env, keepBerryFolders), graphChangedKeys.size > 0)
   );
 }
 
@@ -103,43 +112,62 @@ function trackLiveClient(
   env: Record<string, string>,
   client: EventEmitter | undefined
 ): void {
-  liveClient = client;
-  setLiveClientBerryEnv(client ? env : undefined);
-  if (client && hasBerryBinFolders(env)) {
-    client.once('close', () => {
-      handleClientDisconnected(client).catch((e) => {
-        serverLogger.log(
-          `Failed to drop Yarn Berry bin folders from plugin workers: ${e.message}`
-        );
-      });
-    });
+  if (!client || !hasBerryBinFolders(env) || liveBerryClients.has(client)) {
+    return;
   }
+  liveBerryClients.set(client, env.BERRY_BIN_FOLDER);
+  client.once('close', () => {
+    liveBerryClients.delete(client);
+    if (!isBerryFolderLive(getLiveClientBerryEnv())) {
+      setLiveClientBerryEnv(undefined);
+    }
+    dropUnownedBerryFolders().catch((e) => {
+      serverLogger.log(
+        `Failed to drop Yarn Berry bin folders from plugin workers: ${e.message}`
+      );
+    });
+  });
+}
+
+function isBerryFolderLive(env: NodeJS.ProcessEnv): boolean {
+  return (
+    hasBerryBinFolders(env) &&
+    [...liveBerryClients.values()].includes(env.BERRY_BIN_FOLDER)
+  );
+}
+
+function workerEnv(
+  env: Record<string, string>,
+  keepBerryFolders: boolean
+): Record<string, string> {
+  workersHoldBerryFolders = keepBerryFolders;
+  return (
+    keepBerryFolders
+      ? withTrustedBerryBinFolders(env)
+      : withoutBerryBinFolders(env)
+  ) as Record<string, string>;
 }
 
 /**
- * Once the client whose env was applied last disconnects, its Yarn command is
- * about to delete its bin folders, so plugin workers stop resolving through
+ * Once no connected client carries the applied env's bin folders, their Yarn
+ * command is about to delete them, so plugin workers stop resolving through
  * them. A newer client's apply either lands after this forward or, if it ran
  * while this waited, has already forwarded its own env and is left in place.
  */
-async function handleClientDisconnected(client: EventEmitter): Promise<void> {
-  if (client !== liveClient) {
-    return;
-  }
-  liveClient = undefined;
-  setLiveClientBerryEnv(undefined);
+async function dropUnownedBerryFolders(): Promise<void> {
   while (inFlightApply) {
     await inFlightApply;
   }
   const appliedEnv = getAppliedDaemonClientEnv()?.env;
-  if (!appliedEnv || liveClient) {
+  if (
+    !appliedEnv ||
+    !workersHoldBerryFolders ||
+    isBerryFolderLive(appliedEnv)
+  ) {
     return;
   }
-  await runApply(
-    forwardEnvToPluginWorkers(
-      withoutBerryBinFolders(appliedEnv) as Record<string, string>
-    )
-  );
+  setLiveClientBerryEnv(undefined);
+  await runApply(forwardEnvToPluginWorkers(workerEnv(appliedEnv, false)));
 }
 
 async function applyEnvChange(
