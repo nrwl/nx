@@ -43,6 +43,8 @@ pub struct QueryFilter {
     /// The last bytes emitted are an OSC string too long to hold, still
     /// open; true while the next byte starts one of its fields.
     osc: Option<bool>,
+    /// The last bytes emitted are inside a DCS string no terminator has ended.
+    dcs: bool,
 }
 
 impl QueryFilter {
@@ -51,13 +53,14 @@ impl QueryFilter {
             pending: Vec::new(),
             open: false,
             osc: None,
+            dcs: false,
         }
     }
 
     pub fn feed<'a>(&mut self, chunk: &'a [u8]) -> Cow<'a, [u8]> {
         // Fast path: nothing held over and nothing to remove or hold — the
         // caller's slice passes through without an allocation or copy.
-        if self.pending.is_empty() && self.osc.is_none() && scan_is_clean(chunk) {
+        if self.pending.is_empty() && self.osc.is_none() && !self.dcs && scan_is_clean(chunk) {
             return Cow::Borrowed(chunk);
         }
 
@@ -71,6 +74,7 @@ impl QueryFilter {
 
         let mut out = Vec::with_capacity(input.len());
         let mut open = std::mem::take(&mut self.open);
+        let mut dcs = std::mem::take(&mut self.dcs);
         let mut i = 0;
         if let Some(field_start) = self.osc.take() {
             match self.stream_osc(&input, 0, field_start, &mut out) {
@@ -85,28 +89,33 @@ impl QueryFilter {
             if !matches!(input[i], 0x1b | 0xc2) {
                 out.push(input[i]);
                 open = false;
+                dcs &= !matches!(input[i], 0x18 | 0x1a);
                 i += 1;
                 continue;
             }
             match classify(&input[i..]) {
                 Classification::Query(len) => {
+                    open |= std::mem::take(&mut dcs);
                     cancel_if_open(&mut out, &mut open);
                     i += len;
                 }
                 Classification::NotQuery(len) => {
                     out.extend_from_slice(&input[i..i + len]);
                     open = false;
+                    dcs = matches!(introducer(&input[i..]), Ok((Kind::Dcs, _)));
                     i += len;
                 }
                 Classification::Aborted(len) => {
                     out.extend_from_slice(&input[i..i + len]);
                     open = true;
+                    dcs = false;
                     i += len;
                 }
                 Classification::Cut(len) => {
                     out.extend_from_slice(&input[i..i + len]);
                     out.push(CAN);
                     open = false;
+                    dcs = false;
                     i += len;
                 }
                 Classification::Incomplete => {
@@ -116,6 +125,7 @@ impl QueryFilter {
                         match introducer(rest) {
                             Ok((Kind::Osc, body)) if !drop_unterminated(rest) => {
                                 out.extend_from_slice(&rest[..body]);
+                                dcs = false;
                                 if let Some((end, still_open)) =
                                     self.stream_osc(&input, i + body, false, &mut out)
                                 {
@@ -124,7 +134,10 @@ impl QueryFilter {
                                     continue;
                                 }
                             }
-                            _ => cancel_if_open(&mut out, &mut open),
+                            _ => {
+                                open |= std::mem::take(&mut dcs);
+                                cancel_if_open(&mut out, &mut open);
+                            }
                         }
                     } else {
                         self.pending = input[i..].to_vec();
@@ -134,6 +147,7 @@ impl QueryFilter {
                 }
             }
         }
+        self.dcs = dcs;
         Cow::Owned(out)
     }
 
@@ -161,10 +175,11 @@ impl QueryFilter {
         }
     }
 
-    /// Release whatever partial sequence is still held (call at EOF).
+    /// Judges what is still held at EOF. A partial query or non-OSC sequence
+    /// is dropped, and an open OSC string is ended with CAN.
     pub fn flush(&mut self) -> Vec<u8> {
         let pending = std::mem::take(&mut self.pending);
-        let mut open = std::mem::take(&mut self.open);
+        let mut open = std::mem::take(&mut self.open) | std::mem::take(&mut self.dcs);
         if self.osc.take().is_some() {
             return vec![CAN];
         }
@@ -285,6 +300,11 @@ fn scan_is_clean(chunk: &[u8]) -> bool {
     while let Some(esc) = chunk[i..].iter().position(|b| matches!(b, 0x1b | 0xc2)) {
         i += esc;
         match classify(&chunk[i..]) {
+            Classification::NotQuery(_)
+                if matches!(introducer(&chunk[i..]), Ok((Kind::Dcs, _))) =>
+            {
+                return false;
+            }
             Classification::NotQuery(len) | Classification::Aborted(len) => i += len,
             Classification::Query(_) | Classification::Cut(_) | Classification::Incomplete => {
                 return false;
@@ -741,6 +761,26 @@ mod tests {
 
         let mut f = QueryFilter::new();
         assert_eq!(f.feed(b"a\x1b]5\x1b[").as_ref(), b"a\x1b]5");
+        assert_eq!(f.flush(), b"\x18");
+    }
+
+    #[test]
+    fn removing_a_sequence_cancels_the_dcs_string_it_ended() {
+        assert_eq!(
+            strip(b"\x1bPq\x1b]52;c;YQ==\x07visible"),
+            b"\x1bPq\x18visible"
+        );
+        assert_eq!(strip(b"\x1bPq#0;2;0\x1b[cb"), b"\x1bPq#0;2;0\x18b");
+        assert_eq!(strip(b"\x1bPqa\x1b\\\x1b[cb"), b"\x1bPqa\x1b\\b");
+        assert_eq!(strip(b"\x1bPqa\x18\x1b[cb"), b"\x1bPqa\x18b");
+
+        let mut f = QueryFilter::new();
+        assert_eq!(f.feed(b"\x1bPqa").as_ref(), b"\x1bPqa");
+        assert_eq!(f.feed(b"b").as_ref(), b"b");
+        assert_eq!(f.feed(b"\x1b[cv").as_ref(), b"\x18v");
+
+        let mut f = QueryFilter::new();
+        assert_eq!(f.feed(b"\x1bPqa\x1b[").as_ref(), b"\x1bPqa");
         assert_eq!(f.flush(), b"\x18");
     }
 
