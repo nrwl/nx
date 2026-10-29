@@ -658,6 +658,8 @@ Then set `waitFor` to `ready` on the `dependsOn` entry of each task that should 
   A 404 at the root path is retried at `/index.html`.
   Certificates are verified, except for a loopback address such as `127.0.0.1`, and for `localhost` or a `*.localhost` name whose every address is loopback,
   where a self-signed development certificate works.
+  Nx trusts the certificates in the operating system's store and in the file that `NODE_EXTRA_CA_CERTS` names.
+  `SSL_CERT_FILE` or `SSL_CERT_DIR` replaces the operating system's store.
   Proxy environment variables such as `HTTP_PROXY` and `NO_PROXY` apply to other hosts.
   A `NO_PROXY` entry is `*` for every host, a domain that also covers its subdomains (`example.com` or `.example.com`), `*.example.com` for the subdomains only, an IP address, or a CIDR range such as `10.0.0.0/8`.
   Any entry except a CIDR range can end in a port, such as `staging.internal:8080` or `[fd00::1]:8080`, to match only that port.

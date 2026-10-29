@@ -1,12 +1,16 @@
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::path::Path;
 use std::process::Stdio;
 use std::time::{Duration, Instant};
 
 use hickory_resolver::TokioResolver;
 use hickory_resolver::config::LookupIpStrategy;
-use reqwest::{Client, Url};
+use reqwest::{Certificate, Client, ClientBuilder, Url};
+use rustls::RootCertStore;
+use rustls::pki_types::CertificateDer;
+use rustls::pki_types::pem::PemObject;
 use tokio::net::TcpStream;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
@@ -79,6 +83,7 @@ impl Probe {
         match (&config.url, config.port, &config.command) {
             (Some(url), None, None) => {
                 let url = connect_url(url)?;
+                load_extra_roots();
                 Ok(Self::Url {
                     // Read on the JS thread, which a `process.env` write cannot race
                     direct: no_proxy_matches(&no_proxy_env(), &url),
@@ -271,10 +276,47 @@ fn build_http_client(route: Route) -> reqwest::Result<Client> {
                 .no_proxy()
                 .resolve_to_addrs(host, &pinned)
         }
-        Route::Direct => builder.no_proxy(),
-        Route::FromEnv => builder,
+        Route::Direct => with_extra_roots(builder)?.no_proxy(),
+        Route::FromEnv => with_extra_roots(builder)?,
     }
     .build()
+}
+
+// Node reads NODE_EXTRA_CA_CERTS once per process too
+static EXTRA_ROOTS: OnceCell<Vec<CertificateDer<'static>>> = OnceCell::new();
+
+fn with_extra_roots(builder: ClientBuilder) -> reqwest::Result<ClientBuilder> {
+    EXTRA_ROOTS
+        .get()
+        .into_iter()
+        .flatten()
+        .try_fold(builder, |builder, der| {
+            Ok(builder.add_root_certificate(Certificate::from_der(der)?))
+        })
+}
+
+// Read on the JS thread, which a `process.env` write cannot race
+fn load_extra_roots() {
+    EXTRA_ROOTS.get_or_init(|| {
+        std::env::var_os("NODE_EXTRA_CA_CERTS")
+            .map(|path| extra_roots(Path::new(&path)))
+            .unwrap_or_default()
+    });
+}
+
+// A malformed PEM section ends the file. A certificate rustls cannot use is
+// skipped, so the roots after it still count
+fn extra_roots(path: &Path) -> Vec<CertificateDer<'static>> {
+    let Ok(pem) = std::fs::read(path) else {
+        return Vec::new();
+    };
+    // reqwest runs the same check when it builds the client, and one
+    // rejected certificate fails the whole build
+    let mut store = RootCertStore::empty();
+    CertificateDer::pem_slice_iter(&pem)
+        .map_while(Result::ok)
+        .filter(|der| store.add(der.clone()).is_ok())
+        .collect()
 }
 
 /// Retries a probe until it passes, the timeout elapses or `cancel` is called.
@@ -962,6 +1004,7 @@ mod tests {
                     "--exact",
                     "native::tasks::readiness::tests::url_wait_with_env_proxy",
                 ])
+                .env("NX_READINESS_TEST_URL", "http://app.example.invalid:8080/")
                 .env("HTTP_PROXY", &proxy)
                 .env("NO_PROXY", no_proxy)
                 .status()
@@ -979,15 +1022,158 @@ mod tests {
     #[ignore]
     async fn url_wait_with_env_proxy() {
         let config = ReadinessProbeConfig {
-            url: Some("http://app.example.invalid:8080/".into()),
+            url: Some(std::env::var("NX_READINESS_TEST_URL").unwrap()),
             port: None,
             host: None,
             command: None,
-            timeout: 300,
+            timeout: 1000,
             env: None,
             interval: None,
         };
         probe(config).wait().await.unwrap();
+    }
+
+    // Byte by byte, so nothing past the head is consumed
+    fn read_head(stream: &mut impl std::io::Read) -> bool {
+        let mut head = Vec::new();
+        let mut byte = [0u8; 1];
+        while stream.read(&mut byte).is_ok_and(|n| n == 1) {
+            head.push(byte[0]);
+            if head.ends_with(b"\r\n\r\n") {
+                return true;
+            }
+        }
+        false
+    }
+
+    // Counts the requests that arrive over a completed handshake
+    fn tls_server(served: std::sync::Arc<std::sync::atomic::AtomicUsize>) -> SocketAddr {
+        use rustls::pki_types::PrivateKeyDer;
+        use std::io::Write;
+        let cert = CertificateDer::from_pem_slice(include_bytes!("readiness/fixtures/server.pem"))
+            .unwrap();
+        let key =
+            PrivateKeyDer::from_pem_slice(include_bytes!("readiness/fixtures/server.key")).unwrap();
+        let config = std::sync::Arc::new(
+            rustls::ServerConfig::builder_with_provider(std::sync::Arc::new(
+                rustls::crypto::ring::default_provider(),
+            ))
+            .with_safe_default_protocol_versions()
+            .unwrap()
+            .with_no_client_auth()
+            .with_single_cert(vec![cert], key)
+            .unwrap(),
+        );
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        std::thread::spawn(move || {
+            for stream in listener.incoming().flatten() {
+                let connection = rustls::ServerConnection::new(config.clone()).unwrap();
+                let mut tls = rustls::StreamOwned::new(connection, stream);
+                if read_head(&mut tls) {
+                    served.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    let _ = tls.write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n");
+                    tls.conn.send_close_notify();
+                    let _ = tls.flush();
+                }
+            }
+        });
+        addr
+    }
+
+    // Tunnels every CONNECT to `target`, whatever host it names
+    fn connect_proxy(target: SocketAddr) -> String {
+        use std::io::Write;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            for mut client in listener.incoming().flatten() {
+                if !read_head(&mut client) {
+                    continue;
+                }
+                let mut server = std::net::TcpStream::connect(target).unwrap();
+                let _ = client.write_all(b"HTTP/1.1 200 Connection established\r\n\r\n");
+                let (mut from_client, mut to_server) =
+                    (client.try_clone().unwrap(), server.try_clone().unwrap());
+                std::thread::spawn(move || std::io::copy(&mut from_client, &mut to_server));
+                std::thread::spawn(move || std::io::copy(&mut server, &mut client));
+            }
+        });
+        proxy
+    }
+
+    // The proxy reaches an `https` name that no resolver knows. Each case
+    // runs in a fresh process: the extra roots are read once per process
+    #[test]
+    fn url_trusts_the_roots_node_extra_ca_certs_adds() {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let served = Arc::new(AtomicUsize::new(0));
+        let proxy = connect_proxy(tls_server(served.clone()));
+        let ca = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/native/tasks/readiness/fixtures/ca.pem"
+        );
+        for trusted in [false, true] {
+            let before = served.load(Ordering::SeqCst);
+            let mut child = std::process::Command::new(std::env::current_exe().unwrap());
+            child
+                .args([
+                    "--ignored",
+                    "--exact",
+                    "native::tasks::readiness::tests::url_wait_with_env_proxy",
+                ])
+                .env("NX_READINESS_TEST_URL", "https://app.example.invalid/")
+                .env("HTTPS_PROXY", &proxy)
+                .env("NO_PROXY", "")
+                .env_remove("NODE_EXTRA_CA_CERTS");
+            if trusted {
+                child.env("NODE_EXTRA_CA_CERTS", ca);
+            }
+            assert!(child.status().unwrap().success(), "trusted: {trusted}");
+            assert_eq!(
+                served.load(Ordering::SeqCst) > before,
+                trusted,
+                "trusted: {trusted}"
+            );
+        }
+    }
+
+    #[test]
+    fn extra_roots_stop_at_malformed_pem_and_skip_unusable_certificates() {
+        let dir = tempfile::tempdir().unwrap();
+        let ca = include_str!("readiness/fixtures/ca.pem");
+        let server = include_str!("readiness/fixtures/server.pem");
+        let key = include_str!("readiness/fixtures/server.key");
+        // rustls rejects its critical certificatePolicies extension
+        let critical_policy_ca = include_str!("readiness/fixtures/critical-policy-ca.pem");
+        let bad_base64 = "-----BEGIN CERTIFICATE-----\n!!!!\n-----END CERTIFICATE-----\n";
+        let not_a_certificate = "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n";
+        for (name, content, kept) in [
+            ("both.pem", Some(format!("{ca}{key}{server}")), 2),
+            (
+                "malformed-pem.pem",
+                Some(format!("{ca}{bad_base64}{server}")),
+                1,
+            ),
+            (
+                "not-a-certificate.pem",
+                Some(format!("{ca}{not_a_certificate}{server}")),
+                2,
+            ),
+            (
+                "critical-policy.pem",
+                Some(format!("{critical_policy_ca}{ca}")),
+                1,
+            ),
+            ("missing.pem", None, 0),
+        ] {
+            let path = dir.path().join(name);
+            if let Some(content) = content {
+                std::fs::write(&path, content).unwrap();
+            }
+            assert_eq!(extra_roots(&path).len(), kept, "{name}");
+        }
     }
 
     // Runs the ignored test in a fresh process so the shared client is still unbuilt
