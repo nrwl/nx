@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import {
   resolveFromWorkspace,
   resolveInstalledPackage,
@@ -177,7 +177,7 @@ describe('resolveNxBinFrom', () => {
       .spyOn(ownedPrivateDir, 'isTrustedAncestorEntry')
       .mockImplementation((dir) => dir !== shared);
 
-    expect(() => resolveNxBinFrom(ws)).toThrow();
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
     expect(trusted).toHaveBeenCalledWith(shared, 'node_modules');
   });
 
@@ -190,7 +190,52 @@ describe('resolveNxBinFrom', () => {
       (dir) => dir !== shared
     );
 
-    expect(() => resolveNxBinFrom(ws)).toThrow();
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
+  });
+
+  it('judges the install nx resolves from, past a local one without bin/nx.js', () => {
+    const localNx = join(ws, 'node_modules', 'nx');
+    mkdirSync(localNx, { recursive: true });
+    writeFileSync(
+      join(localNx, 'package.json'),
+      JSON.stringify({ name: 'nx', version: '1.0.0' })
+    );
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockImplementation(
+      (dir) => dir !== shared
+    );
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
+  });
+
+  it('ignores an ancestor package.json that names itself nx', () => {
+    writeFileSync(join(shared, 'evil.js'), '');
+    writeFileSync(
+      join(shared, 'package.json'),
+      JSON.stringify({ name: 'nx', exports: { './bin/nx.js': './evil.js' } })
+    );
+    const localBin = join(ws, 'node_modules', 'nx', 'bin', 'nx.js');
+    mkdirSync(dirname(localBin), { recursive: true });
+    writeFileSync(localBin, '');
+
+    expect(resolveNxBinFrom(ws)).toBe(localBin);
+  });
+
+  it('throws MODULE_NOT_FOUND when no install holds nx', () => {
+    rmSync(join(shared, 'node_modules'), { recursive: true });
+
+    expect(() => resolveNxBinFrom(ws)).toThrow(
+      expect.objectContaining({ code: 'MODULE_NOT_FOUND' })
+    );
+  });
+
+  it('trusts the Yarn PnP resolution', () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockReturnValue(false);
+    process.versions.pnp = '3';
+    try {
+      expect(resolveNxBinFrom(ws)).toBe(nxBin);
+    } finally {
+      delete process.versions.pnp;
+    }
   });
 
   it('judges the install nx resolves from, past an incomplete local one', () => {
@@ -199,6 +244,6 @@ describe('resolveNxBinFrom', () => {
       (dir) => dir !== shared
     );
 
-    expect(() => resolveNxBinFrom(ws)).toThrow();
+    expect(() => resolveNxBinFrom(ws)).toThrow(/Refusing the nx installed in/);
   });
 });
