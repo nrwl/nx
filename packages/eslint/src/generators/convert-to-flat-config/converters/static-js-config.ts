@@ -203,6 +203,11 @@ function evaluateObject(
       return unsupported(dynamicValueReason(property.name, path));
     }
     const propertyPath = path ? `${path}.${key}` : key;
+    if (key === '__proto__') {
+      return unsupported(
+        `"${propertyPath}" sets the object's prototype instead of a property`
+      );
+    }
     const evaluated = evaluate(property.initializer, propertyPath);
     if (evaluated.kind === 'unsupported') {
       return evaluated;
