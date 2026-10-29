@@ -14,9 +14,7 @@ describe('init', () => {
   });
 
   it('should deny the build scripts pulled in through @nx/detox', async () => {
-    await withPnpm(tree, '11.2.2', () =>
-      reactNativeInitGenerator(tree, { addPlugin: true })
-    );
+    await withPnpm(tree, '11.2.2', () => reactNativeInitGenerator(tree, {}));
 
     const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
     expect(pnpmWorkspace).toMatch(/['"]?@parcel\/watcher['"]?: false/);
@@ -24,9 +22,7 @@ describe('init', () => {
   });
 
   it('should add react native dependencies', async () => {
-    await reactNativeInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await reactNativeInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
@@ -39,9 +35,7 @@ describe('init', () => {
 /node_modules
 `
     );
-    await reactNativeInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await reactNativeInitGenerator(tree, {});
 
     const content = tree.read('/.gitignore').toString();
 

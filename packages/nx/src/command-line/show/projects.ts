@@ -8,6 +8,7 @@ import { filterAffected } from '../../project-graph/affected/affected-project-gr
 import {
   computeAffectedTasks,
   selectsAffectedTasks,
+  taskGranularityRequirement,
 } from '../../project-graph/affected/affected-tasks';
 import { printAffectedExplanation } from '../../project-graph/affected/print-explanation';
 import {
@@ -20,7 +21,6 @@ import {
 } from '../../project-graph/file-utils';
 import { filterNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { allFileData } from '../../utils/all-file-data';
 import {
   NxArgs,
   parseFiles,
@@ -47,14 +47,14 @@ export async function showProjectsHandler(
 
   const explainsTasks =
     args.affected &&
-    selectsAffectedTasks() &&
+    selectsAffectedTasks(nxJson) &&
     !!args.withTarget?.length &&
     !args.projects;
   if (isExplaining(nxArgs.explain) && !explainsTasks) {
     throw new Error(
       explainUnavailable(
         [
-          !selectsAffectedTasks() && 'NX_LEGACY_AFFECTED=false',
+          !selectsAffectedTasks(nxJson) && taskGranularityRequirement(),
           !args.affected && '--affected',
           !args.withTarget?.length && 'targets passed with --withTarget (-t)',
         ].filter(Boolean),
@@ -68,7 +68,11 @@ export async function showProjectsHandler(
     const touchedFiles = await getTouchedFiles(nxArgs);
 
     // With a target, list projects owning an affected task for it, matching `affected -t`.
-    if (selectsAffectedTasks() && args.withTarget?.length && !args.projects) {
+    if (
+      selectsAffectedTasks(nxJson) &&
+      args.withTarget?.length &&
+      !args.projects
+    ) {
       const affectedTasks = await computeAffectedTasks({
         projectGraph: graph,
         nxJson,

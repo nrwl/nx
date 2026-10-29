@@ -13,7 +13,7 @@ import {
 import { spawn } from 'child_process';
 import treeKill from 'tree-kill';
 import { join } from 'path';
-import { writeFileSync, mkdtempSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdtempSync, mkdirSync, renameSync } from 'fs';
 import { tmpdir } from 'os';
 
 let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
@@ -36,11 +36,37 @@ const OUTPUT_TIMEOUT_MS = 15000;
 // run, which a late straggler would otherwise slip past.
 const OUTPUT_SETTLE_MS = 500;
 
-/** Every project in `expected` has run the command at least once. */
-const ranFor =
-  (expected: string[]) =>
-  (lines: string[]): boolean =>
-    expected.every((e) => lines.includes(e));
+async function expectProjectChanges(
+  getOutput: GetOutput,
+  expected: Record<string, string[]>
+) {
+  const expectedFiles = Object.values(expected).flat();
+  const lines = await getOutput(
+    receivedAll([...Object.keys(expected), ...expectedFiles])
+  );
+  const batches = new Map<string, string[]>();
+
+  // Each path is published atomically once, so its file list identifies a batch.
+  // Every project command in that batch receives the same file list.
+  for (const line of lines) {
+    const [project, ...files] = line.split(' ');
+    const fileList = files.sort().join(' ');
+    const projects = batches.get(fileList) ?? [];
+    projects.push(project);
+    batches.set(fileList, projects);
+  }
+
+  const actualFiles: string[] = [];
+  for (const [fileList, projects] of batches) {
+    const files = fileList.split(' ');
+    actualFiles.push(...files);
+    const expectedProjects = Object.keys(expected).filter((project) =>
+      expected[project].some((file) => files.includes(file))
+    );
+    expect(projects.sort()).toEqual(expectedProjects.sort());
+  }
+  expect(actualFiles.sort()).toEqual(expectedFiles.sort());
+}
 
 /** Unique paths across every NX_FILE_CHANGES batch, sorted. */
 function reportedFiles(lines: string[]): string[] {
@@ -73,6 +99,17 @@ async function writeFileForWatcher(path: string, content?: string) {
 
   console.log(`writing to: ${e2ePath}`);
   writeFileSync(e2ePath, content ?? uniqueFileContent());
+  await wait(10);
+}
+
+async function publishFileForWatcher(path: string) {
+  const stagingDirectory = join(tmpProjPath(), '.nx/workspace-data');
+  mkdirSync(stagingDirectory, { recursive: true });
+  const stagingPath = join(stagingDirectory, 'watch-fixture');
+
+  // Keep incomplete contents outside the watched files.
+  writeFileSync(stagingPath, uniqueFileContent());
+  renameSync(stagingPath, join(tmpProjPath(), path));
   await wait(10);
 }
 
@@ -121,29 +158,34 @@ describe('Nx Watch', () => {
 
   it('should watch for project changes', async () => {
     const getOutput = await runWatch(
-      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj1} -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES`
     );
-    await writeFileForWatcher(`libs/${proj1}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj2}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`);
-    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`);
-    await writeFileForWatcher(`newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj2}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj3}/newfile2.txt`);
+    await publishFileForWatcher(`newfile2.txt`);
 
-    expect(await getOutput(ranFor([proj1]))).toEqual([proj1]);
+    await expectProjectChanges(getOutput, {
+      [proj1]: [`libs/${proj1}/newfile.txt`, `libs/${proj1}/newfile2.txt`],
+    });
   }, 50000);
 
   it('should watch for all projects and output the project name', async () => {
-    const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
-    await writeFileForWatcher(`libs/${proj1}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj2}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`);
-    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`);
-    await writeFileForWatcher(`newfile2.txt`);
+    const getOutput = await runWatch(
+      `--all -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES`
+    );
+    await publishFileForWatcher(`libs/${proj1}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj2}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj3}/newfile2.txt`);
+    await publishFileForWatcher(`newfile2.txt`);
 
-    let content = await getOutput(ranFor([proj1, proj2, proj3]));
-    let results = content.sort();
-
-    expect(results).toEqual([proj1, proj2, proj3]);
+    await expectProjectChanges(getOutput, {
+      [proj1]: [`libs/${proj1}/newfile.txt`, `libs/${proj1}/newfile2.txt`],
+      [proj2]: [`libs/${proj2}/newfile.txt`],
+      [proj3]: [`libs/${proj3}/newfile2.txt`],
+    });
   }, 50000);
 
   it('should watch for all project changes and output the file name changes', async () => {
@@ -185,18 +227,18 @@ describe('Nx Watch', () => {
 
   it('should watch selected projects only', async () => {
     const getOutput = await runWatch(
-      `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES`
     );
-    await writeFileForWatcher(`libs/${proj1}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj2}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`);
-    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`);
-    await writeFileForWatcher(`newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj2}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj3}/newfile2.txt`);
+    await publishFileForWatcher(`newfile2.txt`);
 
-    let output = await getOutput(ranFor([proj1, proj3]));
-    let results = output.sort();
-
-    expect(results).toEqual([proj1, proj3]);
+    await expectProjectChanges(getOutput, {
+      [proj1]: [`libs/${proj1}/newfile.txt`, `libs/${proj1}/newfile2.txt`],
+      [proj3]: [`libs/${proj3}/newfile2.txt`],
+    });
   }, 50000);
 
   it('should watch projects including their dependencies', async () => {
@@ -206,18 +248,18 @@ describe('Nx Watch', () => {
     });
 
     const getOutput = await runWatch(
-      `--projects=${proj3} --includeDependencies -- echo \\$NX_PROJECT_NAME`
+      `--projects=${proj3} --includeDependencies -- echo \\$NX_PROJECT_NAME \\$NX_FILE_CHANGES`
     );
-    await writeFileForWatcher(`libs/${proj1}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj2}/newfile.txt`);
-    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`);
-    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`);
-    await writeFileForWatcher(`newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj2}/newfile.txt`);
+    await publishFileForWatcher(`libs/${proj1}/newfile2.txt`);
+    await publishFileForWatcher(`libs/${proj3}/newfile2.txt`);
+    await publishFileForWatcher(`newfile2.txt`);
 
-    let output = await getOutput(ranFor([proj1, proj3]));
-    let results = output.sort();
-
-    expect(results).toEqual([proj1, proj3]);
+    await expectProjectChanges(getOutput, {
+      [proj1]: [`libs/${proj1}/newfile.txt`, `libs/${proj1}/newfile2.txt`],
+      [proj3]: [`libs/${proj3}/newfile2.txt`],
+    });
   }, 50000);
 
   it('should detect files created in newly created directories', async () => {

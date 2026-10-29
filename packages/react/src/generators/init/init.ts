@@ -3,12 +3,12 @@ import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescriptPlugin } from '@nx/js/internal';
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
@@ -39,12 +39,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     );
   }
 
-  const nxJson = readNxJson(tree);
-  schema.addPlugin ??=
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
-  if (schema.useReactRouterPlugin && schema.addPlugin) {
+  if (schema.useReactRouterPlugin) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
@@ -67,6 +62,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
       },
       schema.updatePackageScripts
     );
+    await ensureTypescriptPlugin(tree, schema.updatePackageScripts);
   }
 
   if (!schema.skipFormat) {

@@ -230,6 +230,12 @@ describe('run-state', () => {
       );
       expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
 
+      writeFileSync(
+        join(dir, 'run.json'),
+        JSON.stringify(buildState({ singleMigration: 'yes' as never }))
+      );
+      expect(() => readRunState(dir)).toThrow(/corrupt run state/i);
+
       // promptOutcome.status is a closed set too.
       writeFileSync(
         join(dir, 'run.json'),

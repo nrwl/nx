@@ -10,9 +10,56 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
-import { setCwd } from '@nx/devkit/internal-testing-utils';
+import {
+  setCwd,
+  withEnvironmentVariables,
+} from '@nx/devkit/internal-testing-utils';
 import { tsLibVersion } from '@nx/js/internal';
 import { PackageJson, nxVersion } from '@nx/devkit/internal';
+import { sep } from 'node:path';
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
+
+interface PackageManagerSelection {
+  determinePackageManager: (explicit: string | undefined) => string;
+  parseArgs: (argv: string[]) => {
+    name: string | undefined;
+    packageManager: string | undefined;
+  };
+}
+
+/**
+ * Transpiles the selection helpers out of the generated CLI and returns them,
+ * so the code that ships to plugin consumers is exercised rather than
+ * pattern-matched. `sep` is a free variable here because the import sits above
+ * the sliced region.
+ */
+function loadPackageManagerSelection(cli: string): PackageManagerSelection {
+  const start = cli.indexOf('const packageManagers');
+  const end = cli.indexOf('async function main');
+
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+
+  const { outputText } = transpileModule(cli.slice(start, end), {
+    compilerOptions: {
+      module: ModuleKind.CommonJS,
+      target: ScriptTarget.ES2021,
+    },
+  });
+
+  return new Function(
+    'sep',
+    `${outputText}\nreturn { determinePackageManager, parseArgs };`
+  )(sep);
+}
+
+function restoreEnv(key: string, value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
+  }
+}
 
 const getSchema: (
   overrides?: Partial<CreatePackageSchema>
@@ -62,6 +109,78 @@ describe('NxPlugin Create Package Generator', () => {
         assets: ['packages/create-a-workspace/*.md'],
       },
     });
+  });
+
+  describe('generated CLI package manager selection', () => {
+    let userAgentBackup: string | undefined;
+    let execPathBackup: string | undefined;
+
+    beforeEach(() => {
+      userAgentBackup = process.env.npm_config_user_agent;
+      execPathBackup = process.env.npm_execpath;
+      delete process.env.npm_config_user_agent;
+      delete process.env.npm_execpath;
+    });
+
+    afterEach(() => {
+      restoreEnv('npm_config_user_agent', userAgentBackup);
+      restoreEnv('npm_execpath', execPathBackup);
+    });
+
+    async function generateCli(): Promise<string> {
+      await createPackageGenerator(tree, getSchema());
+      return tree.read('packages/create-a-workspace/bin/index.ts', 'utf-8');
+    }
+
+    it('should not bake the generating workspace manager into the CLI', async () => {
+      const cli = await generateCli();
+
+      // A baked manager is the regression: the consumer's npm downloads the CLI
+      // and the CLI then demands the author's manager, which it never installs.
+      expect(cli).not.toMatch(/packageManager: '(npm|pnpm|yarn|bun)'/);
+      expect(cli).toContain(
+        'packageManager: determinePackageManager(packageManager)'
+      );
+    });
+
+    it('should let an explicit --packageManager win', async () => {
+      const { determinePackageManager, parseArgs } =
+        loadPackageManagerSelection(await generateCli());
+
+      expect(determinePackageManager('pnpm')).toEqual('pnpm');
+      expect(parseArgs(['my-workspace', '--packageManager=pnpm'])).toEqual({
+        name: 'my-workspace',
+        packageManager: 'pnpm',
+      });
+      expect(parseArgs(['--pm', 'yarn', 'my-workspace'])).toEqual({
+        name: 'my-workspace',
+        packageManager: 'yarn',
+      });
+      expect(() => determinePackageManager('nmp')).toThrow(/must be one of/);
+    });
+
+    it('should otherwise detect the invoking manager, falling back to npm', async () => {
+      const { determinePackageManager } = loadPackageManagerSelection(
+        await generateCli()
+      );
+
+      process.env.npm_config_user_agent = 'pnpm/9.12.0 npm/? node/v22.9.0';
+      expect(determinePackageManager(undefined)).toEqual('pnpm');
+
+      delete process.env.npm_config_user_agent;
+      process.env.npm_execpath = `${sep}usr${sep}local${sep}bin${sep}yarn${sep}yarn.js`;
+      expect(determinePackageManager(undefined)).toEqual('yarn');
+
+      delete process.env.npm_execpath;
+      expect(determinePackageManager(undefined)).toEqual('npm');
+    });
+  });
+
+  it('should pass jest with no tests since src is removed', async () => {
+    await createPackageGenerator(tree, getSchema());
+    expect(
+      tree.read('packages/create-a-workspace/jest.config.cts', 'utf-8')
+    ).toContain('passWithNoTests: true');
   });
 
   it('should place the create-package plugin in a directory', async () => {
@@ -144,34 +263,66 @@ describe('NxPlugin Create Package Generator', () => {
     );
   });
 
-  it('should budget the e2e test for a cold package manager cache', async () => {
-    await pluginGenerator(tree, {
-      name: 'with-e2e',
-      directory: 'packages/with-e2e',
-      compiler: 'tsc',
-      skipTsConfig: false,
-      skipFormat: false,
-      skipLintChecks: false,
-      linter: 'eslint',
-      unitTestRunner: 'jest',
-      e2eTestRunner: 'jest',
-    });
+  it.each([
+    {
+      packageManager: 'npm',
+      dlx: /npx create-a-workspace@e2e/,
+      list: /npm ls .*with-e2e/,
+    },
+    {
+      packageManager: 'pnpm',
+      dlx: /pnpm dlx create-a-workspace@e2e/,
+      list: /pnpm ls --depth 100 .*with-e2e/,
+    },
+    {
+      packageManager: 'yarn',
+      dlx: /(?:npx|yarn dlx) create-a-workspace@e2e/,
+      list: /(?:yarn list|yarn info --name-only) .*with-e2e/,
+    },
+    {
+      packageManager: 'bun',
+      dlx: /bunx create-a-workspace@e2e/,
+      list: /bun pm ls .*with-e2e/,
+    },
+  ])(
+    'should use $packageManager consistently and budget the e2e test for installation',
+    async ({ packageManager, dlx, list }) => {
+      const spec = await withEnvironmentVariables(
+        { npm_config_user_agent: `${packageManager}/1.0.0` },
+        async () => {
+          await pluginGenerator(tree, {
+            name: 'with-e2e',
+            directory: 'packages/with-e2e',
+            compiler: 'tsc',
+            skipTsConfig: false,
+            skipFormat: false,
+            skipLintChecks: false,
+            linter: 'eslint',
+            unitTestRunner: 'jest',
+            e2eTestRunner: 'jest',
+          });
 
-    await createPackageGenerator(
-      tree,
-      getSchema({ project: 'with-e2e', e2eProject: 'with-e2e-e2e' })
-    );
+          await createPackageGenerator(
+            tree,
+            getSchema({ project: 'with-e2e', e2eProject: 'with-e2e-e2e' })
+          );
 
-    // The test shells out synchronously, which jest cannot interrupt but vitest
-    // fails after the fact, so an under-budgeted test is an intermittent
-    // failure rather than a consistent one.
-    const spec = tree.read(
-      'packages/with-e2e-e2e/src/create-a-workspace.spec.ts',
-      'utf-8'
-    );
-    const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+          return tree.read(
+            'packages/with-e2e-e2e/src/create-a-workspace.spec.ts',
+            'utf-8'
+          );
+        }
+      );
 
-    expect(budget).not.toBeNull();
-    expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(120_000);
-  });
+      expect(spec).toContain(`--packageManager=${packageManager}`);
+      expect(spec).toMatch(dlx);
+      expect(spec).toMatch(list);
+
+      const budget = /\}, (\d[\d_]*)\);/.exec(spec);
+      expect(budget).not.toBeNull();
+      expect(Number(budget[1].replace(/_/g, ''))).toBeGreaterThanOrEqual(
+        120_000
+      );
+    }
+  );
 });

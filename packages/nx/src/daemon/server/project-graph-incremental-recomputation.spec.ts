@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -111,6 +105,233 @@ describe('invalidateGraphCache', () => {
     // The successor's retrieval, proving the parked compute discarded its
     // own result and chained instead of committing.
     expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('dependencies after configuration errors', () => {
+  let fs: TempFs;
+  let cleanupPlugins: (() => void) | undefined;
+
+  beforeEach(() => {
+    fs = new TempFs('pgir-external-node-recovery');
+  });
+
+  afterEach(() => {
+    cleanupPlugins?.();
+    fs.cleanup();
+  });
+
+  it('recovers external dependencies after repairing a plugin configuration', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({
+        plugins: [join(fs.tempDir, 'external-dependencies.cjs')],
+      }),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'external-dependencies.json': JSON.stringify({ ready: false }),
+      'external-dependencies.cjs': `
+        const { readFileSync } = require('node:fs');
+        const { join } = require('node:path');
+
+        const readConfig = (root) =>
+          JSON.parse(readFileSync(join(root, 'external-dependencies.json'), 'utf8'));
+
+        exports.name = 'external-dependencies';
+        exports.createNodes = [
+          'external-dependencies.json',
+          async (files, options, context) => {
+            if (!readConfig(context.workspaceRoot).ready) {
+              throw new Error('Invalid external dependency configuration');
+            }
+            return files.map((file) => [file, {
+              externalNodes: {
+                'npm:first': {
+                  name: 'npm:first',
+                  type: 'npm',
+                  data: { packageName: 'first', version: '1.0.0' },
+                },
+                'npm:second': {
+                  name: 'npm:second',
+                  type: 'npm',
+                  data: { packageName: 'second', version: '2.0.0' },
+                },
+              },
+            }]);
+          },
+        ];
+        exports.createDependencies = (options, context) =>
+          readConfig(context.workspaceRoot).ready
+            ? [{ source: 'npm:first', target: 'npm:second', type: 'static' }]
+            : [];
+      `,
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    ({ cleanupPlugins } =
+      await import('../../project-graph/plugins/get-plugins'));
+    const { getCachedSerializedProjectGraphPromise } =
+      await import('./project-graph-incremental-recomputation');
+
+    const failed = await getCachedSerializedProjectGraphPromise();
+    expect(failed.error).toMatchObject({
+      name: 'DaemonProjectGraphError',
+      errors: expect.arrayContaining([
+        expect.objectContaining({
+          errors: [
+            [
+              null,
+              expect.objectContaining({
+                message: 'Invalid external dependency configuration',
+              }),
+            ],
+          ],
+        }),
+      ]),
+    });
+
+    fs.writeFile('external-dependencies.json', JSON.stringify({ ready: true }));
+
+    const recovered = await getCachedSerializedProjectGraphPromise();
+    expect(recovered.error).toBeNull();
+    expect(recovered.projectGraph.externalNodes).toEqual({
+      'npm:first': {
+        name: 'npm:first',
+        type: 'npm',
+        data: { packageName: 'first', version: '1.0.0' },
+      },
+      'npm:second': {
+        name: 'npm:second',
+        type: 'npm',
+        data: { packageName: 'second', version: '2.0.0' },
+      },
+    });
+    expect(recovered.projectGraph.dependencies['npm:first']).toEqual([
+      { source: 'npm:first', target: 'npm:second', type: 'static' },
+    ]);
+  });
+
+  it('recovers project dependencies after repairing a partial configuration', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ cli: { packageManager: 'npm' } }),
+      'package.json': JSON.stringify({
+        name: 'root',
+        workspaces: ['packages/*'],
+      }),
+      'packages/a/project.json': JSON.stringify({ name: 'a' }),
+      'packages/a/package.json': JSON.stringify({
+        name: '@proj/a',
+        version: '0.0.0',
+        dependencies: { '@proj/b': 'workspace:*' },
+      }),
+      'packages/b/project.json': JSON.stringify({ name: 'b' }),
+      'packages/b/package.json': JSON.stringify({
+        name: '@proj/b',
+        version: '0.0.0',
+      }),
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/plugins/get-plugins');
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+    cleanupPlugins = undefined;
+    const { LoadedNxPlugin } =
+      await import('../../project-graph/plugins/loaded-nx-plugin');
+    const packageJsonPlugin = new LoadedNxPlugin(
+      await import('../../plugins/package-json'),
+      'nx/core/package-json'
+    );
+    const createPackageNodes = packageJsonPlugin.createNodes![1];
+    let configurationFails = false;
+    packageJsonPlugin.createNodes![1] = async (...args) => {
+      if (configurationFails) {
+        throw new Error('Invalid package metadata configuration');
+      }
+      return createPackageNodes(...args);
+    };
+    const defaultPlugins = [
+      new LoadedNxPlugin(
+        await import('../../plugins/js'),
+        'nx/js/dependencies-and-lockfile'
+      ),
+      packageJsonPlugin,
+      new LoadedNxPlugin(
+        (await import('../../plugins/project-json/build-nodes/project-json'))
+          .ProjectJsonProjectsPlugin,
+        'nx/core/project-json'
+      ),
+    ];
+    vi.doMock('../../project-graph/plugins/get-plugins', () => ({
+      getPlugins: async () => defaultPlugins,
+      getPluginsSeparated: async () => ({
+        specifiedPlugins: [],
+        defaultPlugins,
+      }),
+    }));
+
+    try {
+      const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+        await import('./project-graph-incremental-recomputation');
+      const { updateFilesInContext } =
+        await import('../../utils/workspace-context');
+      const healthy = await getCachedSerializedProjectGraphPromise();
+      expect(healthy.error).toBeNull();
+      expect(healthy.projectGraph.dependencies.a).toContainEqual({
+        source: 'a',
+        target: 'b',
+        type: 'static',
+      });
+
+      fs.writeFile(
+        'packages/a/package.json',
+        JSON.stringify({
+          name: '@proj/a',
+          version: '0.0.1',
+          dependencies: { '@proj/b': 'workspace:*' },
+        })
+      );
+      updateFilesInContext(fs.tempDir, ['packages/a/package.json'], []);
+      configurationFails = true;
+      invalidateGraphCache();
+      const failed = await getCachedSerializedProjectGraphPromise();
+      expect(failed.error).toMatchObject({
+        name: 'DaemonProjectGraphError',
+        errors: [
+          expect.objectContaining({
+            errors: [
+              [
+                null,
+                expect.objectContaining({
+                  message: 'Invalid package metadata configuration',
+                }),
+              ],
+            ],
+          }),
+        ],
+      });
+
+      configurationFails = false;
+      const recovered = await getCachedSerializedProjectGraphPromise();
+      expect(recovered.error).toBeNull();
+      expect(recovered.projectGraph.nodes.b.data.metadata.js.packageName).toBe(
+        '@proj/b'
+      );
+      expect(recovered.projectGraph.dependencies.a).toContainEqual({
+        source: 'a',
+        target: 'b',
+        type: 'static',
+      });
+    } finally {
+      vi.doUnmock('../../project-graph/plugins/get-plugins');
+    }
   });
 });
 

@@ -17,13 +17,12 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   ProjectConfiguration,
-  readJsonFile,
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import {
   addBuildAndWatchDepsTargets,
@@ -33,7 +32,6 @@ export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
   serveStaticTargetName?: string;
@@ -84,7 +82,6 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
               targetsCache,
               isUsingTsSolutionSetup,
               pmc,
-              entries[idx].siblingFiles,
               entries[idx].remixCompiler,
               projectHashes[idx] + configFile
             ),
@@ -124,7 +121,6 @@ async function createNodesInternal(
   targetsCache: PluginCache<RemixTargets>,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  siblingFiles: string[],
   remixCompiler: RemixCompiler,
   hash: string
 ) {
@@ -138,7 +134,6 @@ async function createNodesInternal(
         projectRoot,
         options,
         context,
-        siblingFiles,
         remixCompiler,
         isUsingTsSolutionSetup,
         pmc
@@ -166,7 +161,6 @@ async function buildRemixTargets(
   projectRoot: string,
   options: RemixPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[],
   remixCompiler: RemixCompiler,
   isUsingTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -213,15 +207,6 @@ async function buildRemixTargets(
     namedInputs,
     isUsingTsSolutionSetup
   );
-  targets[options.typecheckTargetName] = typecheckTarget(
-    options.typecheckTargetName,
-    projectRoot,
-    namedInputs,
-    siblingFiles,
-    isUsingTsSolutionSetup,
-    pmc
-  );
-
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
     projectRoot,
@@ -347,53 +332,6 @@ function startTarget(
   return startTarget;
 }
 
-function typecheckTarget(
-  typecheckTargetName: string,
-  projectRoot: string,
-  namedInputs: { [inputName: string]: any[] },
-  siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
-): TargetConfiguration {
-  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
-  const typecheckTarget: TargetConfiguration = {
-    cache: true,
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['typescript'] },
-    ],
-    command: isUsingTsSolutionSetup
-      ? `tsc --build --emitDeclarationOnly`
-      : `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
-    options: {
-      cwd: projectRoot,
-    },
-    metadata: {
-      description: `Runs type-checking for the project.`,
-      technologies: ['typescript'],
-      help: {
-        command: isUsingTsSolutionSetup
-          ? `${pmc.exec} tsc --build --help`
-          : `${pmc.exec} tsc${
-              hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
-            } --help`,
-        example: isUsingTsSolutionSetup
-          ? { args: ['--force'] }
-          : { options: { noEmit: true } },
-      },
-    },
-  };
-
-  if (isUsingTsSolutionSetup) {
-    typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
-  }
-
-  return typecheckTarget;
-}
-
 async function getBuildPaths(
   configFilePath: string,
   projectRoot: string,
@@ -448,7 +386,6 @@ function normalizeOptions(options: RemixPluginOptions) {
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
-  options.typecheckTargetName ??= 'typecheck';
   options.serveStaticTargetName ??= 'serve-static';
 
   return options;
@@ -486,7 +423,6 @@ enum RemixCompiler {
 interface RemixEntry {
   configFile: string;
   projectRoot: string;
-  siblingFiles: string[];
   remixCompiler: RemixCompiler;
 }
 
@@ -518,7 +454,7 @@ async function filterRemixConfigs(
         if (remixCompiler === RemixCompiler.IsNotRemix) {
           return null;
         }
-        return { configFile, projectRoot, siblingFiles, remixCompiler };
+        return { configFile, projectRoot, remixCompiler };
       } catch (e) {
         preErrors.push([configFile, e as Error]);
         return null;

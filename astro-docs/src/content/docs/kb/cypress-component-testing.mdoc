@@ -39,7 +39,7 @@ nx g @nx/react:cypress-component-configuration --project=your-project --build-ta
 nx g @nx/angular:cypress-component-configuration --project=your-project --build-target=my-ng-app:build
 ```
 
-The build target option can be changed later via updating the `devServerTarget` option in the `component-test` target.
+To change the build target later, edit the `buildTarget` option that the generator passes to `nxComponentTestingPreset` in `cypress.config.ts`.
 
 {% aside type="note" title="Angular component testing on Cypress 16" %}
 Cypress 16 ships a single `cypress/angular` mount entry point that uses zoneless change detection
@@ -48,10 +48,6 @@ Templates of zone-based applications no longer re-render after a plain property 
 component test, so state that tests assert on must be signal-based.
 The generator writes the `cypress/angular` import on Cypress 16 and `cypress/angular-zoneless` for
 zoneless projects on Cypress 15.8 to 15.x.
-{% /aside %}
-
-{% aside type="caution" title="Executor Options" %}
-When using component testing make sure to set `skipServe: true` in the component test target options, otherwise `@nx/cypress` will attempt to run the build first which can slow down your component tests. `skipServe: true` is automatically set when using the `cypress-component-configuration` generator.
 {% /aside %}
 
 ## Configuration
@@ -79,9 +75,7 @@ terminal. Screenshots and videos will be accessible in `dist/cypress/libs/your-l
 
 ## Watching for changes (Headed mode)
 
-With, `nx component-test your-lib --watch` Cypress will start in headed mode. Where you can see your component being tested.
-
-Running Cypress with `--watch` is a great way to iterate on your components since cypress will rerun your tests as you make those changes validating the new behavior.
+Run `nx open-cypress your-lib --component` to open Cypress in headed mode, where you can see your component being tested. Cypress reruns your tests as you change your components.
 
 ## Splitting component testing tasks by file
 

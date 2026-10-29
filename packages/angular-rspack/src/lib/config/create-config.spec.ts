@@ -312,6 +312,18 @@ describe('createConfig', () => {
     ) as { options: Record<string, unknown> } | undefined;
   }
 
+  function findSideEffectsRules(
+    config: Configuration
+  ): { include?: unknown; sideEffects?: unknown }[] {
+    return (config.module?.rules ?? []).filter(
+      (rule) =>
+        typeof rule === 'object' &&
+        rule !== null &&
+        'sideEffects' in rule &&
+        rule.sideEffects === true
+    ) as { include?: unknown; sideEffects?: unknown }[];
+  }
+
   it.each(['2.0.0', '1.5.0'])(
     'should wire the server entry loader with the engine manifest inputs when the project @rspack/core is %s',
     async (rspackCoreVersion) => {
@@ -336,7 +348,6 @@ describe('createConfig', () => {
           // Posix-normalized by the config, so a native join would fail on
           // Windows.
           browserOutputRelativePath: '../browser',
-          indexOutputName: 'index.html',
           allowedHosts: ['example.com'],
           manifestModuleRequest: expect.stringContaining(
             '__ng-rspack-ssr-entry-manifest__'
@@ -353,6 +364,36 @@ describe('createConfig', () => {
     },
     10000
   );
+
+  it('should mark the engine manifest virtual module as having side effects', async () => {
+    const root = await createSsrProjectRoot('22.0.0', '2.0.0');
+    try {
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+
+      const manifestModuleRequest = (
+        findServerExportsRule(configs[1]).options.engineWiring as Record<
+          string,
+          unknown
+        >
+      ).manifestModuleRequest;
+      expect(manifestModuleRequest).toEqual(
+        expect.stringContaining('__ng-rspack-ssr-entry-manifest__')
+      );
+      // Without it, a package.json `sideEffects` setting lets rspack drop
+      // the side-effect-only import of the manifest from the SSR entry.
+      expect(findSideEffectsRules(configs[1])).toContainEqual({
+        include: [manifestModuleRequest],
+        sideEffects: true,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 
   it.each([
     ['does not support virtual modules', '1.4.5'],
@@ -375,6 +416,13 @@ describe('createConfig', () => {
           (serverExportsRule.options.engineWiring as Record<string, unknown>)
             .manifestModuleRequest
         ).toBeUndefined();
+        expect(
+          findSideEffectsRules(configs[1]).some((rule) =>
+            JSON.stringify(rule.include ?? '').includes(
+              '__ng-rspack-ssr-entry-manifest__'
+            )
+          )
+        ).toBe(false);
         expect(
           configs[1].plugins?.some(
             (plugin) => plugin?.constructor.name === 'EngineManifestPlugin'

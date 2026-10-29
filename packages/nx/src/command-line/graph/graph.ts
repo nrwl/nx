@@ -66,6 +66,11 @@ import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  isUltracacheOnInCI,
+  ultracacheModeInCI,
+} from '../../ultracache/ci-status';
+import { hasCustomHasher } from '../show/show-target/utils';
 import { splitTargetFromNodes } from '../../utils/split-target';
 
 export interface GraphError {
@@ -929,7 +934,8 @@ function createProjectGraphListener() {
             errors,
             currentProjectGraphClientResponse.affected,
             isFilteredGraph ? currentProjectGraphClientResponse.focus : null,
-            isFilteredGraph ? currentProjectGraphClientResponse.exclude : []
+            isFilteredGraph ? currentProjectGraphClientResponse.exclude : [],
+            await isUltracacheOnInCI(readNxJson())
           );
 
         if (
@@ -966,13 +972,49 @@ function createProjectGraphListener() {
   );
 }
 
+/** The graph's nodes, with `ultracacheInCI` set to each target's Ultracache mode in CI. */
+function markTargetsHashedFromUltracacheInCI(
+  graph: ProjectGraph
+): ProjectGraphProjectNode[] {
+  return Object.values(graph.nodes).map((node) => {
+    const targets = Object.entries(node.data.targets ?? {});
+    const modes = new Map(
+      targets.flatMap(([name, target]) => {
+        const mode = ultracacheModeInCI(
+          target,
+          hasCustomHasher(node.name, name, graph)
+        );
+        return mode ? [[name, mode] as const] : [];
+      })
+    );
+    if (!modes.size) {
+      return node;
+    }
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        targets: Object.fromEntries(
+          targets.map(([name, target]) => [
+            name,
+            modes.has(name)
+              ? { ...target, ultracacheInCI: modes.get(name) }
+              : target,
+          ])
+        ),
+      },
+    };
+  });
+}
+
 function transformProjectGraphToClientResponse(
   projectGraph: ProjectGraph,
   sourceMaps: ConfigurationSourceMaps,
   errors: GraphError[] | null,
   affected: string[] = [],
   focus: string = null,
-  exclude: string[] = []
+  exclude: string[] = [],
+  ultracacheOnInCI = false
 ): {
   projectGraphClientResponse: ProjectGraphClientResponse;
   sourceMapResponse: ConfigurationSourceMaps;
@@ -988,7 +1030,9 @@ function transformProjectGraphToClientResponse(
     readFileMapCache()?.fileMap.projectFileMap || {};
 
   const layout = workspaceLayout();
-  const projects: ProjectGraphProjectNode[] = Object.values(graph.nodes);
+  const projects: ProjectGraphProjectNode[] = ultracacheOnInCI
+    ? markTargetsHashedFromUltracacheInCI(graph)
+    : Object.values(graph.nodes);
   const dependencies = graph.dependencies;
 
   const nxJson = readNxJson();
@@ -1082,7 +1126,8 @@ async function createProjectGraphAndSourceMapClientResponse(
       errors,
       affected,
       focus,
-      exclude
+      exclude,
+      await isUltracacheOnInCI(readNxJson())
     );
 
   performance.mark('project graph response generation:end');
@@ -1105,9 +1150,7 @@ async function createProjectGraphAndSourceMapClientResponse(
   };
 }
 
-async function createTaskGraphClientResponse(
-  pruneExternal: boolean = false
-): Promise<TaskGraphClientResponse> {
+async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
   try {
     graph = await createProjectGraphAsync({ exitOnError: false });
@@ -1115,9 +1158,6 @@ async function createTaskGraphClientResponse(
     if (e instanceof ProjectGraphError) {
       graph = e.getPartialProjectGraph();
     }
-  }
-  if (pruneExternal) {
-    graph = pruneExternalNodes(graph);
   }
 
   const nxJson = readNxJson();
@@ -1226,15 +1266,11 @@ async function createExpandedTaskInputResponse(
 
 // Performance optimized functions for lazy loading task graphs
 
-// In-memory cache for task graphs to avoid regeneration
-const taskGraphCache = new Map<string, TaskGraphClientResponse>();
-
 // In-memory cache for expanded task inputs to avoid regeneration
 const expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
 
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
-  taskGraphCache.clear();
   expandedTaskInputsCache.clear();
 }
 
@@ -1512,8 +1548,9 @@ function expandInputs(
     workspaceRootInputs,
     allWorkspaceFiles
   );
+  const projectRoots = depGraphClientResponse.projects.map((p) => p.data.root);
   const filesExpanded = filesInputs.flatMap((globs) =>
-    expandFilesInput(workspaceRoot, globs)
+    expandFilesInput(workspaceRoot, globs, projectRoots)
   );
 
   const otherInputsExpanded = otherInputs.map((input) => {

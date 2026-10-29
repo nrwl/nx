@@ -2,11 +2,6 @@ import * as path from 'path';
 import * as fileUtils from './fileutils';
 import { workspaceRootInner } from './workspace-root';
 
-type FileTree = {
-  files?: string[];
-  [path: string]: string[] | FileTree;
-};
-
 const rootMarkers = ['nx.json', 'nx', 'nx.bat'];
 
 describe('workspaceRootInner', () => {

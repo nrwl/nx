@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { Mock } from 'vitest';
 import { ProvenanceError } from '../../utils/provenance';
 import {
@@ -6,6 +9,7 @@ import {
   type MigrateGenerateErrorCode,
   type MigratePromptName,
   type MigrateRunErrorCode,
+  type MigrateRunStopReason,
 } from './migrate-analytics';
 
 describe('computeMajorsCrossed', () => {
@@ -68,7 +72,6 @@ describe('GA4 event name length cap', () => {
     multi_major: true,
     agentic: true,
     agent_select: true,
-    ambiguous_agent_outcome: true,
   };
   const GENERATE_ERROR_CODES: Record<MigrateGenerateErrorCode, true> = {
     resolve_version: true,
@@ -80,6 +83,12 @@ describe('GA4 event name length cap', () => {
     migration_exec: true,
     agentic: true,
     other: true,
+  };
+  const RUN_STOP_REASONS: Record<MigrateRunStopReason, true> = {
+    existing_run: true,
+    declined_commits: true,
+    aborted: true,
+    runbook_missing: true,
   };
 
   it('keeps every event name within 40 characters', () => {
@@ -97,11 +106,14 @@ describe('GA4 event name length cap', () => {
       'migrate_orchestrator_existing_run',
       'migrate_single_migration_recorded',
       'migrate_single_migration_invocation',
+      'migrate_single_migration_complete',
+      'migrate_single_migration_abandoned',
       ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
       ...Object.keys(GENERATE_ERROR_CODES).map(
         (c) => `migrate_generate_error_${c}`
       ),
       ...Object.keys(RUN_ERROR_CODES).map((c) => `migrate_run_error_${c}`),
+      ...Object.keys(RUN_STOP_REASONS).map((r) => `migrate_run_stopped_${r}`),
     ];
     const tooLong = names.filter((name) => name.length > 40);
     expect(tooLong).toEqual([]);
@@ -163,6 +175,7 @@ describe('migrate-analytics events', () => {
         migrationCount: 3,
         appliedCount: 3,
       });
+      a.reportMigrateRunStopped('aborted');
       a.reportMigrateGenerateError('fetch_migrations', new Error('x'));
       a.reportMigrateRunError({ code: 'other', error: new Error('x') });
       expect(mockReportEvent).not.toHaveBeenCalled();
@@ -193,6 +206,44 @@ describe('migrate-analytics events', () => {
         excludeAppliedMigrations: true,
       });
     });
+
+    it.each([
+      ['local', 'links its nx to this installation outside the root', true],
+      ['temp-latest', 'does not install this nx', false],
+    ])(
+      'reports the %s CLI source when the workspace %s',
+      async (cliSource, _workspace, linksNx) => {
+        const wsRoot = realpathSync(
+          mkdtempSync(join(tmpdir(), 'migrate-analytics-ws-'))
+        );
+        if (linksNx) {
+          mkdirSync(join(wsRoot, 'node_modules'));
+          symlinkSync(
+            realpathSync(join(__dirname, '..', '..', '..')),
+            join(wsRoot, 'node_modules', 'nx'),
+            'dir'
+          );
+        }
+        // load() re-imports workspace-root, so set the root through the env
+        // var it reads; setWorkspaceRoot would not reach the fresh instance.
+        const originalRootEnv = process.env.NX_WORKSPACE_ROOT_PATH;
+        process.env.NX_WORKSPACE_ROOT_PATH = wsRoot;
+        try {
+          const a = await load();
+          a.reportMigrateGenerateStart({ targetPackage: 'nx' });
+          expect(paramsFor('migrate_generate_start')).toMatchObject({
+            cliSource,
+          });
+        } finally {
+          if (originalRootEnv === undefined) {
+            delete process.env.NX_WORKSPACE_ROOT_PATH;
+          } else {
+            process.env.NX_WORKSPACE_ROOT_PATH = originalRootEnv;
+          }
+          rmSync(wsRoot, { recursive: true, force: true });
+        }
+      }
+    );
   });
 
   describe('reportMigrateGenerateComplete', () => {
@@ -393,6 +444,12 @@ describe('migrate-analytics events', () => {
         appliedCount: 4,
       });
     });
+
+    it('encodes the stop reason in the event name', async () => {
+      const a = await load();
+      a.reportMigrateRunStopped('existing_run');
+      expect(countOf('migrate_run_stopped_existing_run')).toBe(1);
+    });
   });
 
   describe('reportMigrateRunError', () => {
@@ -553,6 +610,18 @@ describe('migrate-analytics events', () => {
       expect(paramsFor('migrate_single_migration_invocation')).toEqual({
         promptChoice: 'prompt',
       });
+    });
+
+    it('reports how an agent-enabled single migration ended', async () => {
+      const a = await load();
+      a.reportMigrateSingleMigrationComplete({});
+      a.reportMigrateSingleMigrationComplete({ agentUsed: 'claude-code' });
+      a.reportMigrateSingleMigrationAbandoned({ agentUsed: 'codex' });
+      expect(mockReportEvent.mock.calls).toEqual([
+        ['migrate_single_migration_complete', { agentUsed: undefined }],
+        ['migrate_single_migration_complete', { agentUsed: 'claude-code' }],
+        ['migrate_single_migration_abandoned', { agentUsed: 'codex' }],
+      ]);
     });
   });
 });

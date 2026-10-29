@@ -46,10 +46,17 @@ describe('Vue Plugin', () => {
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /const webServerAddress = [^;]*;/,
+            `const webServerAddress = getReadyUrl('http://localhost:${availablePort}');`
+          )
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
       updateFile(`${app}/vite.config.mts`, (content) => {
@@ -88,10 +95,13 @@ describe('Vue Plugin', () => {
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
       updateFile(`${app}/rsbuild.config.ts`, (content) => {

@@ -107,12 +107,20 @@ export function parseHandoffIssues(
   reportingStep: MigrateStep
 ): ParsedHandoffIssues {
   if (extras !== undefined) {
-    const unknown = unknownKey(extras, ['outcome', 'issues', 'issueUpdates']);
+    // A single run keeps no issue ledger: nx prints its handoff summary when
+    // the run ends, and deletes the run's record.
+    const singleMigration = state.singleMigration === true;
+    const unknown = unknownKey(
+      extras,
+      singleMigration ? ['outcome'] : ['outcome', 'issues', 'issueUpdates']
+    );
     if (unknown !== undefined) {
       return invalid(
-        `the handoff has an unrecognized field ${quoted(
-          unknown
-        )}; the fields accepted next to "status" and "summary" are "outcome", "issues" and "issueUpdates"`
+        `the handoff has an unrecognized field ${quoted(unknown)}; ${
+          singleMigration
+            ? `a --run-migration run accepts only "outcome" next to "status" and "summary", and its problems go in "summary"`
+            : `the fields accepted next to "status" and "summary" are "outcome", "issues" and "issueUpdates"`
+        }`
       );
     }
     if (extras['outcome'] !== undefined && extras['outcome'] !== 'skipped') {

@@ -322,6 +322,37 @@ describe('Extra Nx Misc Tests', () => {
       }
     });
 
+    it('should fail and skip dependents when a command cannot start', () => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
+        config.targets['missing-env'] = {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'echo hi',
+            envFile: `libs/${mylib}/.missing.env`,
+          },
+        };
+        config.targets['after-missing-env'] = {
+          executor: 'nx:run-commands',
+          dependsOn: ['missing-env'],
+          options: { command: 'echo DEPENDENT_RAN' },
+        };
+        return config;
+      });
+
+      // Summary, the default in an agent environment, prints no task output
+      const output = runCLI(
+        `run ${mylib}:after-missing-env --output-style=static`,
+        { silenceError: true }
+      );
+
+      expect(runCLI.lastExitCode).toBe(1);
+      expect(output.match(/no such file or directory/g)).toHaveLength(1);
+      expect(output).toContain(
+        `Running target after-missing-env for project ${mylib} and 1 task it depends on failed`
+      );
+      expect(output).not.toContain('DEPENDENT_RAN');
+    });
+
     it('run command should not break if output property is missing in options and arguments', async () => {
       updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.lint ??= {};
@@ -447,6 +478,29 @@ NX_USERNAME=$FIRSTNAME $LASTNAME`
       result = runCLI(`run-many --target=hello1,hello2`);
       expect(result).toContain('hello1');
       expect(result).toContain('hello2');
+    });
+
+    it('should resolve envFile references against the task env when run directly or forked', () => {
+      updateFile('.env', (content) => `${content}\nNX_E2E_PORT=3000`);
+      updateFile(`libs/${libName}/.env`, 'NX_E2E_PORT=5000');
+      updateFile(
+        `libs/${libName}/.serve.env`,
+        'NX_E2E_URL=http://localhost:${NX_E2E_PORT}'
+      );
+      updateJson(join('libs', libName, 'project.json'), (config) => {
+        config.targets['print-url'] = {
+          command: 'echo "[$NX_E2E_PORT][$NX_E2E_URL]"',
+          options: { envFile: `libs/${libName}/.serve.env` },
+        };
+        return config;
+      });
+
+      for (const env of [{}, { NX_RUN_COMMANDS_DIRECTLY: 'false' }]) {
+        const result = runCLI(`run ${libName}:print-url --skip-nx-cache`, {
+          env,
+        });
+        expect(result).toContain('[5000][http://localhost:5000]');
+      }
     });
   });
 

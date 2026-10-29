@@ -6,6 +6,7 @@
 export type {
   Task,
   TaskGraph,
+  TaskGraphEdge,
   TaskTarget,
   TaskHashDetails,
   TaskUltracacheSettings,

@@ -17,7 +17,7 @@ Certain tasks like end-to-end (e2e) tests, integration tests, or large unit test
 
 Manually splitting these slow tasks can be complex and require ongoing maintenance. Nx Atomizer solves this by **automatically generating runnable targets for each test file**. For example, a task that takes 10 minutes can be split and distributed as five 2-minute tasks per agent. This allows for:
 
-- parallelization across multiple machines with [Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- parallelization across multiple machines with [Workers](/docs/features/ci-features/distribute-task-execution)
 - faster [flaky test detection & retries](/docs/kb/flaky-tasks) by isolating and re-running only the failed tests
 
 ## Enable automated task splitting
@@ -78,26 +78,15 @@ nx add @nx/gradle
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
-If you upgraded Nx from an older version, ensure that [inferred tasks](/docs/kb/convert-to-inferred#enable-inferred-tasks-for-older-workspaces) are enabled in `nx.json`:
-
-```json
-// nx.json
-{
-  ...
-  // turned on by default; just make sure it is not set to false
-  useInferencePlugins: true
-}
-```
-
 ## Update an existing project to use automated task splitting
 
 If you are already using the `@nx/cypress`, `@nx/playwright`, `@nx/jest`, `@nx/vitest`, or `@nx/gradle` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. Follow the instructions for the plugin you are using:
 
-- [Configure Cypress Task Splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
-- [Configure Playwright Task Splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
-- [Configure Jest Task Splitting](/docs/technologies/test-tools/jest/introduction#splitting-e2e-tests)
-- [Configure Vitest Task Splitting](/docs/technologies/test-tools/vitest/introduction#splitting-e2e-tests)
-- [Configure Gradle Testing Task Splitting](/docs/technologies/java/gradle/introduction#test-distribution)
+- [Configure Cypress task splitting](/docs/technologies/test-tools/cypress/introduction#nxcypress-configuration)
+- [Configure Playwright task splitting](/docs/technologies/test-tools/playwright/introduction#nxplaywright-configuration)
+- [Configure Jest task splitting](/docs/technologies/test-tools/jest/introduction#unit-and-e2e-configurations)
+- [Configure Vitest task splitting](/docs/technologies/test-tools/vitest/introduction#configure-unit-and-e2e-separately)
+- [Configure Gradle testing task splitting](/docs/technologies/java/gradle/introduction#nxgradle-configuration)
 
 ## Verify automated task splitting works
 
@@ -233,11 +222,14 @@ nx show project my-project-e2e
           }
         },
         "lint": {
-          "executor": "@nx/eslint:lint",
+          "executor": "nx:run-commands",
           "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
           "cache": true,
           "outputs": ["{options.outputFile}"],
-          "options": {},
+          "options": {
+            "cwd": "apps/admin-e2e",
+            "command": "eslint ."
+          },
           "configurations": {},
           "metadata": {
             "technologies": ["eslint"]
@@ -468,7 +460,7 @@ jobs:
         with:
           version: 9
 
-      - run: pnpm dlx nx start-nx-agents
+      - run: pnpm dlx nx-cloud start-workers
 
       - uses: actions/setup-node@v6
         with:
@@ -482,3 +474,18 @@ jobs:
 ```
 
 Learn more about configuring your [CI provider with these workflow examples](/docs/kb/ci-workflow-examples).
+
+## Skip unaffected test files
+
+Splitting an e2e suite lets its test files run in parallel, but by default each task still depends on
+the whole app, its dependencies, and the e2e project. Even a small change can rerun every test file.
+
+Scoping each test file to the code it tests lets Nx reuse the other files' cached results.
+For example, a change limited to checkout reruns `checkout.spec.ts`, while `search.spec.ts` reuses its
+cached result. A change to shared code that both tests depend on reruns both.
+
+This means fewer tests to execute on each PR, shorter CI runs, and lower compute costs as your suite grows.
+
+Use `@nx-ignore-server-inputs` with Ultracache to track the code a test imports, or `@nx-depends-on`
+to list the projects it covers. See [skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests)
+for examples and setup instructions.

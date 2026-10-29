@@ -5,6 +5,14 @@ import {
   getTaskRawInputs,
 } from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
+import {
+  hasAlwaysInput,
+  isUltracacheOnInCI,
+  ultracacheDocsLink,
+  ultracacheInCINotice,
+  ultracacheModeInCI,
+  type UltracacheModeInCI,
+} from '../../../ultracache/ci-status';
 import type { ShowTargetInputsOptions } from '../command-object';
 import {
   resolveTarget,
@@ -51,10 +59,16 @@ export async function showTargetInputsHandler(
     return;
   }
 
+  const targetConfig = t.node.data.targets[targetName];
+  const mode = args.json ? undefined : ultracacheModeInCI(targetConfig, false);
+  const ultracacheInCI =
+    mode && (await isUltracacheOnInCI(t.nxJson)) ? mode : undefined;
+
   renderInputs(
     { project: projectName, target: targetName, ...hashInputs },
-    t.node.data.targets[targetName].inputs,
-    args
+    targetConfig.inputs,
+    args,
+    ultracacheInCI
   );
 }
 
@@ -92,7 +106,8 @@ async function checkInputs(
 function renderInputs(
   data: HashInputs & { project: string; target: string },
   configuredInputs: TargetConfiguration['inputs'] | undefined,
-  args: ShowTargetInputsOptions
+  args: ShowTargetInputsOptions,
+  ultracacheInCI: UltracacheModeInCI | undefined
 ) {
   if (args.json) {
     printJson(data as unknown as Record<string, unknown>);
@@ -103,6 +118,14 @@ function renderInputs(
   console.log(
     `${c.bold('Inputs for')} ${c.cyan(data.project)}:${c.green(data.target)}`
   );
+
+  if (ultracacheInCI) {
+    const notice = ultracacheInCINotice(
+      ultracacheInCI,
+      hasAlwaysInput(configuredInputs)
+    );
+    console.log(`${c.bold('Ultracache')}: ${notice} ${ultracacheDocsLink()}`);
+  }
 
   if (configuredInputs?.length) {
     printList(

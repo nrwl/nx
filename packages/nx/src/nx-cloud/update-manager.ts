@@ -75,6 +75,13 @@ export interface NxCloudClient {
   readUltracacheConfigurations?: (
     options: ReadUltracacheConfigurationsOptions
   ) => Promise<ReadUltracacheConfigurationsResult | null>;
+  /** Clients that report the workspace's Ultracache setting; see `isUltracacheOnInCI`. */
+  readUltracacheStatus?: (options: {
+    nxCloudOptions?: CloudTaskRunnerOptions;
+    timeoutMs?: number;
+  }) => Promise<{ enabled: boolean }>;
+  /** Clients that dispatch a whole `nx-cloud` command line; resolves to the exit code. */
+  runCLI?: (args: string[]) => Promise<number>;
 }
 export async function verifyOrUpdateNxCloudClient(options?: {
   url?: string;

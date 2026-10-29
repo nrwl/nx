@@ -69,16 +69,19 @@ pub struct TaskUltracacheSettings {
     /// How this target's tasks participate. Defaults to `on`.
     #[napi(ts_type = "'on' | 'warn' | 'error' | 'off'")]
     pub mode: Option<UltracacheMode>,
+    /// Collect successful stat metadata accesses as inputs. Defaults to `false`.
+    /// Missing-path probes are tracked independently of this setting.
+    pub collect_stats: Option<bool>,
     /// Workspace-relative glob patterns for reads that should be excluded
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_reads: Option<Vec<String>>,
+    pub ignore_reads: Option<Vec<String>>,
     /// Workspace-relative glob patterns for writes that should be excluded
     /// from ultracache reports. The first path segment cannot contain `*`,
     /// and `?`, `!`, `[`, `]` and extglobs are not supported; anchor the
     /// pattern to a directory instead of leading with `**`.
-    pub ignored_writes: Option<Vec<String>>,
+    pub ignore_writes: Option<Vec<String>>,
 }
 
 impl Task {
@@ -163,6 +166,22 @@ pub struct TaskResult {
     pub terminal_output: Option<String>,
 }
 
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
+/// An edge from a task to one of the tasks it depends on
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskGraphEdge {
+    /// ID of the task depended on
+    pub id: String,
+    /// What the dependent waits for on a continuous dependency. Defaults to `started`.
+    #[napi(ts_type = "'started' | 'ready'")]
+    pub wait_for: Option<String>,
+    /// `false` on a continuous dependency whose inputs the dependent does not hash
+    #[napi(ts_type = "false")]
+    pub inputs: Option<bool>,
+}
+
+// Nx Cloud decodes this shape by `TASK_GRAPH_FORMAT` in `nx-cloud-internals.ts`; bump it when the shape changes.
 /// Graph of Tasks to be executed
 #[napi(object)]
 pub struct TaskGraph {
@@ -170,12 +189,9 @@ pub struct TaskGraph {
     pub roots: Vec<String>,
     /// Map of Task IDs to Tasks
     pub tasks: HashMap<String, Task>,
-    /// Map of Task IDs to IDs of tasks which the task depends on
-    pub dependencies: HashMap<String, Vec<String>>,
-    pub continuous_dependencies: HashMap<String, Vec<String>>,
-    /// The subset of `continuous_dependencies` from `dependsOn` entries with
-    /// `inputs: false`: still run, but their inputs are not hashed into the task.
-    pub continuous_dependencies_without_inputs: Option<HashMap<String, Vec<String>>>,
+    /// Map of Task IDs to the edges to tasks which the task depends on
+    pub dependencies: HashMap<String, Vec<TaskGraphEdge>>,
+    pub continuous_dependencies: HashMap<String, Vec<TaskGraphEdge>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
@@ -207,7 +223,12 @@ pub enum HashInstruction {
     /// generated files count: a project's `includeIgnored` globs, or the
     /// reads in a task's Ultracache configuration. The project is not part of
     /// it: the same globs read the same files wherever they were declared.
-    IgnoredFileSet(Vec<String>),
+    /// `project_roots` keep each glob out of projects nested below the one it
+    /// reads from; they follow from the globs, see `scope_roots`.
+    IgnoredFileSet {
+        globs: Vec<String>,
+        project_roots: Vec<String>,
+    },
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
@@ -280,7 +301,7 @@ impl InstructionPool {
         match &*self.get(id) {
             HashInstruction::ProjectFileSet(..)
             | HashInstruction::WorkspaceFileSet(_)
-            | HashInstruction::IgnoredFileSet(_) => true,
+            | HashInstruction::IgnoredFileSet { .. } => true,
             HashInstruction::TsConfiguration(_) => !keep_tsconfig,
             HashInstruction::JsonFileSet(json) => !read(&json.json_path),
             _ => false,
@@ -332,12 +353,23 @@ pub struct HashPlans {
 pub const COMPACT_FILES_LABEL_ABOVE: usize = 8;
 
 impl HashInstruction {
+    /// An `IgnoredFileSet` that no project scopes.
+    pub fn ignored_files(globs: Vec<String>) -> Self {
+        HashInstruction::IgnoredFileSet {
+            globs,
+            project_roots: Vec::new(),
+        }
+    }
+
     /// What hash details name this instruction: its Display, except that a
     /// large disk-backed group lists its first positives and counts the rest.
-    /// Unique within a task only: a task's groups never share a positive.
+    /// Not unique, even within a task: a task hash folds instructions that
+    /// share a label into one entry.
     pub fn label(&self) -> String {
         match self {
-            HashInstruction::IgnoredFileSet(globs) if globs.len() > COMPACT_FILES_LABEL_ABOVE => {
+            HashInstruction::IgnoredFileSet { globs, .. }
+                if globs.len() > COMPACT_FILES_LABEL_ABOVE =>
+            {
                 let (negations, positives): (Vec<&String>, Vec<&String>) =
                     globs.iter().partition(|glob| glob.starts_with('!'));
                 let shown = positives.len().min(COMPACT_FILES_LABEL_ABOVE);
@@ -403,7 +435,8 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
                     format!("{project_name}:{}", file_set.join(","))
                 }
-                HashInstruction::IgnoredFileSet(globs) => format!("files:[{}]", globs.join(",")),
+                HashInstruction::IgnoredFileSet { globs, .. } =>
+                    format!("files:[{}]", globs.join(",")),
                 HashInstruction::WorkspaceFileSet(file_set) =>
                     format!("workspace:[{}]", file_set.join(",")),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
@@ -452,16 +485,16 @@ mod tests {
 
     #[test]
     fn label_folds_a_large_disk_backed_group_and_keeps_small_ones_verbatim() {
-        let small = HashInstruction::IgnoredFileSet(vec!["a".into(), "!b".into()]);
+        let small = HashInstruction::ignored_files(vec!["a".into(), "!b".into()]);
         assert_eq!(small.label(), small.to_string());
         let mut globs: Vec<String> = (0..3).map(|i| format!("libs/p/f{i}.ts")).collect();
         globs.extend((0..7).map(|i| format!("!libs/p/n{i}.ts")));
         assert_eq!(
-            HashInstruction::IgnoredFileSet(globs).label(),
+            HashInstruction::ignored_files(globs).label(),
             "files:[libs/p/f0.ts,libs/p/f1.ts,libs/p/f2.ts (+7 excluded)]"
         );
         let globs: Vec<String> = (0..20).map(|i| format!("libs/p/f{i}.ts")).collect();
-        let big = HashInstruction::IgnoredFileSet(globs.clone());
+        let big = HashInstruction::ignored_files(globs.clone());
         let label = big.label();
         assert!(label.ends_with("libs/p/f7.ts (+12 more)]"), "{label}");
         let tracked = HashInstruction::ProjectFileSet("p".into(), globs);
@@ -487,7 +520,7 @@ mod tests {
             "p".into(),
             vec!["p/**/*".into()],
         ));
-        let group = pool.intern(HashInstruction::IgnoredFileSet(vec![
+        let group = pool.intern(HashInstruction::ignored_files(vec![
             "p/a.ts".into(),
             "!p/**/*.spec.ts".into(),
         ]));
@@ -522,7 +555,7 @@ mod tests {
 
     #[test]
     fn disk_backed_display_lists_globs_in_declared_order() {
-        let instruction = HashInstruction::IgnoredFileSet(vec![
+        let instruction = HashInstruction::ignored_files(vec![
             "libs/ui/dist/**/*.js".into(),
             "!libs/ui/dist/**/*.map".into(),
         ]);
@@ -537,11 +570,11 @@ mod tests {
         let globs = vec!["libs/ui/**/*.ts".to_string()];
         assert_ne!(
             HashInstruction::ProjectFileSet("ui".into(), globs.clone()).to_string(),
-            HashInstruction::IgnoredFileSet(globs.clone()).to_string()
+            HashInstruction::ignored_files(globs.clone()).to_string()
         );
         assert_ne!(
             HashInstruction::WorkspaceFileSet(globs.clone()).to_string(),
-            HashInstruction::IgnoredFileSet(globs).to_string()
+            HashInstruction::ignored_files(globs).to_string()
         );
     }
 

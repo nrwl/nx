@@ -197,9 +197,9 @@ describe('@nx/storybook/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {
@@ -216,6 +216,10 @@ describe('@nx/storybook/plugin', () => {
                     ],
                     "options": {
                       "cwd": "my-app",
+                    },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/storybook/ready-check').waitForDevServer()"",
+                      "interval": 1000,
                     },
                   },
                   "static-storybook": {
@@ -236,6 +240,9 @@ describe('@nx/storybook/plugin', () => {
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-app/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -340,6 +347,10 @@ export default config;
                       "configDir": "my-ng-app/.storybook",
                       "port": 6006,
                     },
+                    "readyWhen": {
+                      "host": "{env.SBCONFIG_HOSTNAME ?? options.host ?? localhost}",
+                      "port": "{env.SBCONFIG_PORT ?? options.port ?? 9009}",
+                    },
                   },
                   "static-storybook": {
                     "continuous": true,
@@ -360,6 +371,9 @@ export default config;
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-ng-app/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -585,9 +599,9 @@ export default config;
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {
@@ -604,6 +618,10 @@ export default config;
                     ],
                     "options": {
                       "cwd": "my-react-lib",
+                    },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/storybook/ready-check').waitForDevServer()"",
+                      "interval": 1000,
                     },
                   },
                   "static-storybook": {
@@ -624,6 +642,9 @@ export default config;
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-react-lib/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {

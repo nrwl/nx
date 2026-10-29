@@ -169,7 +169,6 @@ let cachedParsedLockFile: BunLockFile;
 let cachedPackageIndex: PackageIndex;
 
 const keyMap = new Map<string, ProjectGraphExternalNode>();
-const packageVersions = new Map<string, Set<string>>();
 const specParseCache = new Map<
   string,
   { name: string; version: string; protocol: string }
@@ -242,7 +241,6 @@ export function clearCache(): void {
   cachedParsedLockFile = undefined;
   cachedPackageIndex = undefined;
   keyMap.clear();
-  packageVersions.clear();
   specParseCache.clear();
   resolvedVersionCache.clear();
 }

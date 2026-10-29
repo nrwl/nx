@@ -69,7 +69,6 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "typecheckTargetName": "typecheck",
         "serveStaticTargetName": "serve-static",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
@@ -84,12 +83,11 @@ Configure `@nx/remix/plugin` in the `plugins` array in `nx.json`:
 | `buildTargetName`       | Name of the cached production build task.        | `build`        |
 | `devTargetName`         | Name of the continuous development server task.  | `dev`          |
 | `startTargetName`       | Name of the continuous production server task.   | `start`        |
-| `typecheckTargetName`   | Name of the cached TypeScript typecheck task.    | `typecheck`    |
 | `serveStaticTargetName` | Name of an alias for the production server task. | `serve-static` |
 | `buildDepsTargetName`   | Name of an optional dependency build task.       | none           |
 | `watchDepsTargetName`   | Name of an optional dependency watch task.       | none           |
 
-The build and typecheck tasks are cached, with build outputs based on your Remix configuration. The production server tasks depend on the build task.
+The build task is cached, with outputs based on your Remix configuration. [`@nx/js/typescript` creates the `typecheck` task](/docs/technologies/typescript/introduction#how-the-typescript-plugin-infers-tasks) instead of this plugin. The production server tasks depend on the build task.
 
 ### Exclude or include specific projects
 
@@ -107,7 +105,6 @@ Use `include`/`exclude` glob patterns in the plugin configuration:
         "buildTargetName": "build",
         "devTargetName": "dev",
         "startTargetName": "start",
-        "typecheckTargetName": "typecheck",
         "serveStaticTargetName": "serve-static",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"

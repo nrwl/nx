@@ -1,11 +1,11 @@
 ---
-title: Adding Nx to an NPM/Yarn/PNPM Monorepo
-description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM monorepo to gain task scheduling, caching, and improved CI performance.
+title: Adding Nx to an NPM/Yarn/pnpm Monorepo
+description: Learn how to integrate Nx into an existing NPM, Yarn, or pnpm monorepo to gain task scheduling, caching, and improved CI performance.
 filter: 'type:Guides'
 topics:
   - 'Adoption'
 sidebar:
-  label: NPM/Yarn/PNPM monorepos
+  label: NPM/Yarn/pnpm monorepos
 ---
 
 {% aside type="note" title="Migrating from Lerna?" %}
@@ -14,7 +14,7 @@ Modern Lerna already runs its tasks through Nx, so the migration is an increment
 {% /aside %}
 
 Nx has first-class support for [monorepos](/docs/getting-started/tutorials/crafting-your-workspace). Add it to an
-existing NPM, Yarn, or PNPM monorepo and you get
+existing NPM, Yarn, or pnpm monorepo and you get
 
 - fast [task scheduling](/docs/features/run-tasks)
 - high-performance task [caching](/docs/features/cache-task-results)
@@ -24,7 +24,7 @@ None of this is gated on how many packages the monorepo has. The setup installs 
 an `nx.json` for configuring caching and task pipelines. Your workspace layout, your package manager, and your
 `package.json` scripts stay where they are.
 
-{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From pnpm Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 
 ## Installing Nx
 
@@ -81,8 +81,8 @@ For example, use Nx to run your builds:
 npx nx run-many -t build
 ```
 
-But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using
-PNPM commands to run tests across packages
+But instead keep using NPM/Yarn/pnpm workspace commands for your tests and other scripts. Here's an example of using
+pnpm commands to run tests across packages
 
 ```shell
 pnpm run -r test
@@ -341,7 +341,7 @@ Caching pays off locally, and it pays off more in CI, where the same tasks run o
 
 - Nx reduces wasted time in CI with the [`affected` command](/docs/features/ci-features/affected).
 - [Remote caching](/docs/features/ci-features/remote-cache) reuses task artifacts across CI runs when the task inputs match.
-- Nx Agents [efficiently distribute tasks across machines](/docs/concepts/ci-concepts/building-blocks-fast-ci) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
+- Workers [efficiently distribute tasks across machines](/docs/features/ci-features#building-blocks-of-fast-ci) ensuring constant CI time regardless of the repository size. The right number of machines is allocated for each PR to ensure good performance without wasting compute.
 - Nx Atomizer [automatically splits](/docs/kb/split-e2e-tasks) large e2e tests to distribute them across machines. Nx can also automatically [identify and rerun flaky e2e tests](/docs/kb/flaky-tasks).
 
 ### Connect to Nx Cloud
@@ -403,9 +403,9 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -416,7 +416,7 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-The generator also creates a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. It holds the settings that `start-nx-agents` reads, so you tune task distribution there rather than in the workflow:
+The generator also creates a [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. It holds the settings that `start-workers` reads, so you tune task distribution there rather than in the workflow:
 
 ```yml
 // .nx/ci-config.yaml
@@ -453,7 +453,7 @@ For more information about how Nx can improve your CI pipeline, check out our [C
 
 {% linkcard title="Cache Task Results" description="Learn more about how caching works" href="/docs/features/cache-task-results" /%}
 
-{% linkcard title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" href="/docs/concepts/task-pipeline-configuration" /%}
+{% linkcard title="Defining a task pipeline" description="Learn more about how to setup task dependencies" href="/docs/features/run-tasks#defining-a-task-pipeline" /%}
 
 {% linkcard title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" href="/docs/reference/nxignore" /%}
 

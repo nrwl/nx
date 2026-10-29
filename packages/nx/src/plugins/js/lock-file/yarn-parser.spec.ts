@@ -435,7 +435,7 @@ describe('yarn LockFile utility', () => {
       );
 
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         classicLockFile,
         hash,
         packageJson
@@ -680,7 +680,7 @@ describe('yarn LockFile utility', () => {
       );
 
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         berryLockFile,
         hash,
         packageJson
@@ -969,7 +969,7 @@ __metadata:
         };
 
         const hash = uniq('mock-hash');
-        const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+        const { nodes: externalNodes } = getYarnLockfileNodes(
           lockFile,
           hash,
           packageJson
@@ -1253,7 +1253,7 @@ postgres@charsleysa/postgres#fix-errors-compiled:
       };
 
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         lockFile,
         hash,
         packageJson
@@ -1313,7 +1313,7 @@ nx-cloud@latest:
       };
 
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         lockFile,
         hash,
         packageJson
@@ -1349,7 +1349,7 @@ nx-cloud@latest:
       );
 
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         berryLockFile,
         hash,
         packageJson
@@ -1466,7 +1466,7 @@ nx-cloud@latest:
         )
       );
       const hash = uniq('mock-hash');
-      const { nodes: externalNodes, keyMap } = getYarnLockfileNodes(
+      const { nodes: externalNodes } = getYarnLockfileNodes(
         classicLockFile,
         hash,
         packageJson

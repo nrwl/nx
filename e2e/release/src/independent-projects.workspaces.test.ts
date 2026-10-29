@@ -1,4 +1,4 @@
-import { joinPathFragments, NxJsonConfiguration } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import {
   normalizePerformanceReport,
   cleanupProject,
@@ -15,7 +15,19 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'child_process';
+import {
+  closeSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  readSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { prepareAndInstallDependencies, setupWorkspaces } from './utils';
+import { updateNxJson } from './update-nx-json';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -106,7 +118,7 @@ describe('nx release - independent projects - workspaces', () => {
     await prepareAndInstallDependencies(packageManager, pmc.install);
 
     // Normalize git committer information so it is deterministic in snapshots
-    runCommand(`git config user.email "test@test.com"`);
+    runCommand(`git config user.email "test@users.noreply.github.com"`);
     runCommand(`git config user.name "Test"`);
     // Create a baseline version tag for each project
     runCommand(`git tag ${pkg1}@0.0.0`);
@@ -123,7 +135,7 @@ describe('nx release - independent projects - workspaces', () => {
       /**
        * Configure independent releases in the most minimal way possible.
        */
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -359,7 +371,7 @@ describe('nx release - independent projects - workspaces', () => {
               `);
 
       // Enable git commit and tag operations for the version command via config
-      updateJson('nx.json', (json) => {
+      updateNxJson(tmpProjPath('nx.json'), (json) => {
         return {
           ...json,
           release: {
@@ -559,7 +571,7 @@ describe('nx release - independent projects - workspaces', () => {
 
   describe('changelog', () => {
     beforeEach(() => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -725,7 +737,7 @@ describe('nx release - independent projects - workspaces', () => {
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
 
       // Disable git commit and tag operations for the changelog command via config
-      updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      updateNxJson(tmpProjPath('nx.json'), (json) => {
         return {
           ...json,
           release: {
@@ -766,7 +778,7 @@ describe('nx release - independent projects - workspaces', () => {
 
   describe('publish', () => {
     beforeEach(() => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -931,7 +943,7 @@ describe('nx release - independent projects - workspaces', () => {
     });
 
     it('should only run the publish task for the filtered projects within the group when updateDependents=auto', async () => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -1066,7 +1078,7 @@ describe('nx release - independent projects - workspaces', () => {
     });
 
     it('should only run the publish task for the filtered projects and projects across groups when updateDependents=always', async () => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -1267,7 +1279,7 @@ describe('nx release - independent projects - workspaces', () => {
 
   describe('release command', () => {
     it('should allow versioning projects independently', async () => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -1323,7 +1335,7 @@ describe('nx release - independent projects - workspaces', () => {
     });
 
     it('should allow versioning projects independently with conventional commits', async () => {
-      updateJson('nx.json', () => {
+      updateNxJson(tmpProjPath('nx.json'), () => {
         return {
           release: {
             projectsRelationship: 'independent',
@@ -1442,5 +1454,48 @@ describe('nx release - independent projects - workspaces', () => {
         ).length
       ).toEqual(1);
     });
+  });
+});
+
+describe('release fixture configuration updates', () => {
+  it('keeps an in-flight read consistent while replacing nx.json', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'nx-release-config-'));
+    let reader: number | undefined;
+
+    try {
+      const nxJsonPath = join(directory, 'nx.json');
+      const original = {
+        defaultBase: 'aaaa',
+        cli: { packageManager: 'yarn' },
+        workspaceLayout: { appsDir: 'cccc' },
+      };
+      const updated = {
+        defaultBase: 'bbbb',
+        cli: { packageManager: 'yarn' },
+        workspaceLayout: { appsDir: 'dddd' },
+      };
+      const content = JSON.stringify(original, null, 2);
+      writeFileSync(nxJsonPath, content);
+      reader = openSync(nxJsonPath, 'r');
+      const prefix = Buffer.alloc(content.indexOf('"workspaceLayout"'));
+      expect(readSync(reader, prefix, 0, prefix.length, null)).toBe(
+        prefix.length
+      );
+
+      updateNxJson(nxJsonPath, (json) => ({
+        ...json,
+        defaultBase: 'bbbb',
+        workspaceLayout: { ...json.workspaceLayout, appsDir: 'dddd' },
+      }));
+
+      const inFlightRead = prefix.toString() + readFileSync(reader, 'utf8');
+      expect(JSON.parse(inFlightRead)).toEqual(original);
+      expect(readFileSync(nxJsonPath, 'utf8')).toBe(
+        JSON.stringify(updated, null, 2)
+      );
+    } finally {
+      if (reader !== undefined) closeSync(reader);
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

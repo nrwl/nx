@@ -43,6 +43,13 @@
       "description": "Migrate workspaces past breaking changes for Vitest 5.",
       "implementation": "./dist/src/migrations/update-23-3-0/migrate-to-vitest-5",
       "prompt": "./dist/src/migrations/update-23-3-0/ai-instructions-for-vitest-5.md"
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/vitest` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
     }
   },
   "packageJsonUpdates": {
@@ -146,6 +153,19 @@
         },
         "@analogjs/vitest-angular": {
           "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.0-analog": {
+      "version": "24.0.0-beta.4",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~2.7.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~2.7.3",
           "alwaysAddToPackageJson": false
         }
       }

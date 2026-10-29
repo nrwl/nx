@@ -12,7 +12,7 @@ import {
   createProjectFileMapUsingProjectGraph,
 } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { interpolate } from '../../tasks-runner/utils';
+import { interpolateReleaseConfig } from './utils/interpolate-release-config';
 import { handleErrors } from '../../utils/handle-errors';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
@@ -40,6 +40,7 @@ import {
   ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
+  validateCommitMessageTokens,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { ReleaseGroupWithName } from './config/filter-release-groups';
@@ -149,6 +150,9 @@ export function createAPI(
     );
     if (configError) {
       return await handleNxReleaseConfigError(configError);
+    }
+    if (args.gitCommitMessage) {
+      validateCommitMessageTokens(args.gitCommitMessage);
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -290,7 +294,7 @@ export function createAPI(
     // Set resolved version plans on groups
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
-      releaseGraph.releaseGroups,
+      releaseGraph.allReleaseGroups,
       Object.keys(projectGraph.nodes),
       args.verbose
     );
@@ -298,7 +302,7 @@ export function createAPI(
     // Validate version plans against the filter after resolution
     const versionPlanValidationError =
       validateResolvedVersionPlansAgainstFilter(
-        releaseGraph.releaseGroups,
+        releaseGraph.allReleaseGroups,
         releaseGraph.releaseGroupToFilteredProjects
       );
     if (versionPlanValidationError) {
@@ -359,10 +363,6 @@ export function createAPI(
     const workspaceChangelogChanges = await resolveWorkspaceChangelogChanges({
       releaseGraph,
       nxReleaseConfig,
-      args,
-      workspacePreid,
-      projectsPreid,
-      useAutomaticFromRef,
       toSHA,
       fromSHA,
     });
@@ -384,10 +384,6 @@ export function createAPI(
      * Create a cache for from SHA resolution to avoid duplicate git operations
      */
     const fromSHACache = new Map<string, string | null>();
-    // Cache the workspace from SHA if available
-    if (fromSHA) {
-      fromSHACache.set('workspace', fromSHA);
-    }
 
     // Helper function to get cached from SHA or resolve and cache it
     const getCachedFromSHA = async (
@@ -532,40 +528,17 @@ export function createAPI(
               project.data.root
             );
 
-            let commits: GitCommit[];
-            let fromRef = fromSHA;
-            if (!fromRef && useAutomaticFromRef) {
-              // For automatic from ref, we already have it cached
-              fromRef = fromSHACache.get(projectCacheKey);
-              if (fromRef) {
-                commits = await filterProjectCommits({
-                  fromSHA: fromRef,
-                  toSHA,
-                  projectPath: project.data.root,
-                });
-
-                fromRef = commits[0]?.shortHash;
-                if (args.verbose) {
-                  console.log(
-                    `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
-                  );
-                }
-              }
-            }
-
-            if (!fromRef && !commits) {
+            if (!fromSHA) {
               throw new Error(
                 `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTag.pattern" property in nx.json to match the structure of your repository's git tags.`
               );
             }
 
-            if (!commits) {
-              commits = await filterProjectCommits({
-                fromSHA: fromRef,
-                toSHA,
-                projectPath: project.data.root,
-              });
-            }
+            const commits = await filterProjectCommits({
+              fromSHA,
+              toSHA,
+              projectPath: project.data.root,
+            });
 
             const { fileMap } =
               await createFileMapUsingProjectGraph(projectGraph);
@@ -987,7 +960,7 @@ async function generateChangelogForWorkspace({
 
   let interpolatedTreePath = config.file || '';
   if (interpolatedTreePath) {
-    interpolatedTreePath = interpolate(interpolatedTreePath, {
+    interpolatedTreePath = interpolateReleaseConfig(interpolatedTreePath, {
       projectName: '', // n/a for the workspace changelog
       projectRoot: '', // n/a for the workspace changelog
       workspaceRoot: '', // within the tree, workspaceRoot is the root
@@ -1065,7 +1038,9 @@ async function generateChangelogForWorkspace({
         );
       } else {
         // No existing version, simply prepend the new release to the top of the file
-        rootChangelogContents = `${contents}\n\n${rootChangelogContents}`;
+        rootChangelogContents = contents
+          ? `${contents}\n\n${rootChangelogContents}`
+          : rootChangelogContents;
       }
     } else {
       // No existing changelog contents, or replaceExistingContents is true, simply use the generated contents directly
@@ -1136,7 +1111,7 @@ async function generateChangelogForProjects({
   for (const project of projects) {
     let interpolatedTreePath = config.file || '';
     if (interpolatedTreePath) {
-      interpolatedTreePath = interpolate(interpolatedTreePath, {
+      interpolatedTreePath = interpolateReleaseConfig(interpolatedTreePath, {
         projectName: project.name,
         projectRoot: project.data.root,
         workspaceRoot: '', // within the tree, workspaceRoot is the root
@@ -1183,7 +1158,7 @@ async function generateChangelogForProjects({
       project: project.name,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
-          ? interpolate(config.entryWhenNoChanges, {
+          ? interpolateReleaseConfig(config.entryWhenNoChanges, {
               projectName: project.name,
               projectRoot: project.data.root,
               workspaceRoot: '', // within the tree, workspaceRoot is the root
@@ -1232,7 +1207,9 @@ async function generateChangelogForProjects({
           );
         } else {
           // No existing version, simply prepend the new release to the top of the file
-          changelogContents = `${contents}\n\n${changelogContents}`;
+          changelogContents = contents
+            ? `${contents}\n\n${changelogContents}`
+            : changelogContents;
         }
       } else {
         // No existing changelog contents, simply create a new one using the generated contents
@@ -1323,19 +1300,11 @@ async function promptForRemoteRelease(): Promise<boolean> {
 async function resolveWorkspaceChangelogChanges({
   releaseGraph,
   nxReleaseConfig,
-  args,
-  workspacePreid,
-  projectsPreid,
-  useAutomaticFromRef,
   toSHA,
   fromSHA,
 }: {
   releaseGraph: ReleaseGraph;
   nxReleaseConfig: NxReleaseConfig;
-  args: ChangelogOptions;
-  workspacePreid: string | undefined;
-  projectsPreid: Record<string, string | undefined>;
-  useAutomaticFromRef: boolean;
   toSHA: string;
   fromSHA: string | null;
 }): Promise<ChangelogChange[]> {
@@ -1351,10 +1320,6 @@ async function resolveWorkspaceChangelogChanges({
   // Derive changes from commits
   return resolveWorkspaceChangelogFromCommits({
     nxReleaseConfig,
-    args,
-    workspacePreid,
-    projectsPreid,
-    useAutomaticFromRef,
     toSHA,
     fromSHA,
   });
@@ -1380,18 +1345,10 @@ function resolveWorkspaceChangelogFromVersionPlans(
 
 async function resolveWorkspaceChangelogFromCommits({
   nxReleaseConfig,
-  args,
-  workspacePreid,
-  projectsPreid,
-  useAutomaticFromRef,
   toSHA,
   fromSHA,
 }: {
   nxReleaseConfig: NxReleaseConfig;
-  args: ChangelogOptions;
-  workspacePreid: string | undefined;
-  projectsPreid: Record<string, string | undefined>;
-  useAutomaticFromRef: boolean;
   toSHA: string;
   fromSHA: string | null;
 }): Promise<ChangelogChange[]> {

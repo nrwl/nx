@@ -134,6 +134,78 @@ describe('task planner', () => {
     });
   });
 
+  describe('project selections with dependencies', () => {
+    function plansFor(e2eInputs: any[]) {
+      const builder = new ProjectGraphBuilder(undefined, {
+        app: [{ file: 'libs/app/index.ts', hash: 'a.hash' }],
+        feature: [{ file: 'libs/feature/index.ts', hash: 'b.hash' }],
+      });
+      const lib = (name: string, inputs?: any[]) =>
+        builder.addNode({
+          name,
+          type: 'lib',
+          data: {
+            root: `libs/${name}`,
+            targets: { build: { executor: 'nx:run-commands', inputs } },
+          },
+        });
+      builder.addNode({
+        name: 'e2e',
+        type: 'app',
+        data: {
+          root: 'apps/e2e',
+          targets: { e2e: { executor: 'nx:run-commands', inputs: e2eInputs } },
+        },
+      });
+      lib('app', ['^default']);
+      lib('feature');
+      lib('util');
+      builder.addStaticDependency('app', 'feature', 'libs/app/index.ts');
+      builder.addStaticDependency('feature', 'util', 'libs/feature/index.ts');
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['e2e', 'app'],
+        ['e2e', 'build'],
+        undefined,
+        {},
+        false
+      );
+      const ref = transferProjectGraph(toRustProjectGraph(projectGraph));
+      const plans = new HashPlanner({} as any, ref).getPlans(
+        ['e2e:e2e', 'app:build'],
+        taskGraph
+      );
+      const fileSets = (plan: string[]) =>
+        plan.filter((i) => /^[a-z]+:libs\//.test(i));
+      return {
+        e2e: fileSets(plans['e2e:e2e']),
+        app: fileSets(plans['app:build']),
+      };
+    }
+
+    it("hashes the selected projects' dependencies as their own ^ input does", () => {
+      const { e2e, app } = plansFor([
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual(['feature:libs/feature/**/*', 'util:libs/util/**/*']);
+      expect(e2e).toEqual(app);
+    });
+
+    it('covers the selected projects too when paired with the plain selection', () => {
+      const { e2e } = plansFor([
+        { input: 'default', projects: ['app'] },
+        { input: 'default', projects: ['app'], dependencies: true },
+      ]);
+      expect(e2e).toEqual([
+        'app:libs/app/**/*',
+        'feature:libs/feature/**/*',
+        'util:libs/util/**/*',
+      ]);
+    });
+  });
+
   describe('includeIgnored filesets', () => {
     function planFor(inputs: any[], namedInputs?: Record<string, any[]>) {
       const builder = new ProjectGraphBuilder();
@@ -1560,9 +1632,9 @@ describe('task planner', () => {
 
       // The dependency serving this task runs in its own process, so only its
       // declared inputs can stand in for what it reads.
-      expect(taskGraph.continuousDependencies['parent:test']).toContain(
-        'child:serve'
-      );
+      expect(taskGraph.continuousDependencies['parent:test']).toContainEqual({
+        id: 'child:serve',
+      });
       expect(
         planner.getPlans(['parent:test'], taskGraph)['parent:test']
       ).toContain('child:libs/child/**/*');
@@ -1628,9 +1700,9 @@ describe('task planner', () => {
         transferProjectGraph(toRustProjectGraph(projectGraph))
       );
 
-      expect(taskGraph.continuousDependencies['child:serve']).toContain(
-        'grandchild:serve'
-      );
+      expect(taskGraph.continuousDependencies['child:serve']).toContainEqual({
+        id: 'grandchild:serve',
+      });
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(plan).toContain('child:libs/child/**/*');
       expect(plan).toContain('grandchild:libs/grandchild/**/*');
@@ -1752,7 +1824,7 @@ describe('task planner', () => {
     it('terminates on a cycle of continuous dependencies and hashes each server once', () => {
       const { planner, taskGraph } = servedBy({});
       // child:serve is (nonsensically) served by parent:test, closing a loop.
-      taskGraph.continuousDependencies['child:serve'] = ['parent:test'];
+      taskGraph.continuousDependencies['child:serve'] = [{ id: 'parent:test' }];
 
       const plan = planner.getPlans(['parent:test'], taskGraph)['parent:test'];
       expect(
@@ -1832,7 +1904,12 @@ describe('task planner', () => {
     });
   });
   describe('ultracache configurations', () => {
-    function fixture(opts: { cyclic?: boolean } = {}) {
+    function fixture(
+      opts: {
+        cyclic?: boolean;
+        extraParentInputs?: unknown[];
+      } = {}
+    ) {
       const builder = new ProjectGraphBuilder(undefined, {
         parent: [
           { file: 'libs/parent/filea.ts', hash: 'a.hash' },
@@ -1855,6 +1932,7 @@ describe('task planner', () => {
                 { runtime: 'echo runtime123' },
                 { json: '{projectRoot}/package.json', fields: ['version'] },
                 { fileset: '{projectRoot}/generated', includeIgnored: true },
+                ...(opts.extraParentInputs ?? []),
               ],
               outputs: ['{workspaceRoot}/dist/libs/parent'],
             },
@@ -1909,7 +1987,7 @@ describe('task planner', () => {
             continuous: true,
           },
         },
-        continuousDependencies: { 'parent:build': ['child:build'] },
+        continuousDependencies: { 'parent:build': [{ id: 'child:build' }] },
       };
     }
 
@@ -2045,6 +2123,23 @@ describe('task planner', () => {
       )['parent:build'];
       expect(plan).toContain('files:[libs/child/readme.md]');
       expect(plan).toContain('files:[libs/parent/a.spec.ts]');
+    });
+
+    it("keeps an always input's declared files", () => {
+      const read = configurationsFor({
+        'parent:build': { inputs: ['libs/parent/filea.ts'] },
+      });
+      const planWith = (always: boolean) => {
+        const { planner, taskGraph } = fixture({
+          extraParentInputs: [{ input: 'prod', projects: ['child'], always }],
+        });
+        return planner.getPlans(['parent:build'], taskGraph, read)[
+          'parent:build'
+        ];
+      };
+
+      expect(planWith(false)).not.toContain('child:libs/child/**/*');
+      expect(planWith(true)).toContain('child:libs/child/**/*');
     });
 
     it("keeps a continuous dependency's inputs in the task it serves", () => {
@@ -2463,7 +2558,7 @@ describe('task planner', () => {
       }
     );
 
-    it("moves the configuration marker when the task's ignoredReads change, and only then", () => {
+    it("moves the configuration marker when the task's ignoreReads change, and only then", () => {
       const { planner, taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['libs/parent/filea.ts'] },
@@ -2476,13 +2571,13 @@ describe('task planner', () => {
       };
 
       const none = markerWith(undefined);
-      const reads = markerWith({ ignoredReads: ['tmp/**', 'cache/**'] });
+      const reads = markerWith({ ignoreReads: ['tmp/**', 'cache/**'] });
       expect(reads).not.toBe(none);
       // Order means nothing; an empty list is no exclusion.
-      expect(markerWith({ ignoredReads: ['cache/**', 'tmp/**'] })).toBe(reads);
-      expect(markerWith({ ignoredReads: [] })).toBe(none);
+      expect(markerWith({ ignoreReads: ['cache/**', 'tmp/**'] })).toBe(reads);
+      expect(markerWith({ ignoreReads: [] })).toBe(none);
       // Recorded writes are never used, so their exclusions don't count.
-      expect(markerWith({ ignoredWrites: ['tmp/**', 'cache/**'] })).toBe(none);
+      expect(markerWith({ ignoreWrites: ['tmp/**', 'cache/**'] })).toBe(none);
     });
 
     it("hashes reads of a producer task's outputs from disk and defers the task", () => {
@@ -2634,7 +2729,7 @@ describe('task planner', () => {
     });
 
     it("defers a task whose reads sit under a producer's declared outputs", () => {
-      const { planner, taskGraph } = fixture();
+      const { taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });

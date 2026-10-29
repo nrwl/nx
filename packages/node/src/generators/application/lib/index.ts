@@ -6,3 +6,4 @@ export * from './create-files';
 export * from './add-dependencies';
 export * from './add-linting';
 export * from './add-proxy';
+export * from './add-script-serve';

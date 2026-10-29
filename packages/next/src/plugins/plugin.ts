@@ -5,6 +5,7 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  getReadyCheckReadyWhen,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -40,6 +41,10 @@ export interface NextPluginOptions {
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
+// Next.js takes its port and hostname from the CLI and env, not from its
+// config, so the check gets no config file
+const readyWhen = getReadyCheckReadyWhen('@nx/next/ready-check');
+
 type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
 export const createNodes: CreateNodes<NextPluginOptions> = [
@@ -53,6 +58,9 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    const typecheckTargetName = isTsSolutionSetup
+      ? getTypecheckTargetName(context.nxJsonConfiguration)
+      : false;
 
     try {
       const { entries, preErrors } = await filterNextConfigs(
@@ -62,7 +70,7 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, typecheckTargetName },
         context,
         entries.map(() => [lockFileName])
       );
@@ -78,6 +86,7 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
               ctx,
               targetsCache,
               isTsSolutionSetup,
+              typecheckTargetName,
               pmc,
               projectHashes[idx]
             ),
@@ -113,6 +122,7 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   hash: string
 ) {
@@ -127,6 +137,7 @@ async function createNodesInternal(
         options,
         context,
         isTsSolutionSetup,
+        typecheckTargetName,
         pmc
       )
     );
@@ -148,6 +159,7 @@ async function buildNextTargets(
   options: NextPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
@@ -159,7 +171,8 @@ async function buildNextTargets(
     namedInputs,
     projectRoot,
     nextConfig,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    typecheckTargetName
   );
 
   targets[options.devTargetName] = getDevTargetConfig(
@@ -189,7 +202,8 @@ async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
   nextConfig: any,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -211,10 +225,35 @@ async function getBuildTargetConfig(
   targetConfig.options.tty = false;
 
   if (isTsSolutionSetup) {
+    // `next build` type-checks against dependency declarations, which the
+    // dependencies' typecheck targets emit in TS solution setups.
+    if (typecheckTargetName) {
+      targetConfig.dependsOn.push(`^${typecheckTargetName}`);
+    }
     targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;
+}
+
+function getTypecheckTargetName(
+  nxJson: NxJsonConfiguration | undefined
+): string | false {
+  const registration = nxJson?.plugins?.find(
+    (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/typescript'
+  );
+  const typecheck =
+    typeof registration === 'object'
+      ? (
+          registration.options as {
+            typecheck?: boolean | { targetName?: string };
+          }
+        )?.typecheck
+      : undefined;
+  if (typecheck === false) {
+    return false;
+  }
+  return (typeof typecheck === 'object' && typecheck.targetName) || 'typecheck';
 }
 
 function getDevTargetConfig(
@@ -229,6 +268,7 @@ function getDevTargetConfig(
       cwd: projectRoot,
     },
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   if (isTsSolutionSetup) {
@@ -251,6 +291,7 @@ function getStartTargetConfig(
     },
     dependsOn: [options.buildTargetName],
     inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   return targetConfig;

@@ -32,8 +32,6 @@ export interface GeneratorsJsonEntry {
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
   'x-deprecated'?: string;
-  // @todo(v17) Remove this and make it default behavior.
-  'x-use-standalone-layout'?: boolean;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
@@ -44,7 +42,7 @@ export interface ExecutorJsonEntryConfig {
   batchImplementation?: string;
   preferBatch?: boolean;
   description?: string;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   /**
    * @deprecated Use target inputs instead. This will be removed in Nx 25.
    */
@@ -131,6 +129,12 @@ export interface MigrationsJsonEntry {
    * an outer agent or to the user.
    */
   documentation?: string;
+  /**
+   * Marks a migration that applies an optional dependency update.
+   * `nx migrate --include=required` skips it, and `--include=optional` runs it
+   * whenever `requires` is met, so it must set `requires`.
+   */
+  optionalUpdate?: boolean;
 }
 
 export type MigrationDetailsWithId = GeneratedMigrationDetails & {
@@ -172,7 +176,7 @@ export interface ExecutorConfig {
     outputCapture?: OutputCaptureMethod;
     continuous?: boolean;
   } & Schema;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   /**
    * @deprecated Use target inputs instead. This will be removed in Nx 25.
    */
@@ -209,7 +213,7 @@ export type AsyncIteratorExecutor<T = any> = (
  */
 export type Executor<T = any> = PromiseExecutor<T> | AsyncIteratorExecutor<T>;
 
-// TODO(v25): remove custom hasher support.
+// TODO(v25): remove custom hasher support (NXC-5052).
 /**
  * @deprecated Use target inputs instead. This will be removed in Nx 25.
  */

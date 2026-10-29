@@ -30,10 +30,7 @@ export async function storybookConfigurationGenerator(
       : 'src'; // default to src for backward compatibility
 
   const storybookConfigurationGenerator =
-    await vueStorybookConfigurationGenerator(tree, {
-      ...options,
-      addPlugin: true,
-    });
+    await vueStorybookConfigurationGenerator(tree, options);
 
   // Default tsConfiguration to true to match schema default
   const tsConfiguration = options.tsConfiguration ?? true;

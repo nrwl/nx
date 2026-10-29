@@ -1,0 +1,6 @@
+import axios from 'axios';
+
+// Configure axios for tests to use.
+const host = process.env.HOST ?? 'localhost';
+const port = process.env.PORT ?? '<%= port %>';
+axios.defaults.baseURL = `http://${host}:${port}`;

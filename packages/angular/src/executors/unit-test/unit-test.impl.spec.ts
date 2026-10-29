@@ -104,4 +104,26 @@ describe('unitTestExecutor option validation', () => {
 
     expect(value).toEqual({ success: true });
   });
+
+  it('throws when "splitting" is set on Angular < 22.2.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.1.0',
+    });
+
+    await expect(run({ splitting: false })).rejects.toThrow(
+      'The "splitting" option requires Angular version 22.2.0 or greater. You are currently using version 22.1.0.'
+    );
+  });
+
+  it('allows "splitting" on Angular >= 22.2.0', async () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.2.0',
+    });
+
+    const { value } = await run({ splitting: false });
+
+    expect(value).toEqual({ success: true });
+  });
 });

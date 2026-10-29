@@ -86,6 +86,10 @@ export const CORE_PLUGINS: CorePlugin[] = [
     capabilities: 'generators',
   },
   {
+    name: '@nx/rolldown',
+    capabilities: 'generators',
+  },
+  {
     name: '@nx/rollup',
     capabilities: 'executors,generators',
   },

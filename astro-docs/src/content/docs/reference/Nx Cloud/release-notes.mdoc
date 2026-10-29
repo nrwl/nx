@@ -369,11 +369,11 @@ To enable it, you need to set this env variable on the nx-api deployment:
 - node modules caching fixes on Nx Agents
   - previously, we were always recommending caching the `node_modules` folder itself in your Nx Agents yaml configs
   - this does not work with `npm ci`, as it always deletes the local `node_modules` folder before starting the installation. Instead, NPM recommends caching the `$HOME/.npm` directory.
-  - Yarn and PNPM also have their own dedicated folders they recommend for caching
+  - Yarn and pnpm also have their own dedicated folders they recommend for caching
   - Part of this release, we now fixed caching folders in the `$HOME` directory, so all the below options should work:
     - `~/.npm`
     - `~/.cache/yarn`
-    - `.pnpm-store` (note PNPM on Nx Agents does not store its cache folder in the \$HOME dir)
+    - `.pnpm-store` (note pnpm on Nx Agents does not store its cache folder in the \$HOME dir)
   - Please refer to the [custom launch templates docs](/docs/kb/launch-templates#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
   - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
@@ -674,7 +674,7 @@ This release contains everything needed to run [Nx Agents](/docs/features/ci-fea
 If you already running DTE, there are a few advantages to upgrading to Agents:
 
 - simplified CI config: you will need to maintain just a single, main CI job config. NxCloud will create needed CI agents for you as needed.
-- [dynamic agent allocation based on PR size](/docs/features/ci-features/distribute-task-execution#scale-agents-with-pr-size): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
+- [dynamic agent allocation based on PR size](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size): instead of always launching all your agents NxCloud will now launch different number of agents dynamically based on your PR size
 - access to [Spot instances](https://aws.amazon.com/ec2/spot/): if you are running your clusters on any of the popular cloud providers (AWS, Google Cloud, Azure etc.), you can now use their Spot instances for running your CI job. This is possible due to NxCloud's distribution model, which allows work on a reclaimed node to be re-distributed to the remaining agents.
 
 We will shortly make available a new Helm chart that will allow you to deploy a separate Agents cluster to launch workflows: [https://github.com/nrwl/nx-cloud-helm](https://github.com/nrwl/nx-cloud-helm).

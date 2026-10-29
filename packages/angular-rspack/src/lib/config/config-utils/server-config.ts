@@ -20,7 +20,10 @@ import {
 } from '../../plugins/loaders/engine-manifest';
 import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
+import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
+import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
+import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
 import {
   getInstalledPackageVersionFromRoot,
   isPackageInstalled,
@@ -36,7 +39,9 @@ export async function getServerConfig(
   defaultConfig: Configuration,
   swcTranspilationTransform: SwcTranspilationTransform,
   sharedLicenseInputs?: SharedLicenseInputs,
-  sharedAngularPlugin?: AngularRspackPlugin
+  sharedAngularPlugin?: AngularRspackPlugin,
+  serverRenderingInputs?: SharedServerRenderingInputs,
+  ssrReloadServer?: SsrReloadServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -64,6 +69,7 @@ export async function getServerConfig(
           locale: i18n.hasDefinedSourceLocale ? i18n.sourceLocale : undefined,
           inlineCriticalCss:
             !!normalizedOptions.optimization.styles.inlineCritical,
+          usesCriticalCssPlans: installedSsrUsesCriticalCssPlans(root),
           // Baked into the emitted bundle; posix separators keep it valid
           // when the build and the server run on different platforms.
           browserOutputRelativePath: relative(
@@ -72,7 +78,6 @@ export async function getServerConfig(
           )
             .split(sep)
             .join(posix.sep),
-          indexOutputName: normalizedOptions.index?.output,
           supportedLocales: { [i18n.sourceLocale]: '' },
           // An empty allowlist matches no host: from @angular/ssr 22 the
           // engine rejects every request, and the earlier versions that
@@ -158,12 +163,32 @@ export async function getServerConfig(
           ],
           options: platformServerExportsLoaderOptions,
         },
+        // The SSR entry imports the manifest module only for its side effects
+        // (registering the app and engine manifests). Without this, apps that
+        // set `sideEffects` in their package.json have the import dropped and
+        // the engine fails with "Angular app engine manifest is not set".
+        ...(engineWiring?.manifestModuleRequest
+          ? [
+              {
+                include: [engineWiring.manifestModuleRequest],
+                sideEffects: true,
+              },
+            ]
+          : []),
         ...(defaultConfig.module?.rules ?? []),
       ],
     },
     plugins: [
       ...(defaultConfig.plugins ?? []),
       ...(engineManifestPlugin ? [engineManifestPlugin] : []),
+      ...(engineWiring && serverRenderingInputs
+        ? [
+            new ServerAssetsPlugin(
+              serverRenderingInputs,
+              engineWiring.usesCriticalCssPlans
+            ),
+          ]
+        : []),
       // Fixes Critical dependency: the request of a dependency is an expression
       new ContextReplacementPlugin(/@?hapi|express[\\/]/),
       // rspack inlines `import.meta.url` as the source file's URL, breaking
@@ -176,17 +201,27 @@ export async function getServerConfig(
         platform: 'server',
         sharedLicenseInputs,
         sharedAngularPlugin,
+        ssrReloadServer,
       }),
       ...(normalizedOptions.prerender ||
       (normalizedOptions.appShell && !isDevServer)
-        ? [new PrerenderPlugin(normalizedOptions, i18n)]
+        ? [new PrerenderPlugin(normalizedOptions, i18n, serverRenderingInputs)]
         : []),
     ],
   };
 }
 
-// TODO(v24): drop the probe and the loader's inline fallback once
-// @rspack/core v1 is out of the support window.
+function installedSsrUsesCriticalCssPlans(root: string): boolean {
+  const version = getInstalledPackageVersionFromRoot(root, '@angular/ssr');
+  if (!version) {
+    return false;
+  }
+  const [major, minor] = version.split('.').map((part) => parseInt(part, 10));
+  return major > 22 || (major === 22 && minor >= 2);
+}
+
+// TODO(v25): drop the probe and the loader's inline fallback once
+// @rspack/core v1 is out of the support window (NXC-5161).
 function installedRspackSupportsVirtualModules(root: string): boolean {
   const version = getInstalledPackageVersionFromRoot(root, '@rspack/core');
   if (!version) {

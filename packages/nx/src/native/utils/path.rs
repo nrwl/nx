@@ -42,6 +42,16 @@ pub fn normalize_js_path(path: &str) -> String {
     without_drive.replace('\\', "/")
 }
 
+/// The folders holding a workspace-relative, `/`-separated path, deepest
+/// first: `a/b/c` gives `a/b`, then `a`. Split on `/` alone, unlike `Path`,
+/// so every OS reads it the same.
+pub(crate) fn parent_dirs(path: &str) -> impl Iterator<Item = &str> {
+    std::iter::successors(Some(path), |current| {
+        current.rfind('/').map(|cut| &current[..cut])
+    })
+    .skip(1)
+}
+
 pub fn get_child_files<'a, T>(
     directory: &Path,
     files: &'a BTreeMap<PathBuf, T>,
@@ -77,6 +87,13 @@ pub(crate) fn escapes_workspace(path: &Path) -> bool {
 mod test {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn parent_dirs_lists_the_holding_folders_deepest_first() {
+        assert_eq!(parent_dirs("a/b/c").collect::<Vec<_>>(), vec!["a/b", "a"]);
+        assert_eq!(parent_dirs("a").count(), 0);
+        assert_eq!(parent_dirs(r"a\b/c").collect::<Vec<_>>(), vec![r"a\b"]);
+    }
 
     #[test]
     fn a_path_escapes_the_workspace_by_climbing_or_by_a_root() {

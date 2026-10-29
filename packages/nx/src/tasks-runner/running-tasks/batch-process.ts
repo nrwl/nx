@@ -81,7 +81,7 @@ export class BatchProcess {
     private childProcess: ChildProcess,
     private executorName: string,
     /**
-     * Whether the active output style puts task bytes on the terminal at all.
+     * Whether the worker's output is written to the terminal as it streams.
      * `summary` does not, and its life cycle cannot enforce that here: this
      * class writes to `output` directly from a stream handler, so without being
      * told it would print a whole batch into a run that asked for log paths.
@@ -106,6 +106,12 @@ export class BatchProcess {
         case BatchMessageType.CompleteBatchExecution: {
           for (const cb of this.batchResultsCallbacks) {
             cb(message.results);
+          }
+          // The worker runs a single batch. Its IPC channel would otherwise
+          // keep it alive until cleanup kills it, which waits out the grace
+          // period on Windows, where SIGTERM is a no-op.
+          if (this.childProcess.connected) {
+            this.childProcess.disconnect();
           }
           break;
         }

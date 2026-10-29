@@ -1,8 +1,9 @@
-import { dirname, isAbsolute, join, resolve, sep } from 'path';
+import { dirname, isAbsolute, resolve, sep } from 'path';
 import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { readJsonFile } from '../../../utils/fileutils';
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
@@ -778,7 +779,7 @@ export function getTranspiler(
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   compilerOptions.lib = ['es2021'];
@@ -874,11 +875,17 @@ export function isNativeTypeStripError(err: unknown): boolean {
  * Module resolution failures - typically a tsconfig path alias that hasn't
  * been registered yet, or a workspace lib not surfaced via package manager
  * symlinks. CJS uses `MODULE_NOT_FOUND`, ESM uses `ERR_MODULE_NOT_FOUND`.
+ * `ERR_PACKAGE_PATH_NOT_EXPORTED` covers a linked package shadowing a path
+ * alias for a subpath its `exports` doesn't list.
  */
 function isModuleNotFoundError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const code = (err as { code?: string }).code;
-  return code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND';
+  return (
+    code === 'MODULE_NOT_FOUND' ||
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+  );
 }
 
 /**
@@ -1177,8 +1184,8 @@ export function requireWithTsconfigFallback<T = any>(
  *   - ESM-redispatch signals callers expect to handle
  *     (`ERR_REQUIRE_ESM`, `ERR_REQUIRE_ASYNC_MODULE`)
  *   - plain module-resolution failures (`MODULE_NOT_FOUND`,
- *     `ERR_MODULE_NOT_FOUND`) - disabling strip-types doesn't fix a missing
- *     module, the hint just misleads.
+ *     `ERR_MODULE_NOT_FOUND`, `ERR_PACKAGE_PATH_NOT_EXPORTED`) - disabling
+ *     strip-types doesn't fix a missing module, the hint just misleads.
  */
 function augmentLoadFailure(filePath: string, err: unknown): unknown {
   if (!(err instanceof Error)) return err;
@@ -1187,7 +1194,8 @@ function augmentLoadFailure(filePath: string, err: unknown): unknown {
     code === 'ERR_REQUIRE_ESM' ||
     code === 'ERR_REQUIRE_ASYNC_MODULE' ||
     code === 'MODULE_NOT_FOUND' ||
-    code === 'ERR_MODULE_NOT_FOUND'
+    code === 'ERR_MODULE_NOT_FOUND' ||
+    code === 'ERR_PACKAGE_PATH_NOT_EXPORTED'
   ) {
     return err;
   }
@@ -1362,7 +1370,7 @@ function warnNoTranspiler() {
 
 function packageIsInstalled(m: string) {
   try {
-    const p = require.resolve(m);
+    require.resolve(m);
     return true;
   } catch {
     return false;
@@ -1376,7 +1384,7 @@ function packageIsInstalled(m: string) {
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
   if (!ts) {
-    ts = require('typescript');
+    ts = require(resolveFromWorkspace('typescript'));
   }
 
   const flagMap: Partial<{

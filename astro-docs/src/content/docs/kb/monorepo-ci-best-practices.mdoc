@@ -261,10 +261,9 @@ A task that writes outside its declared outputs leaves those files missing on th
 
 Prefer tooling that derives inputs from your build configuration rather than asking you to list them
 by hand.
-To enforce the declarations instead of trusting them, Nx Cloud
-[task sandboxing](/docs/kb/sandboxing) confines each task to its declared inputs
-and outputs and reports a violation when it reads or writes anything else, so an undeclared
-dependency surfaces on the run that introduced it.
+To stop relying on the declarations, Nx Cloud [Ultracache](/docs/features/ci-features/remote-cache#ultracache) records the files each task
+reads in CI and hashes later runs from that record, and reports any read it can't record on the run
+that introduced it.
 
 Nx caches task results locally with inputs inferred from your tool configuration.
 Sharing those results across machines needs Nx Cloud
@@ -306,7 +305,7 @@ bins can't be configured optimally for every case.
 
 Dynamic distribution assigns ready tasks to whichever agent is free, respecting the task graph, and
 moves artifacts between agents through the shared cache.
-Nx Cloud does this with [Nx Agents](/docs/features/ci-features/distribute-task-execution), from the
+Nx Cloud does this with [Workers](/docs/features/ci-features/distribute-task-execution), from the
 same commands you already run.
 Declare the shape of the run once:
 
@@ -325,7 +324,7 @@ Then start the agents before your tasks:
 
 ```yaml
 # .github/workflows/ci.yml
-- run: npx nx-cloud start-nx-agents
+- run: npx nx-cloud start-workers
 
 - run: npx nx affected -t lint test build
 ```
@@ -339,7 +338,7 @@ Heavy targets like `e2e` and `build` need more memory than `lint`.
 work gets large machines and everything else runs on cheap ones.
 
 For a side-by-side comparison of running on one machine against distributing across many, see
-[parallelization and distribution](/docs/concepts/ci-concepts/building-blocks-fast-ci).
+[parallelization and distribution](/docs/features/ci-features#building-blocks-of-fast-ci).
 
 ## Split slow tasks into smaller ones
 
@@ -446,7 +445,7 @@ it, and caches task results locally.
 That much is free and needs no account.
 
 Nx Cloud adds the parts that need a service behind them, including the remote cache, distribution
-across Nx Agents, file-level task splitting, and flaky task detection.
+across Workers, file-level task splitting, and flaky task detection.
 Both layer onto the CI provider you already use rather than replacing it.
 
 Connect an existing workspace:

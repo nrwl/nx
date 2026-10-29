@@ -20,12 +20,12 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * config value never trips the mutually-exclusive-flag guards in
  * `parseMigrationsOptions`: `include` and `multiMajorMode` in the generate
  * phase only; `createCommits` / `commitPrefix` and `agentic` / `validate` when
- * running the whole migrations file or a standalone single migration. A
- * `--run-id` reconcile or recorded worker takes none of them: a recorded run
- * takes its commit config from run.json and is driven by the outer agent. A
- * `--run-migrations --run-id` continue takes `agentic` only, to select the
- * agent of the new session. A `--start-fresh` starts a new run and takes all
- * four.
+ * running the whole migrations file or a standalone single migration, and
+ * `finalValidation` for the whole file only. A `--run-id` reconcile or
+ * recorded worker takes none of them: a recorded run takes its commit config
+ * from run.json and is driven by the outer agent. A `--run-migrations
+ * --run-id` continue takes `agentic` only, to select the agent of the new
+ * session. A `--start-fresh` starts a new run and takes all five.
  *
  * `include` is carried as `includeFromConfig` so it is never mistaken for an
  * explicit `--include`: `resolveInclude` applies it only when the resolved
@@ -78,6 +78,14 @@ export function applyNxJsonMigrateDefaults(
     if (merged.validate === undefined && migrateConfig.validate !== undefined) {
       assertType(migrateConfig.validate, 'boolean', 'validate');
       merged.validate = migrateConfig.validate;
+    }
+    if (
+      isRunMigrations &&
+      merged.finalValidation === undefined &&
+      migrateConfig.finalValidation !== undefined
+    ) {
+      assertType(migrateConfig.finalValidation, 'boolean', 'finalValidation');
+      merged.finalValidation = migrateConfig.finalValidation;
     }
   }
   // A continue takes `agentic` too; the reconcile and the worker must not:

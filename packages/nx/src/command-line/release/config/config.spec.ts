@@ -10117,7 +10117,6 @@ describe('createNxReleaseConfig()', () => {
       `);
     });
 
-    // TODO(v24): remove this test along with the runtime error path
     it('should return an error if deprecated releaseTagPattern* properties are present', async () => {
       const resTopLevel = await createNxReleaseConfig(
         projectGraph,
@@ -13154,6 +13153,66 @@ describe('createNxReleaseConfig()', () => {
     });
   });
 
+  describe('release config tokens', () => {
+    const env = "It can't read environment variables";
+    const fallback = "It can't use ?? fallbacks";
+
+    it.each([
+      [
+        'v{version}{env.S}',
+        { releaseTag: { pattern: 'v{version}{env.S}' } },
+        env,
+      ],
+      ['/release {env.C}', { git: { commitMessage: '/release {env.C}' } }, env],
+      [
+        '{env.F}',
+        { changelog: { projectChangelogs: { file: '{env.F}' } } },
+        env,
+      ],
+      [
+        '{env.E}',
+        { changelog: { projectChangelogs: { entryWhenNoChanges: '{env.E}' } } },
+        env,
+      ],
+      [
+        '{env.R}',
+        { changelog: { workspaceChangelog: { renderer: '{env.R}' } } },
+        env,
+      ],
+      [
+        '{projectName ?? releaseGroupName}-v{version}',
+        {
+          releaseTag: {
+            pattern: '{projectName ?? releaseGroupName}-v{version}',
+          },
+        },
+        fallback,
+      ],
+      [
+        '/release {version ?? next}',
+        { git: { commitMessage: '/release {version ?? next}' } },
+        fallback,
+      ],
+    ])(
+      'rejects %s when the config is loaded',
+      async (template, config, reason) => {
+        await expect(
+          createNxReleaseConfig(projectGraph, projectFileMap, config)
+        ).rejects.toThrow(
+          `Release configuration '${template}' is invalid. ${reason}`
+        );
+      }
+    );
+
+    it('keeps ?? that is not part of a release placeholder', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        git: { commitMessage: 'chore(release): a ?? b {version} {foo ?? bar}' },
+      });
+
+      expect(res.error).toBeNull();
+    });
+  });
+
   describe('default releaseTag.pattern values', () => {
     it('should have a default pattern of v{version}', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap, {});
@@ -13403,189 +13462,6 @@ describe('createNxReleaseConfig()', () => {
       expect(res.nxReleaseConfig.groups['group-1'].releaseTag.pattern).toEqual(
         '{projectName}@{version}'
       );
-    });
-
-    /**
-     * TODO: make this the default behavior in v20 (it's a breaking change)
-     */
-    it.skip('should have a default pattern of {releaseGroupName}-v{version} when one or more custom release groups are used', async () => {
-      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
-        groups: {
-          'group-1': {
-            projects: 'lib-a',
-          },
-        },
-      });
-      expect(res).toMatchInlineSnapshot(`
-        {
-          "error": null,
-          "nxReleaseConfig": {
-            "changelog": {
-              "automaticFromRef": false,
-              "git": {
-                "commit": true,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "stageChanges": false,
-                "tag": true,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "projectChangelogs": false,
-              "workspaceChangelog": {
-                "createRelease": false,
-                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
-                "file": "{workspaceRoot}/CHANGELOG.md",
-                "renderOptions": {
-                  "authors": true,
-                  "commitReferences": true,
-                  "applyUsernameToAuthors": true,
-                  "versionTitleDate": true,
-                },
-                "renderer": "<dirname>/release/changelog-renderer",
-              },
-            },
-            "conventionalCommits": {
-              "types": {
-                "build": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📦 Build",
-                  },
-                  "semverBump": "none",
-                },
-                "chore": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏡 Chore",
-                  },
-                  "semverBump": "none",
-                },
-                "ci": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🤖 CI",
-                  },
-                  "semverBump": "none",
-                },
-                "docs": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "📖 Documentation",
-                  },
-                  "semverBump": "none",
-                },
-                "examples": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🏀 Examples",
-                  },
-                  "semverBump": "none",
-                },
-                "feat": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🚀 Features",
-                  },
-                  "semverBump": "minor",
-                },
-                "fix": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🩹 Fixes",
-                  },
-                  "semverBump": "patch",
-                },
-                "perf": {
-                  "changelog": {
-                    "hidden": false,
-                    "title": "🔥 Performance",
-                  },
-                  "semverBump": "none",
-                },
-                "refactor": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "💅 Refactors",
-                  },
-                  "semverBump": "none",
-                },
-                "revert": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "⏪ Revert",
-                  },
-                  "semverBump": "none",
-                },
-                "style": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🎨 Styles",
-                  },
-                  "semverBump": "none",
-                },
-                "test": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "✅ Tests",
-                  },
-                  "semverBump": "none",
-                },
-                "types": {
-                  "changelog": {
-                    "hidden": true,
-                    "title": "🌊 Types",
-                  },
-                  "semverBump": "none",
-                },
-              },
-            },
-            "git": {
-              "commit": false,
-              "commitArgs": "",
-              "commitMessage": "chore(release): publish {version}",
-              "stageChanges": false,
-              "tag": false,
-              "tagArgs": "",
-              "tagMessage": "",
-            },
-            "groups": {
-              "group-1": {
-                "changelog": false,
-                "projects": [
-                  "lib-a",
-                ],
-                "projectsRelationship": "fixed",
-                "releaseTagPattern": "{releaseGroupName}-v{version}",
-                "version": {
-                  "conventionalCommits": false,
-                  "generator": "@nx/js:release-version",
-                  "generatorOptions": {},
-                },
-                "versionPlans": false,
-              },
-            },
-            "projectsRelationship": "fixed",
-            "releaseTagPattern": "{releaseGroupName}-v{version}",
-            "version": {
-              "conventionalCommits": false,
-              "generator": "@nx/js:release-version",
-              "generatorOptions": {},
-              "git": {
-                "commit": false,
-                "commitArgs": "",
-                "commitMessage": "chore(release): publish {version}",
-                "stageChanges": true,
-                "tag": false,
-                "tagArgs": "",
-                "tagMessage": "",
-              },
-              "preVersionCommand": "",
-            },
-            "versionPlans": false,
-          },
-        }
-      `);
     });
   });
 

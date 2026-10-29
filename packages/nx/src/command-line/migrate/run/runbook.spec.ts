@@ -14,6 +14,7 @@ function buildContext(overrides: Partial<RunbookContext> = {}): RunbookContext {
     createCommits: true,
     validate: true,
     finalValidation: true,
+    singleMigration: false,
     ...overrides,
   };
 }
@@ -156,6 +157,22 @@ describe('renderRunbook', () => {
     expect(renderRunbook(buildContext({ createCommits: false }))).toContain(
       'This run does not create commits'
     );
+  });
+
+  it('points a single run at the handoff summary instead of the issue ledger, and says to re-run rather than resume', () => {
+    const runbook = renderRunbook(
+      buildContext({ singleMigration: true, finalValidation: false })
+    );
+
+    expect(runbook).toContain(
+      "Nx prints the handoff's `summary` when the run ends"
+    );
+    expect(runbook).not.toMatch(/Reporting issues|recorded issues|run\s+issue/);
+    expect(runbook).not.toContain('An `existing-run` action');
+    expect(runbook).toContain(
+      'same `nx migrate --run-migration` command again afterwards'
+    );
+    expect(runbook).not.toContain('resume the run');
   });
 
   it('carries the issue-reporting contract: shapes, mapping vocabulary, and update scoping', () => {

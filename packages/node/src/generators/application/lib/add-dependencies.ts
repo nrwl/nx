@@ -13,6 +13,7 @@ import {
   nodeTypesVersions,
   nxVersion,
   tslibVersion,
+  tsxVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -82,6 +83,7 @@ export function addProjectDependencies(
         ...frameworkDevDependencies[options.framework],
         ...bundlers[options.bundler],
         '@types/node': typesNodeVersion,
+        ...(options.serveRuntime === 'tsx' && { tsx: tsxVersion }),
       },
       undefined,
       options.keepExistingVersions ?? true

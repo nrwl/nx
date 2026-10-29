@@ -282,7 +282,7 @@ function appendOriginPrefix(nxJson: NxJsonConfiguration): void {
   if (nxJson?.affected?.defaultBase) {
     nxJson.affected.defaultBase = `origin/${nxJson.affected.defaultBase}`;
   }
-  if (nxJson.defaultBase || !nxJson.affected) {
+  if (nxJson.defaultBase || !nxJson.affected?.defaultBase) {
     nxJson.defaultBase = `origin/${nxJson.defaultBase ?? deduceDefaultBase()}`;
   }
 }

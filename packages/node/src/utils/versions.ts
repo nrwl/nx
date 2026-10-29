@@ -9,6 +9,7 @@ import { join } from 'path';
 export const nxVersion = require(join('@nx/node', 'package.json')).version;
 
 export const tslibVersion = '^2.3.0';
+export const tsxVersion = '^4.20.5';
 
 // `@types/node` — supported window covers the active LTS majors (currently v22
 // and v24). Fresh installs default to the active LTS (v22).
@@ -114,10 +115,10 @@ export function getInstalledKoaVersion(tree?: Tree): string | null {
 
 // Fastify — upstream "last 2 majors" policy. Support window v4 + v5.
 export const minSupportedFastifyVersion = '4.0.0';
-export const fastifyVersion = '~5.2.1';
-export const fastifyAutoloadVersion = '~6.0.3';
-export const fastifySensibleVersion = '~6.0.2';
-export const fastifyPluginVersion = '~5.0.1';
+export const fastifyVersion = '~5.12.5';
+export const fastifyAutoloadVersion = '~6.5.0';
+export const fastifySensibleVersion = '~6.0.6';
+export const fastifyPluginVersion = '~6.0.0';
 
 type FastifyVersions = {
   fastifyVersion: string;

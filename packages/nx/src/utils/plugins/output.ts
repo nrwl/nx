@@ -1,9 +1,5 @@
 import { join } from 'path';
 import * as pc from 'picocolors';
-import {
-  ExecutorsJsonEntry,
-  GeneratorsJsonEntry,
-} from '../../config/misc-interfaces';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { output } from '../output';
 import { getPackageManagerCommand } from '../package-manager';
@@ -13,13 +9,11 @@ import {
   PluginCapabilities,
   getPluginCapabilities,
 } from './plugin-capabilities';
-import { readModulePackageJson } from '../package-json';
 
 export function listPlugins(
   plugins: Map<string, PluginCapabilities>,
   title: string
 ) {
-  readModulePackageJson;
   const bodyLines: string[] = [];
 
   for (const [, p] of plugins) {

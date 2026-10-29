@@ -5270,4 +5270,103 @@ snapshots:
       expect(nodes['npm:is-even'].data.version).toBe('1.0.0');
     });
   });
+
+  describe('aliased dependency on an earlier snapshot', () => {
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      auth0:
+        specifier: ^7.4.0
+        version: 7.4.0
+
+packages:
+
+  auth0@4.37.1:
+    resolution: {integrity: sha512-4.37.1}
+
+  auth0@7.4.0:
+    resolution: {integrity: sha512-7.4.0}
+
+snapshots:
+
+  auth0@4.37.1: {}
+
+  auth0@7.4.0:
+    dependencies:
+      auth0-legacy: auth0@4.37.1
+`;
+
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': 'hoistedDependencies: {}\n' },
+        '/root'
+      );
+    });
+
+    function buildGraph() {
+      const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        '__alias_earlier_snapshot__'
+      );
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getPnpmLockfileDependencies(
+        lockFile,
+        '__alias_earlier_snapshot__',
+        ctx,
+        keyMap
+      );
+      return { externalNodes, dependencies };
+    }
+
+    it('should link a package to the snapshot its alias points at', () => {
+      expect(buildGraph().dependencies).toEqual([
+        {
+          source: 'npm:auth0@7.4.0',
+          target: 'npm:auth0@4.37.1',
+          type: 'static',
+        },
+      ]);
+    });
+
+    it('should keep the aliased snapshot when pruning', () => {
+      const { externalNodes, dependencies } = buildGraph();
+      const builder = new ProjectGraphBuilder({
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      });
+      for (const dep of dependencies) {
+        builder.addDependency(dep.source, dep.target, dep.type);
+      }
+      const packageJson = {
+        name: 'app',
+        version: '0.0.0',
+        dependencies: { auth0: '7.4.0' },
+      };
+
+      const pruned = stringifyPnpmLockfile(
+        pruneProjectGraph(builder.getUpdatedProjectGraph(), packageJson),
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(pruned).toContain('auth0-legacy: auth0@4.37.1');
+      expect(pruned).toMatch(/^ {2}auth0@4\.37\.1:/m);
+    });
+  });
 });

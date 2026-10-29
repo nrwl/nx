@@ -307,13 +307,15 @@ impl IgnoredIndex {
     /// `cached`, a tracked directory answers from its listing, walking the
     /// first time and keeping it current from events after. Otherwise, and
     /// for a directory nothing tracks, the disk is read and not remembered.
-    /// `None` only when `dir` cannot be read at all.
+    /// `None` only when `dir` cannot be read at all. A disk read does not
+    /// enter the directories in `skip`.
     pub(crate) fn files_under(
         &self,
         workspace_root: &Path,
         dir: &str,
         cached: bool,
         accept: PathPredicate,
+        skip: &[String],
     ) -> Option<Vec<String>> {
         if cached && self.is_tracked(dir) {
             // A listing that cannot settle, because the disk kept moving
@@ -324,7 +326,7 @@ impl IgnoredIndex {
             }
             trace!("no listing for {dir:?}; reading it from disk instead");
         }
-        read_directory(workspace_root, dir, accept)
+        read_directory(workspace_root, dir, accept, skip)
     }
 
     /// A reported write or creation. Under a listed prefix a file becomes a
@@ -601,9 +603,11 @@ impl IgnoredIndexReader {
         dir: &str,
         cached: bool,
         accept: PathPredicate,
+        skip: &[String],
     ) -> Option<Vec<String>> {
         (self.catch_up)();
-        self.index.files_under(workspace_root, dir, cached, accept)
+        self.index
+            .files_under(workspace_root, dir, cached, accept, skip)
     }
 }
 
@@ -755,7 +759,13 @@ mod tests {
         assert_eq!(
             {
                 let mut found = index
-                    .files_under(temp.path(), "dist", true, &|path| path.ends_with(".js"))
+                    .files_under(
+                        temp.path(),
+                        "dist",
+                        true,
+                        &|path| path.ends_with(".js"),
+                        &[],
+                    )
                     .unwrap();
                 found.sort();
                 found

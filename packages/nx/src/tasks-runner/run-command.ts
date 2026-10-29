@@ -7,7 +7,7 @@ import {
   readNxJson,
   TargetDependencies,
 } from '../config/nx-json';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
@@ -101,6 +101,7 @@ import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
+import { getReadyDependencies } from './readiness/ready-when';
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
@@ -109,7 +110,7 @@ import {
 } from './task-graph-utils';
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { pruneToSelectedTasks, shouldStreamOutput } from './utils';
-import { signalToCode } from '../utils/exit-codes';
+import { didCommandComplete, getRunExitCode } from './run-outcome';
 import { handleImport } from '../utils/handle-import';
 import * as pc from 'picocolors';
 
@@ -146,6 +147,7 @@ async function getTerminalOutputLifeCycle(
   projectNames: string[],
   tasks: Task[],
   taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
@@ -225,7 +227,7 @@ async function getTerminalOutputLifeCycle(
       const mainContinuousDependencies =
         taskGraph.continuousDependencies[mainTaskId];
       if (mainContinuousDependencies.length > 0) {
-        pinnedTasks.push(mainContinuousDependencies[0]);
+        pinnedTasks.push(mainContinuousDependencies[0].id);
       }
       const [, target] = mainTaskId.split(':');
       titleText = `1 ${target} task`;
@@ -289,6 +291,7 @@ async function getTerminalOutputLifeCycle(
         titleText,
         workspaceRoot,
         taskGraph,
+        getReadyDependencies(taskGraph, projectGraph),
         isNxCloudUsed(nxJson)
       );
       // The native endCommand renders the perf report in the exit popup; the runner
@@ -299,9 +302,6 @@ async function getTerminalOutputLifeCycle(
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
        */
       const createPatchedLogWrite = (
-        originalWrite:
-          | typeof process.stdout.write
-          | typeof process.stderr.write,
         isError: boolean
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
@@ -320,7 +320,6 @@ async function getTerminalOutputLifeCycle(
             );
           }
 
-          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
           const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
@@ -357,8 +356,8 @@ async function getTerminalOutputLifeCycle(
         };
       };
 
-      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
-      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
+      process.stdout.write = createPatchedLogWrite(false);
+      process.stderr.write = createPatchedLogWrite(true);
 
       // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
       console.log = createPatchedConsoleMethod(originalConsoleLog);
@@ -411,10 +410,9 @@ async function getTerminalOutputLifeCycle(
     };
   }
 
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  getRunner(nxArgs, nxJson);
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
-    runnerOptions,
     nxArgs.specifiedOutputStyle
   );
 
@@ -549,7 +547,7 @@ export async function runCommand(
       });
 
       const startTime = Date.now();
-      const { taskResults, completed } = await runTasksForCommand(
+      const { taskResults, taskStatuses, completed } = await runTasksForCommand(
         taskSelection,
         currentProjectGraph,
         { nxJson },
@@ -567,15 +565,7 @@ export async function runCommand(
       );
       const endTime = Date.now();
 
-      const exitCode = !completed
-        ? signalToCode('SIGINT')
-        : Object.values(taskResults).some(
-              (taskResult) =>
-                taskResult.status === 'failure' ||
-                taskResult.status === 'skipped'
-            )
-          ? 1
-          : 0;
+      const exitCode = getRunExitCode(completed, taskResults, taskStatuses);
 
       await runPostTasksExecution({
         id,
@@ -603,7 +593,11 @@ export async function runTasksForCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<{ taskResults: TaskResults; completed: boolean }> {
+): Promise<{
+  taskResults: TaskResults;
+  taskStatuses?: Record<string, TaskStatus>;
+  completed: boolean;
+}> {
   // Kick off the license lookup in the background so it overlaps with task
   // execution. The log itself is deferred to the print site below so it
   // never lands in the middle of task output.
@@ -636,13 +630,14 @@ export async function runTasksForCommand(
       projectNames,
       tasks,
       taskGraph,
+      projectGraph,
       nxArgs,
       nxJson,
       overrides
     );
 
   try {
-    const taskResults = await invokeTasksRunner({
+    const { taskResults, taskStatuses } = await invokeTasksRunner({
       tasks,
       projectGraph,
       taskGraph,
@@ -670,7 +665,8 @@ export async function runTasksForCommand(
 
     return {
       taskResults,
-      completed: didCommandComplete(tasks, taskResults),
+      taskStatuses,
+      completed: didCommandComplete(tasks, taskResults, taskStatuses),
     };
   } catch (e) {
     restoreTerminal?.();
@@ -705,20 +701,6 @@ async function printConfigureAiAgentsDisclaimer(): Promise<void> {
   } catch {
     // Silently ignore errors
   }
-}
-
-function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
-  if (tasks.length === 0) return true;
-
-  for (const task of tasks) {
-    if (!task.continuous) {
-      // Discrete task must have a result (was started and finished)
-      if (!taskResults[task.id]) return false;
-    }
-  }
-
-  // Any stopped task means the run was interrupted
-  return !Object.values(taskResults).some((r) => r.status === 'stopped');
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -1059,7 +1041,10 @@ export async function invokeTasksRunner({
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
-}): Promise<{ [id: string]: TaskResult }> {
+}): Promise<{
+  taskResults: { [id: string]: TaskResult };
+  taskStatuses?: Record<string, TaskStatus>;
+}> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
   // this needs to be done before we start to run the tasks
@@ -1088,14 +1073,15 @@ export async function invokeTasksRunner({
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
 
-  const deferredTaskIds = await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    hasher,
-    projectGraph,
-    taskGraph,
-    nxJson,
-    taskDetails,
-    ultracacheConfigurations
-  );
+  const hashingDeferredTaskIds =
+    await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
+      hasher,
+      projectGraph,
+      taskGraph,
+      nxJson,
+      taskDetails,
+      ultracacheConfigurations
+    );
   reportUltracacheConfigurations(
     ultracacheConfigurationOutcome,
     projectGraph,
@@ -1191,7 +1177,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
-      deferredTaskIds,
+      hashingDeferredTaskIds,
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1200,10 +1186,17 @@ export async function invokeTasksRunner({
     );
   }
 
-  await (promiseOrObservable as Promise<{
+  const taskStatuses = await (promiseOrObservable as Promise<{
     [id: string]: TaskStatus;
   }>);
-  return taskResultsLifecycle.getTaskResults();
+  return {
+    taskResults: taskResultsLifecycle.getTaskResults(),
+    // Custom runners are not guaranteed to resolve to a status map.
+    taskStatuses:
+      taskStatuses && typeof taskStatuses === 'object'
+        ? taskStatuses
+        : undefined,
+  };
 }
 
 export function constructLifeCycles(
@@ -1251,11 +1244,7 @@ async function convertObservableToPromise(
   });
 }
 
-function shouldUseDynamicLifeCycle(
-  tasks: Task[],
-  options: any,
-  outputStyle: string
-) {
+function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||

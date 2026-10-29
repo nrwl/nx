@@ -58,11 +58,11 @@
     },
     "buildTarget": {
       "type": "string",
-      "description": "The build target of the project to be transformed to use the @nx/vite:build executor."
+      "description": "The existing build target of the project to convert to Rspack."
     },
     "serveTarget": {
       "type": "string",
-      "description": "The serve target of the project to be transformed to use the @nx/vite:dev-server and @nx/vite:preview-server executors."
+      "description": "The existing serve target of the project, used to check that it can be converted to Rspack."
     },
     "rootProject": {
       "type": "boolean",

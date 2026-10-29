@@ -9,7 +9,11 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import { deduceDefaultBase } from '../../utilities/default-base';
 import { vol } from 'memfs';
+
+const { workspaceRoot: nxWorkspaceRoot } =
+  await vi.importActual<typeof import('@nx/devkit')>('@nx/devkit');
 
 vi.mock('child_process', async () => {
   const cp = await vi.importActual<any>('child_process');
@@ -98,7 +102,7 @@ describe('CI Workflow generator', () => {
           } else {
             fileSys = { 'package-lock.json': '' };
           }
-          vol.fromJSON(fileSys, '');
+          vol.fromJSON(fileSys, nxWorkspaceRoot);
         });
 
         it('should generate github CI config', async () => {
@@ -220,6 +224,23 @@ describe('CI Workflow generator', () => {
           });
 
           expect(readNxJson(tree).defaultBase).toEqual('origin/my-branch');
+        });
+
+        it('should add an origin/ defaultBase when the affected block sets no defaultBase', async () => {
+          const nxJson = readNxJson(tree);
+          delete nxJson.defaultBase;
+          nxJson.affected = { legacy: true };
+          writeJson(tree, 'nx.json', nxJson);
+
+          await ciWorkflowGenerator(tree, {
+            ci: 'bitbucket-pipelines',
+            name: 'CI',
+          });
+
+          expect(readNxJson(tree).defaultBase).toEqual(
+            `origin/${deduceDefaultBase()}`
+          );
+          expect(readNxJson(tree).affected).toEqual({ legacy: true });
         });
 
         it('should generate gitlab config', async () => {

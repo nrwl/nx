@@ -357,7 +357,9 @@ fn affected_through_output_reads(
 mod tests {
     use super::*;
     use crate::native::tasks::types::HashInstruction;
-    use crate::native::test_utils::{graph_of_roots as graph, hash_plans, strings, task_graph};
+    use crate::native::test_utils::{
+        edges_to, graph_of_roots as graph, hash_plans, strings, task_graph,
+    };
 
     /// Builds a one-task plan from the given instructions.
     fn plans(task: &str, instructions: Vec<HashInstruction>) -> HashPlans {
@@ -569,7 +571,7 @@ mod tests {
             ),
             (
                 "e2e:e2e",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/apps/web/**",
                 ]))],
             ),
@@ -583,7 +585,7 @@ mod tests {
             &[("web:serve", &["lib:build"])],
         );
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -640,7 +642,7 @@ mod tests {
             &[("web:serve", &["ui:build"])],
         );
         tg.continuous_dependencies
-            .insert("e2e:e2e".into(), strings(&["web:serve"]));
+            .insert("e2e:e2e".into(), edges_to(&["web:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -679,21 +681,17 @@ mod tests {
             ),
             (
                 "a:serve",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/libs/lib/**",
                 ]))],
             ),
             (
                 "b:serve",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/apps/a/**",
-                ]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/apps/a/**"]))],
             ),
             (
                 "c:e2e",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
-                    "dist/apps/b/**",
-                ]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/apps/b/**"]))],
             ),
         ]);
         let mut tg = task_graph(
@@ -706,11 +704,11 @@ mod tests {
             &[("a:serve", &["lib:build"])],
         );
         tg.continuous_dependencies
-            .insert("a:serve".into(), strings(&["b:serve"]));
+            .insert("a:serve".into(), edges_to(&["b:serve"]));
         tg.continuous_dependencies
-            .insert("b:serve".into(), strings(&["a:serve"]));
+            .insert("b:serve".into(), edges_to(&["a:serve"]));
         tg.continuous_dependencies
-            .insert("c:e2e".into(), strings(&["b:serve"]));
+            .insert("c:e2e".into(), edges_to(&["b:serve"]));
 
         let s = compute_affected_task_selection(
             &g,
@@ -824,7 +822,7 @@ mod tests {
             ],
         );
         tg.continuous_dependencies
-            .insert("app:build".into(), strings(&["api:serve"]));
+            .insert("app:build".into(), edges_to(&["api:serve"]));
 
         let s = select(&tg, &p, &options(&[]));
 
@@ -866,7 +864,7 @@ mod tests {
             ("lib:build", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&[
+                vec![HashInstruction::ignored_files(strings(&[
                     "dist/libs/lib/**",
                 ]))],
             ),
@@ -925,7 +923,7 @@ mod tests {
             ("app:prebuild", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/gen/**"]))],
             ),
         ]);
         let tg = task_graph(
@@ -951,7 +949,7 @@ mod tests {
             ("app:prebuild", vec![reads_x()]),
             (
                 "app:build",
-                vec![HashInstruction::IgnoredFileSet(strings(&["dist/gen/**"]))],
+                vec![HashInstruction::ignored_files(strings(&["dist/gen/**"]))],
             ),
             ("app:lint", vec![]),
         ]);

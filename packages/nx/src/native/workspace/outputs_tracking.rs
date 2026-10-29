@@ -101,7 +101,7 @@ fn tracked_dir(root: &Path, output: &str) -> String {
 /// index's listing.
 fn files_from_index(root: &Path, index: &IgnoredIndex, outputs: &[String]) -> Option<Vec<String>> {
     output_files_via(root, outputs.to_vec(), &|dir| {
-        index.files_under(root, dir, true, &|_| true)
+        index.files_under(root, dir, true, &|_| true, &[])
     })
     .ok()
 }

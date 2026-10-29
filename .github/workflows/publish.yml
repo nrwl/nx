@@ -31,7 +31,7 @@ env:
   CARGO_INCREMENTAL: '0'
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 26.7.0
+  NODE_VERSION: 26.12.1
   PNPM_VERSION: 12.4.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
@@ -149,6 +149,8 @@ jobs:
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
+              # Until a released nx-maven-plugin emits "/" roots, the Maven graph breaks on Windows
+              export NX_MAVEN_DISABLE=true
               pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
@@ -333,8 +335,10 @@ jobs:
               export JAVA_HOME="C:\Program Files\OpenJDK\jdk-21"
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
+              # Until a released nx-maven-plugin emits "/" roots, the Maven graph breaks on Windows
+              export NX_MAVEN_DISABLE=true
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@26.7.0
+    name: stable - ${{ matrix.settings.target }} - node@26.12.1
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -467,15 +471,16 @@ jobs:
           RUSTUP_IO_THREADS: 1
           CARGO_INCREMENTAL: '0'
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 26.7.0
+          NODE_VERSION: 26.12.1
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
+          NX_MAVEN_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
         with:
           operating_system: freebsd
           version: '14.0'
           architecture: x86-64
-          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NODE_OPTIONS PNPM_VERSION
+          environment_variables: DEBUG RUSTUP_IO_THREADS CARGO_INCREMENTAL CI PLAYWRIGHT_BROWSERS_PATH NODE_VERSION NX_GRADLE_DISABLE NX_DOTNET_DISABLE NX_MAVEN_DISABLE NODE_OPTIONS PNPM_VERSION
           shell: bash
           run: |
             env

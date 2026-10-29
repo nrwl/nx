@@ -1,13 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`app > Nuxt v4 with app directory structure > should configure nuxt.config.ts without srcDir for app directory 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   workspaceDir: '../',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -22,7 +23,7 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
@@ -143,7 +144,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app > generated files content - as-provided - my-app > general application > should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -151,6 +152,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -165,7 +167,7 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
@@ -204,16 +206,17 @@ exports[`app > generated files content - as-provided - my-app > general applicat
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [vue()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     name: 'my-app',
@@ -383,7 +386,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app > generated files content - as-provided - my-app > styles setup > should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -391,6 +394,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -406,14 +410,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - my-app > styles setup > should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -421,6 +425,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -436,14 +441,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - my-app > styles setup > should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -451,6 +456,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -466,14 +472,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - my-app > styles setup > should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -481,6 +487,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -495,7 +502,7 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
@@ -582,7 +589,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app > generated files content - as-provided - myApp > general application > should configure nuxt correctly 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -590,6 +597,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -604,7 +612,7 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
@@ -643,16 +651,17 @@ exports[`app > generated files content - as-provided - myApp > general applicati
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/myApp',
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [vue()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   test: {
     name: 'myApp',
@@ -822,7 +831,7 @@ export default createConfigForNuxt({
 `;
 
 exports[`app > generated files content - as-provided - myApp > styles setup > should configure css 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -830,6 +839,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -845,14 +855,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - myApp > styles setup > should configure less 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -860,6 +870,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -875,14 +886,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.less'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - myApp > styles setup > should configure scss 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -890,6 +901,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -905,14 +917,14 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.scss'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "
 `;
 
 exports[`app > generated files content - as-provided - myApp > styles setup > should not configure styles 1`] = `
-"import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+"import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -920,6 +932,7 @@ export default defineNuxtConfig({
   workspaceDir: '../',
   srcDir: 'src',
   devtools: { enabled: true },
+  modules: ['@nx/nuxt/ready-signal'],
   devServer: {
     host: 'localhost',
     port: 4200,
@@ -934,7 +947,7 @@ export default defineNuxtConfig({
     autoImport: true,
   },
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths({ loose: true })],
   },
 });
 "

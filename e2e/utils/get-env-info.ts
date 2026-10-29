@@ -144,7 +144,6 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
       }
 
       const allowedKeys = [
-        'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
         'NX_SKIP_LOG_GROUPING',

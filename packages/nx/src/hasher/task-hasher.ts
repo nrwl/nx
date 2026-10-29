@@ -438,13 +438,17 @@ export function splitInputsIntoSelfAndDependencies(
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): {
   depsInputs: { input: string; dependencies: true }[];
-  projectInputs: { input: string; projects: string[] }[];
+  projectInputs: { input: string; projects: string[]; dependencies?: true }[];
   selfInputs: ExpandedSelfInput[];
   depsOutputs: ExpandedDepsOutput[];
   depsFilesets: { fileset: string; dependencies: true }[];
 } {
   const depsInputs: { input: string; dependencies: true }[] = [];
-  const projectInputs: { input: string; projects: string[] }[] = [];
+  const projectInputs: {
+    input: string;
+    projects: string[];
+    dependencies?: true;
+  }[] = [];
   const depsFilesets: { fileset: string; dependencies: true }[] = [];
   const selfInputs = [];
   for (const d of inputs) {
@@ -471,8 +475,8 @@ export function splitInputsIntoSelfAndDependencies(
       } else if (
         'input' in d &&
         !('fileset' in d) &&
-        (('dependencies' in d && d.dependencies) ||
-          // Todo(@AgentEnder): Remove check in v17
+        (('dependencies' in d && d.dependencies && !('projects' in d)) ||
+          // TODO(v25): remove the 'dependencies' magic string (NXC-5157)
           ('projects' in d &&
             typeof d.projects === 'string' &&
             d.projects === 'dependencies'))
@@ -486,12 +490,15 @@ export function splitInputsIntoSelfAndDependencies(
         !('fileset' in d) &&
         'projects' in d &&
         d.projects &&
-        // Todo(@AgentEnder): Remove check in v17
+        // TODO(v25): remove the 'self' magic string (NXC-5157)
         !(d.projects === 'self')
       ) {
         projectInputs.push({
           input: d.input,
           projects: Array.isArray(d.projects) ? d.projects : [d.projects],
+          ...('dependencies' in d && d.dependencies
+            ? { dependencies: true }
+            : {}),
         });
       } else {
         selfInputs.push(d);

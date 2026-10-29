@@ -39,36 +39,6 @@ describe('generator utils', () => {
       );
     });
 
-    it('should return correct path for vite.config file if custom configFile is set', () => {
-      const projectConfig = readProjectConfiguration(
-        tree,
-        'my-test-react-vite-app'
-      );
-      updateProjectConfiguration(tree, 'my-test-react-vite-app', {
-        ...projectConfig,
-        targets: {
-          ...projectConfig.targets,
-          build: {
-            ...projectConfig.targets.build,
-            options: {
-              ...projectConfig.targets.build.options,
-              configFile: 'apps/my-test-react-vite-app/vite.config.custom.ts',
-            },
-          },
-        },
-      });
-
-      tree.write(`apps/my-test-react-vite-app/vite.config.custom.ts`, '');
-
-      const viteConfigPath = getViteConfigPathForProject(
-        tree,
-        'my-test-react-vite-app'
-      );
-      expect(viteConfigPath).toEqual(
-        'apps/my-test-react-vite-app/vite.config.custom.ts'
-      );
-    });
-
     it('should return correct path for vite.config file given a target name', () => {
       const projectConfig = readProjectConfiguration(
         tree,
@@ -121,6 +91,21 @@ describe('generator utils', () => {
   });
 
   describe('createOrEditViteConfig', () => {
+    it.each([5, 6, 7])('should preserve path aliases on Vite %s', (version) => {
+      addProjectConfiguration(tree, 'myproj', { root: 'myproj' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { vite: `^${version}.0.0` },
+      }));
+      createOrEditViteConfig(tree, { project: 'myproj' }, false);
+      const config = tree.read('myproj/vite.config.ts', 'utf-8');
+      expect(config).toContain(
+        "import tsconfigPaths from 'vite-tsconfig-paths'"
+      );
+      expect(config).toContain('tsconfigPaths({ loose: true })');
+      expect(config).not.toContain('tsconfigPaths: true');
+    });
+
     it('should generate formatted config', () => {
       addProjectConfiguration(tree, 'myproj', {
         name: 'myproj',
@@ -139,63 +124,70 @@ describe('generator utils', () => {
 
       expect(tree.read('myproj/vite.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import dts from 'vite-plugin-dts';
-        import * as path from 'path';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import dts from 'vite-plugin-dts';
+          import * as path from 'path';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/myproj',
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
-          // Configuration for building your library.
-          // See: https://vite.dev/guide/build.html#library-mode
-          build: {
-            outDir: '../dist/myproj',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/myproj',
+            resolve: {
+              tsconfigPaths: true,
             },
-            lib: {
-              // Could also be a dictionary or array of multiple entry points.
-              entry: 'src/index.ts',
+            plugins: [import('vite-plugin-static-copy').then(({ viteStaticCopy }) => viteStaticCopy({
+                targets: [
+                  { src: '*.md', dest: '.' },
+                  { src: 'package.json', dest: '.', overwrite: false },
+                ],
+                silent: true,
+              })), dts({ entryRoot: 'src', tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'), pathsToAliases: false })],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            // Configuration for building your library.
+            // See: https://vite.dev/guide/build.html#library-mode
+            build: {
+              outDir: '../dist/myproj',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+              lib: {
+                // Could also be a dictionary or array of multiple entry points.
+                entry: 'src/index.ts',
+                name: 'myproj',
+                fileName: 'index',
+                // Change this to the formats you want to support.
+                // Don't forget to update your package.json as well.
+                formats: ['es' as const]
+              },
+              rolldownOptions: {
+                // External packages that should not be bundled into your library.
+                external: []
+              },
+            },
+            define: {
+              'import.meta.vitest': undefined
+            },
+            test: {
               name: 'myproj',
-              fileName: 'index',
-              // Change this to the formats you want to support.
-              // Don't forget to update your package.json as well.
-              formats: ['es' as const]
+              watch: false,
+              globals: true,
+              environment: 'jsdom',
+              include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+              includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+              reporters: ['default'],
+              coverage: {
+                reportsDirectory: '../coverage/myproj',
+                provider: 'v8' as const,
+              }
             },
-            rolldownOptions: {
-              // External packages that should not be bundled into your library.
-              external: []
-            },
-          },
-          define: {
-            'import.meta.vitest': undefined
-          },
-          test: {
-            name: 'myproj',
-            watch: false,
-            globals: true,
-            environment: 'jsdom',
-            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-            reporters: ['default'],
-            coverage: {
-              reportsDirectory: '../coverage/myproj',
-              provider: 'v8' as const,
-            }
-          },
-        }));
-        "
-      `);
+          }));
+          "
+        `);
     });
 
     it('should generate formatted config without library and in-source tests', () => {
@@ -216,38 +208,40 @@ describe('generator utils', () => {
 
       expect(tree.read('myproj/vite.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../node_modules/.vite/myproj',
-          server:{
-            port: 4200,
-            host: 'localhost',
-          },
-          preview:{
-            port: 4300,
-            host: 'localhost',
-          },
-          plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
-          build: {
-            outDir: '../dist/myproj',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../node_modules/.vite/myproj',
+            server:{
+              port: 4200,
+              host: 'localhost',
             },
-          },
-        }));
-        "
-      `);
+            preview:{
+              port: 4300,
+              host: 'localhost',
+            },
+            resolve: {
+              tsconfigPaths: true,
+            },
+            plugins: [nxReadySignal()],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            build: {
+              outDir: '../dist/myproj',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+            },
+          }));
+          "
+        `);
     });
 
     it('should generate correct config when using ts solution setup', () => {

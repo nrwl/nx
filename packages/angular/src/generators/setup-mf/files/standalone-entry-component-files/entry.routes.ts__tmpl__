@@ -1,4 +1,0 @@
-import { Route } from '@angular/router';
-import { RemoteEntry<%= componentType %> } from './entry<%= componentFileSuffix %>';
-
-export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntry<%= componentType %> }];

@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { handleImport } from './handle-import';
 
 describe('handleImport', () => {
@@ -13,7 +12,7 @@ describe('handleImport', () => {
     const esmError = new Error('require() of ES Module not supported');
     (esmError as any).code = 'ERR_REQUIRE_ESM';
 
-    const originalRequire = await vi.importActual('./handle-import');
+    await vi.importActual('./handle-import');
 
     vi.resetModules();
 

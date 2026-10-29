@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 
 // getProjectGlobPatterns reads these from the plugins' recorded capabilities.
 vi.mock('../plugins/get-plugins', () => ({
@@ -28,7 +29,11 @@ vi.mock('../../tasks-runner/utils', async (importOriginal) => {
         : actual.getExecutorForTask(task, projects),
   };
 });
-import { computeAffectedTasks, selectsAffectedTasks } from './affected-tasks';
+import {
+  computeAffectedTasks,
+  selectsAffectedTasks,
+  taskGranularityRequirement,
+} from './affected-tasks';
 import {
   DeletedFileChange,
   LockFileChange,
@@ -109,6 +114,44 @@ describe('computeAffectedTasks', () => {
       'lib:test',
     ]);
   });
+
+  // `e2e` has no graph edges; it reaches `lib` only through `app`'s dependencies.
+  it.each([
+    ['packages/nx/src/index.ts', ['app:test', 'e2e:test', 'lib:test']],
+    ['packages/js/src/index.ts', ['app:test']],
+  ])(
+    "follows a project selection's dependencies to %s",
+    async (file, expected) => {
+      const projectGraph = graph();
+      projectGraph.nodes.e2e = {
+        name: 'e2e',
+        type: 'e2e',
+        data: {
+          root: 'packages/devkit',
+          targets: {
+            test: {
+              executor: 'nx:run-commands',
+              inputs: [
+                { input: 'production', projects: 'app', dependencies: true },
+              ],
+            },
+          },
+        },
+      };
+      projectGraph.dependencies.e2e = [];
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          { file, getChanges: () => [new WholeFileChange()] },
+        ] as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
 
   /**
    * ProjectConfiguration is spliced into a consumer's plan for each dependency
@@ -667,13 +710,10 @@ describe('a continuous dependency with inputs: false', () => {
   it('still selects the dependent through its own inputs and runs the server', async () => {
     const result = await select(false, 'packages/workspace/src/index.ts');
     expect([...result.affectedTaskIds]).toEqual(['e2e:e2e']);
-    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
-      'app:serve',
-    ]);
     // The run hashes from this graph, so it must keep the opt-out.
-    expect(result.taskGraph.continuousDependenciesWithoutInputs).toEqual({
-      'e2e:e2e': ['app:serve'],
-    });
+    expect(result.taskGraph.continuousDependencies['e2e:e2e']).toEqual([
+      { id: 'app:serve', inputs: false },
+    ]);
   });
 });
 
@@ -876,6 +916,58 @@ describe('selection with Ultracache configurations', () => {
       withConfigurations.taskSelection.ultracacheConfigurationOutcome
     ).toBe(outcome);
   });
+
+  // app:test's recording never read lib's files, so its declared ^production
+  // stops selecting it, unless the dependency input is kept.
+  it.each([
+    ['a plain dependency input', '^production', 'static', ['lib:test']],
+    [
+      'an always dependency input',
+      { input: 'production', dependencies: true, always: true },
+      'static',
+      ['app:test', 'lib:test'],
+    ],
+  ])(
+    'selects a recorded dependent through %s',
+    async (_, dependencyInput, edgeType, expected) => {
+      const commit = 'head'.padEnd(40, '1');
+      const db = connectToNxDb(dir, 'ultracache');
+      new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'app:test': {
+            commit,
+            inputs: ['packages/js/src/index.ts'],
+            outputs: [],
+          },
+        }),
+      });
+      const projectGraph = graph();
+      projectGraph.nodes.app.data.targets.test.inputs = [
+        '{projectRoot}/src/**/*',
+        dependencyInput,
+      ];
+      projectGraph.dependencies.app[0].type = edgeType as any;
+      const result = await computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          {
+            file: 'packages/nx/src/index.ts',
+            getChanges: () => [new WholeFileChange()],
+          },
+        ] as any,
+        ultracacheConfigurationOutcome: {
+          status: 'fetched',
+          configurations: new UltracacheConfigurationStore(db).get(commit),
+        } as any,
+      });
+      expect([...result.affectedTaskIds].sort()).toEqual(expected);
+    }
+  );
 });
 
 describe('tasks with a custom hasher', () => {
@@ -1119,6 +1211,12 @@ describe('computeAffectedTasks with the daemon on', () => {
 
 describe('selectsAffectedTasks', () => {
   const original = process.env.NX_LEGACY_AFFECTED;
+  const legacy = (value?: boolean): NxJsonConfiguration =>
+    value === undefined ? {} : { affected: { legacy: value } };
+
+  beforeEach(() => {
+    delete process.env.NX_LEGACY_AFFECTED;
+  });
 
   afterEach(() => {
     if (original === undefined) {
@@ -1128,19 +1226,48 @@ describe('selectsAffectedTasks', () => {
     }
   });
 
-  // Task selection stays opt-in; flipping the default must be a deliberate edit that fails here.
-  it('selects whole projects when the variable is unset', () => {
-    delete process.env.NX_LEGACY_AFFECTED;
-    expect(selectsAffectedTasks()).toBe(false);
+  it('selects tasks when nx.json leaves legacy unset', () => {
+    expect(selectsAffectedTasks(legacy())).toBe(true);
   });
 
-  it('selects whole projects when the variable is true', () => {
+  it('follows affected.legacy in nx.json', () => {
+    expect(selectsAffectedTasks(legacy(false))).toBe(true);
+    expect(selectsAffectedTasks(legacy(true))).toBe(false);
+  });
+
+  it('lets NX_LEGACY_AFFECTED override nx.json', () => {
     process.env.NX_LEGACY_AFFECTED = 'true';
-    expect(selectsAffectedTasks()).toBe(false);
+    expect(selectsAffectedTasks(legacy(false))).toBe(false);
+    process.env.NX_LEGACY_AFFECTED = 'false';
+    expect(selectsAffectedTasks(legacy(true))).toBe(true);
   });
 
-  it('selects tasks only when the variable is false', () => {
-    process.env.NX_LEGACY_AFFECTED = 'false';
-    expect(selectsAffectedTasks()).toBe(true);
+  it('ignores other NX_LEGACY_AFFECTED values', () => {
+    process.env.NX_LEGACY_AFFECTED = '1';
+    expect(selectsAffectedTasks(legacy(true))).toBe(false);
+    expect(selectsAffectedTasks(legacy())).toBe(true);
+  });
+});
+
+describe('taskGranularityRequirement', () => {
+  const original = process.env.NX_LEGACY_AFFECTED;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.NX_LEGACY_AFFECTED;
+    } else {
+      process.env.NX_LEGACY_AFFECTED = original;
+    }
+  });
+
+  it('points at nx.json unless the variable forces projects', () => {
+    delete process.env.NX_LEGACY_AFFECTED;
+    expect(taskGranularityRequirement()).toBe(
+      'affected.legacy unset or false in nx.json'
+    );
+    process.env.NX_LEGACY_AFFECTED = 'true';
+    expect(taskGranularityRequirement()).toBe(
+      'NX_LEGACY_AFFECTED unset or set to false'
+    );
   });
 });

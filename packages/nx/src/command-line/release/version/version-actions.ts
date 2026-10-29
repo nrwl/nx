@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { ReleaseType } from 'semver';
 import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {
@@ -12,6 +12,8 @@ import {
   requireWithTsconfigFallback,
 } from '../../../plugins/js/utils/register';
 import { interpolate } from '../../../tasks-runner/utils';
+import { interpolateReleaseConfig } from '../utils/interpolate-release-config';
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -48,7 +50,7 @@ function resolveVersionActionsPath(
   projectGraphNode: ProjectGraphProjectNode
 ): string {
   try {
-    return require.resolve(path);
+    return resolveFromWorkspace(path);
   } catch {
     try {
       return require.resolve(join(workspaceRoot, path));
@@ -261,7 +263,7 @@ export abstract class VersionActions {
       this.finalConfigForProject.manifestRootsToUpdate.map((manifestRoot) => {
         return {
           ...manifestRoot,
-          path: interpolate(manifestRoot.path, {
+          path: interpolateReleaseConfig(manifestRoot.path, {
             workspaceRoot: '',
             projectRoot: this.projectGraphNode.data.root,
             projectName: this.projectGraphNode.name,

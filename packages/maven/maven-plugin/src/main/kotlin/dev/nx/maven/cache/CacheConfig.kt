@@ -7,8 +7,11 @@ data class PathPattern(
 
 data class Parameter(val name: String, val glob: String?, val excludeGlob: String? = null)
 
+// A path from the project model (e.g. project.build.outputDirectory) rather than a mojo parameter.
+data class Property(val name: String, val glob: String? = null, val excludeGlob: String? = null)
+
 data class MojoConfig(
-    val inputProperties: Set<String>? = null,
+    val inputProperties: Set<Property>? = null,
     val inputParameters: Set<Parameter>? = null,
     val outputParameters: Set<Parameter>? = null,
 )
@@ -73,22 +76,35 @@ data class CacheConfig(
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
                         // Include generated sources by convention
-                        Parameter("buildDirectory", "generated-sources/**/*.java"),
+                        // javac writes annotations/ itself, so hashing it would miss on the next run.
+                        Parameter(
+                            "buildDirectory",
+                            "generated-sources/**/*.java",
+                            excludeGlob = "generated-sources/annotations/**",
+                        ),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-compiler-plugin:testCompile" to MojoConfig(
+                    inputProperties = setOf(
+                        Property("project.build.outputDirectory"),
+                    ),
                     inputParameters = setOf(
                         Parameter("compileSourceRoots", "**/*.java"),
+                        Parameter(
+                            "buildDirectory",
+                            "generated-test-sources/**/*.java",
+                            excludeGlob = "generated-test-sources/test-annotations/**",
+                        ),
                     ),
                     outputParameters = setOf(
                         Parameter("outputDirectory", "**/*.class"),
                     )
                 ),
                 "maven-resources-plugin:resources" to MojoConfig(
-                    inputProperties = setOf("project.build.resources"),
+                    inputProperties = setOf(Property("project.build.resources")),
                     outputParameters = setOf(
                         Parameter("outputDirectory", null, excludeGlob = "**/*.class"),
                     )
@@ -146,6 +162,15 @@ data class CacheConfig(
                         Parameter("outputDirectory", "*.jar"),
                     )
                 ),
+                // A pom-configured outputFile isn't resolved; outputDirectory/*.jar covers the default location.
+                "maven-shade-plugin:shade" to MojoConfig(
+                    // Its jar comes from maven-jar-plugin in the same package task, so classesDirectory covers it.
+                    inputParameters = emptySet(),
+                    outputParameters = setOf(
+                        Parameter("outputDirectory", "*.jar"),
+                        Parameter("dependencyReducedPomLocation", null),
+                    )
+                ),
                 "maven-war-plugin:war" to MojoConfig(
                     inputParameters = setOf(
                         Parameter("warSourceDirectory", null),
@@ -157,6 +182,13 @@ data class CacheConfig(
                         Parameter("webappDirectory", null),
                         Parameter("workDirectory", null),
                     )
+                ),
+                // Both publish the pom, the main artifact and the attached artifacts.
+                "maven-install-plugin:install" to MojoConfig(
+                    inputProperties = setOf(Property("project.artifact.file"), Property("project.attachedArtifacts")),
+                ),
+                "maven-deploy-plugin:deploy" to MojoConfig(
+                    inputProperties = setOf(Property("project.artifact.file"), Property("project.attachedArtifacts")),
                 ),
                 "spring-boot-maven-plugin:run" to MojoConfig(
                     inputParameters = setOf(
@@ -198,7 +230,8 @@ data class CacheConfig(
                 "maven-site-plugin:site",
                 "maven-install-plugin:install",
                 "bb-sdk-codegen:deploy-local",
-                "spring-boot-maven-plugin:run"
+                "spring-boot-maven-plugin:run",
+                "exec-maven-plugin:java"
             ),
             continuous = setOf(
                 "spring-boot-maven-plugin:run",

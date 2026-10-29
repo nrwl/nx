@@ -45,6 +45,8 @@ import {
   type InternedExplanation,
 } from './affected-reasons';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import { ProgressTopics } from '../../utils/progress-topics';
 import {
   createTaskPlanningContext,
   TaskPlanningContext,
@@ -60,14 +62,22 @@ import { AUTO_AFFECTED_LOCK_FILES } from '../../plugins/js/lock-file/lock-file';
 
 /**
  * Whether `nx affected` selects the individual tasks whose inputs a change
- * reaches, rather than whole projects. Off by default while the task path
- * settles.
+ * reaches, rather than whole projects. `NX_LEGACY_AFFECTED` overrides
+ * nx.json's `affected.legacy`.
  *
- * Env-var only, so `nx show projects --affected` and `nx affected` in one CI
- * script agree. The run also executes the selected tasks' dependencies.
+ * The run also executes the selected tasks' dependencies.
  */
-export function selectsAffectedTasks(): boolean {
-  return process.env.NX_LEGACY_AFFECTED === 'false';
+export function selectsAffectedTasks(nxJson: NxJsonConfiguration): boolean {
+  if (process.env.NX_LEGACY_AFFECTED === 'true') return false;
+  if (process.env.NX_LEGACY_AFFECTED === 'false') return true;
+  return !nxJson.affected?.legacy;
+}
+
+/** What to change so {@link selectsAffectedTasks} returns true, for error messages. */
+export function taskGranularityRequirement(): string {
+  return process.env.NX_LEGACY_AFFECTED === 'true'
+    ? 'NX_LEGACY_AFFECTED unset or set to false'
+    : 'affected.legacy unset or false in nx.json';
 }
 
 export interface AffectedTasksResult {
@@ -224,6 +234,19 @@ export async function computeAffectedTasks(
  * daemon.
  */
 export async function selectAffectedTasks(
+  ...args: Parameters<typeof matchAffectedTasks>
+): ReturnType<typeof matchAffectedTasks> {
+  const spinner = new DelayedSpinner('Calculating affected tasks', {
+    progressTopic: ProgressTopics.AffectedTasks,
+  });
+  try {
+    return await matchAffectedTasks(...args);
+  } finally {
+    spinner.cleanup();
+  }
+}
+
+async function matchAffectedTasks(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   planningContext: TaskPlanningContext,
@@ -304,7 +327,7 @@ export async function selectAffectedTasks(
   const namedProjects = new Set(dependencies.projects);
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const customHashed = new Set(
     taskIds.filter((id) => hasCustomHasher(taskGraph.tasks[id], projects))
   );

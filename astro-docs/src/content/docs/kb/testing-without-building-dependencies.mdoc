@@ -170,11 +170,7 @@ If your test targets previously included `dependsOn: ["^build"]` to ensure depen
 {
   "targets": {
     "test": {
-      "executor": "@nx/vitest:test",
-      "dependsOn": ["^build"],
-      "options": {
-        "config": "vitest.config.mts"
-      }
+      "dependsOn": ["^build"]
     }
   }
 }
@@ -186,14 +182,7 @@ If your test targets previously included `dependsOn: ["^build"]` to ensure depen
 ```json
 // project.json
 {
-  "targets": {
-    "test": {
-      "executor": "@nx/vitest:test",
-      "options": {
-        "config": "vitest.config.mts"
-      }
-    }
-  }
+  "targets": {}
 }
 ```
 

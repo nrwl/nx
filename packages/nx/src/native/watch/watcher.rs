@@ -129,7 +129,7 @@ pub(crate) fn default_watch_ignores() -> Vec<String> {
         .iter()
         .map(|p| (*p).to_string())
         .collect();
-    // Vite/Vitest write timestamp files that we don't want to watch.
+    // Vite, Vitest and pnpm write short-lived files that we don't want to watch.
     globs.extend(TRANSIENT_FILE_GLOBS.iter().map(|g| (*g).to_string()));
     globs
 }

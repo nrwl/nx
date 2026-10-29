@@ -24,7 +24,9 @@ describe('Docker E2Es', () => {
       newProject({ keepBackup: true, packages: ['@nx/docker'] });
       addDockerPluginIfNotExists();
       // Normalize git committer information so it is deterministic in snapshots
-      await runCommandAsync(`git config user.email "test@test.com"`);
+      await runCommandAsync(
+        `git config user.email "test@users.noreply.github.com"`
+      );
       await runCommandAsync(`git config user.name "Test"`);
       // Create a baseline version tag
       await runCommandAsync(`git tag v0.0.0`);

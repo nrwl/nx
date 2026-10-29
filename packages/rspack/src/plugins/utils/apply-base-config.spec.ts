@@ -2,7 +2,13 @@ import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import type { Configuration, Stats } from '@rspack/core';
 import * as path from 'path';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { runInNewContext } from 'vm';
 import { createRequire } from 'module';
@@ -493,4 +499,155 @@ describe('apply-base-config minimizer', () => {
       expect(logs).toEqual(['1,2,3']);
     }
   );
+});
+
+describe('apply-base-config watch option', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.resetModules();
+  });
+
+  it.each([
+    ['keeps the watch mode `rspack build --watch` set', undefined, true],
+    ['lets the plugin option override it', false, false],
+  ])('%s', async (_, watch, expected) => {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const config: Partial<Configuration> = { watch: true };
+
+    applyBaseConfig(
+      {
+        root: '/test',
+        projectRoot: 'apps/test',
+        target: 'node',
+        watch,
+      } as NormalizedNxAppRspackPluginOptions,
+      config
+    );
+
+    expect(config.watch).toBe(expected);
+  });
+});
+
+describe('apply-base-config extractLicenses', () => {
+  let root: string;
+
+  beforeEach(() => {
+    vi.resetModules();
+    global.NX_GRAPH_CREATION = false;
+    root = mkdtempSync(path.join(tmpdir(), 'nx-rspack-licenses-'));
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    rmSync(root, { recursive: true, force: true });
+    vi.resetModules();
+  });
+
+  async function getLicensePlugin() {
+    const { applyBaseConfig } = await import('./apply-base-config');
+    const config: Partial<Configuration> = {};
+    applyBaseConfig(
+      {
+        root,
+        projectRoot: 'apps/test',
+        target: 'web',
+        extractLicenses: true,
+      } as NormalizedNxAppRspackPluginOptions,
+      config
+    );
+    return config.plugins.find(
+      (p) => p.constructor.name === 'LicenseWebpackPlugin'
+    ) as any;
+  }
+
+  it('excludes the project package that loader-prefixed data: modules resolve to', async () => {
+    mkdirSync(path.join(root, 'apps/test'), { recursive: true });
+    writeFileSync(
+      path.join(root, 'apps/test/package.json'),
+      JSON.stringify({ name: '@org/test' })
+    );
+
+    const { excludedPackageTest } = (await getLicensePlugin()).pluginOptions;
+
+    expect(excludedPackageTest('@org/test')).toBe(true);
+    expect(excludedPackageTest('react')).toBe(false);
+  });
+
+  it('excludes nothing when the project has no package.json', async () => {
+    const { excludedPackageTest } = (await getLicensePlugin()).pluginOptions;
+
+    expect(excludedPackageTest('react')).toBe(false);
+    expect(excludedPackageTest(undefined)).toBe(false);
+  });
+});
+
+describe('apply-base-config unsupported transformers warning', () => {
+  let options: NormalizedNxAppRspackPluginOptions;
+
+  beforeEach(() => {
+    options = {
+      root: '/test',
+      projectRoot: 'apps/test',
+      target: 'node',
+      transformers: [{ name: 'some-transformer' }],
+    } as NormalizedNxAppRspackPluginOptions;
+    global.NX_GRAPH_CREATION = false;
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    vi.restoreAllMocks();
+  });
+
+  // Re-import so the set of already-warned projects starts empty.
+  async function loadFresh() {
+    vi.resetModules();
+    const { logger } = await import('@nx/devkit');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const { applyBaseConfig: applyBaseConfigFresh } =
+      await import('./apply-base-config');
+    return { warn, applyBaseConfigFresh };
+  }
+
+  function warnedAboutTransformers(warn: {
+    mock: { calls: unknown[][] };
+  }): boolean {
+    return warn.mock.calls.some((call) =>
+      String(call[0]).includes('`transformers` option is not supported')
+    );
+  }
+
+  it('warns when the option is set', async () => {
+    const { warn, applyBaseConfigFresh } = await loadFresh();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(warnedAboutTransformers(warn)).toBe(true);
+  });
+
+  it.each([
+    ['unset', undefined],
+    ['empty', []],
+  ])('does not warn when the option is %s', async (_, transformers) => {
+    options.transformers = transformers;
+    const { warn, applyBaseConfigFresh } = await loadFresh();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(warnedAboutTransformers(warn)).toBe(false);
+  });
+
+  it('stays silent during graph creation', async () => {
+    global.NX_GRAPH_CREATION = true;
+    const { warn, applyBaseConfigFresh } = await loadFresh();
+
+    applyBaseConfigFresh(options, {});
+
+    expect(warnedAboutTransformers(warn)).toBe(false);
+  });
 });

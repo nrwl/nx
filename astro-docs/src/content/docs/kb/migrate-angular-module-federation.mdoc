@@ -18,10 +18,10 @@ Rules 2 to 7 cover Path A. On Path B, follow that section of the page instead:
 2. Replace `withModuleFederation` and `NxModuleFederationPlugin` from `@nx/module-federation/angular` with `ModuleFederationPlugin` from `@module-federation/enhanced/webpack` or `/rspack`, and drop `NxModuleFederationDevServerPlugin`. Keep `@nx/angular:webpack-browser` with `customWebpackConfig` on webpack, and `createConfig` from `@nx/angular-rspack` on Rspack.
 3. Browser containers are ES modules: set `library: { type: 'module' }`, `experiments.outputModule: true` on webpack or `output.module: true` on Rspack, `filename: 'remoteEntry.mjs'` on webpack and `remoteEntry.js` on Rspack, `dts: false`, `output.publicPath: 'auto'`, `output.uniqueName`, and `optimization.runtimeChunk: false`. An Rspack host keeps its runtime chunk under the dev server. Write `remotes` as plain URLs with no `name@` prefix, one entry per remote even when the host stats list it once per exposed module.
 4. On webpack, add `resolve.alias` entries for every workspace library referenced through `tsconfig` paths. Never alias a `<remote>/<exposed>` entry such as `remoteA/Routes`, `remoteNg/Module`, or a `federate-module` path. Rspack's `createConfig` reads the paths itself and needs no alias.
-5. A host that already calls `registerRemotes` from `@module-federation/enhanced/runtime` is done, including `mf-manifest.json` entries with no `type`. For hosts on `@nx/angular/mf`, convert `setRemoteDefinitions` to `registerRemotes` with `type: 'module'` and `loadRemoteModule(name, './Routes')` to `loadRemote('<container-name>/Routes')`. Map keys and `loadRemote` prefixes are the normalized container name. Map values must be full `remoteEntry.mjs` URLs (`remoteEntry.js` on Rspack).
-6. On webpack, replace the `serve` target with `@nx/angular:dev-server`. On Rspack keep the inferred targets. Keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target (on Rspack under `devServer.headers` in `rspack.config.ts`), and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `spa: true`, `watch: false`, never `buildTarget`. Point Playwright `webServer.command`, or Cypress `webServerCommands` and `ciWebServerCommand`, at `nx run-many -t serve-static -p <host> <remotes>`.
+5. Move every host to a runtime manifest so it boots without every remote running. A host that already calls `registerRemotes` from `@module-federation/enhanced/runtime` is done, including `mf-manifest.json` entries with no `type`. For static hosts and hosts on `@nx/angular/mf`, fetch `module-federation.manifest.json` in `main.ts` and pass it to `registerRemotes` with `type: 'module'`, set `remotes: {}` in the federation config, replace `import('<remote>/Routes')` and `loadRemoteModule(name, './Routes')` with `loadRemote('<container-name>/Routes')`, add `implicitDependencies` on the host, and drop the `<remote>/<exposed>` paths from `tsconfig.base.json`. Map keys and `loadRemote` prefixes are the normalized container name. Map values must be full `remoteEntry.mjs` URLs (`remoteEntry.js` on Rspack). Keep static `remotes` only if the user asks to stay static.
+6. On webpack, replace the `serve` target with `@nx/angular:dev-server` and set `readyWhen: { signal: true }` on every app's `serve` target. On Rspack keep the inferred targets. Keep each remote's `dependsOn: ['<host>:serve']`, set `headers: { 'Access-Control-Allow-Origin': '*' }` on every remote's serve target (on Rspack under `devServer.headers` in `rspack.config.ts`), and add a `serve-static` target per app using `@nx/web:file-server` with `staticFilePath`, `dependsOn: ['build']`, `spa: true`, `watch: false`, `readyWhen: { signal: true }`, never `buildTarget`. Make each e2e task wait for every app's `serve-static`. On Playwright, list one `webServer` entry per app running `npx nx run <app>:serve-static`, with its `url` and `reuseExistingServer: true`. On Cypress, point `webServerCommands` and `ciWebServerCommand` at `npx nx run <host>:serve-static`, and give the e2e target `dependsOn: [{ projects: [<host>, <remotes>], target: 'serve-static', waitFor: 'ready' }]`. Give the atomized `e2e-ci--*` tasks the same `dependsOn` through a `targetDefaults` entry filtered to the e2e project. Never start the apps with `nx run-many` from an e2e web server command.
 7. Remove `@nx/module-federation` only after the new setup builds and runs. Move `@module-federation/enhanced` to `dependencies` (`pnpm add -P` on pnpm). Rebuild uncached, production last. On Rspack a development build needs `NGRS_CONFIG=development`, or it exits 0 with production output. After removing the package, rename any copy left in `node_modules` (pnpm keeps one under `.pnpm/` for optional peers) for one uncached build, then put it back.
-8. Do not claim hot-update parity or shared-state parity from a green build. Remote edits reach the host after a reload, before and after this migration. On Rspack the first load after the dev server starts can need one reload. `Cannot find module '<id>'` while loading `./Routes` means a stale cache: run `nx reset`, delete `.angular/cache`, and rebuild. Report what you verified and what you did not.
+8. Serve one remote alone with `nx serve <remote>`, and check that the host boots and that remote's route renders. Do not claim hot-update parity or shared-state parity from a green build. Remote edits reach the host after a reload, before and after this migration. On Rspack the first load after the dev server starts can need one reload. `Cannot find module '<id>'` while loading `./Routes` means a stale cache: run `nx reset`, delete `.angular/cache`, and rebuild. Report what you verified and what you did not.
 9. On Path B, install the `@angular-architects/native-federation` release matching the workspace's Angular major and minor. A host calling `loadRemote('remoteA/Routes')` switches to `loadRemoteModule('remoteA', './Routes')`.
 10. For apps with a server build (a `server` target or a `webpack.server.config.*` file), follow https://nx.dev/docs/kb/migrate-angular-module-federation-ssr after Path A. Path B does not cover server-side rendering. Stop and report if the user asks for Path B on one.
 
@@ -35,12 +35,22 @@ supports both webpack and Rspack. Nx v24 removes the wrappers, so migrate your a
 plugin directly.
 
 Migrate before you upgrade to v24. The old packages still build, which gives you a baseline to
-compare against. Nx will also ship migrations for this later.
+compare against.
+
+{% aside type="note" title="Coming from the v24 migration" %}
+If you upgraded to Nx v24 with `nx migrate`, its Module Federation migration already ran these
+steps. Use this page as a reference for what changed and why, including which remotes are
+available while you develop.
+
+If a build fails with `Nx Module Federation was removed in Nx v24`, those steps didn't run for
+that project. Follow this page to finish them.
+{% /aside %}
 
 You have one decision to make before you start:
 
-- **Path A** keeps your bundler and swaps the wrapper for the official plugin. Your build target,
-  routes, and deployment model stay the same. It is the conservative option and the smallest diff.
+- **Path A** keeps your bundler and swaps the wrapper for the official plugin. Your build target
+  and deployment model stay the same, and hosts load remotes from a runtime manifest. It is the
+  conservative option and the smallest diff.
 - **Path B** moves to [Native Federation](https://www.npmjs.com/package/@angular-architects/native-federation)
   and onto the esbuild-based `@angular/build:application` builder. It is the larger change, and
   the one more likely to track Angular's own direction.
@@ -68,6 +78,13 @@ The last two ran processes and built nothing. `NxModuleFederationDevServerPlugin
 form of the dev-server executor, which started the host and every remote from one `nx serve`.
 `module-federation-static-server` served the remotes you weren't working on from one port. Step 6
 replaces both with targets you start yourself.
+
+{% aside type="caution" title="Only the remotes you start are available" %}
+`nx serve shell` used to serve every remote from one command. Now the host boots on its own,
+but navigating to a route from a remote that isn't running fails to load it. Start the remotes you need with the host, as in
+`nx run-many -t serve -p shell remoteA remoteB`, or run `nx serve remoteA` in another terminal. A
+`serve-static` target can serve the remotes you aren't editing.
+{% /aside %}
 
 ## Capture a baseline first
 
@@ -104,11 +121,12 @@ A generated webpack host has `withModuleFederation` in `webpack.config.ts` and
 expose `./Routes` (`./Module` for NgModule remotes) and any path `federate-module` added. Their
 `serve` target depends on the host's `serve`.
 
-Sort your hosts into two groups by reading each `src/main.ts`. Step 5 only applies to the second
-group.
+Sort your hosts into two groups by reading each `src/main.ts`. Step 5 moves both to a runtime
+manifest.
 
 - **Static hosts** have no federation call in `main.ts`. They reach remotes through an
-  `import('remoteA/Routes')` in the routes file, resolved by a `tsconfig.base.json` path.
+  `import('remoteA/Routes')` in the routes file, resolved by a `tsconfig.base.json` path. Step 5
+  converts them.
 - **Runtime-loaded hosts** fetch a manifest in `main.ts`. If that chain ends in `init` or
   `registerRemotes` from `@module-federation/enhanced/runtime`, the host needs no source change
   on Path A. Nx 23.2 generates `--dynamic` hosts this way. If it ends in `setRemoteDefinitions`
@@ -418,16 +436,36 @@ it alone, because adding `"type": "module"` breaks the CommonJS federation confi
 {% /tabitem %}
 {% /tabs %}
 
-### Step 5: convert runtime-loaded remotes
+### Step 5: move hosts to a runtime manifest
 
-This step converts the runtime-loaded hosts from Step 1 that call `setRemoteDefinitions` from
-`@nx/angular/mf`. Static hosts and hosts already on `registerRemotes` skip it.
+A runtime manifest holds the remote URLs in a file the host fetches at startup. A static host loads
+every remote's entry before it renders, so one remote that isn't running leaves a blank page. With
+a manifest the host boots on its own, and only the routes of stopped remotes fail. You can also
+change a URL without rebuilding.
 
-The host keeps its manifest and keeps `ModuleFederationPlugin` in its build with `remotes: {}`,
-since `registerRemotes` and `loadRemote` do nothing without the runtime it creates.
+Hosts that already call `registerRemotes` or `init` from `@module-federation/enhanced/runtime`
+skip this step, including the Nx 23.2 `--dynamic` host. Convert static hosts and hosts that call
+`setRemoteDefinitions` from `@nx/angular/mf`.
+
+Move the `remotes` URLs from Step 3 into `public/module-federation.manifest.json`. The host keeps
+`ModuleFederationPlugin` in its build with `remotes: {}`, since `registerRemotes` and
+`loadRemote` do nothing without the runtime it creates.
 
 {% tabs %}
-{% tabitem label="Before" %}
+{% tabitem label="Static host" %}
+
+```ts
+// apps/shell/src/app/app.routes.ts
+export const appRoutes: Route[] = [
+  {
+    path: 'remoteA',
+    loadChildren: () => import('remoteA/Routes').then((m) => m!.remoteRoutes),
+  },
+];
+```
+
+{% /tabitem %}
+{% tabitem label="Runtime-loaded host" %}
 
 ```ts
 // apps/dyn-shell/src/main.ts
@@ -456,7 +494,7 @@ export const appRoutes: Route[] = [
 {% tabitem label="After" %}
 
 ```ts
-// apps/dyn-shell/src/main.ts
+// apps/shell/src/main.ts
 import { registerRemotes } from '@module-federation/enhanced/runtime';
 
 fetch('/module-federation.manifest.json')
@@ -474,18 +512,26 @@ fetch('/module-federation.manifest.json')
 ```
 
 ```ts
-// apps/dyn-shell/src/app/app.routes.ts
+// apps/shell/src/app/app.routes.ts
 import { loadRemote } from '@module-federation/enhanced/runtime';
 
 export const appRoutes: Route[] = [
   {
     path: 'remoteA',
     loadChildren: () =>
-      loadRemote<typeof import('remoteA/Routes')>('remoteA/Routes').then(
+      loadRemote<{ remoteRoutes: Route[] }>('remoteA/Routes').then(
         (m) => m!.remoteRoutes
       ),
   },
 ];
+```
+
+```json
+// apps/shell/public/module-federation.manifest.json
+{
+  "remoteA": "http://localhost:4201/remoteEntry.mjs",
+  "remoteB": "http://localhost:4202/remoteEntry.mjs"
+}
 ```
 
 {% /tabitem %}
@@ -499,6 +545,19 @@ carry their own type.
 Map keys and `loadRemote` prefixes use the normalized container name. A project named `remote-a`
 is `remote_a` in the manifest and `loadRemote('remote_a/Routes')` at the call site.
 
+A static host loses its project-graph edge, which its `import('remoteA/Routes')` calls gave Nx.
+Add `implicitDependencies` on the host so remotes still build first and `nx affected` still
+includes the host. Drop the host's `<remote>/<exposed>` paths from `tsconfig.base.json`.
+
+The `isProd` ternary from Step 3 has no equivalent in the manifest. Ship the right manifest for
+each environment, with a `fileReplacements` pair or by writing the file at deploy time.
+
+{% aside type="note" title="Staying with static remotes" %}
+Keep the `remotes` map from Step 3 and the `tsconfig.base.json` paths, and skip this step.
+Every remote then has to be running before the host renders, so serve them together:
+`nx run-many -t serve -p shell remoteA remoteB`.
+{% /aside %}
+
 ### Step 6: replace the serve orchestration
 
 `@nx/angular:module-federation-dev-server` built and served the remotes along with the host, and
@@ -510,7 +569,8 @@ start the processes yourself.
 On webpack, switch the host's `serve` executor to `@nx/angular:dev-server`. Keep `port`,
 `publicHost`, and the per-configuration `buildTarget` options. Remove `devRemotes`,
 `skipRemotes`, `static`, `isInitialHost`, and `pathToManifestFile`, which the dev server rejects.
-On Rspack, keep the inferred `build` and `serve` targets.
+Set `readyWhen: { signal: true }` on every app's `serve` target, so the dev server reports to Nx
+when it listens. On Rspack, keep the inferred `build` and `serve` targets.
 
 Every remote needs `headers: { 'Access-Control-Allow-Origin': '*' }`, on the `serve` target on
 webpack or under `devServer.headers` in `rspack.config.ts` on Rspack. The host loads
@@ -536,6 +596,7 @@ build output directly:
       "executor": "@nx/web:file-server",
       "continuous": true,
       "dependsOn": ["build"],
+      "readyWhen": { "signal": true },
       "options": {
         "staticFilePath": "dist/apps/remoteB", // dist/apps/remoteB/browser on Rspack
         "port": 4202,
@@ -552,6 +613,10 @@ Replace the whole target, including `configurations` and `defaultConfiguration`,
 build, and that nested build fails inside e2e runs. Keep `spa: true` so a refresh on a deep route
 doesn't 404.
 
+With `readyWhen: { "signal": true }`, the file server reports to Nx once it accepts connections.
+A task waits for it only through a `dependsOn` entry with `"waitFor": "ready"`, as the e2e setup
+below does.
+
 Each remote's `serve-static` port must match the port in the host's `remotes` URL.
 
 {% aside type="note" title="Inferred targets on Rspack" %}
@@ -561,23 +626,111 @@ into them key by key. Add `"buildTarget": ""` to clear the inferred one.
 
 #### End-to-end projects
 
-Generated Playwright projects start the host with `nx run shell:serve`, which no longer starts
-the remotes. Point `webServer.command` at `nx run-many -t serve-static -p shell remoteA remoteB`.
-A remote's own e2e project needs only `-p remoteA`, with `webServer.url` and `baseURL` on its
+Generated e2e projects start the host with `nx run shell:serve`, which no longer starts the
+remotes.
+Run each app's `serve-static` as a task the e2e task depends on with `"waitFor": "ready"`, so the
+tests start once every app is ready.
+Don't start the apps with `nx run-many` from a web server command, since Nx can't wait for each
+app then.
+A remote's own e2e project needs only that remote, with its URL and base URL on its
 `serve-static` port.
 
-Cypress projects set these commands under `nxE2EPreset` in `cypress.config.ts`:
+For Playwright, list one `webServer` entry per app, each with `reuseExistingServer: true`.
+`@nx/playwright/plugin` turns each `npx nx run <app>:serve-static` command into a dependency of
+the e2e tasks, atomized `e2e-ci` tasks included, and waits until every app is ready.
+It infers nothing for an entry without `reuseExistingServer: true`.
+Keep `baseURL` on the host's `serve-static` port.
+
+```ts
+// apps/shell-e2e/playwright.config.ts
+export default defineConfig({
+  // ... preset, use, and projects as before
+  webServer: [
+    {
+      command: 'npx nx run shell:serve-static',
+      url: 'http://localhost:4200',
+      reuseExistingServer: true,
+      cwd: workspaceRoot,
+    },
+    {
+      command: 'npx nx run remoteA:serve-static',
+      url: 'http://localhost:4201',
+      reuseExistingServer: true,
+      cwd: workspaceRoot,
+    },
+    {
+      command: 'npx nx run remoteB:serve-static',
+      url: 'http://localhost:4202',
+      reuseExistingServer: true,
+      cwd: workspaceRoot,
+    },
+  ],
+});
+```
+
+Nx v24 removed the `@nx/cypress:cypress` executor.
+If a Cypress e2e target still uses it, convert the project first with
+`nx g @nx/cypress:convert-to-inferred --project=shell-e2e`.
+
+`@nx/cypress/plugin` infers the e2e task's dependency from `webServerCommands.default`, which
+names one task.
+Point every `webServerCommands` entry and `ciWebServerCommand` at the host's `serve-static`, and
+keep `baseUrl` on its port:
 
 ```ts
 // apps/shell-e2e/cypress.config.ts
-nxE2EPreset(__filename, {
-  cypressDir: 'src',
-  webServerCommands: {
-    default: 'nx run-many -t serve-static -p shell remoteA remoteB',
-    production: 'nx run-many -t serve-static -p shell remoteA remoteB',
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      webServerCommands: { default: 'npx nx run shell:serve-static' },
+      ciWebServerCommand: 'npx nx run shell:serve-static',
+    }),
+    baseUrl: 'http://localhost:4200',
   },
-  ciWebServerCommand: 'nx run-many -t serve-static -p shell remoteA remoteB',
 });
+```
+
+Then replace the inferred dependency with one on every app.
+The e2e target takes it in the e2e project's `project.json`.
+The atomized `e2e-ci--<spec>` tasks take it from a `targetDefaults` entry keyed on their names
+and filtered to the e2e project:
+
+```jsonc
+// apps/shell-e2e/project.json
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        {
+          "projects": ["shell", "remoteA", "remoteB"],
+          "target": "serve-static",
+          "waitFor": "ready",
+        },
+      ],
+    },
+  },
+}
+```
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "e2e-ci--**/**": [
+      {
+        "filter": { "projects": ["shell-e2e"] },
+        "dependsOn": [
+          {
+            "projects": ["shell", "remoteA", "remoteB"],
+            "target": "serve-static",
+            "waitFor": "ready",
+          },
+        ],
+      },
+    ],
+  },
+}
 ```
 
 #### Target defaults
@@ -590,6 +743,8 @@ In `nx.json`, drop the `{ "env": "NX_MF_DEV_REMOTES" }` input from the
 Check the result in a browser against your baseline:
 
 - Each remote route renders in the host.
+- With only `nx serve remoteA` running, which starts the host through `dependsOn`, the host
+  boots and the `remoteA` route renders.
 - A shared mutable value written in the host reads back in each remote after a client-side route
   change.
 - Editing a remote's component shows in the host after a reload, as in the baseline.
@@ -601,9 +756,10 @@ Then check the builds:
   and `.angular/cache`. Build production last because both configurations write the same
   `mf-stats.json`. On Rspack, build development as
   `NGRS_CONFIG=development nx build <app> --configuration=development`.
-- Each app's production `mf-stats.json` lists the same container name, remotes, exposes, and
-  `shared` entries as the baseline. Compare only those fields, since asset hashes and `usedIn`
-  text change.
+- Each app's production `mf-stats.json` lists the same container name, exposes, and `shared`
+  entries as the baseline. Compare only those fields, since asset hashes and `usedIn` text
+  change. A host on a runtime manifest has an empty build-time `remotes`, so check its manifest
+  against the baseline URLs.
 
 ### Step 8: clean up the old setup
 
@@ -691,8 +847,8 @@ On an Nx Module Federation app, the generator leaves this cleanup:
 - Move the `dependsOn: ['shell:serve']` the generator renamed onto `serve-original` back to the
   new `serve`. When a second host uses the same remotes, name every app in the `run-many`.
 - Replace each app's whole `serve-static` target, `defaultConfiguration` included, with the one
-  from Path A Step 6 using `staticFilePath: dist/apps/<app>/browser`, and point the e2e
-  `webServer` commands at `nx run-many -t serve-static` as in that step.
+  from Path A Step 6 using `staticFilePath: dist/apps/<app>/browser`, and set up the e2e
+  projects as in that step.
 - Remove the `@nx/angular:webpack-browser` entry from `targetDefaults` in `nx.json` once every
   app has moved.
 - Rewrite host routes to use Native Federation's `loadRemoteModule`. Static hosts replace each

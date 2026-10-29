@@ -2,25 +2,24 @@
 title: Continuous Integration (CI) with Nx Cloud
 sidebar:
   hidden: true
-description: Nx Cloud cuts CI time and cost with remote caching and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
+description: Nx Cloud cuts CI time and cost with remote caching, Ultracache, and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
 filter: 'type:Features'
 ---
 
-{% youtube src="https://www.youtube.com/watch?v=cDBihpB3SbI" title="Nx and Nx Cloud" width="100%" /%}
-
 Nx Cloud makes CI faster and cheaper in two ways:
 
-- [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine.
-- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Nx Agents, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
+- [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine. On Nx Cloud, Ultracache records the files each task actually reads, improving both cache correctness and efficiency.
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Workers, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
-In most workspaces, distribution uses about 50% fewer machine-minutes than remote caching alone.
-Teams using Nx Cloud report 30% to 70% faster CI.
+In most workspaces, distribution uses about **50% fewer machine-minutes** than remote caching alone.
+Teams using Nx Cloud report **40% to 90% faster CI**.
 
 ## What you get with Nx Cloud on top of Nx Core
 
 |                 | Nx Core                                                                                                    | Nx Cloud                                                                                                          |
 | --------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Caching         | [Local cache](/docs/features/cache-task-results), per machine                                              | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI                     |
+| Task inputs     | Hashes each task from its declared or inferred `inputs`                                                    | Ultracache records what each task reads in CI and hashes from that                                                |
 | Task scheduling | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agents](/docs/features/ci-features/distribute-task-execution) with dynamic task packing |
 | Failing CI      | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR                            |
 | Visibility      | Terminal output for the run in front of you                                                                | [Run history, task analytics, and CI observability](/docs/kb/optimize-your-ttg)                                   |
@@ -38,11 +37,23 @@ To add distribution and the rest of the pipeline, see [setting up CI](/docs/gett
 
 {% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
+## Building blocks of fast CI
+
+Fast CI comes from two things:
+
+- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across Workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a Worker, so you get more work out of each machine.
+- **Only run what you have to.** [`nx affected`](/docs/features/ci-features/affected) selects tasks whose inputs your changes touch. [Remote caching](/docs/features/ci-features/remote-cache) reuses results from tasks that already ran with the same inputs, so they don't run again.
+
 ## Why task-based CI costs less
 
 Most CI setups use static partitioning (binning and sharding), assigning work to machines up front, such as one job for tests and another for builds, and each machine runs until its slowest task ends.
+
+![CI tasks divided into fixed bins](../../../../assets/concepts/ci-concepts/binning.svg)
+
 Nx Cloud assigns individual tasks as agents free up, using the task graph and each task's past duration, CPU, and memory use.
 Agents stay busy, an agent that fails during setup has its work picked up by the others, and adding agents needs no change to how work is split.
+
+![CI tasks distributed across three agents](../../../../assets/concepts/ci-concepts/3agents.svg)
 
 [Learn how teams use Nx Cloud](https://nx.dev/blog?filterBy=customer+story) to scale their workspaces.
 

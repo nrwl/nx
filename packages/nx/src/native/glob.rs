@@ -512,6 +512,23 @@ mod test {
         //no matches
         assert!(!glob_set.is_match("test.module.ts"));
 
+        // A negated file group followed by a brace extension, as the script
+        // plugins use to leave specs, tests, stories and typings out.
+        let glob_set =
+            build_glob_set(&["**/!(*.spec|*.test|*.stories|*.d).{js,cjs,mjs,ts,cts,mts}"]).unwrap();
+        //matches
+        assert!(glob_set.is_match("scripts/seed.ts"));
+        assert!(glob_set.is_match("apps/api/src/main.cts"));
+        assert!(glob_set.is_match("tools/run.mjs"));
+        assert!(glob_set.is_match("libs/a/seed.spec.helper.ts"));
+        //no matches
+        assert!(!glob_set.is_match("libs/a/seed.spec.ts"));
+        assert!(!glob_set.is_match("libs/a/seed.test.js"));
+        assert!(!glob_set.is_match("libs/a/seed.stories.ts"));
+        assert!(!glob_set.is_match("libs/a/index.d.ts"));
+        assert!(!glob_set.is_match("libs/a/index.d.mts"));
+        assert!(!glob_set.is_match("libs/a/seed.tsx"));
+
         let glob_set = build_glob_set(&["**/*.*(component,module).ts?(x)"]).unwrap();
         //matches
         assert!(glob_set.is_match("test.component.ts"));

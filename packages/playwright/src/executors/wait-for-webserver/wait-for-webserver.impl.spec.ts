@@ -339,17 +339,38 @@ describe('waitForWebserverExecutor', () => {
     await listen(server, 0);
     const { port } = server.address() as AddressInfo;
 
-    const result = await waitForWebserverExecutor(
-      { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
-      context
-    );
+    const request = vi.mocked(http.request);
+    const actualRequest = request.getMockImplementation()!;
+    // Expire the fake budget if a regression prevents the connection error.
+    const watchdog = setTimeout(() => vi.advanceTimersByTime(300), 10_000);
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    const deadline = Date.now() + 300;
+    request.mockImplementation((...args) => {
+      const req = actualRequest(...args);
+      req.once('error', () => {
+        // Advancing timers here would hide the connection error.
+        vi.setSystemTime(deadline);
+      });
+      return req;
+    });
 
-    // Without the hop count this reads as the configured server refusing
-    // connections, which is the one thing it is known not to be doing.
-    expect(result).toEqual({ success: false });
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ECONNREFUSED after 1 redirects')
-    );
+    try {
+      const result = await waitForWebserverExecutor(
+        { servers: [{ url: `http://127.0.0.1:${port}` }], timeout: 300 },
+        context
+      );
+
+      // Without the hop count this reads as the configured server refusing
+      // connections, which is the one thing it is known not to be doing.
+      expect(result).toEqual({ success: false });
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ECONNREFUSED after 1 redirects')
+      );
+    } finally {
+      request.mockImplementation(actualRequest);
+      vi.useRealTimers();
+      clearTimeout(watchdog);
+    }
   });
 
   it('waits for every configured server, not just the first', async () => {
@@ -648,6 +669,117 @@ describe('waitForWebserverExecutor', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('at least one server')
     );
+  });
+
+  describe('with NX_READY_URL set', () => {
+    let savedReadyUrl: string | undefined;
+    beforeEach(() => {
+      savedReadyUrl = process.env.NX_READY_URL;
+    });
+    afterEach(() => {
+      if (savedReadyUrl === undefined) {
+        delete process.env.NX_READY_URL;
+      } else {
+        process.env.NX_READY_URL = savedReadyUrl;
+      }
+    });
+
+    async function liveHttpUrl() {
+      const server = createHttpServer((_req, res) => res.end('ok'));
+      await listen(server, 0);
+      return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    }
+
+    it('probes the reported url instead of the configured one', async () => {
+      process.env.NX_READY_URL = await liveHttpUrl();
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: `http://127.0.0.1:${await closedPort()}` }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+
+    it('keeps the path of the configured url', async () => {
+      // Only the app's base path answers; the root 404s
+      const server = createHttpServer((req, res) => {
+        res.statusCode = req.url === '/app/' ? 200 : 404;
+        res.end();
+      });
+      await listen(server, 0);
+      const port = (server.address() as AddressInfo).port;
+      process.env.NX_READY_URL = `http://127.0.0.1:${port}/`;
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: `http://127.0.0.1:${await closedPort()}/app/` }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
+
+    it('keeps the configured server options for the reported url', async () => {
+      const request = https.request as unknown as Mock;
+      const port = await closedPort();
+      process.env.NX_READY_URL = `https://127.0.0.1:${port}`;
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [{ url: 'https://127.0.0.1:1', ignoreHTTPSErrors: true }],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: false });
+      expect(request).toHaveBeenCalledWith(
+        expect.objectContaining({ port: String(port) }),
+        expect.objectContaining({ rejectUnauthorized: false }),
+        expect.any(Function)
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Timed out after 300ms')
+      );
+      request.mockClear();
+    });
+
+    it('ignores the reported url when waiting for several servers', async () => {
+      process.env.NX_READY_URL = await liveHttpUrl();
+
+      const result = await waitForWebserverExecutor(
+        {
+          servers: [
+            { url: process.env.NX_READY_URL },
+            { url: `http://127.0.0.1:${await closedPort()}` },
+          ],
+          timeout: 300,
+        },
+        context
+      );
+
+      expect(result).toEqual({ success: false });
+    });
+
+    it('keeps probing a configured port', async () => {
+      const server = createTcpServer();
+      await listen(server, 0);
+      const { port } = server.address() as AddressInfo;
+      process.env.NX_READY_URL = `http://127.0.0.1:${await closedPort()}`;
+
+      const result = await waitForWebserverExecutor(
+        { servers: [{ port }], timeout: 300 },
+        context
+      );
+
+      expect(result).toEqual({ success: true });
+    });
   });
 
   it.each(['the server', 'the executor'])(

@@ -125,7 +125,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         bundler: 'vite',
         skipFormat: true,
-        addPlugin: true,
       })
     );
 
@@ -174,7 +173,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         skipFormat: true,
         bundler: 'webpack',
-        addPlugin: true,
       })
     );
 
@@ -191,7 +189,6 @@ describe('Cypress Component Configuration', () => {
         project: 'cool-lib',
         skipFormat: true,
         bundler: 'vite',
-        addPlugin: true,
       })
     );
 
@@ -201,9 +198,7 @@ describe('Cypress Component Configuration', () => {
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {
-    await cypressInitGenerator(tree, {
-      addPlugin: true,
-    });
+    await cypressInitGenerator(tree, {});
     const nxJson = readNxJson(tree);
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*'],
@@ -214,7 +209,6 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
-      addPlugin: true,
     });
 
     expect(

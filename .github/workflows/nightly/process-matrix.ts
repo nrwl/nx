@@ -41,7 +41,6 @@ const matrixData: MatrixData = {
       is_golden: true,
     },
     { name: 'e2e-js', codeowners: 'S04SJ6HHP0X', is_golden: true },
-    { name: 'e2e-nx-init', codeowners: 'S04SYHYKGNP', is_golden: true },
     // Core runs 18 suites serially, including repeated workspace installs.
     // Slower combinations are still making progress at the default 60m limit.
     { name: 'e2e-nx', codeowners: 'S04SYHYKGNP', timeout_minutes: 120 },
@@ -94,8 +93,8 @@ const matrixData: MatrixData = {
       package_managers: ['npm', 'pnpm', 'yarn'],
       // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
       // See https://github.com/microsoft/playwright/issues/40724
-      // Floors track @angular/cli engines (^22.22.3 || ^24.15.0): ng new refuses older.
-      node_versions: ['22.22.3', '24.15.0'],
+      // Must satisfy @angular/cli engines (^22.22.3 || ^24.15.0): ng new refuses older.
+      node_versions: ['22.23.4', '24.22.1'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'],
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)
@@ -108,7 +107,7 @@ const matrixData: MatrixData = {
       os_name: 'MacOS',
       os_timeout: 90,
       package_managers: ['npm'],
-      node_versions: ['24.15.0'],
+      node_versions: ['24.22.1'],
       excluded: ['e2e-docker'],
     },
     // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment

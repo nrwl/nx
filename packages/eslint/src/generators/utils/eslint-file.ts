@@ -233,16 +233,13 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
 }
 
 /**
- * Honors both `enableTypedLinting` and the deprecated `setParserOptionsProject`
- * (slated for removal in Nx v24); either one truthy enables typed linting. A
- * generator whose `enableTypedLinting` schema default is `false` must still
- * honor a user who set the deprecated flag.
+ * Plugins this repo installs from npm still import this, and its specs load them.
+ * TODO(v24): remove once the root `nx` catalog is on a release whose plugins no longer import it.
  */
 export function isTypedLintingEnabled(options: {
   enableTypedLinting?: boolean;
-  setParserOptionsProject?: boolean;
 }): boolean {
-  return !!(options.enableTypedLinting || options.setParserOptionsProject);
+  return !!options.enableTypedLinting;
 }
 
 /**
