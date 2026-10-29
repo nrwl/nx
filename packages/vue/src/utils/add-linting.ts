@@ -22,6 +22,7 @@ import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
+  vueEslintParserVersion,
 } from './versions';
 import { addLintingToProject } from '@nx/js/internal';
 
@@ -79,6 +80,8 @@ export async function addLinting(
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
       '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
+      // eslint-plugin-vue v10 takes its parser as a peer dependency.
+      'vue-eslint-parser': vueEslintParserVersion,
     };
     if (
       isEslintConfigSupported(host, options.projectRoot) &&
