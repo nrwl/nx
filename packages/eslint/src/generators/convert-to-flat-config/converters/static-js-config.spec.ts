@@ -99,6 +99,11 @@ describe('readStaticJsEslintrc', () => {
       'is not a literal value',
     ],
     [
+      'a __proto__ key',
+      `module.exports = { rules: { __proto__: { 'no-console': 'error' } } };`,
+      '"rules.__proto__" sets the object\'s prototype instead of a property',
+    ],
+    [
       'no module.exports',
       `const config = { root: true };`,
       'contains code other than a single "module.exports" assignment',
