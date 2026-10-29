@@ -13,6 +13,7 @@ use rusqlite::{params, types::Value};
 
 use crate::native::cache::expand_outputs::{
     _expand_outputs, all_literal, ensure_negated_outputs_kept, normalize_outputs,
+    outputs_below_a_link,
 };
 use crate::native::cache::file_ops::{
     copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
@@ -30,6 +31,9 @@ pub struct CachedOutputs {
     pub expanded_outputs: Vec<String>,
     /// Each file copied, stamped as it is in the workspace.
     pub files: Vec<OutputFile>,
+    /// Outputs that exist only through a linked directory. When there are
+    /// any, nothing is stored and the task is not cached.
+    pub outputs_below_a_link: Vec<String>,
 }
 
 /// Each workspace file in `paths` as it is now. Only a regular file, or a
@@ -433,6 +437,20 @@ impl NxCache {
 
         // Expand the outputs
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
+        let linked = outputs_below_a_link(&self.workspace_root, &outputs);
+        if !linked.is_empty() {
+            debug!("PUT {} skipped, outputs below a link: {:?}", &hash, linked);
+            remove_items(&[&task_dir])?;
+            self.record_terminal_outputs(vec![TerminalOutputRecord {
+                hash: hash.clone(),
+                size: total_size,
+            }])?;
+            return Ok(CachedOutputs {
+                expanded_outputs: vec![],
+                files: vec![],
+                outputs_below_a_link: linked,
+            });
+        }
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
@@ -464,6 +482,7 @@ impl NxCache {
         Ok(CachedOutputs {
             expanded_outputs,
             files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
+            outputs_below_a_link: vec![],
         })
     }
 
@@ -1237,7 +1256,10 @@ mod test {
 
         assert!(stored.expanded_outputs.is_empty());
         assert!(stored.files.is_empty());
-        assert!(!cache.cache_path.join("1/dist").exists());
+        assert_eq!(stored.outputs_below_a_link, ["dist/packages/api"]);
+        assert!(!cache.cache_path.join("1").exists());
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
 
         // A linked output is stored as the link, trailing `/` or not.
         cache
@@ -1257,6 +1279,29 @@ mod test {
                 .unwrap(),
             elsewhere
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn put_through_a_link_replaces_an_earlier_entry_with_a_miss() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
     }
 
     #[cfg(unix)]

@@ -227,6 +227,27 @@ pub(crate) fn all_literal(entries: &[String]) -> bool {
         .all(|entry| !entry.starts_with('!') && partition_glob(entry).1.is_none())
 }
 
+/// The literal `entries` that exist under `directory` only through a linked
+/// directory, which `_expand_outputs` leaves out.
+pub(crate) fn outputs_below_a_link(directory: &Path, entries: &[String]) -> Vec<String> {
+    entries
+        .iter()
+        .filter(|entry| !entry.starts_with('!'))
+        .filter_map(|entry| match partition_glob(entry) {
+            (named, None) => Some((entry, named)),
+            _ => None,
+        })
+        .filter(|(entry, named)| {
+            let paths = [entry.as_str(), named.as_str()];
+            paths.iter().any(|path| directory.join(path).exists())
+                && !paths
+                    .iter()
+                    .any(|path| exists_below_no_link(directory, path))
+        })
+        .map(|(entry, _)| entry.clone())
+        .collect()
+}
+
 /// Fails when copying `expanded` over `directory` would remove a directory
 /// holding a path that a negated entry excludes. With negations no listed
 /// output is a directory, so a copy onto one replaces it whole.

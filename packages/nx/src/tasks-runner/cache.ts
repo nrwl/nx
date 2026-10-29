@@ -248,7 +248,7 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      const { expandedOutputs, files } = this.cache.put(
+      const { expandedOutputs, files, outputsBelowALink } = this.cache.put(
         task.hash,
         terminalOutput,
         outputs,
@@ -258,7 +258,15 @@ export class DbCache {
       // Notify TaskIOService of actual output files
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
-      if (this.remoteCache) {
+      if (outputsBelowALink.length > 0) {
+        output.warn({
+          title: `Not caching ${task.id}`,
+          bodyLines: [
+            'These outputs are inside a symlinked directory, so they cannot be cached:',
+            ...outputsBelowALink.map((o) => `- ${o}`),
+          ],
+        });
+      } else if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,

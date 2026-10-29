@@ -7,6 +7,7 @@ const nativeCache = vi.hoisted(() => ({
   get: vi.fn(),
   getBatch: vi.fn(),
   applyRemoteCacheResults: vi.fn(),
+  put: vi.fn(),
 }));
 
 vi.mock('../native', async (importOriginal) => ({
@@ -83,5 +84,54 @@ describe('DbCache remote results', () => {
 
     expect([...results.keys()]).toEqual(['hash-a']);
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('DbCache put', () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    warn = vi.spyOn(output, 'warn').mockImplementation(() => {});
+  });
+
+  function cacheWithRemoteStore() {
+    const cache = new DbCache({ nxCloudRemoteCache: null });
+    const store = vi.fn(async () => true);
+    (cache as any).remoteCache = { store };
+    return { cache, store };
+  }
+
+  it('stores a cached result remotely', async () => {
+    nativeCache.put.mockReturnValue({
+      expandedOutputs: ['dist/app'],
+      files: [],
+      outputsBelowALink: [],
+    });
+    const { cache, store } = cacheWithRemoteStore();
+
+    await cache.put(task('a'), 'log', ['dist/app'], 0);
+
+    expect(store).toHaveBeenCalledWith('hash-a', '/cache', 'log', 0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('warns and stores nothing remotely when outputs are below a link', async () => {
+    nativeCache.put.mockReturnValue({
+      expandedOutputs: [],
+      files: [],
+      outputsBelowALink: ['dist/packages/api'],
+    });
+    const { cache, store } = cacheWithRemoteStore();
+
+    await cache.put(task('a'), 'log', ['dist/packages/api'], 0);
+
+    expect(store).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Not caching a',
+        bodyLines: expect.arrayContaining(['- dist/packages/api']),
+      })
+    );
   });
 });

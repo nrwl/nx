@@ -619,6 +619,11 @@ export interface CachedOutputs {
   expandedOutputs: Array<string>
   /** Each file copied, stamped as it is in the workspace. */
   files: Array<OutputFile>
+  /**
+   * Outputs that exist only through a linked directory. When there are
+   * any, nothing is stored and the task is not cached.
+   */
+  outputsBelowALink: Array<string>
 }
 
 export interface CachedPluginCapabilities {
