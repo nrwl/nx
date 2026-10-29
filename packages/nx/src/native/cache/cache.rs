@@ -483,20 +483,20 @@ impl NxCache {
         );
         let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
-        if let Some(outputs) = outputs {
-            if outputs.len() > 0 && result.code == 0 {
-                let outputs_path = Path::new(&result.outputs_path);
-                let expanded_outputs = _expand_outputs(
-                    outputs_path,
-                    normalize_outputs(&self.workspace_root, outputs.clone())?,
-                )?;
-                if let Some(link) = find_link_leaving_output(outputs_path, &expanded_outputs)? {
-                    debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
-                    remove_items(&[self.cache_path.join(&hash)])?;
-                    return Ok(false);
-                }
+        if let Some(outputs) = outputs.filter(|outputs| !outputs.is_empty()) {
+            let outputs_path = Path::new(&result.outputs_path);
+            let expanded_outputs = _expand_outputs(
+                outputs_path,
+                normalize_outputs(&self.workspace_root, outputs.clone())?,
+            )?;
+            if let Some(link) = find_link_leaving_output(outputs_path, &expanded_outputs)? {
+                debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
+                remove_items(&[self.cache_path.join(&hash)])?;
+                return Ok(false);
+            }
+            if result.code == 0 {
                 size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
-            };
+            }
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -1392,48 +1392,42 @@ mod test {
     fn remote_result_is_discarded_when_a_link_leaves_its_output() {
         use std::os::unix::fs::symlink;
 
-        type Plant = Box<dyn FnOnce(&Path)>;
-        let cases: Vec<(&str, Plant)> = vec![
-            (
-                "output itself",
-                Box::new(|app: &Path| {
-                    std::fs::remove_dir_all(app).unwrap();
-                    symlink("../..", app).unwrap();
-                }),
-            ),
-            (
-                "absolute",
-                Box::new(|app: &Path| symlink("/tmp", app.join("abs")).unwrap()),
-            ),
-            (
-                "to the output root",
-                Box::new(|app: &Path| symlink(".", app.join("self")).unwrap()),
-            ),
-            (
-                "nested parent",
-                Box::new(|app: &Path| {
-                    create_dir_all(app.join("a/b")).unwrap();
-                    symlink("../../../other", app.join("a/b/up")).unwrap();
-                }),
-            ),
-            (
-                "through another link",
-                Box::new(|app: &Path| {
-                    create_dir_all(app.join("a/b/c")).unwrap();
-                    create_dir_all(app.join("a/x")).unwrap();
-                    symlink("../../x", app.join("a/b/c/l")).unwrap();
-                    symlink("l/../../..", app.join("a/b/c/esc")).unwrap();
-                }),
-            ),
+        let cases: [(&str, fn(&Path)); 5] = [
+            ("output itself", |app| {
+                std::fs::remove_dir_all(app).unwrap();
+                symlink("../..", app).unwrap();
+            }),
+            ("absolute", |app| symlink("/tmp", app.join("abs")).unwrap()),
+            ("to the output root", |app| {
+                symlink(".", app.join("self")).unwrap()
+            }),
+            ("nested parent", |app| {
+                create_dir_all(app.join("a/b")).unwrap();
+                symlink("../../../other", app.join("a/b/up")).unwrap();
+            }),
+            ("through another link", |app| {
+                create_dir_all(app.join("a/b/c")).unwrap();
+                create_dir_all(app.join("a/x")).unwrap();
+                symlink("../../x", app.join("a/b/c/l")).unwrap();
+                symlink("l/../../..", app.join("a/b/c/esc")).unwrap();
+            }),
         ];
 
-        for (name, plant) in cases {
-            let temp = TempDir::new().unwrap();
-            let cache = cache_in(&temp);
-            let result = remote_artifact(&cache, "1", plant);
+        // A failed result is recorded without a restore, but a later local
+        // hit would restore it.
+        for code in [0, 1] {
+            for (name, plant) in cases {
+                let name = format!("{name} (code {code})");
+                let temp = TempDir::new().unwrap();
+                let cache = cache_in(&temp);
+                let result = CachedResult {
+                    code,
+                    ..remote_artifact(&cache, "1", plant)
+                };
 
-            assert!(!apply_remote(&cache, "1", result), "{name}");
-            assert_discarded(&cache, name);
+                assert!(!apply_remote(&cache, "1", result), "{name}");
+                assert_discarded(&cache, &name);
+            }
         }
     }
 
