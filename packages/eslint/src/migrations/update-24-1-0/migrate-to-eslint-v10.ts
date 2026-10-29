@@ -19,6 +19,7 @@ import { coerce, gt, satisfies, subset, validRange, type SemVer } from 'semver';
 import * as ts from 'typescript';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
+  BASE_ESLINTRC_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
   ESLINT_OLD_CONFIG_FILENAMES,
 } from '../../utils/config-file';
@@ -53,6 +54,7 @@ const ESLINT_CONFIG_FILENAMES = new Set([
   ...ESLINT_OLD_CONFIG_FILENAMES,
   ...ESLINT_FLAT_CONFIG_FILENAMES,
   ...BASE_ESLINT_CONFIG_FILENAMES,
+  ...BASE_ESLINTRC_FILENAMES,
 ]);
 
 const SOURCE_FILE_EXTENSIONS = [
@@ -313,7 +315,7 @@ function findRemainingEslintrcConfigs(
     const filename = basename(path);
     if (
       (ESLINT_OLD_CONFIG_FILENAMES.includes(filename) ||
-        filename === '.eslintrc.base.json') &&
+        BASE_ESLINTRC_FILENAMES.includes(filename)) &&
       !alreadyReported.has(path)
     ) {
       remaining.push(path);
@@ -506,7 +508,13 @@ function findRemovedPluginUsages(
       // Anchored, so a relative import of a local file that happens to be named
       // after the plugin is not read as the package. Subpaths still match.
       moduleSpecifier: new RegExp(`^${escapeRegExp(plugin)}(?![\\w-])`),
-      ruleId: new RegExp(`['"\`]${escapeRegExp(prefix)}/`),
+      // A rule id (`'jsx-a11y/alt-text'`) or a config pulled in through
+      // `extends` (`'plugin:jsx-a11y/recommended'`).
+      prefixed: new RegExp(`['"\`](?:plugin:)?${escapeRegExp(prefix)}/`),
+      // YAML leaves both unquoted, as a list item, a mapping key or a flow entry.
+      yamlPrefixed: new RegExp(
+        `[\\s\\[{,'"](?:plugin:)?${escapeRegExp(prefix)}/`
+      ),
     };
   });
 
@@ -527,10 +535,13 @@ function findRemovedPluginUsages(
       // A config is hand-written and small, so naming the package anywhere in it
       // is a registration. A quoted rule id is only conclusive here: in source,
       // `'react/jsx-runtime'` is an import path that reads exactly like one.
+      // ESLint parses a bare `.eslintrc` as YAML too.
+      const isYaml = /\.ya?ml$/.test(path) || basename(path) === '.eslintrc';
       const matchedPlugins = matchers
         .filter(
-          ({ packageName, ruleId }) =>
-            packageName.test(content) || ruleId.test(content)
+          ({ packageName, prefixed, yamlPrefixed }) =>
+            packageName.test(content) ||
+            (isYaml ? yamlPrefixed : prefixed).test(content)
         )
         .map(({ plugin }) => plugin);
       if (matchedPlugins.length > 0) {
@@ -716,6 +727,15 @@ function reportPluginsWithoutV10Support(
 
   const eslintVersion = readInstalledVersion('eslint');
   if (!eslintVersion) {
+    // `requires` passes on the version package.json moves eslint to, so the
+    // migration also runs on a tree where eslint does not resolve at all.
+    agentContext.push(
+      "The check for ESLint plugins without a v10 release did not run: it reads each plugin's peerDependencies from node_modules, and eslint does not resolve from the workspace root. " +
+        'Install the updated dependencies before linting, and treat a plugin that throws at lint time as a version problem rather than a rule violation.'
+    );
+    nextSteps.push(
+      'Skipped the check for ESLint plugins that declare no v10 support, because eslint does not resolve from the workspace root. Install the updated dependencies, then run lint.'
+    );
     return;
   }
   // Every peer range read below comes from node_modules, so the scan only answers

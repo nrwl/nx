@@ -30,13 +30,9 @@ describe('migrate-to-eslint-v10 migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    // The peer scan resolves manifests from the real workspace; leave it blind
-    // unless a test opts in, so nothing depends on what is installed here.
-    vi.spyOn(devkitInternals, 'readModulePackageJson').mockImplementation(
-      () => {
-        throw new Error('not installed');
-      }
-    );
+    // The peer scan resolves manifests from the real workspace, so stub them:
+    // only eslint resolves, as the install that runs before migrations leaves it.
+    mockEslintPeerRanges({}, /* installedEslintVersion */ '10.0.0');
   });
 
   afterEach(() => {
@@ -450,6 +446,44 @@ describe('migrate-to-eslint-v10 migration', () => {
     );
   });
 
+  it('should report a converted config that extends a removed plugin through plugin:', async () => {
+    tree.write(
+      '.eslintrc.json',
+      JSON.stringify({ root: true, extends: ['plugin:jsx-a11y/recommended'] })
+    );
+    setDevDependencies({ 'eslint-plugin-jsx-a11y': '6.10.1' });
+
+    const result = await update(tree);
+
+    expect(result.agentContext.join('\n')).toContain(
+      'eslint.config.mjs (eslint-plugin-jsx-a11y)'
+    );
+  });
+
+  it.each([
+    ['.eslintrc.base.yaml', 'extends:\n  - plugin:jsx-a11y/recommended'],
+    ['.eslintrc.base.yaml', 'extends: plugin:jsx-a11y/recommended'],
+    ['.eslintrc.base.yaml', 'extends: [plugin:jsx-a11y/recommended]'],
+    ['.eslintrc.base.yaml', 'rules:\n  jsx-a11y/alt-text: error'],
+    ['.eslintrc.base.yaml', 'rules: {jsx-a11y/alt-text: error}'],
+    ['.eslintrc', 'extends:\n  - plugin:jsx-a11y/recommended'],
+  ])(
+    'should report a leftover YAML eslintrc that names a removed plugin unquoted: %s %j',
+    async (file, content) => {
+      tree.write('eslint.config.mjs', 'export default [];');
+      tree.write(file, `${content}\n`);
+      setDevDependencies({ 'eslint-plugin-jsx-a11y': '6.10.1' });
+
+      const result = await update(tree);
+
+      const context = result.agentContext.join('\n');
+      expect(context).toContain(
+        `These eslintrc files are still in the workspace: ${file}.`
+      );
+      expect(context).toContain(`${file} (eslint-plugin-jsx-a11y)`);
+    }
+  );
+
   it('should report a module that imports a removed plugin but is not named like a config', async () => {
     tree.write('eslint.config.mjs', `export default [];`);
     tree.write(
@@ -796,14 +830,23 @@ describe('migrate-to-eslint-v10 migration', () => {
     );
   });
 
-  it('should not report a plugin peer range when eslint is neither declared nor installed', async () => {
+  it('should say the peer scan did not run when eslint does not resolve', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
-    setDevDependencies({ 'eslint-plugin-jest': '^28.11.0' });
+    setDevDependencies({
+      eslint: '^10.0.0',
+      'eslint-plugin-jest': '^28.11.0',
+    });
     mockEslintPeerRanges({ 'eslint-plugin-jest': '^9.0.0' });
 
     const result = await update(tree);
 
-    expect(result.agentContext).toEqual([]);
+    expect(result.agentContext.join('\n')).toContain(
+      'The check for ESLint plugins without a v10 release did not run'
+    );
+    expect(result.agentContext.join('\n')).not.toContain('eslint-plugin-jest');
+    expect(result.nextSteps.join('\n')).toContain(
+      'because eslint does not resolve from the workspace root'
+    );
   });
 
   it('should say the peer scan did not run when the install has not caught up', async () => {
