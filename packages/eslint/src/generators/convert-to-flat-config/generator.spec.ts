@@ -4,6 +4,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   NxJsonConfiguration,
   ProjectConfiguration,
+  TargetDefaultArrayEntry,
   Tree,
   addProjectConfiguration,
   logger,
@@ -1769,6 +1770,262 @@ describe('convert-to-flat-config generator', () => {
       await expect(convertToFlatConfigGenerator(tree, options)).rejects.toThrow(
         'Cannot convert ".eslintrc.yaml": it does not hold an ESLint configuration'
       );
+    });
+  });
+
+  // Converting `@nx/eslint:lint` targets to `@nx/eslint/plugin` leaves the
+  // executor's eslintrc-only options on the target as ESLint CLI flags.
+  describe('eslintrc-only lint target options', () => {
+    const options: ConvertToFlatConfigGeneratorSchema = {
+      skipFormat: false,
+      eslintConfigFormat: 'cjs',
+    };
+
+    beforeEach(async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        delete json.targetDefaults;
+        json.plugins = ['@nx/eslint/plugin'];
+        return json;
+      });
+    });
+
+    function setTestLibTargets(targets: ProjectConfiguration['targets']) {
+      updateJson(
+        tree,
+        'libs/test-lib/project.json',
+        (json: ProjectConfiguration) => {
+          json.targets = targets;
+          return json;
+        }
+      );
+    }
+
+    it('should fold an ignore-path into the project config and remove the options flat config rejects', async () => {
+      tree.write('libs/test-lib/custom.eslintignore', 'generated/**');
+      setTestLibTargets({
+        lint: {
+          options: {
+            'ignore-path': 'custom.eslintignore',
+            'no-eslintrc': true,
+            rulesdir: ['tools/eslint-rules'],
+            'resolve-plugins-relative-to': 'tools',
+            'report-unused-disable-directives': 'error',
+          },
+          configurations: { ci: { 'no-eslintrc': true } },
+        },
+      });
+      // Lints with the root config, so it has no eslintrc of its own.
+      addProjectConfiguration(tree, 'no-config-lib', {
+        root: 'libs/no-config-lib',
+        targets: { lint: { options: { 'no-eslintrc': true } } },
+      });
+      const warnSpy = vi.spyOn(logger, 'warn');
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
+        'generated/**'
+      );
+      expect(tree.exists('libs/test-lib/custom.eslintignore')).toBe(false);
+      expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual({
+        options: {
+          rulesdir: ['tools/eslint-rules'],
+          'resolve-plugins-relative-to': 'tools',
+          'report-unused-disable-directives': 'error',
+        },
+        configurations: { ci: {} },
+      });
+      expect(
+        readProjectConfiguration(tree, 'no-config-lib').targets.lint.options
+      ).toEqual({});
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'project "test-lib" target "lint": resolve-plugins-relative-to, rulesdir'
+        )
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('should fold an ignore-path relative to the workspace root under a custom plugin target name', async () => {
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.plugins = [
+          {
+            plugin: '@nx/eslint/plugin',
+            options: { targetName: 'eslint-lint' },
+          },
+        ];
+        return json;
+      });
+      // The executor ran from the workspace root, and the conversion copied
+      // its path as is.
+      tree.write('tools/lint.eslintignore', 'fixtures/**');
+      setTestLibTargets({
+        'eslint-lint': {
+          options: { 'ignore-path': 'tools/lint.eslintignore' },
+        },
+      });
+      addProjectConfiguration(tree, 'other-lib', {
+        root: 'libs/other-lib',
+        targets: {
+          'eslint-lint': {
+            configurations: {
+              ci: { 'ignore-path': 'tools/lint.eslintignore' },
+            },
+          },
+        },
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
+        'fixtures/**'
+      );
+      expect(
+        readProjectConfiguration(tree, 'test-lib').targets['eslint-lint']
+          .options
+      ).toEqual({});
+      // other-lib still names it.
+      expect(tree.exists('tools/lint.eslintignore')).toBe(true);
+    });
+
+    it('should fold an ignore-path hoisted to an @nx/eslint/plugin targetDefaults entry into the root config', async () => {
+      tree.write('.gitignore', 'generated/**');
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.targetDefaults = {
+          lint: [
+            {
+              filter: { plugin: '@nx/eslint/plugin' },
+              options: { 'ignore-path': '.gitignore', 'no-eslintrc': true },
+            },
+            {
+              filter: { plugin: '@nx/eslint/plugin', projects: ['test-lib'] },
+              options: { 'no-eslintrc': true },
+            },
+          ],
+        };
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toContain('generated/**');
+      // Git still reads it.
+      expect(tree.exists('.gitignore')).toBe(true);
+      expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual([
+        { filter: { plugin: '@nx/eslint/plugin' }, options: {} },
+        {
+          filter: { plugin: '@nx/eslint/plugin', projects: ['test-lib'] },
+          options: {},
+        },
+      ]);
+    });
+
+    it('should leave an ignore-path that a configuration replaces for its runs', async () => {
+      tree.write('libs/test-lib/base.eslintignore', 'base/**');
+      const lint = {
+        options: { 'ignore-path': 'base.eslintignore' },
+        configurations: { ci: { 'ignore-path': 'ci.eslintignore' } },
+      };
+      setTestLibTargets({ lint });
+      const warnSpy = vi.spyOn(logger, 'warn');
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual(
+        lint
+      );
+      expect(tree.exists('libs/test-lib/base.eslintignore')).toBe(true);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'project "test-lib" target "lint": ignore-path; project "test-lib" target "lint" (configuration "ci"): ignore-path'
+        )
+      );
+      warnSpy.mockRestore();
+    });
+
+    const sharedEntry: TargetDefaultArrayEntry = {
+      filter: { plugin: '@nx/eslint/plugin' },
+      options: { 'ignore-path': 'shared.eslintignore' },
+    };
+    const narrowerFilter = {
+      plugin: '@nx/eslint/plugin',
+      projects: ['test-lib'],
+    };
+    it.each<
+      [string, TargetDefaultArrayEntry[], ProjectConfiguration['targets']?]
+    >([
+      [
+        'a project sets its own',
+        [sharedEntry],
+        { lint: { options: { 'ignore-path': 'own.eslintignore' } } },
+      ],
+      [
+        'a narrower entry sets its own',
+        [
+          sharedEntry,
+          {
+            filter: narrowerFilter,
+            options: { 'ignore-path': 'own.eslintignore' },
+          },
+        ],
+      ],
+      [
+        'only a narrower entry sets it',
+        [{ filter: narrowerFilter, options: sharedEntry.options }],
+      ],
+      [
+        'a configuration sets its own',
+        [
+          {
+            ...sharedEntry,
+            configurations: { ci: { 'ignore-path': 'own.eslintignore' } },
+          },
+        ],
+      ],
+    ])(
+      'should leave a targetDefaults ignore-path when %s',
+      async (_, entries, targets) => {
+        tree.write('shared.eslintignore', 'shared/**');
+        updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+          json.targetDefaults = { lint: entries };
+          return json;
+        });
+        if (targets) {
+          setTestLibTargets(targets);
+        }
+
+        await convertToFlatConfigGenerator(tree, options);
+
+        expect(tree.read('eslint.config.cjs', 'utf-8')).not.toContain(
+          'shared/**'
+        );
+        expect(tree.exists('shared.eslintignore')).toBe(true);
+      }
+    );
+
+    it('should leave the options of another tool target that shares the plugin target name', async () => {
+      tree.write('libs/test-lib/.stylelintignore', 'dist/**');
+      setTestLibTargets({
+        lint: {
+          command: 'stylelint "**/*.css"',
+          options: { 'ignore-path': '.stylelintignore' },
+        },
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.exists('libs/test-lib/.stylelintignore')).toBe(true);
+      expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual({
+        command: 'stylelint "**/*.css"',
+        options: { 'ignore-path': '.stylelintignore' },
+      });
     });
   });
 });

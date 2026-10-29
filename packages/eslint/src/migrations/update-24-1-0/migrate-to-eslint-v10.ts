@@ -27,6 +27,7 @@ import {
   JS_ESLINTRC_FILENAMES,
   readStaticJsEslintrcFromTree,
 } from '../../generators/convert-to-flat-config/converters/static-js-config';
+import { findEslintrcOnlyTargetOptions } from '../../generators/convert-to-flat-config/eslintrc-only-target-options';
 import { findEslintFile } from '../../generators/utils/eslint-file';
 
 // ESLint plugins with no v10 release. `eslint-plugin-import` has a maintained
@@ -89,6 +90,7 @@ export default async function update(tree: Tree): Promise<{
   const nextSteps: string[] = [];
 
   await convertRemainingEslintrcConfigs(tree, agentContext, nextSteps);
+  reportEslintrcOnlyTargetOptions(tree, agentContext, nextSteps);
   const removedPlugins = replaceV9OnlyPlugins(tree, agentContext, nextSteps);
   reportRemainingFileReferences(tree, removedPlugins, agentContext, nextSteps);
   reportPluginsWithoutV10Support(tree, agentContext, nextSteps);
@@ -204,6 +206,28 @@ async function convertRemainingEslintrcConfigs(
   );
   nextSteps.push(
     `ESLint v10 no longer reads eslintrc files; fold these into flat config and delete them: ${list}.`
+  );
+}
+
+// The conversion moves `ignore-path` into flat config and drops `no-eslintrc`;
+// what it cannot translate stays on the target, where ESLint v10 rejects it.
+function reportEslintrcOnlyTargetOptions(
+  tree: Tree,
+  agentContext: string[],
+  nextSteps: string[]
+): void {
+  const leftover = findEslintrcOnlyTargetOptions(tree);
+  if (leftover.length === 0) {
+    return;
+  }
+  const list = leftover.join('; ');
+  agentContext.push(
+    `These lint targets still carry ESLint CLI options that only exist for eslintrc: ${list}. ESLint v10 rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options, so those targets fail until the options are gone. ` +
+      '"rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
+      'Follow the section on eslintrc-only lint target options.'
+  );
+  nextSteps.push(
+    `Move the eslintrc-only ESLint options these lint targets still carry into flat config, since ESLint v10 does not support them: ${list}.`
   );
 }
 
