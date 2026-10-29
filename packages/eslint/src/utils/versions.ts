@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { major } from 'semver';
+import { useFlatConfig } from './flat-config';
 
 export const nxVersion = require(join('@nx/eslint', 'package.json')).version;
 
@@ -49,12 +50,10 @@ export function versions(tree: Tree): EslintVersions {
     }
     return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
   }
-  // Fresh install: latest stack (v10) by default. If eslintrc is explicitly
-  // requested via ESLINT_USE_FLAT_CONFIG=false, pin v9, the last major that
-  // still supports eslintrc, so the scaffolded .eslintrc.json stays readable.
-  // We check only the env var, not useFlatConfig(tree): its treeless fallback
-  // reads the CLI's own eslint, unrelated to what we're about to install.
-  return legacyRequested ? versionMap[9] : latestVersions;
+  // Fresh install: latest stack (v10) by default. A workspace that stays on
+  // eslintrc gets v9, the last major that reads it, so the scaffolded config
+  // stays readable.
+  return useFlatConfig(tree) ? latestVersions : versionMap[9];
 }
 
 // convert-to-flat-config runs only on eslintrc workspaces, which
