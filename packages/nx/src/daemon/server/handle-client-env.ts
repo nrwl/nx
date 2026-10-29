@@ -1,7 +1,11 @@
 import type { EventEmitter } from 'node:events';
-import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
+import {
+  daemonHostsPluginsInProcess,
+  getPluginsIfLoadedOrLoading,
+} from '../../project-graph/plugins/get-plugins';
 import type { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 import {
+  adoptBerryBinFoldersOnPath,
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
   getChangedEnvKeys,
@@ -57,9 +61,14 @@ export async function handleClientEnv(
   // Yarn Berry's bin folders outlive neither the client nor its request, while
   // the daemon and anything it starts in the background do.
   const daemonEnv = withoutBerryBinFoldersOnPath(env);
+  hostBerryBinFoldersInProcess({});
   const graphEnvBefore = normalizeDaemonEnvironmentForGraph(process.env);
   const previousClientEnv = getAppliedDaemonClientEnv()?.env;
   const changedEnvKeys = applyDaemonEnvFromClient(daemonEnv);
+  const graphEnvAfter = normalizeDaemonEnvironmentForGraph(process.env);
+  hostBerryBinFoldersInProcess(
+    keepBerryFolders ? withTrustedBerryBinFolders(env) : {}
+  );
   if (changedEnvKeys.length === 0) {
     // An unchanged env can still owe workers the folders a disconnect took.
     if (keepBerryFolders && !workersHoldBerryFolders) {
@@ -71,10 +80,7 @@ export async function handleClientEnv(
   // graph normalization (e.g. Yarn Berry's per-invocation BERRY_BIN_FOLDER
   // does not) invalidate the computed graph.
   const graphChangedKeys = new Set([
-    ...getChangedEnvKeys(
-      graphEnvBefore,
-      normalizeDaemonEnvironmentForGraph(process.env)
-    ),
+    ...getChangedEnvKeys(graphEnvBefore, graphEnvAfter),
     ...(previousClientEnv
       ? getChangedEnvKeys(
           normalizeDaemonEnvironmentForGraph(previousClientEnv),
@@ -156,6 +162,14 @@ function liveBerryFolders(): Set<string> {
   );
 }
 
+// A daemon that runs plugins itself is one more plugin host, so its PATH holds
+// the folders its workers do. The graph is computed without them.
+function hostBerryBinFoldersInProcess(env: NodeJS.ProcessEnv): void {
+  if (daemonHostsPluginsInProcess()) {
+    adoptBerryBinFoldersOnPath(env);
+  }
+}
+
 function workerEnv(
   env: Record<string, string>,
   keepBerryFolders: boolean
@@ -194,6 +208,7 @@ async function dropUnownedBerryFolders(): Promise<void> {
     liveBerryFolders()
   );
   setLiveClientBerryEnv(keptEnv);
+  hostBerryBinFoldersInProcess(keptEnv);
   workersHoldBerryFolders = hasBerryBinFolders(keptEnv);
   await runApply(forwardEnvToPluginWorkers(keptEnv as Record<string, string>));
 }
