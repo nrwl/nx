@@ -51,7 +51,7 @@ object BuildStateApplier {
      *
      * @param project The MavenProject to apply state to
      * @param buildState The BuildState to apply
-     * @param workspaceRoot Paths Maven reads from must resolve inside this directory
+     * @param workspaceRoot With the project and build directories, bounds source, resource and artifact paths. Classpath entries are not checked.
      * @param projectHelper Optional MavenProjectHelper for attaching artifacts
      */
     fun applyBuildState(
