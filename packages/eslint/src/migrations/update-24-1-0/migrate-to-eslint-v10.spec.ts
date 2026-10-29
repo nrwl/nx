@@ -50,6 +50,13 @@ describe('migrate-to-eslint-v10 migration', () => {
     });
   }
 
+  function registerEslintPlugin(): void {
+    updateJson(tree, 'nx.json', (json) => {
+      json.plugins = ['@nx/eslint/plugin'];
+      return json;
+    });
+  }
+
   function mockEslintPeerRanges(
     peers: Record<string, string>,
     installedEslintVersion?: string
@@ -146,10 +153,8 @@ describe('migrate-to-eslint-v10 migration', () => {
 
   it('should convert a project JavaScript-based eslintrc that extends the root', async () => {
     tree.write('.eslintrc.json', JSON.stringify({ root: true, rules: {} }));
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      targets: { lint: { executor: '@nx/eslint:lint' } },
-    });
+    registerEslintPlugin();
+    addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
     tree.write(
       'apps/app1/.eslintrc.js',
       `module.exports = {
@@ -205,10 +210,8 @@ describe('migrate-to-eslint-v10 migration', () => {
     // The generator picks .eslintrc.base.json over .eslintrc.js, so the
     // unreadable file never reaches it and must not hold the conversion back.
     tree.write('.eslintrc.base.json', JSON.stringify({ rules: {} }));
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      targets: { lint: { executor: '@nx/eslint:lint' } },
-    });
+    registerEslintPlugin();
+    addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
     tree.write(
       'apps/app1/.eslintrc.json',
       JSON.stringify({ extends: ['../../.eslintrc.base.json'], rules: {} })
@@ -227,6 +230,24 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(tree.exists('.eslintrc.js')).toBe(true);
     expect(result.nextSteps.join('\n')).toContain(
       'fold these into flat config and delete them: .eslintrc.js.'
+    );
+  });
+
+  it('should report the eslintrc-only options a lint target still passes', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true, rules: {} }));
+    registerEslintPlugin();
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: { lint: { options: { rulesdir: ['tools/eslint-rules'] } } },
+    });
+
+    const result = await update(tree);
+
+    expect(result.agentContext.join('\n')).toContain(
+      'only exist for eslintrc: project "app1" target "lint": rulesdir.'
+    );
+    expect(result.nextSteps.join('\n')).toContain(
+      'since ESLint v10 does not support them: project "app1" target "lint": rulesdir.'
     );
   });
 

@@ -5,12 +5,14 @@ import {
   getDependencyVersionFromPackageJson,
   getProjects,
   installPackagesTask,
+  joinPathFragments,
   logger,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
   readNxJson,
   TargetConfiguration,
+  TargetDefaultArrayEntry,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -43,6 +45,14 @@ import {
   resolveAngularEslintVersion,
 } from './angular-eslint';
 import { type InputDefinition } from '@nx/devkit/internal';
+import {
+  ESLINT_LINT_EXECUTOR,
+  findEslintrcOnlyTargetOptions,
+  getEslintPluginTargetNames,
+  isEslintTarget,
+  isInferredEslintTargetOverride,
+  isPluginScopedTargetDefault,
+} from './eslintrc-only-target-options';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -75,14 +85,20 @@ export async function convertToFlatConfigGenerator(
   options.eslintConfigFormat ??= 'mjs';
 
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
+  const targetDefaultIgnorePaths = findTargetDefaultIgnorePaths(tree);
 
   // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
   convertRootToFlatConfig(
     tree,
     eslintFile,
     options.eslintConfigFormat,
+    [...targetDefaultIgnorePaths.values()],
     options.keepExistingVersions
   );
+  removeEslintrcOnlyTargetDefaultOptions(tree, targetDefaultIgnorePaths);
+  for (const ignorePath of targetDefaultIgnorePaths.values()) {
+    eslintIgnoreFiles.add(ignorePath);
+  }
 
   // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
@@ -98,9 +114,16 @@ export async function convertToFlatConfigGenerator(
     );
   }
 
-  // delete all .eslintignore files
+  // Flat config never reads an ignore file. Keep one another tool may read,
+  // such as .gitignore, or one a remaining `ignore-path` still names.
+  const referencedIgnoreFiles = findReferencedIgnoreFiles(tree);
   for (const ignoreFile of eslintIgnoreFiles) {
-    tree.delete(ignoreFile);
+    if (
+      basename(ignoreFile).includes('eslintignore') &&
+      !referencedIgnoreFiles.has(joinPathFragments(ignoreFile))
+    ) {
+      tree.delete(ignoreFile);
+    }
   }
 
   // replace references in nx.json and project.json files
@@ -111,6 +134,15 @@ export async function convertToFlatConfigGenerator(
   // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
   // flat-native config before formatting (no-op below v22).
   await migrateAngularEslintV22FlatConfig(tree);
+
+  const leftover = findEslintrcOnlyTargetOptions(tree);
+  if (leftover.length > 0) {
+    logger.warn(
+      `These lint targets still carry ESLint options that flat config does not support: ${leftover.join('; ')}. ` +
+        'ESLint rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options. "rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
+        'Move "ignore-path" patterns into the flat config\'s "ignores", load the "rulesdir" rules through a local plugin, pass a "resolve-plugins-relative-to" directory to FlatCompat as "resolvePluginsRelativeTo", and delete "no-eslintrc".'
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -125,6 +157,7 @@ function convertRootToFlatConfig(
   tree: Tree,
   eslintFile: string,
   format: 'cjs' | 'mjs',
+  ignorePaths: string[],
   keepExistingVersions?: boolean
 ) {
   // Every generated config extends the root one, so a root config that holds
@@ -138,7 +171,7 @@ function convertRootToFlatConfig(
         source,
         target,
         format,
-        undefined,
+        ignorePaths,
         keepExistingVersions
       )
     ) {
@@ -157,15 +190,6 @@ function convertRootToFlatConfig(
   if (tree.exists(rootEslintFile)) {
     convertRoot(rootEslintFile, `eslint.config.${format}`);
   }
-}
-
-const ESLINT_LINT_EXECUTOR = '@nx/eslint:lint';
-
-function isEslintTarget(target: { executor?: string; command?: string }) {
-  return (
-    target.executor === ESLINT_LINT_EXECUTOR ||
-    target.command?.includes('eslint')
-  );
 }
 
 function hasMatchingEslintTargetDefault(
@@ -203,6 +227,14 @@ function convertProjectToFlatConfig(
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
   if (!eslintFile) {
+    // The project lints with the root config, which is flat from here on.
+    removeEslintrcOnlyTargetOptions(
+      tree,
+      project,
+      projectConfig,
+      nxJson,
+      new Map()
+    );
     return;
   }
   if (JS_ESLINTRC_FILENAMES.includes(eslintFile)) {
@@ -219,6 +251,13 @@ function convertProjectToFlatConfig(
     }
   } else if (eslintFile.endsWith('.js')) {
     // Already on a JavaScript-based flat config (eslint.config.js); nothing to convert.
+    removeEslintrcOnlyTargetOptions(
+      tree,
+      project,
+      projectConfig,
+      nxJson,
+      new Map()
+    );
     return;
   }
 
@@ -257,13 +296,21 @@ function convertProjectToFlatConfig(
     return;
   }
 
+  const inferredTargetIgnorePaths = findInferredTargetIgnorePaths(
+    tree,
+    projectConfig,
+    nxJson
+  );
   const converted = convertConfigToFlatConfig(
     tree,
     projectConfig.root,
     eslintFile,
     `eslint.config.${format}`,
     format,
-    ignorePath,
+    [
+      ...(ignorePath ? [ignorePath] : []),
+      ...inferredTargetIgnorePaths.values(),
+    ],
     keepExistingVersions
   );
   if (!converted) {
@@ -280,6 +327,213 @@ function convertProjectToFlatConfig(
   if (ignorePath) {
     eslintIgnoreFiles.add(ignorePath);
   }
+  for (const ignoreFile of inferredTargetIgnorePaths.values()) {
+    eslintIgnoreFiles.add(ignoreFile);
+  }
+  removeEslintrcOnlyTargetOptions(
+    tree,
+    project,
+    projectConfig,
+    nxJson,
+    inferredTargetIgnorePaths
+  );
+}
+
+// The executor conversion copied `ignore-path` verbatim, so it may be relative
+// to the project root, where the inferred target runs, or to the workspace
+// root, where the executor ran. One a configuration replaces stays put.
+function findInferredTargetIgnorePaths(
+  tree: Tree,
+  projectConfig: ProjectConfiguration,
+  nxJson: NxJsonConfiguration
+): Map<string, string> {
+  const pluginTargetNames = getEslintPluginTargetNames(nxJson);
+  const ignorePaths = new Map<string, string>();
+  for (const [targetName, target] of Object.entries(
+    projectConfig.targets ?? {}
+  )) {
+    const value = target.options?.['ignore-path'];
+    if (
+      typeof value !== 'string' ||
+      target.options.cwd !== undefined ||
+      !isInferredEslintTargetOverride(targetName, target, pluginTargetNames) ||
+      setsConfigurationIgnorePath(target) ||
+      getPluginScopedTargetDefaults(nxJson, targetName).some(
+        setsConfigurationIgnorePath
+      )
+    ) {
+      continue;
+    }
+    const resolved = [joinPathFragments(projectConfig.root, value), value].find(
+      (candidate) => tree.exists(candidate)
+    );
+    if (resolved) {
+      ignorePaths.set(targetName, resolved);
+    }
+  }
+  return ignorePaths;
+}
+
+function removeEslintrcOnlyTargetOptions(
+  tree: Tree,
+  project: string,
+  projectConfig: ProjectConfiguration,
+  nxJson: NxJsonConfiguration,
+  foldedIgnorePaths: Map<string, string>
+) {
+  const pluginTargetNames = getEslintPluginTargetNames(nxJson);
+  let changed = false;
+  for (const [targetName, target] of Object.entries(
+    projectConfig.targets ?? {}
+  )) {
+    if (
+      !isInferredEslintTargetOverride(targetName, target, pluginTargetNames)
+    ) {
+      continue;
+    }
+    for (const options of [
+      target.options,
+      ...Object.values(target.configurations ?? {}),
+    ]) {
+      if (options?.['no-eslintrc'] !== undefined) {
+        delete options['no-eslintrc'];
+        changed = true;
+      }
+    }
+    if (foldedIgnorePaths.has(targetName)) {
+      delete target.options['ignore-path'];
+      changed = true;
+    }
+  }
+  if (changed) {
+    updateProjectConfiguration(tree, project, projectConfig);
+  }
+}
+
+// A hoisted `ignore-path` holds the executor's workspace-relative path. Like the
+// root `.eslintignore`, it goes into the root config, so only when no narrower
+// entry, configuration or project sets another `ignore-path` for the target.
+function findTargetDefaultIgnorePaths(tree: Tree): Map<string, string> {
+  const ignorePaths = new Map<string, string>();
+  if (!tree.exists('nx.json')) {
+    return ignorePaths;
+  }
+  const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
+  const pluginTargetNames = getEslintPluginTargetNames(nxJson);
+  const projects = [...getProjects(tree).values()];
+  for (const targetName of Object.keys(nxJson.targetDefaults ?? {})) {
+    const entries = getPluginScopedTargetDefaults(nxJson, targetName);
+    const setting = entries.filter((entry) => setsIgnorePath(entry.options));
+    const ignorePath = setting[0]?.options['ignore-path'];
+    if (
+      !pluginTargetNames.has(targetName) ||
+      setting.length !== 1 ||
+      !isWorkspaceWidePluginTargetDefault(setting[0]) ||
+      typeof ignorePath !== 'string' ||
+      !tree.exists(ignorePath) ||
+      entries.some(setsConfigurationIgnorePath) ||
+      projects.some((project) => {
+        const target = project.targets?.[targetName];
+        return (
+          target !== undefined &&
+          isInferredEslintTargetOverride(
+            targetName,
+            target,
+            pluginTargetNames
+          ) &&
+          (setsIgnorePath(target.options) ||
+            setsConfigurationIgnorePath(target))
+        );
+      })
+    ) {
+      continue;
+    }
+    ignorePaths.set(targetName, ignorePath);
+  }
+  return ignorePaths;
+}
+
+function removeEslintrcOnlyTargetDefaultOptions(
+  tree: Tree,
+  foldedIgnorePaths: Map<string, string>
+) {
+  if (!tree.exists('nx.json')) {
+    return;
+  }
+  updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+    for (const targetName of Object.keys(json.targetDefaults ?? {})) {
+      for (const entry of getPluginScopedTargetDefaults(json, targetName)) {
+        for (const options of [
+          entry.options,
+          ...Object.values(entry.configurations ?? {}),
+        ]) {
+          delete options?.['no-eslintrc'];
+        }
+        if (
+          foldedIgnorePaths.has(targetName) &&
+          setsIgnorePath(entry.options)
+        ) {
+          delete entry.options['ignore-path'];
+        }
+      }
+    }
+    return json;
+  });
+}
+
+// The files a remaining `ignore-path` may name, under either base it can be
+// relative to.
+function findReferencedIgnoreFiles(tree: Tree): Set<string> {
+  const referenced = new Set<string>();
+  const collect = (root: string, target: Partial<TargetConfiguration>) => {
+    for (const options of [
+      target.options,
+      ...Object.values(target.configurations ?? {}),
+    ]) {
+      const value = options?.['ignore-path'];
+      if (typeof value === 'string') {
+        referenced.add(joinPathFragments(root, value));
+        referenced.add(joinPathFragments(value));
+      }
+    }
+  };
+  for (const [, projectConfig] of getProjects(tree)) {
+    for (const target of Object.values(projectConfig.targets ?? {})) {
+      collect(projectConfig.root, target);
+    }
+  }
+  for (const value of Object.values(readNxJson(tree)?.targetDefaults ?? {})) {
+    for (const entry of Array.isArray(value) ? value : [value]) {
+      collect('', entry);
+    }
+  }
+  return referenced;
+}
+
+function getPluginScopedTargetDefaults(
+  nxJson: NxJsonConfiguration,
+  targetName: string
+): TargetDefaultArrayEntry[] {
+  const value = nxJson.targetDefaults?.[targetName];
+  return Array.isArray(value) ? value.filter(isPluginScopedTargetDefault) : [];
+}
+
+function setsIgnorePath(options: Record<string, unknown> | undefined): boolean {
+  return options?.['ignore-path'] !== undefined;
+}
+
+function setsConfigurationIgnorePath(
+  target: Partial<TargetConfiguration>
+): boolean {
+  return Object.values(target.configurations ?? {}).some(setsIgnorePath);
+}
+
+function isWorkspaceWidePluginTargetDefault(
+  entry: TargetDefaultArrayEntry
+): boolean {
+  return (
+    isPluginScopedTargetDefault(entry) && Object.keys(entry.filter).length === 1
+  );
 }
 
 // Rewrites input entries that reference legacy `.eslintrc[.base].json` / `.eslintignore`
@@ -419,12 +673,12 @@ function convertConfigToFlatConfig(
   source: string,
   target: string,
   format: 'cjs' | 'mjs',
-  ignorePath?: string,
+  extraIgnorePaths: string[],
   keepExistingVersions?: boolean
 ): boolean {
-  const ignorePaths = ignorePath
-    ? [ignorePath, `${root}/.eslintignore`]
-    : [`${root}/.eslintignore`];
+  const ignorePaths = [
+    ...new Set([...extraIgnorePaths, joinPathFragments(root, '.eslintignore')]),
+  ];
 
   const config = readEslintrcConfig(tree, root, source);
   if (!config) {
