@@ -25,11 +25,12 @@ object BuildStateApplier {
     private fun realPath(root: File): Path =
         runCatching { root.toPath().toRealPath() }.getOrElse { root.canonicalFile.toPath() }
 
-    private fun resolveWithin(path: String, basedir: File, roots: List<Path>): String? {
+    private fun resolveWithin(path: String, basedir: File, roots: List<Path>, warnIfMissing: Boolean = false): String? {
         val resolved = try {
             File(path).let { if (it.isAbsolute) it else File(basedir, path) }.toPath().toRealPath()
         } catch (_: NoSuchFileException) {
-            log.debug("    Skipping missing build state path: $path")
+            val message = "    Skipping missing build state path: $path"
+            if (warnIfMissing) log.warn(message) else log.debug(message)
             return null
         } catch (_: Exception) {
             null
@@ -143,7 +144,7 @@ object BuildStateApplier {
         }
 
         // Apply main artifact
-        buildState.mainArtifact?.let { resolveWithin(it.file, basedir, inputRoots) }?.let { absPath ->
+        buildState.mainArtifact?.let { resolveWithin(it.file, basedir, inputRoots, warnIfMissing = true) }?.let { absPath ->
             val file = File(absPath)
             log.debug("    Applied main artifact: ${file.name}")
             project.artifact.file = file
@@ -152,7 +153,7 @@ object BuildStateApplier {
         // Apply attached artifacts (only if not already attached)
         var attachedCount = 0
         buildState.attachedArtifacts.forEach { artifactInfo ->
-            val absPath = resolveWithin(artifactInfo.file, basedir, inputRoots) ?: return@forEach
+            val absPath = resolveWithin(artifactInfo.file, basedir, inputRoots, warnIfMissing = true) ?: return@forEach
             val file = File(absPath)
             if (projectHelper != null) {
                 val classifier = artifactInfo.classifier
@@ -179,7 +180,7 @@ object BuildStateApplier {
         // Skip outputTimestamp - it causes cache invalidation issues
 
         // Apply pomFile if it was modified (e.g., by flatten-maven-plugin)
-        buildState.pomFile?.let { resolveWithin(it, basedir, inputRoots) }?.let { absPath ->
+        buildState.pomFile?.let { resolveWithin(it, basedir, inputRoots, warnIfMissing = true) }?.let { absPath ->
             val pomFile = File(absPath)
             log.info("Applying modified pomFile: ${pomFile.absolutePath}")
             project.setPomFile(pomFile)
