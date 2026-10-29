@@ -126,6 +126,13 @@ class BuildStateApplierTest {
   }
 
   @Test
+  fun `ignores symlinks that leave the workspace behind a path too long to canonicalize`() {
+    Files.createSymbolicLink(File(projectRoot, "target/link").toPath(), outside.toPath())
+    apply(stateWithEveryPath(File(projectRoot, "target/link").path + "/a/..".repeat(1200)))
+    assertNothingApplied()
+  }
+
+  @Test
   fun `ignores output directories outside the build directory`() {
     apply(
       BuildState(
@@ -143,20 +150,24 @@ class BuildStateApplierTest {
   }
 
   @Test
-  fun `keeps an output directory the POM configured outside the build directory`() {
-    val configured = File(workspaceRoot, "out").apply { mkdirs() }
-    project.build.outputDirectory = configured.path
+  fun `keeps output directories the POM configured outside the build directory`() {
+    project.build.outputDirectory = File(workspaceRoot, "out").path
+    project.build.testOutputDirectory = File(workspaceRoot, "test-out").path
+    val output = File(workspaceRoot, "out/sub").apply { mkdirs() }
+    val testOutput = File(workspaceRoot, "test-out/sub").apply { mkdirs() }
 
     apply(
       BuildState(
         compileSourceRoots = emptySet(),
         testCompileSourceRoots = emptySet(),
-        outputDirectory = "../out",
+        outputDirectory = "../out/sub",
+        testOutputDirectory = "../test-out/sub",
         mainArtifact = null,
         attachedArtifacts = emptyList()
       )
     )
 
-    assertEquals(configured.path, project.build.outputDirectory)
+    assertEquals(output.path, project.build.outputDirectory)
+    assertEquals(testOutput.path, project.build.testOutputDirectory)
   }
 }

@@ -23,8 +23,12 @@ object BuildStateApplier {
     private val log: Logger = LoggerFactory.getLogger(BuildStateApplier::class.java)
 
     private fun resolveWithin(path: String, basedir: File, roots: List<File>): String? {
-        val resolved = File(PathUtils.toAbsolutePath(path, basedir, log)).toPath().normalize()
-        if (roots.any { resolved.startsWith(it.canonicalFile.toPath()) }) {
+        val resolved = try {
+            File(path).let { if (it.isAbsolute) it else File(basedir, path) }.canonicalFile.toPath()
+        } catch (_: Exception) {
+            null
+        }
+        if (resolved != null && roots.any { resolved.startsWith(it.canonicalFile.toPath()) }) {
             return resolved.toString()
         }
         log.warn("    Ignoring build state path outside of ${roots.joinToString { it.path }}: $path")
