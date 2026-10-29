@@ -346,6 +346,10 @@
         "@typescript-eslint/typescript-estree": {
           "version": "^8.58.0",
           "alwaysAddToPackageJson": false
+        },
+        "@eslint/compat": {
+          "version": "^2.0.5",
+          "alwaysAddToPackageJson": false
         }
       }
     }

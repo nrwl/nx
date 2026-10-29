@@ -19,7 +19,7 @@ The pre-pass changed, mechanically:
 
 - Converted the remaining eslintrc configs to flat config through the `@nx/eslint:convert-to-flat-config` generator. JavaScript-based configs (`.eslintrc.js`, `.eslintrc.cjs`) are read statically, so the ones built from literal values were converted too.
 - Moved the patterns of the file an `ignore-path` lint target option names into the flat config's `ignores` when the option applies to every run of the target, and removed `no-eslintrc`, in `project.json` lint targets and in the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. A moved file was deleted only when its name contains `eslintignore` and no remaining `ignore-path` names it, so a moved `.gitignore` is still there.
-- Removed `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` from `package.json`, installed `eslint-plugin-import-x` in place of `eslint-plugin-import`, and updated `eslint-plugin-react-hooks` to v7, whose `recommended` preset also enables the React Compiler rules.
+- Removed `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` from `package.json` and installed `eslint-plugin-import-x` in place of `eslint-plugin-import`. Updated `eslint-plugin-import-x` below 4.16.2 and `eslint-plugin-react-hooks` below 7.1.0, the first releases that support ESLint v10. An `eslint-plugin-react-hooks` that moved from v6 or older to v7 also enables the React Compiler rules in its `recommended` preset.
 
 The pre-pass also detected and reported, without changing anything:
 
