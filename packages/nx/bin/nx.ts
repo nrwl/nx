@@ -245,7 +245,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
   try {
     const installPath = getNxInstallationPath(root);
     if (existsSync(installPath)) {
-      return resolveNxBinFrom(installPath);
+      return resolveNxBinFrom(installPath, root);
     }
   } catch {}
 
