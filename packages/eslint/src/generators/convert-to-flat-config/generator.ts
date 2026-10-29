@@ -249,8 +249,8 @@ function convertProjectToFlatConfig(
       );
       return;
     }
-  } else if (eslintFile.endsWith('.js')) {
-    // Already on a JavaScript-based flat config (eslint.config.js); nothing to convert.
+  } else if (ESLINT_FLAT_CONFIG_FILENAMES.includes(eslintFile)) {
+    // Already on a flat config; nothing to convert.
     removeEslintrcOnlyTargetOptions(
       tree,
       project,
