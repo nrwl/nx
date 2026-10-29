@@ -1,11 +1,6 @@
 import { LinterType } from '@nx/js';
-import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
-  runTasksInSerial,
-  Tree,
-} from '@nx/devkit';
-import { getExtraEslintDependencies } from '@nx/react';
+import { GeneratorCallback, runTasksInSerial, Tree } from '@nx/devkit';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -113,15 +108,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.skipPackageJson) {
-    const eslintDependencies = getExtraEslintDependencies(host);
-    const installTask = addDependenciesToPackageJson(
-      host,
-      eslintDependencies.dependencies,
-      eslintDependencies.devDependencies,
-      undefined,
-      true
-    );
-    tasks.push(installTask);
+    tasks.push(addExtraEslintDependencies(host));
   }
 
   return runTasksInSerial(...tasks);

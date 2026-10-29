@@ -3,7 +3,6 @@ import {
   type GeneratorCallback,
   joinPathFragments,
   ensurePackage,
-  addDependenciesToPackageJson,
   runTasksInSerial,
 } from '@nx/devkit';
 import {
@@ -18,7 +17,7 @@ import {
   detectLinters,
   addLintingToProject,
 } from '@nx/js/internal';
-import { getExtraEslintDependencies } from '../../../utils/lint';
+import { addExtraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
@@ -70,14 +69,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
 
     if (!options.skipPackageJson) {
-      const eslintDependencies = getExtraEslintDependencies(host);
-      const installTask = addDependenciesToPackageJson(
-        host,
-        eslintDependencies.dependencies,
-        eslintDependencies.devDependencies,
-        undefined,
-        true
-      );
+      const installTask = addExtraEslintDependencies(host);
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);
     }
