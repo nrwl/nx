@@ -8,6 +8,8 @@ import { readJson, updateJson } from '../../generators/utils/json';
 import { getAgentRulesWrapped, NX_ALLOWLIST_ROOTS } from '../constants';
 import * as installedNxVersionUtils from '../../utils/installed-nx-version';
 import * as cloneModule from '../clone-ai-config-repo';
+import { logger } from '../../utils/logger';
+import { DirectoryRefusedError } from '../../utils/owned-private-dir';
 import * as provenance from '../../utils/provenance';
 import * as packageJsonUtils from '../../utils/package-json';
 import * as fs from 'fs';
@@ -1661,6 +1663,40 @@ sandbox_mode = "read-only"
         expect(content).toContain('args = ["nx", "mcp"]');
         // Should NOT have agents (fallback doesn't include them)
         expect(content).not.toContain('[agents');
+      });
+
+      it('warns when the repo cache directory is refused', async () => {
+        getAiConfigRepoPathSpy.mockImplementation(() => {
+          throw new DirectoryRefusedError({
+            kind: 'foreign-owner',
+            dir: '/tmp/.nx',
+            uid: 1234,
+          });
+        });
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['codex'],
+        });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('/tmp/.nx'));
+        warn.mockRestore();
+      });
+
+      it('does not warn when the repo is unreachable', async () => {
+        getAiConfigRepoPathSpy.mockImplementation(() => {
+          throw new Error('Network error');
+        });
+        const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['codex'],
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
       });
     });
 

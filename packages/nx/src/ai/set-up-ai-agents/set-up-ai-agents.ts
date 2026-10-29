@@ -39,6 +39,8 @@ import {
   rulesRegex,
 } from '../constants';
 import { getAiConfigRepoPath } from '../clone-ai-config-repo';
+import { logger } from '../../utils/logger';
+import { DirectoryRefusedError } from '../../utils/owned-private-dir';
 import { Agent, supportedAgents } from '../utils';
 import {
   NormalizedSetupAiAgentsGeneratorSchema,
@@ -298,8 +300,14 @@ export async function setupAiAgentsGeneratorImpl(
   if (needsAiConfigRepo) {
     try {
       aiConfigRepoPath = getAiConfigRepoPath();
-    } catch {
-      // Network, clone or cache dir failure — individual consumers handle fallback
+    } catch (e) {
+      // Individual consumers handle a missing repo; a refused cache dir is the
+      // one failure the user can fix, so say why skills were skipped.
+      if (e instanceof DirectoryRefusedError) {
+        logger.warn(
+          `Skipping Nx skills and commands for AI agents: ${e.message}`
+        );
+      }
     }
   }
 

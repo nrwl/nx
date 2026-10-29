@@ -15,6 +15,7 @@ const state = vi.hoisted(() => {
   const path = require('node:path') as typeof import('node:path');
   return {
     dir: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-ai-clone-env-')),
+    home: undefined as string | undefined,
     execSync: vi.fn(),
   };
 });
@@ -30,6 +31,9 @@ vi.mock('../utils/nx-tmp-dir', () => {
   return {
     NX_TMP_DIR: shared,
     NX_USER_TMP_DIR: path.join(shared, 'user'),
+    get NX_HOME_TMP_DIR() {
+      return state.home;
+    },
   };
 });
 
@@ -73,9 +77,14 @@ describe('getAiConfigRepoPath', () => {
   const cacheDir = join(userRoot, 'nx-ai-agents-config');
 
   beforeEach(() => {
-    for (const dir of [sharedRoot, join(state.dir, 'nx-ai-agents-config')]) {
+    for (const dir of [
+      sharedRoot,
+      join(state.dir, 'nx-ai-agents-config'),
+      join(state.dir, 'home'),
+    ]) {
       rmSync(dir, { recursive: true, force: true });
     }
+    state.home = undefined;
     state.execSync.mockReset();
     state.execSync.mockImplementation((command: string) => {
       const cmd = String(command);
@@ -174,6 +183,29 @@ describe('getAiConfigRepoPath', () => {
       chmodSync(sharedRoot, 0o777);
 
       expect(() => getAiConfigRepoPath()).toThrow(/not sticky/);
+      expect(execSyncMock).not.toHaveBeenCalled();
+    });
+
+    it('falls back to an owner-only cache under the home dir when the shared root is refused', () => {
+      mkdirSync(sharedRoot);
+      chmodSync(sharedRoot, 0o777);
+      mkdirSync(join(state.dir, 'home'));
+      state.home = join(state.dir, 'home', '.nx');
+      const homeCache = join(state.home, 'nx-ai-agents-config');
+
+      expect(getAiConfigRepoPath()).toBe(join(homeCache, HEAD.slice(0, 10)));
+      for (const dir of [state.home, homeCache]) {
+        expect(lstatSync(dir).mode & 0o077).toBe(0);
+      }
+    });
+
+    it('does not fall back to a home dir that is the shared root', () => {
+      mkdirSync(sharedRoot);
+      chmodSync(sharedRoot, 0o777);
+      state.home = sharedRoot;
+
+      expect(() => getAiConfigRepoPath()).toThrow(/not sticky/);
+      expect(lstatSync(sharedRoot).mode & 0o777).toBe(0o777);
       expect(execSyncMock).not.toHaveBeenCalled();
     });
   });
