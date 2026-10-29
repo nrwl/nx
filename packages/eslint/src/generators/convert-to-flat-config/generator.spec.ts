@@ -1703,6 +1703,68 @@ describe('convert-to-flat-config generator', () => {
       );
     });
 
+    it.each([
+      [
+        '.eslintrc.js',
+        `module.exports = { root: true, rules: { 'no-console': 'error' } };`,
+      ],
+      ['.eslintrc.yaml', 'root: true\nrules:\n  no-console: error\n'],
+    ])(
+      'should import the converted root config in projects that extend %s',
+      async (rootConfig, content) => {
+        tree.write(rootConfig, content);
+        await lintProjectGenerator(tree, {
+          skipFormat: false,
+          linter: 'eslint',
+          project: 'test-lib',
+          enableTypedLinting: false,
+          eslintConfigFormat: 'cjs',
+        });
+        expect(readJson(tree, 'libs/test-lib/.eslintrc.json').extends).toEqual([
+          `../../${rootConfig}`,
+        ]);
+
+        await convertToFlatConfigGenerator(tree, options);
+
+        const projectConfig = tree.read(
+          'libs/test-lib/eslint.config.cjs',
+          'utf-8'
+        );
+        expect(projectConfig).toContain(
+          `const baseConfig = require('../../eslint.config.cjs');`
+        );
+        expect(projectConfig).not.toContain(rootConfig);
+      }
+    );
+
+    it('should keep FlatCompat for an extends of a JavaScript-based config it cannot read statically', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'cjs',
+      });
+      addProjectConfiguration(tree, 'shared-config', {
+        root: 'libs/shared-config',
+      });
+      tree.write(
+        'libs/shared-config/.eslintrc.js',
+        `module.exports = { rules: require('./rules') };`
+      );
+      updateJson(tree, 'libs/test-lib/.eslintrc.json', (json) => {
+        json.extends = ['../shared-config/.eslintrc.js'];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.exists('libs/shared-config/.eslintrc.js')).toBeTruthy();
+      expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
+        `compat.extends('../shared-config/.eslintrc.js')`
+      );
+    });
+
     it('should throw with the reason when the root JavaScript-based config cannot be read statically', async () => {
       tree.write(
         '.eslintrc.js',

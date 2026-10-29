@@ -1,4 +1,4 @@
-import { Tree, names } from '@nx/devkit';
+import { joinPathFragments, Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
@@ -13,11 +13,13 @@ import {
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
+import { readStaticJsEslintrcFromTree } from './static-js-config';
 
-// Rewrites legacy `.eslintrc[.base][.json]` / `.eslintignore` filenames to their flat-config
-// counterparts. Used for `extends` local paths, rule option values that embed these filenames,
-// and nx.json / project.json input globs that referenced the deleted files. Accepts
-// extensionless `.eslintrc` since ESLint treats that as JSON by convention.
+// Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
+// filenames to their flat-config counterparts. Used for `extends` local paths, rule option
+// values that embed these filenames, and nx.json / project.json input globs that referenced
+// the deleted files. Accepts extensionless `.eslintrc` since ESLint treats that as JSON by
+// convention.
 export function renameLegacyEslintrcFile(
   path: string,
   format: 'mjs' | 'cjs'
@@ -27,6 +29,7 @@ export function renameLegacyEslintrcFile(
       /(^|.*?)\.eslintrc(\.base)?(\.json)?$/,
       `$1eslint$2.config.${format}`
     )
+    .replace(/(^|.*?)\.eslintrc\.(ya?ml|c?js)$/, `$1eslint.config.${format}`)
     .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
@@ -46,7 +49,7 @@ function renameLegacyWorkspaceRules(
   return renamed;
 }
 
-// Rewrites references to the legacy `.eslintrc[.base].json` / `.eslintignore` that may appear
+// Rewrites references to the legacy eslintrc / `.eslintignore` files that may appear
 // inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
 // generated flat-config files instead. Without this, rule options keep pointing at files that
 // no longer exist after the conversion.
@@ -126,6 +129,8 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.extends) {
     const extendsResult = addExtends(
+      tree,
+      root,
       importsMap,
       exportElements,
       config,
@@ -351,8 +356,30 @@ export function convertEslintJsonToFlatConfig(
   };
 }
 
+// The generator converts every eslintrc file this matches, except a JavaScript one it
+// cannot read statically. Those stay in place, so an extends of one keeps FlatCompat.
+function isConvertedEslintrc(tree: Tree, root: string, path: string): boolean {
+  if (
+    /\.eslintrc(\.base)?(\.json)?$/.test(path) ||
+    /\.eslintrc\.ya?ml$/.test(path)
+  ) {
+    return true;
+  }
+  if (!/\.eslintrc\.c?js$/.test(path)) {
+    return false;
+  }
+  const file = joinPathFragments(root, path);
+  // Already deleted means already converted, as the root config always is.
+  return (
+    !tree.exists(file) ||
+    readStaticJsEslintrcFromTree(tree, '', file).kind === 'config'
+  );
+}
+
 // add parsed extends to export blocks and add import statements
 function addExtends(
+  tree: Tree,
+  root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
   config: ESLint.ConfigData,
@@ -370,7 +397,7 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (imp.match(/\.eslintrc(\.base)?(\.json)?$/)) {
+      if (isConvertedEslintrc(tree, root, imp)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
         importsMap.set(renameLegacyEslintrcFile(imp, format), localName);

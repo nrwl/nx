@@ -536,7 +536,7 @@ function isWorkspaceWidePluginTargetDefault(
   );
 }
 
-// Rewrites input entries that reference legacy `.eslintrc[.base].json` / `.eslintignore`
+// Rewrites input entries that reference legacy eslintrc / `.eslintignore`
 // files to their flat-config counterparts, then dedupes so the rewrite doesn't produce
 // duplicates of entries that already pointed at the flat config. Leaves non-string /
 // non-fileset inputs (runtime/env/dependentTasksOutputFiles/etc.) untouched.
