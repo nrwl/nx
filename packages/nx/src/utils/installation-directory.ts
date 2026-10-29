@@ -37,10 +37,23 @@ let nxInstallationRoots: string[] | undefined;
  * e.g. the workspace, a global prefix, or the nx repo when run from source.
  */
 function getNxInstallationRoots(): string[] {
-  nxInstallationRoots ??= [__dirname, require.resolve('yargs')]
-    .filter((path) => path.includes(nodeModulesSegment))
-    .map((path) => path.slice(0, path.indexOf(nodeModulesSegment)));
+  nxInstallationRoots ??= installationRootsOf([
+    __dirname,
+    require.resolve('yargs'),
+  ]);
   return nxInstallationRoots;
+}
+
+/**
+ * The directory holding the outermost `node_modules` of each path. The
+ * separator is kept so `/node_modules` yields `/`, not an empty path.
+ */
+export function installationRootsOf(paths: string[]): string[] {
+  return paths
+    .filter((path) => path.includes(nodeModulesSegment))
+    .map((path) =>
+      resolve(path.slice(0, path.indexOf(nodeModulesSegment) + 1))
+    );
 }
 
 function normalize(path: string): string {
