@@ -690,6 +690,34 @@ export default config;
     `);
   });
 
+  it('should stop using production once nx.json removes it', async () => {
+    tempFs.createFileSync('my-app/.storybook/main.ts', '');
+    mockStorybookMainConfig('my-app/.storybook/main.ts', {
+      stories: ['../src/**/*.stories.tsx'],
+      framework: { name: '@storybook/react-vite', options: {} },
+    });
+    await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      context
+    );
+
+    const nodes = await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      {
+        ...context,
+        nxJsonConfiguration: {
+          namedInputs: { default: ['{projectRoot}/**/*'] },
+        },
+      }
+    );
+
+    expect(
+      nodes[0][1].projects['my-app'].targets['build-storybook'].inputs
+    ).toEqual(['default', '^default', { externalDependencies: ['storybook'] }]);
+  });
+
   it('should infer test-storybook from a generated Vite config with addon-vitest', async () => {
     tempFs.createFileSync(
       'my-vitest-app/.storybook/main.ts',

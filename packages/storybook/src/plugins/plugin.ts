@@ -90,7 +90,10 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        {
+          ...normalizedOptions,
+          namedInputs: context.nxJsonConfiguration.namedInputs ?? {},
+        },
         context,
         entries.map(() => [lockFileName])
       );
