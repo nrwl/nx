@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import {
   chmodSync,
   fchmodSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -152,6 +153,21 @@ describe('isTrustedAncestorEntry', () => {
     plantedBy(0, join(base, 'nx.json'));
 
     expect(isTrustedAncestorEntry(base, 'nx.json')).toBe(true);
+  });
+
+  posixOnly('refuses our own entry when it is a hard link', () => {
+    chmodSync(base, 0o1777);
+    linkSync(join(base, 'nx.json'), join(base, 'nx'));
+
+    expect(isTrustedAncestorEntry(base, 'nx')).toBe(false);
+  });
+
+  posixOnly("refuses root's entry when it is a hard link", () => {
+    chmodSync(base, 0o1777);
+    linkSync(join(base, 'nx.json'), join(base, 'nx'));
+    plantedBy(0, join(base, 'nx'));
+
+    expect(isTrustedAncestorEntry(base, 'nx')).toBe(false);
   });
 
   posixOnly.each(['0755', '0775'])(
