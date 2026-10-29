@@ -12,7 +12,7 @@ topics:
 
 Migrate this Nx workspace from .eslintrc to ESLint flat config, following the instructions on the page below.
 
-1. Run `nx g @nx/eslint:convert-to-flat-config`. Convert any JS-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`) yourself using the page's migration steps.
+1. Run `nx g @nx/eslint:convert-to-flat-config`. Convert the JS-based eslintrc files it skips (`.eslintrc.js` or `.eslintrc.cjs` files that compute their values) yourself using the page's migration steps. If it fails on a root config like that, convert every config by hand.
 2. Handle rules removed in typescript-eslint v8 and the ESLint v9 runtime changes as the page describes: drop removed formatting rules, apply the renames and the ban-types split, update plugins that crash, and fix removed formatters and CLI flags.
 3. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
 4. Run `nx reset`, then `nx run-many -t <lint-target>` and fix failures until every project passes. Disable newly preset-enabled rules you never configured instead of editing source to satisfy them, and never weaken a rule the workspace configured explicitly.
@@ -47,15 +47,19 @@ converts every project's ESLint configuration in one pass:
 nx g @nx/eslint:convert-to-flat-config
 ```
 
-The generator walks all projects, converts each `.eslintrc.json` to flat config, converts the
+The generator walks all projects, converts each eslintrc file to flat config, converts the
 base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
-It does not convert JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`), so
-convert those by hand using the steps below.
+It reads JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`) without running
+them, and converts one only when it assigns `module.exports` an object built from literal values.
+It skips a project config that computes its values, for example with `require`, a spread, or a
+function call, and logs a warning naming it, so convert those by hand using the steps below.
+If the root config computes its values, the generator fails with an error before changing any
+file, and you convert the whole workspace by hand.
 New Nx workspaces generate flat config by default, and the
 [@nx/eslint/plugin inferred targets](/docs/technologies/eslint/introduction) run it without
 extra configuration.
 
-The generator aims to produce a flat config that behaves exactly like your original JSON
+The generator aims to produce a flat config that behaves exactly like your original
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.
 Review the converted configs before deleting anything: check that each override kept its
 `parser`.

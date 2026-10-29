@@ -69,7 +69,7 @@ Every installed dependency that declares a `peerDependencies.eslint` is checked 
 
 ##### What is not changed
 
-Source files are never edited, and no rule is turned off to make lint pass. ESLint v10 itself enforces nothing new: it ships the same rule set as v9, `@eslint/js` stays at the version the workspace already has, and `typescript-eslint` moves to 8.58, whose recommended set matches the 8.40 one the ESLint v9 migration installed.
+The migration code never edits a source file or turns a rule off to make lint pass. The paired prompt edits source files in two cases: it rewrites or deletes a directive comment that names a rule ESLint can no longer find, and it replaces an `/* eslint-env */` comment by moving its globals into the flat config. The only rules it turns off are the ones a changed preset newly enables, listed below, and it does that in the flat config. ESLint v10 itself enforces nothing new: it ships the same rule set as v9, `@eslint/js` stays at the version the workspace already has, and `typescript-eslint` moves to 8.58, whose recommended set matches the 8.40 one the ESLint v9 migration installed.
 
 Five things can still turn a workspace that linted cleanly on v9 red, and all five are reported rather than fixed:
 
