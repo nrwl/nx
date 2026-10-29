@@ -7,8 +7,9 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { dirname, join, resolve, sep } from 'path';
 import {
+  installationRootsOf,
   resolveFromWorkspace,
   resolveInstalledPackage,
   resolveNxBinFrom,
@@ -56,6 +57,23 @@ describe('resolveFromWorkspace', () => {
     expect(resolveFromWorkspace('semver', root)).toBe(
       require.resolve('semver')
     );
+  });
+});
+
+describe('installationRootsOf', () => {
+  it('keeps the filesystem root when node_modules sits directly under it', () => {
+    expect(
+      installationRootsOf([join(sep, 'node_modules', 'nx', 'src', 'utils')])
+    ).toEqual([resolve(sep)]);
+  });
+
+  it('takes the directory above the outermost node_modules', () => {
+    expect(
+      installationRootsOf([
+        join(sep, 'app', 'node_modules', '.pnpm', 'node_modules', 'yargs'),
+        join(sep, 'app', 'src'),
+      ])
+    ).toEqual([resolve(sep, 'app')]);
   });
 });
 
