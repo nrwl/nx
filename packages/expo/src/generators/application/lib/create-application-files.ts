@@ -8,6 +8,7 @@ import {
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 import { getInstalledExpoMajor } from '../../../utils/version-utils';
+import { getExtraEslintDependencies } from '@nx/react/internal';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
@@ -33,6 +34,9 @@ export async function createApplicationFiles(
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+  const usesJsxA11y =
+    'eslint-plugin-jsx-a11y' in
+    getExtraEslintDependencies(host).devDependencies;
 
   generateFiles(
     host,
@@ -55,6 +59,7 @@ export async function createApplicationFiles(
       connectCloudUrl,
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       packageManager,
+      usesJsxA11y,
     }
   );
 
