@@ -32,8 +32,14 @@ function splitPosixArgs(value: string): string[] {
       i++;
     } else if (char === '$' && expandPosixVariable(value, i)) {
       const expansion = expandPosixVariable(value, i);
-      if (quote) word += expansion.value;
-      else appendUnquoted(expansion.value);
+      const parts =
+        expansion.fallback === undefined
+          ? [{ value: expansion.value, quoted: false }]
+          : expandPosixText(expansion.fallback, quote === '"');
+      for (const part of parts) {
+        if (quote || part.quoted) word = (word ?? '') + part.value;
+        else appendUnquoted(part.value);
+      }
       i = expansion.end;
     } else if (quote === '"') {
       if (char === '"') {
@@ -67,7 +73,7 @@ function splitPosixArgs(value: string): string[] {
 function expandPosixVariable(
   value: string,
   start: number
-): { value: string; end: number } | undefined {
+): { value: string; end: number; fallback?: string } | undefined {
   const name = value.slice(start + 1).match(/^[A-Za-z_][A-Za-z0-9_]*/)?.[0];
   if (name) {
     return { value: process.env[name] ?? '', end: start + name.length };
@@ -86,7 +92,8 @@ function expandPosixVariable(
       const useFallback =
         fallback !== undefined && (colon ? !env : env === undefined);
       return {
-        value: useFallback ? expandPosixText(fallback) : (env ?? ''),
+        value: env ?? '',
+        ...(useFallback ? { fallback } : {}),
         end: i,
       };
     }
@@ -94,18 +101,61 @@ function expandPosixVariable(
   return undefined;
 }
 
-function expandPosixText(text: string): string {
-  let result = '';
+interface PosixExpansionPart {
+  value: string;
+  quoted: boolean;
+}
+
+// Preserve which characters came from shell quotes. Quotes in an environment
+// value are data, but quotes in a default word protect it from field splitting.
+function expandPosixText(
+  text: string,
+  doubleQuoted = false
+): PosixExpansionPart[] {
+  const parts: PosixExpansionPart[] = [];
+  let quote: '"' | "'" | undefined;
+  const append = (value: string, quoted: boolean) => {
+    const last = parts.at(-1);
+    if (last?.quoted === quoted) last.value += value;
+    else parts.push({ value, quoted });
+  };
   for (let i = 0; i < text.length; i++) {
-    const expansion = text[i] === '$' && expandPosixVariable(text, i);
-    if (expansion) {
-      result += expansion.value;
+    const char = text[i];
+    if (quote === "'") {
+      if (char === "'") quote = undefined;
+      else append(char, true);
+    } else if (char === '\\' && text[i + 1] === '\n') {
+      i++;
+    } else if (char === '$' && expandPosixVariable(text, i)) {
+      const expansion = expandPosixVariable(text, i);
+      if (expansion.fallback === undefined) {
+        append(expansion.value, doubleQuoted || !!quote);
+      } else {
+        for (const part of expandPosixText(
+          expansion.fallback,
+          doubleQuoted || !!quote
+        )) {
+          append(part.value, doubleQuoted || !!quote || part.quoted);
+        }
+      }
       i = expansion.end;
+    } else if (char === '"') {
+      quote = quote ? undefined : '"';
+      append('', true);
+    } else if (char === "'" && !quote && !doubleQuoted) {
+      quote = "'";
+      append('', true);
+    } else if (
+      char === '\\' &&
+      i + 1 < text.length &&
+      (!(doubleQuoted || quote) || '"\\$`'.includes(text[i + 1]))
+    ) {
+      append(text[++i], true);
     } else {
-      result += text[i];
+      append(char, doubleQuoted || !!quote);
     }
   }
-  return result;
+  return parts;
 }
 
 // cmd.exe expands defined %NAME% variables, then drops each ^ outside double
