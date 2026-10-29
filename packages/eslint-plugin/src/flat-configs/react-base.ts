@@ -11,7 +11,8 @@ const importPluginName = isEslint10OrLater ? 'import-x' : 'import';
 const importPluginModule = isEslint10OrLater
   ? require('eslint-plugin-import-x')
   : require('eslint-plugin-import');
-// import-x's CJS build nests the plugin under `.default`; eslint-plugin-import does not.
+// import-x's own flat configs register its `.default`, and ESLint rejects two
+// different objects under one plugin name. eslint-plugin-import has no `.default`.
 const importPlugin = importPluginModule.default ?? importPluginModule;
 
 /**

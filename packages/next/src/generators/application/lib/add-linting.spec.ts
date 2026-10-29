@@ -11,11 +11,9 @@ import { addLinting } from './add-linting';
 import { NormalizedSchema } from './normalize-options';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => projectGraph),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => projectGraph),
 }));
 
 describe('updateEslint', () => {
