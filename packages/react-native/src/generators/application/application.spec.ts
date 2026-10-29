@@ -206,6 +206,42 @@ describe('app', () => {
     expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
+  it.each<[string, (tree: Tree) => void, boolean]>([
+    ['ESLint v9 is declared', (tree) => declareEslint(tree, '^9.39.0'), true],
+    ['ESLint v10 is declared', (tree) => declareEslint(tree, '^10.0.0'), false],
+    ['no ESLint is declared', () => {}, false],
+    [
+      'no ESLint is declared and the root config is eslintrc',
+      (tree) => writeJson(tree, '.eslintrc.json', {}),
+      true,
+    ],
+  ])(
+    'should disable jsx-a11y/accessible-emoji in the welcome screen only when jsx-a11y is installed: %s',
+    async (_, setup, disabled) => {
+      setup(appTree);
+
+      await reactNativeApplicationGenerator(appTree, {
+        name: 'my-app',
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'none',
+        bundler: 'webpack',
+        skipFormat: true,
+      });
+
+      const [firstLine] = appTree
+        .read('my-app/src/app/App.tsx', 'utf-8')
+        .split('\n');
+      expect(firstLine).toBe(
+        disabled
+          ? '/* eslint-disable jsx-a11y/accessible-emoji */'
+          : "import React, { useRef, useState } from 'react';"
+      );
+    }
+  );
+
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
@@ -600,3 +636,10 @@ describe('app', () => {
     });
   });
 });
+
+function declareEslint(tree: Tree, version: string) {
+  updateJson(tree, 'package.json', (json) => {
+    json.devDependencies = { ...json.devDependencies, eslint: version };
+    return json;
+  });
+}
