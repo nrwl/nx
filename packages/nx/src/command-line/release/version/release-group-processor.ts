@@ -628,7 +628,7 @@ export class ReleaseGroupProcessor {
         projectLogger,
         releaseGroup,
         projectGraphNode,
-        !!semver.prerelease(currentVersion ?? ''),
+        currentVersion ?? '',
         this.releaseGraph.cachedLatestMatchingGitTag.get(projectName),
         this.releaseGraph,
         cachedFinalConfigForProject.fallbackCurrentVersionResolver,

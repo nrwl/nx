@@ -1,3 +1,10 @@
+import {
+  coerce as semverCoerce,
+  gt as semverGt,
+  inc as semverInc,
+  prerelease,
+  type ReleaseType,
+} from 'semver';
 import type {
   ProjectGraph,
   ProjectGraphProjectNode,
@@ -8,6 +15,7 @@ import {
   getFirstGitCommit,
   getFirstProjectCommit,
   getLatestGitTagForPattern,
+  sanitizeProjectNameForGitTag,
 } from '../utils/git';
 import { ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
@@ -21,12 +29,7 @@ export async function deriveSpecifierFromConventionalCommits(
   projectLogger: ProjectLogger,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  // NOTE: This TODO was carried over from the original version generator.
-  //
-  // TODO: reevaluate this prerelease logic/workflow for independent projects
-  // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
-  // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
-  isPrerelease: boolean,
+  currentVersion: string,
   latestMatchingGitTag:
     | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
     | undefined,
@@ -94,11 +97,44 @@ export async function deriveSpecifierFromConventionalCommits(
 
   // NOTE: This TODO was carried over from the original version generator.
   // TODO: reevaluate this prerelease logic/workflow for independent projects
-  if (isPrerelease) {
-    specifier = 'prerelease';
-    projectLogger.buffer(
-      `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease`
-    );
+  if (prerelease(currentVersion)) {
+    // A prerelease version's base already encodes a severity relative to the
+    // latest stable release (e.g. 2.2.0-rc.0 encodes a minor bump over 2.1.x).
+    // Escalate to a higher base only when the derived severity exceeds it.
+    const currentBaseVersion = semverCoerce(currentVersion)?.version;
+    const latestStableVersion = currentBaseVersion
+      ? (
+          await getLatestGitTagForPattern(
+            releaseGroup.releaseTag.pattern,
+            {
+              projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
+              releaseGroupName: releaseGroup.name,
+            },
+            releaseGraph.resolveRepositoryTags.bind(releaseGraph),
+            {
+              checkAllBranchesWhen:
+                releaseGroup.releaseTag.checkAllBranchesWhen,
+              requireSemver: releaseGroup.releaseTag.requireSemver,
+              strictPreid: true,
+            }
+          )
+        )?.extractedVersion
+      : undefined;
+    const nextBaseVersion =
+      latestStableVersion && currentBaseVersion
+        ? semverInc(latestStableVersion, specifier as ReleaseType)
+        : null;
+    if (nextBaseVersion && semverGt(nextBaseVersion, currentBaseVersion)) {
+      specifier = `pre${specifier}`;
+      projectLogger.buffer(
+        `📄 Resolved the specifier as "${specifier}" since the derived change severity exceeds the bump encoded by the current prerelease version`
+      );
+    } else {
+      specifier = 'prerelease';
+      projectLogger.buffer(
+        `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease`
+      );
+    }
   } else {
     let extraText = '';
     if (preid && !specifier.startsWith('pre')) {
