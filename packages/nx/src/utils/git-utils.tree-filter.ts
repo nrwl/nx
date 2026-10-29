@@ -95,7 +95,12 @@ try {
       const parts = split(file, SLASH);
       const inSource = srcParts.every((part, i) => parts[i]?.equals(part));
       ensureRealDir(parts.slice(0, -1));
-      if (inSource) {
+      if (inSource && parts.length === srcParts.length) {
+        // The source path is itself a file, so it is the only entry and
+        // takes the staging directory's place.
+        rmdirSync(staging);
+        renameSync(file, staging);
+      } else if (inSource) {
         const target = [staging, ...parts.slice(srcParts.length)];
         ensureRealDir(target.slice(0, -1));
         renameSync(file, joinPath(target));

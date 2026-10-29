@@ -106,6 +106,23 @@ function git(args: string[], cwd: string, env?: Record<string, string>) {
       expect(trackedFiles().sort()).toEqual(['package.json', 'src/index.ts']);
     });
 
+    it('moves a source path that was a file in an earlier commit', () => {
+      mkdirSync(join(repo, 'packages'));
+      writeFileSync(join(repo, 'packages/a'), 'file');
+      git(['add', '-A'], repo);
+      git(['commit', '-m', 'file'], repo);
+      rmSync(join(repo, 'packages/a'));
+      mkdirSync(join(repo, 'packages/a'));
+      writeFileSync(join(repo, 'packages/a/index.ts'), 'a');
+      git(['add', '-A'], repo);
+      git(['commit', '-m', 'directory'], repo);
+
+      filter('packages/a', 'libs/a');
+
+      expect(trackedFiles()).toEqual(['libs/a/index.ts']);
+      expect(git(['show', 'main~1:libs/a'], repo)).toBe('file');
+    });
+
     it('does not follow committed symlinks on the destination path', () => {
       symlinkSync(outside, join(repo, 'libs'));
       writeFileSync(join(repo, 'a.txt'), 'a');
