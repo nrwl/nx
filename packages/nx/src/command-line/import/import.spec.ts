@@ -75,6 +75,9 @@ vi.mock('../init/init-v2', () => ({
   detectPlugins: vi.fn(),
   getPluginReason: vi.fn(),
 }));
+vi.mock('./utils/prepare-source-repo', () => ({
+  prepareSourceRepo: vi.fn(),
+}));
 vi.mock('./utils/ai-output', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./utils/ai-output')>()),
   logProgress: (...args: unknown[]) => aiOutput.records.push(args),
@@ -86,7 +89,6 @@ import { importHandler } from './import';
 describe('importHandler', () => {
   let root: string;
   let originalCwd: string;
-  const originalEnv = { ...process.env };
 
   function git(cwd: string, ...args: string[]) {
     return execFileSync('git', args, { cwd, encoding: 'utf-8' });
@@ -118,17 +120,18 @@ describe('importHandler', () => {
     state.cloneDestination = '';
     originalCwd = process.cwd();
     aiOutput.records = [];
-    process.env.GIT_AUTHOR_NAME = process.env.GIT_COMMITTER_NAME = 'nx';
-    process.env.GIT_AUTHOR_EMAIL = process.env.GIT_COMMITTER_EMAIL =
-      'nx@example.com';
-    process.env.GIT_CONFIG_NOSYSTEM = '1';
-    process.env.GIT_CONFIG_GLOBAL = '/dev/null';
+    vi.stubEnv('GIT_AUTHOR_NAME', 'nx');
+    vi.stubEnv('GIT_COMMITTER_NAME', 'nx');
+    vi.stubEnv('GIT_AUTHOR_EMAIL', 'nx@example.com');
+    vi.stubEnv('GIT_COMMITTER_EMAIL', 'nx@example.com');
+    vi.stubEnv('GIT_CONFIG_NOSYSTEM', '1');
+    vi.stubEnv('GIT_CONFIG_GLOBAL', '/dev/null');
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
     process.chdir(originalCwd);
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     rmSync(root, { recursive: true, force: true });
   });
@@ -177,9 +180,9 @@ describe('importHandler', () => {
 
     const token = 'ghp_secrettoken123';
     const sourceUrl = `https://user:${token}@example.invalid/org/lib.git`;
-    process.env.GIT_CONFIG_COUNT = '1';
-    process.env.GIT_CONFIG_KEY_0 = `url.${source}.insteadOf`;
-    process.env.GIT_CONFIG_VALUE_0 = sourceUrl;
+    vi.stubEnv('GIT_CONFIG_COUNT', '1');
+    vi.stubEnv('GIT_CONFIG_KEY_0', `url.${source}.insteadOf`);
+    vi.stubEnv('GIT_CONFIG_VALUE_0', sourceUrl);
 
     await importHandler({
       sourceRepository: sourceUrl,
