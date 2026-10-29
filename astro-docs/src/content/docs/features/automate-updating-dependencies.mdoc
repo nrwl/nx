@@ -18,6 +18,13 @@ Keeping your tooling up to date is a tedious and time-consuming part of maintain
 - Updating your configuration files (e.g. Vite, Playwright, Nx config).
 - Updating your source code to match the new versions of packages (e.g., migrating across breaking changes).
 
+{% aside type="caution" title="Update self-hosted Nx Cloud before Nx 24" %}
+If you use self-hosted Nx Cloud (private enterprise or on-prem), update your Nx Cloud instance to
+2026.10.1 or later before upgrading your workspace to Nx 24.
+Nx 24 changes the task graph format, so runs against older self-hosted Nx Cloud versions fail.
+Update Nx Cloud first, then run `nx migrate`.
+{% /aside %}
+
 The command guides you through the update interactively:
 
 ```shell
