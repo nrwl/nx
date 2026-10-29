@@ -130,6 +130,11 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import {
+  isRunningWorkspaceNx,
+  isWorkspaceInstalledPackage,
+  shouldSkipTempMigrateCli,
+} from './workspace-installation';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX, MigrateArgs } from './command-object';
 import {
@@ -322,6 +327,7 @@ export class Migrator {
     PendingPackageJsonUpdate
   >();
   private readonly appliedPackageJsonUpdates = new Set<string>();
+  private readonly uninstalledDeclaredPackages = new Set<string>();
   private readonly nxInstallation: NxJsonConfiguration['installation'] | null;
   private minVersionWithSkippedUpdates: string | undefined;
 
@@ -374,7 +380,19 @@ export class Migrator {
       packageUpdates: this.packageUpdates,
       migrations,
       ...(Object.keys(promptContents).length > 0 ? { promptContents } : {}),
+      ...(this.uninstalledDeclaredPackages.size > 0
+        ? { uninstalledDeclaredPackages: [...this.uninstalledDeclaredPackages] }
+        : {}),
       minVersionWithSkippedUpdates: this.minVersionWithSkippedUpdates,
+    };
+  }
+
+  private getDeclaredDependencies(): Record<string, string> {
+    return {
+      ...this.packageJson?.dependencies,
+      ...this.packageJson?.devDependencies,
+      ...this.nxInstallation?.plugins,
+      ...(this.nxInstallation && { nx: this.nxInstallation.version }),
     };
   }
 
@@ -596,6 +614,9 @@ export class Migrator {
     }
 
     if (!this.getPkgVersion(targetPackage)) {
+      if (this.getDeclaredDependencies()[targetPackage]) {
+        this.uninstalledDeclaredPackages.add(targetPackage);
+      }
       this.addPackageUpdate(targetPackage, {
         version: target.version,
         addToPackageJson: target.addToPackageJson || false,
@@ -800,12 +821,7 @@ export class Migrator {
         continue;
       }
 
-      const dependencies: Record<string, string> = {
-        ...this.packageJson?.dependencies,
-        ...this.packageJson?.devDependencies,
-        ...this.nxInstallation?.plugins,
-        ...(this.nxInstallation && { nx: this.nxInstallation.version }),
-      };
+      const dependencies = this.getDeclaredDependencies();
 
       const filtered: Record<string, PackageUpdate> = {};
       for (const [packageName, packageUpdate] of Object.entries(
@@ -1915,7 +1931,7 @@ function createInstalledPackageVersionsResolver(
           for (const req of nxRequires) {
             try {
               const packageJsonPath = req.resolve('nx/package.json');
-              if (packageJsonPath.startsWith(workspaceRoot)) {
+              if (isWorkspaceInstalledPackage('nx', packageJsonPath, root)) {
                 return readJsonFile<PackageJson>(packageJsonPath).version;
               }
             } catch {}
@@ -1939,8 +1955,8 @@ function createInstalledPackageVersionsResolver(
         );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
-        if (!path.startsWith(workspaceRoot)) {
-          throw new Error('Resolved a package outside the workspace root.');
+        if (!isWorkspaceInstalledPackage(packageName, path, root)) {
+          throw new Error('Resolved a package the workspace does not install.');
         }
         cache[packageName] = packageJson.version;
       }
@@ -2617,7 +2633,18 @@ export async function generateMigrationsJsonAndUpdatePackageJson(
       packageUpdates,
       promptContents,
       minVersionWithSkippedUpdates,
+      uninstalledDeclaredPackages,
     } = await migrator.migrate(walkedTargetPackage, opts.targetVersion);
+
+    if (uninstalledDeclaredPackages) {
+      output.warn({
+        title: `nx migrate could not find these declared packages installed: ${uninstalledDeclaredPackages.join(', ')}`,
+        bodyLines: [
+          `- Their package groups and migrations were skipped.`,
+          `- Undo this run's changes, install the workspace's dependencies and run nx migrate again.`,
+        ],
+      });
+    }
 
     // The cascade collects packageJsonUpdates entries against the cascade
     // root's installed version, but inner per-package pins are only gated
@@ -3380,7 +3407,7 @@ async function runMigrations(
     }
   }
 
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
     if (isContinue) {
@@ -4076,7 +4103,7 @@ async function runOrchestratorReconcileFromCli(
   opts: OrchestratorReconcile,
   args: string[]
 ): Promise<number | void> {
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // The workspace-local nx we are about to hand off to must be new enough to
     // understand the new flags we forward to it.
     assertWorkspaceNxSupportsNewMigrateFlags({
@@ -4126,7 +4153,7 @@ async function runSingleMigrationFromCli(
     );
   }
 
-  if (!__dirname.startsWith(workspaceRoot)) {
+  if (!isRunningWorkspaceNx()) {
     // Must stay after the pre-install: it reads the version that install may
     // have just updated, so checking earlier would falsely refuse a workspace
     // whose package.json bump was not installed yet.
@@ -4186,8 +4213,7 @@ export async function runMigration() {
 
     if (
       !targetsExistingRun(process.argv.slice(3)) &&
-      process.env.NX_USE_LOCAL !== 'true' &&
-      process.env.NX_MIGRATE_USE_LOCAL === undefined
+      !shouldSkipTempMigrateCli()
     ) {
       // The version spec mirrors nxCliPath's; keep the two in sync.
       const cliVersionSpec = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
