@@ -65,9 +65,11 @@ export type DirRefusal =
   // Separate kinds, not one with a flag: which advice is correct turns on which
   // directory was refused, so it has to be the discriminant `remedy_for` (now in
   // native/utils/owned_dir.rs) branches on. Root can take over the shared
-  // container; it cannot help with a per-user directory.
+  // container; it cannot help with a per-user directory, and should not be asked
+  // to open up an arbitrary level above a configured one.
   | { kind: 'foreign-owner'; dir: string; uid: number }
   | { kind: 'foreign-shared-container'; dir: string; uid: number }
+  | { kind: 'foreign-ancestor'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
   | { kind: 'not-private'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
@@ -111,6 +113,8 @@ export function describeRefusal(r: DirRefusal): string {
       return `${r.dir} is owned by uid ${r.uid}, not by you`;
     case 'foreign-shared-container':
       return `${r.dir} belongs to another user (uid ${r.uid}) rather than to you or to root`;
+    case 'foreign-ancestor':
+      return `${r.dir} sits above the configured directory and belongs to another user (uid ${r.uid}) rather than to you or to root`;
     case 'not-tightenable':
       return `${r.dir} is reachable by other users (mode ${asMode(
         r.mode
@@ -351,7 +355,7 @@ const MAX_LINKS = 40;
 function isSafeAncestor(dir: string, stats: Stats): DirRefusal | null {
   const ours = stats.uid === process.getuid!();
   if (!ours && stats.uid !== 0) {
-    return { kind: 'foreign-shared-container', dir, uid: stats.uid };
+    return { kind: 'foreign-ancestor', dir, uid: stats.uid };
   }
   const peerWrite = ours ? 0o002 : 0o022;
   return !(stats.mode & peerWrite) || stats.mode & S_ISVTX

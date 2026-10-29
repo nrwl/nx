@@ -26,10 +26,10 @@ const PEER_WRITE_BITS: u32 = 0o022;
 /// Why a guard refused a directory. Data, not a sentence: `remedy_for` decides
 /// on it.
 ///
-/// `ForeignOwner` and `ForeignSharedContainer` are separate variants rather
-/// than one carrying a flag, because which advice is correct turns on which was
-/// refused: root can take over the shared container, and cannot help with a
-/// per-user directory.
+/// The foreign-owner variants are separate rather than one carrying a flag,
+/// because which advice is correct turns on which directory was refused: root
+/// can take over the shared container, cannot help with a per-user directory,
+/// and should not be asked to open up an arbitrary level above a configured one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DirRefusal {
     NotCreated { dir: PathBuf, code: Option<String> },
@@ -37,6 +37,7 @@ pub enum DirRefusal {
     NotADirectory { dir: PathBuf, symlink: bool },
     ForeignOwner { dir: PathBuf, uid: u32 },
     ForeignSharedContainer { dir: PathBuf, uid: u32 },
+    ForeignAncestor { dir: PathBuf, uid: u32 },
     NotTightenable { dir: PathBuf, mode: u32 },
     PeerWritableNotSticky { dir: PathBuf, mode: u32 },
 }
@@ -81,6 +82,11 @@ pub fn describe_refusal(refusal: &DirRefusal) -> String {
         }
         DirRefusal::ForeignSharedContainer { dir, uid } => format!(
             "{} belongs to another user (uid {}) rather than to you or to root",
+            dir.display(),
+            uid
+        ),
+        DirRefusal::ForeignAncestor { dir, uid } => format!(
+            "{} sits above the configured directory and belongs to another user (uid {}) rather than to you or to root",
             dir.display(),
             uid
         ),
@@ -138,6 +144,10 @@ pub fn remedy_for(refusal: &DirRefusal) -> Option<String> {
                 dir.display()
             ))
         }
+        DirRefusal::ForeignAncestor { dir, .. } => Some(format!(
+            "{} belongs to another user on this machine, so Nx will not create anything beneath it. Point the setting that chose this location at a path where you or root own every level.",
+            dir.display()
+        )),
         DirRefusal::NotADirectory { symlink: false, .. }
         | DirRefusal::NotCreated { .. }
         | DirRefusal::NotInspectable { .. }
@@ -457,17 +467,15 @@ const MAX_LINKS: usize = 40;
 /// Whether a level above a configured directory is safe to look the next name
 /// up in. Owned by us or root, and not writable by other users unless sticky.
 /// Group write on a level of ours is the user's own grant and is accepted.
-fn is_safe_ancestor(dir: &Path, metadata: &std::fs::Metadata) -> GuardResult<()> {
-    let uid = uid_of(metadata);
+fn is_safe_ancestor(dir: &Path, uid: u32, mode: u32) -> GuardResult<()> {
     let ours = uid == current_uid();
     if !ours && uid != 0 {
-        return Err(DirRefusal::ForeignSharedContainer {
+        return Err(DirRefusal::ForeignAncestor {
             dir: dir.to_path_buf(),
             uid,
         });
     }
 
-    let mode = mode_of(metadata);
     let peer_write = if ours { 0o002 } else { PEER_WRITE_BITS };
     if mode & peer_write == 0 || mode & S_ISVTX != 0 {
         Ok(())
@@ -513,7 +521,7 @@ pub fn ensure_safe_ancestry(dir: &Path) -> GuardResult<()> {
                             code: error_code(&e),
                         }
                     })?;
-                    is_safe_ancestor(&judged, &metadata)?;
+                    is_safe_ancestor(&judged, uid_of(&metadata), mode_of(&metadata))?;
                     continue;
                 }
             };
@@ -533,7 +541,7 @@ pub fn ensure_safe_ancestry(dir: &Path) -> GuardResult<()> {
             };
             let metadata = std::fs::symlink_metadata(&next).map_err(not_inspectable)?;
             if metadata.is_dir() {
-                is_safe_ancestor(&next, &metadata)?;
+                is_safe_ancestor(&next, uid_of(&metadata), mode_of(&metadata))?;
                 judged = next;
                 continue;
             }
@@ -923,6 +931,38 @@ mod tests {
                 uid: 0,
             })
             .is_some_and(|r| r.contains("NX_SOCKET_DIR"))
+        );
+    }
+
+    /// A level above a configured directory may be a home directory or a mount,
+    /// so handing it to root and opening it to everyone is never the advice.
+    #[test]
+    fn remedy_for_never_offers_the_chown_for_a_foreign_ancestor() {
+        let remedy = remedy_for(&DirRefusal::ForeignAncestor {
+            dir: PathBuf::from("/home/other"),
+            uid: 1002,
+        })
+        .expect("should advise");
+
+        assert!(!remedy.contains("chown"));
+        assert!(!remedy.contains("chmod"));
+        assert!(!remedy.contains("1777"));
+        assert!(remedy.contains("/home/other"));
+        assert!(remedy.contains("you or root own every level"));
+    }
+
+    #[test]
+    fn is_safe_ancestor_reports_a_foreign_level_as_an_ancestor() {
+        let foreign = current_uid().max(1000) + 1;
+        let refusal = is_safe_ancestor(Path::new("/home/other"), foreign, 0o40755)
+            .expect_err("should refuse");
+
+        assert_eq!(
+            refusal,
+            DirRefusal::ForeignAncestor {
+                dir: PathBuf::from("/home/other"),
+                uid: foreign,
+            }
         );
     }
 

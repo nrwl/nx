@@ -79,6 +79,11 @@ describe('describeRefusal', () => {
       '/d belongs to another user (uid 1001) rather than to you or to root',
     ],
     [
+      'foreign-ancestor',
+      { kind: 'foreign-ancestor', dir: '/d', uid: 1001 },
+      '/d sits above the configured directory and belongs to another user (uid 1001) rather than to you or to root',
+    ],
+    [
       'foreign-owner',
       { kind: 'foreign-owner', dir: '/d', uid: 1001 },
       '/d is owned by uid 1001, not by you',
@@ -619,6 +624,23 @@ describe('ensureSafeAncestry', () => {
     chmodSync(project, 0o775);
 
     expect(ensureSafeAncestry(join(project, 'one')).status).toBe('ok');
+  });
+
+  // Run as a different non-root uid, so the fixture's own levels are foreign.
+  posixOnly('should refuse a foreign level as an ancestor', () => {
+    const realUid = process.getuid!();
+    if (realUid === 0) return;
+    const getuid = vi.spyOn(process, 'getuid').mockReturnValue(realUid + 1);
+    try {
+      const verdict = ensureSafeAncestry(join(base, 'one'));
+
+      expect(verdict.status === 'refused' && verdict.refusal).toMatchObject({
+        kind: 'foreign-ancestor',
+        uid: realUid,
+      });
+    } finally {
+      getuid.mockRestore();
+    }
   });
 
   posixOnly('should follow a link of ours', () => {
