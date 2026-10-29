@@ -11,13 +11,14 @@ The migration runs in two halves:
 1. A deterministic pre-pass that converted the eslintrc configs it could read and replaced the plugins that cannot run on v10.
 2. This prompt: finish what the pre-pass could not do safely, and leave the workspace lint-passing.
 
-Out of scope: changing what rules the workspace enforces beyond what the removed plugins force, and upgrading any package other than the ESLint plugins named here. Source files are edited only for the two cases named in sections 2 and 3: directive comments naming a rule that no longer exists, and `/* eslint-env */` comments.
+Out of scope: changing what rules the workspace enforces beyond what the removed plugins force, and upgrading any package other than the ESLint plugins named here. Source files are edited only for the cases named in sections 2, 3 and 6: directive comments naming a rule that no longer exists or that section 6 renames, and `/* eslint-env */` comments.
 
 <pre_pass_summary note="a deterministic pre-pass already applied these edits; verify the new shape is in place rather than redoing them">
 
 The pre-pass changed, mechanically:
 
 - Converted the remaining eslintrc configs to flat config through the `@nx/eslint:convert-to-flat-config` generator. JavaScript-based configs (`.eslintrc.js`, `.eslintrc.cjs`) are read statically, so the ones built from literal values were converted too.
+- Moved the patterns of the file an `ignore-path` lint target option names into the flat config's `ignores` when the option applies to every run of the target, and removed `no-eslintrc`, in `project.json` lint targets and in the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. A moved file was deleted only when its name contains `eslintignore` and no remaining `ignore-path` names it, so a moved `.gitignore` is still there.
 - Removed `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` from `package.json`, installed `eslint-plugin-import-x` in place of `eslint-plugin-import`, and updated `eslint-plugin-react-hooks` to v7, whose `recommended` preset also enables the React Compiler rules.
 
 The pre-pass also detected and reported, without changing anything:
@@ -28,6 +29,7 @@ The pre-pass also detected and reported, without changing anything:
 - Source files carrying `/* eslint-env */` comments, which ESLint v10 reports as errors.
 - Installed dependencies whose `peerDependencies.eslint` rules out the ESLint the workspace now runs.
 - A newly added `@eslint/js`, whose recommended set is wider than the one the eslintrc config applied.
+- Lint targets that still carry an eslintrc-only ESLint option: `rulesdir`, `resolve-plugins-relative-to`, an `ignore-path` it did not move, or a `no-eslintrc` it did not remove.
 
 The pre-pass does NOT:
 
@@ -232,6 +234,22 @@ ESLint v10 requires Node.js `^20.19.0 || ^22.13.0 || >=24`.
 - [ ] If `package.json` declares `engines.node`, narrow it so it cannot resolve to a Node.js version ESLint v10 rejects.
 - [ ] Update the Node.js version used in CI and in any container image that runs lint.
 
+## 6. Remove the eslintrc-only options from lint targets
+
+**Search pattern**: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to` and `no-eslintrc` in the `options` and `configurations` of lint targets in `project.json`, and in the nx.json `targetDefaults` entries filtered to `@nx/eslint/plugin`. `<advisory_context>` names each one the pre-pass left.
+
+**What changed**: these options only exist for eslintrc. When Nx 24 converted `@nx/eslint:lint` targets to inferred tasks, they stayed on the target. The task passes `ignore-path`, `no-eslintrc` and `resolve-plugins-relative-to` to ESLint as CLI flags, and ESLint v10 rejects each one as an invalid option. `rulesdir` holds a list, which the task never passes on, so the rules in that directory are not loaded at all.
+
+The pre-pass already moved the `ignore-path` files that apply to every run of a target and removed `no-eslintrc` from the targets it converted. It left an `ignore-path` that another one replaces for some runs (one under a configuration, or one a project or a narrower `targetDefaults` entry sets), one on a target with its own `cwd` or on an `eslint` command target, and one that names a file it could not find. It left `no-eslintrc` on `eslint` command targets and on projects whose config it could not convert. A relative path in what is left may be relative to the workspace root, where the removed executor ran ESLint, or to the project root, where the inferred target runs it. Use whichever exists.
+
+**Action items**:
+
+- [ ] `ignore-path`: move the file's patterns into the `ignores` of the flat config that lints the same files, then delete the option. An `ignore-path` under a configuration applies only to runs with that configuration: pass each pattern as an `--ignore-pattern` flag in that configuration's `args`, keeping the `args` the target already sets, which the configuration's value replaces.
+- [ ] `rulesdir`: flat config has no rules directory. Register the directory's rules as a local plugin in the flat config, for example `plugins: { local: { rules } }`, rename each reference to those rules, in configs and in directive comments, to `local/<rule>`, then delete the option.
+- [ ] `resolve-plugins-relative-to`: flat config loads each plugin from the config module that imports it. If the config loads eslintrc-style configs through `FlatCompat`, pass the directory to it as `resolvePluginsRelativeTo`. Otherwise check that every plugin the config imports resolves from the config file. Then delete the option.
+- [ ] `no-eslintrc`: delete the option. Flat config never merges configs from parent directories, so it has no equivalent.
+- [ ] Leave `report-unused-disable-directives` as it is: ESLint v10 still accepts it.
+
 ## Post-Migration Validation
 
 1. Clear the inference cache so renamed configs are re-detected:
@@ -246,11 +264,11 @@ ESLint v10 requires Node.js `^20.19.0 || ^22.13.0 || >=24`.
    nx run-many -t lint
    ```
 
-3. Fix the failures this migration caused and re-run until green. Do not disable a rule the user configured, and do not edit source files beyond the two cases sections 2 and 3 authorize.
+3. Fix the failures this migration caused and re-run until green. Do not disable a rule the user configured, and do not edit source files beyond the cases sections 2, 3 and 6 authorize.
 
-   Expect failures from three places, all of them addressed above. Two are not rule violations at all: a directive comment naming a rule that no longer exists (section 2) and an `/* eslint-env */` comment (section 3), each reported against the comment itself.
+   Expect failures from four places, all of them addressed above. Three are not rule violations at all: a directive comment naming a rule that no longer exists (section 2) and an `/* eslint-env */` comment (section 3), each reported against the comment itself, and a lint target option section 6 covers, which fails as an `Invalid option` error or, for `rulesdir`, as a rule ESLint cannot find.
 
-   The third is a rule-set change, and ESLint v10 is not its source: v10 enforces the same rules as v9, so anything newly enabled comes from a package the pre-pass moved. Two can do that, and `<advisory_context>` says which of them applied. A config that extends `eslint:recommended` and was converted here picks up `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error` from `@eslint/js` when the workspace had no such dependency before. A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset picks up the React Compiler rules, which v7 added to that preset with 12 of them at error severity. Both came from a changed preset default, not from the user, so turn the rules off in the flat config with a short comment rather than editing source, and never weaken `rules-of-hooks` or `exhaustive-deps`.
+   The fourth is a rule-set change, and ESLint v10 is not its source: v10 enforces the same rules as v9, so anything newly enabled comes from a package the pre-pass moved. Two can do that, and `<advisory_context>` says which of them applied. A config that extends `eslint:recommended` and was converted here picks up `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error` from `@eslint/js` when the workspace had no such dependency before. A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset picks up the React Compiler rules, which v7 added to that preset with 12 of them at error severity. Both came from a changed preset default, not from the user, so turn the rules off in the flat config with a short comment rather than editing source, and never weaken `rules-of-hooks` or `exhaustive-deps`.
 
 4. Spot-check that a converted project resolves its config:
 
@@ -261,14 +279,13 @@ ESLint v10 requires Node.js `^20.19.0 || ^22.13.0 || >=24`.
 5. Confirm no `.eslintrc.*` files remain.
 
 <fail_if note="if you cannot reach a passing state within the scope above, stop and report">
-Lint cannot pass without editing source files beyond stale rule directives and `/* eslint-env */` comments, or without disabling a rule the user configured. Write status: failed and name the rule and project in your summary. Do not guess.
+Lint cannot pass without editing source files beyond stale or renamed rule directives and `/* eslint-env */` comments, or without disabling a rule the user configured. Write status: failed and name the rule and project in your summary. Do not guess.
 </fail_if>
 
 ## Nx-Specific Notes
 
 - **Shared base config pattern**: many Nx workspaces have a root `eslint.config.mjs` that each project imports, for example `import baseConfig from '../../eslint.config.mjs'`. Convert and verify the base config first, then the per-project configs.
 - **Inferred plugin targets**: `@nx/eslint/plugin` infers the lint target from the presence of `eslint.config.*`. Renaming or moving a config invalidates inference. After config edits, run `nx reset && nx show project <name>` on a sample project to confirm the target is still there.
-- **Executor options with no flat-config equivalent**: `@nx/eslint:lint` rejects `ignorePath`, `resolvePluginsRelativeTo` and `reportUnusedDisableDirectives` when the project uses flat config. Fold `ignorePath` patterns into `ignores` and `reportUnusedDisableDirectives` into `linterOptions`; `resolvePluginsRelativeTo` has no equivalent.
 
 ## References
 

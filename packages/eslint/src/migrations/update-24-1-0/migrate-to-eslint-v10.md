@@ -15,6 +15,8 @@ Two framework integrations pin ESLint v9 through their own peer ranges, so the u
 
 The `@nx/eslint:convert-to-flat-config` generator does the conversion, so JSON and YAML configs are handled the same way the ESLint v9 migration handled them. JavaScript-based configs (`.eslintrc.js`, `.eslintrc.cjs`) are read statically, never executed: a config whose exported object is made of literals is converted like any other, and one that computes its values is reported instead of guessed at.
 
+Lint targets are converted too. When Nx 24 converted `@nx/eslint:lint` targets to inferred tasks, the eslintrc-only options `ignore-path`, `no-eslintrc`, `resolve-plugins-relative-to` and `rulesdir` stayed on the target, and flat config supports none of them. The conversion moves the patterns of an `ignore-path` file into the flat config's `ignores` when the option applies to every run of the target, and removes `no-eslintrc`, in project configuration and in the `targetDefaults` entries for `@nx/eslint/plugin`. A moved file is deleted only when its name contains `eslintignore` and no remaining option names it, so a `.gitignore` stays. `rulesdir` and `resolve-plugins-relative-to` have no flat-config option to move to, so they are reported, as is an `ignore-path` another one replaces for some runs, such as one under a configuration.
+
 ###### Before
 
 ```js
@@ -67,9 +69,10 @@ Every installed dependency that declares a `peerDependencies.eslint` is checked 
 
 Source files are never edited, and no rule is turned off to make lint pass. ESLint v10 itself enforces nothing new: it ships the same rule set as v9, `@eslint/js` stays at the version the workspace already has, and `typescript-eslint` moves to 8.58, whose recommended set matches the 8.40 one the ESLint v9 migration installed.
 
-Four things can still turn a workspace that linted cleanly on v9 red, and all four are reported rather than fixed:
+Five things can still turn a workspace that linted cleanly on v9 red, and all five are reported rather than fixed:
 
 - Directive comments naming a rule from a removed plugin. Removing the plugin removes its rules, and a directive for a rule ESLint cannot find is an error in its own right, so a `/* eslint-disable react/... */` left in source fails the lint run.
 - `/* eslint-env */` comments. Flat config never read them; ESLint v9 warned that they would become errors, and v10 reports each one as `/* eslint-env */ comments are no longer supported`. The globals they declared have to move into the flat config or into a `/* global */` comment.
 - A config that extends `eslint:recommended` and is converted here. The flat-config translation pulls the recommended set from `@eslint/js`, and a workspace that did not have that package yet gets its v10 release, whose recommended set enables three rules the v9 one did not: `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error`.
+- A lint target that still carries `rulesdir`, `resolve-plugins-relative-to`, an `ignore-path` the conversion did not move, or a `no-eslintrc` it did not remove. ESLint v10 rejects `ignore-path`, `no-eslintrc` and `resolve-plugins-relative-to` as invalid options. `rulesdir` never reaches ESLint, so the rules in its directory are not loaded.
 - A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset. Moving that plugin to v7 grows the preset from 2 rules to 16, adding the React Compiler set with 12 of them at error severity. Configs that reach the rules through `@nx/eslint-plugin`'s `flat/react`, `flat/react-base` or `flat/react-jsx` are unaffected: those pin `rules-of-hooks` and `exhaustive-deps` on ESLint v10.
