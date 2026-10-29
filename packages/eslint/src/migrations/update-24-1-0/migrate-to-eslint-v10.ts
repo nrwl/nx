@@ -15,7 +15,15 @@ import {
   acknowledgeBuildScripts,
   readModulePackageJson,
 } from '@nx/devkit/internal';
-import { coerce, gt, satisfies, subset, validRange, type SemVer } from 'semver';
+import {
+  coerce,
+  gt,
+  lt,
+  satisfies,
+  subset,
+  validRange,
+  type SemVer,
+} from 'semver';
 import * as ts from 'typescript';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -44,8 +52,15 @@ export const V9_ONLY_PLUGINS = [
 
 // Versions `@nx/react` installs for the ESLint v10 stack
 // (`packages/react/src/utils/versions.ts`).
-export const ESLINT_PLUGIN_IMPORT_X_VERSION = '4.16.2';
+export const ESLINT_PLUGIN_IMPORT_X_VERSION = '^4.17.1';
 export const ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION = '7.1.1';
+
+// The first release of each plugin the migration keeps whose peer range admits
+// ESLint v10.
+const ESLINT_V10_SUPPORT_FLOORS = {
+  'eslint-plugin-import-x': '4.16.2',
+  'eslint-plugin-react-hooks': '7.1.0',
+};
 
 // eslint@10's `engines.node`.
 const ESLINT_V10_NODE_RANGE = '^20.19.0 || ^22.13.0 || >=24';
@@ -334,32 +349,26 @@ function replaceV9OnlyPlugins(
   const declared = V9_ONLY_PLUGINS.filter(
     (plugin) => getDependencyVersionFromPackageJson(tree, plugin) !== null
   );
-  const reactHooksSpecifier = getDependencyVersionFromPackageJson(
-    tree,
-    'eslint-plugin-react-hooks'
-  );
-  // Only a plain semver range names a version to compare against. A protocol
-  // specifier (`workspace:*`, `npm:...`) or a dist tag does not, and rewriting
-  // one would swap the resolution the workspace chose for a literal version.
-  const reactHooksMajor =
-    reactHooksSpecifier && validRange(reactHooksSpecifier)
-      ? (coerce(reactHooksSpecifier)?.major ?? null)
-      : null;
-  const reactHooksV7Major = Number(
-    ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION.split('.')[0]
-  );
-  if (reactHooksSpecifier !== null && reactHooksMajor === null) {
-    agentContext.push(
-      `eslint-plugin-react-hooks is declared as "${reactHooksSpecifier}", which names no version to compare, so it was left as it is. Its ESLint v10 support starts at v${reactHooksV7Major}: resolve what that specifier points at and update it at its source if it is below that.`
-    );
-    nextSteps.push(
-      `eslint-plugin-react-hooks is declared as "${reactHooksSpecifier}" and was not updated. Check that it resolves to v${reactHooksV7Major} or later, where its ESLint v10 support starts.`
-    );
-  }
+  const importX = readDeclaredVersion(tree, 'eslint-plugin-import-x');
+  const reactHooks = readDeclaredVersion(tree, 'eslint-plugin-react-hooks');
+  const installImportX = importX
+    ? isBelowV10Support(
+        'eslint-plugin-import-x',
+        importX,
+        agentContext,
+        nextSteps
+      )
+    : declared.includes('eslint-plugin-import');
   const needsReactHooksBump =
-    reactHooksMajor !== null && reactHooksMajor < reactHooksV7Major;
+    !!reactHooks &&
+    isBelowV10Support(
+      'eslint-plugin-react-hooks',
+      reactHooks,
+      agentContext,
+      nextSteps
+    );
 
-  if (declared.length === 0 && !needsReactHooksBump) {
+  if (declared.length === 0 && !installImportX && !needsReactHooksBump) {
     return [];
   }
 
@@ -368,10 +377,7 @@ function replaceV9OnlyPlugins(
   }
 
   const devDependencies: Record<string, string> = {};
-  if (
-    declared.includes('eslint-plugin-import') &&
-    getDependencyVersionFromPackageJson(tree, 'eslint-plugin-import-x') === null
-  ) {
+  if (installImportX) {
     devDependencies['eslint-plugin-import-x'] = ESLINT_PLUGIN_IMPORT_X_VERSION;
   }
   if (needsReactHooksBump) {
@@ -393,16 +399,30 @@ function replaceV9OnlyPlugins(
   if (declared.length > 0) {
     changes.push(
       `removed ${declared.join(', ')} (no ESLint v10 release)${
-        devDependencies['eslint-plugin-import-x']
+        installImportX && !importX
           ? ' and installed eslint-plugin-import-x in place of eslint-plugin-import'
           : ''
       }`
     );
   }
+  if (installImportX && importX) {
+    changes.push(
+      `updated eslint-plugin-import-x to ${ESLINT_PLUGIN_IMPORT_X_VERSION}`
+    );
+  }
+  // v7 added the React Compiler rules to the preset, so a 7.0 install has them.
+  const reactHooksGainsCompilerRules =
+    needsReactHooksBump && reactHooks.version.major < 7;
   if (needsReactHooksBump) {
     changes.push(
-      `updated eslint-plugin-react-hooks to ${ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION}, whose "recommended" preset also enables the React Compiler rules`
+      `updated eslint-plugin-react-hooks to ${ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION}${
+        reactHooksGainsCompilerRules
+          ? ', whose "recommended" preset also enables the React Compiler rules'
+          : ''
+      }`
     );
+  }
+  if (reactHooksGainsCompilerRules) {
     agentContext.push(
       `eslint-plugin-react-hooks moved to ${ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION}, and its "recommended" preset grew from 2 rules to 16: it adds the React Compiler set, 12 of them at error severity. A config that pulls that preset directly reports errors it never reported before. ` +
         "@nx/eslint-plugin's flat/react, flat/react-base and flat/react-jsx presets pin rules-of-hooks and exhaustive-deps on ESLint v10, so a config that reaches the rules through one of them is unaffected. " +
@@ -416,6 +436,42 @@ function replaceV9OnlyPlugins(
   );
 
   return [...declared];
+}
+
+type DeclaredVersion = { specifier: string; version: SemVer | null };
+
+// `version` is null for a specifier that names no version: a protocol
+// (`workspace:*`, `npm:...`) or a dist tag. Rewriting one would swap the
+// resolution the workspace chose for a literal version.
+function readDeclaredVersion(tree: Tree, name: string): DeclaredVersion | null {
+  const specifier = getDependencyVersionFromPackageJson(tree, name);
+  if (specifier === null) {
+    return null;
+  }
+  return {
+    specifier,
+    version: validRange(specifier) ? coerce(specifier) : null,
+  };
+}
+
+// Reports a specifier it cannot compare, and leaves it as it is.
+function isBelowV10Support(
+  name: keyof typeof ESLINT_V10_SUPPORT_FLOORS,
+  { specifier, version }: DeclaredVersion,
+  agentContext: string[],
+  nextSteps: string[]
+): boolean {
+  const floor = ESLINT_V10_SUPPORT_FLOORS[name];
+  if (version) {
+    return lt(version, floor);
+  }
+  agentContext.push(
+    `${name} is declared as "${specifier}", which names no version to compare, so it was left as it is. Its ESLint v10 support starts at ${floor}: resolve what that specifier points at and update it at its source if it is below that.`
+  );
+  nextSteps.push(
+    `${name} is declared as "${specifier}" and was not updated. Check that it resolves to ${floor} or later, where its ESLint v10 support starts.`
+  );
+  return false;
 }
 
 // What the dependency changes left behind in the workspace's own files, plus the

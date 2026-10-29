@@ -329,7 +329,7 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(devDependencies['eslint-plugin-import']).toBeUndefined();
     expect(devDependencies['eslint-plugin-jsx-a11y']).toBeUndefined();
     expect(devDependencies['eslint-plugin-react']).toBeUndefined();
-    expect(devDependencies['eslint-plugin-import-x']).toBe('4.16.2');
+    expect(devDependencies['eslint-plugin-import-x']).toBe('^4.17.1');
     expect(devDependencies['eslint-plugin-react-hooks']).toBe('7.1.1');
     // Nothing referenced the removed plugins, so the react-hooks preset getting
     // wider is the only thing left to hand over.
@@ -357,42 +357,62 @@ describe('migrate-to-eslint-v10 migration', () => {
 
   it('should keep eslint-plugin-react-hooks when it already supports v10', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
-    setDevDependencies({ 'eslint-plugin-react-hooks': '^7.0.0' });
+    setDevDependencies({ 'eslint-plugin-react-hooks': '^7.1.0' });
 
     await update(tree);
 
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
-      'eslint-plugin-react-hooks': '^7.0.0',
+      'eslint-plugin-react-hooks': '^7.1.0',
     });
   });
 
-  it('should report eslint-plugin-react-hooks instead of rewriting a specifier it cannot read', async () => {
-    tree.write('eslint.config.mjs', 'export default [];');
-    setDevDependencies({ 'eslint-plugin-react-hooks': 'workspace:*' });
+  it.each([
+    ['eslint-plugin-react-hooks', '^7.0.0', '7.1.1'],
+    ['eslint-plugin-import-x', '^4.10.0', '^4.17.1'],
+  ])(
+    'should update %s from %s, which predates its ESLint v10 support',
+    async (name, from, to) => {
+      tree.write('eslint.config.mjs', 'export default [];');
+      setDevDependencies({ [name]: from });
 
-    const result = await update(tree);
+      const result = await update(tree);
 
-    expect(readJson(tree, 'package.json').devDependencies).toEqual({
-      'eslint-plugin-react-hooks': 'workspace:*',
-    });
-    expect(
-      [...result.nextSteps, ...result.agentContext].some((entry) =>
-        entry.includes('workspace:*')
-      )
-    ).toBe(true);
-  });
+      expect(readJson(tree, 'package.json').devDependencies).toEqual({
+        [name]: to,
+      });
+      // A 7.0 install already has the React Compiler rules in its preset.
+      expect(result.agentContext).toEqual([]);
+    }
+  );
+
+  it.each(['eslint-plugin-react-hooks', 'eslint-plugin-import-x'])(
+    'should report %s instead of rewriting a specifier it cannot read',
+    async (name) => {
+      tree.write('eslint.config.mjs', 'export default [];');
+      setDevDependencies({ [name]: 'workspace:*' });
+
+      const result = await update(tree);
+
+      expect(readJson(tree, 'package.json').devDependencies).toEqual({
+        [name]: 'workspace:*',
+      });
+      expect(result.nextSteps.join('\n')).toContain(
+        `${name} is declared as "workspace:*" and was not updated.`
+      );
+    }
+  );
 
   it('should not install eslint-plugin-import-x when it is already there', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
     setDevDependencies({
       'eslint-plugin-import': '2.31.0',
-      'eslint-plugin-import-x': '^4.10.0',
+      'eslint-plugin-import-x': '^4.16.2',
     });
 
     await update(tree);
 
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
-      'eslint-plugin-import-x': '^4.10.0',
+      'eslint-plugin-import-x': '^4.16.2',
     });
   });
 

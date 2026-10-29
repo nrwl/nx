@@ -46,7 +46,7 @@ export const eslintPluginReactHooksVersion = '5.0.0';
 
 // ESLint v10 stack. The plugins above can't run on v10, so v10 workspaces swap
 // to eslint-plugin-import-x and react-hooks v7 (no react/jsx-a11y substitute exists).
-export const eslintPluginImportXVersion = '4.16.2';
+export const eslintPluginImportXVersion = '^4.17.1';
 export const eslintPluginReactHooksV7Version = '7.1.1';
 
 export const tsLibVersion = '^2.3.0';
