@@ -1111,8 +1111,8 @@ These standing maintainer calibrations encode this repo's review culture. The ch
 1. **Coverage gaps are advisory.** Missing branches, fixtures, and a missing regression test for the changed behavior itself are all Suggestions — they never block. False coverage — a wrong assertion, or a test that cannot fail — is Critical.
 2. Do not demand tests for deprecation warnings, legacy paths, telemetry wiring, or never-throw wrappers; testable logic inside them remains in scope.
 3. Migration silence and retained dependencies are intentional. Flag only silent correctness failures; users may still import a dependency.
-4. `migrations.json` is already inside the migration trust boundary. Flag it only when data crosses a new boundary (for example HTTP or runtime input).
-5. `nx migrate` and `nx release` temp directories are intentional post-mortem artifacts, not leaks.
+4. Migrations the user approved run as trusted code. Publisher input nx reads before that approval (registry metadata, `packageJsonUpdates`, migration and prompt paths) is not covered by this calibration.
+5. `nx migrate` and `nx release` temp directories are intentional post-mortem artifacts, so leaving them behind is not a leak. Where they are created, and who owns them, is still in scope.
 6. Critical/Important findings must pass the charter's **admission test** — a NET-NEW line with base evidence and a TRIGGER line naming a reachable path. Pre-existing behavior the diff merely touches goes to `### Pre-existing` — reported for follow-up, never blocking. Paths no supported workflow reaches are Suggestions at most. Deliberate behavior backed by tests and documentation is a callout, not a blocker.
 7. Do not demand scattered defensive guards when the invariant can be fixed at its source.
 8. Comment-volume asks are Suggestions. Inaccurate/stale comments and required `@deprecated` / `TODO(vNN)` markers remain blocking.

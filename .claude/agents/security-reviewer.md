@@ -86,7 +86,7 @@ This applies to `SECURITY_SOUND` exactly as it applies to a finding, and matters
   - a long-lived process (the daemon, plugin workers) that keeps a client's temp path or env after that path may have been deleted
   - a socket or pid path read from a file whose directory another user can recreate
 
-  The fix reuses `packages/nx/src/utils/owned-private-dir.ts` or `packages/nx/src/native/utils/owned_dir.rs`. A new ownership check is itself a finding.
+  The fix reuses `packages/nx/src/utils/owned-private-dir.ts` or `packages/nx/src/native/utils/owned_dir.rs`. A hand-rolled check is a finding only when it misses a case those helpers cover (final component only, a followed symlink, a root other users can write to). Reimplementing one where a helper is reachable is a Suggestion.
 
 - **A package publisher, before the user approves anything.** Versions, package names, `packageJsonUpdates` keys, prompt paths and manifests that nx fetches or installs while it plans a migration are untrusted. Flag them when they reach a shell string, package manager argv, an object key, or a path inside the workspace, and flag installs that run lifecycle scripts.
 - **A remote cache artifact, even from the org's own cache.** The artifact chooses file names, directory names, symlinks and terminal output. Restoring it is one sink. A later build writing through a restored symlink, a plugin reading a path out of a restored file, and replaying stored terminal output are others.
