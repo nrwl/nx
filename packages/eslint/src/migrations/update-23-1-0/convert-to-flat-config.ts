@@ -15,6 +15,7 @@ import {
   JS_ESLINTRC_FILENAMES,
   readStaticJsEslintrcFromTree,
 } from '../../generators/convert-to-flat-config/converters/static-js-config';
+import { findEslintFile } from '../../generators/utils/eslint-file';
 
 // Output formatters ESLint removed in v9. Built-in names only; community
 // formatter packages (referenced by their package name) keep working.
@@ -54,10 +55,11 @@ type RootConfigState = 'flat' | 'js' | 'convertible' | 'none';
 /**
  * Hybrid migration paired with `convert-to-flat-config.md`. The deterministic
  * half reuses the `@nx/eslint:convert-to-flat-config` generator to convert
- * JSON/YAML eslintrc configs to flat config (the version bump is owned by
- * `packageJsonUpdates`, so it runs with `keepExistingVersions`). It then returns
- * `agentContext` describing the work the generator could not do deterministically
- * (JavaScript-based configs, removed output formatters, the passing-state
+ * eslintrc configs to flat config, JavaScript-based ones included when it can
+ * read them statically (the version bump is owned by `packageJsonUpdates`, so it
+ * runs with `keepExistingVersions`). It then returns `agentContext` describing
+ * the work the generator could not do deterministically (JavaScript-based configs
+ * that compute their values, removed output formatters, the passing-state
  * baseline) so the paired prompt's agent can finish the job and keep the
  * workspace lint-passing.
  */
@@ -108,6 +110,7 @@ export default async function update(tree: Tree): Promise<{
   if (rootState === 'js') {
     agentContext.push(
       'The root ESLint config is JavaScript-based (.eslintrc.js or .eslintrc.cjs) and was not converted automatically. ' +
+        'The conversion takes a JavaScript root config only when it exports an object built from literal values and no other root eslintrc file sits beside it. ' +
         'Convert the whole workspace to flat config by hand: produce an eslint.config.mjs at the root and one per project, ' +
         'preserving the existing rules, plugins, parser options and overrides.'
     );
@@ -120,7 +123,7 @@ export default async function update(tree: Tree): Promise<{
     agentContext.push(
       `These project ESLint configs are JavaScript-based and were not converted automatically: ${skippedJsConfigs.join(
         ', '
-      )}. Convert each one to a flat config (eslint.config.mjs) manually, mirroring the conversion applied to the JSON/YAML configs.`
+      )}. Convert each one to a flat config (eslint.config.mjs) manually, mirroring the conversion applied to the other configs.`
     );
     nextSteps.push(
       `Convert these JavaScript-based ESLint configs to flat config manually: ${skippedJsConfigs.join(
@@ -174,8 +177,14 @@ function detectRootConfigState(tree: Tree): RootConfigState {
   if (hasFlatConfig) {
     return 'flat';
   }
-  if (tree.exists('.eslintrc.js') || tree.exists('.eslintrc.cjs')) {
-    return 'js';
+  const jsRoot = JS_ESLINTRC_FILENAMES.find((file) => tree.exists(file));
+  if (jsRoot) {
+    // The generator converts the one root eslintrc `findEslintFile` picks, and a
+    // JavaScript one only when it can read it statically.
+    return findEslintFile(tree) === jsRoot &&
+      readStaticJsEslintrcFromTree(tree, '', jsRoot).kind === 'config'
+      ? 'convertible'
+      : 'js';
   }
   if (ROOT_ESLINTRC_CANDIDATES.some((file) => tree.exists(file))) {
     return 'convertible';
