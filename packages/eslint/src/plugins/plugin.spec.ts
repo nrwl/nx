@@ -2,7 +2,11 @@ import {
   calculateHashesForCreateNodes,
   globWithWorkspaceContext,
 } from '@nx/devkit/internal';
-import { CreateNodesContext } from '@nx/devkit';
+import {
+  CreateNodesContext,
+  getOutputsForTargetAndConfiguration,
+  type ProjectGraphProjectNode,
+} from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
@@ -278,7 +282,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -337,7 +341,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -429,7 +433,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -488,7 +492,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -623,7 +627,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -665,7 +669,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -673,6 +677,34 @@ describe('@nx/eslint/plugin', () => {
           },
         }
       `);
+    });
+
+    it('should cache the report ESLint writes from the project root', async () => {
+      createFiles({
+        'libs/my-lib/.eslintrc.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+        'libs/my-lib/index.ts': `console.log('hello world')`,
+      });
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+      });
+      const node: ProjectGraphProjectNode = {
+        name: 'my-lib',
+        type: 'lib',
+        data: { root: 'libs/my-lib', ...projects['libs/my-lib'] },
+      };
+      const target = { project: 'my-lib', target: 'lint' };
+
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { 'output-file': '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(target, {}, node)
+      ).toStrictEqual([]);
     });
 
     // This is intentionally disabled, since we should always create a node for project that contains eslint config
@@ -806,7 +838,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -849,7 +881,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -910,7 +942,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -975,7 +1007,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -1061,7 +1093,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },
@@ -1121,7 +1153,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.outputFile}",
+                    "{options.cwd ?? .}/{options.output-file}",
                   ],
                 },
               },

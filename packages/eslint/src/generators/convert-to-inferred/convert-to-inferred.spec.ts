@@ -1182,12 +1182,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it.each`
       outputs                                                 | expectedOutputs
-      ${['{options.outputFile}']}                             | ${['{options.cwd ?? .}/{options.output-file}']}
+      ${['{options.outputFile}']}                             | ${undefined}
       ${['{projectRoot}/other', '{options.outputFile}']}      | ${['{projectRoot}/other', '{options.cwd ?? .}/{options.output-file}']}
       ${['{workspaceRoot}/reports', '!{options.outputFile}']} | ${['{workspaceRoot}/reports', '!{options.cwd ?? .}/{options.output-file}']}
       ${['{options.outputFile}.meta']}                        | ${['{options.cwd ?? .}/{options.output-file}.meta']}
       ${undefined}                                            | ${undefined}
-      ${[]}                                                   | ${undefined}
+      ${[]}                                                   | ${[]}
     `(
       'should rewrite only a declared report output: $outputs',
       async ({ outputs, expectedOutputs }) => {
@@ -1196,6 +1196,31 @@ describe('Eslint - Convert Executors To Plugin', () => {
           appRoot: 'libs/core',
         });
         project.targets.lint.options.outputFile = 'reports/x.json';
+        project.targets.lint.outputs = outputs;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets.lint.outputs).toStrictEqual(
+          expectedOutputs
+        );
+      }
+    );
+
+    it.each`
+      options                                | configurations                                 | outputs                    | expectedOutputs
+      ${{ outputFile: '../reports/x.json' }} | ${undefined}                                   | ${undefined}               | ${[]}
+      ${{ outputFile: 'reports/x.json' }}    | ${{ ci: { outputFile: '../reports/x.json' } }} | ${['{projectRoot}/other']} | ${['{projectRoot}/other']}
+    `(
+      'should leave a report outside the workspace out of the outputs: $options $configurations',
+      async ({ options, configurations, outputs, expectedOutputs }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        Object.assign(project.targets.lint.options, options);
+        project.targets.lint.configurations = configurations;
         project.targets.lint.outputs = outputs;
         updateProjectConfiguration(tree, project.name, project);
 

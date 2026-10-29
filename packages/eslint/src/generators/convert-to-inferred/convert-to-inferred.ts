@@ -27,6 +27,7 @@ import {
   createNodes,
   getLintCommand,
   getStandaloneSrcPath,
+  lintReportOutput,
   type EslintPluginOptions,
 } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
@@ -74,10 +75,10 @@ export async function convertToInferred(tree: Tree, options: Schema) {
                 nxJson,
                 projectNode.data.tags
               ),
-              // the migrator already dropped outputs equal to the plugin's, so
-              // read the ones Nx resolved before the conversion
+              // the migrator already dropped empty outputs and those equal to
+              // the plugin's, so read the ones Nx resolved before the conversion
               projectNode.data.targets?.[inferredTargetConfiguration.name]
-                ?.outputs ?? []
+                ?.outputs
             );
           },
           targetPluginOptionMapper: (targetName) => ({ targetName }),
@@ -146,7 +147,7 @@ function postTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration,
   convertedTarget: TargetConfiguration,
-  originalOutputs: string[]
+  originalOutputs: string[] | undefined
 ): TargetConfiguration {
   if (target.inputs) {
     const normalizeInput = (input: string) => {
@@ -191,9 +192,13 @@ function postTargetTransformer(
     tree.root
   );
   const baseOptions = structuredClone(target.options ?? {});
+  const reportPaths: string[] = [];
 
   if (target.options) {
     handlePropertiesInOptions(target.options, projectDetails, cwd, false);
+    if (target.options['output-file']) {
+      reportPaths.push(joinPathFragments(cwd, target.options['output-file']));
+    }
   }
 
   for (const configurationName in convertedTarget.configurations) {
@@ -230,6 +235,11 @@ function postTargetTransformer(
         }
       }
     }
+    if (configuration['output-file']) {
+      reportPaths.push(
+        joinPathFragments(configurationCwd, configuration['output-file'])
+      );
+    }
     if (Object.keys(configuration).length !== 0) {
       target.configurations ??= {};
       target.configurations[configurationName] = configuration;
@@ -259,23 +269,44 @@ function postTargetTransformer(
     });
   }
 
-  // added after processTargetOutputs, which would root them at the project
-  const declaredReportOutputs = originalOutputs.filter(isReportOutput);
+  // added after processTargetOutputs, which would root them at the project,
+  // in place of the plugin's report output it appends
+  const declaredReportOutputs = (originalOutputs ?? []).filter(isReportOutput);
   if (declaredReportOutputs.length !== 0) {
     target.outputs = [
-      ...(target.outputs ?? []).filter((output) => !isReportOutput(output)),
+      ...(target.outputs ?? []).filter((output) => output !== lintReportOutput),
       ...declaredReportOutputs.map((output) =>
-        output.replaceAll(reportOutputToken, convertedReportOutput)
+        output.replaceAll(reportOutputToken, lintReportOutput)
       ),
     ];
+    if (
+      isDeepStrictEqual(target.outputs, inferredTargetConfiguration.outputs)
+    ) {
+      delete target.outputs;
+    }
+  }
+
+  // Nx fails a task whose output lands outside the workspace, so a target
+  // writing its report there keeps only its own outputs
+  if (
+    declaredReportOutputs.length === 0 &&
+    reportPaths.some((reportPath) => reportPath.startsWith('../'))
+  ) {
+    target.outputs = (target.outputs ?? []).filter(
+      (output) => output !== lintReportOutput
+    );
+  }
+
+  // the migrator drops an empty `outputs`, which would let the target inherit
+  // the plugin's report output
+  if (originalOutputs?.length === 0) {
+    target.outputs = [];
   }
 
   return target;
 }
 
 const reportOutputToken = '{options.outputFile}';
-// ESLint resolves `output-file` from the cwd run-commands runs it in
-const convertedReportOutput = '{options.cwd ?? .}/{options.output-file}';
 
 function handlePropertiesInOptions(
   options: Record<string, any>,

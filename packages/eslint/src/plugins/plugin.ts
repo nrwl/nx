@@ -470,6 +470,9 @@ export function getStandaloneSrcPath(
   return undefined;
 }
 
+// ESLint resolves `output-file` from the cwd run-commands runs it in
+export const lintReportOutput = '{options.cwd ?? .}/{options.output-file}';
+
 export function getLintCommand(
   projectRoot: string,
   standaloneSrcPath: string | undefined
@@ -512,7 +515,7 @@ function buildEslintTargets(
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
-    outputs: ['{options.outputFile}'],
+    outputs: [lintReportOutput],
     metadata: {
       technologies: ['eslint'],
       description: 'Runs ESLint on project',
