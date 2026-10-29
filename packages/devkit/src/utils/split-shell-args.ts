@@ -1,9 +1,3 @@
-/**
- * Splits a string into the words a command gets when a shell runs it, as
- * run-commands does: with POSIX sh rules, or on Windows with cmd.exe and the C
- * runtime's argv rules. Variables expand from `process.env`; command
- * substitution and globs stay literal.
- */
 export function splitShellArgs(value: string): string[] {
   return process.platform === 'win32'
     ? splitWindowsArgs(applyCmdRules(value))
