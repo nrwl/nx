@@ -1,4 +1,4 @@
-import { realpathSync } from 'fs';
+import { existsSync } from 'fs';
 import { createRequire } from 'module';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'path';
 import { isTrustedWorkspaceEntry, workspaceRoot } from './workspace-root';
@@ -107,18 +107,17 @@ export function resolveNxBinFrom(dir: string): string {
   // createRequire avoids nx's own exports field answering by self-reference.
   const dirRequire = createRequire(join(dir, 'package.json'));
   const nxBin = dirRequire.resolve('nx/bin/nx.js');
-  const realNxBin = realpathSync(nxBin);
-  const nodeModules = dirRequire.resolve.paths('nx')?.find((p) => {
-    try {
-      return realNxBin.startsWith(realpathSync(join(p, 'nx')) + sep);
-    } catch {
-      return false;
-    }
-  });
-  if (
-    nodeModules &&
-    !isTrustedWorkspaceEntry(dirname(nodeModules), basename(nodeModules))
-  ) {
+  const nodeModules = dirRequire.resolve
+    .paths('nx')
+    ?.find(
+      (p) =>
+        existsSync(join(p, 'nx', 'package.json')) ||
+        existsSync(join(p, 'nx', 'bin', 'nx.js'))
+    );
+  if (!nodeModules) {
+    throw new Error(`Could not find the nx installation for ${nxBin}`);
+  }
+  if (!isTrustedWorkspaceEntry(dirname(nodeModules), basename(nodeModules))) {
     throw new Error(`Refusing the nx installed in ${nodeModules}`);
   }
   return nxBin;
