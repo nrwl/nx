@@ -227,8 +227,11 @@ function postTargetTransformer(
         false
       );
       for (const [option, value] of Object.entries(inheritedOptions)) {
+        // only `convertedTarget` has the target defaults, but it keeps the
+        // project's own options under the executor's names
         if (
           !(option in configuration) &&
+          !(option in convertedTarget.configurations[configurationName]) &&
           !isDeepStrictEqual(value, target.options?.[option])
         ) {
           configuration[option] = value;

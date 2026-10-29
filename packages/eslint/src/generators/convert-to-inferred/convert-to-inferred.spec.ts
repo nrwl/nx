@@ -1127,6 +1127,31 @@ describe('Eslint - Convert Executors To Plugin', () => {
       });
     });
 
+    it('should keep a configuration value from target defaults over an inherited path', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        lint: { configurations: { ci: { cwd: '.', format: 'json' } } },
+      };
+      updateNxJson(tree, nxJson);
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.format = './tools/formatter.cjs';
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        format: '../../tools/formatter.cjs',
+      });
+      expect(updatedProject.targets.lint.configurations).toBeUndefined();
+      expect(readNxJson(tree).targetDefaults.lint).toStrictEqual({
+        configurations: { ci: { cwd: '.', format: 'json' } },
+      });
+    });
+
     it('should keep an empty outputFile in a configuration disabling the inherited report', async () => {
       const project = createTestProject(tree, {
         appName: 'core',
