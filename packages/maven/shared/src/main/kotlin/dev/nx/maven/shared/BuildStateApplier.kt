@@ -6,14 +6,13 @@ import org.apache.maven.project.MavenProjectHelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.NoSuchFileException
 
 /**
  * Utility for applying build state to Maven projects.
  *
- * Note on warnings: This class uses warnings (not errors) for missing files/artifacts
- * because build state may reference files that don't exist yet in incremental builds,
- * or were cleaned between builds. These conditions are recoverable - Maven will rebuild
- * the missing artifacts as needed. Failing hard would break valid incremental build scenarios.
+ * Paths that no longer exist are skipped rather than failing the build, because build state
+ * may reference files that were cleaned between builds. Maven rebuilds them as needed.
  *
  * The build state file can be restored from a remote cache, so its paths are only applied when
  * they stay where the recorder would have put them: inputs inside the workspace or the project,
@@ -24,7 +23,10 @@ object BuildStateApplier {
 
     private fun resolveWithin(path: String, basedir: File, roots: List<File>): String? {
         val resolved = try {
-            File(path).let { if (it.isAbsolute) it else File(basedir, path) }.canonicalFile.toPath()
+            File(path).let { if (it.isAbsolute) it else File(basedir, path) }.toPath().toRealPath()
+        } catch (_: NoSuchFileException) {
+            log.debug("    Skipping missing build state path: $path")
+            return null
         } catch (_: Exception) {
             null
         }
@@ -135,42 +137,34 @@ object BuildStateApplier {
             log.debug("    Added ${testClasspath.size} test classpath elements")
         }
 
-        // Apply main artifact (only if file exists)
+        // Apply main artifact
         buildState.mainArtifact?.let { resolveWithin(it.file, basedir, inputRoots) }?.let { absPath ->
             val file = File(absPath)
-            if (file.exists()) {
-                log.debug("    Applied main artifact: ${file.name}")
-                project.artifact.file = file
-            } else {
-                log.warn("    Main artifact file does not exist: ${file.absolutePath}")
-            }
+            log.debug("    Applied main artifact: ${file.name}")
+            project.artifact.file = file
         }
 
-        // Apply attached artifacts (only if files exist and not already attached)
+        // Apply attached artifacts (only if not already attached)
         var attachedCount = 0
         buildState.attachedArtifacts.forEach { artifactInfo ->
             val absPath = resolveWithin(artifactInfo.file, basedir, inputRoots) ?: return@forEach
             val file = File(absPath)
-            if (file.exists()) {
-                if (projectHelper != null) {
-                    val classifier = artifactInfo.classifier
-                    // Check if already attached to avoid "already attached, replacing" warnings
-                    val alreadyAttached = project.attachedArtifacts.any { existing ->
-                        existing.type == artifactInfo.type &&
-                        (existing.classifier ?: "") == (classifier ?: "")
+            if (projectHelper != null) {
+                val classifier = artifactInfo.classifier
+                // Check if already attached to avoid "already attached, replacing" warnings
+                val alreadyAttached = project.attachedArtifacts.any { existing ->
+                    existing.type == artifactInfo.type &&
+                    (existing.classifier ?: "") == (classifier ?: "")
+                }
+                if (!alreadyAttached) {
+                    when {
+                        classifier.isNullOrEmpty() -> projectHelper.attachArtifact(project, artifactInfo.type, file)
+                        else -> projectHelper.attachArtifact(project, artifactInfo.type, classifier, file)
                     }
-                    if (!alreadyAttached) {
-                        when {
-                            classifier.isNullOrEmpty() -> projectHelper.attachArtifact(project, artifactInfo.type, file)
-                            else -> projectHelper.attachArtifact(project, artifactInfo.type, classifier, file)
-                        }
-                        attachedCount++
-                    }
-                } else {
-                    log.warn("    Cannot attach artifact (no MavenProjectHelper): ${file.name}")
+                    attachedCount++
                 }
             } else {
-                log.warn("    Attached artifact file does not exist: ${file.absolutePath}")
+                log.warn("    Cannot attach artifact (no MavenProjectHelper): ${file.name}")
             }
         }
         if (attachedCount > 0) {
@@ -182,12 +176,8 @@ object BuildStateApplier {
         // Apply pomFile if it was modified (e.g., by flatten-maven-plugin)
         buildState.pomFile?.let { resolveWithin(it, basedir, inputRoots) }?.let { absPath ->
             val pomFile = File(absPath)
-            if (pomFile.exists()) {
-                log.info("Applying modified pomFile: ${pomFile.absolutePath}")
-                project.setPomFile(pomFile)
-            } else {
-                log.warn("Modified pomFile does not exist, skipping: ${pomFile.absolutePath}")
-            }
+            log.info("Applying modified pomFile: ${pomFile.absolutePath}")
+            project.setPomFile(pomFile)
         }
     }
 }

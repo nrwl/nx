@@ -126,6 +126,20 @@ class BuildStateApplierTest {
   }
 
   @Test
+  fun `ignores symlinks that leave the workspace behind a missing directory`() {
+    Files.createSymbolicLink(File(projectRoot, "target/link").toPath(), outside.toPath())
+    apply(stateWithEveryPath("target/missing/../link"))
+    assertNothingApplied()
+  }
+
+  @Test
+  fun `ignores absolute symlinks that leave the workspace behind a missing directory`() {
+    Files.createSymbolicLink(File(projectRoot, "target/link").toPath(), outside.toPath())
+    apply(stateWithEveryPath(File(projectRoot, "target/missing/../link").path))
+    assertNothingApplied()
+  }
+
+  @Test
   fun `ignores symlinks that leave the workspace behind a path too long to canonicalize`() {
     Files.createSymbolicLink(File(projectRoot, "target/link").toPath(), outside.toPath())
     apply(stateWithEveryPath(File(projectRoot, "target/link").path + "/a/..".repeat(1200)))
