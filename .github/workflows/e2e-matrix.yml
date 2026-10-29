@@ -116,10 +116,6 @@ jobs:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
 
-      - name: Install Cypress
-        if: steps.cache-cypress.outputs.cache-hit != 'true'
-        run: npx cypress install
-
   prepare-matrix:
     name: Prepare matrix combinations
     if: ${{ github.repository_owner == 'nrwl' }}
@@ -218,10 +214,6 @@ jobs:
         with:
           path: '${{ github.workspace }}/.cypress'
           key: ${{ runner.os }}-cypress
-
-      - name: Install Cypress
-        if: steps.cache-cypress.outputs.cache-hit != 'true'
-        run: npx cypress install
 
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
