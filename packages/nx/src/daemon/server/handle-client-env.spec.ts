@@ -26,6 +26,7 @@ vi.mock('../client/daemon-environment', async (importOriginal) => {
       actual.normalizeDaemonEnvironmentForGraph,
     getLiveClientBerryEnv: actual.getLiveClientBerryEnv,
     setLiveClientBerryEnv: actual.setLiveClientBerryEnv,
+    withLiveBerryBinFolders: actual.withLiveBerryBinFolders,
     withoutBerryBinFolders: actual.withoutBerryBinFolders,
     withoutBerryBinFoldersOnPath: actual.withoutBerryBinFoldersOnPath,
     withTrustedBerryBinFolders: actual.withTrustedBerryBinFolders,
@@ -341,6 +342,35 @@ describe('handleClientEnv', () => {
         await flushMicrotasks();
 
         expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it("keeps a nested Yarn command's parent folder while the parent's client is connected", async () => {
+        const outer = new EventEmitter();
+        await handleClientEnv(yarnEnv, outer);
+        const innerFolder = join(root, 'xfs-0000000c');
+        mkdirSync(innerFolder, { mode: 0o755 });
+        const inner = new EventEmitter();
+        await handleClientEnv(
+          {
+            BERRY_BIN_FOLDER: innerFolder,
+            PATH: [innerFolder, folder, '/usr/bin'].join(delimiter),
+          },
+          inner
+        );
+        setWorkerEnv.mockClear();
+
+        inner.emit('close');
+        await flushMicrotasks();
+
+        const outerPath = { PATH: [folder, '/usr/bin'].join(delimiter) };
+        expect(setWorkerEnv).toHaveBeenCalledWith(outerPath);
+        expect(getLiveClientBerryEnv()).toEqual(outerPath);
+
+        outer.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenLastCalledWith({ PATH: '/usr/bin' });
         expect(getLiveClientBerryEnv()).toEqual({});
       });
 

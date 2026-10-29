@@ -9,6 +9,7 @@ import {
   hasBerryBinFolders,
   normalizeDaemonEnvironmentForGraph,
   setLiveClientBerryEnv,
+  withLiveBerryBinFolders,
   withoutBerryBinFolders,
   withoutBerryBinFoldersOnPath,
   withTrustedBerryBinFolders,
@@ -126,8 +127,11 @@ function trackLiveClient(
   liveBerryClients.set(client, env.BERRY_BIN_FOLDER);
   client.once('close', () => {
     liveBerryClients.delete(client);
-    if (!isBerryFolderLive(getLiveClientBerryEnv())) {
-      setLiveClientBerryEnv(undefined);
+    const liveClientEnv = getLiveClientBerryEnv();
+    if (!isBerryFolderLive(liveClientEnv)) {
+      setLiveClientBerryEnv(
+        withLiveBerryBinFolders(liveClientEnv, liveBerryFolders())
+      );
     }
     dropUnownedBerryFolders().catch((e) => {
       serverLogger.log(
@@ -141,6 +145,14 @@ function isBerryFolderLive(env: NodeJS.ProcessEnv): boolean {
   return (
     hasBerryBinFolders(env) &&
     [...liveBerryClients.values()].includes(env.BERRY_BIN_FOLDER)
+  );
+}
+
+function liveBerryFolders(): Set<string> {
+  return new Set(
+    [...liveBerryClients.values()].filter(
+      (folder): folder is string => folder !== undefined
+    )
   );
 }
 
@@ -159,8 +171,10 @@ function workerEnv(
 /**
  * Once no connected client carries the applied env's bin folders, their Yarn
  * command is about to delete them, so plugin workers stop resolving through
- * them. A newer client's apply either lands after this forward or, if it ran
- * while this waited, has already forwarded its own env and is left in place.
+ * them. A nested Yarn command's PATH also carries its parent's folder, which
+ * stays while the parent's client is connected. A newer client's apply either
+ * lands after this forward or, if it ran while this waited, has already
+ * forwarded its own env and is left in place.
  */
 async function dropUnownedBerryFolders(): Promise<void> {
   while (inFlightApply) {
@@ -174,8 +188,14 @@ async function dropUnownedBerryFolders(): Promise<void> {
   ) {
     return;
   }
-  setLiveClientBerryEnv(undefined);
-  await runApply(forwardEnvToPluginWorkers(workerEnv(appliedEnv, false)));
+  // The applied env's PATH never held the bin folders; the live client env does.
+  const keptEnv = withLiveBerryBinFolders(
+    { ...appliedEnv, ...getLiveClientBerryEnv() },
+    liveBerryFolders()
+  );
+  setLiveClientBerryEnv(keptEnv);
+  workersHoldBerryFolders = hasBerryBinFolders(keptEnv);
+  await runApply(forwardEnvToPluginWorkers(keptEnv as Record<string, string>));
 }
 
 async function applyEnvChange(

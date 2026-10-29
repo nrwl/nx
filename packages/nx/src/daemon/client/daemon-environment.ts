@@ -544,21 +544,39 @@ export function withoutBerryBinFolders(
 export function withTrustedBerryBinFolders(
   env: NodeJS.ProcessEnv
 ): NodeJS.ProcessEnv {
-  const trusted = filterBerryBinFoldersOnPath(env, isTrustedBerryBinFolder);
-  if (
-    trusted.BERRY_BIN_FOLDER &&
-    !isTrustedBerryBinFolder(trusted.BERRY_BIN_FOLDER)
-  ) {
-    delete trusted.BERRY_BIN_FOLDER;
+  return withBerryBinFoldersKept(env, isTrustedBerryBinFolder);
+}
+
+/**
+ * Like withTrustedBerryBinFolders, but also drops every bin folder outside
+ * `liveFolders`.
+ */
+export function withLiveBerryBinFolders(
+  env: NodeJS.ProcessEnv,
+  liveFolders: ReadonlySet<string>
+): NodeJS.ProcessEnv {
+  return withBerryBinFoldersKept(
+    env,
+    (dir) => liveFolders.has(dir) && isTrustedBerryBinFolder(dir)
+  );
+}
+
+function withBerryBinFoldersKept(
+  env: NodeJS.ProcessEnv,
+  keep: (dir: string) => boolean
+): NodeJS.ProcessEnv {
+  const kept = filterBerryBinFoldersOnPath(env, keep);
+  if (kept.BERRY_BIN_FOLDER && !keep(kept.BERRY_BIN_FOLDER)) {
+    delete kept.BERRY_BIN_FOLDER;
   }
-  return trusted;
+  return kept;
 }
 
 let liveClientBerryEnv: NodeJS.ProcessEnv = {};
 
 /**
- * The PATH and BERRY_BIN_FOLDER of the env the daemon applied last, or nothing
- * once no connected client carries those bin folders. The daemon's own PATH
+ * The PATH and BERRY_BIN_FOLDER of the env the daemon applied last, keeping
+ * only the bin folders a connected client still carries. The daemon's own PATH
  * lacks the client's bin folders, so workers spawned for that client's request
  * take them here.
  */
