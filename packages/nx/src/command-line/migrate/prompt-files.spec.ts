@@ -49,6 +49,14 @@ describe('resolvePrompt', () => {
     ).toThrow(PromptResolutionError);
   });
 
+  it('should throw when the prompt file name has a character reserved on Windows', () => {
+    vol.fromJSON({ '/root/migrations/prompts/project.json:x.md': '# Prompt' });
+
+    expect(() =>
+      resolvePrompt('prompts/project.json:x.md', '/root/migrations')
+    ).toThrow(PromptResolutionError);
+  });
+
   it('should throw when the prompt path escapes the migrations directory through a link', () => {
     vol.fromJSON({
       '/root/migrations/migrations.json': '{}',
