@@ -225,9 +225,11 @@ export function createPackageJson(
 
   // npm
   if (rootPackageJson.overrides && !options.skipOverrides) {
-    // npm throws EOVERRIDE when an override key is also a direct dependency
-    // (unless specs match). The pruned dist pins exact versions and already
-    // resolved everything via the lockfile, so drop those redundant overrides.
+    // npm throws EOVERRIDE when an override changes the version of a direct
+    // dependency (unless specs match). The pruned dist pins exact versions and
+    // already resolved everything via the lockfile, so drop those redundant
+    // overrides. Overrides nested under a direct dependency only affect its
+    // dependencies, which npm accepts, so they are kept.
     const mergedOverrides = {
       ...rootPackageJson.overrides,
       ...packageJson.overrides,
@@ -235,15 +237,25 @@ export function createPackageJson(
     const overrides: typeof mergedOverrides = {};
     let hasOverrides = false;
     for (const name in mergedOverrides) {
+      let override = mergedOverrides[name];
       if (
         packageJson.dependencies?.[name] ||
         packageJson.devDependencies?.[name] ||
         packageJson.peerDependencies?.[name] ||
         packageJson.optionalDependencies?.[name]
       ) {
-        continue;
+        if (typeof override !== 'object' || override === null) {
+          continue;
+        }
+        // "." overrides the version of the package itself
+        const nestedOverrides = { ...override };
+        delete nestedOverrides['.'];
+        if (Object.keys(nestedOverrides).length === 0) {
+          continue;
+        }
+        override = nestedOverrides;
       }
-      overrides[name] = mergedOverrides[name];
+      overrides[name] = override;
       hasOverrides = true;
     }
     if (hasOverrides) {
