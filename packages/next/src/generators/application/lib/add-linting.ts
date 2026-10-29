@@ -35,6 +35,7 @@ export async function addLinting(
   const tasks: GeneratorCallback[] = [];
 
   if (
+    options.linter === 'eslint' &&
     !options.skipPackageJson &&
     !getInstalledEslintVersion(host) &&
     ((await isNext15(host)) || (await isNext14(host)))
