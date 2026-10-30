@@ -433,7 +433,14 @@ impl HashPlanner {
                 )?);
 
                 if let Some(context) = &context {
-                    self.replace_with_configuration(task, context, &mut ids, always_on_id, always);
+                    self.replace_with_configuration(
+                        task,
+                        &task_graph,
+                        context,
+                        &mut ids,
+                        always_on_id,
+                        always,
+                    );
                 }
 
                 // A continuous dependency serves this task from its own process, so
@@ -585,6 +592,7 @@ impl HashPlanner {
     fn replace_with_configuration(
         &self,
         task: &Task,
+        task_graph: &TaskGraph,
         context: &UltracacheContext,
         ids: &mut Vec<u32>,
         always_on_id: u32,
@@ -592,8 +600,23 @@ impl HashPlanner {
     ) {
         let pool = &self.instruction_pool;
         let keep_tsconfig = context.root_tsconfig_read();
+        // Files under node_modules that no external hashes: upstream outputs,
+        // and what a declared `includeIgnored` group walks into there.
+        let mut not_installed = upstream_output_roots(task_graph, &task.id);
+        for id in ids.iter() {
+            if let HashInstruction::IgnoredFileSet { globs, .. } = &*pool.get(*id) {
+                not_installed.extend(
+                    globs
+                        .iter()
+                        .filter(|glob| !glob.starts_with('!'))
+                        .map(|glob| walk_root(glob))
+                        .filter(|root| root.split('/').any(|segment| segment == "node_modules")),
+                );
+            }
+        }
+        not_installed.sort_unstable();
         let own: hashbrown::HashSet<u32> = self
-            .configuration_file_instructions(task, context)
+            .configuration_file_instructions(task, context, &not_installed)
             .into_iter()
             .map(|instruction| pool.intern(instruction))
             .collect();
@@ -611,6 +634,7 @@ impl HashPlanner {
         &self,
         task: &Task,
         context: &UltracacheContext,
+        not_installed: &[String],
     ) -> Vec<HashInstruction> {
         let entry = context.entry;
         let self_project = task.target.project.as_str();
@@ -639,7 +663,7 @@ impl HashPlanner {
             let expanded = expand_literal_braces(glob);
             let kept: Vec<String> = expanded
                 .iter()
-                .filter(|glob| !covered_by_native_instruction(glob))
+                .filter(|glob| !covered_by_native_instruction(glob, not_installed))
                 .cloned()
                 .collect();
             let whole = kept.len() == expanded.len();
@@ -1351,8 +1375,9 @@ impl HashPlanner {
     /// The self inputs of a project hashed from its Ultracache configuration: the
     /// observed reads replace its declared filesets, `includeIgnored` ones
     /// included, so only the project configuration, tsconfig and non-file inputs
-    /// remain. Whether TsConfiguration and JSON inputs stay is decided by the
-    /// caller's replacement pass.
+    /// remain. The `includeIgnored` group is emitted only so the caller's
+    /// replacement pass can read its roots before dropping it; that pass also
+    /// decides whether TsConfiguration and JSON inputs stay.
     fn gather_self_inputs_from_configuration(
         &self,
         project_name: &str,
@@ -1374,8 +1399,10 @@ impl HashPlanner {
                 _ => None,
             })
             .collect();
-        // Validated but not hashed: an invalid group fails either way.
         validate_files_globs(project_name, &ignored)?;
+        if !ignored.is_empty() {
+            instructions.push(self.ignored_file_set(ignored));
+        }
         instructions.extend(self.runtime_env_cwd_json_inputs(project_name, self_inputs));
         Ok(instructions)
     }
@@ -1883,14 +1910,18 @@ fn propagates_unchanged(before: &Input, after: &Input) -> bool {
     }
 }
 
-/// Reads left out of the configuration's file groups: node_modules (never hashed as
-/// files) and nx.json/.gitignore/.nxignore (the always-on set hashes them whole).
-/// Lockfiles stay: externals may cover only a few packages, not the whole file.
-fn covered_by_native_instruction(glob: &str) -> bool {
+/// Reads left out of the configuration's file groups: installed packages under
+/// node_modules (externals hash them) and nx.json/.gitignore/.nxignore (the
+/// always-on set hashes them whole). A node_modules read overlapping one of the
+/// sorted `not_installed` roots stays. Lockfiles stay: externals may cover only
+/// a few packages, not the whole file.
+fn covered_by_native_instruction(glob: &str, not_installed: &[String]) -> bool {
     let path = glob.strip_prefix('!').unwrap_or(glob);
-    path.starts_with("node_modules/")
-        || path.contains("/node_modules/")
-        || ALWAYS_ON_FILES.contains(&path)
+    if ALWAYS_ON_FILES.contains(&path) {
+        return true;
+    }
+    (path.starts_with("node_modules/") || path.contains("/node_modules/"))
+        && !overlaps_any(not_installed, &walk_root(path))
 }
 
 /// Resolves `{projectRoot}` and `{projectName}` tokens in a fileset pattern.
@@ -3423,6 +3454,94 @@ mod always_tests {
                 HashInstruction::TsConfiguration("e2e".into()),
                 HashInstruction::TsConfiguration("feature".into())
             ]
+        );
+    }
+
+    /// The node_modules reads `e2e:e2e`'s plan hashes as files, and whether it
+    /// is deferred.
+    fn hashed_node_modules_reads(
+        planner: &HashPlanner,
+        graph: TaskGraph,
+        reads: &[&str],
+    ) -> (Vec<String>, bool) {
+        let (_dir, configurations) = ultracache_configurations(&[("e2e:e2e", reads)]);
+        let plans = planner
+            .get_plans_internal(vec!["e2e:e2e"], graph, Some(&configurations), &[])
+            .unwrap();
+        let mut hashed: Vec<String> = plans.plans["e2e:e2e"]
+            .iter()
+            .filter_map(|id| match plans.pool.get(*id).value() {
+                HashInstruction::IgnoredFileSet { globs, .. } => Some(globs.clone()),
+                _ => None,
+            })
+            .flatten()
+            .filter(|glob| glob.contains("node_modules"))
+            .collect();
+        hashed.sort();
+        (hashed, plans.deferred.contains("e2e:e2e"))
+    }
+
+    #[test]
+    fn hashes_a_node_modules_read_inside_an_upstream_output() {
+        let planner = planner(vec![("e2e:e2e", vec![])], &[("e2e", &["app"])]);
+        let graph = task_graph(
+            &[("e2e:e2e", &[]), ("app:build", &["node_modules/.gen/app"])],
+            &[("e2e:e2e", &["app:build"])],
+        );
+        assert_eq!(
+            hashed_node_modules_reads(
+                &planner,
+                graph,
+                &[
+                    "node_modules/.gen/app/index.js",
+                    "node_modules/foo/index.js",
+                    "dist/libs/app/node_modules/dep/index.js",
+                ],
+            ),
+            (vec!["node_modules/.gen/app/index.js".to_string()], true)
+        );
+    }
+
+    #[test]
+    fn hashes_a_node_modules_read_a_declared_include_ignored_fileset_names() {
+        let reads = [
+            "libs/e2e/node_modules/.gen/used.json",
+            "libs/e2e/node_modules/foo/index.js",
+            "libs/app/node_modules/.gen/used.json",
+            "libs/app/node_modules/foo/index.js",
+        ];
+        let hashed = |inputs: Vec<JsInputs>| {
+            hashed_node_modules_reads(
+                &planner(vec![("e2e:e2e", inputs)], &[("e2e", &["app"])]),
+                task_graph(&[("e2e:e2e", &[])], &[]),
+                &reads,
+            )
+            .0
+        };
+        assert_eq!(hashed(vec![]), Vec::<String>::new());
+        assert_eq!(
+            hashed(vec![ignored_fileset(
+                "{projectRoot}/node_modules/.gen/**",
+                false,
+                false
+            )]),
+            vec!["libs/e2e/node_modules/.gen/used.json".to_string()]
+        );
+        assert_eq!(
+            hashed(vec![ignored_fileset(
+                "{projectRoot}/node_modules/.gen/**",
+                true,
+                false
+            )]),
+            vec!["libs/app/node_modules/.gen/used.json".to_string()]
+        );
+        assert_eq!(
+            hashed(vec![ignored_fileset(
+                "{projectRoot}/generated/**",
+                false,
+                false
+            )]),
+            Vec::<String>::new()
         );
     }
 
