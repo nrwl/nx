@@ -1,9 +1,4 @@
-import {
-  TargetConfiguration,
-  Tree,
-  joinPathFragments,
-  logger,
-} from '@nx/devkit';
+import { TargetConfiguration, Tree, joinPathFragments } from '@nx/devkit';
 import {
   findViteConfig,
   findWebpackConfig,
