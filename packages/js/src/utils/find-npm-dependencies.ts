@@ -130,6 +130,10 @@ function collectDependenciesFromFileMap(
         npmDeps[externalDep.data.packageName] = externalDep.data.version;
         continue;
       }
+      if (target.startsWith('npm:')) {
+        npmDeps[getPackageNameFromNpmTarget(target)] = '*';
+        continue;
+      }
 
       // If node is internal, then try reading package info from `package.json` (which must exist for this to work).
       const workspaceDep = projectGraph.nodes[target];
@@ -170,6 +174,20 @@ function collectDependenciesFromFileMap(
       }
     }
   }
+}
+
+function getPackageNameFromNpmTarget(target: string): string {
+  const npmTarget = target.substring('npm:'.length);
+  if (npmTarget.startsWith('@')) {
+    const scopeEnd = npmTarget.indexOf('/');
+    const versionStart =
+      scopeEnd === -1 ? -1 : npmTarget.indexOf('@', scopeEnd + 1);
+    return versionStart === -1
+      ? npmTarget
+      : npmTarget.substring(0, versionStart);
+  }
+  const versionStart = npmTarget.indexOf('@');
+  return versionStart === -1 ? npmTarget : npmTarget.substring(0, versionStart);
 }
 
 function readPackageJson(
