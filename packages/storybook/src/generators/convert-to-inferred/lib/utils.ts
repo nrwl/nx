@@ -5,7 +5,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
-import { dirname } from 'path/posix';
 import { coerce, major } from 'semver';
 
 export function getConfigFilePath(tree: Tree, configDir: string) {
