@@ -316,10 +316,15 @@ impl PseudoTerminal {
 
         let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
         // Do not manipulate raw mode if running within the context of the NX_TUI, it handles it itself
-        let should_control_raw_mode = is_tty && !self.is_within_nx_tui;
+        let mut should_control_raw_mode = is_tty && !self.is_within_nx_tui;
         if should_control_raw_mode {
             trace!("Enabling raw mode");
-            enable_raw_mode().expect("Failed to enter raw terminal mode");
+            // No controlling terminal (ENXIO from /dev/tty) is a valid setup.
+            // Raw mode is optional there; panicking aborts before the task runs.
+            if let Err(e) = enable_raw_mode() {
+                trace!("Failed to enter raw terminal mode: {:?}", e);
+                should_control_raw_mode = false;
+            }
         }
         let pid = child
             .process_id()
@@ -429,5 +434,140 @@ mod tests {
             i += 1;
         }
         drop(pseudo_terminal);
+    }
+}
+
+/// stdout is a tty, stdin is not, and the process has no controlling terminal.
+/// `enable_raw_mode` then fails with ENXIO; that must not abort the task.
+#[cfg(all(test, target_os = "linux"))]
+mod no_controlling_tty_tests {
+    use super::*;
+    use std::io::{IsTerminal, Read};
+    use std::os::fd::{FromRawFd, OwnedFd};
+    use std::process::{Command, Stdio};
+    use std::time::Duration;
+
+    const CHILD_ENV: &str = "NX_TEST_NO_CONTROLLING_TTY";
+
+    #[test]
+    fn run_command_without_controlling_terminal_does_not_panic() {
+        if std::env::var(CHILD_ENV).is_ok() {
+            run_true_without_controlling_terminal();
+            return;
+        }
+
+        let exe = std::env::current_exe().expect("current_exe");
+        let (master, slave) = open_pty_pair();
+        // libtest names omit the crate prefix that module_path!() includes.
+        let module = module_path!();
+        let module = module
+            .split_once("::")
+            .map(|(_, rest)| rest)
+            .unwrap_or(module);
+        let test_name =
+            format!("{module}::run_command_without_controlling_terminal_does_not_panic");
+
+        let mut child = Command::new("setsid")
+            .arg("--wait")
+            .arg(&exe)
+            .arg(&test_name)
+            .arg("--exact")
+            .arg("--nocapture")
+            .env(CHILD_ENV, "1")
+            .env("NX_TUI", "false")
+            .stdin(Stdio::from(
+                std::fs::File::open("/dev/null").expect("open /dev/null"),
+            ))
+            .stdout(Stdio::from(slave))
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("spawn setsid");
+
+        let reader = std::thread::spawn(move || {
+            let mut file = std::fs::File::from(master);
+            let mut buf = Vec::new();
+            let mut tmp = [0u8; 4096];
+            loop {
+                match file.read(&mut tmp) {
+                    Ok(0) => break,
+                    Ok(n) => buf.extend_from_slice(&tmp[..n]),
+                    Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                    Err(_) => break,
+                }
+            }
+            buf
+        });
+
+        let status = child.wait().expect("wait for setsid");
+        let mut stderr = String::new();
+        if let Some(mut err) = child.stderr.take() {
+            let _ = err.read_to_string(&mut stderr);
+        }
+        let _stdout = reader.join().unwrap_or_default();
+
+        assert!(
+            status.success(),
+            "task panicked or failed without a controlling terminal\nstatus: {status}\nstderr:\n{stderr}"
+        );
+    }
+
+    fn run_true_without_controlling_terminal() {
+        assert!(
+            std::io::stdout().is_terminal(),
+            "stdout must be a tty to enter the raw-mode path"
+        );
+        assert!(!std::io::stdin().is_terminal(), "stdin must not be a tty");
+        let tty_err = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open("/dev/tty")
+            .expect_err("opening /dev/tty should fail without a controlling terminal");
+        assert_eq!(tty_err.raw_os_error(), Some(libc::ENXIO));
+
+        let mut pseudo_terminal =
+            PseudoTerminal::new(PseudoTerminalOptions { size: (80, 24) }).unwrap();
+        let cp = pseudo_terminal
+            .run_command(
+                String::from("true"),
+                None,
+                None,
+                None,
+                Some(false),
+                None,
+                None,
+            )
+            .unwrap();
+        let exit = cp
+            .wait_receiver
+            .recv_timeout(Duration::from_secs(15))
+            .expect("timed out waiting for the command to exit");
+        assert_eq!(exit, "Success");
+    }
+
+    fn open_pty_pair() -> (OwnedFd, OwnedFd) {
+        let mut master_fd: libc::c_int = -1;
+        let mut slave_fd: libc::c_int = -1;
+        let mut winsize = libc::winsize {
+            ws_row: 24,
+            ws_col: 80,
+            ws_xpixel: 0,
+            ws_ypixel: 0,
+        };
+        let rc = unsafe {
+            libc::openpty(
+                &mut master_fd,
+                &mut slave_fd,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut winsize,
+            )
+        };
+        assert_eq!(rc, 0, "openpty failed: {}", std::io::Error::last_os_error());
+        unsafe {
+            (
+                OwnedFd::from_raw_fd(master_fd),
+                OwnedFd::from_raw_fd(slave_fd),
+            )
+        }
     }
 }
