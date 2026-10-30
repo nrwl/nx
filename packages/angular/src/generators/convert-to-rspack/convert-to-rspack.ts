@@ -123,7 +123,7 @@ const PATH_NORMALIZER = {
         return;
       }
       try {
-        const resolvedPath = require.resolve(path, {
+        require.resolve(path, {
           paths: [join(workspaceRoot, 'node_modules')],
         });
         normalizedPaths.push(path);
@@ -350,7 +350,7 @@ export async function convertToRspack(
   };
   const configurationOptions: Record<string, Record<string, any>> = {};
   let buildTarget: { name: string; config: TargetConfiguration } | undefined;
-  let serveTarget: { name: string; config: TargetConfiguration } | undefined;
+  let serveTarget: { config: TargetConfiguration } | undefined;
   const buildTsConfigPaths = new Set<string>();
   let serverTsConfigPath: string | undefined;
   const targetsToRemove: string[] = [];
@@ -448,7 +448,7 @@ export async function convertToRspack(
           }
         }
       }
-      serveTarget = { name: targetName, config: target };
+      serveTarget = { config: target };
       targetsToRemove.push(targetName);
     } else if (target.executor === '@angular-devkit/build-angular:prerender') {
       if (target.options) {

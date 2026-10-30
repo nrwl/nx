@@ -2,10 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
-import {
-  createStorybookTestWorkspaceForLib,
-  generateTestApplication,
-} from '../utils/testing';
+import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import type { StorybookConfigurationOptions } from './schema';
 import { storybookConfigurationGenerator } from './storybook-configuration';
 
