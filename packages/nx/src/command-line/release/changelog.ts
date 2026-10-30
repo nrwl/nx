@@ -22,6 +22,8 @@ import {
   createChangesFromCommits,
   createFileToProjectMap,
   filterHiddenChanges,
+  getNonReleasableDependencies,
+  attributeDependencyChangesToProject,
   mapCommitToChange,
 } from './changelog/commit-utils';
 import {
@@ -468,6 +470,10 @@ export function createAPI(
     const allProjectChangelogs: NxReleaseChangelogResult['projectChangelogs'] =
       {};
 
+    const releasableProjects = new Set(
+      releaseGraph.allReleaseGroups.flatMap((group) => group.projects)
+    );
+
     for (const releaseGroup of releaseGraph.releaseGroups) {
       const config = releaseGroup.changelog;
       // The entire feature is disabled at the release group level, exit early
@@ -534,10 +540,25 @@ export function createAPI(
               );
             }
 
+            // Changes to non-releasable dependencies can bump this project's
+            // version (they are part of what it ships), so include them in its
+            // changelog as well.
+            const nonReleasableDependencies = getNonReleasableDependencies(
+              project.name,
+              projectGraph,
+              releasableProjects
+            );
+
             const commits = await filterProjectCommits({
               fromSHA,
               toSHA,
-              projectPath: project.data.root,
+              projectPath: [
+                project.data.root,
+                ...nonReleasableDependencies
+                  .map((dep) => projectGraph.nodes[dep].data.root)
+                  // A root-level project would match every file
+                  .filter((root) => root && root !== '.'),
+              ],
             });
 
             const { fileMap } =
@@ -546,11 +567,15 @@ export function createAPI(
               fileMap.projectFileMap
             );
 
-            changes = createChangesFromCommits(
-              commits,
-              fileMap,
-              fileToProjectMap,
-              nxReleaseConfig.conventionalCommits
+            changes = attributeDependencyChangesToProject(
+              createChangesFromCommits(
+                commits,
+                fileMap,
+                fileToProjectMap,
+                nxReleaseConfig.conventionalCommits
+              ),
+              project.name,
+              nonReleasableDependencies
             );
           }
 
@@ -1279,11 +1304,12 @@ async function filterProjectCommits({
 }: {
   fromSHA: string;
   toSHA: string;
-  projectPath: string;
+  projectPath: string | string[];
 }) {
+  const projectPaths = Array.isArray(projectPath) ? projectPath : [projectPath];
   const allCommits = await getCommits(fromSHA, toSHA);
   return allCommits.filter((c) =>
-    c.affectedFiles.find((f) => f.startsWith(projectPath))
+    c.affectedFiles.find((f) => projectPaths.some((p) => f.startsWith(p)))
   );
 }
 

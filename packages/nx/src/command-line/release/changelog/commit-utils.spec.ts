@@ -1,5 +1,9 @@
 import { GitCommit } from '../utils/git';
-import { FileData, ProjectFileMap } from '../../../config/project-graph';
+import {
+  FileData,
+  ProjectFileMap,
+  ProjectGraph,
+} from '../../../config/project-graph';
 import {
   mapCommitToChange,
   createChangesFromCommits,
@@ -7,6 +11,8 @@ import {
   getProjectsAffectedByCommit,
   commitChangesNonProjectFiles,
   createFileToProjectMap,
+  getNonReleasableDependencies,
+  attributeDependencyChangesToProject,
 } from './commit-utils';
 import { NxReleaseConfig } from '../config/config';
 import { ChangelogChange } from './version-plan-utils';
@@ -393,6 +399,104 @@ describe('commit-utils', () => {
       expect(result).toHaveLength(2);
       expect(result[0].affectedProjects).toEqual(['project1']);
       expect(result[1].affectedProjects).toBe('*');
+    });
+  });
+
+  describe('getNonReleasableDependencies', () => {
+    const node = (name: string) => ({
+      name,
+      type: 'lib' as const,
+      data: { root: `libs/${name}` },
+    });
+    const dep = (source: string, target: string) => ({
+      source,
+      target,
+      type: 'static',
+    });
+    const projectGraph = {
+      nodes: {
+        app: node('app'),
+        shared: node('shared'),
+        utils: node('utils'),
+        releasable: node('releasable'),
+        hidden: node('hidden'),
+      },
+      externalNodes: {},
+      dependencies: {
+        app: [
+          dep('app', 'shared'),
+          dep('app', 'releasable'),
+          dep('app', 'npm:lodash'),
+        ],
+        shared: [dep('shared', 'utils'), dep('shared', 'app')],
+        utils: [],
+        releasable: [dep('releasable', 'hidden')],
+        hidden: [],
+      },
+    } as unknown as ProjectGraph;
+
+    it('should return direct and transitive non-releasable dependencies', () => {
+      expect(
+        getNonReleasableDependencies(
+          'app',
+          projectGraph,
+          new Set(['app', 'releasable'])
+        ).sort()
+      ).toEqual(['shared', 'utils']);
+    });
+
+    it('should not traverse through releasable dependencies', () => {
+      expect(
+        getNonReleasableDependencies(
+          'app',
+          projectGraph,
+          new Set(['app', 'releasable', 'shared'])
+        )
+      ).toEqual([]);
+    });
+
+    it('should return an empty list for a project without dependencies', () => {
+      expect(
+        getNonReleasableDependencies('utils', projectGraph, new Set(['utils']))
+      ).toEqual([]);
+    });
+  });
+
+  describe('attributeDependencyChangesToProject', () => {
+    const change = (
+      affectedProjects: ChangelogChange['affectedProjects']
+    ): ChangelogChange => ({
+      type: 'fix',
+      scope: '',
+      description: 'a fix',
+      body: '',
+      isBreaking: false,
+      githubReferences: [],
+      authors: [],
+      shortHash: 'abc123',
+      revertedHashes: [],
+      affectedProjects,
+    });
+
+    it('should add the project to changes that touched a dependency', () => {
+      const result = attributeDependencyChangesToProject(
+        [change(['shared']), change(['other']), change('*'), change(['app'])],
+        'app',
+        ['shared']
+      );
+      expect(result.map((c) => c.affectedProjects)).toEqual([
+        ['shared', 'app'],
+        ['other'],
+        '*',
+        ['app'],
+      ]);
+    });
+
+    it('should return the changes unchanged when there are no dependencies', () => {
+      const changes = [change(['shared'])];
+      expect(attributeDependencyChangesToProject(changes, 'app', [])).toBe(
+        changes
+      );
     });
   });
 });
