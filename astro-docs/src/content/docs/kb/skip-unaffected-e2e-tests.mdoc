@@ -10,8 +10,14 @@ topics:
   - 'Tasks & caching'
 ---
 
+{% aside type="caution" title="Nx 24+ Required" %}
+The `@nx-depends-on` and `@nx-ignore-server-inputs` directives require Nx 24 or later.
+{% /aside %}
+
 {% llm_copy_prompt title="Skip unaffected split e2e tests in this workspace" %}
 You are scoping split (atomized) e2e test files in an Nx workspace so that each test file's task reruns only when the code it tests changes. Read this guide first: {pageUrl}
+
+The directives require Nx 24 or later. Check the workspace's `nx` version first. On an older version, stop and report that the workspace needs to upgrade.
 
 1. Find the e2e projects and their split targets with `nx show project <e2e-project> --json`. Split targets are named `e2e-ci--<test file path>`. If there are none, stop. Cypress creates them only when the `nxE2EPreset` options set `ciWebServerCommand`, and Vitest and Cypress component tests don't read the directives.
 2. Before editing any files, ask the user to choose a scoping approach and wait for their answer:
