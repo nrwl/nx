@@ -17,21 +17,17 @@ describe('git log parsing', () => {
     execFileSync('git', args, { cwd: tempFs.tempDir, encoding: 'utf-8' });
 
   const commitWithMessage = (author: string, email: string, message: string) =>
-    execFileSync(
-      'git',
-      [
-        '-c',
-        `user.name=${author}`,
-        '-c',
-        `user.email=${email}`,
-        'commit',
-        '-q',
-        '--cleanup=verbatim',
-        '-F',
-        '-',
-      ],
-      { cwd: tempFs.tempDir, input: message }
-    );
+    execFileSync('git', ['commit', '-q', '--cleanup=verbatim', '-F', '-'], {
+      cwd: tempFs.tempDir,
+      input: message,
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: author,
+        GIT_AUTHOR_EMAIL: email,
+        GIT_COMMITTER_NAME: author,
+        GIT_COMMITTER_EMAIL: email,
+      },
+    });
 
   beforeEach(async () => {
     originalCwd = process.cwd();
