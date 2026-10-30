@@ -746,6 +746,7 @@ These report it once the server listens:
 - The `@nx/nuxt/ready-signal` Nuxt module, which reports only once `nuxt dev` has built the app and stops answering 503.
 - The Metro reporter that the inferred React Native `start` task passes to `react-native start`.
 - The `@nx/web:file-server` executor.
+- The `@nx/js:verdaccio` executor, which reports once its registry listens.
 - Any other executor or Angular builder that returns a successful result with a `baseUrl`, such as `@angular/build:dev-server`.
   Nx reports that `baseUrl` for it, with a `0.0.0.0` or `[::]` host replaced by `localhost`.
 
