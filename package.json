@@ -265,7 +265,7 @@
     "@tailwindcss/postcss": "catalog:tailwind",
     "@tailwindcss/typography": "0.5.16",
     "@types/license-checker": "^25.0.3",
-    "axios": "1.18.1",
+    "axios": "1.20.0",
     "classnames": "^2.5.1",
     "core-js": "3.36.1",
     "form-data": "^4.0.4",
