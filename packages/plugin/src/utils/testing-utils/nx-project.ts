@@ -11,7 +11,7 @@ import { dirname } from 'path';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
-function runNxNewCommand(args?: string, silent?: boolean) {
+function runNxNewCommand(args?: string) {
   const localTmpDir = dirname(tmpProjPath());
   return execSync(
     `node ${require.resolve('nx')} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nx/workspace --npmScope=proj --preset=apps ${
@@ -19,7 +19,6 @@ function runNxNewCommand(args?: string, silent?: boolean) {
     }`,
     {
       cwd: localTmpDir,
-      ...(silent && false ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
       windowsHide: true,
     }
   );
@@ -71,7 +70,7 @@ export function newNxProject(
   pluginDistPath: string
 ): void {
   cleanup();
-  runNxNewCommand('', true);
+  runNxNewCommand('');
   patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
   runPackageManagerInstall();
 }
