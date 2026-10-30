@@ -268,7 +268,6 @@ async function buildAngularProjects(
         };
       } else if (knownExecutors.test.has(angularTarget.builder)) {
         await updateTestTarget(
-          projectName,
           targets[nxTargetName],
           angularTarget,
           context,
@@ -459,7 +458,6 @@ async function updateBuildTarget(
 }
 
 async function updateTestTarget(
-  projectName: string,
   target: TargetConfiguration,
   angularTarget: AngularTargetConfiguration,
   context: CreateNodesContext,

@@ -209,7 +209,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
   describe('--project', () => {
     it('should setup a new Playwright plugin and only migrate one specific project', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -217,12 +217,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',
@@ -266,7 +266,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should add project to existing plugins includes', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -274,12 +274,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'e2e',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'e2e',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'e2e',
@@ -324,7 +324,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should remove include when all projects are included', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -332,12 +332,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'e2e',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'e2e',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'e2e',
@@ -500,7 +500,7 @@ describe('Playwright - Convert Executors To Plugin', () => {
 
     it('should setup a new Playwright plugin to match only projects migrated', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
@@ -508,12 +508,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',

@@ -1076,7 +1076,7 @@ module.exports = withModuleFederation(config, { dts: false });
     await convertToRspack(tree, { project: 'app' });
 
     // ASSERT
-    const updatedProject = readProjectConfiguration(tree, 'app');
+    readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { createConfig } from '@nx/angular-rspack';

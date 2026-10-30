@@ -69,9 +69,7 @@ function migrateExecutorUsages(tree: Tree): void {
   for (const projectName of projectsToUpdate) {
     const projectConfig = readProjectConfiguration(tree, projectName);
 
-    for (const [targetName, target] of Object.entries(
-      projectConfig.targets || {}
-    )) {
+    for (const [, target] of Object.entries(projectConfig.targets || {})) {
       if (target.executor === '@nx/vite:test') {
         target.executor = '@nx/vitest:test';
       }

@@ -11,7 +11,6 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
   ) => {
     if (target.options) {
       handlePropertiesFromTargetOptions(
-        tree,
         target.options,
         projectDetails.projectName,
         projectDetails.root
@@ -23,7 +22,6 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
         const configuration = target.configurations[configurationName];
 
         handlePropertiesFromTargetOptions(
-          tree,
           configuration,
           projectDetails.projectName,
           projectDetails.root
@@ -50,7 +48,6 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
 }
 
 function handlePropertiesFromTargetOptions(
-  tree: Tree,
   options: any,
   projectName: string,
   projectRoot: string

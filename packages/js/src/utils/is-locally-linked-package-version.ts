@@ -1,8 +1,4 @@
-import {
-  detectPackageManager,
-  getPackageManagerVersion,
-  PackageManager,
-} from '@nx/devkit';
+import { detectPackageManager, PackageManager } from '@nx/devkit';
 // import { lt } from 'semver';
 
 let pm: PackageManager | undefined;

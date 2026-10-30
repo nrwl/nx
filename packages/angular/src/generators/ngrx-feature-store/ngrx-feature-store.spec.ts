@@ -226,7 +226,6 @@ describe('ngrx-feature-store', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
       await addNgModuleLib(tree);
-      const statePath = 'feature-module/src/lib/+state';
       // ACT
       await ngrxFeatureStoreGenerator(tree, {
         name: 'users',
@@ -247,7 +246,6 @@ describe('ngrx-feature-store', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
       await addNgModuleLib(tree);
-      const statePath = 'feature-module/src/lib/+state';
       // ACT
       await ngrxFeatureStoreGenerator(tree, {
         name: 'users',
@@ -269,7 +267,6 @@ describe('ngrx-feature-store', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
       await addNgModuleLib(tree);
-      const statePath = 'feature-module/src/lib/+state';
       // ACT
       await ngrxFeatureStoreGenerator(tree, {
         name: 'users/users',
@@ -537,7 +534,6 @@ describe('ngrx-feature-store', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
       await addStandaloneLib(tree);
-      const statePath = 'feature/src/lib/+state';
       // ACT
       await ngrxFeatureStoreGenerator(tree, {
         name: 'users',
@@ -556,7 +552,6 @@ describe('ngrx-feature-store', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace();
       await addStandaloneLib(tree);
-      const statePath = 'feature/src/lib/+state';
       // ACT
       await ngrxFeatureStoreGenerator(tree, {
         name: 'users',

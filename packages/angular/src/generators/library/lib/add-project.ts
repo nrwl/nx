@@ -47,7 +47,7 @@ export async function addProject(
     };
 
     if (libraryOptions.publishable) {
-      const nxJson = readJson(tree, 'nx.json');
+      readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
         tree,
         libraryOptions.name,

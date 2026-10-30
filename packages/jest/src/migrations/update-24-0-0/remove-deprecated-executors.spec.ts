@@ -7,7 +7,6 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-  type ExpandedPluginConfiguration,
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type ProjectGraph,
@@ -19,7 +18,6 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import type { JestPluginOptions } from '../../plugins/plugin';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;

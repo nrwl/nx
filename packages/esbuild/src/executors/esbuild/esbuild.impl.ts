@@ -34,11 +34,6 @@ const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
-// since the workspace has esbuild 0.17+ installed, there's no definition
-// of esbuild without 'context', therefore, the esbuild import in the else
-// branch below has type never, getting the type to cast later
-type EsBuild = typeof esbuild;
-
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext

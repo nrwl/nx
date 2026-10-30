@@ -167,12 +167,7 @@ async function buildRemixTargets(
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const { buildDirectory, assetsBuildDirectory, serverBuildPath } =
-    await getBuildPaths(
-      configFilePath,
-      projectRoot,
-      context.workspaceRoot,
-      remixCompiler
-    );
+    await getBuildPaths(configFilePath, context.workspaceRoot, remixCompiler);
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
@@ -185,7 +180,6 @@ async function buildRemixTargets(
     isUsingTsSolutionSetup
   );
   targets[options.devTargetName] = devTarget(
-    serverBuildPath,
     projectRoot,
     remixCompiler,
     namedInputs,
@@ -277,7 +271,6 @@ function buildInputs(namedInputs: {
 }
 
 function devTarget(
-  serverBuildPath: string,
   projectRoot: string,
   remixCompiler: RemixCompiler,
   namedInputs: { [inputName: string]: any[] },
@@ -334,7 +327,6 @@ function startTarget(
 
 async function getBuildPaths(
   configFilePath: string,
-  projectRoot: string,
   workspaceRoot: string,
   remixCompiler: RemixCompiler
 ): Promise<{
