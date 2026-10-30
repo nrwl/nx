@@ -333,7 +333,14 @@ async function createReadme(
   };
 
   const nxCloudOnboardingUrl = nxCloudToken
-    ? await createNxCloudOnboardingURL('readme', nxCloudToken, undefined, false)
+    ? await createNxCloudOnboardingURL(
+        'readme',
+        nxCloudToken,
+        undefined,
+        false,
+        false,
+        join(tree.root, directory)
+      )
     : null;
 
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
