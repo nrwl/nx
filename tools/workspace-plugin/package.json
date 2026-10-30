@@ -8,7 +8,7 @@
     "@nx/conformance": "5.0.4",
     "@nx/devkit": "catalog:nx",
     "@nx/js": "catalog:nx",
-    "@xmldom/xmldom": "^0.8.10",
+    "@xmldom/xmldom": "^0.8.15",
     "semver": "catalog:",
     "shiki": "^4.0.2",
     "tinyglobby": "catalog:",
