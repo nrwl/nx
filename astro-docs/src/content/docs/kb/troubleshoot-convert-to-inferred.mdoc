@@ -176,7 +176,7 @@ export default defineConfig({
 ## Webpack: project cannot be migrated
 
 Projects that
-use [Nx-enhanced Webpack configuration](/docs/kb/webpack-config-setup#nxenhanced-configuration-with-composable-plugins)
+use [Nx-enhanced Webpack configuration](/docs/kb/webpack-config-setup#nx-enhanced-configuration-with-composable-plugins)
 files cannot be migrated to use Webpack CLI. Those configuration files call `composePlugins` and `withNx`, which Nx v24
 removed.
 
@@ -185,7 +185,7 @@ To solve this issue, run `nx g @nx/webpack:convert-config-to-webpack-plugin` fir
 ## Webpack: usage of `useLegacyNxPlugin`
 
 When converting
-from [Nx-enhanced](/docs/kb/webpack-config-setup#nxenhanced-configuration-with-composable-plugins) to basic
+from [Nx-enhanced](/docs/kb/webpack-config-setup#nx-enhanced-configuration-with-composable-plugins) to basic
 Webpack configuration, we add the `useLegacyNxPlugin` utility function to
 ensure that your build tasks behave the same after the migration. We recommend that you refactor the configuration such
 that `useLegacyNxPlugin` is not needed.

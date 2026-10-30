@@ -754,7 +754,7 @@ Some important changes in Nx 23:
 
 When versioning with `--preid`, the implicit patch bumps given to dependents (and to other projects in a fixed release group) are stable patches by default. That means `project-b` being bumped to `2.0.1-rc.0` still bumps its dependent `project-a` to `1.0.1`, not `1.0.1-rc.0`.
 
-Set `version.applyPreidToDependents` to `true` if you want the `--preid` value to flow through to those side-effectful bumps instead. It can also be set per release group under `release.groups.<group>.version.applyPreidToDependents`. See [Update Dependents](/docs/guides/nx-release/update-dependents#propagating-preid-to-dependent-bumps) for the full walkthrough and guidance on when to enable it.
+Set `version.applyPreidToDependents` to `true` if you want the `--preid` value to flow through to those side-effectful bumps instead. It can also be set per release group under `release.groups.<group>.version.applyPreidToDependents`. See [Update Dependents](/docs/guides/nx-release/update-dependents#propagating---preid-to-dependent-bumps) for the full walkthrough and guidance on when to enable it.
 
 ### Changelog
 
@@ -934,7 +934,7 @@ When configuring the `@nx/docker` plugin in `nx.json`, you can customize the beh
 {
   "plugins": [
     {
-      "plugin": "@nx/docker/plugin",
+      "plugin": "@nx/docker",
       "options": {
         "buildTarget": {
           "name": "docker:build",
@@ -996,9 +996,7 @@ You can configure [Docker release](/docs/kb/release-docker-images) settings at t
           // Run a script before tagging Docker version
           "groupPreVersionCommand": "echo Preparing backend release",
         },
-        "changelog": {
-          "projectChangelogs": true
-        }
+        "changelog": true
       }
     }
   }
