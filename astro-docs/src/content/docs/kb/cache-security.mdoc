@@ -40,7 +40,7 @@ Avoid [specifying a token](/docs/kb/access-tokens) with the `nxCloudAccessToken`
 
 ### Use scoped tokens in CI
 
-We recommend using a [read-write token](/docs/kb/access-tokens#read-write-access) only for protected branches (branches that don't allow direct push).
+We recommend using a [read-write token](/docs/kb/access-tokens#read--write-access) only for protected branches (branches that don't allow direct push).
 A `read-write` access token allows reading from and writing to the shared global cache of your workspace.
 
 In all other branches, we recommend using a [read-only token](/docs/kb/access-tokens#read-only-access). A `read-only` token only allows reading from the shared global cache, while writing is limited to an execution specific isolated cache.

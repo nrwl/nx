@@ -289,9 +289,9 @@ nxApi:
   - Parallelism configuration
   - Target globs
   - See [here](/docs/kb/assignment-rules#how-to-define-an-assignment-rule) for examples
-- Feat: Parallel agent steps and step groups (docs [here](/docs/kb/launch-templates#launchtemplatestemplatenamegroupname))
+- Feat: Parallel agent steps and step groups (docs [here](/docs/kb/launch-templates#launch-templatestemplate-namegroup-name))
 - Feat: Reusable agent launch template snippets via yaml anchors
-  - See example [here](/docs/kb/launch-templates#full-example)
+  - See example [here](/docs/kb/launch-template-examples#full-example)
   - Specifically how `common-init-steps: &common-init-steps` is defined
 - Feat: Individual GitHub commit statuses for each run group
   - This is configurable in your workspace settings
@@ -341,7 +341,7 @@ Assignment rules allow you to control which tasks can run on which agents. Save 
 
 Assignment rules are defined in yaml files within your workspace's `.nx/workflows` directory. You can use assignment rules with DTE-agents or with dynamic Nx Agents. Note that additional configuration is required when using DTE agents.
 
-Read the full docs [here](/docs/kb/assignment-rules#assignment-rules-beta).
+Read the full docs [here](/docs/kb/assignment-rules).
 
 Once you start using assignment rules, you'll be able to see all your configured "rules" in your CIPE "Analysis page".
 
@@ -374,7 +374,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
     - `~/.npm`
     - `~/.cache/yarn`
     - `.pnpm-store` (note pnpm on Nx Agents does not store its cache folder in the \$HOME dir)
-  - Please refer to the [custom launch templates docs](/docs/kb/launch-templates#full-example) for how you can setup your caching under these new recommendations
+  - Please refer to the [custom launch templates docs](/docs/kb/launch-template-examples#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
   - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)
@@ -564,7 +564,7 @@ We now have full support for BitBucket Data Center (self-hosted):
 - VCS integration for posting comments with live updates about your CI runs
 - full agents integration
 - more info about each one of your commits on the NxCloud web app
-- you can even [set-up auth with BitBucket Data Center](/docs/enterprise/single-tenant/auth-bitbucket-data-center#bitbucket-data-center-auth)
+- you can even [set-up auth with BitBucket Data Center](/docs/enterprise/single-tenant/auth-bitbucket-data-center)
 
 ##### Misc
 

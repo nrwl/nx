@@ -161,7 +161,7 @@ Nx Cloud guards against it in several ways:
 
 - Your source code never reaches the cache. Nx Cloud stores the task hash, the files matched by `outputs`, and the terminal output.
 - Cache entries are immutable. Once Nx Cloud stores an entry, no later run can overwrite it.
-- CI writes are scoped by token. Use a [read-write token](/docs/kb/access-tokens#read-write-access) only on protected branches, such as `main`. On other branches, a [read-only token](/docs/kb/access-tokens#read-only-access) reads the shared cache and writes to a cache isolated to that run, so a pull request can't change what `main` restores.
+- CI writes are scoped by token. Use a [read-write token](/docs/kb/access-tokens#read--write-access) only on protected branches, such as `main`. On other branches, a [read-only token](/docs/kb/access-tokens#read-only-access) reads the shared cache and writes to a cache isolated to that run, so a pull request can't change what `main` restores.
 - Nx Cloud protects against [CREEP (CVE-2025-36852)](https://nx.dev/blog/creep-vulnerability-build-cache-security#the-creep-vulnerability), where an untrusted pull request writes a poisoned artifact that a trusted build later restores. With the token setup above, pull request writes stay isolated from the cache used by protected branches.
 - Developers authenticate with [personal access tokens](/docs/kb/personal-access-tokens). [Workspace settings](https://cloud.nx.app/go/workspace/settings/access) decide whether each developer can write to the cache, and whether unauthenticated machines get read-write, read-only, or no access.
 - [End-to-end encryption](/docs/kb/encryption) encrypts artifacts on your machines before they're uploaded, with a key Nx Cloud never sees.
