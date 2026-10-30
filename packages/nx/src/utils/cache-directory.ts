@@ -49,7 +49,8 @@ function ensureTrustedConfiguredDir(
     return dir;
   }
 
-  if (!isWithin(resolve(dir), resolve(root))) {
+  // Claim a missing directory under a shared parent before another user can.
+  if (!isWithin(resolve(dir), resolve(root)) && nearestExistingIsShared(dir)) {
     try {
       mkdirSync(dir, { recursive: true, mode: 0o775 });
     } catch {}
@@ -89,6 +90,17 @@ function ensureTrustedConfiguredDir(
 
   trustedConfiguredDirs.add(key);
   return dir;
+}
+
+function nearestExistingIsShared(dir: string): boolean {
+  for (let p = resolve(dir); ; p = dirname(p)) {
+    try {
+      return (statSync(p).mode & 0o002) !== 0;
+    } catch {}
+    if (dirname(p) === p) {
+      return false;
+    }
+  }
 }
 
 function isWithin(path: string, root: string): boolean {
