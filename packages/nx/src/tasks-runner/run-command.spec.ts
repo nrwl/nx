@@ -10,6 +10,16 @@ const {
   nxCloudTasksRunnerShell,
 } = require('../nx-cloud/nx-cloud-tasks-runner-shell');
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
+import { resolveInstalledPackage } from '../utils/installation-directory';
+
+vi.mock('../utils/installation-directory', async (importActual) => {
+  const actual =
+    await importActual<typeof import('../utils/installation-directory')>();
+  return {
+    ...actual,
+    resolveInstalledPackage: vi.fn(actual.resolveInstalledPackage),
+  };
+});
 
 describe('getRunner', () => {
   it('uses default runner when no tasksRunnerOptions are present', () => {
@@ -61,6 +71,15 @@ describe('getRunner', () => {
         "url": "https://my-nx-cloud.app",
       }
     `);
+  });
+
+  it('looks up the legacy nx-cloud package only inside the workspace and nx installation', () => {
+    const { tasksRunner } = getRunner({}, { nxCloudId: 'XXXX-XXX' });
+
+    expect(resolveInstalledPackage).toHaveBeenCalledWith('nx-cloud', [
+      __dirname,
+    ]);
+    expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
   });
 
   it('uses cloud runner when tasksRunnerOptions are not present and accessToken is set in env', () => {
