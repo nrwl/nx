@@ -32,6 +32,7 @@ import {
 import * as devkit from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import {
+  BUN_INSTALL_SETTINGS_INPUTS,
   PNPM_INSTALL_SETTINGS_INPUTS,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
@@ -2172,5 +2173,36 @@ describe('app', () => {
         expect.arrayContaining(['{workspaceRoot}/pnpm-workspace.yaml'])
       );
     });
+  });
+
+  describe('Bun deploy-settings inputs', () => {
+    beforeEach(() => {
+      (detectPackageManager as Mock).mockReturnValue('bun');
+    });
+
+    it.each([
+      ['bun.lock', BUN_INSTALL_SETTINGS_INPUTS],
+      // The binary lockfile's deploy output is the manifest alone
+      ['bun.lockb', []],
+    ])(
+      'adds them to the build target defaults only on the text lockfile (%s)',
+      async (lockFile, deployInputs) => {
+        tree.write(lockFile, '');
+
+        await applicationGenerator(tree, {
+          directory: 'app1',
+          bundler: 'esbuild',
+        });
+
+        expect(
+          readNxJson(tree).targetDefaults['@nx/esbuild:esbuild'].inputs
+        ).toEqual([
+          'default',
+          '^default',
+          TS_SOLUTION_SETUP_TSCONFIG_INPUT,
+          ...deployInputs,
+        ]);
+      }
+    );
   });
 });

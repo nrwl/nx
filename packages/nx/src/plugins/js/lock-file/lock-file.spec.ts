@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { output } from '../../../utils/output';
 import type { PackageJson } from '../../../utils/package-json';
+import { vendoredPackagesRootBunLock } from './__fixtures__/bun/pruned-vendored-packages.bun.lock';
 import { createLockFile, generatePrunedDeployOutput } from './lock-file';
 import { stringifyNpmLockfile } from './npm-parser';
 import { stringifyPnpmLockfile } from './pnpm-parser';
@@ -125,6 +127,36 @@ describe('createLockFile', () => {
     );
   });
 
+  it('warns that a pruned bun.lock is missing the vendored packages it references', async () => {
+    const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+    (readFileSync as Mock).mockImplementation((path, ...rest) =>
+      String(path).endsWith('bun.lock')
+        ? vendoredPackagesRootBunLock
+        : fs.readFileSync(path, ...rest)
+    );
+    try {
+      createLockFile(
+        {
+          name: '@demo/api',
+          version: '1.0.0',
+          dependencies: { vend: 'file:local_path_modules/vendor/vend' },
+        },
+        graph,
+        'bun'
+      );
+    } finally {
+      (readFileSync as Mock).mockImplementation(() => 'ROOT_LOCKFILE');
+    }
+
+    expect(output.warn).toHaveBeenCalledWith({
+      title: 'The pruned bun.lock needs artifacts this call does not return',
+      bodyLines: [
+        'A standalone install of the output will be missing the vendored file:/link: dependencies it references.',
+        'Use generatePrunedDeployOutput to ship them.',
+      ],
+    });
+  });
+
   it('does not warn about missing artifacts for a package manager without them', () => {
     createLockFile({ name: 'app', version: '1.0.0' }, graph, 'npm');
 
@@ -164,7 +196,8 @@ describe('generatePrunedDeployOutput', () => {
       packageJson,
       'apps/app',
       '/root',
-      new Set()
+      new Map(),
+      'pnpm'
     );
     // the relocation must land in the manifest before the lockfile copies its
     // specifiers

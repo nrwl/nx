@@ -1399,6 +1399,175 @@ describe('createPackageJson', () => {
       mockReadNxJson.mockRestore();
     });
   });
+
+  describe('local-path dependencies', () => {
+    // Graph versions as the Bun parser records them: a directory relative to
+    // the workspace root, a tarball relative to the manifest declaring it.
+    const graph: ProjectGraph = {
+      nodes: {
+        myapp: {
+          type: 'app',
+          name: 'myapp',
+          data: { targets: { build: {} }, root: 'apps/myapp' },
+        },
+        lib1: {
+          type: 'lib',
+          name: 'lib1',
+          data: { targets: { build: {} }, root: 'libs/lib1' },
+        },
+      },
+      externalNodes: {
+        'npm:libvend': {
+          type: 'npm',
+          name: 'npm:libvend',
+          data: {
+            version: 'file:vendor/libvend',
+            hash: '',
+            packageName: 'libvend',
+          },
+        },
+        'npm:ltar': {
+          type: 'npm',
+          name: 'npm:ltar',
+          data: {
+            version: '../../vendor/ltar-1.0.0.tgz',
+            hash: '',
+            packageName: 'ltar',
+          },
+        },
+        'npm:abs': {
+          type: 'npm',
+          name: 'npm:abs',
+          data: { version: 'file:/opt/abs', hash: '', packageName: 'abs' },
+        },
+        'npm:rootvend': {
+          type: 'npm',
+          name: 'npm:rootvend',
+          data: {
+            version: 'file:vendor/rootvend',
+            hash: '',
+            packageName: 'rootvend',
+          },
+        },
+        'npm:ms': {
+          type: 'npm',
+          name: 'npm:ms',
+          data: { version: '2.1.3', hash: '', packageName: 'ms' },
+        },
+      },
+      dependencies: {
+        myapp: [
+          { source: 'myapp', target: 'lib1', type: DependencyType.static },
+          {
+            source: 'myapp',
+            target: 'npm:rootvend',
+            type: DependencyType.static,
+          },
+        ],
+        lib1: [
+          {
+            source: 'lib1',
+            target: 'npm:libvend',
+            type: DependencyType.static,
+          },
+          { source: 'lib1', target: 'npm:ltar', type: DependencyType.static },
+          { source: 'lib1', target: 'npm:abs', type: DependencyType.static },
+          { source: 'lib1', target: 'npm:ms', type: DependencyType.static },
+        ],
+      },
+    };
+    const fileMap: ProjectFileMap = {
+      myapp: [
+        createFile('apps/myapp/src/main.ts', [
+          ['apps/myapp/src/main.ts', 'lib1', DependencyType.static],
+          ['apps/myapp/src/main.ts', 'npm:rootvend', DependencyType.static],
+        ]),
+      ],
+      lib1: [
+        createFile('libs/lib1/src/index.ts', [
+          ['libs/lib1/src/index.ts', 'npm:libvend', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:ltar', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:abs', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:ms', DependencyType.static],
+        ]),
+      ],
+    };
+
+    it.each([
+      [
+        'bun',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
+        'pnpm',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
+        'npm',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:vendor/libvend',
+          ltar: '../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:vendor/rootvend',
+        },
+      ],
+    ] as const)(
+      'should declare an inherited local-path dependency relative to the project on %s',
+      (packageManager, expected) => {
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager },
+        });
+        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: ['{projectRoot}/**/*'],
+        });
+        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+          (_root, files) => files
+        );
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (path) => path === 'libs/lib1/package.json'
+        );
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) =>
+          path === 'libs/lib1/package.json'
+            ? {
+                name: 'lib1',
+                dependencies: {
+                  abs: 'file:/opt/abs',
+                  libvend: 'file:../../vendor/libvend',
+                  ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+                  ms: '^2.1.0',
+                },
+              }
+            : {
+                name: 'root-package',
+                dependencies: { rootvend: 'file:./vendor/rootvend' },
+              }
+        );
+
+        const result = createPackageJson(
+          'myapp',
+          graph,
+          { target: 'build', root: '', isProduction: true },
+          fileMap
+        );
+
+        expect(result.dependencies).toEqual(expected);
+      }
+    );
+  });
 });
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {

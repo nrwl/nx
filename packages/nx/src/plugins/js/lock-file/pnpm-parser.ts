@@ -37,6 +37,7 @@ import {
   PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
   type PnpmLockfileConfigField,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   uncontainLocalPath,
 } from './pruned-output';
 import {
@@ -81,6 +82,8 @@ export function getPnpmLockfileNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+  /** Workspace-relative local path sources per node name. */
+  localPathSources: Record<string, string[]>;
 } {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
@@ -247,21 +250,25 @@ function findPatchHash(
   return nameOnlyMatch?.hash;
 }
 
-// Segment-aware: `..` and `../x` escape, a directory literally named `..cache`
-// does not. Absolute targets are resolved against the workspace root.
-function linkTargetEscapesWorkspace(
+// The workspace-relative target of a `link:` version, or undefined when it
+// escapes the workspace. Segment-aware: `..` and `../x` escape, a directory
+// literally named `..cache` does not. Absolute targets are resolved against
+// the workspace root.
+function getLinkTargetInWorkspace(
   importerPath: string,
   depVersion: string
-): boolean {
+): string | undefined {
   const rawTarget = depVersion.slice('link:'.length);
   if (posix.isAbsolute(rawTarget) || isAbsolute(rawTarget)) {
     const rel = relative(workspaceRoot, rawTarget);
-    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+    return rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)
+      ? undefined
+      : posix.normalize(rel.split(sep).join('/'));
   }
   const combined = posix.normalize(
     posix.join(importerPath === '.' ? '' : importerPath, rawTarget)
   );
-  return combined === '..' || combined.startsWith('../');
+  return combined === '..' || combined.startsWith('../') ? undefined : combined;
 }
 
 function getNodes(
@@ -270,6 +277,7 @@ function getNodes(
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
+  localPathSources: Record<string, string[]>;
 } {
   cachedInvertedRecords.clear();
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
@@ -545,13 +553,40 @@ function getNodes(
     });
   }
 
-  // `link:` dependencies pointing outside the workspace never appear in the
-  // packages section, so nothing above minted a node for them — and a task
-  // input naming one via `externalDependencies` fails hashing with "could not
-  // be found". Mint a node under the bare `npm:<name>`, hashed on the link
-  // path: the hash changes only when the path does, not when the linked
-  // content does, which is how linked dependencies behave everywhere else in
-  // Nx. Links that resolve inside the workspace are workspace projects, not
+  // The sources of the packages installed from the local file tree, whose
+  // contents the lockfile does not record.
+  const localPathSources: Record<string, string[]> = {};
+  const addLocalPathSource = (nodeName: string, source: string) => {
+    const sources = (localPathSources[nodeName] ??= []);
+    if (!sources.includes(source)) {
+      sources.push(source);
+      sources.sort();
+    }
+  };
+  for (const [key, snapshot] of Object.entries(data.packages ?? {})) {
+    const resolution = snapshot.resolution as
+      | { directory?: string; tarball?: string }
+      | undefined;
+    const source =
+      resolution?.directory ??
+      (resolution?.tarball?.startsWith('file:')
+        ? resolution.tarball.slice('file:'.length)
+        : undefined);
+    if (typeof source !== 'string') {
+      continue;
+    }
+    for (const node of keyMap.get(key) ?? []) {
+      addLocalPathSource(node.name, posix.normalize(source));
+    }
+  }
+
+  // `link:` dependencies never appear in the packages section, so nothing
+  // above minted a node for them, and a task input naming one via
+  // `externalDependencies` fails hashing with "could not be found". Mint a
+  // node under the bare `npm:<name>`, hashed on the link path. A target inside
+  // the workspace is a local path source as well, while one outside it keeps
+  // only the path hash, which is how linked dependencies behave everywhere else
+  // in Nx. Links to workspace packages (importers) are workspace projects, not
   // externals, and are skipped.
   //
   // One node per package name, chosen deterministically by visiting importers
@@ -561,6 +596,7 @@ function getNodes(
   const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
     a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
   );
+  const importerPathSet = new Set(importerPaths);
   for (const importerPath of importerPaths) {
     const importer = data.importers[importerPath];
     for (const depType of [
@@ -576,8 +612,9 @@ function getNodes(
         if (typeof depVersion !== 'string' || !depVersion.startsWith('link:')) {
           continue;
         }
-        if (!linkTargetEscapesWorkspace(importerPath, depVersion)) {
-          continue; // inside the workspace -> a workspace project
+        const target = getLinkTargetInWorkspace(importerPath, depVersion);
+        if (target !== undefined && importerPathSet.has(target)) {
+          continue;
         }
         const bareName = `npm:${depName}`;
         if (results[bareName]) {
@@ -592,11 +629,14 @@ function getNodes(
             hash: hashArray([depName, depVersion]),
           },
         };
+        if (target !== undefined) {
+          addLocalPathSource(bareName, target);
+        }
       }
     }
   }
 
-  return { nodes: results, keyMap };
+  return { nodes: results, keyMap, localPathSources };
 }
 
 function getHoistedVersion(
@@ -673,7 +713,8 @@ export function stringifyPnpmLockfile(
   graph: ProjectGraph,
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projectRoot?: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, importers } = data;
@@ -683,6 +724,18 @@ export function stringifyPnpmLockfile(
   const packageIndex = indexPackagesByName(packages, +lockfileVersion);
 
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
+  const isImporterWorkspaceModule = (
+    importerPath: string,
+    importer: ProjectSnapshot,
+    depName: string
+  ) =>
+    !!resolveWorkspaceModuleDependency(
+      workspaceModules,
+      depName,
+      importer.specifiers?.[depName] ?? '',
+      importerPath,
+      workspaceRoot
+    );
 
   // A peer another workspace module declares is not recorded under the
   // depending importer when pnpm's `autoInstallPeers` is off, so the lockfile
@@ -710,7 +763,15 @@ export function stringifyPnpmLockfile(
         for (const [name, spec] of Object.entries(
           manifest.peerDependencies ?? {}
         )) {
-          if (workspaceModules.has(name)) {
+          if (
+            resolveWorkspaceModuleDependency(
+              workspaceModules,
+              name,
+              String(spec),
+              importerPath,
+              workspaceRoot
+            )
+          ) {
             peers.workspaceSiblings.push(name);
           } else if (typeof spec === 'string' && isLocalPathSpecifier(spec)) {
             peers.localPathPeers.push([name, spec]);
@@ -736,7 +797,8 @@ export function stringifyPnpmLockfile(
       graph,
       workspaceModules,
       +lockfileVersion,
-      workspaceRoot
+      workspaceRoot,
+      projectRoot
     );
   const snapshots = mapSnapshots(
     packages,
@@ -751,7 +813,7 @@ export function stringifyPnpmLockfile(
   const allRequiredImporters: Record<string, string> = { ...requiredImporters };
   const queue = Object.keys(requiredImporters);
   const enqueueWorkspaceModule = (depName: string) => {
-    if (workspaceModules.has(depName) && !(depName in allRequiredImporters)) {
+    if (!(depName in allRequiredImporters)) {
       allRequiredImporters[depName] = workspaceModules.get(depName)!.data.root;
       queue.push(depName);
     }
@@ -765,7 +827,9 @@ export function stringifyPnpmLockfile(
         const deps = importer[depType];
         if (!deps) continue;
         for (const depName of Object.keys(deps)) {
-          enqueueWorkspaceModule(depName);
+          if (isImporterWorkspaceModule(importerPath, importer, depName)) {
+            enqueueWorkspaceModule(depName);
+          }
         }
       }
     }
@@ -817,7 +881,7 @@ export function stringifyPnpmLockfile(
       for (const [depName, ref] of Object.entries(deps)) {
         // Sibling workspace modules resolve to their own directory package; npm
         // deps (resolved peers included) keep the ref from the source importer.
-        if (workspaceModules.has(depName)) {
+        if (isImporterWorkspaceModule(importerPath, baseImporter, depName)) {
           resolved[depName] = `file:workspace_modules/${depName}`;
         } else if (ref.startsWith('link:')) {
           // pnpm reads a snapshot link: ref relative to the lockfile dir, so
@@ -1236,7 +1300,8 @@ function mapRootSnapshot(
   graph: ProjectGraph,
   workspaceModules: ReturnType<typeof getWorkspacePackagesFromGraph>,
   lockfileVersion: number,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projectRoot: string | undefined
 ) {
   const catalogManager = getCatalogManager(workspaceRoot);
   const snapshot: ProjectSnapshot = { specifiers: {} };
@@ -1264,7 +1329,15 @@ function mapRootSnapshot(
           version = resolved;
         }
 
-        if (workspaceModules.has(packageName)) {
+        if (
+          resolveWorkspaceModuleDependency(
+            workspaceModules,
+            packageName,
+            version,
+            projectRoot,
+            workspaceRoot
+          )
+        ) {
           // The app may declare the module under dependencies,
           // optionalDependencies, devDependencies, or peerDependencies. Route
           // the lockfile entry into the matching section; peerDependencies

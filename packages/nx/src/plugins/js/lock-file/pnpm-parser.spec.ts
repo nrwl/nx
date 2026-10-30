@@ -3299,6 +3299,111 @@ snapshots:
       );
     });
 
+    // The app vendors `util`, `@demo/lib` takes the same `util` as a peer, and
+    // `@demo/web` uses the workspace package `util`.
+    it('should ship a vendored package named like a workspace package', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/api:
+    dependencies:
+      '@demo/lib':
+        specifier: workspace:*
+        version: link:../../libs/lib
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  apps/web:
+    dependencies:
+      util:
+        specifier: workspace:*
+        version: link:../../libs/util
+
+  libs/lib:
+    dependencies:
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  libs/util:
+    dependencies:
+      odd:
+        specifier: file:../../vendor/odd
+        version: file:vendor/odd
+
+packages:
+
+  odd@file:vendor/odd:
+    resolution: {directory: vendor/odd, type: directory}
+
+  util@file:vendor/util:
+    resolution: {directory: vendor/util, type: directory}
+
+snapshots:
+
+  odd@file:vendor/odd: {}
+
+  util@file:vendor/util: {}`;
+      // as relocated by rewritePrunedLocalPathSpecifiers
+      const packageJson = {
+        name: '@demo/api',
+        version: '1.0.0',
+        dependencies: {
+          '@demo/lib': 'workspace:*',
+          util: 'file:local_path_modules/vendor/util',
+        },
+      };
+      const localNode = (name: string): ProjectGraphExternalNode => ({
+        type: 'npm',
+        name: `npm:${name}`,
+        data: { version: `file:vendor/${name}`, packageName: name },
+      });
+      const graph = makeGraph(
+        [
+          { projectName: 'lib', packageName: '@demo/lib', root: 'libs/lib' },
+          { projectName: 'util', packageName: 'util', root: 'libs/util' },
+        ],
+        {},
+        { 'npm:util': localNode('util'), 'npm:odd': localNode('odd') },
+        { lib: ['npm:util'], util: ['npm:odd'] }
+      );
+
+      vol.fromJSON(
+        {
+          'libs/lib/package.json': JSON.stringify({
+            name: '@demo/lib',
+            version: '1.0.0',
+            peerDependencies: { util: 'file:../../vendor/util' },
+          }),
+        },
+        '/virtual'
+      );
+
+      const result = stringifyPnpmLockfile(
+        pruneProjectGraph(graph, packageJson, '/virtual', 'pnpm'),
+        lockFile,
+        packageJson,
+        '/virtual',
+        'apps/api'
+      );
+
+      expect(result).toMatch(
+        /util:\s+specifier: file:local_path_modules\/vendor\/util\s+version: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).toMatch(
+        /'@demo\/lib@file:workspace_modules\/@demo\/lib':\s+dependencies:\s+util: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).not.toContain('workspace_modules/util');
+    });
+
     it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = `lockfileVersion: '9.0'
 
@@ -5133,8 +5238,9 @@ importers:
   });
 
   describe('linked dependencies', () => {
-    // Out-of-workspace `link:` targets mint external nodes; links inside the
-    // workspace are workspace projects and must not.
+    // `link:` targets mint external nodes, except links to workspace packages
+    // (importers), which are workspace projects. A target inside the workspace
+    // is also a local path source.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -5250,9 +5356,14 @@ snapshots:
     });
 
     it('should not treat a dot-prefixed directory name as an escape', () => {
-      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        lockFile,
+        '__linked_dotname__'
+      );
 
-      expect(nodes['npm:dot-named']).toBeUndefined();
+      expect(nodes['npm:dot-named']).toBeDefined();
+      expect(localPathSources['npm:dot-named']).toEqual(['..cache/plugin']);
+      expect(localPathSources['npm:@scoped/linked-out']).toBeUndefined();
     });
 
     it('should not shadow a hoisted registry package with a link from a nested importer', () => {

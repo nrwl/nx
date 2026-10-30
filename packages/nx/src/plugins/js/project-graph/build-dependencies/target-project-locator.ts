@@ -284,6 +284,47 @@ export class TargetProjectLocator {
   }
 
   /**
+   * The external node a `file:`/`link:` dependency of a package.json installs,
+   * when the lockfile names it by path: the target's root-relative `file:` or
+   * `link:./` path (Bun, pnpm), or the path as written for a Bun tarball,
+   * which Bun records relative to its dependent. Unlike
+   * `findNpmProjectFromImport`, it tells apart local packages that share a
+   * name with each other or with a registry package.
+   *
+   * @param packageJsonPath the manifest's workspace-relative path
+   */
+  findNpmProjectFromLocalPathSpec(
+    packageName: string,
+    spec: string,
+    packageJsonPath: string
+  ): string | null {
+    const protocol = spec.startsWith('file:')
+      ? 'file:'
+      : spec.startsWith('link:')
+        ? 'link:'
+        : null;
+    if (!protocol) {
+      return null;
+    }
+    const specPath = posix.normalize(
+      spec.slice(protocol.length).replace(/\\/g, '/')
+    );
+    const target = posix.join(posix.dirname(packageJsonPath), specPath);
+    const candidates = [
+      `npm:${packageName}@file:${target}`,
+      `npm:${packageName}@link:./${target}`,
+      `npm:${packageName}@${specPath}`,
+    ];
+    for (const candidate of candidates) {
+      const node = this.npmProjects[candidate];
+      if (node) {
+        return node.name;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Return file paths matching the import relative to the repo root
    * @param normalizedImportExpr
    * @deprecated Use `findMatchingPaths` instead. It will be removed in Nx v22.
