@@ -59,6 +59,53 @@ public static class ProjectUtilities
         return msbuildProjectName;
     }
 
+    public static List<string>? GetCommonNxTags(IReadOnlyList<ProjectInstance> projects)
+    {
+        HashSet<string>? commonTags = null;
+        var allTags = new SortedSet<string>(StringComparer.Ordinal);
+
+        foreach (var project in projects)
+        {
+            var projectTags = new HashSet<string>(StringComparer.Ordinal);
+            projectTags.UnionWith(SplitMsBuildList(project.GetPropertyValue("NxTags")));
+            projectTags.UnionWith(
+                project
+                    .GetItems("NxTag")
+                    .SelectMany(item => SplitMsBuildList(item.EvaluatedInclude)));
+            allTags.UnionWith(projectTags);
+
+            if (commonTags is null)
+            {
+                commonTags = projectTags;
+            }
+            else
+            {
+                commonTags.IntersectWith(projectTags);
+            }
+        }
+
+        if (commonTags is null)
+        {
+            return null;
+        }
+
+        allTags.ExceptWith(commonTags);
+        if (allTags.Count > 0)
+        {
+            Console.Error.WriteLine(
+                $"Warning: {projects[0].FullPath}: NxTags/NxTag values [{string.Join(", ", allTags)}] " +
+                "were not added as Nx project tags because they do not apply to every target framework. " +
+                "Define shared tags without a target-framework condition.");
+        }
+
+        return commonTags.Count > 0
+            ? commonTags.OrderBy(tag => tag, StringComparer.Ordinal).ToList()
+            : null;
+    }
+
+    private static IEnumerable<string> SplitMsBuildList(string value) =>
+        value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
     /// <summary>
     /// Directory.Build.props/.targets are auto-imported by Microsoft.Common.props/.targets, walking
     /// up from the project to the first ancestor that defines them. Directory.Build.rsp is read by
