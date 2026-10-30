@@ -32,7 +32,7 @@
     "copy-built-package": "tsx scripts/copy-built-package"
   },
   "devDependencies": {
-    "@actions/core": "^1.10.0",
+    "@actions/core": "^2.0.3",
     "@angular-devkit/architect": "catalog:angular",
     "@angular-devkit/build-angular": "catalog:angular",
     "@angular-devkit/core": "catalog:angular",
