@@ -1,14 +1,14 @@
-export function parseChangelogMarkdown(contents: string) {
-  /**
-   * The release header may include prerelease identifiers (e.g., -alpha.13),
-   * and major releases may use a single #, instead of the standard ## used
-   * for minor and patch releases. This regex matches all of these cases.
-   */
-  const CHANGELOG_RELEASE_HEAD_RE = new RegExp(
-    '^#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
-    'gm'
-  );
+/**
+ * The release header may include prerelease identifiers (e.g., -alpha.13),
+ * and major releases may use a single #, instead of the standard ## used
+ * for minor and patch releases. This regex matches all of these cases.
+ */
+const CHANGELOG_RELEASE_HEAD_RE = new RegExp(
+  '^#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
+  'gm'
+);
 
+export function parseChangelogMarkdown(contents: string) {
   const headings = [...contents.matchAll(CHANGELOG_RELEASE_HEAD_RE)];
   const releases: { version?: string; body: string }[] = [];
 
@@ -32,4 +32,28 @@ export function parseChangelogMarkdown(contents: string) {
   return {
     releases,
   };
+}
+
+export function replaceChangelogRelease(
+  contents: string,
+  version: string,
+  newEntry: string
+): string {
+  const headings = [...contents.matchAll(CHANGELOG_RELEASE_HEAD_RE)];
+  const index = headings.findIndex((heading) => heading[1] === version);
+  if (index === -1) {
+    return contents;
+  }
+
+  const start = headings[index].index;
+  const nextHeading = headings[index + 1];
+  const existingEntry = contents
+    .slice(start, nextHeading ? nextHeading.index : contents.length)
+    .trimEnd();
+
+  return (
+    contents.slice(0, start) +
+    newEntry +
+    contents.slice(start + existingEntry.length)
+  );
 }
