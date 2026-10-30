@@ -170,6 +170,17 @@ function hostBerryBinFoldersInProcess(env: NodeJS.ProcessEnv): void {
   }
 }
 
+/**
+ * The daemon's env plus the trusted bin folders a connected client still
+ * carries, for a command the daemon starts now on a client's behalf.
+ */
+export function envWithLiveBerryBinFolders(): NodeJS.ProcessEnv {
+  return withLiveBerryBinFolders(
+    { ...process.env, ...getLiveClientBerryEnv() },
+    liveBerryFolders()
+  );
+}
+
 function workerEnv(
   env: Record<string, string>,
   keepBerryFolders: boolean

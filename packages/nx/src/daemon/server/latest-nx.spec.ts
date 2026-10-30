@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 
 const spawnedEnvs = vi.hoisted(() => [] as NodeJS.ProcessEnv[]);
+const execCalls = vi.hoisted(
+  () => [] as { command: string; env: NodeJS.ProcessEnv }[]
+);
 
 vi.mock('child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('child_process')>();
@@ -17,6 +20,10 @@ vi.mock('child_process', async (importOriginal) => {
   return {
     ...actual,
     exec: (...args: unknown[]) => {
+      execCalls.push({
+        command: args[0] as string,
+        env: (args[1] as { env?: NodeJS.ProcessEnv }).env,
+      });
       const error = record(args);
       (args.find((arg) => typeof arg === 'function') as Function)?.(error);
     },
@@ -33,7 +40,13 @@ vi.mock('child_process', async (importOriginal) => {
   };
 });
 vi.mock('../../project-graph/plugins/get-plugins', () => ({
+  daemonHostsPluginsInProcess: () => false,
   getPluginsIfLoadedOrLoading: vi.fn(),
+}));
+vi.mock('../../utils/package-manager', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../utils/package-manager')>()),
+  detectPackageManager: () => 'yarn',
+  getPackageManagerVersion: () => '4.0.0',
 }));
 vi.mock('./project-graph-incremental-recomputation', () => ({
   invalidateGraphCache: vi.fn(),
@@ -51,6 +64,7 @@ describe.skipIf(process.platform === 'win32')('getLatestNxTmpPath', () => {
     process.env = { ...originalEnv };
     delete process.env.NX_SKIP_PROVENANCE_CHECK;
     spawnedEnvs.length = 0;
+    execCalls.length = 0;
   });
 
   afterEach(() => {
@@ -76,5 +90,73 @@ describe.skipIf(process.platform === 'win32')('getLatestNxTmpPath', () => {
     for (const env of spawnedEnvs) {
       expect(env.PATH.split(delimiter)).not.toContain(folder);
     }
+  });
+
+  describe('installing with Yarn', () => {
+    let bin: string;
+
+    function addExecutable(dir: string, name: string) {
+      writeFileSync(join(dir, name), '', { mode: 0o755 });
+    }
+
+    beforeEach(() => {
+      process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
+      bin = join(root, 'bin');
+      mkdirSync(bin);
+      addExecutable(bin, 'corepack');
+      process.env.PATH = bin;
+    });
+
+    async function install() {
+      execCalls.length = 0;
+      await getLatestNxTmpPath().catch(() => {});
+      expect(execCalls.length).toBeGreaterThan(0);
+      return execCalls;
+    }
+
+    it("runs it from a connected client's own bin folder", async () => {
+      const folder = join(root, 'xfs-2b3c4d5e');
+      mkdirSync(folder, { mode: 0o755 });
+      addExecutable(folder, 'yarn');
+      const unowned = join(root, 'xfs-3c4d5e6f');
+      mkdirSync(unowned, { mode: 0o755 });
+      const client = new EventEmitter();
+      await handleClientEnv(
+        {
+          ...(process.env as Record<string, string>),
+          BERRY_BIN_FOLDER: folder,
+          PATH: [folder, unowned, bin].join(delimiter),
+        },
+        client
+      );
+
+      for (const { command, env } of await install()) {
+        expect(command).toMatch(/^yarn /);
+        expect(env.PATH.split(delimiter)).toContain(folder);
+        expect(env.PATH.split(delimiter)).not.toContain(unowned);
+      }
+
+      client.emit('close');
+      await new Promise(setImmediate);
+
+      for (const { command, env } of await install()) {
+        expect(command).toMatch(/^corepack yarn /);
+        expect(env.PATH.split(delimiter)).not.toContain(folder);
+      }
+    });
+
+    it('runs it through Corepack when no yarn is on PATH', async () => {
+      for (const { command } of await install()) {
+        expect(command).toMatch(/^corepack yarn /);
+      }
+    });
+
+    it('runs yarn directly when it is on PATH', async () => {
+      addExecutable(bin, 'yarn');
+
+      for (const { command } of await install()) {
+        expect(command).toMatch(/^yarn /);
+      }
+    });
   });
 });
