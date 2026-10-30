@@ -7,7 +7,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { nextVersion } from '../../../utils/versions';
 import { reactDomVersion, reactVersion } from '@nx/react';
 
