@@ -463,7 +463,7 @@ async function resolveValidConfigFilesAndHashes(
  * The cache key is composed by:
  * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
  *   - current config file
- *   - config files extended by the current config file (recursively up to the root config file)
+ *   - config files extended by the current config file or its internal references (recursively up to the root config file)
  *   - referenced config files that are internal to the owning Nx project of the current config file,
  *     or is a shallow external reference of the owning Nx project
  *   - lock file
@@ -486,15 +486,16 @@ async function getConfigFileHash(
     workspaceRoot,
     cache
   );
-  const extendedConfigFiles = getExtendedConfigFiles(
-    tsConfig,
-    workspaceRoot,
-    cache
-  );
   const internalReferencedFiles = resolveInternalProjectReferences(
     tsConfig,
     workspaceRoot,
     project,
+    cache
+  );
+  const extendedConfigFiles = getProjectExtendedConfigFiles(
+    tsConfig,
+    internalReferencedFiles,
+    workspaceRoot,
     cache
   );
   const externalProjectReferences = resolveShallowExternalProjectReferences(
@@ -857,8 +858,9 @@ function getInputs(
   // glob patterns from external dependencies
   // const externalDependencies = ['typescript'];
 
-  const extendedConfigFiles = getExtendedConfigFiles(
+  const extendedConfigFiles = getProjectExtendedConfigFiles(
     tsConfig,
+    internalProjectReferences,
     workspaceRoot,
     cache
   );
@@ -1026,8 +1028,10 @@ function getInputs(
       inputs.push('{projectRoot}/package.json');
     }
     inputs.push(
-      ...Array.from(configFiles).map((p: string) =>
-        pathToInputOrOutput(p, workspaceRoot, config.project)
+      ...new Set(
+        Array.from(configFiles).map((p: string) =>
+          pathToInputOrOutput(p, workspaceRoot, config.project)
+        )
       ),
       ...Array.from(includePaths).map((p: string) =>
         pathToInputOrOutput(
@@ -1328,6 +1332,31 @@ function getExtendedConfigFiles(
     files: Array.from(extendedConfigFiles),
     packages: Array.from(extendedExternalPackages),
   };
+}
+
+/**
+ * Extended config files of the tsconfig and its internal project references,
+ * which `tsc --build` reads along with them.
+ */
+function getProjectExtendedConfigFiles(
+  tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
+  workspaceRoot: string,
+  cache: InvocationCache
+): {
+  files: string[];
+  packages: string[];
+} {
+  const files = new Set<string>();
+  const packages = new Set<string>();
+  for (const config of [
+    tsConfig,
+    ...Object.values(internalProjectReferences),
+  ]) {
+    getExtendedConfigFiles(config, workspaceRoot, cache, files, packages);
+  }
+
+  return { files: Array.from(files), packages: Array.from(packages) };
 }
 
 function resolveInternalProjectReferences(
