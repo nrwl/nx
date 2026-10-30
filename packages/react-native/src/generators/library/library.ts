@@ -219,7 +219,7 @@ async function addProject(
     }
   } else {
     if (options.publishable) {
-      const nxJson = readJson(host, 'nx.json');
+      readJson(host, 'nx.json');
       await addReleaseConfigForNonTsSolution(host, options.name, project);
     }
     addProjectConfiguration(host, options.name, project);
