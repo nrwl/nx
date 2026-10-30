@@ -6,7 +6,6 @@ import {
   multiselectPrompt,
   confirmationPrompt,
 } from '../../utils/prompt-helpers';
-import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
@@ -39,7 +38,7 @@ import {
   toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
@@ -82,10 +81,14 @@ export async function initHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp(
+    const version = await resolveVersionWithProvenance(
       'nx',
       'latest',
+      process.cwd()
+    );
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      version,
       detectPackageManager(process.cwd())
     );
     cleanup = packageInstallResults.cleanup;
@@ -167,8 +170,8 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
 }
 
 async function runInit(options: InitArgs): Promise<void> {
-  const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
+  // Resolving `latest` here would install a version nothing has verified.
+  const version = process.env.NX_VERSION ?? nxVersion;
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
   }

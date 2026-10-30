@@ -13,11 +13,11 @@ vi.mock('./version-skew-guard', async () => ({
     mockAssertWorkspaceNx(...args),
 }));
 
-const mockEnsurePackageHasProvenance = vi.fn();
+const mockResolveVersionWithProvenance = vi.fn();
 vi.mock('../../utils/provenance', async () => ({
   ...(await vi.importActual('../../utils/provenance')),
-  ensurePackageHasProvenance: (...args: unknown[]) =>
-    mockEnsurePackageHasProvenance(...args),
+  resolveVersionWithProvenance: (...args: unknown[]) =>
+    mockResolveVersionWithProvenance(...args),
 }));
 
 // Both spawn helpers are mocked: the hand-off calls runNxArgvSync, and
@@ -100,6 +100,7 @@ vi.mock('./agentic/inception', async () => ({
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -407,7 +408,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
 
   beforeEach(() => {
     mockResolveRunTarget.mockReset().mockResolvedValue('temp-cli');
-    mockEnsurePackageHasProvenance.mockReset();
+    mockResolveVersionWithProvenance.mockReset().mockResolvedValue('23.2.0');
     mockResolvePackageVersion.mockReset().mockResolvedValue('23.2.0');
     mockRunNxArgvSync.mockReset();
     mockExecSync.mockReset();
@@ -446,7 +447,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
   it('runs the router with the raw argv before installing the temp CLI', async () => {
     // The first step of the temp-CLI install (nxCliPath), so rejecting it
     // aborts before any real install runs.
-    mockEnsurePackageHasProvenance.mockRejectedValue(
+    mockResolveVersionWithProvenance.mockRejectedValue(
       new Error('stub: no network in tests')
     );
 
@@ -461,9 +462,13 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
         ownNxVersion: expect.any(String),
       })
     );
-    expect(mockEnsurePackageHasProvenance).toHaveBeenCalledWith('nx', 'latest');
+    expect(mockResolveVersionWithProvenance).toHaveBeenCalledWith(
+      'nx',
+      'latest',
+      expect.any(String)
+    );
     expect(mockResolveRunTarget.mock.invocationCallOrder[0]).toBeLessThan(
-      mockEnsurePackageHasProvenance.mock.invocationCallOrder[0]
+      mockResolveVersionWithProvenance.mock.invocationCallOrder[0]
     );
 
     // The resolver must probe without side effects: a minimum-release-age
@@ -488,7 +493,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
 
     expect(exitCode).toBe(0);
     expect(mockResolveRunTarget).not.toHaveBeenCalled();
-    expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
+    expect(mockResolveVersionWithProvenance).not.toHaveBeenCalled();
     expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
     expect(mockRunNxArgvSync.mock.calls[0][0]).toEqual([
       '_migrate',
@@ -548,7 +553,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     const exitCode = await runMigration();
 
     expect(exitCode).toBe(0);
-    expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
+    expect(mockResolveVersionWithProvenance).not.toHaveBeenCalled();
     expect(mockRunNxArgvSync).toHaveBeenCalledTimes(1);
     expect(mockRunNxArgvSync.mock.calls[0][0]).toEqual([
       '_migrate',
@@ -564,7 +569,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     const exitCode = await runMigration();
 
     expect(exitCode).toBe(1);
-    expect(mockEnsurePackageHasProvenance).not.toHaveBeenCalled();
+    expect(mockResolveVersionWithProvenance).not.toHaveBeenCalled();
     expect(mockRunNxArgvSync).not.toHaveBeenCalled();
   });
 
@@ -588,6 +593,21 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
           cmd.includes('_migrate')
         )
       ).toEqual([]);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('installs the exact nx version whose provenance was verified', async () => {
+    const tmpDir = stubTempCliInstall({ nx: './dist/bin/nx.js' });
+
+    try {
+      await runMigration();
+
+      expect(
+        JSON.parse(readFileSync(join(tmpDir, 'package.json'), 'utf-8'))
+          .dependencies
+      ).toEqual({ nx: '23.2.0' });
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }

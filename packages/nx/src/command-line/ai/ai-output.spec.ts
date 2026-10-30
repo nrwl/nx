@@ -1,4 +1,14 @@
 import type { MockInstance, MockedFunction } from 'vitest';
+import {
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { dirname, join } from 'path';
 import { writeAiOutput, logProgress, writeErrorLog } from './ai-output';
 
 // Mock isAiAgent
@@ -75,6 +85,43 @@ describe('shared ai-output', () => {
     it('should handle non-Error objects', () => {
       const path = writeErrorLog('string error', 'nx');
       expect(path).toBeTruthy();
+    });
+
+    describe.skipIf(process.platform === 'win32')('file permissions', () => {
+      let root: string;
+      const originalTmpdir = process.env.TMPDIR;
+
+      beforeEach(() => {
+        root = mkdtempSync(join(tmpdir(), 'nx-ai-output-spec-'));
+        process.env.TMPDIR = root;
+      });
+
+      afterEach(() => {
+        if (originalTmpdir === undefined) delete process.env.TMPDIR;
+        else process.env.TMPDIR = originalTmpdir;
+        vi.restoreAllMocks();
+        rmSync(root, { recursive: true, force: true });
+      });
+
+      it('should write the log readable only by the current user', () => {
+        const path = writeErrorLog(new Error('secret'), 'nx');
+        expect(path.startsWith(root)).toBe(true);
+        expect(statSync(path).mode & 0o077).toBe(0);
+        expect(statSync(dirname(path)).mode & 0o077).toBe(0);
+        expect(readFileSync(path, 'utf-8')).toContain('secret');
+      });
+
+      it('should not follow a pre-created file at the predictable path', () => {
+        vi.spyOn(Date, 'now').mockReturnValue(1700000000000);
+        const target = join(root, 'target');
+        writeFileSync(target, 'untouched');
+        symlinkSync(target, join(root, 'nx-error-1700000000000.log'));
+
+        const path = writeErrorLog(new Error('secret'), 'nx');
+
+        expect(readFileSync(target, 'utf-8')).toBe('untouched');
+        expect(path).not.toBe(join(root, 'nx-error-1700000000000.log'));
+      });
     });
   });
 });
