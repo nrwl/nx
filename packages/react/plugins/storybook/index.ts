@@ -1,9 +1,7 @@
 import {
   createProjectGraphAsync,
-  ExecutorContext,
   logger,
   ProjectGraphProjectNode,
-  workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedWebpackExecutorOptions } from '@nx/webpack';

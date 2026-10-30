@@ -40,7 +40,7 @@ describe('nextjs:stories for applications', () => {
       tree.exists('test-ui-app/src/components/test.stories.tsx')
     ).toMatchSnapshot();
 
-    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    JSON.parse(tree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {
