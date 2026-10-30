@@ -1,6 +1,7 @@
 import { dirname, join } from 'path';
 import {
   Generator,
+  GeneratorCallback,
   GeneratorsJson,
   GeneratorsJsonEntry,
 } from '../../config/misc-interfaces';
@@ -162,5 +163,15 @@ function findFullGeneratorName(
         return key;
       }
     }
+  }
+}
+
+export async function runGeneratorCallback(result: unknown): Promise<void> {
+  const callback =
+    result && typeof result === 'object'
+      ? (result as { callback?: GeneratorCallback }).callback
+      : result;
+  if (typeof callback === 'function') {
+    await callback();
   }
 }
