@@ -87,6 +87,8 @@ export default async function mavenExecutor(
       command: mavenExecutable,
       cwd: workspaceRoot,
       args,
+      // The apply goal bounds restored paths by this root, which `-f` would otherwise move.
+      env: { NX_WORKSPACE_ROOT: workspaceRoot },
       __unparsed__: options.__unparsed__ || [],
     },
     context

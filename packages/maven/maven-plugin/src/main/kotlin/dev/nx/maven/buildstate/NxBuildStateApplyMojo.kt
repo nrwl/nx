@@ -59,10 +59,14 @@ class NxBuildStateApplyMojo : AbstractMojo() {
 
         if (projectsToApply.isNotEmpty()) {
             log.info("Applying build state to ${projectsToApply.size} projects...")
+            // `-f` moves the execution root to the selected POM's directory.
+            val workspaceRoot = File(
+                session.systemProperties.getProperty("env.NX_WORKSPACE_ROOT") ?: session.executionRootDirectory
+            )
             projectsToApply.forEach { (depProject, stateFile) ->
                 try {
                     val buildState = gson.fromJson(stateFile.readText(), BuildState::class.java)
-                    BuildStateApplier.applyBuildState(depProject, buildState, projectHelper)
+                    BuildStateApplier.applyBuildState(depProject, buildState, workspaceRoot, projectHelper)
                 } catch (e: Exception) {
                     log.warn("Failed to apply build state to ${depProject.artifactId}: ${e.message}")
                 }
