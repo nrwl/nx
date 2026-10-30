@@ -195,12 +195,14 @@ const changeCache = (file) => {
     }
   }
 };
-const statSync = fs.statSync;
-fs.statSync = function(file, ...args) {
-  const result = statSync.call(this, file, ...args);
-  if (phase === 'stat') changeCache(file);
-  return result;
-};
+for (const name of ['statSync', 'lstatSync']) {
+  const original = fs[name];
+  fs[name] = function(file, ...args) {
+    const result = original.call(this, file, ...args);
+    if (phase === 'stat') changeCache(file);
+    return result;
+  };
+}
 const dlopen = process.dlopen;
 process.dlopen = function(module, file, ...args) {
   if (phase === 'dlopen') changeCache(file);

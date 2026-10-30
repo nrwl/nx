@@ -238,6 +238,7 @@ describe('createSandbox', () => {
 
   it('keeps a failed install dir at exit so its error log can be read', async () => {
     const home = join(root, 'home');
+    mkdirSync(home);
     vi.stubEnv('HOME', home);
     vi.stubEnv('USERPROFILE', home);
     await treatDirsAboveRootAsSystemDirs();
