@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  type ExpandedPluginConfiguration,
   joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
