@@ -7,7 +7,6 @@ import {
   connectExistingRepoToNxCloudPrompt,
   connectWorkspaceToCloud,
 } from './connect-to-nx-cloud';
-import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 
 export async function viewLogs(): Promise<number> {
   const cloudUsed = isNxCloudUsed(readNxJson());

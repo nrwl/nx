@@ -379,7 +379,6 @@ impl App {
             tasks,
             initiating_tasks,
             run_mode,
-            _,
             task_count,
             task_status_map,
             task_start_times,
@@ -401,7 +400,6 @@ impl App {
                 state_lock.tasks().to_vec(),
                 state_lock.initiating_tasks().clone(),
                 state_lock.run_mode(),
-                state_lock.pinned_tasks().to_vec(),
                 get_task_count(state_lock.task_graph()),
                 state_lock.get_task_status_map().clone(),
                 state_lock.get_task_start_times().clone(),
@@ -1337,12 +1335,6 @@ impl App {
                                             // commands mid-typing, matching the pane
                                             // search host.
                                             KeyCode::Char(c) if !is_filter_mode => match c {
-                                                'j' => {
-                                                    self.dispatch_action(Action::NextTask);
-                                                }
-                                                'k' => {
-                                                    self.dispatch_action(Action::PreviousTask);
-                                                }
                                                 '1' => {
                                                     self.toggle_current_task_in_pane(0);
                                                     let _ = self.handle_pty_resize();

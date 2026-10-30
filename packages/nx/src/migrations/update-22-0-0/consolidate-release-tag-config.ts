@@ -1,8 +1,5 @@
 import { join } from 'node:path';
-import type {
-  NxJsonConfiguration,
-  NxReleaseConfiguration,
-} from '../../config/nx-json';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { formatChangedFiles } from '../../generators/internal-utils/format-changed-files';
 import type { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';

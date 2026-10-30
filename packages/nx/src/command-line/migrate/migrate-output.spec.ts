@@ -39,16 +39,6 @@ describe('migrate-output', () => {
     kind: 'applied',
     commit: { kind: 'none' },
   });
-  const deferred = (
-    name: string,
-    sha: string | null = null,
-    pkg: string = PKG
-  ): MigrationOutcome => ({
-    migration: { package: pkg, name },
-    status: 'completed',
-    kind: 'deferred',
-    commit: { kind: 'landed', sha },
-  });
   const deferredNoCommit = (
     name: string,
     pkg: string = PKG
