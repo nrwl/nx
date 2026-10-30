@@ -5,6 +5,8 @@
 import { relative } from 'node:path';
 import { coerce as semverCoerce, gte as semverGte } from 'semver';
 import { interpolateReleaseConfig } from './interpolate-release-config';
+import { assertValidGitRevision } from '../../../utils/git-revision';
+import { redactUrlCredentials } from '../../../utils/redact-url-credentials';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
 import type { CheckAllBranchesWhen, RepoGitTags } from './repository-git-tags';
@@ -20,6 +22,8 @@ export interface RawGitCommit {
   body: string;
   shortHash: string;
   author: GitCommitAuthor;
+  /** Git's --name-status output, free of commit-author text. */
+  nameStatus?: string;
 }
 
 export interface Reference {
@@ -264,6 +268,11 @@ export async function getGitDiff(
   from: string | undefined,
   to = 'HEAD'
 ): Promise<RawGitCommit[]> {
+  if (from) {
+    assertValidGitRevision(from);
+  }
+  assertValidGitRevision(to);
+
   let range = '';
   if (!from || from === to) {
     range = to;
@@ -271,15 +280,15 @@ export async function getGitDiff(
     range = `${from}..${to}`;
   }
 
-  // Use unique enough separators that we can be relatively certain will not occur within the commit message itself
-  const commitMetadataSeparator = '§§§';
-  const commitsSeparator = '|@-------@|';
+  // Git rejects NUL in commit messages, so commit text cannot forge a field boundary.
+  // Each commit prints a fixed number of fields; --name-status lands in the last one.
+  const fieldsPerCommit = 6;
   // https://git-scm.com/docs/pretty-formats
   const args = [
     '--no-pager',
     'log',
     range,
-    `--pretty="${commitsSeparator}%n%s${commitMetadataSeparator}%h${commitMetadataSeparator}%an${commitMetadataSeparator}%ae%n%b"`,
+    `--pretty="%x00%s%x00%h%x00%an%x00%ae%x00%b"%x00`,
     '--name-status',
   ];
   // Support cases where the nx workspace root is located at a nested path within the git repo
@@ -290,22 +299,20 @@ export async function getGitDiff(
 
   const r = await execCommand('git', args);
 
-  return r
-    .split(`${commitsSeparator}\n`)
-    .splice(1)
-    .map((line) => {
-      const [firstLine, ..._body] = line.split('\n');
-      const [message, shortHash, authorName, authorEmail] = firstLine.split(
-        commitMetadataSeparator
-      );
-      const r: RawGitCommit = {
-        message,
-        shortHash,
-        author: { name: authorName, email: authorEmail },
-        body: _body.join('\n'),
-      };
-      return r;
+  const fields = r.split('\0').slice(1);
+  const commits: RawGitCommit[] = [];
+  for (let i = 0; i + fieldsPerCommit <= fields.length; i += fieldsPerCommit) {
+    const [message, shortHash, authorName, authorEmail, body, nameStatus] =
+      fields.slice(i, i + fieldsPerCommit);
+    commits.push({
+      message,
+      shortHash,
+      author: { name: authorName, email: authorEmail },
+      body: body + nameStatus,
+      nameStatus,
     });
+  }
+  return commits;
 }
 
 async function getChangedTrackedFiles(cwd: string): Promise<Set<string>> {
@@ -543,7 +550,7 @@ export async function gitPush({
         ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
         : `Pushing the current branch to the remote with the following command:`
     );
-    console.log(`git ${commandArgs.join(' ')}`);
+    console.log(redactUrlCredentials(`git ${commandArgs.join(' ')}`));
   }
 
   if (dryRun) {
@@ -553,7 +560,7 @@ export async function gitPush({
   try {
     await execCommand('git', commandArgs);
   } catch (err) {
-    throw new Error(`Unexpected git push error: ${err}`);
+    throw new Error(redactUrlCredentials(`Unexpected git push error: ${err}`));
   }
 }
 
@@ -625,20 +632,39 @@ export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
 function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
   const authors: GitCommitAuthor[] = [commit.author];
   // Additional authors can be specified in the commit body (depending on the VCS provider)
-  for (const match of commit.body.matchAll(CoAuthoredByRegex)) {
-    authors.push({
-      name: (match.groups.name || '').trim(),
-      email: (match.groups.email || '').trim(),
-    });
+  for (const line of commit.body.split(LineTerminatorRE)) {
+    const coAuthor = parseCoAuthoredByLine(line);
+    if (coAuthor) {
+      authors.push(coAuthor);
+    }
   }
   return authors;
+}
+
+// Parsed with string scans rather than a regex to stay linear on long lines.
+function parseCoAuthoredByLine(line: string): GitCommitAuthor | null {
+  const prefix = CoAuthoredByRE.exec(line);
+  if (!prefix) {
+    return null;
+  }
+  const value = line.slice(prefix.index + prefix[0].length);
+  const emailEnd = value.lastIndexOf('>');
+  const emailStart = emailEnd < 2 ? -1 : value.lastIndexOf('<', emailEnd - 2);
+  if (emailStart < 1) {
+    return null;
+  }
+  return {
+    name: value.slice(0, emailStart).trim(),
+    email: value.slice(emailStart + 1, emailEnd).trim(),
+  };
 }
 
 // https://www.conventionalcommits.org/en/v1.0.0/
 // https://regex101.com/r/FSfNvA/1
 const ConventionalCommitRegex =
   /^(?<type>[^\s():!]+)(?:\s*\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)$/u;
-const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
+const CoAuthoredByRE = /co-authored-by:/i;
+const LineTerminatorRE = /\r\n|[\n\r\u2028\u2029]/;
 // GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 // GitLab style merge request references
@@ -692,9 +718,8 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   // Find all authors
   const authors = getAllAuthorsForCommit(commit);
 
-  // Extract file changes from commit body
   const affectedFiles = Array.from(
-    commit.body.matchAll(ChangedFileRegex)
+    (commit.nameStatus ?? '').matchAll(ChangedFileRegex)
   ).reduce(
     (prev, [, , file1, file2]: RegExpExecArray) =>
       // file2 only exists for some change types, such as renames
@@ -716,8 +741,9 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 }
 
 export async function getCommitHash(ref: string) {
+  assertValidGitRevision(ref);
   try {
-    return (await execCommand('git', ['rev-parse', ref])).trim();
+    return (await execCommand('git', ['rev-parse', '--verify', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
   }
