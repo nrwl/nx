@@ -212,10 +212,8 @@ async function buildViteTargets(
     isSsrBuild: false,
     isPreview: false,
   };
-  const userConfigResult = await loadConfigFromFile(
-    configEnv,
-    absoluteConfigFilePath,
-    projectRoot
+  const userConfigResult = await retryOnRequireEsmRace(() =>
+    loadConfigFromFile(configEnv, absoluteConfigFilePath, projectRoot)
   );
   const viteBuildConfig = await retryOnRequireEsmRace(() =>
     resolveConfig(
