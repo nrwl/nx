@@ -992,14 +992,14 @@ You can configure [Docker release](/docs/kb/release-docker-images) settings at t
         "projectsRelationship": "independent",
         "docker": {
           // Only set this to true if you are not using {versionActionsVersion} in your docker version scheme
-          "skipVersionActions": true
+          "skipVersionActions": true,
           // Run a script before tagging Docker version
           "groupPreVersionCommand": "echo Preparing backend release",
         },
-        "changelog": true
-      }
-    }
-  }
+        "changelog": true,
+      },
+    },
+  },
 }
 ```
 

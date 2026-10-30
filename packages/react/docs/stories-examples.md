@@ -1,7 +1,7 @@
 This generator will generate stories for all your components in your project. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```bash
-nx g @nx/react:stories project-name
+nx g @nx/react:stories --project=project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for React overview page](/recipes/storybook/overview-react#auto-generate-stories).

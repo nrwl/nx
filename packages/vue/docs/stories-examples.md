@@ -8,7 +8,7 @@ This generator will generate stories for all your components in your project. Th
 You can also use this generator to generate stories for your **Nuxt** project:
 
 ```bash
-nx g @nx/vue:stories project-name
+nx g @nx/vue:stories --project=project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#auto-generate-stories).

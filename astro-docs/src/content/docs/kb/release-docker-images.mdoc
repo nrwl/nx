@@ -136,7 +136,7 @@ To learn more about release groups, see the [Release Groups](/docs/guides/nx-rel
 
 The `release.groups.apps.docker.skipVersionActions` option should be set to `true` to skip versioning for other tooling such as NPM or Rust crates.
 
-The `release.groups.apps.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `projectChangelogs` so that each application within the group maintains its own release cadence and changelog.
+The `release.groups.apps.projectsRelationship` is set to `independent` and `release.groups.apps.changelog` is set to `true` so that each application within the group maintains its own release cadence and changelog.
 
 The `release.groups.apps.docker.groupPreVersionCommand` is an optional command that runs before the versioning step, allowing you to perform any pre-version checks such as image verification before continuing the release.
 
