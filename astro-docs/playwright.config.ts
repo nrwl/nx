@@ -3,7 +3,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
 
-// For CI, you may want to set BASE_URL to the deployed application.
+// BASE_URL changes the browser destination; local startup is still required.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4321';
 const reportDir = join(
   workspaceRoot,
@@ -25,7 +25,6 @@ export default defineConfig({
       },
     ],
   ],
-  /* Global setup to wait for server */
   globalSetup: require.resolve('./global-setup.e2e.ts'),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
