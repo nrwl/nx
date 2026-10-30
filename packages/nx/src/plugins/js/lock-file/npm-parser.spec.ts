@@ -1743,6 +1743,86 @@ describe('NPM lock file utility', () => {
       ).toEqual({ '@myorg/lib-b': 'file:../lib-b' });
     });
 
+    it('should map a workspace package whose directory name matches its package name', () => {
+      // npm omits `name` from a workspace entry when it equals the directory's
+      // basename, so the package must be found through its node_modules link.
+      // app -> lib-a -> lib-b -> lodash
+      const lockFile = {
+        name: 'test-app',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'test-app',
+            version: '1.0.0',
+            dependencies: { 'lib-a': 'file:libs/lib-a' },
+          },
+          'libs/lib-a': {
+            version: '0.0.1',
+            dependencies: { 'lib-b': 'file:../lib-b' },
+          },
+          'node_modules/lib-a': {
+            resolved: 'libs/lib-a',
+            link: true,
+          },
+          'libs/lib-b': {
+            version: '0.0.1',
+            dependencies: { lodash: '^4.17.21' },
+          },
+          'node_modules/lib-b': {
+            resolved: 'libs/lib-b',
+            link: true,
+          },
+          'node_modules/lodash': {
+            version: '4.17.21',
+            resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz',
+            integrity:
+              'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+          },
+        },
+      };
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'lib-a': 'file:libs/lib-a' },
+      };
+
+      const graph = makeGraph(
+        [
+          { projectName: 'lib-a', packageName: 'lib-a', root: 'libs/lib-a' },
+          { projectName: 'lib-b', packageName: 'lib-b', root: 'libs/lib-b' },
+        ],
+        { 'lib-a': ['lib-b'] },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        { 'lib-b': ['npm:lodash'] }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = JSON.parse(
+        stringifyNpmLockfile(prunedGraph, JSON.stringify(lockFile), packageJson)
+      );
+
+      expect(result.packages['workspace_modules/lib-a'].dependencies).toEqual({
+        'lib-b': 'file:../lib-b',
+      });
+      expect(result.packages).toHaveProperty('node_modules/lib-b');
+      expect(result.packages['workspace_modules/lib-b'].dependencies).toEqual({
+        lodash: '^4.17.21',
+      });
+      expect(result.packages).toHaveProperty('node_modules/lodash');
+    });
+
     it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = {
         name: 'test-app',
