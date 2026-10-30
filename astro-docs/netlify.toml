@@ -71,12 +71,24 @@ from = "/docs/getting-started/tutorials/react-monorepo-tutorial"
 to = "/docs/getting-started/tutorials/crafting-your-workspace"
 
 [[redirects]]
+from = "/docs/getting-started/tutorials/react-monorepo-tutorial.md"
+to = "/docs/getting-started/tutorials/crafting-your-workspace.md"
+
+[[redirects]]
 from = "/docs/getting-started/tutorials/angular-monorepo-tutorial"
 to = "/docs/getting-started/tutorials/crafting-your-workspace"
 
 [[redirects]]
+from = "/docs/getting-started/tutorials/angular-monorepo-tutorial.md"
+to = "/docs/getting-started/tutorials/crafting-your-workspace.md"
+
+[[redirects]]
 from = "/docs/getting-started/tutorials/typescript-packages-tutorial"
 to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+[[redirects]]
+from = "/docs/getting-started/tutorials/typescript-packages-tutorial.md"
+to = "/docs/getting-started/tutorials/crafting-your-workspace.md"
 
 # DOC-452: Learn Nx URLs redirect to Tutorials (in case any were indexed)
 [[redirects]]
@@ -679,7 +691,7 @@ to = "/docs/kb/create-config"
 
 [[redirects]]
 from = "/docs/technologies/angular/angular-rspack/create-server"
-to = "/docs/kb/create-server"
+to = "/docs/technologies/angular/angular-rspack/introduction"
 
 [[redirects]]
 from = "/docs/technologies/angular/angular-rspack/guides/getting-started"
@@ -956,6 +968,14 @@ to = "/docs/kb/migrate-from-nx-module-federation"
 [[redirects]]
 from = "/docs/kb/faster-builds-with-module-federation"
 to = "/docs/technologies/module-federation/introduction"
+
+[[redirects]]
+from = "/docs/kb/create-server"
+to = "/docs/technologies/angular/angular-rspack/introduction"
+
+[[redirects]]
+from = "/docs/kb/create-server.md"
+to = "/docs/technologies/angular/angular-rspack/introduction.md"
 
 [[redirects]]
 from = "/docs/kb/overview-react"
