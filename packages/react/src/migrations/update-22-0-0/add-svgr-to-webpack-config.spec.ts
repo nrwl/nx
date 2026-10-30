@@ -1,4 +1,4 @@
-import { Tree, readProjectConfiguration } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import addSvgrToWebpackConfig from './add-svgr-to-webpack-config';
 
