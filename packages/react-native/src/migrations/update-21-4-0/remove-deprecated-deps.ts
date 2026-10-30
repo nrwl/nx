@@ -12,7 +12,7 @@ import { join } from 'path';
 export default function update(tree: Tree) {
   const projects = getProjects(tree);
 
-  for (const [_, config] of projects.entries()) {
+  for (const [, config] of projects.entries()) {
     const appPackageJsonPath = join(config.root, 'package.json');
 
     if (!tree.exists(appPackageJsonPath)) {
