@@ -44,6 +44,11 @@ vi.mock('vite', () => ({
 vi.mock('../../utils/executor-utils', () => ({
   loadViteDynamicImport: vi.fn().mockImplementation(() => ({
     resolveConfig: vi.fn().mockImplementation(getMockedConfig),
+    loadConfigFromFile: vi
+      .fn()
+      .mockImplementation((_configEnv, configFile: string) =>
+        getMockedConfig({ configFile, mode: 'development' }, 'build')
+      ),
   })),
 }));
 

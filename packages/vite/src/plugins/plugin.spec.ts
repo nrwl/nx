@@ -8,6 +8,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 vi.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: vi.fn().mockResolvedValue({
     resolveConfig: vi.fn().mockResolvedValue({}),
+    loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
   }),
 }));
 
@@ -22,6 +23,10 @@ describe('@nx/vite/plugin', () => {
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    (loadViteDynamicImport as Mock).mockResolvedValue({
+      resolveConfig: vi.fn().mockResolvedValue({}),
+      loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
+    });
   });
 
   describe('root project', () => {
@@ -115,6 +120,7 @@ describe('@nx/vite/plugin', () => {
             },
           },
         }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
 
       const nodes = await createNodesFunction(
@@ -136,6 +142,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'nx-ready-signal' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
 
       const nodes = await createNodesFunction(['vite.config.ts'], {}, context);
@@ -195,6 +202,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync('tsconfig.json', '');
       tempFs.createFileSync('tsconfig.app.json', '');
@@ -225,6 +233,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync('tsconfig.json', '');
 
@@ -273,6 +282,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync(
         'vite.config.ts',
@@ -443,6 +453,20 @@ describe('@nx/vite/plugin', () => {
               name: 'my-lib',
             },
           },
+          server: {
+            port: 5173,
+            host: 'localhost',
+          },
+        }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({
+          config: {
+            build: {
+              lib: {
+                entry: 'index.ts',
+                name: 'my-lib',
+              },
+            },
+          },
         }),
       }),
         (context = {
@@ -475,19 +499,21 @@ describe('@nx/vite/plugin', () => {
     });
     it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
       const tempFs = new TempFs('test-exclude');
+      const userConfig = {
+        build: {
+          lib: {
+            entry: 'index.ts',
+            name: 'my-lib',
+          },
+        },
+        server: {
+          port: 3000,
+          host: 'localhost',
+        },
+      };
       ((loadViteDynamicImport as Mock).mockResolvedValue({
-        resolveConfig: vi.fn().mockResolvedValue({
-          build: {
-            lib: {
-              entry: 'index.ts',
-              name: 'my-lib',
-            },
-          },
-          server: {
-            port: 3000,
-            host: 'localhost',
-          },
-        }),
+        resolveConfig: vi.fn().mockResolvedValue(userConfig),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: userConfig }),
       }),
         (context = {
           nxJsonConfiguration: {
