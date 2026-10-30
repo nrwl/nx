@@ -140,7 +140,7 @@ function resolveTypescriptPath(
   return resolvedTypescriptPaths[projectRoot];
 }
 
-const TSCONFIG_CACHE_VERSION = 2;
+const TSCONFIG_CACHE_VERSION = 3;
 const TS_CONFIG_CACHE_PATH = join(
   workspaceDataDirectory,
   'tsconfig-files.hash'
@@ -1988,25 +1988,26 @@ function toAbsolutePaths(
       extendedFilesHash,
       hash,
     };
-    if (data.options.rootDir) {
+    // '' is a valid cached path (the workspace root), so check for undefined
+    if (data.options.rootDir !== undefined) {
       updatedCache[key].data.options.rootDir = join(
         workspaceRoot,
         data.options.rootDir
       );
     }
-    if (data.options.outDir) {
+    if (data.options.outDir !== undefined) {
       updatedCache[key].data.options.outDir = join(
         workspaceRoot,
         data.options.outDir
       );
     }
-    if (data.options.outFile) {
+    if (data.options.outFile !== undefined) {
       updatedCache[key].data.options.outFile = join(
         workspaceRoot,
         data.options.outFile
       );
     }
-    if (data.options.tsBuildInfoFile) {
+    if (data.options.tsBuildInfoFile !== undefined) {
       updatedCache[key].data.options.tsBuildInfoFile = join(
         workspaceRoot,
         data.options.tsBuildInfoFile
@@ -2063,25 +2064,25 @@ function toRelativePaths(
       hash,
     };
     if (data.options.rootDir) {
-      updatedCache[key].data.options.rootDir = posixRelative(
+      updatedCache[key].data.options.rootDir = toCachedPath(
         workspaceRoot,
         data.options.rootDir
       );
     }
     if (data.options.outDir) {
-      updatedCache[key].data.options.outDir = posixRelative(
+      updatedCache[key].data.options.outDir = toCachedPath(
         workspaceRoot,
         data.options.outDir
       );
     }
     if (data.options.outFile) {
-      updatedCache[key].data.options.outFile = posixRelative(
+      updatedCache[key].data.options.outFile = toCachedPath(
         workspaceRoot,
         data.options.outFile
       );
     }
     if (data.options.tsBuildInfoFile) {
-      updatedCache[key].data.options.tsBuildInfoFile = posixRelative(
+      updatedCache[key].data.options.tsBuildInfoFile = toCachedPath(
         workspaceRoot,
         data.options.tsBuildInfoFile
       );
@@ -2106,4 +2107,9 @@ function toRelativePaths(
 
 function posixRelative(workspaceRoot: string, path: string): string {
   return normalizePath(relative(workspaceRoot, path));
+}
+
+// relative() returns '' for the workspace root, which is falsy like an unset option
+function toCachedPath(workspaceRoot: string, path: string): string {
+  return posixRelative(workspaceRoot, path) || '.';
 }
