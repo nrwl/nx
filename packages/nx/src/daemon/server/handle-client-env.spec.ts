@@ -1,9 +1,17 @@
-import { delimiter } from 'node:path';
+import { EventEmitter } from 'node:events';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { Socket } from 'node:net';
+import { delimiter, join } from 'node:path';
 import type { Mock } from 'vitest';
-import { getPluginsIfLoadedOrLoading } from '../../project-graph/plugins/get-plugins';
+import {
+  daemonHostsPluginsInProcess,
+  getPluginsIfLoadedOrLoading,
+} from '../../project-graph/plugins/get-plugins';
 import {
   applyDaemonEnvFromClient,
   getAppliedDaemonClientEnv,
+  getLiveClientBerryEnv,
 } from '../client/daemon-environment';
 import { serverLogger } from '../logger';
 import { handleClientEnv, _setEnvForwardTimeoutMs } from './handle-client-env';
@@ -13,14 +21,23 @@ vi.mock('../client/daemon-environment', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('../client/daemon-environment')>();
   return {
+    adoptBerryBinFoldersOnPath: actual.adoptBerryBinFoldersOnPath,
     applyDaemonEnvFromClient: vi.fn(),
     getAppliedDaemonClientEnv: vi.fn(),
     getChangedEnvKeys: actual.getChangedEnvKeys,
+    hasBerryBinFolders: actual.hasBerryBinFolders,
     normalizeDaemonEnvironmentForGraph:
       actual.normalizeDaemonEnvironmentForGraph,
+    getLiveClientBerryEnv: actual.getLiveClientBerryEnv,
+    setLiveClientBerryEnv: actual.setLiveClientBerryEnv,
+    withLiveBerryBinFolders: actual.withLiveBerryBinFolders,
+    withoutBerryBinFolders: actual.withoutBerryBinFolders,
+    withoutBerryBinFoldersOnPath: actual.withoutBerryBinFoldersOnPath,
+    withTrustedBerryBinFolders: actual.withTrustedBerryBinFolders,
   };
 });
 vi.mock('../../project-graph/plugins/get-plugins', () => ({
+  daemonHostsPluginsInProcess: vi.fn(),
   getPluginsIfLoadedOrLoading: vi.fn(),
 }));
 vi.mock('./project-graph-incremental-recomputation', () => ({
@@ -42,6 +59,7 @@ describe('handleClientEnv', () => {
       env: {},
     });
     (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(undefined);
+    (daemonHostsPluginsInProcess as Mock).mockReturnValue(false);
   });
 
   it('keeps the cached graph when only the Yarn Berry runtime folder rotated', async () => {
@@ -230,4 +248,251 @@ describe('handleClientEnv', () => {
     await expect(handleClientEnv(env)).resolves.toBeUndefined();
     expect(invalidateGraphCache).toHaveBeenCalled();
   });
+
+  describe.skipIf(process.platform === 'win32')(
+    "a Yarn Berry client's bin folders",
+    () => {
+      const originalEnv = process.env;
+      let root: string;
+      let folder: string;
+      let yarnEnv: Record<string, string>;
+      let setWorkerEnv: Mock;
+
+      beforeEach(async () => {
+        const actual = await vi.importActual<
+          typeof import('../client/daemon-environment')
+        >('../client/daemon-environment');
+        (applyDaemonEnvFromClient as Mock).mockImplementation(
+          actual.applyDaemonEnvFromClient
+        );
+        (getAppliedDaemonClientEnv as Mock).mockImplementation(
+          actual.getAppliedDaemonClientEnv
+        );
+        setWorkerEnv = vi.fn().mockResolvedValue(undefined);
+        (getPluginsIfLoadedOrLoading as Mock).mockReturnValue(
+          Promise.resolve([{ name: 'a', setWorkerEnv }])
+        );
+        process.env = { PATH: '/usr/bin' };
+        root = mkdtempSync(join(tmpdir(), 'nx-berry-'));
+        folder = join(root, 'xfs-1a2b3c4d');
+        mkdirSync(folder, { mode: 0o755 });
+        yarnEnv = {
+          BERRY_BIN_FOLDER: folder,
+          PATH: [folder, '/usr/bin'].join(delimiter),
+        };
+      });
+
+      afterEach(() => {
+        process.env = originalEnv;
+        rmSync(root, { recursive: true, force: true });
+      });
+
+      it('keeps them off the daemon PATH and hands them to workers', async () => {
+        const client = new EventEmitter();
+
+        await handleClientEnv(yarnEnv, client);
+
+        expect(process.env.PATH).toEqual('/usr/bin');
+        expect(process.env.BERRY_BIN_FOLDER).toEqual(folder);
+        expect(setWorkerEnv).toHaveBeenCalledWith(yarnEnv);
+        expect(getLiveClientBerryEnv()).toEqual(yarnEnv);
+      });
+
+      it('withholds them from workers once they no longer exist', async () => {
+        rmSync(folder, { recursive: true });
+
+        await handleClientEnv(yarnEnv, new EventEmitter());
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+      });
+
+      it('takes them back from workers once the client disconnects', async () => {
+        const client = new EventEmitter();
+        await handleClientEnv(yarnEnv, client);
+        setWorkerEnv.mockClear();
+
+        client.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it('gives them back to a later client from the same Yarn command', async () => {
+        const first = new EventEmitter();
+        await handleClientEnv(yarnEnv, first);
+        first.emit('close');
+        await flushMicrotasks();
+        setWorkerEnv.mockClear();
+
+        await handleClientEnv(yarnEnv, new EventEmitter());
+
+        expect(setWorkerEnv).toHaveBeenCalledWith(yarnEnv);
+        expect(getLiveClientBerryEnv()).toEqual(yarnEnv);
+      });
+
+      it('keeps them while another client from the same Yarn command is connected', async () => {
+        const outer = new EventEmitter();
+        const inner = new EventEmitter();
+        await handleClientEnv(yarnEnv, outer);
+        await handleClientEnv(yarnEnv, inner);
+        setWorkerEnv.mockClear();
+
+        inner.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).not.toHaveBeenCalled();
+        expect(getLiveClientBerryEnv()).toEqual(yarnEnv);
+
+        outer.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it("keeps a nested Yarn command's parent folder while the parent's client is connected", async () => {
+        const outer = new EventEmitter();
+        await handleClientEnv(yarnEnv, outer);
+        const innerFolder = join(root, 'xfs-0000000c');
+        mkdirSync(innerFolder, { mode: 0o755 });
+        const inner = new EventEmitter();
+        await handleClientEnv(
+          {
+            BERRY_BIN_FOLDER: innerFolder,
+            PATH: [innerFolder, folder, '/usr/bin'].join(delimiter),
+          },
+          inner
+        );
+        setWorkerEnv.mockClear();
+
+        inner.emit('close');
+        await flushMicrotasks();
+
+        const outerPath = { PATH: [folder, '/usr/bin'].join(delimiter) };
+        expect(setWorkerEnv).toHaveBeenCalledWith(outerPath);
+        expect(getLiveClientBerryEnv()).toEqual(outerPath);
+
+        outer.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenLastCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it('withholds them from workers when the client closed before its env was applied', async () => {
+        const client = new Socket();
+        client.destroy();
+        await flushMicrotasks();
+
+        await handleClientEnv(yarnEnv, client);
+
+        expect(setWorkerEnv).toHaveBeenCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it('withholds them from workers when the client closes while queued behind another apply', async () => {
+        let releaseFirstForward: () => void;
+        setWorkerEnv.mockImplementationOnce(
+          () => new Promise<void>((r) => (releaseFirstForward = r))
+        );
+        const firstApply = handleClientEnv(env, new EventEmitter());
+        await flushMicrotasks();
+        const queued = new Socket();
+        const queuedApply = handleClientEnv(yarnEnv, queued);
+        queued.destroy();
+        await flushMicrotasks();
+        releaseFirstForward();
+        await Promise.all([firstApply, queuedApply]);
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenLastCalledWith({ PATH: '/usr/bin' });
+        expect(getLiveClientBerryEnv()).toEqual({});
+      });
+
+      it("leaves a newer client's folders alone when an older client disconnects", async () => {
+        const older = new EventEmitter();
+        await handleClientEnv(yarnEnv, older);
+        const newerFolder = join(root, 'xfs-0000000b');
+        mkdirSync(newerFolder, { mode: 0o755 });
+        const newerEnv = {
+          BERRY_BIN_FOLDER: newerFolder,
+          PATH: [newerFolder, '/usr/bin'].join(delimiter),
+        };
+        await handleClientEnv(newerEnv, new EventEmitter());
+        setWorkerEnv.mockClear();
+
+        older.emit('close');
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).not.toHaveBeenCalled();
+        expect(getLiveClientBerryEnv()).toEqual(newerEnv);
+      });
+
+      it("leaves a newer client's folders alone when it applies while an older client's disconnect waits", async () => {
+        let releaseFirstForward: () => void;
+        setWorkerEnv.mockImplementationOnce(
+          () => new Promise<void>((r) => (releaseFirstForward = r))
+        );
+        const older = new EventEmitter();
+        const olderApply = handleClientEnv(yarnEnv, older);
+        await flushMicrotasks();
+        const newerFolder = join(root, 'xfs-0000000b');
+        mkdirSync(newerFolder, { mode: 0o755 });
+        const newerEnv = {
+          BERRY_BIN_FOLDER: newerFolder,
+          PATH: [newerFolder, '/usr/bin'].join(delimiter),
+        };
+        const newerApply = handleClientEnv(newerEnv, new EventEmitter());
+        older.emit('close');
+        releaseFirstForward();
+        await Promise.all([olderApply, newerApply]);
+        await flushMicrotasks();
+
+        expect(setWorkerEnv).toHaveBeenLastCalledWith(newerEnv);
+        expect(getLiveClientBerryEnv()).toEqual(newerEnv);
+      });
+
+      describe('when plugins run in the daemon', () => {
+        beforeEach(() => {
+          (daemonHostsPluginsInProcess as Mock).mockReturnValue(true);
+        });
+
+        it('puts them on the daemon PATH until the client disconnects', async () => {
+          const client = new EventEmitter();
+
+          await handleClientEnv(yarnEnv, client);
+
+          expect(process.env.PATH).toEqual(yarnEnv.PATH);
+
+          client.emit('close');
+          await flushMicrotasks();
+
+          expect(process.env.PATH).toEqual('/usr/bin');
+        });
+
+        it('keeps a nested Yarn command off the graph identity', async () => {
+          const outer = new EventEmitter();
+          await handleClientEnv(yarnEnv, outer);
+          const innerFolder = join(root, 'xfs-0000000c');
+          mkdirSync(innerFolder, { mode: 0o755 });
+          const innerEnv = {
+            BERRY_BIN_FOLDER: innerFolder,
+            PATH: [innerFolder, folder, '/usr/bin'].join(delimiter),
+          };
+          await handleClientEnv(innerEnv, new EventEmitter());
+          expect(process.env.PATH).toEqual(innerEnv.PATH);
+          (invalidateGraphCache as Mock).mockClear();
+
+          await handleClientEnv(innerEnv, new EventEmitter());
+          await handleClientEnv(yarnEnv, outer);
+
+          expect(
+            (applyDaemonEnvFromClient as Mock).mock.results.at(-2).value
+          ).toEqual([]);
+          expect(invalidateGraphCache).not.toHaveBeenCalled();
+        });
+      });
+    }
+  );
 });

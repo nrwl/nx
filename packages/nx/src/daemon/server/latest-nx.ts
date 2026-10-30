@@ -6,6 +6,7 @@ import { detectPackageManager } from '../../utils/package-manager';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from '../logger';
+import { envWithLiveBerryBinFolders } from './handle-client-env';
 
 // Module-level state - persists across invocations within daemon lifecycle
 let latestNxTmpPath: string | null = null;
@@ -37,7 +38,8 @@ export async function getLatestNxTmpPath(): Promise<string> {
       const result = await installPackageToTmpAsync(
         'nx',
         'latest',
-        detectPackageManager(workspaceRoot)
+        detectPackageManager(workspaceRoot),
+        { env: envWithLiveBerryBinFolders }
       );
       latestNxTmpPath = result.tempDir;
       cleanupFn = result.cleanup;

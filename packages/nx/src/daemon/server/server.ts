@@ -307,7 +307,7 @@ export async function handleMessage(socket: Socket, data: Buffer) {
   }
 
   if (isDaemonMessage(payload) && payload.env) {
-    await handleClientEnv(payload.env);
+    await handleClientEnv(payload.env, socket);
   }
 
   if (payload.type === 'PING') {
