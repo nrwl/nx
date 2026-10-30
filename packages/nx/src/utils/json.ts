@@ -43,6 +43,12 @@ export function parseJson<T extends object = any>(
   input: string,
   options?: JsonParseOptions
 ): T {
+  // npm and Node's require() strip a UTF-8 BOM from JSON files; JSON.parse and
+  // jsonc-parser both reject it.
+  if (input.charCodeAt(0) === 0xfeff) {
+    input = input.slice(1);
+  }
+
   try {
     if (options?.expectComments !== true) {
       return JSON.parse(input);
