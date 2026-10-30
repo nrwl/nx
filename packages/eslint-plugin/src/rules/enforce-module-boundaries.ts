@@ -24,6 +24,9 @@ import {
   expandIgnoredCircularDependencies,
   findFilesInCircularPath,
   findFilesWithDynamicImports,
+  hasIgnoreServerInputsDirective,
+  isProjectGraphProjectNode,
+  isRelativePath,
 } from '@nx/devkit/internal';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
@@ -49,11 +52,6 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import {
-  hasIgnoreServerInputsDirective,
-  isRelativePath,
-  isProjectGraphProjectNode,
-} from '@nx/devkit/internal';
 
 export type Options = [
   {
