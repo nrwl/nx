@@ -58,6 +58,9 @@ struct State<'a> {
     open_angle_count: i128,
     blocks_stack: Vec<BlockType>,
     next_block_type: BlockType,
+    /// Byte offset of a token that consumed no input. A second one there means
+    /// the lexer is retrying that byte and will not reach EOF.
+    stuck_span_lo: Option<BytePos>,
 }
 
 impl<'a> State<'a> {
@@ -72,6 +75,7 @@ impl<'a> State<'a> {
             blocks_stack: vec![],
             next_block_type: BlockType::Block,
             import_type: ImportType::Dynamic,
+            stuck_span_lo: None,
         }
     }
 
@@ -87,6 +91,22 @@ impl<'a> State<'a> {
 
         // Store current token
         self.current_token = next;
+
+        if let Some((lo, hi)) = self
+            .current_token
+            .as_ref()
+            .map(|token| (token.span.lo, token.span.hi))
+        {
+            if lo == hi {
+                if self.stuck_span_lo == Some(lo) {
+                    self.current_token = None;
+                    return &self.current_token;
+                }
+                self.stuck_span_lo = Some(lo);
+            } else {
+                self.stuck_span_lo = None;
+            }
+        }
 
         if let Some(current) = &self.current_token {
             // Keep track of braces/ when blocks begin and end
@@ -603,15 +623,214 @@ fn line_begin_pos(line_starts: &[BytePos], pos: BytePos) -> Option<BytePos> {
     lookup_line(line_starts, pos).and_then(|line| line_starts.get(line).copied())
 }
 
+// swc's JSX tag lexer casts a lead byte to a Latin-1 ident and then emits an
+// empty token when the scalar is not an ident, retrying that byte forever
+// (https://github.com/nrwl/nx/issues/37687). Same-width spaces; keep strings.
+fn neutralize_jsx_attribute_stalls(source: &str) -> Option<String> {
+    let bytes = source.as_bytes();
+    let mut out = Vec::new();
+    let mut dirty = false;
+    let mut i = 0;
+    let mut mode = JsxSourceMode::Code;
+    // Brace depth of `${...}` expressions, so a nested template returns to code.
+    let mut template_exprs: Vec<u32> = Vec::new();
+
+    while i < bytes.len() {
+        match mode {
+            JsxSourceMode::LineComment => {
+                if bytes[i] == b'\n' || bytes[i] == b'\r' {
+                    mode = JsxSourceMode::Code;
+                }
+                i = push_stall_or_char(&mut out, &mut dirty, source, i);
+            }
+            JsxSourceMode::BlockComment => {
+                if bytes[i] == b'*' && bytes.get(i + 1) == Some(&b'/') {
+                    push_raw(&mut out, dirty, bytes, i, i + 2);
+                    i += 2;
+                    mode = JsxSourceMode::Code;
+                } else {
+                    i = push_stall_or_char(&mut out, &mut dirty, source, i);
+                }
+            }
+            JsxSourceMode::String(quote) => {
+                i = push_escaped_or_end(&mut out, dirty, bytes, i, quote, &mut mode);
+            }
+            JsxSourceMode::Template => {
+                if bytes[i] == b'\\' {
+                    let end = end_after_escape(bytes, i);
+                    push_raw(&mut out, dirty, bytes, i, end);
+                    i = end;
+                } else if bytes[i] == b'`' {
+                    push_raw(&mut out, dirty, bytes, i, i + 1);
+                    i += 1;
+                    mode = JsxSourceMode::Code;
+                } else if bytes[i] == b'$' && bytes.get(i + 1) == Some(&b'{') {
+                    push_raw(&mut out, dirty, bytes, i, i + 2);
+                    i += 2;
+                    template_exprs.push(1);
+                    mode = JsxSourceMode::Code;
+                } else {
+                    let end = next_char_end(bytes, i);
+                    push_raw(&mut out, dirty, bytes, i, end);
+                    i = end;
+                }
+            }
+            JsxSourceMode::Code => {
+                if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'/') {
+                    push_raw(&mut out, dirty, bytes, i, i + 2);
+                    i += 2;
+                    mode = JsxSourceMode::LineComment;
+                } else if bytes[i] == b'/' && bytes.get(i + 1) == Some(&b'*') {
+                    push_raw(&mut out, dirty, bytes, i, i + 2);
+                    i += 2;
+                    mode = JsxSourceMode::BlockComment;
+                } else if bytes[i] == b'\'' || bytes[i] == b'"' {
+                    let quote = bytes[i];
+                    push_raw(&mut out, dirty, bytes, i, i + 1);
+                    i += 1;
+                    mode = JsxSourceMode::String(quote);
+                } else if bytes[i] == b'`' {
+                    push_raw(&mut out, dirty, bytes, i, i + 1);
+                    i += 1;
+                    mode = JsxSourceMode::Template;
+                } else if bytes[i] == b'{' {
+                    if let Some(depth) = template_exprs.last_mut() {
+                        *depth += 1;
+                    }
+                    push_raw(&mut out, dirty, bytes, i, i + 1);
+                    i += 1;
+                } else if bytes[i] == b'}' {
+                    let leave_template = if let Some(depth) = template_exprs.last_mut() {
+                        *depth -= 1;
+                        *depth == 0
+                    } else {
+                        false
+                    };
+                    push_raw(&mut out, dirty, bytes, i, i + 1);
+                    i += 1;
+                    if leave_template {
+                        template_exprs.pop();
+                        mode = JsxSourceMode::Template;
+                    }
+                } else {
+                    i = push_stall_or_char(&mut out, &mut dirty, source, i);
+                }
+            }
+        }
+    }
+
+    dirty.then(|| String::from_utf8(out).expect("replacement is spaces plus the original UTF-8"))
+}
+
+#[derive(Clone, Copy)]
+enum JsxSourceMode {
+    Code,
+    LineComment,
+    BlockComment,
+    String(u8),
+    Template,
+}
+
+fn end_after_escape(bytes: &[u8], index: usize) -> usize {
+    let escaped = index + 1;
+    if escaped >= bytes.len() {
+        bytes.len()
+    } else {
+        next_char_end(bytes, escaped)
+    }
+}
+
+fn next_char_end(bytes: &[u8], index: usize) -> usize {
+    let byte = bytes[index];
+    let width = if byte < 0x80 {
+        1
+    } else if byte < 0xE0 {
+        2
+    } else if byte < 0xF0 {
+        3
+    } else {
+        4
+    };
+    index + width
+}
+
+/// Width of a scalar whose UTF-8 lead byte is a Latin-1 ident start but which
+/// is not itself an ident start. Those are the scalars `read_jsx_word` drops.
+fn jsx_attribute_stall_width(source: &str, index: usize) -> Option<usize> {
+    let lead = source.as_bytes()[index];
+    if lead < 0x80 {
+        return None;
+    }
+    let ch = source[index..].chars().next()?;
+    if swc_ecma_ast::Ident::is_valid_start(lead as char) && !swc_ecma_ast::Ident::is_valid_start(ch)
+    {
+        Some(ch.len_utf8())
+    } else {
+        None
+    }
+}
+
+fn push_raw(out: &mut Vec<u8>, dirty: bool, bytes: &[u8], from: usize, to: usize) {
+    if dirty {
+        out.extend_from_slice(&bytes[from..to]);
+    }
+}
+
+fn push_stall_or_char(out: &mut Vec<u8>, dirty: &mut bool, source: &str, index: usize) -> usize {
+    let bytes = source.as_bytes();
+    if let Some(width) = jsx_attribute_stall_width(source, index) {
+        if !*dirty {
+            out.extend_from_slice(&bytes[..index]);
+            *dirty = true;
+        }
+        out.extend(std::iter::repeat_n(b' ', width));
+        index + width
+    } else {
+        let end = next_char_end(bytes, index);
+        push_raw(out, *dirty, bytes, index, end);
+        end
+    }
+}
+
+fn push_escaped_or_end(
+    out: &mut Vec<u8>,
+    dirty: bool,
+    bytes: &[u8],
+    index: usize,
+    quote: u8,
+    mode: &mut JsxSourceMode,
+) -> usize {
+    if bytes[index] == b'\\' {
+        let end = end_after_escape(bytes, index);
+        push_raw(out, dirty, bytes, index, end);
+        return end;
+    }
+    if bytes[index] == quote {
+        push_raw(out, dirty, bytes, index, index + 1);
+        *mode = JsxSourceMode::Code;
+        return index + 1;
+    }
+    let end = next_char_end(bytes, index);
+    push_raw(out, dirty, bytes, index, end);
+    end
+}
+
 fn process_file(
     (source_project, file_path): (&String, &String),
 ) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
-    let Ok(source) = std::fs::read_to_string(file_path)
+    let Ok(raw) = std::fs::read_to_string(file_path)
         .inspect_err(|e| trace!("Unable to load {}: {}", file_path, e))
     else {
         return Ok(None);
     };
+    let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
+    let sanitized = if tsx {
+        neutralize_jsx_attribute_stalls(&raw)
+    } else {
+        None
+    };
+    let source = sanitized.as_deref().unwrap_or(raw.as_str());
     let source_len = match u32::try_from(source.len()) {
         Ok(source_len) => source_len,
         Err(_) => {
@@ -619,11 +838,10 @@ fn process_file(
             return Ok(None);
         }
     };
-    let line_starts = line_starts_for_source(&source);
+    let line_starts = line_starts_for_source(source);
 
     let comments = SingleThreadedComments::default();
 
-    let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
     let lexer = Lexer::new(
         Syntax::Typescript(TsSyntax {
             tsx,
@@ -633,7 +851,7 @@ fn process_file(
             disallow_ambiguous_jsx_like: false,
         }),
         EsNext,
-        StringInput::new(&source, BytePos(0), BytePos(source_len)),
+        StringInput::new(source, BytePos(0), BytePos(source_len)),
         Some(&comments),
     );
 
@@ -872,6 +1090,165 @@ import 'a4'; import 'a5';
             vec![String::from("non-narrow-char-dependency")]
         );
         assert!(result.dynamic_import_expressions.is_empty());
+    }
+
+    fn imports_in(file_name: &str, source: &str) -> ImportResult {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir.child(file_name).write_str(source).unwrap();
+        let path = format!("{}/{}", temp_dir.display(), file_name);
+        find_imports(HashMap::from([(String::from("proj"), vec![path])]))
+            .unwrap()
+            .pop()
+            .unwrap()
+    }
+
+    fn assert_static_imports(file_name: &str, source: &str, expected: &[&str]) {
+        let result = imports_in(file_name, source);
+        assert_eq!(
+            result.static_import_expressions,
+            expected
+                .iter()
+                .map(|spec| (*spec).to_string())
+                .collect::<Vec<_>>(),
+            "{file_name}"
+        );
+        assert!(
+            result.dynamic_import_expressions.is_empty(),
+            "{file_name}: {:?}",
+            result.dynamic_import_expressions
+        );
+    }
+
+    #[test]
+    fn should_rewrite_jsx_stalls_without_touching_strings() {
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("<B …>").as_deref(),
+            Some("<B    >")
+        );
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("<B →>").as_deref(),
+            Some("<B    >")
+        );
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("<B €>").as_deref(),
+            Some("<B    >")
+        );
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("<B 😀>").as_deref(),
+            Some("<B     >")
+        );
+        assert!(neutralize_jsx_attribute_stalls("<B ...>").is_none());
+        assert!(neutralize_jsx_attribute_stalls("<B ü>").is_none());
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("import 'keep-…'; <B …>").as_deref(),
+            Some("import 'keep-…'; <B    >")
+        );
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("import `./a…b${<B …/>}`;").as_deref(),
+            Some("import `./a…b${<B    />}`;")
+        );
+        assert_eq!(
+            neutralize_jsx_attribute_stalls("/* <B …> */\nimport 'a';").as_deref(),
+            Some("/* <B    > */\nimport 'a';")
+        );
+    }
+
+    #[test]
+    fn should_finish_on_multibyte_chars_where_a_jsx_attribute_is_expected() {
+        // A non-self-closing tag leaves the lexer in JSX text, so an import
+        // written after `<B>` is not a module import. Self-closing tags are.
+        assert_static_imports(
+            "open.tsx",
+            "import 'before-open';\n<B …>\nimport 'after-open';\n",
+            &["before-open"],
+        );
+        assert_static_imports(
+            "open-ascii.tsx",
+            "import 'before-open';\n<B ...>\nimport 'after-open';\n",
+            &["before-open"],
+        );
+        assert_static_imports("bare.tsx", "<B …>\n", &[]);
+        assert_static_imports("bare-ascii.tsx", "<B ...>\n", &[]);
+
+        // `...` is three dot tokens, so `<B .../>` does not close. `…` is
+        // whitespace here, so `/>` closes and the following import is found.
+        assert_static_imports(
+            "self.tsx",
+            "import 'before';\n<B …/>\nimport 'after';\n",
+            &["before", "after"],
+        );
+        assert_static_imports(
+            "self-ascii.tsx",
+            "import 'before';\n<B .../>\nimport 'after';\n",
+            &["before"],
+        );
+        assert_static_imports(
+            "attr.tsx",
+            "import 'before';\n<B x={1} … />\nimport 'after';\n",
+            &["before", "after"],
+        );
+        assert_static_imports(
+            "attr-ascii.tsx",
+            "import 'before';\n<B x={1} ... />\nimport 'after';\n",
+            &["before"],
+        );
+        assert_static_imports(
+            "arrow.tsx",
+            "import 'before';\n<B →>\nimport 'after';\n",
+            &["before"],
+        );
+        assert_static_imports(
+            "emoji.tsx",
+            "import 'before';\n<B 😀>\nimport 'after';\n",
+            &["before"],
+        );
+        assert_static_imports(
+            "closed.tsx",
+            "import 'before';\n<B …></B>\nimport 'after';\n",
+            &["before", "after"],
+        );
+        assert_static_imports(
+            "closed-ascii.tsx",
+            "import 'before';\n<B ...></B>\nimport 'after';\n",
+            &["before", "after"],
+        );
+
+        assert_static_imports(
+            "specifier.tsx",
+            "import 'keep-…-specifier';\n<B …/>\nimport 'after-specifier';\n",
+            &["keep-…-specifier", "after-specifier"],
+        );
+        assert_static_imports(
+            "jsx-self.jsx",
+            "import 'before';\n<B …/>\nimport 'after';\n",
+            &["before", "after"],
+        );
+        assert_static_imports(
+            "jsx-arrow.jsx",
+            "import 'jsx-before';\n() => {}; <B …/>\nimport 'jsx-after';\n",
+            &["jsx-before", "jsx-after"],
+        );
+        assert_static_imports(
+            "jsx-arrow-ascii.jsx",
+            "import 'jsx-before';\n() => {}; <B .../>\nimport 'jsx-after';\n",
+            &["jsx-before"],
+        );
+    }
+
+    #[test]
+    fn should_finish_when_a_generic_arrow_makes_a_later_comment_look_like_jsx() {
+        let unicode = "\
+import 'before-generic';
+const wrap = <F,>(setter: F): F => setter;
+
+/**
+ * `<Radio.Group onChange={wrap(save)} …/>`
+ */
+import 'after-generic';
+";
+        let ascii = unicode.replace('…', "...");
+        assert_static_imports("generic.tsx", unicode, &["before-generic"]);
+        assert_static_imports("generic-ascii.tsx", &ascii, &["before-generic"]);
     }
 
     #[test]
