@@ -117,9 +117,7 @@ export async function rspackInitGenerator(
       rspackVersions.rspackDevServerVersion;
   }
 
-  // @nx/rspack depends on sass, which pulls in @parcel/watcher. Its install
-  // script only builds from source when npm_config_build_from_source is set,
-  // so skip it.
+  // @parcel/watcher's install script is only needed for opt-in source builds.
   acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
     '@parcel/watcher': false,
   });
