@@ -1,5 +1,6 @@
 import {
   chmodSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -180,6 +181,14 @@ posixOnly('configured data directories', () => {
       expect(resolveDir(workspace)).toBe(dir);
       expect(statSync(dir).isDirectory()).toBe(true);
       expect(statSync(dir).mode & 0o002).toBe(0);
+    });
+
+    it('leaves a missing directory under a private parent uncreated', () => {
+      const dir = join(base, 'private', 'mycache');
+      configure(dir);
+
+      expect(resolveDir(workspace)).toBe(dir);
+      expect(existsSync(join(base, 'private'))).toBe(false);
     });
 
     it('accepts group-writable directories without changing their mode', () => {
