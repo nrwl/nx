@@ -50,6 +50,34 @@ const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
+/**
+ * Package root for a file that Node resolved inside `node_modules/<name>/`.
+ * `realpath` keeps that directory for a normal install, including pnpm's store path.
+ */
+function installedPackageJsonFromResolvedFile(
+  resolvedFile: string | null | undefined,
+  packageName: string
+): string | null {
+  if (!resolvedFile) {
+    return null;
+  }
+  const normalized = resolvedFile.replace(/\\/g, '/');
+  const marker = `/node_modules/${packageName}/`;
+  const index = normalized.lastIndexOf(marker);
+  if (index === -1) {
+    return null;
+  }
+  const root = normalized.slice(0, index + marker.length - 1);
+  return join(root, 'package.json');
+}
+
+function isNestedPackageName(
+  manifestName: string | undefined,
+  packageName: string
+): boolean {
+  return !!manifestName && manifestName.startsWith(`${packageName}/`);
+}
+
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
   return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
@@ -587,14 +615,18 @@ export class TargetProjectLocator {
    * In some cases, such as when multiple module formats are published, the resolved package.json
    * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
    * until we find a package.json that contains the "name" and "version" fields.
+   *
+   * A nested manifest whose name is a subpath of the requested package (for example
+   * `@stencil/core/internal`) is not that package. Prefer `node_modules/<name>/package.json`
+   * — aliases keep that file's own name — and skip subpath manifests while walking up.
    */
   private readPackageJson(
     packageName: string,
     relativeToDir: string
   ): PackageJson | null {
-    // The package.json is directly resolvable
+    // Package specifiers use `/` on every OS. path.join() would use `\` on Windows.
     const packageJsonPath = resolveRelativeToDir(
-      join(packageName, 'package.json'),
+      `${packageName}/package.json`,
       relativeToDir
     );
     if (packageJsonPath) {
@@ -616,36 +648,84 @@ export class TargetProjectLocator {
       // Resolve the main entry point of the package
       const pathOfFileInPackage =
         packageJsonPath ?? resolveRelativeToDir(packageName, relativeToDir);
+      const installedPackageJsonPath = installedPackageJsonFromResolvedFile(
+        pathOfFileInPackage,
+        packageName
+      );
+      if (
+        installedPackageJsonPath &&
+        installedPackageJsonPath !== packageJsonPath
+      ) {
+        const installedPackageJson = this.readCompletePackageJson(
+          installedPackageJsonPath
+        );
+        if (installedPackageJson) {
+          return installedPackageJson;
+        }
+      }
+
       let dir = dirname(pathOfFileInPackage);
 
       while (dir !== dirname(dir)) {
-        const packageJsonPath = join(dir, 'package.json');
-        if (this.packageJsonResolutionCache.has(packageJsonPath)) {
-          const cached = this.packageJsonResolutionCache.get(packageJsonPath);
-          if (cached) {
+        const candidatePath = join(dir, 'package.json');
+        if (this.packageJsonResolutionCache.has(candidatePath)) {
+          const cached = this.packageJsonResolutionCache.get(candidatePath);
+          if (
+            cached?.name &&
+            cached.version &&
+            !isNestedPackageName(cached.name, packageName)
+          ) {
             return cached;
           }
-          // Cached incomplete manifests are traversal points, not terminal misses.
+          // Cached incomplete manifests, and nested packages, are traversal points.
         } else {
           try {
-            const parsedPackageJson = readJsonFile(packageJsonPath);
+            const parsedPackageJson = readJsonFile(candidatePath);
             // Ensure the package.json contains the "name" and "version" fields
             if (parsedPackageJson.name && parsedPackageJson.version) {
-              this.packageJsonResolutionCache.set(
-                packageJsonPath,
-                parsedPackageJson
-              );
-              return parsedPackageJson;
+              if (isNestedPackageName(parsedPackageJson.name, packageName)) {
+                this.packageJsonResolutionCache.set(candidatePath, null);
+              } else {
+                this.packageJsonResolutionCache.set(
+                  candidatePath,
+                  parsedPackageJson
+                );
+                return parsedPackageJson;
+              }
+            } else {
+              // A module-format stub without name/version: remember it and keep
+              // traversing towards the real manifest.
+              this.packageJsonResolutionCache.set(candidatePath, null);
             }
-            // A module-format stub without name/version: remember it and keep
-            // traversing towards the real manifest.
-            this.packageJsonResolutionCache.set(packageJsonPath, null);
           } catch {
             // Package.json is invalid, keep traversing
           }
         }
         dir = dirname(dir);
       }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private readCompletePackageJson(
+    packageJsonPath: string | null
+  ): PackageJson | null {
+    if (!packageJsonPath) {
+      return null;
+    }
+    const cached = this.packageJsonResolutionCache.get(packageJsonPath);
+    if (cached?.name && cached.version) {
+      return cached;
+    }
+    try {
+      const parsedPackageJson = readJsonFile(packageJsonPath);
+      if (parsedPackageJson.name && parsedPackageJson.version) {
+        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
+        return parsedPackageJson;
+      }
+      this.packageJsonResolutionCache.set(packageJsonPath, null);
       return null;
     } catch {
       return null;
