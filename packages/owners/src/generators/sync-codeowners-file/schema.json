@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxOwnersSyncCodeownersFileGenerator",
+  "title": "Nx Owners Sync CODEOWNERS File Generator",
+  "description": "Sync the Nx Owners configuration to the CODEOWNERS file.",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

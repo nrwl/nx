@@ -1,0 +1,9 @@
+{
+  "name": "e2e-conformance",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/conformance",
+  "projectType": "application",
+  "implicitDependencies": ["conformance", "owners"],
+  "// targets": "to see all targets run: nx show project e2e-conformance --web",
+  "targets": {}
+}

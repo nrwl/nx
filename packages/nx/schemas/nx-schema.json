@@ -573,6 +573,10 @@
               "type": "string",
               "description": "The path to write the generated owners file to. Defaults based on format (e.g. '.github/CODEOWNERS')."
             },
+            "prefix": {
+              "type": "string",
+              "description": "Prefix applied to owner strings (e.g. '@org')."
+            },
             "patterns": {
               "type": "array",
               "description": "List of ownership patterns to apply.",
@@ -716,11 +720,27 @@
           }
         },
         "owners": {
-          "type": "array",
-          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files.",
-          "items": {
-            "type": "string"
-          }
+          "description": "List of owners (e.g. GitHub usernames or team handles) for the matched projects or files, or false to mark them as having no owners.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "applyPrefix": {
+          "type": "boolean",
+          "description": "Whether the root owners prefix applies to this pattern. Defaults to true."
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for this pattern's owners, taking precedence over the root owners prefix."
         }
       },
       "required": ["owners"],

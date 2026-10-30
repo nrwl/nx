@@ -1,0 +1,77 @@
+{
+  "name": "@nx/owners",
+  "description": "The Nx Plugin for Owners, which lets you configure and maintain code owners for the projects in an Nx workspace.",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "generators.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/owners"
+  },
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "keywords": [
+    "Monorepo",
+    "CODEOWNERS",
+    "Ownership",
+    "CLI"
+  ],
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "homepage": "https://nx.dev",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json",
+    "./generators.json": "./generators.json",
+    "./ensure-owners": {
+      "@nx/nx-source": "./src/rules/ensure-owners/index.ts",
+      "default": "./dist/src/rules/ensure-owners/index.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
+  },
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "workspace:*",
+    "jsonc-parser": "catalog:",
+    "minimatch": "catalog:",
+    "tslib": "catalog:typescript"
+  },
+  "devDependencies": {
+    "@nx/conformance": "workspace:*",
+    "nx": "workspace:*"
+  }
+}

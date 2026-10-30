@@ -151,6 +151,8 @@
       "@nx/web",
       "@nx/webpack",
       "@nx/docker",
+      "@nx/conformance",
+      "@nx/owners",
       "create-nx-workspace",
       {
         "package": "nx-cloud",

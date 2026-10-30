@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "<%= ruleName %>",
+  "title": "<%= ruleName %> rule configuration",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

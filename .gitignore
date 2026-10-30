@@ -158,6 +158,8 @@ packages/webpack/README.md
 packages/rolldown/README.md
 packages/rollup/README.md
 packages/docker/README.md
+packages/conformance/README.md
+packages/owners/README.md
 packages/gradle/README.md
 packages/rsbuild/README.md
 packages/web/README.md
