@@ -60,19 +60,19 @@ function checkIfProjectIsUsed(
   config: TargetConfiguration,
   callback: (x: string) => void | string
 ) {
-  function recur(obj, key, value) {
+  function recur(value) {
     if (typeof value === 'string') {
       callback(value);
     } else if (Array.isArray(value)) {
-      value.forEach((x, idx) => recur(value, idx, x));
+      value.forEach((x, idx) => recur(x));
     } else if (typeof value === 'object') {
-      Object.entries(value).forEach(([k, v]) => {
-        recur(value, k, v);
+      Object.entries(value).forEach(([, v]) => {
+        recur(v);
       });
     }
   }
 
-  Object.entries(config).forEach(([k, v]) => {
-    recur(config, k, v);
+  Object.entries(config).forEach(([, v]) => {
+    recur(v);
   });
 }
