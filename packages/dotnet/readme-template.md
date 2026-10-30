@@ -47,6 +47,7 @@ dotnet new xunit -n MyApp.Tests
 ```
 
 The plugin will automatically detect your .NET projects and configure appropriate Nx targets.
+It infers `projectType` as `application` for `Exe`/`WinExe` output or `library` for `Library` output when all evaluated target frameworks agree. Executable test projects and projects with unknown or conflicting output types remain unclassified. Project technologies remain `dotnet` plus the project language.
 
 #### Step 4: Run Build, Test, and other commands
 
