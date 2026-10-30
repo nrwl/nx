@@ -22,6 +22,9 @@ vi.mock('../../daemon/tmp-dir', () => ({
 vi.mock('../../native/native-file-cache-location', () => ({
   getNativeFileCacheLocationToDelete: () => null,
 }));
+vi.mock('../../utils/package-manager', () => ({
+  removeStaleTempInstallDirectories: () => {},
+}));
 vi.mock('../../utils/workspace-root', () => ({ workspaceRoot: '/ws' }));
 vi.mock('../../utils/cache-directory', () => ({
   cacheDir: '/cache',
@@ -80,6 +83,7 @@ describe('nx reset', () => {
       'Removed the Nx Daemon workspace data',
       'Removed the cache directory',
       'Removed the workspace data directory',
+      'Removed stale temporary package installs',
       'Cleaned up the Nx Cloud client',
       'Removed the installed Nx Cloud client',
     ]);

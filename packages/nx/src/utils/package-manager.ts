@@ -8,7 +8,10 @@ import {
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
+  readdirSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'fs';
@@ -39,6 +42,13 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
+import { homeDirIsDistinctFromSharedTmp, NX_HOME_TMP_DIR } from './nx-tmp-dir';
+import {
+  canonicalDir,
+  describeRefusal,
+  ensureOwnedPrivateDir,
+  isOwnedRealDirectory,
+} from './owned-private-dir';
 import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
@@ -721,6 +731,192 @@ function getPackageManagerConfigRoot(): string {
 }
 
 /**
+ * Creates an empty owner-only directory for a throwaway package install.
+ *
+ * Package managers and Node read config and modules from every ancestor of
+ * the install, so it lives under `~/.nx/tmp`, else under the OS temp dir, and
+ * only where that root and all of its ancestors are closed to other users.
+ * Throws when neither root qualifies or can be written. The OS does not reap
+ * it, so it is removed when the process exits.
+ */
+export function createTempInstallDirectory(): string {
+  const dir = createInPrivateInstallRoot();
+  if (tempInstallDirectories.size === 0) {
+    process.once('exit', removeTempInstallDirectories);
+  }
+  tempInstallDirectories.add(dir);
+  return dir;
+}
+
+/**
+ * Removes this user's throwaway install dirs under `~/.nx/tmp` and the temp
+ * dir fallback that are more than a day old. Best effort; creates nothing.
+ */
+export function removeStaleTempInstallDirectories(): void {
+  if (NX_HOME_TMP_DIR && homeDirIsDistinctFromSharedTmp()) {
+    const root = join(NX_HOME_TMP_DIR, 'tmp');
+    if (isOwnedRealDirectory(NX_HOME_TMP_DIR) && isOwnedRealDirectory(root)) {
+      removeStaleInstallDirectories(root);
+    }
+  }
+  const fallbackRoot = join(tmpdir(), TMPDIR_INSTALL_ROOT);
+  if (!privateTreeRefusal(tmpdir()) && isOwnedRealDirectory(fallbackRoot)) {
+    removeStaleInstallDirectories(fallbackRoot);
+  }
+}
+
+const tempInstallDirectories = new Set<string>();
+
+function removeTempInstallDirectories() {
+  for (const dir of tempInstallDirectories) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+const STALE_INSTALL_DIRECTORY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Removes install dirs left behind by processes that never reached their exit
+ * handler. A day outlasts any realistic install or `nx migrate` run, so a
+ * concurrent process's install survives.
+ */
+function removeStaleInstallDirectories(root: string) {
+  let entries: string[];
+  try {
+    entries = readdirSync(root);
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - STALE_INSTALL_DIRECTORY_MS;
+  for (const entry of entries) {
+    const path = join(root, entry);
+    try {
+      const stats = lstatSync(path);
+      if (
+        stats.isDirectory() &&
+        stats.mtimeMs < cutoff &&
+        (typeof process.getuid !== 'function' || stats.uid === process.getuid())
+      ) {
+        rmSync(path, { recursive: true, force: true });
+      }
+    } catch {}
+  }
+}
+
+const TMPDIR_INSTALL_ROOT = 'nx-installs';
+
+/**
+/**
+ * An existing `~/.nx/tmp` can still refuse writes, for example under an agent
+ * sandbox, so a failed create there moves on to the OS temp dir.
+ */
+function createInPrivateInstallRoot(): string {
+  let homeRefusal = homeInstallRootRefusal();
+  if (!homeRefusal) {
+    const root = join(NX_HOME_TMP_DIR, 'tmp');
+    try {
+      return createInstallDirectory(root);
+    } catch (e: any) {
+      homeRefusal = `${root} is not writable${e?.code ? ` (${e.code})` : ''}`;
+    }
+  }
+  const tmp = tmpdir();
+  const fallbackRoot = join(tmp, TMPDIR_INSTALL_ROOT);
+  let tmpRefusal = privateTreeRefusal(tmp);
+  if (!tmpRefusal) {
+    const result = ensureOwnedPrivateDir(fallbackRoot);
+    if (result.status === 'ok') {
+      return createInstallDirectory(fallbackRoot);
+    }
+    tmpRefusal = describeRefusal(result.refusal);
+  }
+  throw new PrivateInstallRootError(homeRefusal, tmpRefusal);
+}
+
+function createInstallDirectory(root: string): string {
+  removeStaleInstallDirectories(root);
+  return dirSync({ tmpdir: root }).name;
+}
+
+function homeInstallRootRefusal(): string | undefined {
+  if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
+    return 'there is no home directory separate from the shared temp directory';
+  }
+  for (const dir of [NX_HOME_TMP_DIR, join(NX_HOME_TMP_DIR, 'tmp')]) {
+    const result = ensureOwnedPrivateDir(dir);
+    if (result.status === 'refused') {
+      return describeRefusal(result.refusal);
+    }
+  }
+  return privateTreeRefusal(join(NX_HOME_TMP_DIR, 'tmp'));
+}
+
+/**
+ * Why `dir` or one of its ancestors could be written by another user, if it
+ * could. Each must be a directory owned by us or root without group or other
+ * write, sticky or not, and `dir` itself must be ours and not a symlink. Both
+ * the path as written and its canonical form are checked, so a symlinked
+ * ancestor and the directory it leads to must each qualify.
+ */
+function privateTreeRefusal(dir: string): string | undefined {
+  if (typeof process.getuid !== 'function') {
+    return isOwnedRealDirectory(dir)
+      ? undefined
+      : `${dir} is not a real directory`;
+  }
+  for (const leaf of [resolve(dir), canonicalDir(dir)]) {
+    for (let p = leaf; ; p = dirname(p)) {
+      const refusal = privatePathRefusal(p, p === leaf);
+      if (refusal) {
+        return refusal;
+      }
+      if (dirname(p) === p) {
+        break;
+      }
+    }
+  }
+  return undefined;
+}
+
+function privatePathRefusal(path: string, isLeaf: boolean): string | undefined {
+  let stats: ReturnType<typeof lstatSync>;
+  try {
+    stats = lstatSync(path);
+  } catch (e: any) {
+    return `${path} could not be inspected${e?.code ? ` (${e.code})` : ''}`;
+  }
+  const uid = process.getuid();
+  const trustedOwner = stats.uid === uid || (!isLeaf && stats.uid === 0);
+  if (stats.isSymbolicLink() && !isLeaf) {
+    return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;
+  }
+  if (!stats.isDirectory()) {
+    return stats.isSymbolicLink()
+      ? `${path} is a symlink, not a real directory`
+      : `${path} is not a directory`;
+  }
+  if (stats.mode & 0o022) {
+    const mode = (stats.mode & 0o7777).toString(8).padStart(4, '0');
+    return `${path} is writable by other users (mode ${mode})`;
+  }
+  return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;
+}
+
+class PrivateInstallRootError extends Error {
+  constructor(homeRefusal: string, tmpRefusal: string) {
+    super(
+      'Nx cannot install packages because it found no directory closed to other users to install into.\n' +
+        `  ~/.nx/tmp: ${homeRefusal}.\n` +
+        `  The OS temp directory: ${tmpRefusal}.\n` +
+        'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install where another user could write to it or to any of its parents.'
+    );
+    this.name = 'PrivateInstallRootError';
+  }
+}
+
+/**
  * Creates a temporary directory where you can run package manager commands safely.
  *
  * For cases where you'd want to install packages that require an `.npmrc` set up,
@@ -732,7 +928,7 @@ function getPackageManagerConfigRoot(): string {
  *                   where no existing configuration files are available to copy.
  */
 export function createTempNpmDirectory(skipCopy = false) {
-  const dir = dirSync().name;
+  const dir = createTempInstallDirectory();
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
@@ -744,7 +940,7 @@ export function createTempNpmDirectory(skipCopy = false) {
     try {
       await rm(dir, { recursive: true, force: true });
     } catch {
-      // It's okay if this fails, the OS will clean it up eventually
+      // The exit handler retries the removal.
     }
   };
 
