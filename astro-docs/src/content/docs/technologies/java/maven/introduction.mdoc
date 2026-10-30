@@ -132,6 +132,14 @@ To view the inferred tasks for a module, open the [project details view](/docs/f
 nx show project my-module --web
 ```
 
+### Goal ordering within a phase
+
+When multiple Maven goals are bound to the same lifecycle phase, Nx records them on the inferred phase target in the order it will pass them to Maven. Goals are sorted by their execution priority first, with lower priority values running first, and then by the Maven execution id.
+
+Nx derives priority from common execution id keywords such as `generate`, `process`, `compile`, `test`, `package`, `install`, and `deploy`. If multiple goals use the same priority, their execution ids are sorted alphabetically.
+
+If one goal must run after another goal in the same phase, set explicit `<id>` values for the plugin executions in `pom.xml` so their execution ids sort in the intended order.
+
 ### @nx/maven configuration
 
 Configure the plugin in the `plugins` array of `nx.json`.
