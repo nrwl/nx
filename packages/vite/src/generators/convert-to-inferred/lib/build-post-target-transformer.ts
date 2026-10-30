@@ -26,11 +26,7 @@ export function buildPostTargetTransformer(
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
       configValues[configurationName] = {};
-      removePropertiesFromTargetOptions(
-        configuration,
-        projectDetails.root,
-        configValues[configurationName]
-      );
+      removePropertiesFromTargetOptions(configuration, projectDetails.root);
     }
 
     for (const configurationName in target.configurations) {
@@ -68,11 +64,7 @@ export function buildPostTargetTransformer(
       viteConfigPath = target.options.configFile;
     }
 
-    removePropertiesFromTargetOptions(
-      target.options,
-      projectDetails.root,
-      configValues['default']
-    );
+    removePropertiesFromTargetOptions(target.options, projectDetails.root);
   }
 
   if (target.outputs) {
@@ -101,8 +93,7 @@ export function buildPostTargetTransformer(
 
 function removePropertiesFromTargetOptions(
   targetOptions: any,
-  projectRoot: string,
-  configValues: Record<string, unknown>
+  projectRoot: string
 ) {
   if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(

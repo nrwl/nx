@@ -9,17 +9,14 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
-    const viteConfigPath = getViteConfigPath(tree, projectDetails.root);
+    getViteConfigPath(tree, projectDetails.root);
 
     if (target.options) {
       removePropertiesFromTargetOptions(
-        tree,
         target.options,
-        viteConfigPath,
         projectDetails.root,
         projectDetails.projectName,
-        migrationLogs,
-        true
+        migrationLogs
       );
     }
 
@@ -27,9 +24,7 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
         removePropertiesFromTargetOptions(
-          tree,
           configuration,
-          viteConfigPath,
           projectDetails.root,
           projectDetails.projectName,
           migrationLogs
@@ -56,13 +51,10 @@ export function servePostTargetTransformer(migrationLogs: AggregatedLog) {
 }
 
 function removePropertiesFromTargetOptions(
-  tree: Tree,
   targetOptions: any,
-  viteConfigPath: string,
   projectRoot: string,
   projectName: string,
-  migrationLogs: AggregatedLog,
-  defaultOptions = false
+  migrationLogs: AggregatedLog
 ) {
   if ('buildTarget' in targetOptions) {
     delete targetOptions.buildTarget;

@@ -9,7 +9,7 @@ export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
-    const viteConfigPath = getViteConfigPath(tree, projectDetails.root);
+    getViteConfigPath(tree, projectDetails.root);
 
     if (target.options) {
       removePropertiesFromTargetOptions(
