@@ -160,14 +160,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- AssertJ -->
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <version>${assertj.version}</version>
-      <scope>test</scope>
-    </dependency>
-
     <!-- Mockito -->
     <dependency>
       <groupId>org.mockito</groupId>
@@ -175,15 +167,6 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-
-
-    <!-- Plexus Utils for XML parsing -->
-    <dependency>
-      <groupId>org.codehaus.plexus</groupId>
-      <artifactId>plexus-utils</artifactId>
-      <version>3.5.1</version>
-    </dependency>
-
 
   </dependencies>
 
