@@ -297,7 +297,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup a new Eslint plugin and only migrate one specific project', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
@@ -305,12 +305,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         targetName: 'eslint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'eslint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'linter',
@@ -375,20 +375,20 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should add project to existing plugins includes', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'lint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'lint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'lint',
@@ -443,7 +443,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         JSON.stringify({ ignorePatterns: ['**/*'] })
       );
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
@@ -451,12 +451,12 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree, {
         targetName: 'lint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'lint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'lint',
@@ -476,10 +476,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      const projectJsonForProject = readJson(
-        tree,
-        `${project.root}/project.json`
-      );
+      readJson(tree, `${project.root}/project.json`);
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
       const addedTestEslintPlugin = nxJsonPlugins.find((plugin) => {
@@ -791,7 +788,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
   describe('--all', () => {
     it('should successfully migrate a project using Eslint executors to plugin', async () => {
-      const project = createTestProject(tree);
+      createTestProject(tree);
 
       // ACT
       await convertToInferred(tree, { skipFormat: true });
@@ -815,7 +812,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup Eslint plugin to match projects', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
       });
 
@@ -841,7 +838,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should handle targets using legacy executor', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
         legacyExecutor: true,
       });
@@ -868,20 +865,20 @@ describe('Eslint - Convert Executors To Plugin', () => {
 
     it('should setup a new Eslint plugin to match only projects migrated', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'eslint',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         targetName: 'eslint',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         targetName: 'linter',

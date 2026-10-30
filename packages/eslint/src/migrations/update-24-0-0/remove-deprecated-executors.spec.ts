@@ -1,16 +1,12 @@
 import {
   addProjectConfiguration as _addProjectConfiguration,
   joinPathFragments,
-  readJson,
   readNxJson,
   readProjectConfiguration,
-  updateNxJson,
   writeJson,
-  type ExpandedPluginConfiguration,
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import {
   mockCjsModule as mockConverterModule,
