@@ -8,13 +8,7 @@ This generator will generate stories for all your components in your project. Th
 You can also use this generator to generate stories for your **Nuxt** project:
 
 ```bash
-nx g @nx/vue:stories project-name
-```
-
-or
-
-```bash
-nx g @nx/nuxt:stories project-name
+nx g @nx/vue:stories --project=project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#auto-generate-stories).
@@ -22,7 +16,7 @@ You can read more about how this generator works, in the [Storybook for Vue over
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. You can read more about this in the [Nx Storybook interaction tests documentation page](/recipes/storybook/storybook-interaction-tests#setup-storybook-interaction-tests)..
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. You can read more about this in the [Nx Storybook interaction tests documentation page](/docs/kb/storybook-interaction-tests)..
 
 You must provide a `name` for the generator to work.
 

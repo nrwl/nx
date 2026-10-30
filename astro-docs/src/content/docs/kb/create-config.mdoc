@@ -50,7 +50,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssrEntry: './src/server.ts',
+    ssr: { entry: './src/server.ts' },
   },
 });
 ```
@@ -84,7 +84,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssrEntry: './src/server.ts',
+    ssr: { entry: './src/server.ts' },
   },
   rspackConfigOverrides: {
     mode: 'development',
@@ -105,7 +105,7 @@ export default createConfig({
   options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
-    ssrEntry: './src/server.ts',
+    ssr: { entry: './src/server.ts' },
     fileReplacements: [
       {
         replace: './src/environments/environment.ts',

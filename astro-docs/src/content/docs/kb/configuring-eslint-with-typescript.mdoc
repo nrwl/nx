@@ -28,7 +28,6 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -36,7 +35,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
@@ -94,7 +93,6 @@ If we now come in and add a rule which does require type information, for exampl
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -102,7 +100,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
@@ -178,7 +176,6 @@ The solution is to update our config once more, this time to configure typed lin
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -186,7 +183,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
