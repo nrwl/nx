@@ -122,7 +122,7 @@ export class GitRepository {
     ]);
   }
   async fetch(remote: string, ref?: string) {
-    return await this.execGit(['fetch', remote, ...(ref ? [ref] : [])]);
+    return await this.execGit(['fetch', '--', remote, ...(ref ? [ref] : [])]);
   }
 
   async checkout(
@@ -145,7 +145,7 @@ export class GitRepository {
   }
 
   async push(ref: string, remoteName: string) {
-    return await this.execGit(['push', '-u', '-f', remoteName, ref]);
+    return await this.execGit(['push', '-u', '-f', '--', remoteName, ref]);
   }
 
   async commit(message: string) {
@@ -160,7 +160,7 @@ export class GitRepository {
   }
 
   async addGitRemote(name: string, url: string) {
-    return await this.execGit(['remote', 'add', name, url]);
+    return await this.execGit(['remote', 'add', '--no-tags', name, url]);
   }
 
   async hasFilterRepoInstalled() {
