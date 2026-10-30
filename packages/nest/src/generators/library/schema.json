@@ -34,7 +34,7 @@
       "x-priority": "important"
     },
     "unitTestRunner": {
-      "description": "Test runner to use for unit tests.",
+      "description": "Test runner to use for unit tests. With Nest 12, which is ESM only, `jest` needs Node.js 24.9 or later, and Nx sets it up with Jest 30.5 and `--experimental-vm-modules`.",
       "type": "string",
       "enum": ["jest", "vitest", "none"],
       "default": "none",
