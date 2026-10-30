@@ -150,11 +150,13 @@ export class DbCache {
       );
 
       if (res) {
-        this.applyRemoteCacheResults(task.hash, res, task.outputs);
-
         return {
           ...res,
-          terminalOutput: res.terminalOutput ?? '',
+          terminalOutput: this.applyRemoteCacheResults(
+            task.hash,
+            res,
+            task.outputs
+          ),
           remote: true,
         };
       } else {
@@ -209,10 +211,13 @@ export class DbCache {
             this.cache.cacheDirectory
           );
           if (res) {
-            this.applyRemoteCacheResults(task.hash, res, task.outputs);
             results.set(task.hash, {
               ...res,
-              terminalOutput: res.terminalOutput ?? '',
+              terminalOutput: this.applyRemoteCacheResults(
+                task.hash,
+                res,
+                task.outputs
+              ),
               remote: true,
             });
           }
@@ -231,7 +236,7 @@ export class DbCache {
     hash: string,
     res: NativeCacheResult,
     outputs: string[]
-  ) {
+  ): string {
     return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
