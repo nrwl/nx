@@ -142,6 +142,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'nx-ready-signal' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
 
       const nodes = await createNodesFunction(['vite.config.ts'], {}, context);
@@ -201,6 +202,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync('tsconfig.json', '');
       tempFs.createFileSync('tsconfig.app.json', '');
@@ -231,6 +233,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync('tsconfig.json', '');
 
@@ -279,6 +282,7 @@ describe('@nx/vite/plugin', () => {
         resolveConfig: vi
           .fn()
           .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+        loadConfigFromFile: vi.fn().mockResolvedValue({ config: {} }),
       });
       tempFs.createFileSync(
         'vite.config.ts',
