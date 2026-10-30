@@ -154,7 +154,7 @@ To have Nx wrap it anyway, opt the target in:
 
 ### Test project detection
 
-A project gets a `test` target, and loses its `pack` target, when either MSBuild property is `true`:
+A project gets a `test` target, and loses its `pack`, `publish`, and `run` targets, when either MSBuild property is `true`:
 
 - `IsTestProject`, which `Microsoft.NET.Test.Sdk` sets.
 - `IsTestingPlatformApplication`, which [Microsoft.Testing.Platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro) sets.
@@ -164,7 +164,7 @@ These are the two properties the .NET SDK itself checks before it will run a pro
 Nx therefore agrees with `dotnet test` about what a test project is.
 Referencing a framework such as xunit or NUnit is not enough on its own, which is what lets a
 library expose test helpers and keep its `pack` target.
-`publish` and `run` depend only on `OutputType`, so a runner built as an executable keeps both.
+A test project built as an executable still gets no `publish` or `run` target.
 
 Both properties arrive with a restored package, so neither has a value before the project has
 been restored.
@@ -256,10 +256,10 @@ Once a .NET project file has been identified, the targets are created with the c
 - `test` - Runs unit tests (for test projects)
 - `clean` - Removes build outputs
 - `restore` - Restores NuGet package dependencies. Not created unless you opt in with `"restore": true`
-- `publish` - Publishes the application (for executable projects)
+- `publish` - Publishes the application (for executable projects that aren't test projects)
 - `pack` - Creates a NuGet package (for library projects)
 - `watch` - Watches the project for changes and rebuilds (automatically marked as continuous)
-- `run` - Runs the application (for executable projects)
+- `run` - Runs the application (for executable projects that aren't test projects)
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/dotnet`.
 
