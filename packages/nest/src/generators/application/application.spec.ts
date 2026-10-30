@@ -136,6 +136,25 @@ describe('application generator', () => {
     ).toBeDefined();
   });
 
+  describe('--bundler', () => {
+    it('should use webpack by default', async () => {
+      await applicationGenerator(tree, { directory: appDirectory });
+
+      expect(tree.exists(`${appDirectory}/webpack.config.js`)).toBe(true);
+      expect(tree.exists(`${appDirectory}/rolldown.config.ts`)).toBe(false);
+    });
+
+    it('should use rolldown when requested', async () => {
+      await applicationGenerator(tree, {
+        directory: appDirectory,
+        bundler: 'rolldown',
+      });
+
+      expect(tree.exists(`${appDirectory}/rolldown.config.ts`)).toBe(true);
+      expect(tree.exists(`${appDirectory}/webpack.config.js`)).toBe(false);
+    });
+  });
+
   it('should generate files', async () => {
     await applicationGenerator(tree, {
       linter: 'eslint',
