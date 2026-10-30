@@ -282,7 +282,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -341,7 +341,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -433,7 +433,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -492,7 +492,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -627,7 +627,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -669,7 +669,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -699,6 +699,13 @@ describe('@nx/eslint/plugin', () => {
         getOutputsForTargetAndConfiguration(
           target,
           { 'output-file': '../../reports/lint.json' },
+          node
+        )
+      ).toStrictEqual(['reports/lint.json']);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          target,
+          { o: '../../reports/lint.json' },
           node
         )
       ).toStrictEqual(['reports/lint.json']);
@@ -838,7 +845,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -881,7 +888,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -942,7 +949,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -1007,7 +1014,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -1093,7 +1100,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },
@@ -1153,7 +1160,7 @@ describe('@nx/eslint/plugin', () => {
                     },
                   },
                   "outputs": [
-                    "{options.cwd ?? .}/{options.output-file}",
+                    "{options.cwd ?? .}/{options.output-file ?? options.o}",
                   ],
                 },
               },

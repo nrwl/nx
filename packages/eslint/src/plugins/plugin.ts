@@ -470,8 +470,10 @@ export function getStandaloneSrcPath(
   return undefined;
 }
 
-// ESLint resolves `output-file` from the cwd run-commands runs it in
-export const lintReportOutput = '{options.cwd ?? .}/{options.output-file}';
+// ESLint resolves `--output-file`, or its short form `-o`, from the cwd
+// run-commands runs it in
+export const lintReportOutput =
+  '{options.cwd ?? .}/{options.output-file ?? options.o}';
 
 export function getLintCommand(
   projectRoot: string,

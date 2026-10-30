@@ -1208,9 +1208,9 @@ describe('Eslint - Convert Executors To Plugin', () => {
     it.each`
       outputs                                                 | expectedOutputs
       ${['{options.outputFile}']}                             | ${undefined}
-      ${['{projectRoot}/other', '{options.outputFile}']}      | ${['{projectRoot}/other', '{options.cwd ?? .}/{options.output-file}']}
-      ${['{workspaceRoot}/reports', '!{options.outputFile}']} | ${['{workspaceRoot}/reports', '!{options.cwd ?? .}/{options.output-file}']}
-      ${['{options.outputFile}.meta']}                        | ${['{options.cwd ?? .}/{options.output-file}.meta']}
+      ${['{projectRoot}/other', '{options.outputFile}']}      | ${['{projectRoot}/other', '{options.cwd ?? .}/{options.output-file ?? options.o}']}
+      ${['{workspaceRoot}/reports', '!{options.outputFile}']} | ${['{workspaceRoot}/reports', '!{options.cwd ?? .}/{options.output-file ?? options.o}']}
+      ${['{options.outputFile}.meta']}                        | ${['{options.cwd ?? .}/{options.output-file ?? options.o}.meta']}
       ${undefined}                                            | ${undefined}
       ${[]}                                                   | ${[]}
     `(
