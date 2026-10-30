@@ -149,9 +149,7 @@ export class DbCache {
         this.cache.cacheDirectory
       );
 
-      if (res) {
-        this.applyRemoteCacheResults(task.hash, res, task.outputs);
-
+      if (res && this.applyRemoteCacheResults(task, res)) {
         return {
           ...res,
           terminalOutput: res.terminalOutput ?? '',
@@ -208,8 +206,7 @@ export class DbCache {
             task.hash,
             this.cache.cacheDirectory
           );
-          if (res) {
-            this.applyRemoteCacheResults(task.hash, res, task.outputs);
+          if (res && this.applyRemoteCacheResults(task, res)) {
             results.set(task.hash, {
               ...res,
               terminalOutput: res.terminalOutput ?? '',
@@ -227,12 +224,21 @@ export class DbCache {
     return this.cache.getCacheSize();
   }
 
-  private applyRemoteCacheResults(
-    hash: string,
-    res: NativeCacheResult,
-    outputs: string[]
-  ) {
-    return this.cache.applyRemoteCacheResults(hash, res, outputs);
+  private applyRemoteCacheResults(task: Task, res: NativeCacheResult) {
+    const applied = this.cache.applyRemoteCacheResults(
+      task.hash,
+      res,
+      task.outputs
+    );
+    if (!applied) {
+      output.warn({
+        title: `Ignoring the remote cache result for ${task.id}`,
+        bodyLines: [
+          'Its outputs contain a symlink that points outside the output it is in.',
+        ],
+      });
+    }
+    return applied;
   }
 
   async put(
@@ -242,7 +248,7 @@ export class DbCache {
     code: number
   ) {
     return tryAndRetry(async () => {
-      const { expandedOutputs, files } = this.cache.put(
+      const { expandedOutputs, files, outputsBelowALink } = this.cache.put(
         task.hash,
         terminalOutput,
         outputs,
@@ -252,7 +258,15 @@ export class DbCache {
       // Notify TaskIOService of actual output files
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
-      if (this.remoteCache) {
+      if (outputsBelowALink.length > 0) {
+        output.warn({
+          title: `Not caching ${task.id}`,
+          bodyLines: [
+            'These outputs are inside a symlinked directory, so they cannot be cached:',
+            ...outputsBelowALink.map((o) => `- ${o}`),
+          ],
+        });
+      } else if (this.remoteCache) {
         await this.remoteCache.store(
           task.hash,
           this.cache.cacheDirectory,
