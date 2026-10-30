@@ -55,18 +55,17 @@ impl RustPseudoTerminal {
         quiet: bool,
         command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
-        let command = format!(
-            "node {} {} {}",
-            os::handle_path_space(fork_script),
-            pseudo_ipc_path,
-            id
-        );
+        let command = format!("node {}", os::handle_path_space(fork_script));
+
+        let mut js_env = js_env.unwrap_or_default();
+        js_env.insert("NX_PSEUDO_IPC_PATH".to_string(), pseudo_ipc_path);
+        js_env.insert("NX_PSEUDO_IPC_FORK_ID".to_string(), id);
 
         trace!("nx_fork command: {}", &command);
         self.run_command(
             command,
             command_dir,
-            js_env,
+            Some(js_env),
             exec_argv,
             Some(quiet),
             Some(true),
