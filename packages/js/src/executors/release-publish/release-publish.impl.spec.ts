@@ -490,6 +490,57 @@ describe('release-publish executor', () => {
     });
   });
 
+  describe('devEngines enforcement', () => {
+    it('forces the npm registry calls past a non-npm devEngines pin', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockExec
+        .mockReturnValueOnce(
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
+        )
+        .mockReturnValueOnce('');
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['view']),
+        expect.objectContaining({
+          env: expect.objectContaining({ npm_config_force: 'true' }),
+        })
+      );
+      expect(mockExec).toHaveBeenCalledWith(
+        'npm',
+        expect.arrayContaining(['dist-tag', 'add']),
+        expect.objectContaining({
+          env: expect.objectContaining({ npm_config_force: 'true' }),
+        })
+      );
+    });
+
+    it('does not force the publish command', async () => {
+      mockDetectPackageManager.mockReturnValue('pnpm');
+      mockExec
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        })
+        .mockReturnValueOnce('[]');
+      mockExecSync.mockReturnValueOnce('10.0.0' as any);
+
+      await runExecutor(options, context);
+
+      const publishCall = mockExec.mock.calls.find(([, args]) =>
+        (args as string[]).includes('publish')
+      );
+      expect(publishCall).toBeDefined();
+      expect((publishCall![2] as any).env?.npm_config_force).toBeUndefined();
+    });
+  });
+
   describe('npm view empty output handling', () => {
     it('should continue to publish when npm view returns empty output instead of crashing on JSON.parse', async () => {
       // `npm view` can exit 0 with empty stdout when the package exists in the
