@@ -17,7 +17,7 @@ export function addLoadChildren(
   }
 
   const moduleSource = tree.read(options.parent, 'utf-8');
-  const sourceFile = tsModule.createSourceFile(
+  tsModule.createSourceFile(
     options.parent,
     moduleSource,
     tsModule.ScriptTarget.Latest,

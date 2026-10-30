@@ -10,7 +10,7 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
   assertSupportedAngularVersion(tree);
   const options = await normalizeOptions(tree, schema);
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  getInstalledAngularVersionInfo(tree);
 
   generateFiles(
     tree,
