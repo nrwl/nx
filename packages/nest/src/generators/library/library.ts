@@ -3,7 +3,6 @@ import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
-  logger,
   readJson,
   runTasksInSerial,
   writeJson,
