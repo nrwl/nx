@@ -2148,9 +2148,10 @@ function resolvesToSpec(tuple: unknown[], spec: string): boolean {
   );
 }
 
-// Bun records the manifest's trusted names that are installed, in manifest
-// order. An empty manifest list is `[]` in a Bun 1.4.4 lockfile and absent in
-// earlier ones, so it follows the root lockfile.
+// Bun records the manifest's trusted names that are installed. Bun picks its
+// own order, which a frozen install does not check, so this keeps the
+// manifest's. An empty manifest list is `[]` in a Bun 1.4.4 lockfile and
+// absent in earlier ones, so it follows the root lockfile.
 function getPrunedTrustedDependencies(
   declared: string[] | undefined,
   rootTrusted: string[] | undefined,
