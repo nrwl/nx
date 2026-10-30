@@ -60,22 +60,23 @@ async function runTasks(
     projectGraph,
     taskGraph: fullTaskGraph,
   };
-  for (const task of tasks) {
-    const projectConfiguration =
-      projectsConfigurations.projects[task.target.project];
-    const targetConfiguration =
-      projectConfiguration.targets[task.target.target];
-    input[task.id] = combineOptionsForExecutor(
-      task.overrides as Options,
-      task.target.configuration,
-      targetConfiguration,
-      batchExecutor.schema,
-      null,
-      process.cwd()
-    );
-  }
 
   try {
+    for (const task of tasks) {
+      const projectConfiguration =
+        projectsConfigurations.projects[task.target.project];
+      const targetConfiguration =
+        projectConfiguration.targets[task.target.target];
+      input[task.id] = combineOptionsForExecutor(
+        task.overrides as Options,
+        task.target.configuration,
+        targetConfiguration,
+        batchExecutor.schema,
+        null,
+        process.cwd()
+      );
+    }
+
     const results = await batchExecutor.batchImplementationFactory()(
       batchTaskGraph,
       input,
