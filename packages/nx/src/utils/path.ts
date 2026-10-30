@@ -25,8 +25,19 @@ export function joinPathFragments(...fragments: string[]): string {
  * True when `relativePath` stays inside the directory it is resolved against.
  * Absolute paths are rejected because `path.join` silently treats them as
  * relative, so they would otherwise slip past a `..` check.
+ *
+ * Callers resolve with both `path.join` and `joinPathFragments`, and only the
+ * latter treats `\` as a separator on every platform, so the path must be
+ * contained under both readings.
  */
 export function isContainedRelativePath(relativePath: string): boolean {
+  return (
+    isContainedNativePath(relativePath) &&
+    isContainedNativePath(normalizePath(relativePath))
+  );
+}
+
+function isContainedNativePath(relativePath: string): boolean {
   if (path.isAbsolute(relativePath)) {
     return false;
   }

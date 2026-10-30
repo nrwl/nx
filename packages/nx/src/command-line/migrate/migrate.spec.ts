@@ -71,6 +71,7 @@ import { applyNxJsonMigrateDefaults } from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
+  promptContentKey,
   readPromptFilesFromInstall,
   validateMigrationEntries,
   writePromptMigrationFiles,
@@ -79,6 +80,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -152,6 +154,23 @@ describe('Migration', () => {
 
       await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toThrow(
         'Fetched migration metadata for mypackage is invalid: the target version is missing.'
+      );
+    });
+
+    it('should fail fast when a fetched migration config carries a version that is not a version', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: 'git+https://git.example.com/mypackage.git',
+          }),
+        from: {},
+        to: {},
+      });
+
+      await expect(migrator.migrate('mypackage', 'latest')).rejects.toThrow(
+        'Fetched migration metadata for mypackage is invalid: the target version "git+https://git.example.com/mypackage.git" is not a valid version.'
       );
     });
 
@@ -5063,6 +5082,19 @@ module.exports = {
       await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
     });
 
+    it('the fetcher surfaces a release whose version is not a version instead of falling back to install', async () => {
+      const err = new packageMgrUtils.InvalidResolvedVersionError(
+        'mypackage',
+        'git+https://git.example.com/mypackage.git'
+      );
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
+    });
+
     it('the fetcher rejects when an exact requested version comes back as a different version', async () => {
       // A config surface (registry proxy, override, cooldown gate) silently
       // substituting another version must fail the run, not corrupt the plan.
@@ -5101,6 +5133,30 @@ module.exports = {
       await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
         version: '2.0.1',
       });
+    });
+  });
+
+  describe('fetched package names', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('does not fall back to installing a flag-shaped package name', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('Unable to resolve version'));
+      const createTempNpmDirectory = vi
+        .spyOn(packageMgrUtils, 'createTempNpmDirectory')
+        .mockImplementation(() => {
+          throw new Error('installed');
+        });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+
+      await expect(fetch('--userconfig=/tmp/x', 'latest')).rejects.toThrow(
+        /Invalid package name: "--userconfig=\/tmp\/x"/
+      );
+      expect(createTempNpmDirectory).not.toHaveBeenCalled();
     });
   });
 
@@ -5243,6 +5299,78 @@ module.exports = {
         });
       }
     );
+
+    it('passes the install fallback spec to the shell as a single argument', async () => {
+      const dir = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-migrate-install-spec-'))
+      );
+      const marker = join(dir, 'marker');
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('No match found for version'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      const fetch = createFetcher({ add: 'npm-add' } as any);
+      const version = `latest; echo x > ${marker}`;
+
+      try {
+        await expect(fetch('mypackage', version)).rejects.toThrow(
+          `Failed to fetch migrations for mypackage@${version}`
+        );
+        expect(existsSync(marker)).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    it('installs without lifecycle scripts when falling back to install', async () => {
+      vi.spyOn(
+        packageMgrUtils,
+        'resolvePackageVersionUsingRegistry'
+      ).mockRejectedValue(new Error('registry unavailable'));
+      const dir = mkdtempSync(join(tmpdir(), 'nx-migrate-spec-'));
+      vi.spyOn(packageMgrUtils, 'createTempNpmDirectory').mockReturnValue({
+        dir,
+        cleanup: async () => {},
+      });
+      writeFileSync(
+        join(dir, 'add.js'),
+        `const fs = require('fs');
+        fs.mkdirSync('node_modules/mypackage', { recursive: true });
+        fs.writeFileSync(
+          'node_modules/mypackage/package.json',
+          JSON.stringify({ name: 'mypackage', version: '2.0.1' })
+        );
+        fs.writeFileSync(
+          'call.json',
+          JSON.stringify({
+            args: process.argv.slice(2),
+            YARN_ENABLE_SCRIPTS: process.env.YARN_ENABLE_SCRIPTS,
+          })
+        );`
+      );
+
+      try {
+        const fetch = createFetcher({
+          add: 'node add.js',
+          ignoreScriptsFlag: '--ignore-scripts',
+        } as any);
+        await expect(fetch('mypackage', 'latest')).resolves.toMatchObject({
+          version: '2.0.1',
+        });
+        expect(
+          JSON.parse(readFileSync(join(dir, 'call.json'), 'utf-8'))
+        ).toEqual({
+          args: ['mypackage@latest', '--ignore-scripts'],
+          YARN_ENABLE_SCRIPTS: 'false',
+        });
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
   });
 
   describe('multi-major migration prompt', () => {
@@ -6063,6 +6191,8 @@ module.exports = {
       ['../../etc/passwd'],
       ['./safe/../../escape.md'],
       ['/etc/passwd'],
+      ['..\\..\\etc\\passwd'],
+      ['safe/..\\..\\escape.md'],
     ])(
       'should reject prompt path %p that escapes the migrations directory',
       async (badPath) => {
@@ -6080,6 +6210,111 @@ module.exports = {
         ).rejects.toThrow(/Invalid prompt path/);
       }
     );
+
+    describe('in an installed package', () => {
+      let dir: string;
+      let packageDir: string;
+
+      const readPrompt = (prompt: string) =>
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          { generators: { m: { version: '1.0.0', prompt } } },
+          join(packageDir, 'migrations.json')
+        );
+
+      beforeEach(() => {
+        dir = mkdtempSync(join(tmpdir(), 'nx-prompt-install-'));
+        packageDir = join(dir, 'node_modules', 'pkg');
+        mkdirSync(join(packageDir, 'prompts'), { recursive: true });
+        writeFileSync(join(packageDir, 'prompts', 'x.md'), '# X');
+        mkdirSync(join(dir, 'outside'));
+        writeFileSync(join(dir, 'outside', 'credentials.md'), 'secret');
+      });
+
+      afterEach(() => {
+        rmSync(dir, { recursive: true, force: true });
+      });
+
+      it('should read a prompt file shipped by the package', async () => {
+        await expect(readPrompt('./prompts/x.md')).resolves.toEqual({
+          './prompts/x.md': '# X',
+        });
+      });
+
+      it('should read a prompt file when the package itself is a link', async () => {
+        const linkedPackageDir = join(dir, 'linked-pkg');
+        symlinkSync(packageDir, linkedPackageDir, 'dir');
+        packageDir = linkedPackageDir;
+
+        await expect(readPrompt('prompts/x.md')).resolves.toEqual({
+          'prompts/x.md': '# X',
+        });
+      });
+
+      it('should reject a prompt path that leaves the package through a linked dependency', async () => {
+        mkdirSync(join(packageDir, 'node_modules'));
+        symlinkSync(
+          join(dir, 'outside'),
+          join(packageDir, 'node_modules', 'pkg'),
+          'dir'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+
+      it('should reject a prompt path that leaves the package through any other link', async () => {
+        symlinkSync(join(dir, 'outside'), join(packageDir, 'linked'), 'dir');
+
+        await expect(readPrompt('linked/credentials.md')).rejects.toThrow(
+          /Could not find prompt file/
+        );
+      });
+
+      it('should reject a prompt path into a dependency copied into the package', async () => {
+        mkdirSync(join(packageDir, 'node_modules', 'pkg'), { recursive: true });
+        writeFileSync(
+          join(packageDir, 'node_modules', 'pkg', 'credentials.md'),
+          'secret'
+        );
+
+        await expect(
+          readPrompt('node_modules/pkg/credentials.md')
+        ).rejects.toThrow(/Could not find prompt file/);
+      });
+    });
+  });
+
+  describe('prompt file name', () => {
+    it.each([
+      ['./prompts/project.json'],
+      ['./prompts/vite.config.ts'],
+      ['./prompts/no-extension'],
+      ['./prompts/.md'],
+      ['./prompts/project.json:x.md'],
+      ['./prompts/a|b.md'],
+      ['./prompts/a?.md'],
+      ['./prompts/a*.md'],
+      ['./prompts/a<b>.md'],
+      ['./prompts/a"b.md'],
+      ['./prompts/a\nb.md'],
+      ['./pro:mpts/x.md'],
+    ])('should reject prompt path %s', async (badPath) => {
+      await expect(
+        readPromptFilesFromInstall(
+          'pkg',
+          '1.0.0',
+          {
+            generators: {
+              m: { version: '1.0.0', prompt: badPath },
+            },
+          },
+          '/tmp/fake-pkg/migrations.json'
+        )
+      ).rejects.toThrow(/prompt files must be markdown \(\.md\) files/);
+    });
   });
 
   describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
@@ -6303,6 +6538,82 @@ module.exports = {
     });
   });
 
+  describe('generateMigrationsJsonAndUpdatePackageJson (addToPackageJson)', () => {
+    let tempFs: TempFs;
+    let root: string;
+
+    beforeEach(() => {
+      tempFs = new TempFs('nx-migrate-add-to-package-json');
+      root = tempFs.tempDir;
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      delete (Object.prototype as any).polluted;
+      tempFs.cleanup();
+    });
+
+    it('only adds packages to the dependencies and devDependencies sections', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: { plugin: '1.0.0' },
+        })
+      );
+
+      const fetch = (p: string) => {
+        if (p === 'plugin') {
+          return Promise.resolve({
+            version: '2.0.0',
+            packageJsonUpdates: {
+              version2: {
+                version: '2.0.0',
+                packages: {
+                  dep: { version: '2.0.0', addToPackageJson: 'dependencies' },
+                  devDep: {
+                    version: '2.0.0',
+                    alwaysAddToPackageJson: 'devDependencies',
+                  },
+                  polluted: { version: 'yes', addToPackageJson: '__proto__' },
+                  preinstall: {
+                    version: 'echo hi',
+                    alwaysAddToPackageJson: 'scripts',
+                  },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '2.0.0' });
+      };
+
+      await generateMigrationsJsonAndUpdatePackageJson(
+        root,
+        {
+          type: 'generateMigrations',
+          targetPackage: 'plugin',
+          targetVersion: '2.0.0',
+          from: { plugin: '1.0.0' },
+          to: {},
+          interactive: false,
+        },
+        fetch as any
+      );
+
+      expect(({} as any).polluted).toBeUndefined();
+      expect(
+        JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8'))
+      ).toEqual({
+        name: 'w',
+        version: '0.0.0',
+        dependencies: { dep: '2.0.0' },
+        devDependencies: { plugin: '2.0.0', devDep: '2.0.0' },
+      });
+    });
+  });
+
   describe('writePromptMigrationFiles', () => {
     let tmpRoot: string;
 
@@ -6313,6 +6624,29 @@ module.exports = {
     afterEach(() => {
       rmSync(tmpRoot, { recursive: true, force: true });
     });
+
+    it.each([
+      ['files/..\\..\\..\\..\\x.md', 'x.md'],
+      ['files\\x.md', 'x.md'],
+      ['files/x.md\\..', 'files'],
+    ])(
+      'should keep prompt %s inside the target version directory',
+      (prompt, baseName) => {
+        const migrations = [
+          { package: 'pkg', name: 'm', version: '1.0.0', prompt },
+        ];
+
+        const written = writePromptMigrationFiles(
+          tmpRoot,
+          migrations,
+          { [promptContentKey('pkg', prompt)]: 'X' },
+          '1.0.0'
+        );
+
+        expect(written).toEqual([`tools/ai-migrations/pkg/1.0.0/${baseName}`]);
+        expect(readdirSync(tmpRoot)).toEqual(['tools']);
+      }
+    );
 
     it('should write prompt files under the package and target version directories using the basename', () => {
       const migrations = [
