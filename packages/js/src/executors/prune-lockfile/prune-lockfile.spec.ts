@@ -469,6 +469,185 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     expect(generated.peerDependenciesMeta).toBeUndefined();
   });
 
+  it.each([
+    {
+      lockFile: 'bun.lock',
+      dependencies: {
+        '@myorg/a': 'file:./workspace_modules/@myorg/a',
+        '@myorg/b': 'file:./workspace_modules/@myorg/b',
+        '@myorg/c': 'file:./workspace_modules/@myorg/c',
+        avend: 'file:../../libs/a/vendor/avend',
+        lodash: '^4.17.21',
+        util: 'file:../../vendor/util',
+      },
+      devDependencies: {
+        '@myorg/t': 'file:./workspace_modules/@myorg/t',
+        '@myorg/u': 'file:./workspace_modules/@myorg/u',
+        uvend: 'file:../../libs/u/vendor/uvend',
+      },
+    },
+    {
+      lockFile: 'package-lock.json',
+      dependencies: {
+        '@myorg/a': 'file:./workspace_modules/@myorg/a',
+        lodash: '^4.17.21',
+      },
+      devDependencies: {
+        '@myorg/b': 'file:./workspace_modules/@myorg/b',
+        '@myorg/t': 'file:./workspace_modules/@myorg/t',
+      },
+    },
+  ])(
+    'declares the workspace modules and vendored packages other modules depend on only for Bun ($lockFile)',
+    async ({ lockFile, dependencies, devDependencies }) => {
+      const module = (name: string, deps: Record<string, string> = {}) =>
+        JSON.stringify({ name, version: '1.0.0', dependencies: deps });
+      tempFs.createFilesSync({
+        'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+        [lockFile]: '{}',
+        [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+          name: 'app',
+          version: '0.0.1',
+          dependencies: { '@myorg/a': 'workspace:*', lodash: '^4.17.21' },
+          // b is also reached from a, so a production install needs it
+          devDependencies: {
+            '@myorg/b': 'workspace:*',
+            '@myorg/t': 'workspace:*',
+          },
+        }),
+        'libs/a/package.json': module('@myorg/a', {
+          '@myorg/b': 'workspace:*',
+          '@myorg/c': 'workspace:*',
+          avend: 'file:./vendor/avend',
+        }),
+        // a vendored package named like the workspace package util
+        'libs/b/package.json': module('@myorg/b', {
+          util: 'file:../../vendor/util',
+        }),
+        'libs/util/package.json': module('util', {
+          uvend2: 'file:./vendor/uvend2',
+        }),
+        // the app's own lodash wins
+        'libs/c/package.json': module('@myorg/c', {
+          lodash: 'file:../../vendor/lodash',
+        }),
+        'libs/t/package.json': module('@myorg/t', {
+          '@myorg/u': 'workspace:*',
+        }),
+        'libs/u/package.json': module('@myorg/u', {
+          uvend: 'file:vendor/uvend',
+        }),
+      });
+      tempFs.createDirSync('dist/app');
+      const workspacePackages = new Map([
+        ...['a', 'b', 'c', 't', 'u'].map((name): [string, any] => [
+          `@myorg/${name}`,
+          { data: { root: `libs/${name}` } },
+        ]),
+        ['util', { data: { root: 'libs/util' } }],
+      ]);
+      mockGetWorkspacePackages.mockReturnValue(workspacePackages);
+      try {
+        await pruneLockfileExecutor(
+          {
+            buildTarget: 'app:build',
+            outputPath: join(tempFs.tempDir, 'dist/app'),
+          },
+          {
+            root: tempFs.tempDir,
+            cwd: tempFs.tempDir,
+            isVerbose: false,
+            projectGraph: {
+              nodes: {
+                app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+              },
+              dependencies: {},
+              externalNodes: {},
+            },
+          } as unknown as ExecutorContext
+        );
+      } finally {
+        mockGetWorkspacePackages.mockReturnValue(new Map());
+      }
+
+      const generated: PackageJson = JSON.parse(
+        readFileSync(
+          join(tempFs.tempDir, 'dist', 'app', 'package.json'),
+          'utf-8'
+        )
+      );
+      expect(generated.dependencies).toEqual(dependencies);
+      expect(generated.devDependencies).toEqual(devDependencies);
+    }
+  );
+
+  it.each(['bun.lock', 'pnpm-lock.yaml'])(
+    'leaves a vendored package named like a workspace package alone (%s)',
+    async (lockFile) => {
+      tempFs.createFilesSync({
+        'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+        [lockFile]: '{}',
+        [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+          name: 'app',
+          version: '0.0.1',
+          dependencies: {
+            '@myorg/a': 'workspace:*',
+            util: 'file:../../vendor/util',
+          },
+        }),
+        'libs/a/package.json': JSON.stringify({
+          name: '@myorg/a',
+          version: '1.0.0',
+        }),
+        'libs/util/package.json': JSON.stringify({
+          name: 'util',
+          version: '1.0.0',
+          dependencies: { uvend: 'file:./vendor/uvend' },
+        }),
+      });
+      tempFs.createDirSync('dist/app');
+      mockGetWorkspacePackages.mockReturnValue(
+        new Map<string, any>([
+          ['@myorg/a', { data: { root: 'libs/a' } }],
+          ['util', { data: { root: 'libs/util' } }],
+        ])
+      );
+      try {
+        await pruneLockfileExecutor(
+          {
+            buildTarget: 'app:build',
+            outputPath: join(tempFs.tempDir, 'dist/app'),
+          },
+          {
+            root: tempFs.tempDir,
+            cwd: tempFs.tempDir,
+            isVerbose: false,
+            projectGraph: {
+              nodes: {
+                app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+              },
+              dependencies: {},
+              externalNodes: {},
+            },
+          } as unknown as ExecutorContext
+        );
+      } finally {
+        mockGetWorkspacePackages.mockReturnValue(new Map());
+      }
+
+      const generated: PackageJson = JSON.parse(
+        readFileSync(
+          join(tempFs.tempDir, 'dist', 'app', 'package.json'),
+          'utf-8'
+        )
+      );
+      expect(generated.dependencies).toEqual({
+        '@myorg/a': 'file:./workspace_modules/@myorg/a',
+        util: 'file:../../vendor/util',
+      });
+    }
+  );
+
   it('writes the manifest after the deploy output rewrites it', async () => {
     tempFs.createFilesSync({
       'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),

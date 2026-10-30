@@ -2411,7 +2411,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'file:./vendor/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe(
       'file:local_path_modules/apps/api/vendor/pkg'
@@ -2425,7 +2425,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'link:../shared' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'
@@ -2443,7 +2443,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/nested/api',
       WS,
-      new Set()
+      new Map()
     );
 
     expect(packageJson.dependencies.lib).toBe(
@@ -2459,7 +2459,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { shared: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       shared: 'link:local_path_modules/apps/shared',
@@ -2481,7 +2481,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.peerDependencies).toEqual({ react: '^18.0.0' });
     expect(packageJson.peerDependenciesMeta).toEqual({
@@ -2497,7 +2497,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { external: 'file:../../../outside/pkg' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.external).toBe('file:../../../outside/pkg');
     expect(warn).toHaveBeenCalledWith(
@@ -2513,7 +2513,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { vendored: 'link:/opt/thing' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.vendored).toBe('link:/opt/thing');
     expect(warn).toHaveBeenCalledWith(
@@ -2529,7 +2529,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { 'root-pkg': 'link:../..' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies['root-pkg']).toBe('link:../..');
     expect(warn).toHaveBeenCalledWith(
@@ -2548,7 +2548,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       peerDependenciesMeta: { external: { optional: true } },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies).toEqual({
       external: 'link:../../../outside/shared',
@@ -2571,7 +2571,12 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       packageJson,
       'apps/api',
       WS,
-      new Set(['@scope/lib'])
+      new Map([
+        [
+          '@scope/lib',
+          { name: 'lib', type: 'lib', data: { root: 'libs/lib' } },
+        ],
+      ])
     );
 
     expect(packageJson.dependencies['@scope/lib']).toBe('link:../../libs/lib');
@@ -2584,7 +2589,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { lodash: '^4.17.21' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.lodash).toBe('^4.17.21');
   });
@@ -2600,7 +2605,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       dependencies: { shared: 'catalog:' },
     };
 
-    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Map());
 
     expect(packageJson.dependencies.shared).toBe(
       'link:local_path_modules/apps/shared'

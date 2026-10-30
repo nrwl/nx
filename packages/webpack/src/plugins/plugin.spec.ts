@@ -14,6 +14,7 @@ vi.mock('@nx/js/internal', async () => ({
 
 import { CreateNodesContext } from '@nx/devkit';
 import {
+  BUN_INSTALL_SETTINGS_INPUTS,
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
 } from '@nx/js/internal';
@@ -382,6 +383,30 @@ describe('@nx/webpack/plugin', () => {
       expect.arrayContaining(PNPM_INSTALL_SETTINGS_INPUTS)
     );
   });
+
+  it.each([
+    ['bun.lock', true],
+    ['bun.lockb', false],
+  ])(
+    'adds the Bun install settings inputs only on the text lockfile (%s)',
+    async (lockFile, included) => {
+      tempFs.removeFileSync('package-lock.json');
+      tempFs.createFileSync(lockFile, '');
+      mockWebpackConfig({ output: { path: 'dist/foo' } });
+
+      const nodes = await createNodesFunction(
+        ['my-app/webpack.config.js'],
+        { buildTargetName: 'build' },
+        context
+      );
+
+      expect(nodes[0][1].projects['my-app'].targets.build.inputs).toEqual(
+        included
+          ? expect.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+          : expect.not.arrayContaining(BUN_INSTALL_SETTINGS_INPUTS)
+      );
+    }
+  );
 
   it('omits the pnpm major runtime probe when the root package.json pins a pnpm version', async () => {
     tempFs.removeFileSync('package-lock.json');

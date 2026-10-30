@@ -7,6 +7,12 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
+import { localPathPackagesBunLock } from './lock-file/__fixtures__/bun/local-path-packages.bun.lock';
+import {
+  patchedPackagesBunLock,
+  unpatchedPackagesBunLock,
+} from './lock-file/__fixtures__/bun/patched-packages.bun.lock';
+import localPathPackagesPnpmLock from './lock-file/__fixtures__/local-path-packages/pnpm-lock.yaml';
 
 const { root, workspaceDataDirectory } = vi.hoisted(() => {
   const { mkdtempSync, realpathSync } = require('node:fs');
@@ -254,6 +260,135 @@ describe('nx/js/dependencies-and-lockfile', () => {
       { source: 'npm:a', target: 'npm:x', type: 'static' },
     ]);
   });
+
+  it('should hash the patch files of patched Bun packages', async () => {
+    const dependencies = {
+      'is-odd': '1.0.0',
+      'odd-alias': 'npm:is-odd@2.0.0',
+      'left-pad': '1.1.0',
+    };
+    const writeBunWorkspace = (
+      patchedDependencies: Record<string, string> | undefined
+    ) => {
+      write(
+        'package.json',
+        JSON.stringify({ name: 'root', dependencies, patchedDependencies })
+      );
+      write(
+        'bun.lock',
+        patchedDependencies ? patchedPackagesBunLock : unpatchedPackagesBunLock
+      );
+    };
+    const hashes = async () => {
+      const nodes = await createExternalNodes(
+        await loadPluginInNewProcess(),
+        'bun.lock'
+      );
+      return Object.fromEntries(
+        ['npm:is-odd@1.0.0', 'npm:odd-alias', 'npm:is-odd@2.0.0'].map(
+          (name) => [name, nodes[name].data.hash]
+        )
+      );
+    };
+    writeBunWorkspace(undefined);
+    const unpatched = await hashes();
+
+    write('patches/is-odd@1.0.0.patch', 'P1');
+    write('custom/is-odd@2.0.0.patch', 'A1');
+    writeBunWorkspace({
+      'is-odd@1.0.0': 'patches/is-odd@1.0.0.patch',
+      'is-odd@2.0.0': 'custom/is-odd@2.0.0.patch',
+    });
+    const patched = await hashes();
+    // bun.lock records only the path, so an edit leaves the lockfile as is.
+    write('patches/is-odd@1.0.0.patch', 'P2');
+    const edited = await hashes();
+    rmSync(join(root, 'patches/is-odd@1.0.0.patch'));
+    const missing = await hashes();
+
+    for (const name of Object.keys(unpatched)) {
+      expect(patched[name]).not.toBe(unpatched[name]);
+    }
+    expect(edited['npm:is-odd@1.0.0']).not.toBe(patched['npm:is-odd@1.0.0']);
+    expect(edited['npm:odd-alias']).toBe(patched['npm:odd-alias']);
+    expect(missing['npm:is-odd@1.0.0']).not.toBe(unpatched['npm:is-odd@1.0.0']);
+    expect(missing['npm:is-odd@1.0.0']).not.toBe(edited['npm:is-odd@1.0.0']);
+    expect(
+      (await createExternalNodes(await loadPluginInNewProcess(), 'bun.lock'))[
+        'npm:left-pad@1.1.0'
+      ].data.hash
+    ).toBe(
+      'sha512-C8cw/7VpfXLj8Yjlmux8lqb3mfIe3vEXTdik/cXTuzZ8FXJnu45UAWp94XlWWmcW7Yxl74wvHw8w10wIHNGHRQ=='
+    );
+  });
+
+  it.each([
+    ['bun.lock', localPathPackagesBunLock],
+    ['pnpm-lock.yaml', localPathPackagesPnpmLock],
+  ])(
+    'should hash the contents of local path packages in %s',
+    async (lockFile, lockFileContent) => {
+      write(
+        'package.json',
+        JSON.stringify({
+          name: 'root',
+          dependencies: {
+            vend: 'file:./vendor/vend',
+            ignored: 'file:./vendor/ignored',
+            vtar: 'file:./vendor/vtar-1.0.0.tgz',
+            lnk: 'link:vendor/lnk',
+          },
+        })
+      );
+      write('.gitignore', 'vendor/ignored\n');
+      write(lockFile, lockFileContent);
+      // `vend` declares the `ttar` tarball.
+      const sources = {
+        vend: 'vendor/vend/index.js',
+        ignored: 'vendor/ignored/index.js',
+        vtar: 'vendor/vtar-1.0.0.tgz',
+        lnk: 'vendor/lnk/index.js',
+        ttar: 'vendor/ttar-1.0.0.tgz',
+      };
+      for (const source of Object.values(sources)) {
+        write(source, 'V1');
+      }
+      // Every node of a package, so a package that also has a bare node
+      // changes only when all of them do.
+      const hashes = async () => {
+        const plugin = await loadPluginInNewProcess();
+        // A new process walks the workspace again.
+        (await import('../../utils/workspace-context')).resetWorkspaceContext();
+        const nodes = await createExternalNodes(plugin, lockFile);
+        return Object.fromEntries(
+          Object.keys(sources).map((name) => [
+            name,
+            Object.values(nodes)
+              .filter((node) => node.data.packageName === name)
+              .map((node) => node.data.hash),
+          ])
+        );
+      };
+      const before = await hashes();
+
+      for (const [name, source] of Object.entries(sources)) {
+        write(source, 'V2');
+        const after = await hashes();
+        write(source, 'V1');
+
+        expect(before[name].length).toBeGreaterThan(0);
+        for (const [otherName, otherHashes] of Object.entries(before)) {
+          if (otherName === name) {
+            for (const [i, hash] of after[name].entries()) {
+              expect(hash).not.toBe(otherHashes[i]);
+            }
+          } else {
+            expect(after[otherName]).toEqual(otherHashes);
+          }
+        }
+      }
+    }
+  );
 
   it('should not create dependencies from a lockfile that createNodes skipped', async () => {
     write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));

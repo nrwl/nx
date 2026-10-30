@@ -42,6 +42,10 @@ describe('explicit package json dependencies', () => {
           root: 'libs/proj6',
           name: 'proj6',
         },
+        proj7: {
+          root: 'libs/proj7',
+          name: 'proj7',
+        },
       },
     };
 
@@ -102,6 +106,13 @@ describe('explicit package json dependencies', () => {
           lodash: '4.0.0',
         },
         devDependencies: { proj3: '*' },
+      }),
+      './libs/proj7/package.json': JSON.stringify({
+        dependencies: {
+          'is-odd': 'file:../../vendor/is-odd',
+          'is-even': 'file:../../vendor/is-even-1.0.0.tgz',
+          'is-number': 'link:../../vendor/is-number',
+        },
       }),
     });
 
@@ -193,6 +204,20 @@ describe('explicit package json dependencies', () => {
           },
         },
       },
+      proj7: {
+        name: 'proj7',
+        type: 'lib',
+        data: {
+          root: 'libs/proj7',
+          metadata: {
+            js: {
+              packageName: 'proj7',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
     };
 
     const fileMap = createFileMap(
@@ -228,6 +253,24 @@ describe('explicit package json dependencies', () => {
         packageName: 'lodash',
       },
     });
+    // Local packages, named as the Bun lockfile names them, beside registry
+    // packages of the same names.
+    for (const [packageName, version] of [
+      ['is-odd', 'file:vendor/is-odd'],
+      ['is-even', '../../vendor/is-even-1.0.0.tgz'],
+      ['is-number', 'link:./vendor/is-number'],
+    ]) {
+      builder.addExternalNode({
+        type: 'npm',
+        name: `npm:${packageName}`,
+        data: { version: '1.0.0', packageName },
+      });
+      builder.addExternalNode({
+        type: 'npm',
+        name: `npm:${packageName}@${version}`,
+        data: { version, packageName },
+      });
+    }
 
     ctx = {
       fileMap: fileMap,
@@ -379,6 +422,26 @@ describe('explicit package json dependencies', () => {
         },
       ])
     );
+  });
+
+  it('should add dependencies on the local packages that file: and link: specs name', async () => {
+    const targetProjectLocator = new TargetProjectLocator(
+      projects,
+      ctx.externalNodes,
+      new Map()
+    );
+
+    const res = buildExplicitPackageJsonDependencies(ctx, targetProjectLocator);
+    expect(
+      res
+        .filter(({ source }) => source === 'proj7')
+        .map(({ target }) => target)
+        .sort()
+    ).toEqual([
+      'npm:is-even@../../vendor/is-even-1.0.0.tgz',
+      'npm:is-number@link:./vendor/is-number',
+      'npm:is-odd@file:vendor/is-odd',
+    ]);
   });
 
   it('should add dependencies from the root package.json of a project rooted at "."', async () => {

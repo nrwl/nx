@@ -16,15 +16,19 @@ import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
 import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
-import { join } from 'path';
+import { isAbsolute, join, posix } from 'path';
+import { valid } from 'semver';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
+import { detectPackageManager } from '../../../utils/package-manager';
+import { normalizePath } from '../../../utils/path';
 import {
   findNodeMatchingVersion,
   isLinkNode,
+  isLocalPathSpecifier,
 } from '../lock-file/project-graph-pruning';
 import { logger } from '../../../utils/logger';
 
@@ -104,6 +108,13 @@ export function createPackageJson(
     } catch (e) {}
   }
 
+  const getInheritedLocalPathSpec = createInheritedLocalPathSpecResolver(
+    projectNode,
+    graph,
+    root,
+    rootPackageJson
+  );
+
   const getVersion = (
     packageName: string,
     version: string,
@@ -118,6 +129,14 @@ export function createPackageJson(
     );
     if (projectVersion) {
       return projectVersion;
+    }
+
+    // A local package's graph version is a path, never a semver version
+    if (!valid(version)) {
+      const localPathSpec = getInheritedLocalPathSpec(packageName);
+      if (localPathSpec) {
+        return localPathSpec;
+      }
     }
 
     // For libraries, fall back to root package.json (single section)
@@ -312,6 +331,92 @@ export function createPackageJson(
   // endregion Overrides/Resolutions
 
   return packageJson;
+}
+
+/**
+ * A local-path spec for a dependency the project inherits, rebased from the
+ * manifest that declares it to the project root. The graph version of a local
+ * package is root-relative (relative to its declarer for a Bun tarball), while
+ * the pnpm and Bun deploy outputs relocate every local-path spec from the
+ * project root. npm and yarn pruning matches the graph version itself, so they
+ * keep it.
+ *
+ * Declarers are searched nearest first: the project, the workspace projects it
+ * depends on, then the root manifest.
+ */
+function createInheritedLocalPathSpecResolver(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  root: string,
+  rootPackageJson: PackageJson
+): (packageName: string) => string | undefined {
+  let declarers: Array<{ root: string; manifest: PackageJson }> | undefined;
+  return (packageName) => {
+    if (declarers === undefined) {
+      const packageManager = detectPackageManager(root);
+      declarers =
+        packageManager === 'pnpm' || packageManager === 'bun'
+          ? getLocalPathSpecDeclarers(projectNode, graph, root, rootPackageJson)
+          : [];
+    }
+    for (const declarer of declarers) {
+      const spec = getDependencyVersionFromPackageJson(
+        packageName,
+        root,
+        declarer.manifest,
+        [
+          'dependencies',
+          'optionalDependencies',
+          'devDependencies',
+          'peerDependencies',
+        ]
+      );
+      if (!spec || !isLocalPathSpecifier(spec)) {
+        continue;
+      }
+      const protocol = spec.startsWith('link:') ? 'link:' : 'file:';
+      const path = normalizePath(spec.slice(protocol.length));
+      if (isAbsolute(path)) {
+        return spec;
+      }
+      return `${protocol}${posix.relative(
+        projectNode.data.root,
+        posix.join(declarer.root, path)
+      )}`;
+    }
+    return undefined;
+  };
+}
+
+function getLocalPathSpecDeclarers(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  root: string,
+  rootPackageJson: PackageJson
+): Array<{ root: string; manifest: PackageJson }> {
+  const declarers: Array<{ root: string; manifest: PackageJson }> = [];
+  const queue = [projectNode];
+  const seen = new Set([projectNode.name]);
+  while (queue.length) {
+    const project = queue.shift();
+    const manifestPath = join(root, project.data.root, 'package.json');
+    if (existsSync(manifestPath)) {
+      try {
+        declarers.push({
+          root: project.data.root,
+          manifest: readJsonFile(manifestPath),
+        });
+      } catch {}
+    }
+    for (const { target } of graph.dependencies[project.name] ?? []) {
+      if (graph.nodes[target] && !seen.has(target)) {
+        seen.add(target);
+        queue.push(graph.nodes[target]);
+      }
+    }
+  }
+  declarers.push({ root: '', manifest: rootPackageJson });
+  return declarers;
 }
 
 export function findProjectsNpmDependencies(

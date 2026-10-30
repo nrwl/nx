@@ -106,6 +106,10 @@ export interface PackageJson {
   // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
   // or git specs; `true` approves, `false` denies.
   allowScripts?: Record<string, boolean>;
+  // Bun install-script allowlist; when set it replaces Bun's default list.
+  trustedDependencies?: string[];
+  // Bun patches, `name@version` -> patch file path.
+  patchedDependencies?: Record<string, string>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]

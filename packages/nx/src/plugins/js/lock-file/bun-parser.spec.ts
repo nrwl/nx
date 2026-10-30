@@ -14,6 +14,11 @@ import { nestedOverridesBunLock } from './__fixtures__/bun/nested-overrides.bun.
 import { peerDependenciesMetaLockFile } from './__fixtures__/bun/peer-dependencies-meta.bun.lock';
 import { scopedPackagesBunLock } from './__fixtures__/bun/scoped-packages.bun.lock';
 import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependencies.bun.lock';
+import { tupleShapesBunLock } from './__fixtures__/bun/tuple-shapes.bun.lock';
+import {
+  vendoredPackagesBunLock,
+  workspaceFileDependencyBunLock,
+} from './__fixtures__/bun/vendored-packages.bun.lock';
 import { versionResolutionLockFile } from './__fixtures__/bun/version-resolution.bun.lock';
 import { workspaceDependenciesBunLock } from './__fixtures__/bun/workspace-dependencies.bun.lock';
 import {
@@ -83,136 +88,62 @@ describe('Bun Parser', () => {
       expect(Object.keys(nodes)).toHaveLength(0);
     });
 
-    it('should handle file packages with 2-element tuples', () => {
-      const lockFileContent = JSON.stringify({
-        lockfileVersion: 1,
-        workspaces: {
-          '': {
-            name: 'test-workspace',
-            dependencies: {
-              'local-pkg': 'file:./local-package',
-            },
-          },
-        },
-        packages: {
-          'local-pkg': [
-            'local-pkg@file:./local-package',
-            { dependencies: { lodash: '^4.17.21' } },
-          ],
-        },
-      });
+    it('should create nodes for file packages with 2-element tuples', () => {
+      const nodes = getBunTextLockfileNodes(tupleShapesBunLock, 'test-hash');
 
-      const nodes = getBunTextLockfileNodes(lockFileContent, 'test-hash');
-
-      // File dependencies should be filtered out as they represent workspace packages
-      expect(Object.keys(nodes)).toHaveLength(0);
+      // A file package outside the workspaces is a vendored package.
+      expect(
+        Object.keys(nodes)
+          .filter((name) => nodes[name].data.packageName === 'file-pkg')
+          .sort()
+      ).toEqual(['npm:file-pkg', 'npm:file-pkg@file:local-package']);
     });
 
     it('should handle git packages with 3-element tuples', () => {
-      const lockFileContent = JSON.stringify({
-        lockfileVersion: 1,
-        workspaces: {
-          '': {
-            name: 'test-workspace',
-            dependencies: {
-              'git-pkg': 'git:https://github.com/user/repo.git#abc123',
-            },
-          },
-        },
-        packages: {
-          'git-pkg': [
-            'git-pkg@git:https://github.com/user/repo.git#abc123',
-            { dependencies: { lodash: '^4.17.21' } },
-            'abc123',
-          ],
-        },
-      });
-
-      const nodes = getBunTextLockfileNodes(lockFileContent, 'test-hash');
+      const nodes = getBunTextLockfileNodes(tupleShapesBunLock, 'test-hash');
 
       expect(
-        nodes['npm:git-pkg@git:https://github.com/user/repo.git#abc123']
-      ).toBeDefined();
-      expect(
-        nodes['npm:git-pkg@git:https://github.com/user/repo.git#abc123'].data
-          .version
-      ).toBe('git:https://github.com/user/repo.git#abc123');
+        nodes[
+          'npm:git-pkg@git+file:///tmp/repos/git-pkg.git#62e28c90a2aadf723b59ed7cebd00ce63a5dae87'
+        ].data.version
+      ).toBe(
+        'git+file:///tmp/repos/git-pkg.git#62e28c90a2aadf723b59ed7cebd00ce63a5dae87'
+      );
     });
 
     it('should handle npm packages with 4-element tuples', () => {
-      const lockFileContent = JSON.stringify({
-        lockfileVersion: 1,
-        workspaces: {
-          '': {
-            name: 'test-workspace',
-            dependencies: {
-              'npm-pkg': '^1.0.0',
-            },
-          },
-        },
-        packages: {
-          'npm-pkg': [
-            'npm-pkg@npm:1.0.0',
-            'https://registry.npmjs.org/npm-pkg/-/npm-pkg-1.0.0.tgz',
-            { dependencies: { lodash: '^4.17.21' } },
-            'sha512-abcdef123456',
-          ],
-        },
+      const nodes = getBunTextLockfileNodes(tupleShapesBunLock, 'test-hash');
+
+      expect(nodes['npm:is-odd@1.0.0'].data).toEqual({
+        version: '1.0.0',
+        packageName: 'is-odd',
+        hash: 'sha512-yIhxkKCK7pZnj48WBvaTQ36Or7PymGYqmZrSNqkrhmU3pakkp2TWhuN7hH25bqJgH+Xq4IZ3QNd3+QVshldEHA==',
       });
-
-      const nodes = getBunTextLockfileNodes(lockFileContent, 'test-hash');
-
-      expect(nodes['npm:npm-pkg@1.0.0']).toBeDefined();
-      expect(nodes['npm:npm-pkg@1.0.0'].data.version).toBe('1.0.0');
-      expect(nodes['npm:npm-pkg@1.0.0'].data.hash).toBe('sha512-abcdef123456');
     });
 
     it('should handle mixed tuple lengths in same lockfile', () => {
-      const lockFileContent = JSON.stringify({
-        lockfileVersion: 1,
-        workspaces: {
-          '': {
-            name: 'test-workspace',
-            dependencies: {
-              'workspace-pkg': 'workspace:apps/workspace-pkg',
-              'file-pkg': 'file:./local-package',
-              'git-pkg': 'git:https://github.com/user/repo.git#abc123',
-              'npm-pkg': '^1.0.0',
-            },
-          },
-        },
-        packages: {
-          'workspace-pkg': ['workspace-pkg@workspace:apps/workspace-pkg'],
-          'file-pkg': [
-            'file-pkg@file:./local-package',
-            { dependencies: { lodash: '^4.17.21' } },
-          ],
-          'git-pkg': [
-            'git-pkg@git:https://github.com/user/repo.git#abc123',
-            { dependencies: { lodash: '^4.17.21' } },
-            'abc123',
-          ],
-          'npm-pkg': [
-            'npm-pkg@npm:1.0.0',
-            'https://registry.npmjs.org/npm-pkg/-/npm-pkg-1.0.0.tgz',
-            { dependencies: { lodash: '^4.17.21' } },
-            'sha512-abcdef123456',
-          ],
-        },
-      });
+      const nodes = getBunTextLockfileNodes(tupleShapesBunLock, 'test-hash');
 
-      const nodes = getBunTextLockfileNodes(lockFileContent, 'test-hash');
-
-      // Should only have non-workspace packages (file dependencies are filtered out)
-      // Now includes hoisted nodes for packages that appear in workspace dependencies
-      expect(Object.keys(nodes)).toHaveLength(4);
-      expect(
-        nodes['npm:git-pkg@git:https://github.com/user/repo.git#abc123']
-      ).toBeDefined();
-      expect(nodes['npm:npm-pkg@1.0.0']).toBeDefined();
-      // Should also have hoisted nodes
-      expect(nodes['npm:git-pkg']).toBeDefined();
-      expect(nodes['npm:npm-pkg']).toBeDefined();
+      // Every package but the workspace, plus a bare node for each package at
+      // the top of the tree.
+      expect(Object.keys(nodes).sort()).toEqual([
+        'npm:file-pkg',
+        'npm:file-pkg@file:local-package',
+        'npm:git-pkg',
+        'npm:git-pkg@git+file:///tmp/repos/git-pkg.git#62e28c90a2aadf723b59ed7cebd00ce63a5dae87',
+        'npm:is-buffer',
+        'npm:is-buffer@1.1.6',
+        'npm:is-number',
+        'npm:is-number@3.0.0',
+        'npm:is-odd',
+        'npm:is-odd@1.0.0',
+        'npm:kind-of',
+        'npm:kind-of@3.2.2',
+        'npm:left-pad',
+        'npm:left-pad@1.3.0',
+        'npm:ms',
+        'npm:ms@2.1.3',
+      ]);
     });
 
     it('should parse basic dependencies', () => {
@@ -615,14 +546,14 @@ describe('Bun Parser', () => {
       );
     });
 
-    it('should handle file dependencies', () => {
+    it('should create nodes for vendored file dependencies', () => {
       const result = getBunTextLockfileNodes(
         fileDependenciesLockFile,
         BASIC_LOCK_FILE_HASH
       );
 
-      // File dependencies are treated as workspace packages and filtered out
-      // Only their transitive dependencies (from npm registry) should be included
+      // File dependencies outside the workspaces are vendored packages, with
+      // their registry dependencies alongside them.
       expect(result).toEqual(
         expect.objectContaining({
           'npm:uuid@9.0.1': {
@@ -637,10 +568,28 @@ describe('Bun Parser', () => {
         })
       );
 
-      // Verify file dependencies are correctly filtered out
-      expect(result['npm:local-lib@file:packages/local-lib']).toBeUndefined();
-      expect(result['npm:shared-utils@file:shared-utils']).toBeUndefined();
-      expect(result['npm:test-utils@file:test-utils']).toBeUndefined();
+      expect(result['npm:local-lib@file:packages/local-lib'].data).toEqual({
+        version: 'file:packages/local-lib',
+        packageName: 'local-lib',
+        hash: expect.any(String),
+      });
+      expect(result['npm:shared-utils@file:shared-utils']).toBeDefined();
+      expect(result['npm:test-utils@file:test-utils']).toBeDefined();
+    });
+
+    it('should treat only workspace entries as workspaces', () => {
+      const result = getBunTextLockfileNodes(
+        workspaceFileDependencyBunLock,
+        BASIC_LOCK_FILE_HASH
+      );
+
+      expect(result['npm:is-odd@file:vendor/is-odd']).toBeDefined();
+      expect(result['npm:is-odd@1.0.0']).toBeDefined();
+      expect(
+        Object.values(result).filter(
+          (node) => node.data.packageName === '@demo/lib'
+        )
+      ).toEqual([]);
     });
 
     it('should handle tarball dependencies', () => {
@@ -780,7 +729,7 @@ describe('Bun Parser', () => {
           "lockfileVersion": 0,
           "packages": {
             "lodash": [
-              "lodash@npm:4.17.21",
+              "lodash@4.17.21",
               {"resolution": "lodash@npm:4.17.21"},
               "hash123"
             ]
@@ -861,19 +810,19 @@ describe('Bun Parser', () => {
           },
           "packages": {
             "@scope/package-name": [
-              "@scope/package-name@npm:1.0.0",
+              "@scope/package-name@1.0.0",
               "https://registry.npmjs.org/scope/package-name/-/scope-package-name-1.0.0.tgz",
               {"resolution": "@scope/package-name@npm:1.0.0"},
               "hash1"
             ],
             "package.with.dots": [
-              "package.with.dots@npm:2.0.0",
+              "package.with.dots@2.0.0",
               "https://registry.npmjs.org/package.with.dots/-/package.with.dots-2.0.0.tgz",
               {"resolution": "package.with.dots@npm:2.0.0"},
               "hash2"
             ],
             "package-with-dashes": [
-              "package-with-dashes@npm:3.0.0",
+              "package-with-dashes@3.0.0",
               "https://registry.npmjs.org/package-with-dashes/-/package-with-dashes-3.0.0.tgz",
               {"resolution": "package-with-dashes@npm:3.0.0"},
               "hash3"
@@ -969,7 +918,7 @@ describe('Bun Parser', () => {
           },
           "packages": {
             "lodash": [
-              "lodash@npm:4.17.21",
+              "lodash@4.17.21",
               "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
               null,
               "hash123"
@@ -1180,102 +1129,6 @@ describe('Bun Parser', () => {
             name: 'npm:scheduler@0.23.2',
           }),
         })
-      );
-    });
-
-    it('should handle patched dependencies by skipping them', () => {
-      const result = getBunTextLockfileNodes(
-        enhancedFeaturesBunLock,
-        ENHANCED_LOCK_FILE_HASH
-      );
-
-      // Patched packages should be skipped and not appear in external nodes
-      expect(result['patched-package@1.0.0']).toBeUndefined();
-
-      // Non-patched packages should still be present
-      expect(result).toEqual(
-        expect.objectContaining({
-          'npm:lodash@4.17.21': expect.objectContaining({
-            type: 'npm',
-            name: 'npm:lodash@4.17.21',
-            data: expect.objectContaining({
-              version: '4.17.21',
-              packageName: 'lodash',
-            }),
-          }),
-        })
-      );
-    });
-
-    it('should use manifests for better hash information', () => {
-      const result = getBunTextLockfileNodes(
-        enhancedFeaturesBunLock,
-        ENHANCED_LOCK_FILE_HASH
-      );
-
-      // Should use SHA hash from lockfile package entry
-      expect(result['npm:lodash@4.17.21'].data.hash).toBe(
-        'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=='
-      );
-      expect(result['npm:react@18.3.1'].data.hash).toBe(
-        'sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=='
-      );
-    });
-
-    it('should identify workspace packages using workspacePackages field', () => {
-      const result = getBunTextLockfileNodes(
-        enhancedFeaturesBunLock,
-        ENHANCED_LOCK_FILE_HASH
-      );
-
-      // Workspace packages should be skipped and not appear in external nodes
-      expect(result['workspace-lib@1.0.0']).toBeUndefined();
-    });
-
-    it('should validate enhanced lockfile structure', () => {
-      // Test that invalid patches structure throws error
-      const invalidPatchesLockFile = `{
-          "lockfileVersion": 0,
-          "workspaces": { "": {} },
-          "packages": {},
-          "patches": {
-            "test-package": {
-              "path": null
-            }
-          }
-        }`;
-
-      expect(() => {
-        getBunTextLockfileNodes(
-          invalidPatchesLockFile,
-          ENHANCED_LOCK_FILE_HASH
-        );
-      }).toThrow(
-        'Invalid patch entry for package "test-package": path must be a string'
-      );
-    });
-
-    it('should validate workspacePackages structure', () => {
-      // Test that invalid workspacePackages structure throws error
-      const invalidWorkspacePackagesLockFile = `{
-          "lockfileVersion": 0,
-          "workspaces": { "": {} },
-          "packages": {},
-          "workspacePackages": {
-            "test-package": {
-              "name": "test-package",
-              "version": null
-            }
-          }
-        }`;
-
-      expect(() => {
-        getBunTextLockfileNodes(
-          invalidWorkspacePackagesLockFile,
-          ENHANCED_LOCK_FILE_HASH
-        );
-      }).toThrow(
-        'Invalid workspace package entry for "test-package": version must be a string'
       );
     });
 
@@ -1650,14 +1503,14 @@ describe('Bun Parser', () => {
           // Scoped alias pointing to lodash - this is NOT a workspace-specific variant,
           // it's a scoped package name used as an alias
           '@custom/lodash': [
-            'lodash@npm:lodash@4.17.21',
+            'lodash@4.17.21',
             '',
             {},
             'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
           ],
           // Regular lodash entry
           lodash: [
-            'lodash@npm:lodash@4.17.21',
+            'lodash@4.17.21',
             '',
             {},
             'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
@@ -2421,6 +2274,44 @@ describe('Bun Parser', () => {
           },
         ]
       `);
+    });
+
+    it('should create dependencies of vendored packages', () => {
+      const externalNodes = getBunTextLockfileNodes(
+        vendoredPackagesBunLock,
+        BASIC_LOCK_FILE_HASH
+      );
+      const ctx: CreateDependenciesContext = {
+        externalNodes,
+        projects: {},
+        fileMap: { projectFileMap: {}, nonProjectFiles: [] },
+        filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
+        nxJsonConfiguration: {},
+        workspaceRoot: '/root',
+      };
+
+      const result = getBunTextLockfileDependencies(
+        vendoredPackagesBunLock,
+        BASIC_LOCK_FILE_HASH,
+        ctx
+      );
+
+      // An import of `vend` resolves to its bare node, which carries the same
+      // dependencies.
+      expect(
+        result.map(({ source, target }) => `${source} -> ${target}`).sort()
+      ).toEqual([
+        'npm:is-number@3.0.0 -> npm:kind-of@3.2.2',
+        'npm:is-odd@1.0.0 -> npm:is-number@3.0.0',
+        'npm:is-odd@file:vendor/is-odd -> npm:ms@2.1.3',
+        'npm:kind-of@3.2.2 -> npm:is-buffer@1.1.6',
+        'npm:vend -> npm:inner@file:vendor/inner',
+        'npm:vend -> npm:ms@2.1.3',
+        'npm:vend -> npm:ttar@../ttar-1.0.0.tgz',
+        'npm:vend@file:vendor/vend -> npm:inner@file:vendor/inner',
+        'npm:vend@file:vendor/vend -> npm:ms@2.1.3',
+        'npm:vend@file:vendor/vend -> npm:ttar@../ttar-1.0.0.tgz',
+      ]);
     });
   });
 });

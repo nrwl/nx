@@ -28,14 +28,21 @@ export {
 // TS solution awareness; mirrors Node's nearest-package.json semantics).
 export { isEsmProject } from './src/utils/module-format/is-esm-project';
 
-// Inputs for build targets that emit a pruned pnpm deploy output
+// Inputs for build targets that emit a pruned pnpm or Bun deploy output
 export {
   PNPM_INSTALL_SETTINGS_INPUTS,
   PNPM_MAJOR_RUNTIME_INPUT,
   pnpmInstallSettingsInputsForInferredTarget,
   shouldIncludePnpmMajorRuntimeInput,
 } from './src/utils/pnpm-install-settings-inputs';
-export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export {
+  BUN_INSTALL_SETTINGS_INPUTS,
+  shouldIncludeBunInstallSettingsInputs,
+} from './src/utils/bun-install-settings-inputs';
+export {
+  addDeployOutputCacheInputs,
+  type DeployOutputSettingsInput,
+} from './src/utils/deploy-output-cache-inputs';
 export { readRuntimeDependencies } from './src/utils/package-json/runtime-dependencies';
 export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
 

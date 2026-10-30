@@ -2,13 +2,15 @@ import {
   detectPackageManager,
   type ExecutorContext,
   logger,
+  normalizePath,
   parseTargetString,
   type ProjectGraph,
+  type ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname, isAbsolute, join, posix } from 'path';
 import {
   dropEmptyPeerDependencySections,
   generatePrunedDeployOutput,
@@ -18,10 +20,14 @@ import {
   movePeerDependencyToDependencies,
   type PackageJson,
   type PackageJsonDependencySection,
+  resolveWorkspaceModuleDependency,
 } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
-import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
+import {
+  TRANSITIVE_INSTALL_SECTIONS,
+  WORKSPACE_MODULE_INSTALL_SECTIONS,
+} from '../../utils/workspace-module-sections';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -32,15 +38,27 @@ export default async function pruneLockfileExecutor(
   const packageJson = resolveCatalogReferences(getPackageJson(schema, context));
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
-
   const { project } = parseTargetString(schema.buildTarget, context);
   const projectRoot = context.projectGraph.nodes[project].data.root;
+  if (packageManager === 'bun') {
+    declareTransitiveFolderDependencies(
+      packageJson,
+      context.projectGraph,
+      projectRoot
+    );
+  }
+
   generatePrunedDeployOutput(packageJson, context.projectGraph, projectRoot, {
     outputDirectory,
     packageManager,
     workspaceRoot,
   });
-  rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+  rewriteWorkspaceModuleSpecifiers(
+    packageJson,
+    context.projectGraph,
+    projectRoot,
+    packageManager
+  );
   writeFileSync(
     join(outputDirectory, 'package.json'),
     JSON.stringify(packageJson, null, 2)
@@ -56,23 +74,35 @@ export default async function pruneLockfileExecutor(
 // standalone output installs them as pnpm `file:` directory dependencies.
 // pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
 // workspace module is moved into dependencies instead (an optional peer
-// becomes required, which is moot since the module is always copied in). Gate
-// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
-// local path (e.g. a vendored tarball) is left alone, since
-// copy-workspace-modules only ever copies actual workspace projects.
+// becomes required, which is moot since the module is always copied in). For
+// pnpm and Bun, as in copy-workspace-modules, a `file:`/`link:` spec to another
+// directory is a vendored package even when a workspace package has its name.
 function rewriteWorkspaceModuleSpecifiers(
   packageJson: PackageJson,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  projectRoot: string,
+  packageManager: ReturnType<typeof detectPackageManager>
 ) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const resolvesLocalPaths =
+    packageManager === 'pnpm' || packageManager === 'bun';
 
   for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      if (!workspacePackages.has(pkgName)) {
+    for (const [pkgName, spec] of Object.entries(deps)) {
+      const isWorkspaceModule = resolvesLocalPaths
+        ? resolveWorkspaceModuleDependency(
+            workspacePackages,
+            pkgName,
+            spec,
+            projectRoot,
+            workspaceRoot
+          )
+        : workspacePackages.has(pkgName);
+      if (!isWorkspaceModule) {
         continue;
       }
       const fileSpec = `file:./workspace_modules/${pkgName}`;
@@ -104,6 +134,107 @@ function mergeAllowScripts(packageJson: PackageJson) {
     ...rootPackageJson.allowScripts,
     ...packageJson.allowScripts,
   };
+}
+
+/**
+ * Bun never installs the dependencies of a `file:` dependency declared by
+ * another `file:` dependency, so a Bun output declares every workspace module
+ * the app reaches through other modules, and every vendored `file:` package
+ * those modules declare. A package a production section reaches goes to
+ * dependencies, one only devDependencies reach to devDependencies. A vendored
+ * package is declared relative to `projectRoot`, like the app's own.
+ */
+function declareTransitiveFolderDependencies(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  projectRoot: string
+) {
+  const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const productionSections = WORKSPACE_MODULE_INSTALL_SECTIONS.filter(
+    (section) => section !== 'devDependencies'
+  );
+  const resolveModule = (name: string, spec: string, dependentRoot: string) =>
+    resolveWorkspaceModuleDependency(
+      workspacePackages,
+      name,
+      spec,
+      dependentRoot,
+      workspaceRoot
+    );
+  const visited = new Set<string>();
+  const visit = (
+    name: string,
+    project: ProjectGraphProjectNode,
+    section: 'dependencies' | 'devDependencies'
+  ) => {
+    if (visited.has(name)) {
+      return;
+    }
+    visited.add(name);
+    const declaredForProduction = productionSections.some(
+      (declared) => packageJson[declared]?.[name]
+    );
+    if (
+      !declaredForProduction &&
+      (section === 'dependencies' || !packageJson.devDependencies?.[name])
+    ) {
+      if (packageJson.devDependencies?.[name]) {
+        delete packageJson.devDependencies[name];
+        if (!Object.keys(packageJson.devDependencies).length) {
+          delete packageJson.devDependencies;
+        }
+      }
+      (packageJson[section] ??= {})[name] = `file:./workspace_modules/${name}`;
+    }
+    const manifest: PackageJson = readJsonFile(
+      join(workspaceRoot, project.data.root, 'package.json')
+    );
+    for (const transitiveSection of TRANSITIVE_INSTALL_SECTIONS) {
+      for (const [dep, spec] of Object.entries(
+        manifest[transitiveSection] ?? {}
+      )) {
+        const workspaceModule = resolveModule(dep, spec, project.data.root);
+        if (workspaceModule) {
+          visit(dep, workspaceModule, section);
+        } else if (spec.startsWith('file:')) {
+          declareVendored(dep, spec, project.data.root, section);
+        }
+      }
+    }
+  };
+  const declareVendored = (
+    name: string,
+    spec: string,
+    moduleRoot: string,
+    section: 'dependencies' | 'devDependencies'
+  ) => {
+    if (
+      WORKSPACE_MODULE_INSTALL_SECTIONS.some(
+        (declared) => packageJson[declared]?.[name]
+      )
+    ) {
+      return;
+    }
+    const path = normalizePath(spec.slice('file:'.length));
+    (packageJson[section] ??= {})[name] = isAbsolute(path)
+      ? spec
+      : `file:${posix.relative(projectRoot, posix.join(moduleRoot, path))}`;
+  };
+  const visitDeclared = (
+    section: PackageJsonDependencySection,
+    visitAs: 'dependencies' | 'devDependencies'
+  ) => {
+    for (const [name, spec] of Object.entries(packageJson[section] ?? {})) {
+      const workspaceModule = resolveModule(name, spec, projectRoot);
+      if (workspaceModule) {
+        visit(name, workspaceModule, visitAs);
+      }
+    }
+  };
+  for (const section of productionSections) {
+    visitDeclared(section, 'dependencies');
+  }
+  visitDeclared('devDependencies', 'devDependencies');
 }
 
 export function resolveCatalogReferences(
