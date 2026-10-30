@@ -225,7 +225,7 @@ nx show project my-project-e2e
           "executor": "nx:run-commands",
           "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
           "cache": true,
-          "outputs": ["{options.cwd ?? .}/{options.output-file ?? options.o}"],
+          "outputs": ["{options.cwd ?? .}/{options.o ?? options.output-file}"],
           "options": {
             "cwd": "apps/admin-e2e",
             "command": "eslint ."

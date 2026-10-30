@@ -471,9 +471,10 @@ export function getStandaloneSrcPath(
 }
 
 // ESLint resolves `--output-file`, or its short form `-o`, from the cwd
-// run-commands runs it in
+// run-commands runs it in. `o` comes first so a command-line `-o` overrides
+// the `output-file` the converter writes, since ESLint keeps the last flag
 export const lintReportOutput =
-  '{options.cwd ?? .}/{options.output-file ?? options.o}';
+  '{options.cwd ?? .}/{options.o ?? options.output-file}';
 
 export function getLintCommand(
   projectRoot: string,

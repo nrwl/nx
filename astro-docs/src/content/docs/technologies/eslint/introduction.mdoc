@@ -91,6 +91,11 @@ When you set `output-file`, Nx also caches the report and restores it on a cache
 A relative `output-file` resolves from the effective working directory of the lint task,
 which defaults to the project root.
 
+You can also pass the report path as `-o`, the short form of `output-file`.
+When both are set, Nx caches the `-o` path, so `-o` on the command line overrides a configured `output-file`.
+Set `output-file`, not `o`, on the lint target, and pass only one of the two flags on the command line.
+Otherwise ESLint can write the `--output-file` path while Nx caches and restores an unrelated file at the `-o` path.
+
 A relative `output-file` that resolves outside the workspace fails the lint task with
 `Cache output is outside the workspace`.
 For an absolute `output-file`, Nx looks for the report under the working directory instead,
