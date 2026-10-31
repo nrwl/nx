@@ -71,6 +71,7 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
         skipRemoteCache: options.skipRemoteCache,
+        parallel: options.parallel,
       })
     : new Cache(options);
 }
@@ -101,6 +102,48 @@ export function batchOutputPathForKey(key: string): string {
   return join(cacheDir, 'batchOutputs', `${key}.log`);
 }
 
+// Used when --parallel was not passed through. Retrieve is I/O, so this is
+// wider than the task runner's default of 3.
+const DEFAULT_REMOTE_CACHE_RETRIEVE_CONCURRENCY = 10;
+const MAX_REMOTE_CACHE_RETRIEVE_CONCURRENCY = 16;
+
+export function remoteCacheRetrieveConcurrency(
+  parallel: number | undefined
+): number {
+  const configured =
+    typeof parallel === 'number' && Number.isFinite(parallel)
+      ? Math.floor(parallel)
+      : DEFAULT_REMOTE_CACHE_RETRIEVE_CONCURRENCY;
+  return Math.min(
+    Math.max(configured, 1),
+    MAX_REMOTE_CACHE_RETRIEVE_CONCURRENCY
+  );
+}
+
+async function mapWithConcurrency<T>(
+  items: readonly T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>
+): Promise<void> {
+  if (items.length === 0) {
+    return;
+  }
+  let nextIndex = 0;
+  const workers = Math.min(Math.max(concurrency, 1), items.length);
+
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= items.length) {
+        return;
+      }
+      await fn(items[index]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: workers }, () => worker()));
+}
+
 export class DbCache {
   private nxJson = readNxJson();
   private cache = new NxCache(
@@ -120,6 +163,7 @@ export class DbCache {
     private readonly options: {
       nxCloudRemoteCache: RemoteCache;
       skipRemoteCache?: boolean;
+      parallel?: number;
     }
   ) {}
 
@@ -198,12 +242,14 @@ export class DbCache {
       }
     }
 
-    // 2. Remote: parallel HTTP retrievals for anything the local SQL missed.
-    //    The RemoteCache interface has no batch endpoint, so this is just
-    //    Promise.all over individual retrieve() calls.
+    // Remote misses are fetched before --parallel gates task execution, and
+    // RemoteCache has no batch retrieve. Cap in-flight calls so a cold run
+    // cannot open one connection per task.
     if (remoteMisses.length > 0) {
-      await Promise.all(
-        remoteMisses.map(async (task) => {
+      await mapWithConcurrency(
+        remoteMisses,
+        remoteCacheRetrieveConcurrency(this.options.parallel),
+        async (task) => {
           const res = await this.remoteCache.retrieve(
             task.hash,
             this.cache.cacheDirectory
@@ -216,7 +262,7 @@ export class DbCache {
               remote: true,
             });
           }
-        })
+        }
       );
     }
 
