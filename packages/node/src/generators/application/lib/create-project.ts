@@ -42,6 +42,7 @@ export function addProject(
   const pnpmDeployInputs = tree.exists('pnpm-lock.yaml')
     ? PNPM_INSTALL_SETTINGS_INPUTS
     : [];
+  // The rolldown build target comes from @nx/rolldown:configuration.
   if (options.bundler === 'esbuild') {
     addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', 'build', [
       TS_SOLUTION_SETUP_TSCONFIG_INPUT,
@@ -55,11 +56,15 @@ export function addProject(
       options.appProjectRoot
     );
   }
-  // The rolldown build target comes from @nx/rolldown:configuration.
-  project.targets = {
-    ...project.targets,
-    ...getPruneTargets(options.buildTargetName, options.outputPath),
-  };
+  const buildGeneratesPackageJson =
+    !options.isUsingTsSolutionConfig &&
+    (options.bundler === 'esbuild' || options.bundler === 'webpack');
+  if (!buildGeneratesPackageJson) {
+    project.targets = {
+      ...project.targets,
+      ...getPruneTargets(options.buildTargetName, options.outputPath),
+    };
+  }
   if (!options.serveRuntime) {
     project.targets.serve = getServeConfig(options);
   } else {
@@ -91,7 +96,8 @@ export function addProject(
     addProjectConfiguration(tree, options.name, project);
   }
 
-  // The prune targets read the project package.json for the deps to deploy.
+  // The prune targets, or a build with generatePackageJson, read the project
+  // package.json for the deps to deploy.
   if (
     !options.useProjectJson ||
     options.isUsingTsSolutionConfig ||
