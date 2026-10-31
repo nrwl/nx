@@ -8,11 +8,7 @@ use tracing::trace;
 use super::pseudo_terminal::WriterArc;
 
 pub fn handle_path_space(path: String) -> String {
-    if path.contains(' ') {
-        format!("'{}'", path)
-    } else {
-        path
-    }
+    format!("'{}'", path.replace('\'', r"'\''"))
 }
 
 pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {

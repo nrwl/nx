@@ -81,11 +81,11 @@ impl NxConsoleMessageConnection {
         // where both ends used to derive the path for themselves. Without this
         // it would look to the user like no IDE is running -- there is no
         // handshake or version field to tell them otherwise.
-        if client.is_none() {
-            let legacy = legacy_nx_console_socket_path(workspace_root);
-            if resolved.as_deref() != Some(legacy.as_path()) {
-                client = Self::dial(&legacy).await;
-            }
+        if client.is_none()
+            && let Some(legacy) = legacy_nx_console_socket_path(workspace_root, None)
+            && resolved.as_deref() != Some(legacy.as_path())
+        {
+            client = Self::dial(&legacy).await;
         }
 
         Self { client }

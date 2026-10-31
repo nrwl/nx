@@ -64,11 +64,12 @@ vi.mock('../cache', async () => ({
 }));
 
 import { EventEmitter } from 'node:events';
-import { connect } from 'net';
+import { connect, createServer } from 'net';
 
 import { waitForSocketConnection } from '../../utils/wait-for-socket-connection';
 import { clientLogger } from '../logger';
 import { getDaemonProcessIdSync, readDaemonProcessJsonCache } from '../cache';
+import { connectToDaemonSocket } from '../socket-utils';
 import { DAEMON_OUTPUT_LOG_FILE as logFile } from '../tmp-dir';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
@@ -466,6 +467,44 @@ describe('startInBackground', () => {
     }
   );
 
+  (process.platform === 'win32' ? it.skip : it)(
+    'should start a daemon rather than dial a recorded socket in a directory that is not ours',
+    async () => {
+      const planted = mkdtempSync(join(tmpdir(), 'nx-spec-planted-'));
+      const socketPath = join(planted, 'd.sock');
+      let accepted = 0;
+      const listener = createServer((socket) => {
+        accepted++;
+        socket.destroy();
+      });
+      await new Promise<void>((resolve) =>
+        listener.listen(socketPath, resolve)
+      );
+      (readDaemonProcessJsonCache as Mock).mockReturnValue({ socketPath });
+      (waitForSocketConnection as Mock).mockResolvedValue(null);
+      const startInBackground = vi.spyOn(daemonClient, 'startInBackground');
+      const getuid = vi
+        .spyOn(process, 'getuid')
+        .mockReturnValue(process.getuid!() + 1);
+
+      try {
+        daemonClient.reset();
+        await (daemonClient as any).startDaemonIfNecessary().catch(() => {});
+
+        expect(accepted).toBe(0);
+        expect(startInBackground).toHaveBeenCalled();
+        expect((waitForSocketConnection as Mock).mock.calls[0][1].connect).toBe(
+          connectToDaemonSocket
+        );
+      } finally {
+        getuid.mockRestore();
+        startInBackground.mockRestore();
+        await new Promise((resolve) => listener.close(resolve));
+        rmSync(planted, { recursive: true, force: true });
+      }
+    }
+  );
+
   rootlessPosix(
     'should not hand on a refusal from an earlier round when the probe records none',
     async () => {
@@ -660,7 +699,7 @@ describe('DaemonClient state machine', () => {
       socket = createFakeSocket();
       (connect as Mock).mockReturnValue(socket);
       (readDaemonProcessJsonCache as Mock).mockReturnValue({
-        socketPath: '/tmp/nx-spec-plugin-worker/d.sock',
+        socketPath: join(dirname(logFile), 'd.sock'),
       });
       probeServer = vi
         .spyOn(client, 'probeServer')
