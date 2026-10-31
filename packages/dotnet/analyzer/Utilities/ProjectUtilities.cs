@@ -66,12 +66,12 @@ public static class ProjectUtilities
 
         foreach (var project in projects)
         {
-            var projectTags = new HashSet<string>(StringComparer.Ordinal);
-            projectTags.UnionWith(SplitMsBuildList(project.GetPropertyValue("NxTags")));
-            projectTags.UnionWith(
+            var projectTags = new HashSet<string>(
                 project
                     .GetItems("NxTag")
-                    .SelectMany(item => SplitMsBuildList(item.EvaluatedInclude)));
+                    .Select(item => item.EvaluatedInclude.Trim())
+                    .Where(tag => tag.Length > 0),
+                StringComparer.Ordinal);
             allTags.UnionWith(projectTags);
 
             if (commonTags is null)
@@ -93,7 +93,7 @@ public static class ProjectUtilities
         if (allTags.Count > 0)
         {
             Console.Error.WriteLine(
-                $"Warning: {projects[0].FullPath}: NxTags/NxTag values [{string.Join(", ", allTags)}] " +
+                $"Warning: {projects[0].FullPath}: NxTag values [{string.Join(", ", allTags)}] " +
                 "were not added as Nx project tags because they do not apply to every target framework. " +
                 "Define shared tags without a target-framework condition.");
         }
@@ -102,9 +102,6 @@ public static class ProjectUtilities
             ? commonTags.OrderBy(tag => tag, StringComparer.Ordinal).ToList()
             : null;
     }
-
-    private static IEnumerable<string> SplitMsBuildList(string value) =>
-        value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
     /// <summary>
     /// Directory.Build.props/.targets are auto-imported by Microsoft.Common.props/.targets, walking
