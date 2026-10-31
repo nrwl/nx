@@ -93,10 +93,14 @@
   "peerDependencies": {
     "babel-plugin-react-compiler": "^1.0.0",
     "react": ">=18.0.0 <20.0.0",
-    "react-dom": ">=18.0.0 <20.0.0"
+    "react-dom": ">=18.0.0 <20.0.0",
+    "typescript": "*"
   },
   "peerDependenciesMeta": {
     "babel-plugin-react-compiler": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },
