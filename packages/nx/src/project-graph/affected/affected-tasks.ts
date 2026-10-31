@@ -18,6 +18,7 @@ import {
   createTaskGraph,
   createTaskGraphWithDependencyOverrides,
   filterTaskGraphToSelection,
+  findTasksRunWithoutDependencies,
 } from '../../tasks-runner/create-task-graph';
 import { runnableForTarget } from '../../utils/project-graph-utils';
 import {
@@ -371,6 +372,13 @@ async function matchAffectedTasks(
   const keep = request.excludeTaskDependencies
     ? selection.required.filter((id) => initial.has(id))
     : selection.required;
+  const tasksRunWithoutDependencies = request.excludeTaskDependencies
+    ? findTasksRunWithoutDependencies(
+        taskGraph.dependencies,
+        taskGraph.continuousDependencies,
+        new Set(keep)
+      )
+    : [];
 
   return {
     affectedTaskIds: new Set(selection.affected),
@@ -412,6 +420,9 @@ async function matchAffectedTasks(
         ),
       initiatingTaskIds: keep.filter((id) => initial.has(id)),
       taskIds: keep,
+      ...(tasksRunWithoutDependencies.length
+        ? { tasksRunWithoutDependencies }
+        : {}),
     },
   };
 }
