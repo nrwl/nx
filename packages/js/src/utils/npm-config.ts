@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
+import { detectPackageManager } from '@nx/devkit';
 import { PackageJson, safeSpawn } from '@nx/devkit/internal';
 
 export async function parseRegistryOptions(
@@ -96,20 +97,32 @@ export async function getNpmTag(cwd: string): Promise<string> {
 }
 
 async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
-  try {
-    const result = await npmConfigGet(key, cwd);
-    return result === 'undefined' ? undefined : result;
-  } catch (e) {
-    return Promise.resolve(undefined);
+  const binaries =
+    detectPackageManager(cwd) === 'pnpm' ? ['pnpm', 'npm'] : ['npm'];
+
+  for (const binary of binaries) {
+    try {
+      const result = await configGet(binary, key, cwd);
+      if (result && result !== 'undefined' && result !== 'null') {
+        return result;
+      }
+    } catch {
+      continue;
+    }
   }
+  return undefined;
 }
 
 // `key` carries the package's own scope, so it goes to npm as an argument
 // rather than through a shell.
-async function npmConfigGet(key: string, cwd: string): Promise<string> {
+async function configGet(
+  binary: string,
+  key: string,
+  cwd: string
+): Promise<string> {
   // Must be non-blocking async to allow spinner to render
   return new Promise<string>((resolve, reject) => {
-    const child = safeSpawn('npm', ['config', 'get', key], {
+    const child = safeSpawn(binary, ['config', 'get', key], {
       cwd,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -122,7 +135,7 @@ async function npmConfigGet(key: string, cwd: string): Promise<string> {
       if (code !== 0) {
         return reject(
           (stderr ? `${stderr}\n` : '') +
-            `npm config get ${key} exited with code ${code}`
+            `${binary} config get ${key} exited with code ${code}`
         );
       }
       return resolve(stdout.trim());
