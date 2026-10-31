@@ -67,8 +67,8 @@ export function updateTsconfigFiles(tree: Tree, options: NormalizedSchema) {
     updateJson(tree, tsconfigSpecPath, (json) => {
       json.compilerOptions = {
         ...json.compilerOptions,
-        module: 'commonjs',
-        moduleResolution: 'node10',
+        module: compilerOptions.module,
+        moduleResolution: compilerOptions.moduleResolution,
       };
       json.compilerOptions = getNeededCompilerOptionOverrides(
         tree,
