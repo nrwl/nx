@@ -470,15 +470,36 @@ export function getPackageManagerCommand(
   return commands[packageManager]();
 }
 
+// Keyed by `${packageManager}:${cwd}`. Populated by getPackageManagerVersion
+// so every caller — including getPackageManagerCommand inside plugin
+// createNodesV2 invocations — pays the execSync cost at most once per process.
+// A null entry is stored by getPackageManagerVersionSafe when detection fails,
+// so that callers tolerating a missing version also avoid repeated spawns.
+const packageManagerVersionCache = new Map<string, string | null>();
+
 /**
  * Returns the version of the package manager used in the workspace.
  * By default, the package manager is derived based on the lock file,
  * but it can also be passed in explicitly.
+ *
+ * The result is memoised for the lifetime of the process so that plugins
+ * calling getPackageManagerCommand() on every createNodesV2 invocation do not
+ * pay a repeated execSync spawn penalty (~240 ms for pnpm on a cold binary).
  */
 export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
+  const cacheKey = `${packageManager}:${cwd}`;
+  if (packageManagerVersionCache.has(cacheKey)) {
+    const cached = packageManagerVersionCache.get(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+    // null means a previous attempt (via getPackageManagerVersionSafe) already
+    // failed; surface the same failure without spawning again.
+    throw new Error(`Cannot determine the version of ${packageManager}.`);
+  }
   let version: string;
   if (existsSync(join(cwd, 'package.json'))) {
     const packageManagerEntry = readJsonFile<PackageJson>(
@@ -510,6 +531,7 @@ export function getPackageManagerVersion(
   if (!version) {
     throw new Error(`Cannot determine the version of ${packageManager}.`);
   }
+  packageManagerVersionCache.set(cacheKey, version);
   return version;
 }
 
@@ -1102,12 +1124,13 @@ export async function packageRegistryPack(
   }
 }
 
-// The version probe shells out when the packageManager field is absent, and
-// packageRegistryView/packageRegistryPack run in tight resolution loops.
-const packageManagerVersionCache = new Map<string, string | null>();
 /**
  * A null version is tolerated per package manager: pnpm and yarn skip bridging,
  * bun assumes a current version.
+ *
+ * On success the version is stored in the shared packageManagerVersionCache by
+ * getPackageManagerVersion.  On failure a null sentinel is stored here so
+ * repeated calls still avoid a spawn.
  */
 function getPackageManagerVersionSafe(
   packageManager: PackageManager,
@@ -1115,16 +1138,17 @@ function getPackageManagerVersionSafe(
 ): string | null {
   const key = `${packageManager}:${root}`;
   if (!packageManagerVersionCache.has(key)) {
-    let version: string | null = null;
     try {
-      version = getPackageManagerVersion(packageManager, root);
+      // getPackageManagerVersion writes the version into the cache on success.
+      getPackageManagerVersion(packageManager, root);
     } catch (e) {
       logger.verbose(
         `Failed to determine the ${packageManager} version in "${root}".`,
         e
       );
+      // Store null so future calls skip the spawn too.
+      packageManagerVersionCache.set(key, null);
     }
-    packageManagerVersionCache.set(key, version);
   }
   return packageManagerVersionCache.get(key);
 }
