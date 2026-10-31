@@ -38,6 +38,26 @@ vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
     if (pathOrPackage === '@rerouted/pkg/package.json') {
       return '/root/node_modules/@rerouted/pkg/dist/cjs/package.json';
     }
+    // exports omit ./package.json. The resolved entry sits below a nested manifest.
+    if (
+      pathOrPackage === '@hidden-exports/pkg/package.json' ||
+      pathOrPackage === 'hidden-exports-pkg/package.json'
+    ) {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/pkg') {
+      return '/root/node_modules/@hidden-exports/pkg/internal/entry/index.cjs';
+    }
+    if (pathOrPackage === 'hidden-exports-pkg') {
+      return '/root/node_modules/hidden-exports-pkg/internal/entry/index.cjs';
+    }
+    // Same shape, but the resolved entry is not under node_modules/<name>/.
+    if (pathOrPackage === '@hidden-exports/linked/package.json') {
+      return null;
+    }
+    if (pathOrPackage === '@hidden-exports/linked') {
+      return '/opt/packages/@hidden-exports/linked/internal/entry/index.cjs';
+    }
     return join(
       '/root',
       'node_modules',
@@ -779,6 +799,34 @@ describe('TargetProjectLocator', () => {
         './node_modules/@rerouted/pkg/dist/cjs/package.json': JSON.stringify({
           type: 'commonjs',
         }),
+        // exports hide ./package.json, and a nested manifest carries its own name.
+        './node_modules/@hidden-exports/pkg/package.json': JSON.stringify({
+          name: '@hidden-exports/pkg',
+          version: '4.44.2',
+        }),
+        './node_modules/@hidden-exports/pkg/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/pkg/internal',
+            version: '4.44.2',
+          }),
+        './node_modules/hidden-exports-pkg/package.json': JSON.stringify({
+          name: 'hidden-exports-pkg',
+          version: '1.2.3',
+        }),
+        './node_modules/hidden-exports-pkg/internal/package.json':
+          JSON.stringify({
+            name: 'hidden-exports-internal',
+            version: '9.9.9',
+          }),
+        '/opt/packages/@hidden-exports/linked/package.json': JSON.stringify({
+          name: '@hidden-exports/linked',
+          version: '5.0.0',
+        }),
+        '/opt/packages/@hidden-exports/linked/internal/package.json':
+          JSON.stringify({
+            name: '@hidden-exports/linked/internal',
+            version: '5.0.0',
+          }),
       };
       vol.fromJSON(fsJson, '/root');
 
@@ -983,6 +1031,31 @@ describe('TargetProjectLocator', () => {
             hash: 'sha512-4Md7RPDCSYpmW1HWIpWBOqCd4vWfIqm53S3e/uzQ62iGi7L3r34fK/8nhOMEe+/eVfCx8+gdSCt1d74SlacQHw==',
           },
         },
+        // Versioned-only: a nested manifest must not be able to satisfy the lookup.
+        'npm:@hidden-exports/pkg@4.44.2': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/pkg@4.44.2',
+          data: {
+            version: '4.44.2',
+            packageName: '@hidden-exports/pkg',
+          },
+        },
+        'npm:hidden-exports-pkg@1.2.3': {
+          type: 'npm',
+          name: 'npm:hidden-exports-pkg@1.2.3',
+          data: {
+            version: '1.2.3',
+            packageName: 'hidden-exports-pkg',
+          },
+        },
+        'npm:@hidden-exports/linked@5.0.0': {
+          type: 'npm',
+          name: 'npm:@hidden-exports/linked@5.0.0',
+          data: {
+            version: '5.0.0',
+            packageName: '@hidden-exports/linked',
+          },
+        },
         // Keep this versioned-only so resolution cannot use the unversioned fallback.
         'npm:@rerouted/pkg@2.0.0': {
           type: 'npm',
@@ -1167,6 +1240,31 @@ describe('TargetProjectLocator', () => {
         'libs/proj/index.ts'
       );
       expect(result).toEqual('npm:@rerouted/pkg@2.0.0');
+    });
+
+    it('should resolve a package whose exports omit package.json when a nested package.json is closer to the entry', () => {
+      const scoped = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg',
+        'libs/proj/index.ts'
+      );
+      const scopedSubpath = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/pkg/testing',
+        'libs/proj/index.ts'
+      );
+      const unscoped = targetProjectLocator.findProjectFromImport(
+        'hidden-exports-pkg',
+        'libs/proj/index.ts'
+      );
+
+      expect(scoped).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(scopedSubpath).toEqual('npm:@hidden-exports/pkg@4.44.2');
+      expect(unscoped).toEqual('npm:hidden-exports-pkg@1.2.3');
+
+      const linked = targetProjectLocator.findProjectFromImport(
+        '@hidden-exports/linked',
+        'libs/proj/index.ts'
+      );
+      expect(linked).toEqual('npm:@hidden-exports/linked@5.0.0');
     });
   });
 
