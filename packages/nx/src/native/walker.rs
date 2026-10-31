@@ -172,7 +172,7 @@ where
         Some(NxFile {
             full_path: String::from(dir_entry.path().to_string_lossy()),
             normalized_path: file_path.to_normalized_string(),
-            mod_time: get_mod_time(&metadata),
+            mod_time: hash_mod_time(dir_entry.path(), &metadata),
         })
     })
 }
@@ -257,7 +257,7 @@ fn walk_and_find_ignore_files(
             tx.send(NxFile {
                 full_path: String::from(dir_entry.path().to_string_lossy()),
                 normalized_path: file_path.to_normalized_string(),
-                mod_time: get_mod_time(&metadata),
+                mod_time: hash_mod_time(dir_entry.path(), &metadata),
             })
             .ok();
 
@@ -276,6 +276,20 @@ fn walk_and_find_ignore_files(
 /// block indefinitely on such paths (FIFOs wait for a writer).
 fn is_hashable_file(file_type: &std::fs::FileType) -> bool {
     file_type.is_file() || file_type.is_symlink()
+}
+
+/// Archive key for a walked file. A symlink is stamped with the later of its
+/// own mtime and its target's: editing the target does not touch the link,
+/// and retargeting the link does not touch the target.
+fn hash_mod_time(path: &Path, metadata: &std::fs::Metadata) -> i64 {
+    let own = get_mod_time(metadata);
+    if metadata.file_type().is_symlink()
+        && let Ok(target) = std::fs::metadata(path)
+    {
+        own.max(get_mod_time(&target))
+    } else {
+        own
+    }
 }
 
 /// Files tools write and remove moments later. Vite and vitest write them

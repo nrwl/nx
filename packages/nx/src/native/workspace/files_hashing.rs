@@ -245,4 +245,48 @@ mod tests {
             "an entry settled before the gather should still be reused"
         );
     }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_a_symlink_when_its_target_is_edited() {
+        // Editing the file a symlink points at has to miss the archive. The
+        // link's own mtime does not move, which is what used to replay the
+        // stored hash until `.nx/workspace-data` was cleared.
+        use std::time::{Duration, UNIX_EPOCH};
+
+        use crate::native::hasher::hash;
+
+        let temp = TempDir::new().unwrap();
+        temp.child("target.txt").write_str("one").unwrap();
+        std::os::unix::fs::symlink("target.txt", temp.path().join("link.txt")).unwrap();
+
+        let hashed = super::full_files_hash(nx_walker(temp.path(), true).collect());
+        let stamp = hashed.get("link.txt").expect("link.txt").1;
+        let archived = FilesArchive::from_hashes(&hashed.with_gathered_at(stamp + 1)).unwrap();
+
+        let unchanged =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            unchanged.get("link.txt").unwrap().0,
+            hash(b"one"),
+            "an unchanged symlink target should still be reused"
+        );
+
+        temp.child("target.txt").write_str("two").unwrap();
+        // get_mod_time reports whole seconds, so a rewrite in the original
+        // second does not move the stamp. Put the target in a later second.
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(temp.child("target.txt").path())
+            .unwrap()
+            .set_modified(UNIX_EPOCH + Duration::from_secs((stamp + 10) as u64))
+            .unwrap();
+
+        let edited = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            edited.get("link.txt").unwrap().0,
+            hash(b"two"),
+            "editing a symlink target must re-hash the link"
+        );
+    }
 }
