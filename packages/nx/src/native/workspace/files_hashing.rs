@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
+use crate::native::utils::hash_stamp_mtime;
 use crate::native::walker::NxFile;
 use crate::native::workspace::files_archive::{FilesArchive, NxFileHashed, NxFileHashes};
 
@@ -23,18 +24,20 @@ pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -
     // ~15.6ms system tick on Windows, so a rewrite inside that window leaves the
     // timestamp identical and the archived hash silently stale. Re-hash those;
     // they are a handful of files touched during the gather window, not the
-    // workspace.
+    // workspace. Compare the mtime half only: on unix the stamp's high bit is
+    // the executable bit, which `chmod` flips without moving mtime.
     let gathered_at = archived_files.gathered_at();
 
     for file in files {
-        if let Some((hash, mod_time)) = archived_files.get(&file.normalized_path) {
-            if mod_time == file.mod_time && file.mod_time < gathered_at {
-                archived.push((
-                    file.normalized_path,
-                    NxFileHashed(hash.to_owned(), mod_time),
-                ));
-                continue;
-            }
+        if let Some((hash, mod_time)) = archived_files.get(&file.normalized_path)
+            && mod_time == file.mod_time
+            && hash_stamp_mtime(file.mod_time) < gathered_at
+        {
+            archived.push((
+                file.normalized_path,
+                NxFileHashed(hash.to_owned(), mod_time),
+            ));
+            continue;
         }
         not_archived.push(file);
     }
@@ -243,6 +246,74 @@ mod tests {
             hashed.get("settled.txt").unwrap().0,
             "archived-hash",
             "an entry settled before the gather should still be reused"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_when_only_the_executable_bit_changes() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = TempDir::new().unwrap();
+        let file = temp.child("tool.sh");
+        file.write_str("echo").unwrap();
+        let mut perms = std::fs::metadata(file.path()).unwrap().permissions();
+        perms.set_mode(perms.mode() & !0o111);
+        std::fs::set_permissions(file.path(), perms.clone()).unwrap();
+        let mtime = get_mod_time(&std::fs::metadata(file.path()).unwrap());
+        // Recorded while the file was not executable. Same mtime, no mode bit.
+        let archived = vec![(
+            String::from("tool.sh"),
+            NxFileHashed(String::from("stale-hash"), mtime),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(mtime + 1);
+        let archived = FilesArchive::from_hashes(&archived).unwrap();
+
+        perms.set_mode(perms.mode() | 0o111);
+        std::fs::set_permissions(file.path(), perms).unwrap();
+        std::fs::File::open(file.path())
+            .unwrap()
+            .set_modified(std::time::UNIX_EPOCH + std::time::Duration::from_secs(mtime as u64))
+            .unwrap();
+
+        let hashed = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_ne!(
+            hashed.get("tool.sh").unwrap().0,
+            "stale-hash",
+            "chmod must miss the archive even though mtime is unchanged"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_reuse_an_executable_file_with_an_unchanged_mode() {
+        use std::os::unix::fs::PermissionsExt;
+
+        use crate::native::utils::hash_stamp;
+
+        let temp = TempDir::new().unwrap();
+        let file = temp.child("tool.sh");
+        file.write_str("echo").unwrap();
+        let mut perms = std::fs::metadata(file.path()).unwrap().permissions();
+        perms.set_mode(perms.mode() | 0o111);
+        std::fs::set_permissions(file.path(), perms).unwrap();
+        let meta = std::fs::metadata(file.path()).unwrap();
+        let archived = vec![(
+            String::from("tool.sh"),
+            NxFileHashed(String::from("archived-hash"), hash_stamp(&meta)),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(get_mod_time(&meta) + 1);
+        let archived = FilesArchive::from_hashes(&archived).unwrap();
+
+        let hashed = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_eq!(
+            hashed.get("tool.sh").unwrap().0,
+            "archived-hash",
+            "an executable file whose mode did not change should still be reused"
         );
     }
 }

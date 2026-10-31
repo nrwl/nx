@@ -1,8 +1,9 @@
 //! The daemon's record of each task's outputs, so a run can tell whether the
 //! files on disk are still the ones the cache holds and skip copying them
-//! back. A file stands while its `(mtime, size)` matches the record: watch
-//! events only keep the index's listings current, so a late event for a
-//! task's own write, or a rescan, cannot drop a record.
+//! back. A file stands while its `(mtime, size)` matches the record, and on
+//! unix while its executable bit does too. Watch events only keep the index's
+//! listings current, so a late event for a task's own write, or a rescan,
+//! cannot drop a record.
 
 use std::fs::Metadata;
 use std::path::Path;
@@ -33,23 +34,36 @@ pub struct TaskOutputs {
 #[napi(object)]
 pub struct OutputFile {
     pub path: String,
-    /// `<mtime nanos>:<size>`, a string because the nanoseconds do not fit a
+    /// `<mtime nanos>:<size>`, or `<mtime nanos>:<size>:1` when the file is
+    /// executable on unix. A string because the nanoseconds do not fit a
     /// JavaScript number.
     pub stamp: String,
 }
 
 impl OutputFile {
     pub(crate) fn new(path: String, metadata: &Metadata) -> Self {
-        let (mtime, size) = stamp_of(metadata);
-        Self {
-            path,
-            stamp: format!("{mtime}:{size}"),
-        }
+        let (mtime, size, executable) = stamp_of(metadata);
+        let stamp = if executable {
+            format!("{mtime}:{size}:1")
+        } else {
+            format!("{mtime}:{size}")
+        };
+        Self { path, stamp }
     }
 
     fn stamp(&self) -> Option<FileStamp> {
-        let (mtime, size) = self.stamp.split_once(':')?;
-        Some((mtime.parse().ok()?, size.parse().ok()?))
+        let mut parts = self.stamp.split(':');
+        let mtime = parts.next()?.parse().ok()?;
+        let size = parts.next()?.parse().ok()?;
+        let executable = match parts.next() {
+            None => false,
+            Some("1") => true,
+            _ => return None,
+        };
+        if parts.next().is_some() {
+            return None;
+        }
+        Some((mtime, size, executable))
     }
 }
 

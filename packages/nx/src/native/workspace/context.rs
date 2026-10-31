@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 use crate::native::glob::{build_glob_set, glob_files::glob_files};
-use crate::native::hasher::hash;
+use crate::native::hasher::hash_file_path;
 use crate::native::project_graph::utils::{ProjectRootMappings, find_project_for_path};
 use crate::native::types::FileData;
 #[cfg(not(target_arch = "wasm32"))]
@@ -910,10 +910,10 @@ fn seal(state: &mut State, outcomes: Outcomes) -> ChangeBatch {
 /// rewritten in one batch ends up present. A path reported deleted that the
 /// list has no file for is taken as a directory and everything under it goes.
 /// A reported write is re-read and re-hashed; one that cannot be read (a
-/// directory, or a file gone again already) is skipped, and one whose bytes
+/// directory, or a file gone again already) is skipped, and one whose hash
 /// did not change is not reported: restoring a cached task output rewrites a
-/// file with identical content, and treating that as a change makes the
-/// daemon recompute the project graph for nothing.
+/// file with identical content and mode, and treating that as a change makes
+/// the daemon recompute the project graph for nothing.
 fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outcomes {
     let mut outcomes = Outcomes::new();
 
@@ -953,11 +953,7 @@ fn apply(state: &mut State, workspace_root: &Path, changes: Vec<Change>) -> Outc
         .filter(|c| policy.as_ref().is_none_or(|admits| admits(&c.path)))
         .filter_map(|change| {
             let full_path = workspace_root.join(&change.path);
-            let Ok(content) = std::fs::read(&full_path) else {
-                trace!("could not read file: {full_path:?}");
-                return None;
-            };
-            Some((change, hash(&content)))
+            hash_file_path(&full_path).map(|hash| (change, hash))
         })
         .collect();
 
