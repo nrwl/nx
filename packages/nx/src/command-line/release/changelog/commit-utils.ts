@@ -45,15 +45,27 @@ export function filterHiddenChanges(
   changes: ChangelogChange[],
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
 ): ChangelogChange[] {
+  // The changelog renderer drops a change together with its revert, but it
+  // never sees a hidden revert, so drop the change such a revert undoes here.
+  // Changes are newest first, so a revert comes before the change it undoes.
+  const hiddenRevertedHashes: string[] = [];
   return changes.filter((change) => {
+    if (
+      change.shortHash &&
+      hiddenRevertedHashes.some((hash) => hash.startsWith(change.shortHash))
+    ) {
+      return false;
+    }
+
     const type = change.type;
 
     const typeConfig = conventionalCommitsConfig.types[type];
-    if (!typeConfig) {
-      // don't include changes with unknown types
-      return false;
+    // don't include changes with unknown types
+    const isHidden = !typeConfig || typeConfig.changelog.hidden;
+    if (isHidden && change.revertedHashes?.length) {
+      hiddenRevertedHashes.push(...change.revertedHashes);
     }
-    return !typeConfig.changelog.hidden;
+    return !isHidden;
   });
 }
 
