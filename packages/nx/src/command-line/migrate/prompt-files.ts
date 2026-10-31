@@ -1,11 +1,21 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, posix } from 'path';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from 'fs';
+import { dirname, join, posix, relative, sep } from 'path';
 import {
   MigrationsJson,
   MigrationsJsonEntry,
 } from '../../config/misc-interfaces';
 import { extractFileFromTarball } from '../../utils/tar';
-import { isContainedRelativePath, joinPathFragments } from '../../utils/path';
+import {
+  isContainedRelativePath,
+  joinPathFragments,
+  normalizePath,
+} from '../../utils/path';
 
 export const AI_MIGRATIONS_DIR = joinPathFragments('tools', 'ai-migrations');
 
@@ -53,6 +63,11 @@ async function resolvePromptFiles(
       packageName,
       packageVersion
     );
+    if (!isPortableMarkdownPath(entry.prompt)) {
+      throw new Error(
+        `Invalid prompt path "${entry.prompt}" in package "${packageName}@${packageVersion}": prompt files must be markdown (.md) files whose path has no characters reserved on Windows (<>:"|?*).`
+      );
+    }
     try {
       resolvedPromptFiles[entry.prompt] = await resolveContent(entry.prompt);
     } catch (e) {
@@ -80,6 +95,17 @@ function assertPromptPathWithinMigrationsDir(
   }
 }
 
+// Prompt files are copied into the workspace under their own name, so any
+// other extension could land as workspace configuration (e.g. project.json).
+// Windows reads `:` as an NTFS stream separator, so `project.json:x.md` would
+// write project.json.
+function isPortableMarkdownPath(promptPath: string): boolean {
+  return (
+    !/[<>:"|?*\x00-\x1f]/.test(promptPath) &&
+    posix.extname(promptPath).toLowerCase() === '.md'
+  );
+}
+
 /**
  * Thrown when the markdown prompt file referenced by a migration cannot be
  * resolved.
@@ -102,18 +128,35 @@ export class PromptResolutionError extends Error {
  * Resolves a migration prompt file path to an absolute path. Prompt paths are
  * plain markdown files referenced relative to the directory containing the
  * `migrations.json` - unlike schemas, they are not resolved through package
- * exports or `require.resolve`. The path must stay within the migrations
- * directory and point at an existing file.
+ * exports or `require.resolve`. The path must point at an existing markdown
+ * (`.md`) file, free of characters reserved on Windows, that stays within the
+ * migrations directory after resolving links, outside any nested
+ * `node_modules`.
  */
 export function resolvePrompt(
   promptPath: string,
   migrationsDir: string
 ): string {
-  if (!isContainedRelativePath(promptPath)) {
+  if (
+    !isContainedRelativePath(promptPath) ||
+    !isPortableMarkdownPath(promptPath)
+  ) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   const resolvedPath = join(migrationsDir, promptPath);
   if (!existsSync(resolvedPath)) {
+    throw new PromptResolutionError(promptPath, migrationsDir);
+  }
+  const realRelativePath = relative(
+    realpathSync(migrationsDir),
+    realpathSync(resolvedPath)
+  );
+  if (
+    !isContainedRelativePath(realRelativePath) ||
+    realRelativePath
+      .split(sep)
+      .some((segment) => segment.toLowerCase() === 'node_modules')
+  ) {
     throw new PromptResolutionError(promptPath, migrationsDir);
   }
   return resolvedPath;
@@ -160,7 +203,8 @@ export function readPromptFilesFromInstall(
     packageName,
     packageVersion,
     migrations,
-    (promptRelPath) => readFileSync(join(migrationsDir, promptRelPath), 'utf-8')
+    (promptRelPath) =>
+      readFileSync(resolvePrompt(promptRelPath, migrationsDir), 'utf-8')
   );
 }
 
@@ -190,7 +234,9 @@ export function writePromptMigrationFiles(
       continue;
     }
 
-    const baseName = posix.basename(migration.prompt);
+    const baseName = posix.basename(
+      posix.normalize(normalizePath(migration.prompt))
+    );
     const ext = posix.extname(baseName);
     const stem = ext ? baseName.slice(0, -ext.length) : baseName;
     const destDir = joinPathFragments(

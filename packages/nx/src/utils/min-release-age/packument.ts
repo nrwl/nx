@@ -1,3 +1,4 @@
+import { valid } from 'semver';
 import { packageRegistryView, parseRegistryViewJson } from '../package-manager';
 
 export interface RegistryMetadata {
@@ -20,7 +21,8 @@ function toArray<T>(value: T | T[] | undefined): T[] {
  * Fetches the full packument for a package and normalizes the quirks of
  * `npm view --json`: `versions` may be a scalar when a single version exists,
  * `time` may be absent (third-party registries) and is exposed as null,
- * `dist-tags` carries a hyphen.
+ * `dist-tags` carries a hyphen. Entries that are not versions are dropped,
+ * because a pick is reused after `<pkg>@` in a package manager command.
  */
 export async function fetchRegistryMetadata(
   pkg: string
@@ -43,8 +45,10 @@ export async function fetchRegistryMetadata(
 
   return {
     name: parsed.name ?? pkg,
-    versions: toArray(parsed.versions),
+    versions: toArray(parsed.versions).filter((v) => valid(v)),
     time,
-    distTags: parsed['dist-tags'] ?? {},
+    distTags: Object.fromEntries(
+      Object.entries(parsed['dist-tags'] ?? {}).filter(([, v]) => valid(v))
+    ),
   };
 }
