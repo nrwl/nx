@@ -10,7 +10,7 @@ public static partial class TargetBuilder
     /// <summary>
     /// Builds all applicable targets for a .NET project.
     /// </summary>
-    public static Dictionary<string, Target> BuildTargets(
+    public static BuildTargetsResult BuildTargets(
         string projectName,
         string fileName,
         bool isTest,
@@ -21,7 +21,8 @@ public static partial class TargetBuilder
         string workspaceRoot,
         PluginOptions options,
         NxJsonConfig? nxJson,
-        List<string> directoryBuildInputs)
+        List<string> directoryBuildInputs,
+        List<FrameworkVariant>? frameworkVariants = null)
     {
         var targets = new Dictionary<string, Target>();
 
@@ -54,7 +55,11 @@ public static partial class TargetBuilder
             AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
-        return targets;
+        var groups = options.TfmVariants && frameworkVariants is { Count: > 1 }
+            ? AddFrameworkVariantTargets(targets, projectName, fileName, frameworkVariants, projectDirectory, workspaceRoot, options)
+            : null;
+
+        return new BuildTargetsResult { Targets = targets, TargetGroups = groups };
     }
 
     /// <summary>
