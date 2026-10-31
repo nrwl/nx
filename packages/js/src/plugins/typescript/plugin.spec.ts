@@ -1,7 +1,8 @@
 import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import picomatch = require('picomatch');
-import { mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { getLockFileName, setupWorkspaceContext } from '@nx/devkit/internal';
 import type { Mock } from 'vitest';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
@@ -3176,6 +3177,54 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             "{projectRoot}/tsconfig.lib.tsbuildinfo",
           ]
         `);
+      });
+
+      it('should infer the same tsbuildinfo file from the persisted tsconfig cache when rootDir is the workspace root', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.base.json': JSON.stringify({
+            compilerOptions: { rootDir: '.' },
+          }),
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            extends: '../../tsconfig.base.json',
+            files: [],
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            extends: './tsconfig.json',
+            compilerOptions: { outDir: 'out-tsc/lib' },
+            include: ['src/**/*.ts'],
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        const fromParsedTsconfigs = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+        // keep the persisted tsconfig cache but drop the computed targets
+        const cacheDir = 'tmp/project-graph-cache';
+        expect(existsSync(join(cacheDir, 'tsconfig-files.hash'))).toBe(true);
+        for (const file of readdirSync(cacheDir)) {
+          if (file.startsWith('tsc-')) {
+            rmSync(join(cacheDir, file));
+          }
+        }
+        const fromTsconfigCache = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+
+        const outputs =
+          fromParsedTsconfigs.projects['libs/my-lib'].targets.typecheck.outputs;
+        expect(outputs).toContain(
+          '{projectRoot}/out-tsc/lib/libs/my-lib/tsconfig.lib.tsbuildinfo'
+        );
+        expect(
+          fromTsconfigCache.projects['libs/my-lib'].targets.typecheck.outputs
+        ).toEqual(outputs);
       });
 
       it('should add the inline output files when `outDir` is not defined', async () => {
