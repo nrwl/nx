@@ -14,6 +14,7 @@ import org.apache.maven.session.scope.internal.SessionScope
 import org.codehaus.plexus.PlexusContainer
 import org.eclipse.aether.RepositorySystemSession
 import org.slf4j.LoggerFactory
+import java.io.File
 
 /**
  * Nx Maven 3.x executor that caches project graph and session across invocations.
@@ -102,7 +103,7 @@ class NxMaven3(
             session.allProjects = graph.allProjects.toMutableList()
             session.projectDependencyGraph = graph
 
-            BuildStateManager.applyBuildStates(graph.allProjects)
+            BuildStateManager.applyBuildStates(graph.allProjects, File(request.baseDirectory))
             log.debug("Graph cache initialized with ${graph.allProjects.size} projects")
         } finally {
             sessionScope.exit()
@@ -186,7 +187,7 @@ class NxMaven3(
         session.projects = selectedProjects
         session.currentProject = selectedProjects.firstOrNull()
         session.projectMap = buildProjectMap(selectedProjects)
-        BuildStateManager.applyBuildStates(selectedProjects)
+        BuildStateManager.applyBuildStates(selectedProjects, File(request.baseDirectory))
     }
 
     private fun buildProjectMap(projects: List<MavenProject>): Map<String, MavenProject> {

@@ -24,6 +24,7 @@ import org.apache.maven.session.scope.internal.SessionScope
 import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.repository.WorkspaceReader
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -188,7 +189,7 @@ class NxMaven(
       // Apply existing build states to all projects in the graph
       log.debug("   🔄 Applying existing build states to ${graph.allProjects.size} projects...")
       val applyStartTime = System.currentTimeMillis()
-      BuildStateManager.applyBuildStates(graph.allProjects)
+      BuildStateManager.applyBuildStates(graph.allProjects, File(request.baseDirectory))
       val applyTimeMs = System.currentTimeMillis() - applyStartTime
       log.debug("   ✅ Build state application completed in ${applyTimeMs}ms")
     } finally {
