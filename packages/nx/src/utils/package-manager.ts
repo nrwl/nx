@@ -700,23 +700,23 @@ export function copyPackageManagerConfigurationFiles(
  * A non-JS workspace has no root package.json and keeps its package manager
  * files under the Nx installation directory instead.
  */
-function getPackageManagerConfigRoot(): string {
-  if (existsSync(join(workspaceRoot, 'package.json'))) {
-    return workspaceRoot;
+export function getPackageManagerConfigRoot(
+  root: string = workspaceRoot
+): string {
+  if (existsSync(join(root, 'package.json'))) {
+    return root;
   }
-  const installationPath = getNxInstallationPath(workspaceRoot);
+  const installationPath = getNxInstallationPath(root);
   // The installation directory can be missing or not a directory, and spawning
   // with such a cwd fails outright (ENOENT/ENOTDIR).
   try {
-    return statSync(installationPath).isDirectory()
-      ? installationPath
-      : workspaceRoot;
+    return statSync(installationPath).isDirectory() ? installationPath : root;
   } catch (e) {
     logger.verbose(
       `Failed to stat the Nx installation directory at "${installationPath}".`,
       e
     );
-    return workspaceRoot;
+    return root;
   }
 }
 
