@@ -1334,6 +1334,7 @@ export interface Target {
   options?: string
   configurations?: string
   parallelism?: boolean
+  scriptContent?: string
 }
 
 /** A representation of the invocation of an Executor */
