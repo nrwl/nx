@@ -62,8 +62,8 @@ describe('@nx/react/react-router-plugin', () => {
     afterEach(() => {
       vi.resetModules();
       resetCjsMocks();
-      tempFs.cleanup();
       process.chdir(cwd);
+      tempFs.cleanup();
     });
 
     it('should create nodes by default', async () => {
