@@ -7,6 +7,7 @@ describe('splitShellArgs', () => {
     vi.stubEnv('PORT', '4300');
     vi.stubEnv('ARGS', ' --port  4301 ');
     vi.stubEnv('EMPTY', '');
+    vi.stubEnv('QUOTED', '"a b"');
     delete process.env.MISSING;
   });
 
@@ -44,6 +45,17 @@ describe('splitShellArgs', () => {
         ['4200', '1', '4300'],
       ],
       ['x$ARGS', ['x', '--port', '4301']],
+      ['${MISSING:-"my config.mjs"}', ['my config.mjs']],
+      ["${MISSING:-'my config.mjs'}", ['my config.mjs']],
+      ['"${MISSING:-"my config.mjs"}"', ['my config.mjs']],
+      ['${MISSING:-my\\ config.mjs}', ['my config.mjs']],
+      ['${MISSING:-${MISSING:-"my config.mjs"}}', ['my config.mjs']],
+      ['a${MISSING:-""}b', ['ab']],
+      ['${MISSING:-""}', ['']],
+      ['${MISSING:-"$PORT"}', ['4300']],
+      ['${MISSING:-$QUOTED}', ['"a', 'b"']],
+      ['${MISSING:-"$QUOTED"}', ['"a b"']],
+
       ['$(echo 1) $1 ${a b}', ['$(echo', '1)', '$1', '${a', 'b}']],
     ])('splits %j', (input, expected) => {
       expect(splitShellArgs(input)).toEqual(expected);
