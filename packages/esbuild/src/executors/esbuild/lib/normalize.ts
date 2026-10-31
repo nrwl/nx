@@ -22,7 +22,10 @@ export async function normalizeOptions(
     );
   }
 
-  const tsConfig = readTsConfig(options.tsConfig);
+  // `tsConfig` is relative to the workspace root, and `readTsConfig` resolves a
+  // relative path against `process.cwd()` — so anchor it here, or running the
+  // target from anywhere but the workspace root reads a path that doesn't exist.
+  const tsConfig = readTsConfig(path.join(context.root, options.tsConfig));
 
   // If we're not generating package.json file, then copy it as-is as an asset when not using ts solution setup.
   const assets =
