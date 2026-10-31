@@ -580,8 +580,11 @@ function getEntryPoint(file: string, projectRoot: string): string {
     return fileEntryPoint.file;
   }
 
-  let parent = joinPathFragments(file, '../');
-  while (parent !== `${projectRoot}/`) {
+  // `entry.path` never has a trailing slash, so `parent` is normalized to
+  // match it exactly when checking each ancestor directory for a package.json
+  // `exports`-based secondary entry point.
+  let parent = joinPathFragments(file, '../').replace(/\/$/, '');
+  while (parent !== projectRoot) {
     const entryPoint = packageEntryPoints.find(
       (entry) => entry.path === parent
     );
@@ -599,7 +602,7 @@ function getEntryPoint(file: string, projectRoot: string): string {
         parseJson(ngPackageContent)?.lib?.entryFile ?? 'src/public_api.ts';
       return joinPathFragments(parent, entryFile);
     }
-    parent = joinPathFragments(parent, '../');
+    parent = joinPathFragments(parent, '../').replace(/\/$/, '');
   }
   return undefined;
 }
