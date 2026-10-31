@@ -68,4 +68,76 @@ describe('typeDefinitions', () => {
       });
     })();
   });
+
+  it('should emit .d.ts files with relative references to source files', () => {
+    const mockBundle = {
+      'index.js': {
+        type: 'chunk',
+        isEntry: true,
+        fileName: 'index.js',
+        facadeModuleId: '/project/src/index.ts',
+        exports: ['default'],
+      },
+      'entry-point.js': {
+        type: 'chunk',
+        isEntry: true,
+        fileName: 'entry-point.js',
+        facadeModuleId: '/project/src/entry-point1/entry-point.ts',
+        exports: [],
+      },
+      'entry-point2/entry-point.js': {
+        type: 'chunk',
+        isEntry: true,
+        fileName: 'entry-point2/entry-point.js',
+        facadeModuleId: '/project/src/entry-point2/entry-point.ts',
+        exports: ['default'],
+      },
+    };
+
+    const mockOpts = {};
+
+    const mockEmitFile = jest.fn();
+
+    const plugin = typeDefinitions({ projectRoot: '/project' });
+
+    const mockContext = {
+      emitFile: mockEmitFile,
+    };
+
+    (async function testPlugin() {
+      await plugin.generateBundle.call(mockContext, mockOpts, mockBundle);
+
+      // The expected relative paths in the emitted .d.ts files should correctly reference the source .d.ts files
+      const expectedReferences = [
+        ['index.d.ts', './src/index', true], // for index.d.ts
+        ['entry-point.d.ts', './src/entry-point1/entry-point', false], // for entry-point.d.ts
+        [
+          'entry-point2/entry-point.d.ts',
+          '../src/entry-point2/entry-point',
+          true,
+        ], // for entry-point2/entry-point.d.ts
+      ];
+
+      mockEmitFile.mock.calls.forEach(([{ fileName }], index) => {
+        const [expectedFileName, expectedRelativePath, expectDefaultExport] =
+          expectedReferences[index];
+        expect(fileName).toBe(expectedFileName);
+
+        const emittedContent = mockEmitFile.mock.calls[index][0].source;
+        expect(emittedContent).toContain(
+          `export * from "${expectedRelativePath}";`
+        );
+
+        if (expectDefaultExport) {
+          expect(emittedContent).toContain(
+            `export { default } from "${expectedRelativePath}";`
+          );
+        } else {
+          expect(emittedContent).not.toContain(
+            `export { default } from "${expectedRelativePath}";`
+          );
+        }
+      });
+    })();
+  });
 });
