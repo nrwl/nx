@@ -1,6 +1,8 @@
+import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ProjectGraph } from '../../config/project-graph';
 import { EventType, hashFile, type WatchEvent } from '../../native';
+import { getIgnoreObject } from '../../utils/ignore';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 // Last-seen content hash per dotenv file, so a byte-identical rewrite (an editor
@@ -42,10 +44,9 @@ export interface DotEnvChangeClassification {
  * computation is adding), so the caller queues it for replay against the next
  * graph a computation is about to serve rather than dropping it.
  *
- * Known limitation: a `.nxignore`d dotenv file never reaches this watcher (the
- * native watcher applies `.nxignore` even with `use_ignore: false`), so a warm
- * edit of one does not invalidate the graph. The cold path still resolves it:
- * getGraphTimeDotEnvForTask reads dotenv from disk directly.
+ * Paths matching the root `.gitignore` or `.nxignore` are dropped: the raw
+ * watch stream delivers them. Non-delete events for a non-regular file are
+ * dropped before `hashFile`, which would read a FIFO and re-trigger the watch.
  */
 export function classifyDotEnvChanges(
   changeEvents: WatchEvent[],
@@ -60,12 +61,19 @@ export function classifyDotEnvChanges(
     return { invalidating: [], unclassified: [] };
   }
 
+  const ignore = getIgnoreObject();
   const roots = graphTimeDotEnvRoots(projectGraph);
   const invalidating: string[] = [];
   const unclassified: WatchEvent[] = [];
 
   for (const event of candidates) {
     const { path, type } = event;
+    if (isDroppedDotEnvChange(ignore, path, type)) {
+      // A hash recorded before the path became ignored or non-regular would
+      // suppress a later event once it is a regular file again.
+      dotEnvFileHashes.delete(path);
+      continue;
+    }
     if (!isDotEnvUnderRoot(path, roots)) {
       // A recorded hash stops being proof the graph observed the current
       // content once an event for the path cannot be classified: the pending
@@ -100,6 +108,31 @@ export function classifyDotEnvChanges(
   }
 
   return { invalidating, unclassified };
+}
+
+function isDroppedDotEnvChange(
+  ignore: ReturnType<typeof getIgnoreObject>,
+  path: string,
+  type: EventType
+): boolean {
+  if (ignore.ignores(path)) {
+    return true;
+  }
+  // A delete has no inode left to stat. An existing FIFO must not reach
+  // hashFile: reading it is what makes the writer emit the next event.
+  return (
+    type !== EventType.delete &&
+    isPresentNonRegularFile(join(workspaceRoot, path))
+  );
+}
+
+// ENOENT is not "non-regular": a vanished file still has to invalidate.
+function isPresentNonRegularFile(absolutePath: string): boolean {
+  try {
+    return !statSync(absolutePath).isFile();
+  } catch {
+    return false;
+  }
 }
 
 // Superset of the names both regexes accept: a prefixed name's first segment
