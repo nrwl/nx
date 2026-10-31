@@ -73,6 +73,82 @@ The nx release command is customizable. You can customize the versioning, change
 
 See the [configuration reference](/docs/reference/nx-json#release) for all available options.
 
+## Custom version actions
+
+By default, Nx Release uses the `@nx/js` version actions implementation to update JavaScript and TypeScript package manifests. If you need to version a different kind of project or manifest, configure `release.version.versionActions` with a path to a custom implementation. This option can also be set under a release group or a project's `release.version` configuration.
+
+```jsonc
+// nx.json
+{
+  "release": {
+    "version": {
+      "versionActions": "./tools/release/my-version-actions.ts",
+      "currentVersionResolver": "disk",
+      "versionActionsOptions": {
+        "manifestName": "service.json",
+      },
+    },
+  },
+}
+```
+
+The module should export a default class that extends `VersionActions` from `nx/release`. A custom implementation can use `this.projectGraphNode`, `this.releaseGroup`, and `this.finalConfigForProject.versionActionsOptions` to access the resolved release context.
+
+```ts
+import { join } from 'node:path';
+import { readJson, updateJson, type ProjectGraph, type Tree } from '@nx/devkit';
+import { VersionActions } from 'nx/release';
+
+export default class MyVersionActions extends VersionActions {
+  validManifestFilenames = [
+    (this.finalConfigForProject.versionActionsOptions
+      ?.manifestName as string) ?? 'service.json',
+  ];
+
+  async readCurrentVersionFromSourceManifest(tree: Tree) {
+    const manifestPath =
+      this.manifestsToUpdate[0]?.manifestPath ??
+      join(this.projectGraphNode.data.root, this.validManifestFilenames[0]);
+    return {
+      manifestPath,
+      currentVersion: readJson(tree, manifestPath).version,
+    };
+  }
+
+  async readCurrentVersionFromRegistry() {
+    return null;
+  }
+
+  async readCurrentVersionOfDependency(
+    _tree: Tree,
+    _projectGraph: ProjectGraph,
+    _dependencyProjectName: string
+  ) {
+    return { currentVersion: null, dependencyCollection: null };
+  }
+
+  async updateProjectVersion(tree: Tree, newVersion: string) {
+    for (const { manifestPath } of this.manifestsToUpdate) {
+      updateJson(tree, manifestPath, (json) => ({
+        ...json,
+        version: newVersion,
+      }));
+    }
+    return [`Updated service manifests for ${this.projectGraphNode.name}`];
+  }
+
+  async updateProjectDependencies(
+    _tree: Tree,
+    _projectGraph: ProjectGraph,
+    _dependenciesToUpdate: Record<string, string>
+  ) {
+    return [];
+  }
+}
+```
+
+For version schemes that are not semver-compatible, override `calculateNewVersion` as well. If your implementation needs to update workspace-level files after every project has been versioned, the module can also export an `afterAllProjectsVersioned` function.
+
 ## Using the programmatic API for Nx release
 
 A powerful feature of Nx Release is the fact that it is designed to be used via a Node.js programmatic API in addition to the `nx release` CLI.
