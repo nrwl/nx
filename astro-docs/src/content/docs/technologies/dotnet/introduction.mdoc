@@ -210,21 +210,20 @@ The value is relative to the project directory, the same way `dotnet test` reads
 
 ## Define Nx project tags in MSBuild
 
-Use the evaluated `NxTags` property or `NxTag` items to add tags to a .NET project.
-Define values in the project file or import them from `Directory.Build.props`.
+Use `NxTag` items inside an `ItemGroup` to add tags to a .NET project.
+Define items in the project file or import them from `Directory.Build.props`.
+MSBuild merges the imported items with the project's own items.
 
 ```xml
-<PropertyGroup>
-  <NxTags>scope:client;owner:devflow</NxTags>
-</PropertyGroup>
-
 <ItemGroup>
+  <NxTag Include="scope:client" />
+  <NxTag Include="owner:devflow" />
   <NxTag Include="requires:emulator" />
 </ItemGroup>
 ```
 
 The plugin adds a tag only when it applies to every evaluated inner build of a multi-target project.
-If an `NxTags` value or `NxTag` item applies to only some target frameworks, the plugin omits that tag
+If an `NxTag` item applies to only some target frameworks, the plugin omits that tag
 and warns with the project path and omitted tags.
 Define shared tags without a target-framework condition to include them in the Nx project.
 
