@@ -1046,6 +1046,97 @@ describe('createPackageJson', () => {
       });
     });
 
+    it('should keep nested npm overrides under a direct dependency', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                // only overrides the dependencies of `random`, which npm
+                // accepts even though `random` is a direct dependency.
+                random: {
+                  foo: '1.0.0',
+                },
+                // the "." entry overrides `typescript` itself and must be
+                // dropped, while its nested override is carried through.
+                typescript: {
+                  '.': '5.0.0',
+                  bar: '2.0.0',
+                },
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          random: {
+            foo: '1.0.0',
+          },
+          typescript: {
+            bar: '2.0.0',
+          },
+        },
+      });
+    });
+
+    it('should drop nested npm overrides that only set the version of a direct dependency', () => {
+      spies.push(
+        vi
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) => {
+          if (path === 'package.json') {
+            return {
+              ...rootPackageJson(),
+              overrides: {
+                typescript: {
+                  '.': '5.0.0',
+                },
+              },
+            };
+          }
+          if (path === 'libs/lib1/package.json') {
+            return projectPackageJson();
+          }
+        })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).not.toHaveProperty('overrides');
+    });
+
     it('should omit npm overrides when every entry targets a direct dependency', () => {
       spies.push(
         vi
