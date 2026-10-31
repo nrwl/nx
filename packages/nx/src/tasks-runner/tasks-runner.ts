@@ -33,5 +33,10 @@ export type TasksRunner<T = unknown> = (
     daemon?: DaemonClient;
     /** Tasks hashed only once the tasks they read outputs from have run. */
     hashingDeferredTaskIds?: ReadonlySet<string>;
+    /**
+     * Tasks run with a dependency task omitted. Cache reads still apply;
+     * their results are not written.
+     */
+    tasksRunWithoutDependencies?: ReadonlySet<string>;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;

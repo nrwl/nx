@@ -237,5 +237,112 @@ describe('selectTasksForProjects', () => {
       'app:test',
     ]);
     expect(selection.taskIds).toBeUndefined();
+    expect(selection.tasksRunWithoutDependencies).toBeUndefined();
+  });
+
+  it('names a task whose dependency task was excluded', () => {
+    const selection = selectTasksForProjects(
+      projectGraph,
+      ['app'],
+      { targets: ['build'] } as NxArgs,
+      {},
+      {},
+      true
+    );
+
+    expect(Object.keys(selection.taskGraph.tasks)).toEqual(['app:build']);
+    expect(selection.tasksRunWithoutDependencies).toEqual(['app:build']);
+  });
+
+  it('names a task that depends on one run without its own dependency', () => {
+    const withUtils = {
+      nodes: {
+        app: node('app', { build: run(['^build']) }),
+        lib: node('lib', { build: run(['^build']) }),
+        utils: node('utils', { build: run() }),
+      },
+      dependencies: {
+        app: [{ source: 'app', target: 'lib', type: 'static' }],
+        lib: [{ source: 'lib', target: 'utils', type: 'static' }],
+        utils: [],
+      },
+    } as any;
+    const selection = selectTasksForProjects(
+      withUtils,
+      ['app', 'lib'],
+      { targets: ['build'] } as NxArgs,
+      {},
+      {},
+      true
+    );
+
+    expect(Object.keys(selection.taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+    expect(selection.tasksRunWithoutDependencies).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+  });
+
+  it('leaves the list unset when every dependency task is selected', () => {
+    const selection = selectTasksForProjects(
+      projectGraph,
+      ['app', 'lib'],
+      { targets: ['build'] } as NxArgs,
+      {},
+      {},
+      true
+    );
+
+    expect(Object.keys(selection.taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+    expect(selection.tasksRunWithoutDependencies).toBeUndefined();
+  });
+
+  it('leaves the list unset for a task with no dependencies', () => {
+    const selection = selectTasksForProjects(
+      projectGraph,
+      ['app'],
+      { targets: ['test'] } as NxArgs,
+      {},
+      {},
+      true
+    );
+
+    expect(Object.keys(selection.taskGraph.tasks)).toEqual(['app:test']);
+    expect(selection.tasksRunWithoutDependencies).toBeUndefined();
+  });
+
+  it('does not name a task whose dependency is reached through a project without the target', () => {
+    const graph = {
+      nodes: {
+        app: node('app', { build: run(['^build']) }),
+        mid: node('mid', {}),
+        lib: node('lib', { build: run() }),
+      },
+      dependencies: {
+        app: [{ source: 'app', target: 'mid', type: 'static' }],
+        mid: [{ source: 'mid', target: 'lib', type: 'static' }],
+        lib: [],
+      },
+    } as any;
+    const selection = selectTasksForProjects(
+      graph,
+      ['app', 'lib'],
+      { targets: ['build'] } as NxArgs,
+      {},
+      {},
+      true
+    );
+
+    expect(Object.keys(selection.taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'lib:build',
+    ]);
+    expect(selection.tasksRunWithoutDependencies).toBeUndefined();
   });
 });

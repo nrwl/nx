@@ -789,6 +789,22 @@ describe('TaskOrchestrator', () => {
       return orchestrator;
     }
 
+    it('still reads a cached result for a task run without its dependencies', async () => {
+      const task = createTask('app:build');
+      const orchestrator = createOrchestrator(
+        new Map([
+          [task.hash, { code: 0, terminalOutput: 'from cache', remote: false }],
+        ])
+      );
+      orchestrator.tasksRunWithoutDependencies = new Set(['app:build']);
+
+      const hits = await orchestrator.fetchCacheHits([task]);
+
+      expect(hits.map((hit: { task: Task }) => hit.task.id)).toEqual([
+        'app:build',
+      ]);
+    });
+
     it('should not re-query hashes already confirmed as misses', async () => {
       const task = createTask('app:build');
       const orchestrator = createOrchestrator(new Map());
@@ -1008,6 +1024,38 @@ describe('TaskOrchestrator', () => {
       expect(writes).toEqual(['cached body']);
       expect(readOutput(task)).toBe('cached body');
       expect(orchestrator.tasksWithPersistedOutput.has(task.id)).toBe(false);
+    });
+
+    it('does not cache a task run without its dependencies', async () => {
+      const orchestrator = createOrchestrator();
+      orchestrator.tasksRunWithoutDependencies = new Set(['app:build']);
+      const task = makeTask('app:build', { outputs: ['dist'] });
+      const sibling = makeTask('lib:build');
+
+      await orchestrator.postRunSteps(
+        [
+          {
+            task,
+            status: 'success',
+            terminalOutput: 'built against stale deps',
+          },
+          { task: sibling, status: 'success', terminalOutput: 'fresh' },
+        ],
+        true,
+        0
+      );
+
+      expect(orchestrator.cache.put).toHaveBeenCalledTimes(1);
+      expect(orchestrator.cache.put).toHaveBeenCalledWith(
+        sibling,
+        'fresh',
+        sibling.outputs,
+        0
+      );
+      expect(readOutput(task)).toBe('built against stale deps');
+      expect(orchestrator.cache.recordTerminalOutputs).toHaveBeenCalledWith([
+        { hash: task.hash, size: 'built against stale deps'.length },
+      ]);
     });
 
     it('does not rewrite output a runner already persisted', async () => {
