@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { tmpdir } from 'os';
 import { existsSync } from 'fs';
 import type { MockedFunction } from 'vitest';
 
@@ -16,6 +15,11 @@ vi.mock('../utils/workspace-root', () => ({
 vi.mock('../utils/cache-directory', () => ({
   cacheDir: join('/shared', 'cache'),
   cacheDirectoryForWorkspace: vi.fn(() => join('/workspace', '.nx', 'cache')),
+}));
+
+vi.mock('../utils/nx-tmp-dir', () => ({
+  NX_HOME_TMP_DIR: join('/home', '.nx'),
+  homeDirIsDistinctFromSharedTmp: () => true,
 }));
 
 // `isCI` reads ~18 environment variables that the runner sets, so left unmocked
@@ -66,11 +70,11 @@ describe('getBundleInstallDefaultLocation', () => {
     expect(getBundleInstallDefaultLocation()).toBe(legacy);
   });
 
-  it('falls back to a per-api temp directory outside a workspace', () => {
+  it('falls back to a per-api directory under the home directory outside a workspace', () => {
     stagePresent([]);
 
     expect(getBundleInstallDefaultLocation()).toMatch(
-      new RegExp(`^${join(tmpdir(), 'nx-cloud-client')}.`)
+      new RegExp(`^${join('/home', '.nx', 'cloud-client')}.`)
     );
   });
 });

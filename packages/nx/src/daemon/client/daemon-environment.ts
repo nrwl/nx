@@ -50,6 +50,9 @@ const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // to the next client's connection. Pinned at daemon spawn instead; see
   // getDaemonSpawnEnv.
   'NX_MAX_MESSAGE_SIZE',
+  // Read when the daemon resolves its cache directories at startup. Pinned at
+  // spawn instead, so one client's opt-out never reaches later clients.
+  'NX_ALLOW_INSECURE_DIRECTORIES',
 
   // Nx UI/logging vars (don't affect graph structure)
   'NX_TUI',
@@ -326,9 +329,11 @@ export function getDaemonClientEnvGeneration(): number {
  *   the pin, a root without markers under an ancestor that has them
  *   resolves to the ancestor and the daemon publishes its socket under the
  *   wrong workspace.
- * - NX_MAX_MESSAGE_SIZE: excluded from reflection (see above), so the value
- *   here holds for the daemon's whole lifetime. Changing it therefore needs a
- *   daemon restart (`nx reset`).
+ * - NX_MAX_MESSAGE_SIZE and NX_ALLOW_INSECURE_DIRECTORIES: excluded from
+ *   reflection (see above), so the value here holds for the daemon's whole
+ *   lifetime. Changing either therefore needs a daemon restart (`nx reset`).
+ * - TMPDIR: without it, os.tmpdir() in the daemon and every process it
+ *   starts falls back to the shared /tmp instead of the user's own.
  */
 export function getDaemonSpawnEnv() {
   const env = getDaemonEnv();
@@ -340,6 +345,13 @@ export function getDaemonSpawnEnv() {
   }
   if (process.env.NX_MAX_MESSAGE_SIZE !== undefined) {
     env.NX_MAX_MESSAGE_SIZE = process.env.NX_MAX_MESSAGE_SIZE;
+  }
+  if (process.env.TMPDIR !== undefined) {
+    env.TMPDIR = process.env.TMPDIR;
+  }
+  if (process.env.NX_ALLOW_INSECURE_DIRECTORIES !== undefined) {
+    env.NX_ALLOW_INSECURE_DIRECTORIES =
+      process.env.NX_ALLOW_INSECURE_DIRECTORIES;
   }
   return env;
 }

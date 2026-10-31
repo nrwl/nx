@@ -32,15 +32,11 @@ vi.mock('../../utils/child-process', async () => ({
 
 // The temp-CLI hand-off installs nx for real; stubbing the dir it installs
 // into and the commands it runs lets a test shape that installation.
-const mockTmpDirSync = vi.fn();
-// migrate.ts lazy-requires tmp (CJS channel), which vi.mock cannot intercept;
-// replace the module in the require channel instead.
-import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
-import * as realTmp from 'tmp';
-mockCjsModule(import.meta.url, 'tmp', {
-  ...realTmp,
-  dirSync: (...args: unknown[]) => mockTmpDirSync(...args),
-});
+const mockCreateTempInstallDirectory = vi.fn();
+vi.mock('../../utils/package-manager', async () => ({
+  ...(await vi.importActual('../../utils/package-manager')),
+  createTempInstallDirectory: () => mockCreateTempInstallDirectory(),
+}));
 
 const mockExecSync = vi.fn();
 vi.mock('child_process', async () => ({
@@ -63,6 +59,7 @@ vi.mock('./resolve-package-version', async () => ({
 
 // migrate.ts lazy-requires ./run (CJS channel), which vi.mock cannot
 // intercept; replace the module in the require channel instead.
+import { mockCjsModule } from '../../internal-testing-utils/cjs-mock';
 const mockRunSingleMigrationWorker = vi.fn();
 const mockHoldRunToContinue = vi.fn();
 const mockReleaseRunToHandOff = vi.fn();
@@ -411,7 +408,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     mockResolvePackageVersion.mockReset().mockResolvedValue('23.2.0');
     mockRunNxArgvSync.mockReset();
     mockExecSync.mockReset();
-    mockTmpDirSync.mockReset();
+    mockCreateTempInstallDirectory.mockReset();
     vi.spyOn(output, 'log').mockImplementation(() => {});
     vi.spyOn(output, 'warn').mockImplementation(() => {});
     vi.spyOn(output, 'error').mockImplementation(() => {});
@@ -439,7 +436,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
       join(tmpDir, 'node_modules', 'nx', 'package.json'),
       JSON.stringify({ name: 'nx', version: '23.2.0', ...(bin ? { bin } : {}) })
     );
-    mockTmpDirSync.mockReturnValue({ name: tmpDir });
+    mockCreateTempInstallDirectory.mockReturnValue(tmpDir);
     return tmpDir;
   }
 
@@ -476,6 +473,27 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
     expect(mockResolvePackageVersion).toHaveBeenCalledWith('nx', 'latest', {
       applySideEffects: false,
     });
+  });
+
+  it('reports a missing private install root instead of falling back to the local nx', async () => {
+    mockEnsurePackageHasProvenance.mockResolvedValue(undefined);
+    mockCreateTempInstallDirectory.mockImplementation(() => {
+      throw new Error(
+        'Nx cannot install packages because it found no directory closed to other users to install into.\n  ~/.nx/tmp: reason.'
+      );
+    });
+
+    const exitCode = await runMigration();
+
+    expect(exitCode).toBe(1);
+    expect(output.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title:
+          'Nx cannot install packages because it found no directory closed to other users to install into.',
+      })
+    );
+    expect(mockExecSync).not.toHaveBeenCalled();
+    expect(mockRunNxArgvSync).not.toHaveBeenCalled();
   });
 
   it('runs the local nx without consulting the router when the argv names an existing run', async () => {
@@ -632,7 +650,7 @@ describe('runMigration() version-skew-guard wiring (temp-CLI install)', () => {
       JSON.stringify({ name: 'nx', bin: { nx: './dist/bin/nx.js' } })
     );
     mkdirSync(installDir, { recursive: true });
-    mockTmpDirSync.mockReturnValue({ name: installDir });
+    mockCreateTempInstallDirectory.mockReturnValue(installDir);
 
     try {
       const exitCode = await runMigration();
