@@ -25,6 +25,7 @@ import { acknowledgeDeclaredBuildScripts } from '../../utils/acknowledge-build-s
 import * as packageManager from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { runPluginInitGenerator } from '../init/configure-plugins';
 import { addHandler, coreNxPluginVersions, installPackage } from './add';
 
 describe('nx add installation', () => {
@@ -69,6 +70,39 @@ describe('nx add installation', () => {
       );
     }
   );
+
+  it('forwards unparsed arguments to the init generator', async () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(configuration, 'readNxJson').mockReturnValue({});
+    vi.spyOn(packageManager, 'detectPackageManager').mockReturnValue('npm');
+    vi.spyOn(packageManager, 'getPackageManagerVersion').mockReturnValue(
+      '11.0.0'
+    );
+    vi.spyOn(packageManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'npm install -D',
+    } as any);
+    vi.spyOn(childProcess, 'exec').mockImplementation(((
+      _command,
+      _options,
+      callback
+    ) => callback(null, '', '')) as any);
+
+    expect(
+      await addHandler({
+        packageSpecifier: '@org/plugin@1.0.0',
+        verbose: false,
+        __overrides_unparsed__: ['--programName=foo', '--skipFormat'],
+      })
+    ).toBe(0);
+    expect(runPluginInitGenerator).toHaveBeenCalledWith(
+      '@org/plugin',
+      workspaceRoot,
+      false,
+      false,
+      undefined,
+      ['--programName=foo', '--skipFormat']
+    );
+  });
 });
 
 describe('nx core packages', () => {
