@@ -1,4 +1,7 @@
+import { lstatSync } from 'node:fs';
+import { basename, delimiter } from 'node:path';
 import { hashObject } from '../../hasher/file-hasher';
+import { isOwnedRealDirectory } from '../../utils/owned-private-dir';
 
 const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -331,7 +334,7 @@ export function getDaemonClientEnvGeneration(): number {
  *   daemon restart (`nx reset`).
  */
 export function getDaemonSpawnEnv() {
-  const env = getDaemonEnv();
+  const env = withoutBerryBinFoldersOnPath(getDaemonEnv());
   if (process.env.ELECTRON_RUN_AS_NODE !== undefined) {
     env.ELECTRON_RUN_AS_NODE = process.env.ELECTRON_RUN_AS_NODE;
   }
@@ -414,10 +417,10 @@ const BERRY_BIN_FOLDER_GRAPH_IDENTITY = '<YARN_BERRY_BIN_FOLDER>';
 
 /**
  * Yarn Berry creates a fresh BERRY_BIN_FOLDER for every invocation and puts it
- * first on PATH. The wrappers inside are runtime state the daemon and workers
- * must receive, but the folder's random name is not project-graph identity:
- * two invocations whose environments differ only by it would compute the same
- * graph. Strips the folder from PATH and pins the var to a sentinel so such
+ * first on PATH. Plugin workers, and the daemon's own PATH when it runs plugins
+ * itself, get its wrappers only while a connected client carries it. Its random name is not
+ * project-graph identity: two invocations whose environments differ only by it
+ * would compute the same graph. Strips the folder from PATH and pins the var to a sentinel so such
  * environments compare equal. Returns a copy; never mutates runtime env.
  */
 export function normalizeDaemonEnvironmentForGraph(
@@ -464,4 +467,147 @@ export function getChangedEnvKeys(
     }
   }
   return changedKeys;
+}
+
+const BERRY_BIN_FOLDER_NAME = /^xfs-[0-9a-f]{8}$/i;
+
+function isBerryBinFolder(entry: string): boolean {
+  return BERRY_BIN_FOLDER_NAME.test(basename(entry));
+}
+
+function isTrustedBerryBinFolder(dir: string): boolean {
+  if (!isOwnedRealDirectory(dir)) {
+    return false;
+  }
+  if (process.platform === 'win32') {
+    return true;
+  }
+  try {
+    return (lstatSync(dir).mode & 0o022) === 0;
+  } catch {
+    return false;
+  }
+}
+
+function filterBerryBinFoldersOnPath(
+  env: NodeJS.ProcessEnv,
+  keep: (dir: string) => boolean
+): NodeJS.ProcessEnv {
+  const filtered = { ...env };
+  for (const key of Object.keys(filtered)) {
+    if (key.toUpperCase() === 'PATH' && filtered[key]) {
+      filtered[key] = filtered[key]
+        .split(delimiter)
+        .filter((entry) => !isBerryBinFolder(entry) || keep(entry))
+        .join(delimiter);
+    }
+  }
+  return filtered;
+}
+
+export function hasBerryBinFolders(env: NodeJS.ProcessEnv): boolean {
+  return env.BERRY_BIN_FOLDER !== undefined || hasBerryBinFoldersOnPath(env);
+}
+
+function hasBerryBinFoldersOnPath(env: NodeJS.ProcessEnv): boolean {
+  return Object.keys(env).some(
+    (key) =>
+      key.toUpperCase() === 'PATH' &&
+      !!env[key]?.split(delimiter).some(isBerryBinFolder)
+  );
+}
+
+/**
+ * Yarn Berry deletes its per-invocation bin folders when the command exits, so
+ * a process that can outlive the command must not resolve binaries through
+ * them. BERRY_BIN_FOLDER is kept: Yarn only ever writes it, and graph identity
+ * is computed from it.
+ */
+export function withoutBerryBinFoldersOnPath(
+  env: NodeJS.ProcessEnv
+): NodeJS.ProcessEnv {
+  return filterBerryBinFoldersOnPath(env, () => false);
+}
+
+export function withoutBerryBinFolders(
+  env: NodeJS.ProcessEnv
+): NodeJS.ProcessEnv {
+  const stripped = withoutBerryBinFoldersOnPath(env);
+  delete stripped.BERRY_BIN_FOLDER;
+  return stripped;
+}
+
+/**
+ * For work a live client is waiting on: its Yarn command, and so its bin
+ * folders, are still alive, but only folders that are ours and closed to other
+ * users are kept.
+ */
+export function withTrustedBerryBinFolders(
+  env: NodeJS.ProcessEnv
+): NodeJS.ProcessEnv {
+  return withBerryBinFoldersKept(env, isTrustedBerryBinFolder);
+}
+
+/**
+ * Like withTrustedBerryBinFolders, but also drops every bin folder outside
+ * `liveFolders`.
+ */
+export function withLiveBerryBinFolders(
+  env: NodeJS.ProcessEnv,
+  liveFolders: ReadonlySet<string>
+): NodeJS.ProcessEnv {
+  return withBerryBinFoldersKept(
+    env,
+    (dir) => liveFolders.has(dir) && isTrustedBerryBinFolder(dir)
+  );
+}
+
+function withBerryBinFoldersKept(
+  env: NodeJS.ProcessEnv,
+  keep: (dir: string) => boolean
+): NodeJS.ProcessEnv {
+  const kept = filterBerryBinFoldersOnPath(env, keep);
+  if (kept.BERRY_BIN_FOLDER && !keep(kept.BERRY_BIN_FOLDER)) {
+    delete kept.BERRY_BIN_FOLDER;
+  }
+  return kept;
+}
+
+let liveClientBerryEnv: NodeJS.ProcessEnv = {};
+
+/**
+ * The PATH and BERRY_BIN_FOLDER of the env the daemon applied last, keeping
+ * only the bin folders a connected client still carries. The daemon's own PATH
+ * lacks the client's bin folders, so workers spawned for that client's request,
+ * and a daemon that starts running plugins itself, take them here.
+ */
+export function setLiveClientBerryEnv(env: NodeJS.ProcessEnv | undefined) {
+  liveClientBerryEnv = {};
+  if (!env || !hasBerryBinFolders(env)) {
+    return;
+  }
+  for (const key of Object.keys(env)) {
+    if (key === 'BERRY_BIN_FOLDER' || key.toUpperCase() === 'PATH') {
+      liveClientBerryEnv[key] = env[key];
+    }
+  }
+}
+
+export function getLiveClientBerryEnv(): NodeJS.ProcessEnv {
+  return { ...liveClientBerryEnv };
+}
+
+/**
+ * Replaces the bin folders on this process's PATH with those on `env`'s PATH,
+ * for a daemon that runs plugins itself rather than in workers.
+ */
+export function adoptBerryBinFoldersOnPath(env: NodeJS.ProcessEnv): void {
+  const source = hasBerryBinFoldersOnPath(env)
+    ? env
+    : withoutBerryBinFoldersOnPath(process.env);
+  for (const key of Object.keys(source)) {
+    if (key.toUpperCase() === 'PATH') {
+      process.env[key] = source[key];
+    }
+  }
 }
