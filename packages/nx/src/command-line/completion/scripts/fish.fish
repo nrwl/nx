@@ -8,6 +8,14 @@
 #
 complete -e -c nx
 
+# In a world-writable directory (/tmp) only trust entries owned by you or root.
+function __nx_trusted_entry
+  set -l shared (find -H $argv[1] -prune -perm -0002 2>/dev/null)
+  test -z "$shared"; and return 0
+  set -l owned (find $argv[1]/$argv[2] -prune \( -user (id -u) -o -user 0 \) 2>/dev/null)
+  test -n "$owned"
+end
+
 function __nx_completions
   set -l tokens (commandline -cop)
   set -l current (commandline -ct)
@@ -15,11 +23,11 @@ function __nx_completions
   set -l nx_cmd nx
   set -l dir $PWD
   while test "$dir" != "/"
-    if test -x "$dir/node_modules/.bin/nx"
+    if test -x "$dir/node_modules/.bin/nx"; and __nx_trusted_entry "$dir" node_modules
       set nx_cmd "$dir/node_modules/.bin/nx"
       break
     end
-    if test -x "$dir/.nx/installation/node_modules/.bin/nx"
+    if test -x "$dir/.nx/installation/node_modules/.bin/nx"; and __nx_trusted_entry "$dir" .nx
       set nx_cmd "$dir/.nx/installation/node_modules/.bin/nx"
       break
     end

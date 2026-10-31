@@ -16,6 +16,7 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
+  statSync,
   type Stats,
   realpathSync,
 } from 'node:fs';
@@ -308,6 +309,33 @@ export function isOwnedRealDirectory(dir: string): OwnedRealDir | null {
       : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Whether the entry `name` of `dir` can be acted on by a walk up from the cwd.
+ * In a world-writable directory (`/tmp`) anyone can create it, so it must be
+ * ours or root's. Elsewhere ownership is not checked, so checkouts owned by
+ * another uid keep working. `lstat` judges a symlink by who made it.
+ *
+ * Anyone can hard-link a file they do not own, so a non-directory entry with
+ * more than one link proves nothing about who placed it.
+ */
+export function isTrustedAncestorEntry(dir: string, name: string): boolean {
+  if (typeof process.getuid !== 'function') {
+    return true;
+  }
+  try {
+    if (!(statSync(dir).mode & 0o002)) {
+      return true;
+    }
+    const entry = lstatSync(join(dir, name));
+    if (!entry.isDirectory() && entry.nlink !== 1) {
+      return false;
+    }
+    return entry.uid === process.getuid() || entry.uid === 0;
+  } catch {
+    return false;
   }
 }
 
