@@ -196,10 +196,11 @@ errors, or workflows, identify any named hand-written documentation made stale.
 
 ## Nx calibration
 
-- Migration silence, retained dependencies, release temporary directories, and migration temporary
-  directories are intentional unless a supported input demonstrably fails.
-- `migrations.json` is already inside the migration trust boundary. Require a new external boundary
-  before reporting a security defect.
+- Migration silence, retained dependencies, and leftover release and migration temporary directories
+  are intentional unless a supported input demonstrably fails. Where those directories are created,
+  and who owns them, is still in scope.
+- Migrations the user approved run as trusted code. Publisher input nx reads before that approval
+  (registry metadata, `packageJsonUpdates`, migration and prompt paths) is not covered.
 - Fix an invariant at its source instead of demanding scattered defensive guards.
 - Executor and generator changes must be traced through registration and option normalization.
 - Plugin inference and project-graph changes must be assessed at monorepo scale, including traversal,
