@@ -1,5 +1,6 @@
 use super::process_killer::{ProcessKiller, normalize_signal};
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, PtyOutput, WriterArc};
+use crate::native::tui::terminal_parser::TerminalParser;
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::Either;
@@ -10,7 +11,6 @@ use parking_lot::{Mutex, RwLock};
 use std::io::Write;
 use std::sync::Arc;
 use tracing::warn;
-use vt100_ctt::Parser;
 
 pub enum ChildProcessMessage {
     Kill,
@@ -18,7 +18,7 @@ pub enum ChildProcessMessage {
 
 #[napi]
 pub struct ChildProcess {
-    parser: Arc<RwLock<Parser>>,
+    parser: Arc<RwLock<TerminalParser>>,
     pid: i32,
     process_killer: ProcessKiller,
     message_receiver: Receiver<PtyOutput>,
@@ -30,7 +30,7 @@ pub struct ChildProcess {
 #[napi]
 impl ChildProcess {
     pub fn new(
-        parser: Arc<RwLock<Parser>>,
+        parser: Arc<RwLock<TerminalParser>>,
         writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
         master_arc: MasterArc,
         pid: i32,

@@ -1,4 +1,21 @@
-import { formatCacheSize, parseMaxCacheSize } from './cache';
+import { Task } from '../config/task-graph';
+import { DbCache, formatCacheSize, parseMaxCacheSize } from './cache';
+
+const nativeCache = vi.hoisted(() => ({
+  cacheDirectory: '/cache',
+  get: vi.fn(),
+  getBatch: vi.fn(),
+  applyRemoteCacheResults: vi.fn(),
+}));
+
+vi.mock('../native', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../native')>()),
+  NxCache: vi.fn(function () {
+    return nativeCache;
+  }),
+}));
+vi.mock('../utils/db-connection', () => ({ getDbConnection: () => 'db' }));
+vi.mock('../config/nx-json', () => ({ readNxJson: () => ({}) }));
 
 describe('cache', () => {
   describe('parseMaxCacheSize', () => {
@@ -65,6 +82,58 @@ describe('cache', () => {
 
     it('should format partial units', () => {
       expect(formatCacheSize(1024 * 88.5)).toEqual('88.50 KB');
+    });
+  });
+
+  describe('DbCache remote hits', () => {
+    const artifact = {
+      code: 0,
+      terminalOutput: 'raw\x1b]52;c;Y3VybA==\x07',
+      outputsPath: '/cache/a',
+    };
+    const task = (hash: string) => ({ hash, outputs: [] }) as unknown as Task;
+
+    function cacheWithRemote() {
+      const cache = new DbCache({ nxCloudRemoteCache: null });
+      (cache as any).remoteCache = {
+        retrieve: vi.fn().mockResolvedValue({ ...artifact }),
+      };
+      return cache;
+    }
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      nativeCache.get.mockReturnValue(null);
+      nativeCache.getBatch.mockImplementation((hashes: string[]) =>
+        hashes.map(() => null)
+      );
+      nativeCache.applyRemoteCacheResults.mockReturnValue('filtered');
+    });
+
+    it('get returns the terminal output as stored by the native cache', async () => {
+      const result = await cacheWithRemote().get(task('a'));
+
+      expect(nativeCache.applyRemoteCacheResults).toHaveBeenCalledWith(
+        'a',
+        expect.objectContaining({ terminalOutput: artifact.terminalOutput }),
+        []
+      );
+      expect(result).toMatchObject({
+        terminalOutput: 'filtered',
+        remote: true,
+      });
+    });
+
+    it('getBatch returns the terminal output as stored by the native cache', async () => {
+      const results = await cacheWithRemote().getBatch([task('a'), task('b')]);
+
+      expect(nativeCache.applyRemoteCacheResults).toHaveBeenCalledTimes(2);
+      for (const hash of ['a', 'b']) {
+        expect(results.get(hash)).toMatchObject({
+          terminalOutput: 'filtered',
+          remote: true,
+        });
+      }
     });
   });
 });
