@@ -3,6 +3,12 @@
 resolver = '2'
 members = ['packages/nx']
 
+# swc_ecma_lexer debug-asserts on the JSX stall that release builds loop on
+# (https://github.com/nrwl/nx/issues/37687), so tests would panic before the
+# guard in ts_import_locators.rs runs.
+[profile.dev.package.swc_ecma_lexer]
+debug-assertions = false
+
 [profile.release]
 lto = true
 # Rebuilding after a one-line Rust change drops from ~21s to ~4.5s. CI opts out
