@@ -7,6 +7,8 @@ vi.mock('node:fs', async () => ({
 
 const mocks = {
   hashWithWorkspaceContext: vi.fn(async () => 'files-hash'),
+  globWithWorkspaceContext: vi.fn(async () => ['app/a.cs']),
+  hashFile: vi.fn(() => 'analyzer-hash'),
   safeSpawn: vi.fn(),
   killChildOnHostExit: vi.fn(),
   killProcessTreeGraceful: vi.fn(() => Promise.resolve()),
@@ -18,7 +20,10 @@ vi.mock('@nx/devkit/internal', async () => ({
   isCI: () => false,
   hashWithWorkspaceContext: (...args: unknown[]) =>
     mocks.hashWithWorkspaceContext(...args),
-  hashObject: () => 'options-hash',
+  hashObject: (value: unknown) => JSON.stringify(value),
+  globWithWorkspaceContext: (...args: unknown[]) =>
+    mocks.globWithWorkspaceContext(...args),
+  hashFile: (...args: unknown[]) => mocks.hashFile(...args),
   workspaceDataDirectory: '/tmp/workspace-data',
   PluginCache: vi.fn(function () {
     return {
@@ -56,6 +61,8 @@ describe('analyzeProjects', () => {
     vi.resetModules();
     vi.clearAllMocks();
     mocks.hashWithWorkspaceContext.mockImplementation(async () => 'files-hash');
+    mocks.globWithWorkspaceContext.mockResolvedValue(['app/a.cs']);
+    mocks.hashFile.mockReturnValue('analyzer-hash');
     mocks.pluginCacheGet.mockReturnValue(undefined);
     delete process.env.NX_DOTNET_PROJECT_GRAPH_TIMEOUT;
     ({
@@ -112,6 +119,35 @@ describe('analyzeProjects', () => {
 
     expect(child.stdin.end).toHaveBeenCalledWith('\na/a.csproj');
   });
+
+  it.each(['options', 'item inventory', 'analyzer binary'])(
+    'does not reuse inference after %s changes',
+    async (change) => {
+      const first = fakeChild();
+      const second = fakeChild();
+      mocks.safeSpawn.mockReturnValueOnce(first).mockReturnValueOnce(second);
+      const initial = analyzeProjects(['a/a.csproj'], { tfmVariants: true });
+      await new Promise(setImmediate);
+      first.stdout.emit('data', '{"nodesByFile":{},"referencesByRoot":{}}');
+      first.emit('close', 0);
+      await initial;
+      if (change === 'item inventory')
+        mocks.globWithWorkspaceContext.mockResolvedValue([
+          'app/a.cs',
+          'app/added.cs',
+        ]);
+      if (change === 'analyzer binary')
+        mocks.hashFile.mockReturnValue('updated-analyzer-hash');
+      const next = analyzeProjects(['a/a.csproj'], {
+        tfmVariants: change !== 'options',
+      });
+      await new Promise(setImmediate);
+      expect(mocks.safeSpawn).toHaveBeenCalledTimes(2);
+      second.stdout.emit('data', '{"nodesByFile":{},"referencesByRoot":{}}');
+      second.emit('close', 0);
+      await next;
+    }
+  );
 
   it('should register the analyzer process to be killed on host exit', async () => {
     const child = fakeChild();
