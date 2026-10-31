@@ -58,6 +58,8 @@ struct State<'a> {
     open_angle_count: i128,
     blocks_stack: Vec<BlockType>,
     next_block_type: BlockType,
+    empty_token_lo: Option<BytePos>,
+    pub stalled: bool,
 }
 
 impl<'a> State<'a> {
@@ -72,6 +74,8 @@ impl<'a> State<'a> {
             blocks_stack: vec![],
             next_block_type: BlockType::Block,
             import_type: ImportType::Dynamic,
+            empty_token_lo: None,
+            stalled: false,
         }
     }
 
@@ -87,6 +91,20 @@ impl<'a> State<'a> {
 
         // Store current token
         self.current_token = next;
+
+        // swc's JSX tag lexer can emit empty tokens at one offset forever on a
+        // multi-byte char (https://github.com/nrwl/nx/issues/37687). Stop there.
+        if let Some(span) = self.current_token.as_ref().map(|t| t.span) {
+            if span.lo != span.hi {
+                self.empty_token_lo = None;
+            } else if self.empty_token_lo == Some(span.lo) {
+                self.stalled = true;
+                self.current_token = None;
+                return &self.current_token;
+            } else {
+                self.empty_token_lo = Some(span.lo);
+            }
+        }
 
         if let Some(current) = &self.current_token {
             // Keep track of braces/ when blocks begin and end
@@ -693,6 +711,9 @@ fn process_file(
     }
 
     trace!("finding imports in {} {:.2?}", file_path, now.elapsed());
+    if state.stalled {
+        debug!("{}: lexer stalled, imports after it are skipped", file_path);
+    }
 
     // These are errors from the lexer. They don't always mean something is broken
     let mut errs = state.take_errors();
@@ -872,6 +893,44 @@ import 'a4'; import 'a5';
             vec![String::from("non-narrow-char-dependency")]
         );
         assert!(result.dynamic_import_expressions.is_empty());
+    }
+
+    #[test]
+    fn should_finish_on_multibyte_chars_where_a_jsx_attribute_is_expected() {
+        let temp_dir = TempDir::new().unwrap();
+        let cases = [
+            ("open.tsx", "<B …>"),
+            ("self-closing.tsx", "<B …/>"),
+            ("attr.tsx", "<B x={1} … />"),
+            ("arrow.tsx", "<B →>"),
+            ("euro.tsx", "<B €>"),
+            ("emoji.tsx", "<B 😀>"),
+            ("arrow-fn.jsx", "() => {}; <B …/>"),
+            (
+                "generic-jsdoc.tsx",
+                "const wrap = <F,>(setter: F): F => setter;\n/**\n * `<Radio.Group onChange={wrap(save)} …/>`\n */",
+            ),
+        ];
+        let paths = cases
+            .iter()
+            .map(|(name, body)| {
+                let source = format!("import 'before';\n{body}\nimport('after');\n");
+                temp_dir.child(name).write_str(&source).unwrap();
+                format!("{}/{}", temp_dir.display(), name)
+            })
+            .collect::<Vec<_>>();
+
+        let results = find_imports(HashMap::from([(String::from("a"), paths)])).unwrap();
+
+        assert_eq!(results.len(), cases.len());
+        for result in results {
+            assert_eq!(
+                result.static_import_expressions,
+                vec![String::from("before")],
+                "{}",
+                result.file
+            );
+        }
     }
 
     #[test]
