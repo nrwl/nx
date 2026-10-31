@@ -296,4 +296,43 @@ mod tests {
             "a rewrite the mtime cannot show must still be re-hashed"
         );
     }
+
+    // `chmod` moves the ctime but neither the mtime nor the bytes, and the
+    // executable bit is part of the file's hash, so the archive must miss.
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_when_only_the_executable_bit_changes() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = TempDir::new().unwrap();
+        let file = temp.child("tool.sh");
+        file.write_str("echo").unwrap();
+        let mut perms = std::fs::metadata(file.path()).unwrap().permissions();
+        perms.set_mode(perms.mode() & !0o111);
+        std::fs::set_permissions(file.path(), perms.clone()).unwrap();
+        let before = std::fs::metadata(file.path()).unwrap();
+        let archived = vec![(
+            String::from("tool.sh"),
+            NxFileHashed(String::from("stale-hash"), get_metadata_key(&before)),
+        )]
+        .into_iter()
+        .collect::<NxFileHashes>()
+        .with_gathered_at(get_mod_time(&before) + 1);
+        let archived = FilesArchive::from_hashes(&archived).unwrap();
+
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        perms.set_mode(perms.mode() | 0o111);
+        std::fs::set_permissions(file.path(), perms).unwrap();
+        std::fs::File::open(file.path())
+            .unwrap()
+            .set_modified(before.modified().unwrap())
+            .unwrap();
+
+        let hashed = super::selective_files_hash(nx_walker(temp.path(), true).collect(), &archived);
+        assert_ne!(
+            hashed.get("tool.sh").unwrap().0,
+            "stale-hash",
+            "chmod must miss the archive even though mtime is unchanged"
+        );
+    }
 }
