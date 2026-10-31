@@ -436,6 +436,41 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn a_nested_cache_directory_is_part_of_a_fileset() {
+        let temp = TempDir::new().unwrap();
+        for file in [
+            "proj/src/a.txt",
+            "proj/src/.nx/cache/y.txt",
+            "proj/src/.nx/workspace-data/z.txt",
+            "proj/src/.yarn/cache/x.zip",
+            "proj/src/node_modules/pkg/index.js",
+            ".nx/cache/root.txt",
+            ".yarn/cache/root.zip",
+        ] {
+            temp.child(file).write_str("x").unwrap();
+        }
+
+        assert_eq!(
+            expand_files(temp.path(), &globs(&["proj/src/**"]))
+                .unwrap()
+                .files,
+            vec![
+                "proj/src/.nx/cache/y.txt",
+                "proj/src/.nx/workspace-data/z.txt",
+                "proj/src/.yarn/cache/x.zip",
+                "proj/src/a.txt",
+            ]
+        );
+        assert!(
+            expand_files(temp.path(), &globs(&["**/*"]))
+                .unwrap()
+                .files
+                .iter()
+                .all(|file| !file.starts_with(".nx/cache") && !file.starts_with(".yarn/cache"))
+        );
+    }
+
+    #[test]
     fn a_glob_rooted_at_a_skipped_directory_still_reads_it() {
         let temp = workspace();
         temp.child("node_modules/foo/package.json")

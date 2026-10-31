@@ -13,8 +13,9 @@ import { assertNxSupportsIgnoreCheckers } from '../utils/nx-ignore-internals';
  * nested negation overrides the root. They are read from the tree, not disk, so
  * one a generator wrote in the same run counts.
  *
- * `node_modules`, `.git` and the nx and yarn caches are never visited, whatever
- * the workspace's ignore files say.
+ * `node_modules` and `.git` are never visited, at any depth. The workspace's
+ * own `.nx/cache`, `.nx/workspace-data` and `.yarn/cache` are not either; a
+ * nested copy of them is project content and is visited.
  */
 export function visitNotIgnoredFiles(
   tree: Tree,
