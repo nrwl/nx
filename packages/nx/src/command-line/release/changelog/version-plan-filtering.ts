@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { prerelease } from 'semver';
+import { assertValidGitRevision } from '../../../utils/git-revision';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ChangelogOptions } from '../command-object';
 import type { NxReleaseConfig } from '../config/config';
@@ -76,6 +77,9 @@ async function getFilesAddedInCommitRange(
   toSHA: string,
   isVerbose: boolean
 ): Promise<Set<string>> {
+  assertValidGitRevision(fromSHA);
+  assertValidGitRevision(toSHA);
+
   try {
     // Use git log to get version plan files added within the commit range
     // --name-only shows just the file paths
@@ -165,7 +169,7 @@ export async function resolveChangelogFromSHA({
     }
   );
   if (latestTag?.tag) {
-    return await getCommitHash(latestTag.tag);
+    return await getCommitHash(`refs/tags/${latestTag.tag}`);
   }
   // Finally, if automatic from ref is enabled, use the first commit as a fallback.
   // When a projectRoot is provided, scope the fallback to the project's first commit

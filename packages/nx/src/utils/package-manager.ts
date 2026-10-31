@@ -43,6 +43,7 @@ import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
+import { redactUrlCredentials } from './redact-url-credentials';
 import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
@@ -106,13 +107,13 @@ export interface PackageManagerCommands {
    */
   publish: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => string;
   publishArgv: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => { command: string; args: string[] };
@@ -283,7 +284,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -352,13 +353,17 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}`,
+          ...(registry
+            ? [
+                `--${
+                  configForm
+                    ? `config.${registryConfigKey}`
+                    : scopedForm
+                      ? registryConfigKey
+                      : 'registry'
+                }=${registry}`,
+              ]
+            : []),
           `--tag=${tag}`,
           '--no-git-checks',
         ],
@@ -405,7 +410,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -441,7 +446,7 @@ export function getPackageManagerCommand(
           'publish',
           `--cwd=${packageRoot}`,
           '--json',
-          `--registry=${registry}`,
+          ...(registry ? [`--registry=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -801,11 +806,6 @@ export async function resolvePackageVersionUsingRegistry(
       cause: redactErrorCause(e),
     });
   }
-}
-
-// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
-function redactUrlCredentials(text: string): string {
-  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
 function redactErrorCause(error: unknown): unknown {

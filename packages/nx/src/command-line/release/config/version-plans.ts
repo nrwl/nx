@@ -1,9 +1,9 @@
-import { exec } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { execCommand } from '../utils/exec-command';
 import { RawGitCommit } from '../utils/git';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
@@ -391,41 +391,34 @@ async function getCommitForVersionPlanFile(
   rawVersionPlan: RawVersionPlan,
   isVerbose: boolean
 ): Promise<RawGitCommit | null> {
-  return new Promise((resolve) => {
-    exec(
-      `git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`,
-      {
-        windowsHide: true,
-      },
-      (error, stdout, stderr) => {
-        if (error) {
-          if (isVerbose) {
-            console.error(
-              `Error executing git command for ${rawVersionPlan.relativePath}: ${error.message}`
-            );
-          }
-          return resolve(null);
-        }
-        if (stderr) {
-          if (isVerbose) {
-            console.error(
-              `Git command stderr for ${rawVersionPlan.relativePath}: ${stderr}`
-            );
-          }
-          return resolve(null);
-        }
+  let stdout: string;
+  try {
+    stdout = await execCommand('git', [
+      '--literal-pathspecs',
+      'log',
+      '--diff-filter=A',
+      '--pretty=format:%s%x00%h%x00%an%x00%ae%x00%b',
+      '-n',
+      '1',
+      '--',
+      rawVersionPlan.absolutePath,
+    ]);
+  } catch (error) {
+    if (isVerbose) {
+      console.error(
+        `Error executing git command for ${rawVersionPlan.relativePath}: ${error?.message ?? error}`
+      );
+    }
+    return null;
+  }
 
-        const [message, shortHash, authorName, authorEmail, ...body] = stdout
-          .trim()
-          .split('|');
-        const commitDetails: RawGitCommit = {
-          message: message || '',
-          shortHash: shortHash || '',
-          author: { name: authorName || '', email: authorEmail || '' },
-          body: body.join('|') || '', // Handle case where body might be empty or contain multiple '|'
-        };
-        return resolve(commitDetails);
-      }
-    );
-  });
+  const [message, shortHash, authorName, authorEmail, body] = stdout
+    .trim()
+    .split('\0');
+  return {
+    message: message || '',
+    shortHash: shortHash || '',
+    author: { name: authorName || '', email: authorEmail || '' },
+    body: body || '',
+  };
 }
