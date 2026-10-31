@@ -83,7 +83,7 @@ packages/
 ```
 
 If the target's `outputs` only lists `["{projectRoot}/dist"]`, the `types/` directory isn't
-[stored in the remote cache](/docs/features/ci-features/remote-cache#what-gets-stored).
+[stored in the remote cache](/docs/features/ci-features/remote-cache#what-nx-cloud-stores).
 On a cache hit, `dist/` is restored but the type declarations are missing, breaking downstream
 library consumers.
 
@@ -166,17 +166,19 @@ Check what your tasks currently declare before enabling sandboxing.
 Use `nx show target` to inspect a specific target's resolved inputs and outputs:
 
 {% aside type="caution" title="Nx 22.6+ Required" %}
-The `--inputs` and `--outputs` flags for `nx show target` require Nx 22.6 or later.
+The `inputs` and `outputs` subcommands of `nx show target` require Nx 22.6 or later.
 {% /aside %}
 
 ```shell
-nx show target <project>:<target> --inputs --outputs
+nx show target inputs <project>:<target>
+nx show target outputs <project>:<target>
 ```
 
 Add the `--json` flag for machine-readable output:
 
 ```shell
-nx show target <project>:<target> --inputs --outputs --json
+nx show target inputs <project>:<target> --json
+nx show target outputs <project>:<target> --json
 ```
 
 For a broader view of the full project configuration, run `nx show project`:

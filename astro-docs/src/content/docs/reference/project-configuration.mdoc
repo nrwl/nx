@@ -510,24 +510,24 @@ With the expanded syntax, you also have a third option available to configure ho
     "build": {
       // forward params passed to this target to the dependency targets
       "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "forward" }
+        { "dependencies": true, "target": "build", "params": "forward" }
       ]
     },
     "test": {
       // ignore params passed to this target, won't be forwarded to the dependency targets
       "dependsOn": [
-        { "projects": "{dependencies}", "target": "build", "params": "ignore" }
+        { "dependencies": true, "target": "build", "params": "ignore" }
       ]
     },
     "lint": {
       // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+      "dependsOn": [{ "dependencies": true, "target": "build" }]
     }
   }
 }
 ```
 
-This also works for a target of the same project. Leave out `projects`:
+This also works for a target of the same project. Leave out `dependencies`:
 
 ```json
 {
@@ -927,7 +927,7 @@ A key written after the spread token overrides the inherited value. For example,
 
 ### Sync generators
 
-In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerators` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
 
 ```json
 {

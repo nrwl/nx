@@ -74,6 +74,12 @@ export default defineConfig({
     '/features/ci-features/dynamic-agents':
       '/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size',
     '/getting-started/nx-cloud': '/docs/features/ci-features',
+    '/getting-started/tutorials/react-monorepo-tutorial':
+      '/docs/getting-started/tutorials/crafting-your-workspace',
+    '/getting-started/tutorials/angular-monorepo-tutorial':
+      '/docs/getting-started/tutorials/crafting-your-workspace',
+    '/getting-started/tutorials/typescript-packages-tutorial':
+      '/docs/getting-started/tutorials/crafting-your-workspace',
     '/concepts/ci-concepts/parallelization-distribution':
       '/docs/features/ci-features#building-blocks-of-fast-ci',
     '/platform-features/orchestration-ci': '/docs/features/ci-features',
@@ -145,6 +151,8 @@ export default defineConfig({
       '/docs/kb/migrate-from-nx-module-federation',
     '/kb/faster-builds-with-module-federation':
       '/docs/technologies/module-federation/introduction',
+    '/kb/create-server':
+      '/docs/technologies/angular/angular-rspack/introduction',
     '/kb/overview-react': '/docs/kb/storybook-for-react',
     '/kb/project-graph-plugins': '/docs/kb/add-language-support',
     '/kb/intro': '/docs/kb/add-language-support',

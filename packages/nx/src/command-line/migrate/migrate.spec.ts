@@ -76,6 +76,7 @@ import {
   writePromptMigrationFiles,
 } from './prompt-files';
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
