@@ -2,7 +2,7 @@ import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync } from 'node:fs';
 import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
-import { stat, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, stat, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { selectPrompt, textPrompt } from '../../utils/prompt-helpers';
 import { output } from '../../utils/output';
@@ -12,6 +12,7 @@ import { readNxJson } from '../../config/nx-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -25,7 +26,10 @@ import { resetWorkspaceContext } from '../../utils/workspace-context';
 import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
-import { mergeRemoteSource } from './utils/merge-remote-source';
+import {
+  createTemporaryRemote,
+  mergeRemoteSource,
+} from './utils/merge-remote-source';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
@@ -94,7 +98,10 @@ export async function importHandler(options: ImportOptions) {
 
     if (missingFields.length > 0) {
       writeAiOutput(
-        buildImportNeedsOptionsResult(missingFields, sourceRepository)
+        buildImportNeedsOptionsResult(
+          missingFields,
+          sourceRepository && redactUrlCredentials(sourceRepository)
+        )
       );
       process.exit(0);
     }
@@ -133,8 +140,6 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  const tempImportDirectory = join(tmpdir, 'nx-import');
-
   if (!sourceRepository) {
     sourceRepository = await textPrompt({
       message:
@@ -151,24 +156,21 @@ export async function importHandler(options: ImportOptions) {
   } catch (e) {
     // It's a remote url
   }
+  const displayRepository = redactUrlCredentials(sourceRepository);
 
+  const tempImportDirectory = await mkdtemp(join(tmpdir, 'nx-import-'));
   const sourceTempRepoPath = join(tempImportDirectory, 'repo');
   let spinner: any;
   if (aiMode) {
     logProgress(
       'cloning',
-      `Cloning ${sourceRepository} into ${sourceTempRepoPath}...`
+      `Cloning ${displayRepository} into ${sourceTempRepoPath}...`
     );
   } else {
     spinner = createSpinner(
-      `Cloning ${sourceRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
+      `Cloning ${displayRepository} into a temporary directory: ${sourceTempRepoPath} (Use --depth to limit commit history and speed up clone times)`
     ).start();
   }
-  try {
-    await rm(tempImportDirectory, { recursive: true });
-  } catch {}
-  await mkdir(tempImportDirectory, { recursive: true });
-
   let sourceGitClient: GitRepository;
   try {
     sourceGitClient = await cloneFromUpstream(
@@ -182,12 +184,12 @@ export async function importHandler(options: ImportOptions) {
   } catch (e) {
     if (!aiMode) {
       spinner.fail(
-        `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}`
+        `Failed to clone ${displayRepository} into ${sourceTempRepoPath}`
       );
     }
-    let errorMessage = `Failed to clone ${sourceRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${e.message}`;
-
-    throw new Error(errorMessage);
+    throw new Error(
+      `Failed to clone ${displayRepository} into ${sourceTempRepoPath}. Please double check the remote and try again.\n${redactUrlCredentials(e.message)}`
+    );
   }
   if (!aiMode) {
     spinner.succeed(`Cloned into ${sourceTempRepoPath}`);
@@ -249,14 +251,14 @@ export async function importHandler(options: ImportOptions) {
   await sourceGitClient.addFetchRemote(importRemoteName, ref);
   await sourceGitClient.fetch(importRemoteName, ref);
   if (!aiMode) {
-    spinner.succeed(`Fetched ${ref} from ${sourceRepository}`);
+    spinner.succeed(`Fetched ${ref} from ${displayRepository}`);
     spinner.start(
       `Checking out a temporary branch, ${tempImportBranch} based on ${ref}`
     );
   }
   await sourceGitClient.checkout(tempImportBranch, {
     new: true,
-    base: `${importRemoteName}/${ref}`,
+    base: `refs/remotes/${importRemoteName}/${ref}`,
   });
 
   if (!aiMode) {
@@ -267,7 +269,7 @@ export async function importHandler(options: ImportOptions) {
     await stat(absSource);
   } catch (e) {
     throw new Error(
-      `The source directory ${source} does not exist in ${sourceRepository}. Please double check to make sure it exists.`
+      `The source directory ${source} does not exist in ${displayRepository}. Please double check to make sure it exists.`
     );
   }
 
@@ -287,7 +289,7 @@ export async function importHandler(options: ImportOptions) {
     source,
     relativeDestination,
     tempImportBranch,
-    sourceRepository
+    displayRepository
   );
 
   await createTemporaryRemote(
@@ -301,7 +303,7 @@ export async function importHandler(options: ImportOptions) {
   }
   await mergeRemoteSource(
     destinationGitClient,
-    sourceRepository,
+    displayRepository,
     tempImportBranch,
     destination,
     importRemoteName,
@@ -464,7 +466,7 @@ export async function importHandler(options: ImportOptions) {
     output.log({
       title: `Check root dependencies`,
       bodyLines: [
-        `"dependencies" and "devDependencies" are not imported from the source repository (${sourceRepository}).`,
+        `"dependencies" and "devDependencies" are not imported from the source repository (${displayRepository}).`,
         `You may need to add some of those dependencies to this workspace in order to run tasks successfully.`,
       ],
     });
@@ -491,7 +493,7 @@ export async function importHandler(options: ImportOptions) {
             name,
             reason: getPluginReason(name),
           })),
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -531,7 +533,7 @@ export async function importHandler(options: ImportOptions) {
 
       writeAiOutput(
         buildImportSuccessResult({
-          sourceRepository,
+          sourceRepository: displayRepository,
           ref,
           source: source || '.',
           destination,
@@ -620,7 +622,7 @@ async function handlePluginOnlyMode(
 
   writeAiOutput(
     buildImportSuccessResult({
-      sourceRepository: options.sourceRepository,
+      sourceRepository: redactUrlCredentials(options.sourceRepository),
       ref: options.ref,
       source: options.source || '.',
       destination: options.destination,
@@ -631,18 +633,6 @@ async function handlePluginOnlyMode(
 
 function getTempImportBranch(sourceBranch: string) {
   return `__nx_tmp_import__/${sourceBranch}`;
-}
-
-async function createTemporaryRemote(
-  destinationGitClient: GitRepository,
-  sourceRemoteUrl: string,
-  remoteName: string
-) {
-  try {
-    await destinationGitClient.deleteGitRemote(remoteName);
-  } catch {}
-  await destinationGitClient.addGitRemote(remoteName, sourceRemoteUrl);
-  await destinationGitClient.fetch(remoteName);
 }
 
 /**
