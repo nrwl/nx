@@ -292,7 +292,22 @@ export declare class TaskDetails {
 }
 
 export declare class TaskHasher {
+  getRehashFiles(): Array<FileData>
+  /** Replay requirements, without reading the filesystem or executing inputs. */
+  getRehashPlanInputs(plans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, RehashPlanInputs>
   constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<Record<string, Array<FileData>>>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, rootTsconfigPath: string | undefined | null, options: HasherOptions | undefined | null, ignoredIndex: ExternalObject<IgnoredIndexReader>)
+  /**
+   * Fail closed for rehash inputs whose execution-time state this hasher
+   * does not hold. Called before AND after hashing. The immutable FileData
+   * references are the evidence for source contents, not the live disk index.
+   */
+  validateRehashPlans(plans: ExternalObject<Record<string, Array<HashInstruction>>>, outputs: Array<string>, writtenFiles: Array<string>): Record<string, string>
+  /**
+   * Only validated source plans reach this path. Every disk-backed positive
+   * is an exact file in FileData, so NothingRan resolves it AND its hash
+   * from that immutable map, without touching the mutable ignored index.
+   */
+  hashPlansForRehash(plans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, outputs: Array<string>, writtenFiles: Array<string>): Record<string, HashDetails>
   /**
    * Hash each task's instructions using the env map keyed by `task.id`.
    * Every task in `hash_plans` must have an entry in `per_task_envs` —
@@ -1191,6 +1206,13 @@ export interface ReadinessProbeConfig {
  * the root (rooted, drive-prefixed, or climbing with `..`).
  */
 export declare function readShebangHeaders(workspaceRoot: string, files: Array<string>): Array<ShebangFile>
+
+export interface RehashPlanInputs {
+  files: Array<string>
+  globs: Array<string>
+  sourceOnly: boolean
+  directories: Array<string>
+}
 
 export declare function remove(src: string): void
 

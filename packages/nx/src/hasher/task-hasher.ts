@@ -15,10 +15,83 @@ import type { TaskPlanningContext } from './task-planning-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import {
   HashInputs,
+  IS_WASM,
   UltracacheConfigurations,
   NxWorkspaceFilesExternals,
 } from '../native';
 import { getTaskIOService } from '../tasks-runner/task-io-service';
+import { TaskRehasher, type UltracacheRehasher } from './ultracache-rehasher';
+import type { UltracacheExecutionState } from './ultracache-rehasher';
+
+const retainedRehashers = new Set<TaskRehasher>();
+
+/** Finalize on the executing agent, persist the returned JSON, then exit. */
+export function exportUltracacheExecutionStates(
+  executedTaskHashes: Record<string, string>
+): UltracacheExecutionState[] {
+  const states = new Map<
+    UltracacheExecutionState['source'],
+    UltracacheExecutionState
+  >();
+  const observations = new Map();
+  for (const retained of [...retainedRehashers]) {
+    try {
+      const state = retained.exportExecutionState(
+        executedTaskHashes,
+        observations
+      );
+      if (Object.keys(state.taskHashes).length) {
+        const shared = states.get(state.source);
+        if (shared) {
+          Object.assign(shared.taskHashes, state.taskHashes);
+          for (const [id, context] of Object.entries(state.taskContexts)) {
+            shared.taskContexts[id] =
+              shared.taskContexts[id] === undefined ||
+              shared.taskContexts[id] === context
+                ? context
+                : ''; // Ambiguous owner context must never be promoted.
+          }
+        } else states.set(state.source, state);
+      }
+    } catch {
+      // Missing observations are a normal cache-priming skip.
+    } finally {
+      retained.dispose();
+    }
+  }
+  return [...states.values()];
+}
+
+/**
+ * Call before hashing starts, on the process that hashes the executed tasks.
+ * Daemon/proxy/custom hashers cannot provide retained native state: return null.
+ * Dispose after finalization; the handle keeps per-task environments private.
+ */
+export function createUltracacheRehasher(
+  hasher: TaskHasher
+): UltracacheRehasher | null {
+  return !IS_WASM && hasher instanceof InProcessTaskHasher
+    ? hasher.createRehasher()
+    : null;
+}
+
+/** Retrieves pre-hash retention; never creates a post-execution baseline. */
+export function getUltracacheRehasher(
+  hasher: TaskHasher
+): UltracacheRehasher | null {
+  return hasher instanceof InProcessTaskHasher ? hasher.getRehasher() : null;
+}
+
+/** For an agent handed an already-hashed task, before scheduling execution. */
+export function captureUltracacheExecutionHash(
+  hasher: TaskHasher,
+  task: Task,
+  graph: TaskGraph,
+  env: NodeJS.ProcessEnv
+): void {
+  if (hasher instanceof InProcessTaskHasher)
+    hasher.captureExecutionHash(task, graph, env);
+}
 
 // Re-export HashInputs from native module for public API
 export { HashInputs };
@@ -228,7 +301,72 @@ export class DaemonBasedTaskHasher implements TaskHasher {
 }
 
 export class InProcessTaskHasher implements TaskHasher {
-  private taskHasher: TaskHasherImpl;
+  private taskHasher: NativeTaskHasherImpl;
+  private rehasher?: TaskRehasher;
+
+  getRehasher(): UltracacheRehasher | null {
+    return this.rehasher ?? null;
+  }
+
+  captureExecutionHash(
+    task: Task,
+    graph: TaskGraph,
+    env: NodeJS.ProcessEnv
+  ): void {
+    if (!this.rehasher || !task.hash) return;
+    try {
+      if (
+        this.rehasher.hasMatchingCapture(
+          task,
+          graph,
+          env,
+          process.cwd(),
+          this.ultracacheConfigurations
+        )
+      )
+        return;
+      const plans = this.taskHasher.createRehashPlans(
+        [task],
+        graph,
+        this.ultracacheConfigurations
+      );
+      if (!this.taskHasher.rehashRequirements(plans)[task.id]?.sourceOnly)
+        return;
+      const raw = this.taskHasher.hashTasksForRehash(
+        plans,
+        graph,
+        { [task.id]: env },
+        process.cwd(),
+        []
+      );
+      if (!raw[task.id]) return;
+      const result = this.createHashDetails(task, raw[task.id]);
+      if (result.value !== task.hash) return;
+      this.rehasher.capture(
+        [task],
+        graph,
+        { [task.id]: env },
+        process.cwd(),
+        this.ultracacheConfigurations
+      )({ [task.id]: result });
+    } catch {
+      /* Optional cache priming must not affect execution. */
+    }
+  }
+
+  createRehasher(): UltracacheRehasher {
+    if (this.rehasher) return this.rehasher;
+    const retained = new TaskRehasher(
+      this.taskHasher,
+      (task, hash) => this.createHashDetails(task, hash),
+      () => {
+        retainedRehashers.delete(retained);
+        this.rehasher = undefined;
+      }
+    );
+    retainedRehashers.add(retained);
+    return (this.rehasher = retained);
+  }
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -249,6 +387,15 @@ export class InProcessTaskHasher implements TaskHasher {
       },
       this.planningContext
     );
+    // An empty imported set also marks an activated native Ultracache run.
+    // Cloud credentials alone must not add workspace-wide source IO.
+    if (!IS_WASM && ultracacheConfigurations) {
+      try {
+        this.createRehasher();
+      } catch {
+        /* No retention means no promotion. */
+      }
+    }
   }
 
   async hashTasks(
@@ -259,17 +406,32 @@ export class InProcessTaskHasher implements TaskHasher {
     collectInputs?: boolean,
     ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash[]> {
+    const envs = normalizePerTaskEnvs(tasks, envOrPerTaskEnvs);
+    const resolvedCwd = cwd ?? process.cwd();
+    const configurations =
+      ultracacheConfigurations ?? this.ultracacheConfigurations;
+    const remember = this.rehasher?.capture(
+      tasks,
+      taskGraph,
+      envs,
+      resolvedCwd,
+      configurations
+    );
     const hashes = await this.taskHasher.hashTasks(
       tasks,
       taskGraph,
-      normalizePerTaskEnvs(tasks, envOrPerTaskEnvs),
-      cwd ?? process.cwd(),
+      envs,
+      resolvedCwd,
       collectInputs,
-      ultracacheConfigurations ?? this.ultracacheConfigurations
+      configurations
     );
-    return tasks.map((task, index) =>
+    const result = tasks.map((task, index) =>
       this.createHashDetails(task, hashes[index])
     );
+    remember?.(
+      Object.fromEntries(tasks.map((task, i) => [task.id, result[i]]))
+    );
+    return result;
   }
 
   async hashTasksUpfront(
@@ -280,13 +442,23 @@ export class InProcessTaskHasher implements TaskHasher {
     collectInputs?: boolean,
     ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Record<string, Hash>> {
+    const resolvedCwd = cwd ?? process.cwd();
+    const configurations =
+      ultracacheConfigurations ?? this.ultracacheConfigurations;
+    const remember = this.rehasher?.capture(
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      resolvedCwd,
+      configurations
+    );
     const hashes = await this.taskHasher.hashTasksUpfront(
       tasks,
       taskGraph,
       perTaskEnvs,
-      cwd ?? process.cwd(),
+      resolvedCwd,
       collectInputs,
-      ultracacheConfigurations ?? this.ultracacheConfigurations
+      configurations
     );
     const result: Record<string, Hash> = {};
     for (const task of tasks) {
@@ -294,6 +466,7 @@ export class InProcessTaskHasher implements TaskHasher {
         result[task.id] = this.createHashDetails(task, hashes[task.id]);
       }
     }
+    remember?.(result);
     return result;
   }
 
@@ -305,15 +478,28 @@ export class InProcessTaskHasher implements TaskHasher {
     collectInputs?: boolean,
     ultracacheConfigurations?: UltracacheConfigurations
   ): Promise<Hash> {
+    const resolvedEnv = env ?? process.env;
+    const resolvedCwd = cwd ?? process.cwd();
+    const configurations =
+      ultracacheConfigurations ?? this.ultracacheConfigurations;
+    const remember = this.rehasher?.capture(
+      [task],
+      taskGraph!,
+      { [task.id]: resolvedEnv },
+      resolvedCwd,
+      configurations
+    );
     const res = await this.taskHasher.hashTask(
       task,
       taskGraph!,
-      env ?? process.env,
-      cwd ?? process.cwd(),
+      resolvedEnv,
+      resolvedCwd,
       collectInputs,
-      ultracacheConfigurations ?? this.ultracacheConfigurations
+      configurations
     );
-    return this.createHashDetails(task, res);
+    const result = this.createHashDetails(task, res);
+    remember?.({ [task.id]: result });
+    return result;
   }
 
   private createHashDetails(task: Task, res: PartialHash): Hash {

@@ -7,6 +7,19 @@ export {
   openUltracacheConfigurations,
 } from './src/ultracache/store';
 
+export {
+  createUltracacheRehasher,
+  getUltracacheRehasher,
+  captureUltracacheExecutionHash,
+  exportUltracacheExecutionStates,
+} from './src/hasher/task-hasher';
+export type {
+  UltracacheRehasher,
+  UltracacheRehashResult,
+  UltracacheRehashEvidence,
+  UltracacheExecutionState,
+} from './src/hasher/ultracache-rehasher';
+
 // Nx Cloud reads it to pick the task-graph shape it hands this nx. Bump it when
 // the shape changes in a way Cloud must handle.
 //   1: `dependencies` and `continuousDependencies` edges are task ids (implied
