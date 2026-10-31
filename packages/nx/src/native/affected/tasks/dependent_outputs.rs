@@ -555,6 +555,7 @@ mod tests {
             options: None,
             configurations: None,
             parallelism: None,
+            script_content: None,
         };
         let project = |root: &str, reads_outputs: bool| Project {
             root: root.into(),

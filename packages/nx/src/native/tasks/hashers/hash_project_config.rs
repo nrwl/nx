@@ -21,13 +21,14 @@ pub fn hash_project_config(
         .sorted_by(|a, b| a.0.cmp(b.0))
         .map(|(k, v)| {
             format!(
-                "{}{}{}{}{}{}",
+                "{}{}{}{}{}{}{}",
                 k,
                 v.executor.as_deref().unwrap_or_default(),
                 v.outputs.as_deref().unwrap_or_default().concat(),
                 v.options.as_deref().unwrap_or_default(),
                 v.configurations.as_deref().unwrap_or_default(),
-                v.parallelism.unwrap_or_default()
+                v.parallelism.unwrap_or_default(),
+                v.script_content.as_deref().unwrap_or_default()
             )
         })
         .collect::<Vec<_>>()
@@ -161,6 +162,57 @@ mod tests {
         assert_eq!(
             result.unwrap_err().to_string(),
             "Could not find project 'nx'"
+        );
+    }
+
+    #[test]
+    fn test_hash_project_config_changes_when_script_content_changes() {
+        fn projects(script_content: Option<&str>) -> HashMap<String, Project> {
+            HashMap::from([(
+                "app".into(),
+                Project {
+                    root: "packages/app".into(),
+                    targets: HashMap::from([(
+                        "build".into(),
+                        Target {
+                            executor: Some("nx:run-script".into()),
+                            options: Some(r#"{"script":"build"}"#.into()),
+                            script_content: script_content.map(str::to_string),
+                            ..Default::default()
+                        },
+                    )]),
+                    ..Default::default()
+                },
+            )])
+        }
+
+        let missing = hash_project_config("app", &projects(None)).unwrap();
+        let original = hash_project_config(
+            "app",
+            &projects(Some("mkdir -p dist && cat src/*.txt > dist/out.txt")),
+        )
+        .unwrap();
+        let rewritten = hash_project_config(
+            "app",
+            &projects(Some(
+                "mkdir -p dist && cat src/*.txt | tr a-z A-Z > dist/out.txt",
+            )),
+        )
+        .unwrap();
+
+        assert_ne!(missing, original);
+        assert_ne!(original, rewritten);
+        assert_eq!(
+            original,
+            hash_project_config(
+                "app",
+                &projects(Some("mkdir -p dist && cat src/*.txt > dist/out.txt")),
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            missing,
+            hash_project_config("app", &projects(Some(""))).unwrap()
         );
     }
 }

@@ -80,6 +80,11 @@ export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
         options: JSON.stringify(targetConfig.options),
         configurations: JSON.stringify(targetConfig.configurations),
         parallelism: targetConfig.parallelism,
+        // nx:run-script stores the package.json body here, not in options.
+        scriptContent:
+          typeof targetConfig.metadata?.scriptContent === 'string'
+            ? targetConfig.metadata.scriptContent
+            : undefined,
       };
     }
     nodes[projectName] = {
