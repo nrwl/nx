@@ -2,7 +2,6 @@ import { readNxJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { setupDockerGenerator } from './setup-docker';
-import * as process from 'node:process';
 
 describe('setupDockerGenerator', () => {
   let tree: Tree;

@@ -515,13 +515,6 @@ class NxTargetFactory(
     return targetGroupsJson
   }
 
-  private fun createNoopPhaseTarget(
-    phase: String
-  ): NxTarget {
-    log.info("Creating noop target for phase '$phase' (no goals)")
-    return NxTarget("nx:noop", null, cache = true, continuous = false)
-  }
-
   private fun createSkippedPhaseTarget(
     project: MavenProject,
     phase: String,
@@ -598,7 +591,6 @@ class NxTargetFactory(
     val targets = mutableMapOf<String, NxTarget>()
 
     val testClasses = testClassDiscovery.discoverTestClasses(project)
-    val testCiTargetGroup = mutableListOf<String>()
 
     val analysis = mojoAnalyzer.analyzeMojo(goalDescriptor.pluginDescriptor, goalDescriptor.goal, project)
       ?: return emptyMap()
@@ -643,7 +635,6 @@ class NxTargetFactory(
       if (dependsOnOwnModule) addOwnBuildStateInput(project, target)
 
       targets[targetName] = target
-      testCiTargetGroup.add(targetName)
 
       val dependsOnNode = JsonObject()
       dependsOnNode.addProperty("target", targetName)

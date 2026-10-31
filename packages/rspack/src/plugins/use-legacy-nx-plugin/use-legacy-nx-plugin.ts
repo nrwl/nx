@@ -6,11 +6,7 @@ import {
 } from '@nx/devkit';
 import type { NxRspackExecutionContext } from '../../utils/config';
 import type { NxAppRspackPluginOptions } from '../utils/models';
-import type {
-  Compiler,
-  Configuration,
-  RspackOptionsNormalized,
-} from '@rspack/core';
+import type { Compiler, RspackOptionsNormalized } from '@rspack/core';
 import { normalizeOptions } from '../utils/plugins/normalize-options';
 import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 

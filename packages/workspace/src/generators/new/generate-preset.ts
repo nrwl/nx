@@ -113,7 +113,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     cwd: newWorkspaceRoot,
   };
-  const pmc = getPackageManagerCommand();
+  getPackageManagerCommand();
   const nxInstallationPaths = getNxRequirePaths(newWorkspaceRoot);
   const nxBinForNewWorkspaceRoot = require.resolve('nx/bin/nx', {
     paths: nxInstallationPaths,

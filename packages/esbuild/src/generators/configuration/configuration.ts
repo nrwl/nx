@@ -176,7 +176,7 @@ function updatePackageJson(
     } = mergedTarget.options;
 
     // the file must exist in the TS solution setup
-    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+    readJson(tree, 'tsconfig.base.json');
 
     // can't use the declarationRootDir as rootDir because it only affects the typings,
     // not the runtime entry point

@@ -190,7 +190,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         projectConfig
       );
     } else {
-      const nxJson = readJson(tree, 'nx.json');
+      readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
         tree,
         options.projectName,

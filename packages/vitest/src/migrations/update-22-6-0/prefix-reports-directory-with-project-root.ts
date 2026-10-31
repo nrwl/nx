@@ -25,32 +25,21 @@ export default function prefixReportsDirectoryWithProjectRoot(tree: Tree) {
 }
 
 function migrateProjectConfigurations(tree: Tree): void {
-  const projectsToUpdate = new Map<
-    string,
-    Map<string, { target: string; configuration?: string }>
-  >();
+  const projectsToUpdate = new Set<string>();
 
   for (const executorName of ['@nx/vitest:test', '@nx/vite:test']) {
     forEachExecutorOptions<VitestExecutorOptions>(
       tree,
       executorName,
-      (options, projectName, targetName, configuration) => {
+      (options, projectName) => {
         if (needsMigration(options.reportsDirectory)) {
-          if (!projectsToUpdate.has(projectName)) {
-            projectsToUpdate.set(projectName, new Map());
-          }
-          const key = configuration
-            ? `${targetName}::${configuration}`
-            : targetName;
-          projectsToUpdate
-            .get(projectName)
-            .set(key, { target: targetName, configuration });
+          projectsToUpdate.add(projectName);
         }
       }
     );
   }
 
-  for (const [projectName] of projectsToUpdate) {
+  for (const projectName of projectsToUpdate) {
     const projectConfig = readProjectConfiguration(tree, projectName);
 
     for (const [_targetName, target] of Object.entries(

@@ -7,7 +7,7 @@ export async function generateStories(
   tree: Tree,
   options: StorybookConfigurationOptions
 ) {
-  const project = readProjectConfiguration(tree, options.project);
+  readProjectConfiguration(tree, options.project);
 
   await angularStoriesGenerator(tree, {
     name: options.project,

@@ -12,19 +12,17 @@ import { NormalizedSchema } from '../schema';
 export function updateBuildTargets(tree: Tree, schema: NormalizedSchema) {
   getProjects(tree).forEach((projectConfig, project) => {
     let changed = false;
-    Object.entries(projectConfig.targets || {}).forEach(
-      ([target, targetConfig]) => {
-        changed =
-          updateJsonValue(targetConfig, (value) => {
-            const [project, target, configuration] = value.split(':');
-            if (project === schema.projectName && target) {
-              return configuration
-                ? `${schema.newProjectName}:${target}:${configuration}`
-                : `${schema.newProjectName}:${target}`;
-            }
-          }) || changed;
-      }
-    );
+    Object.entries(projectConfig.targets || {}).forEach(([, targetConfig]) => {
+      changed =
+        updateJsonValue(targetConfig, (value) => {
+          const [project, target, configuration] = value.split(':');
+          if (project === schema.projectName && target) {
+            return configuration
+              ? `${schema.newProjectName}:${target}:${configuration}`
+              : `${schema.newProjectName}:${target}`;
+          }
+        }) || changed;
+    });
     if (changed) {
       updateProjectConfiguration(tree, project, projectConfig);
     }

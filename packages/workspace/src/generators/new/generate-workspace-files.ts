@@ -328,7 +328,6 @@ async function createReadme(
 
   // default to an empty one for custom presets
   const presetInfo: PresetInfo = presetToPluginMap[preset] ?? {
-    package: '',
     generateLibCmd: null,
   };
 

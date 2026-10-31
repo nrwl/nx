@@ -11,7 +11,6 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  logger,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -276,7 +275,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         projectConfiguration
       );
     } else {
-      const nxJson = readNxJson(host);
+      readNxJson(host);
       await addReleaseConfigForNonTsSolution(
         host,
         options.name,

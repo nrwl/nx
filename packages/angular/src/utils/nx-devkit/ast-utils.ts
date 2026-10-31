@@ -20,10 +20,9 @@ let tsModule: typeof import('typescript');
 
 type DecoratorName = 'Component' | 'Directive' | 'NgModule' | 'Pipe';
 
-function _angularImportsFromNode(
-  node: ts.ImportDeclaration,
-  _sourceFile: ts.SourceFile
-): { [name: string]: string } {
+function _angularImportsFromNode(node: ts.ImportDeclaration): {
+  [name: string]: string;
+} {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
@@ -118,7 +117,7 @@ export function getDecoratorMetadata(
     source,
     tsModule.SyntaxKind.ImportDeclaration
   )
-    .map((node: ts.ImportDeclaration) => _angularImportsFromNode(node, source))
+    .map((node: ts.ImportDeclaration) => _angularImportsFromNode(node))
     .reduce(
       (
         acc: { [name: string]: string },

@@ -1,9 +1,4 @@
-import {
-  updateJson,
-  ProjectConfiguration,
-  Tree,
-  workspaceRoot,
-} from '@nx/devkit';
+import { ProjectConfiguration, Tree, workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
 import { NormalizedSchema } from '../schema';

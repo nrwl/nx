@@ -10,7 +10,6 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { gte } from 'semver';
 import { createNodesV2 } from '../../plugins/plugin';
 import { getStorybookVersionToInstall } from '../../utils/utilities';
 import { nxVersion } from '../../utils/versions';

@@ -2,7 +2,6 @@ import { CreateDependenciesContext, CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { mkdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
 import {
   createDependencies,
   createNodesV2,

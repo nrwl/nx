@@ -43,7 +43,7 @@ export async function* combineAsyncIterables<T = any>(
       }
     } while (asyncIteratorsValues.size > 0);
   } finally {
-    for (const [index, iterator] of asyncIteratorsValues.entries())
+    for (const [, iterator] of asyncIteratorsValues.entries())
       if (iterator?.['return'] !== null) iterator['return']?.();
   }
 }

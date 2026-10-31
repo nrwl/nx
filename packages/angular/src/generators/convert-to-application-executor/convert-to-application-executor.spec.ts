@@ -2,7 +2,6 @@ import {
   addProjectConfiguration,
   logger,
   readProjectConfiguration,
-  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';

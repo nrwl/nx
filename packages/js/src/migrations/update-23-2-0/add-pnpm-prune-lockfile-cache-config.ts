@@ -8,7 +8,6 @@ import {
   type ProjectGraphProjectNode,
   type TargetConfiguration,
   type TargetDefaultArrayEntry,
-  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
 import {
