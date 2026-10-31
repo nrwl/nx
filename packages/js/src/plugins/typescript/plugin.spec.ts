@@ -2251,6 +2251,98 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
       });
 
+      it('should add extended config files from internal project references', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.lib.base.json': JSON.stringify({
+            include: ['${configDir}/src/**/*.ts'],
+            exclude: ['${configDir}/src/**/*.spec.ts'],
+          }),
+          'tsconfig.spec.base.json': JSON.stringify({
+            include: ['${configDir}/src/**/*.spec.ts'],
+          }),
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            include: [],
+            references: [
+              { path: './tsconfig.lib.json' },
+              { path: './tsconfig.spec.json' },
+            ],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            extends: ['./tsconfig.json', '../../tsconfig.lib.base.json'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/tsconfig.spec.json': JSON.stringify({
+            extends: ['./tsconfig.json', '../../tsconfig.spec.base.json'],
+            references: [{ path: './tsconfig.lib.json' }],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+
+        expect(result.projects['libs/my-lib'].targets.typecheck.inputs).toEqual(
+          [
+            '{projectRoot}/package.json',
+            '{projectRoot}/tsconfig.json',
+            '{workspaceRoot}/tsconfig.lib.base.json',
+            '{workspaceRoot}/tsconfig.spec.base.json',
+            '{projectRoot}/tsconfig.lib.json',
+            '{projectRoot}/tsconfig.spec.json',
+            '{projectRoot}/src/**/*.ts',
+            '{projectRoot}/src/**/*.spec.ts',
+            {
+              dependentTasksOutputFiles: '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
+              transitive: true,
+            },
+            {
+              dependencies: true,
+              fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
+            },
+          ]
+        );
+      });
+
+      it('should recompute inputs when a config file extended by an internal project reference changes', async () => {
+        process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.lib.base.json': JSON.stringify({
+            include: ['${configDir}/src/**/*.ts'],
+          }),
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            include: [],
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            extends: '../../tsconfig.lib.base.json',
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+        await invokeCreateNodesOnMatchingFiles(configFiles, context, {});
+
+        await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.lib.base.json': JSON.stringify({
+            include: ['${configDir}/lib/**/*.ts'],
+          }),
+        });
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          {}
+        );
+
+        const inputs = result.projects['libs/my-lib'].targets.typecheck.inputs;
+        expect(inputs).toContain('{projectRoot}/lib/**/*.ts');
+        expect(inputs).not.toContain('{projectRoot}/src/**/*.ts');
+      });
+
       it('should collect distinct tsconfig patterns from file-specific external project references', async () => {
         configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
@@ -5575,6 +5667,48 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             },
           }
         `);
+      });
+
+      it('should add extended config files from internal project references', async () => {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.other.base.json': JSON.stringify({
+            include: ['${configDir}/other/**/*.ts'],
+          }),
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist' },
+            include: ['src/**/*.ts'],
+            references: [{ path: './tsconfig.other.json' }],
+          }),
+          'libs/my-lib/tsconfig.other.json': JSON.stringify({
+            extends: '../../tsconfig.other.base.json',
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+        });
+
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { typecheck: false, build: true }
+        );
+
+        expect(result.projects['libs/my-lib'].targets.build.inputs).toEqual([
+          '{projectRoot}/package.json',
+          '{workspaceRoot}/tsconfig.other.base.json',
+          '{projectRoot}/tsconfig.lib.json',
+          '{projectRoot}/tsconfig.other.json',
+          '{projectRoot}/src/**/*.ts',
+          '{projectRoot}/other/**/*.ts',
+          {
+            dependentTasksOutputFiles: '**/*.{d.ts,d.cts,d.mts,tsbuildinfo}',
+            transitive: true,
+          },
+          {
+            dependencies: true,
+            fileset: '{projectRoot}/**/*.{d.ts,d.cts,d.mts}',
+          },
+        ]);
       });
 
       it('should only collect tsconfig patterns from the build reference chain', async () => {
