@@ -1,5 +1,17 @@
 {
-  "generators": {},
+  "generators": {
+    "upgrade-to-nest-12": {
+      "version": "24.1.0-beta.0",
+      "requires": {
+        "@nestjs/core": ">=11.0.0 <12.0.0"
+      },
+      "optionalUpdate": true,
+      "description": "Moves a NestJS 11 workspace to NestJS 12: bumps the declared `@nestjs/*` core packages, upgrades TypeScript 5 to 6 for `@nestjs/schematics` 12, and sets up Jest 30.5 with `--experimental-vm-modules` for projects that test Nest code with Jest, unless such a project runs on a Node.js below 24.9, where Jest cannot load NestJS 12; an AI prompt then checks CI and the remaining changes.",
+      "implementation": "./dist/src/migrations/update-24-1-0/upgrade-to-nest-12",
+      "prompt": "./dist/src/migrations/update-24-1-0/ai-instructions-for-nest-12.md",
+      "documentation": "./dist/src/migrations/update-24-1-0/upgrade-to-nest-12.md"
+    }
+  },
   "packageJsonUpdates": {
     "21.2.0-beta.2": {
       "version": "21.2.0-beta.2",

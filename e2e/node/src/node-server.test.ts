@@ -94,7 +94,7 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=${nestPort} --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
