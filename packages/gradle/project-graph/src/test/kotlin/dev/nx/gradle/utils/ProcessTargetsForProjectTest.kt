@@ -346,6 +346,34 @@ class ProcessTargetsForProjectTest {
   }
 
   @Test
+  fun `should apply arbitrary task target name overrides`(@TempDir workspaceDir: File) {
+    val workspaceRoot = workspaceDir.absolutePath
+    val projectDir = File(workspaceRoot, "project-a").apply { mkdirs() }
+    val project = ProjectBuilder.builder().withProjectDir(projectDir).build()
+
+    File(projectDir, "build.gradle").writeText("// test build file")
+
+    project.tasks.register("detekt").get().apply {
+      group = "verification"
+      description = "Runs detekt"
+    }
+
+    val gradleTargets =
+        processTargetsForProject(
+            project = project,
+            dependencies = mutableSetOf(),
+            targetNameOverrides = mapOf("detektTargetName" to "lint"),
+            workspaceRoot = workspaceRoot,
+            atomized = false)
+
+    assertNotNull(
+        gradleTargets.targets["lint"], "Expected detektTargetName to rename detekt to lint")
+    assertFalse(
+        gradleTargets.targets.containsKey("detekt"),
+        "Expected original detekt target to be replaced by lint")
+  }
+
+  @Test
   fun `should use buildTreePath for subproject dependsOn references`(@TempDir workspaceDir: File) {
     val workspaceRoot = workspaceDir.absolutePath
     val rootDir = File(workspaceRoot, "root").apply { mkdirs() }
