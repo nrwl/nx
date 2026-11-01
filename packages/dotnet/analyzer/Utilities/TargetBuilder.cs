@@ -43,9 +43,9 @@ public static partial class TargetBuilder
         AddCleanTarget(targets, fileName, isTest, options);
         AddWatchTarget(targets, fileName, options);
 
-        if (isExe)
+        if (isExe && !isTest)
         {
-            AddPublishTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+            AddPublishTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
             AddRunTarget(targets, fileName, options);
         }
 
