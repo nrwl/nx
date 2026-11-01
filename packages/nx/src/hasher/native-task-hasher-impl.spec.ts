@@ -1575,6 +1575,26 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
+  it('plans from a graph without task results', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const child = taskGraph.tasks['child:compile'];
+    child.hash = 'hash';
+    child.hashDetails = {
+      command: '',
+      nodes: {},
+      implicitDeps: {},
+      runtime: {},
+    };
+    const getPlans = vi.spyOn(impl.planner, 'getPlansReference');
+
+    await impl.hashTask(taskGraph.tasks['parent:compile'], taskGraph, {});
+
+    const planned = getPlans.mock.calls[0][1].tasks['child:compile'];
+    expect(planned).not.toHaveProperty('hash');
+    expect(planned).not.toHaveProperty('hashDetails');
+    expect(child.hash).toEqual('hash');
+  });
+
   // The entry digest covers the writes, not the reads, because a read
   // reaches the hash as the file group it becomes. That is only true while
   // every read-driven difference has another carrier, so assert it directly
