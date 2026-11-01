@@ -82,6 +82,27 @@ describe('semver utils', () => {
       expect(isMatchingDependencyRange('1.0.0-alpha', '^1.0.0')).toBe(false);
     });
 
+    it('should return true when a prerelease version satisfies a broad range', () => {
+      // Canary/dev versions of a release that is within the range should be considered matching.
+      // e.g. "3.0.6-dev.abc.0" is a prerelease of 3.0.6 which satisfies ">=2"
+      expect(isMatchingDependencyRange('3.0.6-dev.abc.0', '>=2')).toBe(true);
+      expect(isMatchingDependencyRange('3.0.6-dev.abc.0', '>=2.0.0-0')).toBe(
+        true
+      );
+      expect(isMatchingDependencyRange('3.0.6-rc.0', '>=2')).toBe(true);
+      expect(isMatchingDependencyRange('1.1.0-rc.0', '^1.0.0')).toBe(true);
+      expect(isMatchingDependencyRange('1.0.1-alpha.0', '~1.0.0')).toBe(true);
+    });
+
+    it('should return false when a prerelease version does not satisfy the range', () => {
+      // Breaking changes must still be detected even for prereleases
+      expect(isMatchingDependencyRange('2.0.0-rc.0', '^1.0.0')).toBe(false);
+      expect(isMatchingDependencyRange('3.0.0-dev.abc.0', '^2.0.0')).toBe(
+        false
+      );
+      expect(isMatchingDependencyRange('1.9.9-rc.0', '>=2')).toBe(false);
+    });
+
     it('should handle build metadata', () => {
       expect(isMatchingDependencyRange('1.0.0+build.1', '^1.0.0')).toBe(true);
       expect(isMatchingDependencyRange('1.2.3+20230101', '^1.0.0')).toBe(true);
