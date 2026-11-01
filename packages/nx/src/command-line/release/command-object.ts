@@ -88,11 +88,18 @@ export type ChangelogOptions = NxReleaseArgs &
   };
 
 export type PublishOptions = NxReleaseArgs &
-  Partial<RunManyOptions> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
+  Omit<Partial<RunManyOptions>, 'parallel'> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
     registry?: string;
     tag?: string;
     access?: string;
     otp?: number;
+    /**
+     * Unlike the CLI path, which normalizes the raw yargs string via
+     * readParallelFromArgsAndEnv() before it reaches this type, programmatic
+     * API callers must pass the already-resolved number directly — it flows
+     * straight into getThreadPoolSize() in task-orchestrator.ts.
+     */
+    parallel?: number;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     versionData?: VersionData;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
