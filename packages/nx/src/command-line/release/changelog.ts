@@ -360,19 +360,18 @@ export function createAPI(
 
     const postGitTasks: PostGitTask[] = [];
 
-    const workspaceChangelogChanges = await resolveWorkspaceChangelogChanges({
-      releaseGraph,
-      nxReleaseConfig,
-      toSHA,
-      fromSHA,
-    });
-
     const workspaceChangelog = await generateChangelogForWorkspace({
       tree,
       args,
       nxReleaseConfig,
       workspaceChangelogVersion,
-      changes: workspaceChangelogChanges,
+      resolveChanges: () =>
+        resolveWorkspaceChangelogChanges({
+          releaseGraph,
+          nxReleaseConfig,
+          toSHA,
+          fromSHA,
+        }),
     });
 
     // Add the post git task (e.g. create a remote release) for the workspace changelog, if applicable
@@ -899,13 +898,13 @@ async function generateChangelogForWorkspace({
   args,
   nxReleaseConfig,
   workspaceChangelogVersion,
-  changes,
+  resolveChanges,
 }: {
   tree: Tree;
   args: ChangelogOptions;
   nxReleaseConfig: NxReleaseConfig;
   workspaceChangelogVersion: (string | null) | undefined;
-  changes: ChangelogChange[];
+  resolveChanges: () => Promise<ChangelogChange[]>;
 }): Promise<NxReleaseChangelogResult['workspaceChangelog'] | undefined> {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
   // The entire feature is disabled at the workspace level, exit early
@@ -949,6 +948,11 @@ async function generateChangelogForWorkspace({
     });
     return;
   }
+
+  // Only resolved once we know the workspace changelog will be generated: resolving changes
+  // from commits requires a previous workspace-level tag, which a workspace that tags per
+  // release group or per project does not have
+  const changes = await resolveChanges();
 
   // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
   const interactive =
