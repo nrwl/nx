@@ -23,6 +23,8 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
 
   @get:Input abstract val projectName: Property<String>
 
+  @get:Input abstract val projectPath: Property<String>
+
   @get:Input abstract val hash: Property<String>
 
   @get:Input abstract val workspaceRoot: Property<String>
