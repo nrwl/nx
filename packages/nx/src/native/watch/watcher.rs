@@ -42,10 +42,13 @@ const MAX_WAIT: Duration = Duration::from_millis(500);
 /// drops events across many flushes recovers with a single re-walk, not one
 /// per flush. This bounds that hold so an unending storm still recovers.
 const RESCAN_MAX_WAIT: Duration = Duration::from_secs(2);
-/// Grace for the kernel→notify hop before the first event arrives; short so an
-/// idle force-flush adds no latency. macOS FSEvents lags more than inotify.
+/// Grace for the kernel→notify hop before the first event arrives. Paid in full
+/// by every idle force-flush, i.e. on every daemon request that finds nothing
+/// pending, so it is sized to the hop and not much more: FSEvents delivered a
+/// utime to `notify` in 7–17ms across 10 probes on an M-series machine under
+/// load, where the previous 50ms was ~20% of a warm `show projects`.
 #[cfg(target_os = "macos")]
-const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(50);
+const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(25);
 #[cfg(not(target_os = "macos"))]
 const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 /// Silence window that ends a trickling burst once collection is underway.
@@ -360,12 +363,16 @@ impl WatchPipeline {
 
     /// Returns Err if the loop should exit and surface the message via
     /// the JS callback (e.g. inotify watch-limit reached).
-    fn ingest_event(&mut self, event: NotifyResult) -> std::result::Result<(), String> {
+    /// Returns whether the event was accumulated. An event the filter drops —
+    /// the daemon's own log under `.nx/`, say — is not a burst, and a
+    /// force-flush that treated it as one waited the full quiet window on
+    /// every request that logged before flushing.
+    fn ingest_event(&mut self, event: NotifyResult) -> std::result::Result<bool, String> {
         let event = match event {
             Ok(e) => e,
             Err(err) => {
                 tracing::warn!("notify error: {:?}", err);
-                return Ok(());
+                return Ok(false);
             }
         };
         self.last_event_at = Instant::now();
@@ -383,13 +390,13 @@ impl WatchPipeline {
             self.rescan_deadline.get_or_insert(now + RESCAN_MAX_WAIT);
             let bs = *self.burst_start.get_or_insert(now);
             self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
-            return Ok(());
+            return Ok(true);
         }
 
         let raw = RawWatchEvent::new(event);
 
         if !self.filterer.check_event(&raw) {
-            return Ok(());
+            return Ok(false);
         }
 
         // Trace only events that survive the filter — Access reads and
@@ -433,7 +440,7 @@ impl WatchPipeline {
         let now = Instant::now();
         let bs = *self.burst_start.get_or_insert(now);
         self.flush_deadline = Some((now + IDLE_WINDOW).min(bs + MAX_WAIT));
-        Ok(())
+        Ok(true)
     }
 
     /// Build a pipeline whose notify channel is driven by the returned sender
@@ -505,13 +512,22 @@ impl WatchPipeline {
                         let handler_started_at = Instant::now();
 
                         // Collect until delivery goes quiet. An idle channel
-                        // returns after one short grace; once a burst is in
-                        // progress each event restarts the longer
-                        // FORCE_FLUSH_QUIET window so a trickle isn't cut
-                        // mid-stream. Bounded by FORCE_FLUSH_MAX. A Delivered
-                        // flush takes only what is already in the channel.
+                        // returns once a short grace from the START of the
+                        // flush has passed; each accepted event restarts the
+                        // longer FORCE_FLUSH_QUIET window so a trickle isn't
+                        // cut mid-stream. An event the filter drops restarts
+                        // nothing: the daemon's own log under `.nx/`, or any
+                        // write under `node_modules`, would otherwise hold
+                        // every flush to FORCE_FLUSH_MAX. Bounded by
+                        // FORCE_FLUSH_MAX. A Delivered flush takes only what
+                        // is already in the channel.
                         let deadline = handler_started_at + FORCE_FLUSH_MAX;
-                        let mut burst_in_progress = self.has_pending();
+                        let mut quiet_until = handler_started_at
+                            + if self.has_pending() {
+                                FORCE_FLUSH_QUIET
+                            } else {
+                                FORCE_FLUSH_GRACE
+                            };
                         while fatal.is_none() {
                             let now = Instant::now();
                             if now >= deadline {
@@ -519,20 +535,25 @@ impl WatchPipeline {
                             }
                             let wait = match mode {
                                 FlushMode::Delivered => Duration::ZERO,
-                                FlushMode::Settled if burst_in_progress => FORCE_FLUSH_QUIET,
-                                FlushMode::Settled => FORCE_FLUSH_GRACE,
+                                FlushMode::Settled => {
+                                    if now >= quiet_until {
+                                        break;
+                                    }
+                                    quiet_until - now
+                                }
                             };
                             let wait = wait.min(deadline - now);
                             // A request arriving mid-wait joins this snapshot
                             // rather than queueing behind it for a second wait.
                             select! {
                                 recv(self.notify_rx) -> res => match res {
-                                    Ok(event) => {
-                                        burst_in_progress = true;
-                                        if let Err(msg) = self.ingest_event(event) {
-                                            fatal = Some(msg);
+                                    Ok(event) => match self.ingest_event(event) {
+                                        Ok(true) => {
+                                            quiet_until = Instant::now() + FORCE_FLUSH_QUIET
                                         }
-                                    }
+                                        Ok(false) => {}
+                                        Err(msg) => fatal = Some(msg),
+                                    },
                                     Err(_) => {
                                         fatal = Some("watcher channel disconnected".to_string());
                                     }
@@ -1619,6 +1640,52 @@ mod tests {
             matches!(evt.r#type, EventType::create),
             "fresh write should classify as Create; got {:?}",
             evt.r#type
+        );
+    }
+
+    #[test]
+    fn ignored_writes_do_not_extend_flush() {
+        // Regression: an event the filter dropped still flipped the flush into
+        // its quiet window, so writes under `node_modules` — or the daemon's
+        // own log under `.nx/` — re-armed FORCE_FLUSH_QUIET on every arrival
+        // and an idle flush ran to FORCE_FLUSH_MAX instead of returning after
+        // the grace.
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        let dir = tempdir().expect("tempdir");
+        let ignored = dir.path().join("node_modules");
+        fs::create_dir_all(&ignored).expect("mkdir");
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        let stop = Arc::new(AtomicBool::new(false));
+        let writer = {
+            let stop = stop.clone();
+            let file = ignored.join("touched.txt");
+            std::thread::spawn(move || {
+                let mut i = 0u32;
+                while !stop.load(Ordering::Relaxed) {
+                    fs::write(&file, i.to_string()).ok();
+                    i += 1;
+                    std::thread::sleep(Duration::from_millis(5));
+                }
+            })
+        };
+        // Let the ignored writes be in flight before flushing.
+        std::thread::sleep(Duration::from_millis(100));
+
+        let start = std::time::Instant::now();
+        let events = watcher.flush(FlushMode::Settled);
+        let elapsed = start.elapsed();
+        stop.store(true, Ordering::Relaxed);
+        writer.join().unwrap();
+
+        assert!(
+            events.is_empty(),
+            "ignored writes leaked into the flush: {events:?}"
+        );
+        assert!(
+            elapsed < FORCE_FLUSH_MAX - Duration::from_millis(50),
+            "flush took {elapsed:?} — filtered events extended the quiet window"
         );
     }
 
