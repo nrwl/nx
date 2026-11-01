@@ -1684,6 +1684,32 @@ describe('flushPerformanceReport', () => {
     }
   });
 
+  it('does not write a job summary when NX_SKIP_JOB_SUMMARY=true (still logs the report)', () => {
+    const dir = mkdtempSync(join(os.tmpdir(), 'nx-perf-gha-'));
+    const summaryFile = join(dir, 'summary.md');
+    try {
+      withEnvironmentVariables(
+        {
+          ...envFor({}),
+          GITHUB_ACTIONS: 'true',
+          GITHUB_STEP_SUMMARY: summaryFile,
+          NX_TASK_TARGET_PROJECT: null,
+          NX_SKIP_JOB_SUMMARY: 'true',
+        },
+        () => {
+          const a = makeTask('a', { start: 0, end: 1000 });
+          feedActive(makeGraph([a]));
+          flushPerformanceReport();
+        }
+      );
+
+      expect(existsSync(summaryFile)).toBe(false);
+      expect(logSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   // Constructing a lifecycle registers it as the module-level
   // `activePerformanceLifeCycle`, which is what flush reads.
   function feedActive(
