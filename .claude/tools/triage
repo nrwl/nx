@@ -1,0 +1,2052 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * triage — a staging area for issue mutations, so nothing reaches GitHub
+ * unreviewed.
+ *
+ * An agent triaging issues produces label changes, assignees and public comments.
+ * Applying those directly means the first time a human sees a mistake, it is
+ * already on a public issue and cannot be unsent. So the agent writes its intent
+ * to a file here, a human approves it in `triage review`, and only then does
+ * anything hit `gh`.
+ *
+ * Records are markdown with YAML frontmatter because both parties edit them: the
+ * agent writes them, and the human fixes a wrong label or rewrites a clumsy
+ * comment in $EDITOR without going back through the agent.
+ *
+ * Everything except `review` runs on node builtins alone. That matters because
+ * `apply` is the step that must work in a fresh clone, before `pnpm install`,
+ * and in CI. Only the TUI needs ink, and only the TUI pays for it.
+ */
+
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+// `triage list | head` is how anyone reads a long queue. Without this the next
+// write raises an unhandled EPIPE and the verb dies with a stack trace printed
+// over output it already produced successfully.
+process.stdout.on('error', (e) => {
+  if (e.code === 'EPIPE') process.exit(0);
+  throw e;
+});
+
+const REPO = process.env.TRIAGE_REPO || 'nrwl/nx';
+const ROOT = path.resolve(__dirname, '..', '..');
+const STATE_DIR = process.env.TRIAGE_DIR || path.join(ROOT, '.nx-issue-triage');
+
+// Owned by .github/workflows/{schedule-stale,lock-threads}.yml. Setting either
+// by hand desynchronizes the bot that manages it.
+const BOT_OWNED = new Set(['stale', 'outdated']);
+
+// Each of these is watched by an actions/stale pass: 7 days of silence adds
+// `stale`, 21 more close the issue. Two at once means two countdowns and two
+// nag comments for one problem.
+const STALE_TIMERS = new Set([
+  'blocked: repro needed',
+  'blocked: more info needed',
+  'blocked: retry with latest',
+]);
+
+// gh issue close --reason accepts exactly these. `duplicate` is first-class:
+// routing duplicates through `not planned` loses that signal on the issue.
+const CLOSE_REASONS = new Set(['completed', 'not planned', 'duplicate']);
+
+/**
+ * A record is about an issue or a pull request.
+ *
+ * They share one store because GitHub numbers them from ONE sequence per repo —
+ * #36845 can be an issue and #36846 a PR, but no number is ever both — so the
+ * key needs no qualifier and `list`, `recover`, the journal and the watcher all
+ * work on either without knowing which they hold. What differs is the verbs at
+ * apply time, and that is the only place this is branched on.
+ */
+const KINDS = new Set(['issue', 'pr']);
+
+/**
+ * A write-ahead copy of every record, kept OUTSIDE the state directory.
+ *
+ * The state directory is gitignored, so it has no history to fall back on, and
+ * anything that clears it — an `rm -rf` from a neighbouring agent, a stale test
+ * fixture, a botched cleanup — takes hours of triage with it. That has happened.
+ * The journal is not a second source of truth: nothing reads it during normal
+ * operation, and `recover` only ever restores records that are MISSING.
+ */
+const JOURNAL = path.join(os.homedir(), '.nx-triage', 'journal.jsonl');
+const JOURNAL_MAX_BYTES = 8 * 1024 * 1024;
+
+const OWNERS_FILE = path.join(__dirname, 'triage-owners.md');
+const ROTATION_FILE = path.join(STATE_DIR, '.rotation.json');
+
+/**
+ * Two append-only logs carrying the live session in each direction.
+ *
+ * events   TUI/CLI -> supervising agent. Every record write lands here, so the
+ *          agent's monitor tails one file instead of polling every record and
+ *          diffing, and sees the note the reviewer typed at the moment it is
+ *          typed.
+ * commands agent -> any running TUI. Lets the agent push a record it just
+ *          restaged into view instead of the reviewer having to guess that `r`
+ *          is now needed.
+ *
+ * Append-only and offset-read on purpose: several TUIs and several agents may
+ * be attached at once, and a file each side rewrites is a file they race on.
+ */
+/**
+ * Applied records move here. They are done — keeping them in the review list
+ * means the reviewer scrolls past a growing wall of finished work to reach the
+ * few rows that still need a decision. Moved rather than deleted: the record is
+ * the only account of what was actually written to a public issue.
+ */
+const ARCHIVE_DIR = path.join(STATE_DIR, '.archive');
+
+const EVENTS_FILE = path.join(STATE_DIR, 'events.jsonl');
+const COMMANDS_FILE = path.join(STATE_DIR, 'commands.jsonl');
+
+/**
+ * Append to a bus. Never fatal — a bus write that fails must not fail the record
+ * write it was reporting on — but never silent either.
+ *
+ * It used to swallow the error outright, which made the bus *invisibly* lossy:
+ * a full disk or a read-only state dir looked exactly like a quiet queue, and
+ * the one thing that lives ONLY here — a note — was gone with nothing said. The
+ * record files are still the source of truth for everything that has one, so
+ * degrading is correct; degrading in silence is not.
+ */
+let busError = null;
+let busWarned = false;
+function appendJsonl(file, obj) {
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), ...obj }) + '\n');
+    return true;
+  } catch (e) {
+    busError = e.code || e.message;
+    // Once per process, and never from inside the TUI: a stderr write there
+    // lands on the alternate screen as garbage. The TUI reads busError()
+    // instead and puts it in the status line.
+    if (require.main === module && !busWarned) {
+      busWarned = true;
+      process.stderr.write(
+        `triage: events bus write failed (${busError}) at ${rel(file)} — ` +
+          `decisions may not reach the agent; records on disk are unaffected\n`
+      );
+    }
+    return false;
+  }
+}
+
+/** The last bus failure, for a caller that can surface it better than stderr. */
+function lastBusError() {
+  return busError;
+}
+
+/**
+ * Tell any attached TUI its list is stale.
+ *
+ * Every verb that changes WHICH records are in the review list has to call this
+ * — apply archives them, rm and prune delete them, and none of that is visible
+ * to a TUI that only re-reads on a keypress. The reviewer is then looking at a
+ * record that is already on GitHub, with no way to know.
+ */
+function notifyReload() {
+  appendJsonl(COMMANDS_FILE, { type: 'reload' });
+}
+
+/**
+ * A message to the supervising agent ABOUT a record, changing nothing on it.
+ *
+ * `changes-requested` is the channel for "this record is wrong, restage it".
+ * This is the one for "and also do X" — file a Linear ticket, ping someone —
+ * which has nothing to do with the mutations the record has prepared and must
+ * not gate them. Putting it on the events bus rather than in the record keeps
+ * that separation literal: the note is addressed to the agent, it is never
+ * written to GitHub, and it outlives `apply` archiving the record it names.
+ */
+function appendNote(issue, note) {
+  const text = String(note || '').trim();
+  if (!text) return null;
+  // The title rides along so the watcher can name the issue without reopening
+  // the record — which by then may be archived, or gone. Resolved rather than
+  // read straight through readRecord: that one `fail`s, which is process.exit,
+  // so a try/catch around it would never run.
+  const file = resolveRecordPath(issue);
+  const title = file ? readRecord(issue).front.title || '' : '';
+  const entry = { type: 'note', issue: Number(issue), title, note: text };
+  appendJsonl(EVENTS_FILE, entry);
+  return entry;
+}
+
+/**
+ * Every note on the bus, oldest first.
+ *
+ * No read cursor, the same as `feedback`: the queue lives about as long as the
+ * session that staged it, and the agent holds in its own context which notes it
+ * has already acted on. A second state file to track that would be a second
+ * thing to get out of sync.
+ */
+function listNotes() {
+  let raw = '';
+  try {
+    raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.type === 'note' && e.note) out.push(e);
+    } catch {
+      /* a torn line is not worth losing the rest of the bus over */
+    }
+  }
+  return out;
+}
+
+const STATUSES = [
+  'pending',
+  'approved',
+  'changes-requested',
+  'rejected',
+  'applied',
+  'failed',
+];
+
+const LIST_KEYS = new Set([
+  'add_labels',
+  'remove_labels',
+  'current_labels',
+  'current_assignees',
+]);
+
+// ---------------------------------------------------------------- frontmatter
+
+/**
+ * A deliberately small YAML subset: `key: scalar`, and `key:` followed by
+ * `  - item` lines. Humans hand-edit these files, so anything outside the subset
+ * throws with a line number rather than being skipped — a dropped line here
+ * means a label silently not applied, which is invisible at every layer above.
+ */
+function parseFrontmatter(text, file) {
+  const front = {};
+  let key = null;
+  text.split('\n').forEach((raw, i) => {
+    const line = raw.replace(/\s+$/, '');
+    const at = `${file}:${i + 2}`;
+    if (!line || line.trimStart().startsWith('#')) return;
+
+    const item = line.match(/^ {2}- (.*)$/);
+    if (item) {
+      if (!key || !Array.isArray(front[key])) {
+        throw new Error(`${at}: list item outside a list key`);
+      }
+      front[key].push(unquote(item[1], at));
+      return;
+    }
+
+    const pair = line.match(/^([A-Za-z_][A-Za-z0-9_]*):(?: (.*))?$/);
+    if (!pair) throw new Error(`${at}: cannot parse ${JSON.stringify(raw)}`);
+    key = pair[1];
+    const value = pair[2];
+    if (value === undefined || value === '') {
+      front[key] = LIST_KEYS.has(key) ? [] : '';
+    } else if (value === '[]') {
+      front[key] = [];
+    } else {
+      front[key] = unquote(value, at);
+    }
+  });
+  return front;
+}
+
+function unquote(value, at) {
+  const v = value.trim();
+  if (v.startsWith("'")) {
+    if (!v.endsWith("'") || v.length < 2) throw new Error(`${at}: unterminated quote`);
+    return v.slice(1, -1).replace(/''/g, "'");
+  }
+  if (v.startsWith('"')) {
+    if (!v.endsWith('"') || v.length < 2) throw new Error(`${at}: unterminated quote`);
+    return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  }
+  return v;
+}
+
+function quote(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function serializeFrontmatter(front) {
+  const lines = [];
+  for (const [key, value] of Object.entries(front)) {
+    if (Array.isArray(value)) {
+      if (!value.length) {
+        lines.push(`${key}: []`);
+      } else {
+        lines.push(`${key}:`);
+        for (const item of value) lines.push(`  - ${quote(item)}`);
+      }
+    } else if (typeof value === 'number') {
+      lines.push(`${key}: ${value}`);
+    } else {
+      lines.push(`${key}: ${quote(value ?? '')}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+// -------------------------------------------------------------------- records
+
+const recordPath = (n) => path.join(STATE_DIR, `${n}.md`);
+
+/**
+ * Where record <n> actually lives, live directory first, or null.
+ *
+ * Anything that reads or tests for a record by number must go through this:
+ * archiving moved applied records out from under `recordPath`, and every
+ * direct `recordPath` reader silently stopped seeing them.
+ */
+function resolveRecordPath(n) {
+  const live = recordPath(n);
+  if (fs.existsSync(live)) return live;
+  const archived = path.join(ARCHIVE_DIR, `${n}.md`);
+  return fs.existsSync(archived) ? archived : null;
+}
+
+function readRecord(n) {
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no staged record for #${n} (looked in ${rel(recordPath(n))})`);
+  const text = fs.readFileSync(file, 'utf8');
+  const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!m) fail(`${rel(file)}: missing YAML frontmatter`);
+  let front;
+  try {
+    front = parseFrontmatter(m[1], rel(file));
+  } catch (e) {
+    fail(e.message);
+  }
+  return { front, body: m[2], file };
+}
+
+function writeRecord(front, body) {
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  const file = recordPath(front.issue);
+
+  // Read the prior status before overwriting, so the event carries the
+  // transition rather than just the destination. "pending -> approved" and a
+  // re-save that changed only the note look identical without it.
+  let from = null;
+  try {
+    if (fs.existsSync(file)) from = readRecord(front.issue).front.status || null;
+  } catch {
+    from = null;
+  }
+
+  const content = `---\n${serializeFrontmatter(front)}\n---\n\n${body.trim()}\n`;
+  fs.writeFileSync(file, content);
+  journal(front.issue, content);
+
+  emitRecordEvent(front, body, from);
+  // A rejection is final — nothing downstream ever acts on one — so it leaves
+  // the review list the moment it is made, the way `apply` retires a record it
+  // has written to GitHub. Here rather than at each call site because, unlike
+  // apply, there is no "did the gh call succeed" to branch on: `x` in the TUI
+  // and `triage set <N> rejected` are the same decision and must not diverge.
+  // After the event, so the bus still carries the transition into `rejected`.
+  if (front.status === 'rejected') {
+    archiveRecord(front.issue);
+    return path.join(ARCHIVE_DIR, `${front.issue}.md`);
+  }
+  return file;
+}
+
+function emitRecordEvent(front, body, from) {
+  const note = (section(body, 'Feedback') || '').split('\n').find((l) => l.trim()) || '';
+  return appendJsonl(EVENTS_FILE, {
+    type: from === null ? 'staged' : from === front.status ? 'updated' : 'status',
+    issue: front.issue,
+    title: front.title || '',
+    from,
+    to: front.status,
+    close_reason: front.close_reason || '',
+    note: note.trim().slice(0, 240),
+  });
+}
+
+/**
+ * Report a record that changed on disk WITHOUT going through writeRecord.
+ *
+ * Two paths do that: `e` in the TUI hands the file straight to $EDITOR, and
+ * `recover` restores one from the journal. Both leave the bus silent, so an
+ * agent watching it slept through a decision the reviewer really made.
+ *
+ * `from` is the status the caller saw before the edit, which is the one thing
+ * the file can no longer tell us once it has been overwritten.
+ *
+ * Tolerant on purpose: $EDITOR can leave frontmatter that does not parse, and
+ * readRecord answers that with `fail`, which is process.exit — inside the TUI
+ * that would take the screen down while reporting an edit.
+ */
+/**
+ * Report a record leaving the live review list without a status change — `rm`
+ * and `prune`. The status is unchanged, so emitRecordEvent would call it an
+ * `updated` and say nothing about the one thing that happened.
+ */
+function emitRemoved(front) {
+  return appendJsonl(EVENTS_FILE, {
+    type: 'removed',
+    issue: front.issue,
+    title: front.title || '',
+    from: front.status,
+    to: front.status,
+  });
+}
+
+function emitEdit(issue, from) {
+  const file = resolveRecordPath(issue);
+  if (!file) return null;
+  try {
+    const text = fs.readFileSync(file, 'utf8');
+    const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+    if (!m) return null;
+    const front = parseFrontmatter(m[1], rel(file));
+    emitRecordEvent(front, m[2], from ?? null);
+    return front.status;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Best-effort: a journal that failed to write must never fail the write it was
+ * protecting. Both the TUI and the CLI reach this through writeRecord, so a
+ * status change or a note typed in the TUI is journalled too — those are the
+ * parts a re-stage cannot reconstruct.
+ */
+function journal(issue, content) {
+  try {
+    fs.mkdirSync(path.dirname(JOURNAL), { recursive: true });
+    if (fs.existsSync(JOURNAL) && fs.statSync(JOURNAL).size > JOURNAL_MAX_BYTES) {
+      compactJournal();
+    }
+    fs.appendFileSync(
+      JOURNAL,
+      JSON.stringify({ ts: new Date().toISOString(), dir: STATE_DIR, issue, content }) + '\n'
+    );
+  } catch {
+    /* the journal is a safety net, not a dependency */
+  }
+}
+
+/** Keep only the newest entry per issue per directory. */
+function compactJournal() {
+  const latest = new Map();
+  for (const line of fs.readFileSync(JOURNAL, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      latest.set(`${e.dir}\u0000${e.issue}`, e);
+    } catch {
+      /* a torn line is not worth losing the rest of the journal over */
+    }
+  }
+  fs.writeFileSync(
+    JOURNAL,
+    [...latest.values()].map((e) => JSON.stringify(e)).join('\n') + '\n'
+  );
+}
+
+/**
+ * Fail clearly when TRIAGE_DIR is not a directory.
+ *
+ * A mis-set TRIAGE_DIR — pointing at a file, which a stray glob makes easy —
+ * otherwise surfaces as a raw ENOTDIR stack trace from readdirSync, in the TUI
+ * as a wall of React frames. The env var is the one knob a caller sets by hand,
+ * so it is the one worth checking by hand.
+ */
+function assertStateDir() {
+  if (!fs.existsSync(STATE_DIR)) return;
+  if (!fs.statSync(STATE_DIR).isDirectory()) {
+    fail(`TRIAGE_DIR is not a directory: ${STATE_DIR}`);
+  }
+}
+
+function listRecords({ includeArchived = false } = {}) {
+  assertStateDir();
+  const dirs = [STATE_DIR];
+  if (includeArchived) dirs.push(ARCHIVE_DIR);
+  const seen = new Set();
+  const out = [];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!/^\d+\.md$/.test(f)) continue;
+      const n = parseInt(f, 10);
+      if (seen.has(n)) continue;
+      seen.add(n);
+      out.push(readRecord(n));
+    }
+  }
+  return out.sort((a, b) => Number(a.front.issue) - Number(b.front.issue));
+}
+
+/**
+ * Move a finished record out of the review list. Best-effort: failing to tidy
+ * up must never turn a successful apply into a reported failure, since the
+ * mutation it describes has already reached GitHub and cannot be retried
+ * safely.
+ */
+function archiveRecord(n) {
+  try {
+    const from = recordPath(n);
+    if (!fs.existsSync(from)) return;
+    fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
+    fs.renameSync(from, path.join(ARCHIVE_DIR, `${n}.md`));
+  } catch {
+    /* the record stays in the list; harmless */
+  }
+}
+
+/** Body sections are `## Name` headings. A missing section reads as empty. */
+function section(body, name) {
+  for (const part of body.split(/^## /m)) {
+    const nl = part.indexOf('\n');
+    const heading = (nl === -1 ? part : part.slice(0, nl)).trim();
+    if (heading === name) return nl === -1 ? '' : part.slice(nl + 1).trim();
+  }
+  return '';
+}
+
+function buildBody({ repro, comment, rationale, feedback }) {
+  const parts = [];
+  // Reproduction lives in the BODY, not frontmatter. It is often several
+  // paragraphs with commands and output, and a YAML scalar can hold none of
+  // that — it flattened to one unreadable line. It comes first because it is the
+  // evidence the comment and the priority rest on.
+  if ((repro || '').trim()) parts.push(`## Reproduction\n\n${repro.trim()}`);
+  parts.push(`## Comment\n\n${(comment || '').trim() || '_none_'}`);
+  parts.push(`## Rationale\n\n${(rationale || '').trim() || '_none given_'}`);
+  if ((feedback || '').trim()) parts.push(`## Feedback\n\n${feedback.trim()}`);
+  return parts.join('\n\n');
+}
+
+/**
+ * Workflow runs on this PR's head commit that are blocked on a maintainer.
+ *
+ * GitHub's `statusCheckRollup` does NOT count an ACTION_REQUIRED suite, so a fork
+ * PR whose CI has never been allowed to start still rolls up as SUCCESS off a
+ * third-party check like socket-security. Reading the rollup alone is how a
+ * reviewer gets told "CI is green" about a PR that was never built.
+ */
+function pendingRunIds(pr) {
+  const head = spawnSync('gh', ['pr', 'view', pr, '--repo', REPO, '--json', 'headRefOid', '-q', '.headRefOid'], { encoding: 'utf8' });
+  if (head.status !== 0) return [];
+  const sha = head.stdout.trim();
+  const runs = spawnSync('gh', ['api', `/repos/${REPO}/actions/runs?status=action_required&per_page=100`, '--paginate', '-q', '.workflow_runs[] | [.id, .head_sha] | @tsv'], { encoding: 'utf8' });
+  if (runs.status !== 0) return [];
+  return runs.stdout
+    .split('\n')
+    .map((l) => l.split('\t'))
+    .filter(([, s]) => s === sha)
+    .map(([id]) => id);
+}
+
+// ------------------------------------------------------------------- preflight
+
+/**
+ * Does the record still describe the PR?
+ *
+ * A record is a snapshot. Between staging and approval the branch gets rebased,
+ * CI finishes, someone else closes the thread. Applying a stale record adds a
+ * `blocked: needs rebase` to a branch that now merges, or drafts a PR that went
+ * green, and the comment explaining it is wrong the moment it posts.
+ *
+ * This ran as a manual step for a long time, which meant it ran when someone
+ * remembered. It belongs here.
+ */
+function liveState(kind, n) {
+  const q =
+    kind === 'pr'
+      ? `query { repository(owner:"${REPO.split('/')[0]}", name:"${REPO.split('/')[1]}"){ pullRequest(number:${n}){
+           state isDraft mergeable
+           commits(last:1){nodes{commit{ statusCheckRollup{state}
+             checkSuites(first:30){nodes{ conclusion app{slug} checkRuns{totalCount} }} }}} } } }`
+      : `query { repository(owner:"${REPO.split('/')[0]}", name:"${REPO.split('/')[1]}"){ issue(number:${n}){ state } } }`;
+  const r = spawnSync('gh', ['api', 'graphql', '-f', `query=${q}`], { encoding: 'utf8' });
+  if (r.status !== 0) return null;
+  try {
+    const d = JSON.parse(r.stdout).data.repository;
+    return d.pullRequest || d.issue || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * `mergeable` is computed lazily: the FIRST query always returns UNKNOWN and only
+ * schedules the work. Asking once and believing the answer drops every conflict
+ * in a queue, which is exactly what happened on the sweep that motivated this.
+ */
+function livePr(n, tries = 4) {
+  let s = null;
+  for (let i = 0; i < tries; i++) {
+    s = liveState('pr', n);
+    if (!s || s.mergeable !== 'UNKNOWN') return s;
+  }
+  return s;
+}
+
+function preflight(front) {
+  const n = Number(front.issue);
+  const kind = front.kind === 'pr' ? 'pr' : 'issue';
+  const live = kind === 'pr' ? livePr(n) : liveState('issue', n);
+  if (!live) return ['could not read live state from GitHub; not applying blind'];
+
+  const p = [];
+  if (live.state !== 'OPEN' && !front.close_reason) {
+    p.push(`already ${live.state.toLowerCase()} on GitHub, so this record is stale`);
+  }
+  if (live.state !== 'OPEN' && front.close_reason) {
+    p.push(`already ${live.state.toLowerCase()}; the close would be a no-op and the comment would land on a settled thread`);
+  }
+  if (kind !== 'pr') return p;
+
+  if (front.draft === 'true' && live.isDraft) {
+    p.push('already a draft, so the conversion is a no-op while the comment claims otherwise');
+  }
+  if (live.mergeable === 'UNKNOWN') {
+    p.push('GitHub would not settle `mergeable` after several tries; retry rather than guess');
+  } else if (front.mergeable && front.mergeable !== live.mergeable) {
+    p.push(`record says mergeable ${front.mergeable}, GitHub now says ${live.mergeable}`);
+  }
+
+  // The linked issue can close while the record waits. The comment's premise is
+  // that merging this closes it, so once the issue is settled that premise is
+  // false and something else has probably already fixed it. Caught here because
+  // a record's claims about OTHER threads decay just as surely as its own state,
+  // and nothing else was watching them.
+  // Match `#NNNNN` only. A bare number match also eats the digits out of a Linear
+  // key (`NXC-4798` -> 4798) and looks THAT up as a GitHub issue, which resolves
+  // to an unrelated thread and refuses a perfectly good record. Parentheses are
+  // stripped first because the field may carry an annotation naming the closer,
+  // and that reference is closed on purpose.
+  // A record that already SAYS the link is settled has accounted for it, and its
+  // comment is written around that fact. The check is for a premise that went
+  // false in silence, not for one triage recorded on purpose.
+  const linkedRaw = String(front.linked || '');
+  const acknowledged = /\b(closed|merged|superseded)\b/i.test(linkedRaw);
+  const linkedRefs = acknowledged ? [] : linkedRaw.replace(/\([^)]*\)/g, '').match(/#(\d{4,6})/g) || [];
+  for (const raw of linkedRefs) {
+    const ref = raw.slice(1);
+    const other = liveState('issue', ref);
+    if (other && other.state !== 'OPEN' && !front.close_reason) {
+      p.push(`linked issue #${ref} is ${other.state.toLowerCase()}, so merging this closes nothing`);
+    }
+  }
+
+  // Green means green only when a github-actions suite actually produced check
+  // runs. Zero runs and the rollup is reporting whatever third-party bot is left.
+  const suites = (live.commits?.nodes?.[0]?.commit?.checkSuites?.nodes || []).filter(
+    (s) => s.app && s.app.slug === 'github-actions'
+  );
+  const runs = suites.reduce((a, s) => a + (s.checkRuns?.totalCount || 0), 0);
+  const rollup = live.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state || null;
+  if (front.draft === 'true' && runs > 0 && rollup === 'SUCCESS') {
+    p.push('CI is genuinely green now, so drafting it would be wrong');
+  }
+  return p;
+}
+
+// -------------------------------------------------------------------- nx cloud
+
+/**
+ * The failing TASK names for a PR, from Nx Cloud.
+ *
+ * GitHub only names the workflow that failed. On this repo that is `main-linux`,
+ * or a 90-character `affected --targets=...` string, and neither tells a
+ * contributor what broke. The task names live in Nx Cloud, four hops away, with
+ * several ways to get it wrong by hand. Those belong here rather than in a skill
+ * asking an agent to improvise the same chain each time.
+ *
+ * Credential order matches nx-cloud-api's documented resolution, and no token is
+ * ever printed, logged or passed through argv.
+ */
+function nxJsonField(name) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(ROOT, 'nx.json'), 'utf8'))[name] || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The PAT from ~/.config/nxcloud/nxcloud.ini.
+ *
+ * Section headers are the server URL with the dots ESCAPED —
+ * `[https://staging\.nx\.app]` — so a naive equality check never matches and the
+ * caller silently concludes there is no credential.
+ */
+function cloudPat(url) {
+  let raw;
+  try {
+    raw = fs.readFileSync(path.join(os.homedir(), '.config', 'nxcloud', 'nxcloud.ini'), 'utf8');
+  } catch {
+    return null;
+  }
+  const want = url.replace(/\/+$/, '');
+  let section = null;
+  for (const line of raw.split('\n')) {
+    const head = line.match(/^\s*\[(.+?)\]\s*$/);
+    if (head) {
+      section = head[1].replace(/\\/g, '').replace(/\/+$/, '');
+      continue;
+    }
+    const kv = line.match(/^\s*personalAccessToken\s*=\s*(.+?)\s*$/);
+    if (kv && section === want) return kv[1];
+  }
+  return null;
+}
+
+function cloudAuth() {
+  const url = (process.env.NX_CLOUD_URL || nxJsonField('nxCloudUrl') || 'https://cloud.nx.app')
+    .replace(/\/+$/, '');
+  const bearer = process.env.NX_CLOUD_ACCESS_TOKEN || process.env.NX_CLOUD_AUTH_TOKEN;
+  if (bearer) return { url, headers: { Authorization: `Bearer ${bearer}` } };
+  const id = process.env.NX_CLOUD_ID || nxJsonField('nxCloudId');
+  const pat = process.env.NX_CLOUD_PERSONAL_ACCESS_TOKEN || cloudPat(url);
+  if (pat && id) {
+    return { url, headers: { 'Nx-Cloud-Personal-Access-Token': pat, 'Nx-Cloud-Id': id } };
+  }
+  return null;
+}
+
+async function cloudGet(auth, rel) {
+  const res = await fetch(auth.url + rel, { headers: auth.headers });
+  if (res.status === 404) return { notFound: true };
+  if (!res.ok) throw new Error(`${rel} returned HTTP ${res.status}`);
+  return res.json();
+}
+
+function ghJson(args) {
+  const r = spawnSync('gh', args, { encoding: 'utf8' });
+  if (r.status !== 0) return null;
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    return r.stdout.trim();
+  }
+}
+
+async function cmdCiTasks(args) {
+  const pr = args[0];
+  if (!/^\d+$/.test(pr || '')) fail('usage: triage ci-tasks <pr-number>');
+  const auth = cloudAuth();
+  if (!auth) {
+    fail(
+      'no Nx Cloud credential.\n' +
+        '  Run `nx login` from the workspace root, or set NX_CLOUD_ACCESS_TOKEN.\n' +
+        '  Never pass a token on the command line.'
+    );
+  }
+
+  const sha = ghJson(['pr', 'view', pr, '--repo', REPO, '--json', 'headRefOid', '-q', '.headRefOid']);
+  if (!sha) fail(`could not read the head commit for #${pr}`);
+
+  // The check run carries the CIPE id. Do NOT look the CIPE up by branch: Nx
+  // Cloud records a FORK PR's branch as the pull request NUMBER, so a head-ref
+  // lookup returns nothing and reads as "this never ran".
+  const runs = ghJson(['api', `/repos/${REPO}/commits/${sha}/check-runs`, '--jq',
+    '[.check_runs[] | select(.app.slug=="nx-cloud") | .details_url]']);
+  const cipeId = (runs || []).map((u) => (u.match(/\/cipes\/([0-9a-f]{24})/) || [])[1]).find(Boolean);
+  if (!cipeId) fail(`no Nx Cloud check on ${sha.slice(0, 8)}, so there is no pipeline to read`);
+
+  const cipe = await cloudGet(auth, `/nx-cloud/data/v0-beta/cipes/${cipeId}`);
+  if (cipe.notFound) {
+    fail(
+      `Nx Cloud no longer has CIPE ${cipeId}.\n` +
+        '  Pipelines age out, so an old PR keeps its check run while the data behind it is gone.\n' +
+        '  This is retention, NOT an absence of failures. Do not report it as "nothing failed".'
+    );
+  }
+  const head = cipe.vcsContext?.headSha;
+  if (head && head !== sha) {
+    process.stderr.write(`warning: this pipeline ran on ${head.slice(0, 8)}, not the current head ${sha.slice(0, 8)}\n`);
+  }
+
+  const groups = await cloudGet(auth, `/nx-cloud/data/v0-beta/run-groups?cipeId=${cipeId}`);
+  for (const g of groups.items || []) {
+    // A critical error means the pipeline itself broke. Reporting task names
+    // then would blame a contributor for our infrastructure.
+    if (g.criticalErrorMessage) {
+      process.stderr.write(`run group ${g.id} failed with a critical error, not a task: ${g.criticalErrorMessage}\n`);
+    }
+  }
+
+  const seen = new Set();
+  const failed = [];
+  for (const g of groups.items || []) {
+    const rs = await cloudGet(auth, `/nx-cloud/data/v0-beta/runs?runGroup=${encodeURIComponent(g.id)}`);
+    for (const run of rs.items || []) {
+      const id = (run.links?.tasks || '').match(/runs\/([^/]+)\/tasks/)?.[1];
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const ts = await cloudGet(auth, `/nx-cloud/data/v0-beta/runs/${id}/tasks?statuses=FAILED`);
+      for (const task of ts.items || []) failed.push({ id: task.id, cache: task.cacheStatus, run: run.status });
+    }
+  }
+
+  if (!failed.length) {
+    process.stderr.write(`no FAILED tasks recorded in CIPE ${cipeId} (status ${cipe.status})\n`);
+    return;
+  }
+  // Task ids on stdout so $(...) captures them; everything else on stderr.
+  for (const f of failed) console.log(f.id);
+  process.stderr.write(`\n${failed.length} failed task(s) in CIPE ${cipeId}, head ${(head || sha).slice(0, 8)}\n`);
+  for (const f of failed) process.stderr.write(`  ${f.id}  [${f.cache || '?'}, run ${f.run}]\n`);
+  process.stderr.write('these are the tasks as of that commit; a push changes them\n');
+}
+
+// ------------------------------------------------------------------ validation
+
+function validate(front) {
+  const problems = [];
+  if (!/^\d+$/.test(String(front.issue))) problems.push('issue must be a number');
+  if (!STATUSES.includes(front.status)) {
+    problems.push(`status must be one of ${STATUSES.join(', ')}`);
+  }
+  const add = front.add_labels || [];
+  const remove = front.remove_labels || [];
+
+  for (const label of [...add, ...remove]) {
+    if (BOT_OWNED.has(label)) {
+      problems.push(`"${label}" is bot-owned; the workflows manage it, not us`);
+    }
+  }
+  const timers = add.filter((l) => STALE_TIMERS.has(l));
+  if (timers.length > 1) {
+    problems.push(`two stale countdowns at once: ${timers.join(' + ')}`);
+  }
+  for (const label of add) {
+    if (remove.includes(label)) problems.push(`"${label}" is both added and removed`);
+  }
+  if (front.assign && !/^[A-Za-z0-9-]+$/.test(front.assign)) {
+    problems.push(`assign "${front.assign}" is not a GitHub login`);
+  }
+  if (!KINDS.has(front.kind || 'issue')) {
+    problems.push(`kind "${front.kind}" must be issue or pr`);
+  }
+  // `gh pr close` takes no --reason, so the vocabulary only constrains issues.
+  // On a PR the reason still earns its place in the record: it is what the
+  // comment has to justify.
+  if (
+    front.close_reason &&
+    (front.kind || 'issue') === 'issue' &&
+    !CLOSE_REASONS.has(front.close_reason)
+  ) {
+    problems.push(
+      `close_reason "${front.close_reason}" must be one of ${[...CLOSE_REASONS].join(', ')}`
+    );
+  }
+  if (front.draft && (front.kind || 'issue') !== 'pr') {
+    problems.push('only a pull request can be converted to a draft');
+  }
+  if (front.approve_ci && (front.kind || 'issue') !== 'pr') {
+    problems.push('only a pull request has workflow runs to approve');
+  }
+  // A `blocked:` label on a PR being closed asks the author for something on a
+  // thread that is over, and it outlives the close in every future label query.
+  if (front.close_reason) {
+    const blocking = (front.add_labels || []).filter((l) => l.startsWith('blocked:'));
+    if (blocking.length) {
+      problems.push(`a close should not add ${blocking.join(', ')}: the thread is ending, so the ask goes nowhere`);
+    }
+  }
+  // GitHub computes `mergeable` lazily: the FIRST query returns UNKNOWN and only
+  // schedules the work. Recording UNKNOWN means the query was not repeated, and
+  // on a sweep that silently drops every conflict in the queue.
+  if ((front.mergeable || '').toUpperCase() === 'UNKNOWN') {
+    problems.push('mergeable "UNKNOWN" means GitHub had not computed it yet; query again');
+  }
+  // The repo already carries `blocked: needs rebase` for this. A record that
+  // knows the PR conflicts and does not say so leaves the author waiting on a
+  // review that cannot happen.
+  // Not on a close: asking someone to rebase a PR you are closing is noise, and
+  // the label would outlive the thread for no one's benefit.
+  if ((front.mergeable || '').toUpperCase() === 'CONFLICTING' && !front.close_reason) {
+    const has = [...(front.add_labels || []), ...(front.current_labels || [])].includes('blocked: needs rebase');
+    if (!has) problems.push('mergeable is CONFLICTING, so add the "blocked: needs rebase" label');
+  }
+  // A record that both approves CI and reports on its result is describing two
+  // different moments. If the run has not been allowed to start, its outcome is
+  // not knowable yet, and SUCCESS here is the exact claim this field exists to
+  // stop being made.
+  if (front.approve_ci === 'true' && /^(SUCCESS|FAILURE)/i.test(front.ci || '')) {
+    problems.push(
+      `ci "${front.ci}" contradicts approve_ci: nothing has run yet, so use AWAITING_APPROVAL`
+    );
+  }
+  return problems;
+}
+
+// ----------------------------------------------------------------------- verbs
+
+/**
+ * The issue's labels and assignees as GitHub has them right now.
+ *
+ * Recorded at stage time so review can distinguish a mutation from a no-op: a
+ * record that lists `+scope: core` and `@leosvelperez` looks identical whether
+ * it changes anything or restates what is already there, and a reviewer cannot
+ * approve what they cannot see the shape of.
+ *
+ * Best-effort by design. Offline, rate-limited or unauthenticated, this returns
+ * null and the reviewer sees today's undecorated rendering — a stage must not
+ * fail because the network did.
+ */
+function fetchCurrent(issue) {
+  if (process.env.TRIAGE_NO_FETCH) return null;
+  const res = spawnSync(
+    'gh',
+    ['issue', 'view', String(issue), '--repo', REPO, '--json', 'labels,assignees'],
+    { encoding: 'utf8', timeout: 15000 }
+  );
+  if (res.status !== 0 || !res.stdout) return null;
+  try {
+    const d = JSON.parse(res.stdout);
+    return {
+      labels: (d.labels || []).map((l) => l.name),
+      assignees: (d.assignees || []).map((a) => a.login),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalise a comment's Markdown before it is stored.
+ *
+ * Comments get authored with hand-placed line breaks inside paragraphs. GitHub
+ * joins those when it renders, so the posted result is already fine — but the
+ * stored record diffs a whole paragraph when one word changes, and a reviewer
+ * who opens it in `$EDITOR` has to re-wrap by hand after every edit.
+ *
+ * `proseWrap: 'never'` joins them and aligns Markdown tables. Verified against
+ * a real record: it leaves the blank lines inside a `<details>` block alone,
+ * which the collapsed Triage notes block depends on — GitHub only parses
+ * Markdown inside `<details>` when the tags are blank-line separated, so a
+ * formatter that tightened those would silently post raw HTML.
+ *
+ * Best-effort by design. Formatting is a nicety and staging is the job, so a
+ * missing dependency or a parse error falls back to the text as written rather
+ * than refusing the record.
+ */
+async function formatMarkdown(text) {
+  if (!text || !text.trim()) return text || '';
+  try {
+    const { format } = require('oxfmt');
+    const { code, errors } = await format('comment.md', text, { proseWrap: 'never' });
+    if (errors && errors.length) return text;
+    return code.trimEnd();
+  } catch {
+    return text;
+  }
+}
+
+async function cmdStage(args) {
+  const raw = args.includes('--json')
+    ? args[args.indexOf('--json') + 1]
+    : fs.readFileSync(0, 'utf8');
+  if (!raw || !raw.trim()) {
+    fail('nothing on stdin. Usage: triage stage < payload.json');
+  }
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch (e) {
+    fail(`payload is not valid JSON: ${e.message}`);
+  }
+
+  // Resolve through the archive too, or restaging an applied issue silently
+  // loses the "already applied" guard and starts a second round unannounced.
+  const existing = resolveRecordPath(payload.issue) ? readRecord(payload.issue) : null;
+  if (existing && existing.front.status === 'applied' && !args.includes('--force')) {
+    fail(`#${payload.issue} was already applied. Pass --force to stage a new round.`);
+  }
+
+  const front = {
+    issue: Number(payload.issue),
+    title: payload.title || '',
+    url: payload.url || `https://github.com/${REPO}/issues/${payload.issue}`,
+    status: 'pending',
+    staged: new Date().toISOString(),
+    add_labels: payload.add_labels || [],
+    remove_labels: payload.remove_labels || [],
+    assign: payload.assign || '',
+    linked_pr: payload.linked_pr || '',
+    close_reason: payload.close_reason || '',
+    // Normalised for case but NOT coerced: `kind: 'PR'` should work, while a
+    // typo has to fail loudly. Silently reading anything unrecognised as
+    // "issue" would apply `gh issue` verbs to a pull request.
+    kind: String(payload.kind || 'issue').toLowerCase(),
+    // Who opened it, and their standing in the repo. Recorded rather than
+    // derived because the reviewer's tone should differ for a first-time
+    // contributor, and that is a decision made while reading the record.
+    author: payload.author || '',
+    author_assoc: String(payload.author_assoc || '').toUpperCase(),
+    // PR-only. `ci` and `linked` are recorded rather than derived so the TUI can
+    // show the evidence the judgement rested on without re-querying GitHub.
+    draft: payload.draft ? 'true' : '',
+    approve_ci: payload.approve_ci ? 'true' : '',
+    mergeable: payload.mergeable || '',
+    ci: payload.ci || '',
+    linked: payload.linked || '',
+  };
+
+  // Carry a previous capture forward rather than dropping it, so a restage
+  // after a review note does not lose the diff the reviewer was reading.
+  const current = fetchCurrent(front.issue) ||
+    (existing
+      ? { labels: existing.front.current_labels, assignees: existing.front.current_assignees }
+      : null);
+  if (current && current.labels) {
+    front.current_labels = current.labels;
+    front.current_assignees = current.assignees || [];
+  }
+
+  const comment = await formatMarkdown(payload.comment);
+
+  const problems = validate(front);
+  // Closing without saying why is the one mutation a reporter cannot argue
+  // with, so it does not get to be the quiet one.
+  if (front.close_reason && !comment.trim()) {
+    problems.push('a close needs a comment explaining it');
+  }
+  // Silence is allowed only when the record asks nothing of the author and tells
+  // them nothing they cannot already see. A comment on a maintainer's own PR
+  // that just restates its labels is noise on their own thread. A comment that
+  // would have explained a draft, an approval or a new blocking label is not.
+  if (!comment.trim()) {
+    const owed = [];
+    if (front.draft === 'true') owed.push('it converts the PR to a draft');
+    if (front.approve_ci === 'true') owed.push('it approves CI runs');
+    if ((front.add_labels || []).some((l) => l.startsWith('blocked:'))) {
+      owed.push('it adds a blocked: label');
+    }
+    if (owed.length) {
+      problems.push(`this record needs a comment, because ${owed.join(', and ')}`);
+    }
+  }
+  // A comment posts from a maintainer's account and cannot be unposted, so the
+  // repo's prose rules are enforced here rather than left to a skill that may be
+  // skipped. Delegated to the `deslop` scanner instead of a regex kept here, so
+  // adding a token to astro-docs/.vale/styles/Nx gates triage comments too.
+  const scanner = path.join(ROOT, '.claude/skills/deslop/scripts/deslop-scan.mjs');
+  if (comment.trim() && fs.existsSync(scanner)) {
+    const scan = spawnSync(process.execPath, [scanner, '-'], { input: comment, encoding: 'utf8' });
+    if (scan.status > 0) {
+      problems.push(`comment does not pass the deslop scanner:\n${indent(scan.stdout.trim())}`);
+    }
+  }
+  if (problems.length) fail(`refusing to stage #${front.issue}:\n  - ${problems.join('\n  - ')}`);
+
+  const file = writeRecord(
+    front,
+    buildBody({
+      repro: payload.repro || (existing ? section(existing.body, 'Reproduction') : ''),
+      comment,
+      rationale: payload.rationale,
+      // A restage answers previous feedback; keep it visible until applied.
+      feedback: existing ? section(existing.body, 'Feedback') : '',
+    })
+  );
+  console.log(rel(file));
+}
+
+function cmdList(args) {
+  const wanted = flag(args, '--status');
+  // Applied records are archived, so asking for them by status implies wanting
+  // the archive too — otherwise `--status applied` reports nothing forever.
+  const includeArchived = args.includes('--all') || wanted === 'applied';
+  let records = listRecords({ includeArchived });
+  if (wanted) records = records.filter((r) => r.front.status === wanted);
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(records.map((r) => r.front), null, 2));
+    return;
+  }
+  if (!records.length) {
+    console.log(wanted ? `no records with status ${wanted}` : 'nothing staged');
+    return;
+  }
+  for (const { front, body } of records) {
+    const labels = [
+      ...(front.add_labels || []).map((l) => `+${l}`),
+      ...(front.remove_labels || []).map((l) => `-${l}`),
+    ].join(', ');
+    const bits = [labels];
+    if (front.assign) bits.push(`@${front.assign}`);
+    if (section(body, 'Comment') !== '_none_') bits.push('comment');
+    console.log(
+      `${String(front.status).padEnd(17)} #${front.issue}  ${truncate(front.title, 58)}`
+    );
+    console.log(`${' '.repeat(18)}${bits.filter(Boolean).join('  ') || '(no changes)'}`);
+  }
+}
+
+function cmdShow(args) {
+  const n = requireIssue(args);
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no staged record for #${n}`);
+  process.stdout.write(fs.readFileSync(file, 'utf8'));
+}
+
+function cmdSet(args) {
+  const n = requireIssue(args);
+  const status = args[1];
+  if (!STATUSES.includes(status)) {
+    fail(`unknown status "${status}". One of: ${STATUSES.join(', ')}`);
+  }
+  const { front, body } = readRecord(n);
+  front.status = status;
+  const note = flag(args, '--note');
+  const merged = note
+    ? buildBody({
+        repro: section(body, 'Reproduction'),
+        comment: section(body, 'Comment'),
+        rationale: section(body, 'Rationale'),
+        feedback: note,
+      })
+    : body;
+  writeRecord(front, merged);
+  console.log(`#${n} -> ${status}`);
+}
+
+function cmdFeedback(args) {
+  const records = listRecords().filter((r) => r.front.status === 'changes-requested');
+  if (args.includes('--json')) {
+    console.log(
+      JSON.stringify(
+        records.map((r) => ({ ...r.front, feedback: section(r.body, 'Feedback') })),
+        null,
+        2
+      )
+    );
+    return;
+  }
+  if (!records.length) {
+    console.log('no changes requested');
+    return;
+  }
+  for (const { front, body } of records) {
+    console.log(`#${front.issue}  ${front.title}`);
+    console.log(indent(section(body, 'Feedback') || '(no note left)'));
+    console.log('');
+  }
+}
+
+function cmdNote(args) {
+  const n = requireIssue(args);
+  // Strict about the record existing, unlike appendNote: at the CLI the number
+  // is typed, and a note filed against #3677 instead of #36775 is just lost.
+  if (!resolveRecordPath(n)) fail(`no record for #${n} to note against`);
+  const rest = args.slice();
+  rest.splice(rest.findIndex((a) => /^\d+$/.test(a)), 1);
+  const text = rest.join(' ').trim();
+  if (!text) fail('nothing to say. e.g. triage note 36775 "open a linear ticket too"');
+  appendNote(n, text);
+  console.log(`noted on #${n}`);
+}
+
+/**
+ * Notes the reviewer left for the agent.
+ *
+ * `--count` and `--since` exist for the watcher, which keeps its cursor as a
+ * plain integer so it never has to parse JSON in bash — note text is arbitrary
+ * prose and sed would eventually meet a quote it mangles.
+ */
+function cmdNotes(args) {
+  const notes = listNotes();
+  if (args.includes('--json')) {
+    console.log(JSON.stringify(notes, null, 2));
+    return;
+  }
+  if (args.includes('--count')) {
+    console.log(notes.length);
+    return;
+  }
+  const sinceArg = args.find((a) => a.startsWith('--since='));
+  if (sinceArg) {
+    const since = Number(sinceArg.split('=')[1] || 0);
+    for (const e of notes.slice(since)) {
+      console.log(`#${e.issue} NOTE — ${truncate(e.title || '', 70)}`);
+      console.log(indent(e.note));
+    }
+    return;
+  }
+  if (!notes.length) {
+    console.log('no notes');
+    return;
+  }
+  for (const e of notes) {
+    console.log(`#${e.issue}  ${e.title || ''}`.trimEnd());
+    console.log(indent(e.note));
+    console.log('');
+  }
+}
+
+/**
+ * Report each review decision as it lands, for the Monitor tool.
+ *
+ *   Monitor(command: ".claude/tools/triage monitor",
+ *           description: "triage review decisions", timeout_ms: 3600000)
+ *
+ * Arm it after staging and keep working: approvals, rejections, changes-requested
+ * notes and `n` notes arrive as notifications instead of anyone polling `list`.
+ * Exits once nothing is pending, which ends the watch.
+ *
+ * This reads the EVENTS BUS, not the record files. The bus carries the
+ * transition — `{from: 'pending', to: 'rejected'}` — so a record that archives
+ * itself on the way out has already been reported by the time it moves. The
+ * previous implementation diffed directory snapshots, which could only see
+ * records that still EXISTED at the end of the tick: a record going
+ * approved -> applied -> archived produced no line at all. Every path that
+ * changes the list now emits (writeRecord, emitEdit for $EDITOR and recover,
+ * emitRemoved for rm and prune), so there is nothing left for a snapshot to
+ * catch that the bus misses.
+ */
+async function cmdMonitor(args) {
+  const every =
+    Number((args.find((a) => a.startsWith('--interval=')) || '').split('=')[1] || 0) ||
+    Number(process.env.TRIAGE_POLL_SEC || 2);
+
+  if (!fs.existsSync(STATE_DIR)) {
+    console.log(`triage monitor: no records directory at ${rel(STATE_DIR)} — nothing staged yet`);
+    return;
+  }
+  const live = listRecords();
+  if (!live.length) {
+    console.log(`triage monitor: 0 records staged in ${rel(STATE_DIR)} — nothing to watch`);
+    return;
+  }
+
+  // Seeded once from disk, then kept by the bus. Absolute state is the one
+  // question events cannot answer on their own: reading from the current end is
+  // what stops a previous session's decisions replaying as this one's.
+  let pending = live.filter((r) => r.front.status === 'pending').length;
+  let offset = 0;
+  try {
+    offset = fs.statSync(EVENTS_FILE).size;
+  } catch {
+    offset = 0;
+  }
+  console.log(
+    `triage monitor armed: ${live.length} records, ${pending} pending — run 'pnpm triage-tui' to review`
+  );
+
+  // Statuses that archive themselves out of the list. The settle summary reads
+  // the others back off disk, but these are gone by then, so they are counted
+  // as they are reported.
+  const gone = { rejected: 0, applied: 0 };
+
+  for (;;) {
+    await new Promise((r) => setTimeout(r, every * 1000));
+
+    // The directory is gitignored and several agent sessions share this
+    // checkout, so it can be cleaned out from under a live review. That has to
+    // be an event: going quiet reads as "the user hasn't started yet".
+    if (!fs.existsSync(STATE_DIR)) {
+      console.log(
+        `triage monitor STOPPED: ${rel(STATE_DIR)} disappeared — staged records were deleted, restage before applying`
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    for (const e of readEventsSince()) {
+      if (e.type === 'note') {
+        console.log(`#${e.issue} NOTE — ${truncate(e.title || '', 70)}`);
+        console.log(indent(e.note));
+        continue;
+      }
+      // A same-status rewrite decides nothing and is not worth a line.
+      if (e.type === 'updated') continue;
+      if (e.from === 'pending') pending -= 1;
+      if (e.to === 'pending' && e.type !== 'removed') pending += 1;
+      const title = truncate(e.title || '', 70);
+      if (e.type === 'removed') {
+        console.log(`#${e.issue} removed from the queue`);
+        continue;
+      }
+      if (e.type === 'staged') {
+        console.log(`#${e.issue} staged (${e.to}) — ${title}`);
+        continue;
+      }
+      if (e.to in gone) gone[e.to] += 1;
+      switch (e.to) {
+        case 'changes-requested':
+          console.log(`#${e.issue} CHANGES REQUESTED — ${title}`);
+          if (e.note) console.log(`    note: ${e.note}`);
+          break;
+        case 'rejected': console.log(`#${e.issue} REJECTED — ${title}`); break;
+        case 'approved': console.log(`#${e.issue} approved — ${title}`); break;
+        case 'applied':  console.log(`#${e.issue} applied to GitHub — ${title}`); break;
+        case 'failed':   console.log(`#${e.issue} APPLY FAILED — ${title}`); break;
+        default:         console.log(`#${e.issue} -> ${e.to} — ${title}`);
+      }
+    }
+
+    if (pending <= 0) {
+      const rest = listRecords();
+      const n = (st) => rest.filter((r) => r.front.status === st).length;
+      const c = n('changes-requested');
+      const a = n('approved');
+      console.log(
+        `triage queue settled: ${a} approved, ${c} changes-requested, ` +
+          `${gone.rejected} rejected, ${gone.applied} applied, ${n('failed')} failed`
+      );
+      if (c) console.log('    next: .claude/tools/triage feedback');
+      if (a) console.log('    next: .claude/tools/triage apply');
+      const notes = listNotes().length;
+      if (notes) {
+        console.log(`    next: .claude/tools/triage notes  (${notes} left for you)`);
+      }
+      return;
+    }
+  }
+
+  /** New whole lines only: a read can land mid-append, and half a line is not an event. */
+  function readEventsSince() {
+    let end;
+    try {
+      end = fs.statSync(EVENTS_FILE).size;
+    } catch {
+      return [];
+    }
+    if (end < offset) offset = 0; // truncated or rotated under us
+    if (end === offset) return [];
+    const fd = fs.openSync(EVENTS_FILE, 'r');
+    const buf = Buffer.alloc(end - offset);
+    fs.readSync(fd, buf, 0, buf.length, offset);
+    fs.closeSync(fd);
+    const text = buf.toString('utf8');
+    const cut = text.lastIndexOf('\n');
+    if (cut === -1) return [];
+    offset += Buffer.byteLength(text.slice(0, cut + 1), 'utf8');
+    const out = [];
+    for (const line of text.slice(0, cut).split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        out.push(JSON.parse(line));
+      } catch {
+        /* a torn line is not worth dropping the rest of the batch over */
+      }
+    }
+    return out;
+  }
+}
+
+/**
+ * Apply approvals as they land, without a human or an agent in the loop.
+ *
+ * An approved record that passes validation and preflight needs no judgement to
+ * apply, and waiting for someone to notice the approval is dead time. Anything
+ * that does need judgement is refused by preflight and stays approved, so it
+ * surfaces on the next pass rather than being applied wrongly.
+ */
+async function cmdWatch(args) {
+  const every = Number((args.find((a) => a.startsWith('--interval=')) || '').split('=')[1] || 20);
+  process.stderr.write(`watching for approvals every ${every}s; ctrl-c to stop\n`);
+  let stop = false;
+  process.on('SIGINT', () => {
+    stop = true;
+  });
+  // A record preflight refuses stays approved on purpose, so a human sees it.
+  // But re-checking it every tick spends a GitHub call per record forever, and
+  // the answer will not change until someone edits the record or the PR moves.
+  // Skip it for this process's lifetime; restarting the watcher re-checks.
+  const refused = new Set();
+  while (!stop) {
+    const ready = listRecords()
+      .filter((r) => r.front.status === 'approved')
+      .filter((r) => !refused.has(String(r.front.issue)));
+    if (ready.length) {
+      const before = ready.map((r) => String(r.front.issue));
+      cmdApply(before);
+      for (const n of before) {
+        const still = listRecords().find((r) => String(r.front.issue) === n);
+        if (still && still.front.status === 'approved') {
+          refused.add(n);
+          process.stderr.write(`#${n}: parked after a preflight refusal; fix the record or restart the watcher\n`);
+        }
+      }
+    }
+    await new Promise((r) => setTimeout(r, every * 1000));
+  }
+  process.stderr.write('stopped\n');
+}
+
+function cmdApply(args) {
+  const dryRun = args.includes('--dry-run');
+  const explicit = args.filter((a) => /^\d+$/.test(a)).map(Number);
+  let records = listRecords().filter((r) => r.front.status === 'approved');
+  if (explicit.length) records = records.filter((r) => explicit.includes(Number(r.front.issue)));
+
+  if (!records.length) {
+    console.log('nothing approved to apply');
+    return;
+  }
+
+  for (const { front, body } of records) {
+    const problems = validate(front);
+    // Only when actually applying: a dry run is for reading the plan, and should
+    // not need the network or spend a rate-limit budget on it.
+    if (!dryRun && !problems.length) problems.push(...preflight(front));
+    if (problems.length) {
+      console.error(`#${front.issue}: refusing to apply:\n  - ${problems.join('\n  - ')}`);
+      continue;
+    }
+
+    // `gh issue` and `gh pr` take the same edit/comment flags, so the verbs are
+    // the only difference and the rest of this loop is shared.
+    const kind = front.kind === 'pr' ? 'pr' : 'issue';
+    const n = String(front.issue);
+
+    const steps = [];
+    const edit = [];
+    for (const l of front.add_labels || []) edit.push('--add-label', l);
+    for (const l of front.remove_labels || []) edit.push('--remove-label', l);
+    if (front.assign) edit.push('--add-assignee', front.assign);
+    if (edit.length) steps.push([kind, 'edit', n, '--repo', REPO, ...edit]);
+
+    const comment = section(body, 'Comment');
+    let commentFile = null;
+    if (comment && comment !== '_none_') {
+      // --body-file, never --body: comment prose contains backticks and quotes,
+      // and argv is not a safe place to carry either.
+      commentFile = path.join(os.tmpdir(), `triage-${front.issue}-${Date.now()}.md`);
+      fs.writeFileSync(commentFile, comment + '\n');
+      steps.push([kind, 'comment', n, '--repo', REPO, '--body-file', commentFile]);
+    }
+
+    // Converting to a draft goes BEFORE the comment so the comment explaining it
+    // lands on a PR that is already marked, rather than describing a state the
+    // PR has not reached yet.
+    if (front.draft === 'true') {
+      steps.splice(edit.length ? 1 : 0, 0, ['pr', 'ready', n, '--repo', REPO, '--undo']);
+    }
+
+    // Approving a fork PR's workflows runs contributor-authored code on our
+    // runners, so it is staged and human-approved like every other mutation
+    // here. Run ids are resolved NOW rather than at stage time: every push to
+    // the PR supersedes them, and approving a stale id is a silent no-op that
+    // still lets the comment claim CI is running.
+    if (front.approve_ci === 'true') {
+      const ids = pendingRunIds(n);
+      if (!ids.length) {
+        console.log(`  #${n}: no workflow runs awaiting approval (already approved, or a new push superseded them)`);
+      }
+      // Before the comment, so "CI is running now" is true when it posts.
+      const at = steps.findIndex((s) => s[1] === 'comment');
+      const approve = ids.map((id) => [
+        'api', '--method', 'POST', `/repos/${REPO}/actions/runs/${id}/approve`,
+      ]);
+      steps.splice(at === -1 ? steps.length : at, 0, ...approve);
+    }
+
+    // Last, and only after the comment: closing first would land the
+    // explanation on an already-closed thread.
+    if (front.close_reason) {
+      steps.push(
+        kind === 'pr'
+          ? ['pr', 'close', n, '--repo', REPO]
+          : ['issue', 'close', n, '--repo', REPO, '--reason', front.close_reason]
+      );
+    }
+
+    if (!steps.length) {
+      console.log(`#${front.issue}: nothing to do`);
+      continue;
+    }
+
+    let failed = null;
+    for (const argv of steps) {
+      console.log(`  gh ${argv.map(showArg).join(' ')}`);
+      if (dryRun) continue;
+      const res = spawnSync('gh', argv, { encoding: 'utf8' });
+      if (res.status !== 0) {
+        failed = (res.stderr || res.stdout || `gh exited ${res.status}`).trim();
+        break;
+      }
+    }
+    if (commentFile) fs.rmSync(commentFile, { force: true });
+    if (dryRun) continue;
+
+    front.status = failed ? 'failed' : 'applied';
+    front.applied = new Date().toISOString();
+    writeRecord(
+      front,
+      failed
+        ? buildBody({
+            repro: section(body, 'Reproduction'),
+            comment: section(body, 'Comment'),
+            rationale: section(body, 'Rationale'),
+            feedback: `Apply failed:\n\n${failed}`,
+          })
+        : body
+    );
+    // A failure stays in the list: it still needs a human.
+    if (!failed) archiveRecord(front.issue);
+    console.log(failed ? `#${front.issue}: FAILED — ${failed}` : `#${front.issue}: applied`);
+  }
+
+  // Once, after the whole batch: a reload per record would make the TUI jump
+  // under the reviewer's hands mid-apply.
+  if (!dryRun) notifyReload();
+}
+
+function cmdReview() {
+  // Both of these fail deep inside the renderer or the module loader if left to
+  // chance, and the resulting stack trace buries the one-line diagnosis.
+  if (!process.stdin.isTTY) {
+    fail(
+      'triage review needs a terminal.\n' +
+        'Non-interactively, use: triage list, triage show <N>, triage set <N> <status>.'
+    );
+  }
+
+  // Bun, not node. opentui's renderer is native FFI with no node build yet — the
+  // node bundle throws "OpenTUI native FFI is not available for this runtime
+  // yet" — so this is the one part of the toolchain that does not run on the
+  // repo's node/pnpm.
+  if (spawnSync('bun', ['--version'], { encoding: 'utf8' }).status !== 0) {
+    fail(
+      'triage review needs Bun: https://bun.sh  (curl -fsSL https://bun.sh/install | bash)\n' +
+        'Everything else (list, show, set, feedback, apply) runs on node and needs nothing extra.\n' +
+        'Prefer Bun >= 1.4: 1.3.x prints a harmless malloc error on quit.'
+    );
+  }
+  const TUI_DIR = path.join(__dirname, 'triage-tui');
+  if (!fs.existsSync(path.join(TUI_DIR, 'node_modules', '@opentui'))) {
+    fail('triage review needs its dependencies: run `pnpm install` first.');
+  }
+
+  const res = spawnSync('bun', [path.join(TUI_DIR, 'index.tsx')], {
+    stdio: 'inherit',
+    env: { ...process.env, TRIAGE_DIR: STATE_DIR, TRIAGE_REPO: REPO },
+  });
+  // Bun 1.3.x aborts during opentui's native teardown when the app holds other
+  // event-loop handles — ours are the fs watcher and the command poll. It fires
+  // after the screen is restored and the summary is printed, so the review
+  // itself succeeded. Bisected: a bare renderer exits 0; add an interval and an
+  // fs.watch and it exits 5 with `malloc: pointer being freed was not
+  // allocated`, even through opentui's own ctrl-c path. Same shape as upstream
+  // anomalyco/opentui#1405, which pins it on destroy() leaving a handle
+  // registered on the loop.
+  //
+  // Bun 1.4.0 exits 0 with no error, measured A/B on the same records — so this
+  // mapping only protects 1.3.x and can go once that is the floor. Note the
+  // opentui maintainer has not merged 1.4 support yet (#1400), so 1.3 stays the
+  // supported runtime for now even though it is the noisier one.
+  process.exit(res.status === 5 ? 0 : (res.status ?? 0));
+}
+
+/**
+ * Parse the owners table out of markdown into the shape the rest of this file
+ * expects: `{ roster, people, owners }`.
+ *
+ * Markdown rather than JSON because the load-bearing part of this table is
+ * prose — the guidance an agent reads before overriding a pick — and multi
+ * sentence guidance crammed into a single JSON string is unreadable to author
+ * and unreviewable in a diff.
+ *
+ * Deliberately forgiving about formatting and strict about names. Whitespace,
+ * blank lines and the alignment row are all ignored; a handle that is not on
+ * the roster is a hard error. That asymmetry is the point: prose can drift
+ * without consequence, but a stale name silently keeps receiving issues.
+ */
+function parseOwnersMarkdown(src) {
+  const roster = new Map();
+  const people = {};
+  const owners = {};
+  // `| a | b | c |` -> ['a','b','c'], dropping the alignment row.
+  const cells = (line) => {
+    const t = line.trim();
+    if (!t.startsWith('|')) return null;
+    if (/^\|[\s:|-]+\|$/.test(t)) return null;
+    return t.slice(1, -1).split('|').map((c) => c.trim());
+  };
+  const handle = (c) => (c.match(/^`?([A-Za-z0-9_-]+)`?$/) || [])[1] || null;
+
+  let section = null; // 'roster' | 'people' | 'areas'
+  let key = null; // current ### heading
+  let prose = [];
+  const flushProse = () => {
+    const text = prose.join(' ').replace(/\s+/g, ' ').trim();
+    prose = [];
+    return text;
+  };
+
+  for (const line of src.split('\n')) {
+    const h2 = line.match(/^##\s+(.+?)\s*$/);
+    const h3 = line.match(/^###\s+(.+?)\s*$/);
+    if (h2 && !h3) {
+      if (section === 'people' && key) people[key].note ||= flushProse();
+      if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+      const name = h2[1].toLowerCase();
+      section = name.startsWith('roster')
+        ? 'roster'
+        : name.startsWith('people')
+          ? 'people'
+          : name.startsWith('area')
+            ? 'areas'
+            : null;
+      key = null;
+      prose = [];
+      continue;
+    }
+    if (h3) {
+      if (section === 'people' && key) people[key].note ||= flushProse();
+      if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+      key = h3[1].trim();
+      prose = [];
+      if (section === 'people') people[key] = {};
+      if (section === 'areas') owners[key] = { guidance: '', candidates: [] };
+      continue;
+    }
+
+    // Any table line is consumed here, including the alignment row that `cells`
+    // rejects — otherwise it falls through and lands in the guidance prose.
+    if (line.trim().startsWith('|')) {
+      const row = cells(line);
+      if (!row) continue;
+      if (section === 'roster' && row.length >= 2) {
+        const h = handle(row[0]);
+        // The header row's first cell ("Handle") parses as a handle too; a
+        // roster entry always names a person in column two, headers do not.
+        if (h && h.toLowerCase() !== 'handle') roster.set(h, row[1]);
+      } else if (section === 'areas' && key && row.length >= 1) {
+        const h = handle(row[0]);
+        if (h && h.toLowerCase() === 'handle') continue; // header
+        const weight = row[1] === '' || row[1] == null ? undefined : Number(row[1]);
+        const note = row[2] || '';
+        if (h) {
+          owners[key].candidates.push({ login: h, weight, note });
+        } else if (/defer/i.test(row[0])) {
+          owners[key].candidates.push({ defer: 'scope', weight, note });
+        }
+      }
+      continue;
+    }
+
+    if (section === 'people' && key) {
+      const w = line.match(/^weight:\s*(-?\d+)\s*$/);
+      if (w) {
+        people[key].weight = Number(w[1]);
+        continue;
+      }
+    }
+    if (line.trim() && !line.trim().startsWith('#')) prose.push(line.trim());
+  }
+  if (section === 'people' && key) people[key].note ||= flushProse();
+  if (section === 'areas' && key) owners[key].guidance ||= flushProse();
+
+  // The assertion the roster exists for. A handle that is not on it is either a
+  // typo or someone who has left — both route real issues to a dead end, and
+  // both are invisible until someone notices an assignee never responded.
+  const unknown = [];
+  for (const [label, row] of Object.entries(owners)) {
+    for (const c of row.candidates) {
+      if (c.login && !roster.has(c.login)) unknown.push(`${label} -> ${c.login}`);
+    }
+  }
+  for (const login of Object.keys(people)) {
+    if (!roster.has(login)) unknown.push(`people -> ${login}`);
+  }
+  if (unknown.length) {
+    fail(
+      `${rel(OWNERS_FILE)} names handles that are not on the roster:\n  ` +
+        unknown.join('\n  ') +
+        `\nAdd them under "## Roster", or remove the rows — someone who has left must not stay in a rotation.`
+    );
+  }
+  return { roster: Object.fromEntries(roster), people, owners };
+}
+
+/**
+ * Resolve a scope's candidates, folding the global `people` defaults into each
+ * one. A per-candidate weight overrides the person's default; absent both, 1.
+ */
+function candidatesFor(table, scope) {
+  const row = (table.owners || {})[scope];
+  if (row === undefined) return undefined;
+  const people = table.people || {};
+  return {
+    guidance: row.guidance || '',
+    candidates: (row.candidates || []).map((c) => {
+      const person = people[c.login] || {};
+      const weight = c.weight ?? person.weight ?? 1;
+      const note = c.note || person.note || '';
+      // A `defer` candidate is a share of the rotation that belongs to another
+      // row rather than to a person — it keeps a bias ("usually Craigory, he
+      // has the Windows box") from silently becoming an override.
+      return { login: c.login || null, defer: c.defer || null, weight, note };
+    }),
+  };
+}
+
+/**
+ * Smooth weighted round-robin (the nginx algorithm).
+ *
+ * Plain round-robin ignores weight; expanding the list by weight honors it but
+ * clusters, so a 3:1 row hands the same person three consecutive issues in one
+ * sweep — exactly the pile-up the rotation exists to prevent. Smooth WRR
+ * interleaves instead (A B A C A B rather than A A A B B C) while still
+ * converging on the configured ratio.
+ *
+ * Deterministic on purpose. A random draw would be defensible statistically but
+ * makes a staged queue impossible to reason about on review, and impossible to
+ * reproduce when someone asks why an issue went where it did.
+ */
+function pickWeighted(candidates, state) {
+  const total = candidates.reduce((sum, c) => sum + Math.max(0, c.weight), 0);
+  if (total <= 0) return null;
+  let best = null;
+  for (const c of candidates) {
+    if (c.weight <= 0) continue; // 0 means "listed, never auto-suggested"
+    state[c.login] = (state[c.login] ?? 0) + c.weight;
+    if (best === null || state[c.login] > state[best.login]) best = c;
+  }
+  if (best) state[best.login] -= total;
+  return best;
+}
+
+/**
+ * Suggest an owner for a scope.
+ *
+ * The login goes to stdout so `$(triage owner "scope: core")` still yields just
+ * the login; the guidance and the weighted field go to stderr, where the agent
+ * reads them but command substitution does not. The suggestion is advisory —
+ * the guidance exists to be acted on, not just displayed.
+ *
+ * Rotation advances when a proposal is staged, not when it is applied, so a
+ * rejected proposal still consumes a turn. That is the cheap direction to be
+ * wrong in.
+ */
+function cmdOwner(args) {
+  const scope = args.find((a) => !a.startsWith('--'));
+  if (!scope) fail('which scope? e.g. triage owner "scope: core"');
+  if (!fs.existsSync(OWNERS_FILE)) fail(`no owners table at ${rel(OWNERS_FILE)}`);
+
+  const table = parseOwnersMarkdown(fs.readFileSync(OWNERS_FILE, 'utf8'));
+  const row = candidatesFor(table, scope);
+  const deferTo = flag(args, '--scope');
+  if (row === undefined) {
+    fail(`"${scope}" is not in ${rel(OWNERS_FILE)}. Add a row, or derive from git history.`);
+  }
+
+  if (row.guidance) console.error(`guidance for "${scope}": ${row.guidance}`);
+
+  if (!row.candidates.length) {
+    // Silence on stdout is a real answer: fall back to git history rather than
+    // pick someone arbitrary.
+    console.log('');
+    console.error(`no configured owner for "${scope}" — derive one from recent commits`);
+    process.exit(0);
+  }
+
+  let rotation = {};
+  if (fs.existsSync(ROTATION_FILE)) {
+    try {
+      rotation = JSON.parse(fs.readFileSync(ROTATION_FILE, 'utf8'));
+    } catch {
+      rotation = {};
+    }
+  }
+  const state = rotation[scope] && typeof rotation[scope] === 'object' ? rotation[scope] : {};
+  const pick = pickWeighted(row.candidates, state);
+
+  for (const c of row.candidates) {
+    const mark = pick && c === pick ? '->' : '  ';
+    const who = c.defer ? `(defer to ${c.defer})` : c.login;
+    const weight = c.weight <= 0 ? 'never auto-suggested' : `weight ${c.weight}`;
+    console.error(`${mark} ${who} (${weight})${c.note ? ` — ${c.note}` : ''}`);
+  }
+
+  // The deferred share belongs to another row. Resolve it here so the caller
+  // still gets one login on stdout and the bias stays honest end to end.
+  if (pick && pick.defer) {
+    if (!deferTo) {
+      console.log('');
+      console.error(
+        `this turn defers to the ${pick.defer} rotation — re-run with --scope "<scope label>"`
+      );
+      process.exit(0);
+    }
+    if (!args.includes('--peek')) {
+      rotation[scope] = state;
+      fs.mkdirSync(STATE_DIR, { recursive: true });
+      fs.writeFileSync(ROTATION_FILE, JSON.stringify(rotation, null, 2));
+    }
+    console.error(`deferring to "${deferTo}" for this one`);
+    return cmdOwner([deferTo, ...args.filter((a) => a === '--peek')]);
+  }
+
+  if (!pick) {
+    console.log('');
+    console.error(`every candidate for "${scope}" is weighted 0 — pick deliberately`);
+    process.exit(0);
+  }
+
+  if (!args.includes('--peek')) {
+    rotation[scope] = state;
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    fs.writeFileSync(ROTATION_FILE, JSON.stringify(rotation, null, 2));
+  }
+  console.error('suggestion only — override it when the issue names a better owner, and say why');
+  console.log(pick.login);
+}
+
+/**
+ * Restore records the state directory has lost.
+ *
+ * Only ever writes a record that is MISSING. A record present on disk is the
+ * live one by definition — the journal is older by construction, so preferring
+ * it would quietly roll back whatever was just decided.
+ */
+function cmdRecover(args) {
+  if (!fs.existsSync(JOURNAL)) {
+    console.log(`no journal at ${JOURNAL.replace(os.homedir(), '~')}`);
+    return;
+  }
+  const latest = new Map();
+  for (const line of fs.readFileSync(JOURNAL, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.dir === STATE_DIR) latest.set(String(e.issue), e);
+    } catch {
+      /* skip a torn line */
+    }
+  }
+  if (!latest.size) {
+    console.log(`journal holds nothing for ${rel(STATE_DIR)}`);
+    return;
+  }
+
+  const entries = [...latest.values()].sort((a, b) => Number(a.issue) - Number(b.issue));
+  if (args.includes('--list')) {
+    for (const e of entries) {
+      const status = (e.content.match(/^status: '([^']*)'/m) || [])[1] || '?';
+      const here = Boolean(resolveRecordPath(e.issue));
+      console.log(
+        `#${String(e.issue).padEnd(6)} ${status.padEnd(18)} ${e.ts.slice(0, 19)}  ${here ? 'present' : 'MISSING'}`
+      );
+    }
+    return;
+  }
+
+  let restored = 0;
+  fs.mkdirSync(STATE_DIR, { recursive: true });
+  for (const e of entries) {
+    // Archived counts as present: an applied record is not missing, and
+    // restoring it would put a mutation that is already on GitHub back in the
+    // review list looking undecided.
+    if (resolveRecordPath(e.issue)) continue;
+    fs.writeFileSync(recordPath(e.issue), e.content);
+    // Writes the file directly rather than through writeRecord, so the bus
+    // needs telling by hand. `null` reads as "appeared", which is what it did.
+    emitEdit(e.issue, null);
+    console.log(`restored #${e.issue} (as of ${e.ts.slice(0, 19)})`);
+    restored += 1;
+  }
+  console.log(
+    restored
+      ? `${restored} record${restored === 1 ? '' : 's'} restored`
+      : 'nothing missing — every journalled record is already on disk'
+  );
+}
+
+/**
+ * Take a record out of the review list.
+ *
+ * Settled records are ARCHIVED rather than deleted, for the same reason applied
+ * ones are: the record is the only readable account of what triage proposed, and
+ * that is worth keeping when a human went and did something else on GitHub
+ * instead. Only a record that never settled is actually removed, because an
+ * abandoned draft of a proposal is not an account of anything.
+ */
+function cmdRm(args) {
+  const n = requireIssue(args);
+  const file = resolveRecordPath(n);
+  if (!file) fail(`no record for #${n}`);
+  const { front } = readRecord(n);
+  const settled = ['applied', 'rejected', 'failed'].includes(front.status);
+  emitRemoved(front);
+  if (settled) {
+    archiveRecord(n);
+    console.log(`archived #${n}`);
+  } else {
+    fs.rmSync(file, { force: true });
+    console.log(`removed #${n}`);
+  }
+  notifyReload();
+}
+
+function cmdPrune() {
+  let n = 0;
+  for (const { front, file } of listRecords()) {
+    if (front.status === 'applied' || front.status === 'rejected') {
+      emitRemoved(front);
+      archiveRecord(front.issue);
+      n += 1;
+    }
+  }
+  console.log(`archived ${n} settled record${n === 1 ? '' : 's'}`);
+  notifyReload();
+}
+
+// ----------------------------------------------------------------------- utils
+
+function flag(args, name) {
+  const i = args.indexOf(name);
+  return i === -1 ? null : args[i + 1];
+}
+
+function requireIssue(args) {
+  const n = args.find((a) => /^\d+$/.test(a));
+  if (!n) fail('which issue? Pass an issue number.');
+  return Number(n);
+}
+
+const rel = (p) => path.relative(ROOT, p) || p;
+const indent = (s) => s.split('\n').map((l) => `    ${l}`).join('\n');
+const truncate = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+const showArg = (a) => (/[\s'"]/.test(a) ? JSON.stringify(a) : a);
+
+/**
+ * Push a command to any TUI attached to this state directory.
+ *
+ * Fire-and-forget: nothing here waits for or confirms delivery, because there
+ * may be no TUI open and that is a normal state, not an error. The record on
+ * disk stays the source of truth either way — a missed command costs the
+ * reviewer one `r`, never correctness.
+ */
+function cmdNotify(args) {
+  const [action, ...rest] = args;
+  const actions = {
+    reload: () => ({ type: 'reload', issue: rest[0] ? Number(rest[0]) : null }),
+    select: () => {
+      if (!rest[0]) fail('which issue? e.g. triage notify select 36775');
+      return { type: 'select', issue: Number(rest[0]) };
+    },
+    message: () => {
+      const text = rest.join(' ').trim();
+      if (!text) fail('nothing to say. e.g. triage notify message "restaged #36775"');
+      return { type: 'message', text };
+    },
+  };
+  if (!action || !actions[action]) {
+    fail('usage: triage notify <reload [N] | select <N> | message "text">');
+  }
+  appendJsonl(COMMANDS_FILE, actions[action]());
+}
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+const HELP = `triage — stage issue mutations, review them, then apply.
+
+  stage              read a JSON payload on stdin and write a pending record
+  list [--status S]  one line per record   [--json] [--all: include archived]
+  show <N>           print a record verbatim
+  review             interactive approval TUI, also "pnpm triage-tui"
+  set <N> <status>   set status by hand         [--note "..."]
+  feedback           records where changes were requested, and why  [--json]
+  note <N> "text"    leave the agent a note about a record, changing nothing
+  notes              every note the reviewer left, oldest first        [--json]
+  owner <scope>      next owner for a scope, round-robin      [--peek]
+  apply [<N>...]     apply approved records via gh    [--dry-run]
+  watch              apply approvals as they land, unattended  [--interval=20]
+  monitor            report each decision as it lands, for Monitor  [--interval=2]
+  recover [--list]   restore records the state dir lost (journal is outside it)
+  notify <action>    push to a live TUI: reload [N] | select <N> | message "..."
+  rm <N> | prune     take one record, or all settled ones, out of the review list
+  ci-tasks <pr>      failing TASK names from Nx Cloud, not just the workflow name
+
+Records live in ${rel(STATE_DIR)}/<N>.md — markdown, hand-editable. Every write is
+journalled to ~/.nx-triage/journal.jsonl, outside that directory, so \`recover\`
+can restore records if it is cleared. Set TRIAGE_DIR to point somewhere else —
+do that for tests rather than deleting the real one.
+Staged records start pending. The TUI moves them to approved, rejected, or
+changes-requested (with a note the agent reads back via "triage feedback").
+A rejection is final, so it archives the moment it is made and leaves the review
+list; "list --all" and "show <N>" still reach it.
+"note" is the separate channel for a request that is not about the staged
+mutations at all — it leaves the status alone and the agent reads it back via
+"triage notes".
+apply then writes applied or failed, and moves applied records into
+<state>/.archive too, so the review list only holds what still needs a decision.
+\`list --all\` and \`show <N>\` still reach them.
+`;
+
+async function main() {
+  const [verb, ...args] = process.argv.slice(2);
+  const verbs = {
+    stage: cmdStage,
+    list: cmdList,
+    show: cmdShow,
+    review: cmdReview,
+    set: cmdSet,
+    feedback: cmdFeedback,
+    note: cmdNote,
+    notes: cmdNotes,
+    owner: cmdOwner,
+    recover: cmdRecover,
+    apply: cmdApply,
+    notify: cmdNotify,
+    rm: cmdRm,
+    prune: cmdPrune,
+    'ci-tasks': cmdCiTasks,
+    watch: cmdWatch,
+    monitor: cmdMonitor,
+  };
+  if (!verb || verb === 'help' || verb === '--help') {
+    console.log(HELP);
+    return;
+  }
+  if (!verbs[verb]) fail(`unknown verb "${verb}"\n\n${HELP}`);
+  // `stage` formats Markdown through oxfmt, which is async; the rest are sync
+  // and awaiting a non-promise is harmless.
+  await verbs[verb](args);
+}
+
+// The TUI drives the same record functions rather than reimplementing the
+// frontmatter format. Two parsers for one file format is how a hand-edit starts
+// meaning different things to different verbs.
+if (require.main === module) main().catch((e) => fail(e && e.message ? e.message : String(e)));
+
+module.exports = {
+  ARCHIVE_DIR,
+  COMMANDS_FILE,
+  EVENTS_FILE,
+  STATE_DIR,
+  STATUSES,
+  // The TUI binds `n` only when a store exports these, the same way it takes
+  // COLUMNS and ACTIONS: the read-only review store has no events bus, so the
+  // key is simply absent there rather than bound to something that throws.
+  appendNote,
+  emitEdit,
+  lastBusError,
+  listNotes,
+  buildBody,
+  listRecords,
+  readRecord,
+  recordPath,
+  section,
+  validate,
+  writeRecord,
+};
