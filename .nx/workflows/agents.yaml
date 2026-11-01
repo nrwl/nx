@@ -57,6 +57,8 @@ common-init-steps: &common-init-steps
       echo "rust:   $(rustc --version) - $(cargo --version)"
       echo "dotnet: $(dotnet --version)"
       echo "java:   $(javac --version)"
+      echo "chrome: $(google-chrome --version)"
+      echo "ca-certificates: $(dpkg -s ca-certificates | grep Version)"
 
   - name: Install system deps
     script: |
@@ -108,12 +110,12 @@ common-init-steps: &common-init-steps
 launch-templates:
   linux-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'ubuntu22.04-node20.19-v1'
+    image: 'us-docker.pkg.dev/nxcloudstaging/quay-mirror/nxdev/nx-agents-base-images@sha256:f9d5685b22570325dbc677d8fb419931b775b239f8394abd6a0f862ad032aeb6'
     env: *common-env-vars
     init-steps: *common-init-steps
 
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
-    image: 'ubuntu22.04-node20.19-v1'
+    image: 'us-docker.pkg.dev/nxcloudstaging/quay-mirror/nxdev/nx-agents-base-images@sha256:a4a518fd44ee031b7a847389fa56e41da8150c1cf957b8903295454f1d698802'
     env: *common-env-vars
     init-steps: *common-init-steps
