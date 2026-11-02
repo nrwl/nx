@@ -14,7 +14,7 @@ import { join } from 'node:path';
 // vi.spyOn must target the module the code under test binds (packages/devkit
 // imports nx/src/devkit-internals directly); spying on the @nx/devkit/internal
 // barrel re-export would not intercept it.
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import * as devkitInternals from 'nx/src/devkit-internals';
 import { coerce } from 'semver';
 import type * as ts from 'typescript';
