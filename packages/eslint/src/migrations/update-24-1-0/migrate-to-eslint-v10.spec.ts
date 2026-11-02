@@ -651,6 +651,20 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(result.agentContext.join('\n')).not.toContain('notes.ts');
   });
 
+  it('should not read a rule from a plugin namespace that ends in a removed prefix', async () => {
+    tree.write('eslint.config.mjs', `export default [];`);
+    tree.write(
+      'apps/app1/src/banner.tsx',
+      `/* eslint-disable @eslint-react/dom-no-dangerously-set-innerhtml */
+       export const Banner = () => null;`
+    );
+    setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
+
+    const result = await update(tree);
+
+    expect(result.agentContext.join('\n')).not.toContain('banner.tsx');
+  });
+
   it('should only read the two -line directive forms from a line comment', async () => {
     tree.write('eslint.config.mjs', `export default [];`);
     // ESLint reads a bare `eslint-disable` or an inline rule setting only from a
