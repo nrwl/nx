@@ -6,10 +6,10 @@ This migration runs when the workspace lands on ESLint v10. It converts the esli
 
 ##### When the ESLint v10 update is held back
 
-Two framework integrations pin ESLint v9 through their own peer ranges, so the update to ESLint v10 is skipped for a workspace that has either of them. Those workspaces stay on v9, which is still supported, and move to v10 once the integration does.
+Two framework integrations pin ESLint v9 through their own peer ranges, so the update to ESLint v10 is skipped for a workspace that has either of them. Those workspaces stay on v9, which is still supported, until they upgrade to Angular 21 or Next.js 16.
 
-- `angular-eslint` below 21.3, the release that added ESLint v10 to its peer range.
-- `eslint-config-next` v15 and lower. Support for ESLint v10 landed in 16.
+- `angular-eslint` below 21.3, the release that added ESLint v10 to its peer range. On Angular 21, the `@nx/angular` migrations move `angular-eslint` 21.0-21.2 to 21.3 in the same run, so the update goes ahead. Angular 20 workspaces stay on v9.
+- `eslint-config-next` v15 and lower, which Next.js 15 and lower use. Versions 16.0-16.3 do not hold the update back, and the `@nx/next` migrations move them to 16.4 (see Next.js configs below).
 
 ##### Converting the remaining eslintrc configs
 
@@ -73,7 +73,7 @@ A Next.js config is still reported when it imports one of the removed plugins di
 
 ##### Checking the remaining plugins
 
-Every installed dependency that declares a `peerDependencies.eslint` is checked against it, and the ones whose range rules the new ESLint out are reported so they can be updated or replaced. Declaring that peer is the signal rather than the package name, so packages like `typescript-eslint` and `angular-eslint` are covered too. The check is one-directional: a package that declares an open range such as `>=8`, or no ESLint peer at all, satisfies it without having been built for v10, so it is worth running lint before treating the workspace as done. It also reads those ranges from `node_modules`, so when the migration runs before the updated dependencies are installed it reports that the check was skipped rather than a clean result.
+Every dependency in the root `package.json` that declares a `peerDependencies.eslint` is checked against it, and the ones whose range rules the new ESLint out are reported so they can be updated or replaced. Declaring that peer is the signal rather than the package name, so packages like `typescript-eslint` and `angular-eslint` are covered too. A plugin declared only in a project's `package.json` is not checked. The check is one-directional: a package that declares an open range such as `>=8`, or no ESLint peer at all, satisfies it without having been built for v10, so it is worth running lint before treating the workspace as done. It also reads those ranges from `node_modules`, so when the migration runs before the updated dependencies are installed it reports that the check was skipped rather than a clean result.
 
 ##### What is not changed
 

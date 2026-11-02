@@ -218,7 +218,7 @@ export default [
 | `context.getPhysicalFilename()` | `context.physicalFilename` |
 | `context.getSourceCode()`       | `context.sourceCode`       |
 
-The pre-pass read the `peerDependencies.eslint` of every installed dependency that declares one and forwarded the ones that rule ESLint v10 out, unless `<advisory_context>` says the check did not run. That list is a floor, not a clearance: a package with an open range (`>=8`) or no ESLint peer at all passes the check and can still fail at lint time.
+The pre-pass read the `peerDependencies.eslint` of each root `package.json` dependency that declares one and forwarded the ones that rule ESLint v10 out, unless `<advisory_context>` says the check did not run. It did not check plugins declared only in a project's `package.json`. That list is a floor, not a clearance: a package with an open range (`>=8`) or no ESLint peer at all passes the check and can still fail at lint time.
 
 **Action items**:
 
