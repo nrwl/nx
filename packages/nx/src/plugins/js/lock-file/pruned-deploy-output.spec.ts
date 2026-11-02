@@ -229,6 +229,13 @@ describe('generatePrunedDeployOutput sinks', () => {
     expect(emitted).toEqual([]);
     expect(packageJson).toEqual({ name: 'app', version: '1.0.0' });
     expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bodyLines: expect.arrayContaining([
+          expect.stringContaining('bun install --save-text-lockfile'),
+        ]),
+      })
+    );
     warn.mockRestore();
   });
 });
