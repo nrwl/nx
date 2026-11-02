@@ -35,8 +35,9 @@ export async function createApplicationFiles(
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
   const usesJsxA11y =
+    options.linter === 'eslint' &&
     'eslint-plugin-jsx-a11y' in
-    getExtraEslintDependencies(host).devDependencies;
+      getExtraEslintDependencies(host).devDependencies;
 
   generateFiles(
     host,
