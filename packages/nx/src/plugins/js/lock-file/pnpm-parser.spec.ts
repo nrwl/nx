@@ -4677,6 +4677,49 @@ snapshots:
       expect(result).not.toMatch(/vendored-lib@/);
     });
 
+    // A deploy output passes the relocated spec, createLockFile the declared one
+    it.each(['link:local_path_modules/vendor/x', 'link:../../vendor/x'])(
+      'emits a link: dependency the graph has a node for as a direct importer entry (%s)',
+      (spec) => {
+        // pnpm 12.8.1 lockfile of an app declaring `x: link:../../vendor/x`
+        const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/app:
+    dependencies:
+      x:
+        specifier: link:../../vendor/x
+        version: link:../../vendor/x
+`;
+        const { nodes } = getPnpmLockfileNodes(lockFile, 'link-node');
+        expect(nodes['npm:x']).toBeDefined();
+
+        const result = stringifyPnpmLockfile(
+          makeGraph([], {}, nodes),
+          lockFile,
+          { name: 'app', version: '0.0.0', dependencies: { x: spec } },
+          '/root'
+        );
+
+        expect(result).toContain(
+          [
+            '    dependencies:',
+            '      x:',
+            `        specifier: ${spec}`,
+            `        version: ${spec}`,
+          ].join('\n')
+        );
+        expect(result).not.toMatch(/x@/);
+      }
+    );
+
     it('rewrites a copied module link: snapshot ref relative to the lockfile dir', () => {
       // A copied workspace module (@myorg/lib-a) links a vendored package. The
       // source ref is importer-relative, but pnpm reads a snapshot link: ref

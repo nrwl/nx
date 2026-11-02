@@ -1373,31 +1373,30 @@ function mapRootSnapshot(
               `file:workspace_modules/${packageName}`;
           }
         } else {
+          // peer dependencies are mapped to dependencies
+          const section =
+            depType === 'peerDependencies' ? 'dependencies' : depType;
+          if (version.startsWith('link:')) {
+            // A link: has no packages: entry, even when the graph has a node
+            // for it, so the importer records the manifest value as is.
+            snapshot.specifiers[packageName] = version;
+            snapshot[section] = snapshot[section] || {};
+            snapshot[section][packageName] = version;
+            return;
+          }
           let node =
             graph.externalNodes[`npm:${packageName}@${version}`] ||
             (graph.externalNodes[`npm:${packageName}`] &&
             graph.externalNodes[`npm:${packageName}`].data.version === version
               ? graph.externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
-          // A file:/link: local-path dependency records a path where a version
-          // would go, so the lookups above never match it; findLocalPathNode
-          // matches it on that path instead.
+          // A file: local-path dependency records a path where a version would
+          // go, so the lookups above never match it; findLocalPathNode matches
+          // it on that path instead.
           if (!node && isLocalPathSpecifier(version)) {
             node = findLocalPathNode(graph, packageName, version);
           }
-          // peer dependencies are mapped to dependencies
-          const section =
-            depType === 'peerDependencies' ? 'dependencies' : depType;
           if (!node) {
-            if (version.startsWith('link:')) {
-              // A link: needs no packages: entry; emit the manifest value
-              // (relocated to its shipped location by the pre-lockfile rewrite)
-              // directly.
-              snapshot.specifiers[packageName] = version;
-              snapshot[section] = snapshot[section] || {};
-              snapshot[section][packageName] = version;
-              return;
-            }
             throw new Error(
               `Could not find external node for package ${packageName}@${version}.`
             );
