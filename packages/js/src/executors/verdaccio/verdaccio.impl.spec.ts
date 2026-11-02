@@ -32,7 +32,7 @@ vi.mock('child_process', async (importOriginal) => {
 const detectPort = vi.hoisted(() => vi.fn<(port: number) => Promise<number>>());
 vi.mock('detect-port', () => ({ default: detectPort }));
 
-// The executor resolves verdaccio from `module.paths`, which vitest leaves empty
+// The executor resolves verdaccio from the workspace root, which the vitest setup points at a scratch directory
 vi.mock('@nx/devkit/internal', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@nx/devkit/internal')>();
   return {
@@ -142,6 +142,7 @@ describe('Verdaccio readiness', () => {
         host,
         port: '4874',
       });
+      child.emit('message', { verdaccio_started: false });
       expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
       child.emit('message', { verdaccio_started: true });
