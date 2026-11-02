@@ -10,7 +10,7 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { basename } from 'node:path/posix';
+import { basename, dirname } from 'node:path/posix';
 import {
   acknowledgeBuildScripts,
   readModulePackageJson,
@@ -31,7 +31,9 @@ import {
   ESLINT_FLAT_CONFIG_FILENAMES,
   ESLINT_OLD_CONFIG_FILENAMES,
   isEslintConfigFile,
+  isFlatConfig,
 } from '../../utils/config-file';
+import { getEslintConfigNextUsage } from '../../utils/eslint-config-next';
 import { convertToFlatConfigGenerator } from '../../generators/convert-to-flat-config/generator';
 import {
   JS_ESLINTRC_FILENAMES,
@@ -50,6 +52,14 @@ export const V9_ONLY_PLUGINS = [
   'eslint-plugin-jsx-a11y',
   'eslint-plugin-react',
 ] as const;
+
+// eslint-config-next registers these itself, so their rules keep resolving in
+// the configs that pull it in.
+const ESLINT_CONFIG_NEXT_PLUGINS = new Set<string>([
+  'eslint-plugin-import',
+  'eslint-plugin-jsx-a11y',
+  'eslint-plugin-react',
+]);
 
 // Versions `@nx/react` installs for the ESLint v10 stack
 // (`packages/react/src/utils/versions.ts`).
@@ -565,8 +575,24 @@ function findRemovedPluginUsages(
       yamlPrefixed: new RegExp(
         `[\\s\\[{,'"](?:plugin:)?${escapeRegExp(prefix)}/`
       ),
+      pluginConfig: new RegExp(`['"\`]plugin:${escapeRegExp(prefix)}/`),
+      registeredByEslintConfigNext: ESLINT_CONFIG_NEXT_PLUGINS.has(plugin),
     };
   });
+
+  const pullsInEslintConfigNext = new Map<string, boolean>();
+  const isNextConfig = (configPath: string): boolean => {
+    if (!pullsInEslintConfigNext.has(configPath)) {
+      const usage = getEslintConfigNextUsage(tree.read(configPath, 'utf-8'));
+      pullsInEslintConfigNext.set(
+        configPath,
+        usage.importsEslintConfigNext ||
+          usage.registersNextPlugin ||
+          usage.extendsNextThroughCompat
+      );
+    }
+    return pullsInEslintConfigNext.get(configPath);
+  };
 
   visitNotIgnoredFiles(tree, '', (path) => {
     const isConfig = isEslintConfigFile(path);
@@ -587,12 +613,19 @@ function findRemovedPluginUsages(
       // `'react/jsx-runtime'` is an import path that reads exactly like one.
       // ESLint parses a bare `.eslintrc` as YAML too.
       const isYaml = /\.ya?ml$/.test(path) || basename(path) === '.eslintrc';
+      const nextConfig = isFlatConfig(path) && isNextConfig(path);
       const matchedPlugins = matchers
-        .filter(
-          ({ packageName, prefixed, yamlPrefixed }) =>
-            packageName.test(content) ||
-            (isYaml ? yamlPrefixed : prefixed).test(content)
-        )
+        .filter((matcher) => {
+          if (matcher.packageName.test(content)) {
+            return true;
+          }
+          if (nextConfig && matcher.registeredByEslintConfigNext) {
+            return matcher.pluginConfig.test(content);
+          }
+          return (isYaml ? matcher.yamlPrefixed : matcher.prefixed).test(
+            content
+          );
+        })
         .map(({ plugin }) => plugin);
       if (matchedPlugins.length > 0) {
         references.push({ path, matched: matchedPlugins });
@@ -628,6 +661,11 @@ function findRemovedPluginUsages(
     const code = blankOutLiterals(sourceFile, content);
     const matchedPrefixes = matchers
       .filter(({ prefix }) => hasEslintDirectiveFor(code, prefix))
+      .filter(
+        ({ registeredByEslintConfigNext }) =>
+          !registeredByEslintConfigNext ||
+          !isLintedWithNextConfig(tree, path, isNextConfig)
+      )
       .map(({ prefix }) => prefix);
     if (matchedPrefixes.length > 0) {
       directives.push({ path, matched: matchedPrefixes });
@@ -638,6 +676,25 @@ function findRemovedPluginUsages(
   });
 
   return { references, directives, eslintEnv };
+}
+
+// ESLint v10 lints a file with the flat config nearest to it.
+function isLintedWithNextConfig(
+  tree: Tree,
+  path: string,
+  isNextConfig: (configPath: string) => boolean
+): boolean {
+  for (let dir = dirname(path); ; dir = dirname(dir)) {
+    const config = ESLINT_FLAT_CONFIG_FILENAMES.map((file) =>
+      joinPathFragments(dir, file)
+    ).find((file) => tree.exists(file));
+    if (config) {
+      return isNextConfig(config);
+    }
+    if (dir === '.') {
+      return false;
+    }
+  }
 }
 
 const BLOCK_COMMENT = /\/\*([\s\S]*?)\*\//g;
