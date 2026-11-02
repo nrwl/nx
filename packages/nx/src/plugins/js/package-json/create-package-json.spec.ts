@@ -1904,6 +1904,214 @@ describe('createPackageJson', () => {
         expect(result.dependencies).toEqual({ x: expected });
       }
     );
+
+    // Every declarer writes the same spec for its own `vendor/x`, which only
+    // the resolution of the import tells apart
+    it.each([
+      {
+        packageManager: 'pnpm',
+        scenario: 'myapp imports it and lib2 declares it',
+        importer: 'myapp',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario: 'myapp imports it and lib2 declares it',
+        importer: 'myapp',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports and declares it',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'link:../../libs/nested/lib2/vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario: 'lib2 imports and declares it',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports it and its parent declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: false,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and its parent, which it depends on, declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: true,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario:
+          'lib2 imports it and its parent, which it depends on, declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: true,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and a project whose root only shares a prefix declares it',
+        importer: 'lib2',
+        declarers: ['prefixed'],
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+    ] as const)(
+      'should inherit the spec the import resolves to on $packageManager when $scenario',
+      ({ packageManager, importer, declarers, edge, expected }) => {
+        const [graphVersion, spec] =
+          packageManager === 'pnpm'
+            ? ['link:vendor/x', 'link:vendor/x']
+            : ['vendor/x-1.0.0.tgz', 'file:vendor/x-1.0.0.tgz'];
+        const projectRoots = {
+          lib2: 'libs/nested/lib2',
+          parent: 'libs/nested',
+          prefixed: 'libs/nest',
+        };
+        const manifests = Object.fromEntries(
+          Object.entries(projectRoots).map(([name, projectRoot]) => [
+            `${projectRoot}/package.json`,
+            {
+              name,
+              dependencies: (declarers as readonly string[]).includes(name)
+                ? { x: spec }
+                : {},
+            },
+          ])
+        );
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager },
+        });
+        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: ['{projectRoot}/**/*'],
+        });
+        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+          (_root, files) => files
+        );
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (path) => typeof path === 'string' && path in manifests
+        );
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation(
+          (path) =>
+            manifests[path] ?? {
+              name: 'root-package',
+              dependencies: { x: spec },
+            }
+        );
+        const importsX = (project: string) =>
+          project === importer
+            ? [
+                {
+                  source: project,
+                  target: 'npm:x',
+                  type: DependencyType.static,
+                },
+              ]
+            : [];
+
+        const result = createPackageJson(
+          'myapp',
+          {
+            nodes: {
+              myapp: {
+                type: 'app',
+                name: 'myapp',
+                data: { targets: { build: {} }, root: 'apps/myapp' },
+              },
+              ...Object.fromEntries(
+                Object.entries(projectRoots).map(([name, projectRoot]) => [
+                  name,
+                  {
+                    type: 'lib' as const,
+                    name,
+                    data: { targets: {}, root: projectRoot },
+                  },
+                ])
+              ),
+            },
+            externalNodes: {
+              'npm:x': {
+                type: 'npm',
+                name: 'npm:x',
+                data: { version: graphVersion, hash: '', packageName: 'x' },
+              },
+            },
+            dependencies: {
+              myapp: [
+                {
+                  source: 'myapp',
+                  target: 'lib2',
+                  type: DependencyType.static,
+                },
+                ...importsX('myapp'),
+              ],
+              lib2: [
+                ...(edge
+                  ? [
+                      {
+                        source: 'lib2',
+                        target: 'parent',
+                        type: DependencyType.static,
+                      },
+                    ]
+                  : []),
+                ...importsX('lib2'),
+              ],
+              parent: [],
+              prefixed: [],
+            },
+          },
+          { target: 'build', root: '', isProduction: true },
+          {
+            myapp: [
+              createFile('apps/myapp/src/main.ts', [
+                [
+                  'apps/myapp/src/main.ts',
+                  importer === 'myapp' ? 'npm:x' : 'lib2',
+                  DependencyType.static,
+                ],
+              ]),
+            ],
+            lib2:
+              importer === 'lib2'
+                ? [
+                    createFile('libs/nested/lib2/src/index.ts', [
+                      [
+                        'libs/nested/lib2/src/index.ts',
+                        'npm:x',
+                        DependencyType.static,
+                      ],
+                    ]),
+                  ]
+                : [],
+            parent: [],
+            prefixed: [],
+          }
+        );
+
+        expect(result.dependencies).toEqual({ x: expected });
+      }
+    );
   });
 });
 
