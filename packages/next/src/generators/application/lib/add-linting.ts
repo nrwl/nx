@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   detectPackageManager,
   GeneratorCallback,
   joinPathFragments,
@@ -11,8 +12,8 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
-  addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addSpreadConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
   useFlatConfig,
@@ -28,6 +29,7 @@ export async function addLinting(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const isNext16App = options.linter === 'eslint' && (await isNext16(host));
 
   tasks.push(
     await addLintingToProject(host, {
@@ -49,15 +51,22 @@ export async function addLinting(
 
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
+      if (isNext16App) {
+        addSpreadConfigToFlatLintConfig(
+          host,
+          options.appProjectRoot,
+          'nextVitals',
+          'eslint-config-next/core-web-vitals',
+          { insertAtTheEnd: false }
+        );
+      }
       addPredefinedConfigToFlatLintConfig(
         host,
         options.appProjectRoot,
         'flat/react-typescript',
         { checkBaseConfig: true }
       );
-      if (await isNext16(host)) {
-        addPluginsToLintConfig(host, options.appProjectRoot, ['@next/next']);
-      } else {
+      if (!isNext16App) {
         // Since Next.js < 16 does not support flat configs yet, we need to use compat fixup.
         const addExtendsTask = addExtendsToLintConfig(
           host,
@@ -122,11 +131,21 @@ export async function addLinting(
       'unrs-resolver': false,
     });
 
+    const nextLintDependencies = {
+      'eslint-config-next': eslintConfigNextVersion,
+      '@next/eslint-plugin-next': eslintConfigNextVersion,
+    };
+    // eslint-config-next 16 brings its own React plugins.
     tasks.push(
-      addExtraEslintDependencies(host, {
-        'eslint-config-next': eslintConfigNextVersion,
-        '@next/eslint-plugin-next': eslintConfigNextVersion,
-      })
+      isNext16App
+        ? addDependenciesToPackageJson(
+            host,
+            {},
+            nextLintDependencies,
+            undefined,
+            true
+          )
+        : addExtraEslintDependencies(host, nextLintDependencies)
     );
   }
 

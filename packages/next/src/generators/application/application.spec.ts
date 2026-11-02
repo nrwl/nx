@@ -486,12 +486,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.mjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "import nextEslintPluginNext from '@next/eslint-plugin-next';
-          import nx from '@nx/eslint-plugin';
+          "import nx from '@nx/eslint-plugin';
+          import nextVitals from 'eslint-config-next/core-web-vitals';
           import baseConfig from '../eslint.config.mjs';
 
           export default [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nextVitals,
             ...nx.configs['flat/react-typescript'],
             ...baseConfig,
             {
@@ -514,12 +514,12 @@ describe('app', () => {
 
         expect(tree.read(`${name}/eslint.config.cjs`, 'utf-8'))
           .toMatchInlineSnapshot(`
-          "const nextEslintPluginNext = require('@next/eslint-plugin-next');
-          const nx = require('@nx/eslint-plugin');
+          "const nx = require('@nx/eslint-plugin');
+          const nextVitals = require('eslint-config-next/core-web-vitals');
           const baseConfig = require('../eslint.config.cjs');
 
           module.exports = [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nextVitals,
 
             ...nx.configs['flat/react-typescript'],
             ...baseConfig,
@@ -542,13 +542,13 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '^16.1.6',
-            '@next/eslint-plugin-next': '^16.1.6',
+            'eslint-config-next': '^16.4.0',
+            '@next/eslint-plugin-next': '^16.4.0',
           },
         });
       });
 
-      it('should install ESLint v10 plugins by default in an empty Nx workspace', async () => {
+      it('should install ESLint v10 without the React plugins in an empty Nx workspace', async () => {
         delete process.env.ESLINT_USE_FLAT_CONFIG;
         const name = uniq();
         await applicationGenerator(tree, {
@@ -557,21 +557,18 @@ describe('app', () => {
           linter: 'eslint',
         });
 
-        const packageJson = readJson(tree, '/package.json');
-        expect(packageJson.devDependencies.eslint).toMatch(/^\^?10\./);
-        expect(packageJson.devDependencies['eslint-plugin-import-x']).toMatch(
-          /^\^?4\./
-        );
-        expect(
-          packageJson.devDependencies['eslint-plugin-react-hooks']
-        ).toMatch(/^\^?7\./);
-        // react/jsx-a11y have no ESLint v10 release, so they must not install
-        expect(
-          packageJson.devDependencies['eslint-plugin-react']
-        ).toBeUndefined();
-        expect(
-          packageJson.devDependencies['eslint-plugin-jsx-a11y']
-        ).toBeUndefined();
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies.eslint).toMatch(/^\^?10\./);
+        // eslint-config-next 16 depends on and registers its own React plugins
+        for (const pkg of [
+          'eslint-plugin-import',
+          'eslint-plugin-import-x',
+          'eslint-plugin-jsx-a11y',
+          'eslint-plugin-react',
+          'eslint-plugin-react-hooks',
+        ]) {
+          expect(devDependencies).not.toHaveProperty(pkg);
+        }
       });
 
       it('should install eslint-config-next@15 when an existing Next.js 15 project is detected', async () => {
@@ -643,8 +640,8 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-plugin-react': expect.anything(),
-            'eslint-plugin-react-hooks': expect.anything(),
+            'eslint-config-next': expect.anything(),
+            '@next/eslint-plugin-next': expect.anything(),
           },
         });
 
@@ -740,11 +737,11 @@ describe('app', () => {
         const eslintContents = tree.read('eslint.config.mjs', 'utf-8');
 
         expect(eslintContents).toMatchInlineSnapshot(`
-          "import nextEslintPluginNext from '@next/eslint-plugin-next';
+          "import nextVitals from 'eslint-config-next/core-web-vitals';
           import nx from '@nx/eslint-plugin';
 
           export default [
-            { plugins: { '@next/next': nextEslintPluginNext } },
+            ...nextVitals,
             ...nx.configs['flat/base'],
             ...nx.configs['flat/typescript'],
             ...nx.configs['flat/javascript'],

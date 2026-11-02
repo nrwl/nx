@@ -10,6 +10,7 @@ export {
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addSpreadConfigToFlatLintConfig,
   addTypedLintingToFlatConfig,
   findEslintFile,
   inspectTypedLinting,
