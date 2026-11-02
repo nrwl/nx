@@ -1089,7 +1089,7 @@ describe('package-manager', () => {
     it('should return bun publish command with registry and tag', () => {
       const commands = getPackageManagerCommand('bun');
       expect(commands.publish(...publishCmdParam)).toEqual(
-        'bun publish --cwd=dist/packages/my-pkg --json --registry=https://registry.npmjs.org/ --tag=latest'
+        'bun publish --cwd=dist/packages/my-pkg --registry=https://registry.npmjs.org/ --tag=latest'
       );
     });
 

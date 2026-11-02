@@ -440,7 +440,6 @@ export function getPackageManagerCommand(
         args: [
           'publish',
           `--cwd=${packageRoot}`,
-          '--json',
           `--registry=${registry}`,
           `--tag=${tag}`,
         ],
