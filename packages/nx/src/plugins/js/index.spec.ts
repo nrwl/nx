@@ -309,28 +309,28 @@ describe('nx/js/dependencies-and-lockfile', () => {
           },
         })
       );
-      write('.gitignore', 'vendor/ignored\n');
+      write('.gitignore', 'vendor/ignored\nvendor/vend/dist\n');
       write(lockFile, lockFileContent);
-      // `vend` declares the `ttar` tarball.
-      const sources = {
-        vend: 'vendor/vend/index.js',
-        ignored: 'vendor/ignored/index.js',
-        vtar: 'vendor/vtar-1.0.0.tgz',
-        lnk: 'vendor/lnk/index.js',
-        ttar: 'vendor/ttar-1.0.0.tgz',
-      };
-      for (const source of Object.values(sources)) {
+      // `vend` declares the `ttar` tarball. Its ignored dist ships with it.
+      const sources = [
+        ['vend', 'vendor/vend/index.js'],
+        ['vend', 'vendor/vend/dist/index.js'],
+        ['ignored', 'vendor/ignored/index.js'],
+        ['vtar', 'vendor/vtar-1.0.0.tgz'],
+        ['lnk', 'vendor/lnk/index.js'],
+        ['ttar', 'vendor/ttar-1.0.0.tgz'],
+      ];
+      const names = [...new Set(sources.map(([name]) => name))];
+      for (const [, source] of sources) {
         write(source, 'V1');
       }
       // Every node of a package, so a package that also has a bare node
       // changes only when all of them do.
       const hashes = async () => {
         const plugin = await loadPluginInNewProcess();
-        // A new process walks the workspace again.
-        (await import('../../utils/workspace-context')).resetWorkspaceContext();
         const nodes = await createExternalNodes(plugin, lockFile);
         return Object.fromEntries(
-          Object.keys(sources).map((name) => [
+          names.map((name) => [
             name,
             Object.values(nodes)
               .filter((node) => node.data.packageName === name)
@@ -340,7 +340,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
       };
       const before = await hashes();
 
-      for (const [name, source] of Object.entries(sources)) {
+      for (const [name, source] of sources) {
         write(source, 'V2');
         const after = await hashes();
         write(source, 'V1');
