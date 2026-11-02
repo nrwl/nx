@@ -131,14 +131,10 @@ describe('updateEslint', () => {
   });
 
   it('should pin ESLint v9 when the workspace uses Next.js 15', async () => {
-    projectGraph.externalNodes = {
-      'npm:next': {
-        type: 'npm',
-        name: 'npm:next',
-        data: { packageName: 'next', version: '15.2.4' },
-      },
-    };
-    tree.write('eslint.config.cjs', `module.exports = []`);
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, next: '~15.2.4' },
+    }));
 
     await addLinting(tree, schema);
 
@@ -149,51 +145,11 @@ describe('updateEslint', () => {
     expect(devDependencies['eslint-plugin-import-x']).toBeUndefined();
   });
 
-  it('should keep an existing ESLint version when the workspace uses Next.js 15', async () => {
-    projectGraph.externalNodes = {
-      'npm:next': {
-        type: 'npm',
-        name: 'npm:next',
-        data: { packageName: 'next', version: '15.2.4' },
-      },
-    };
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      devDependencies: { ...json.devDependencies, eslint: '^9.0.0' },
-    }));
-    tree.write('eslint.config.cjs', `module.exports = []`);
-
-    await addLinting(tree, schema);
-
-    const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['eslint']).toBe('^9.0.0');
-  });
-
-  it.each(['none', 'oxlint'] as const)(
-    'should not install ESLint on Next.js 15 when the linter is %s',
-    async (linter) => {
-      projectGraph.externalNodes = {
-        'npm:next': {
-          type: 'npm',
-          name: 'npm:next',
-          data: { packageName: 'next', version: '15.2.4' },
-        },
-      };
-
-      await addLinting(tree, { ...schema, linter });
-
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies?.['eslint']).toBeUndefined();
-    }
-  );
-
   it('should not pin ESLint v9 when the workspace uses the latest Next.js version', async () => {
-    tree.write('eslint.config.cjs', `module.exports = []`);
-
     await addLinting(tree, schema);
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['eslint']).toBeUndefined();
+    expect(devDependencies['eslint']).toBe('^10.0.0');
     expect(devDependencies['eslint-plugin-import-x']).toBeDefined();
     expect(devDependencies['eslint-plugin-react']).toBeUndefined();
   });
