@@ -125,7 +125,7 @@ export function createPackageJson(
 
     // A local package's graph version is a path, never a semver version
     if (!valid(version)) {
-      const localPathSpec = getInheritedLocalPathSpec(packageName);
+      const localPathSpec = getInheritedLocalPathSpec(packageName, version);
       if (localPathSpec) {
         return localPathSpec;
       }
@@ -327,31 +327,49 @@ export function createPackageJson(
 
 /**
  * A local-path spec for a dependency the project inherits, rebased from the
- * manifest that declares it to the project root. The graph version of a local
- * package is root-relative (relative to its declarer for a Bun tarball), while
- * the pnpm and Bun deploy outputs relocate every local-path spec from the
- * project root. npm and yarn pruning matches the graph version itself, so they
- * keep it.
+ * manifest that declares it to the project root. The graph version records the
+ * path relative to the workspace root or to its declarer, while the pnpm and
+ * Bun deploy outputs relocate every local-path spec from the project root. npm
+ * and yarn pruning matches the graph version itself, so they keep it.
  *
  * Declarers are searched nearest first: the project, the workspace projects it
- * depends on, then the root manifest.
+ * depends on, then the root manifest. A declarer counts only when its spec
+ * resolves to the path the graph version records, so a same-named package
+ * another project vendors never replaces a registry version or registry alias.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   root: string,
   rootPackageJson: PackageJson
-): (packageName: string) => string | undefined {
-  let declarers: Array<{ root: string; manifest: PackageJson }> | undefined;
-  return (packageName) => {
-    if (declarers === undefined) {
+): (packageName: string, version: string) => string | undefined {
+  let lookup:
+    | {
+        packageManager: 'pnpm' | 'bun';
+        declarers: Array<{ root: string; manifest: PackageJson }>;
+      }
+    | null
+    | undefined;
+  return (packageName, version) => {
+    if (lookup === undefined) {
       const packageManager = detectPackageManager(root);
-      declarers =
+      lookup =
         packageManager === 'pnpm' || packageManager === 'bun'
-          ? getLocalPathSpecDeclarers(projectNode, graph, root, rootPackageJson)
-          : [];
+          ? {
+              packageManager,
+              declarers: getLocalPathSpecDeclarers(
+                projectNode,
+                graph,
+                root,
+                rootPackageJson
+              ),
+            }
+          : null;
     }
-    for (const declarer of declarers) {
+    if (lookup === null) {
+      return undefined;
+    }
+    for (const declarer of lookup.declarers) {
       const spec = getDependencyVersionFromPackageJson(
         packageName,
         root,
@@ -368,16 +386,76 @@ function createInheritedLocalPathSpecResolver(
       }
       const protocol = spec.startsWith('link:') ? 'link:' : 'file:';
       const path = normalizePath(spec.slice(protocol.length));
+      const target = withoutTrailingSlash(
+        isAbsolute(path) ? path : posix.join(declarer.root, path)
+      );
+      if (
+        getRecordedLocalPath(
+          version,
+          protocol,
+          declarer.root,
+          lookup.packageManager
+        ) !== target
+      ) {
+        continue;
+      }
       if (isAbsolute(path)) {
         return spec;
       }
-      return `${protocol}${posix.relative(
-        projectNode.data.root,
-        posix.join(declarer.root, path)
-      )}`;
+      return `${protocol}${posix.relative(projectNode.data.root, target)}`;
     }
     return undefined;
   };
+}
+
+/**
+ * The path a graph version names, read the way the lockfile records a
+ * `protocol` spec of the manifest at `declarerRoot`. pnpm records a `file:`
+ * path from the workspace root and a `link:` path from the importer. Bun
+ * records directories and `link:` paths from the workspace root, and a tarball
+ * from its declarer without the `file:` protocol. Both record a dependency
+ * named differently from its package as an `npm:<package>@<version>` alias.
+ */
+function getRecordedLocalPath(
+  graphVersion: string,
+  protocol: 'file:' | 'link:',
+  declarerRoot: string,
+  packageManager: 'pnpm' | 'bun'
+): string | undefined {
+  const version = getAliasedVersion(graphVersion);
+  const isBunTarball =
+    packageManager === 'bun' &&
+    protocol === 'file:' &&
+    !isLocalPathSpecifier(version);
+  if (!isBunTarball && !version.startsWith(protocol)) {
+    return undefined;
+  }
+  const path = normalizePath(
+    isBunTarball ? version : version.slice(protocol.length)
+  );
+  if (isAbsolute(path)) {
+    return withoutTrailingSlash(path);
+  }
+  const isDeclarerRelative =
+    isBunTarball || (protocol === 'link:' && packageManager === 'pnpm');
+  return withoutTrailingSlash(
+    posix.join(isDeclarerRelative ? declarerRoot : '', path)
+  );
+}
+
+// The search starts past the package name's first character, the `@` of a
+// scoped name, so an `@` in the version's path stays in the version
+function getAliasedVersion(version: string): string {
+  if (!version.startsWith('npm:')) {
+    return version;
+  }
+  const separator = version.indexOf('@', 'npm:'.length + 1);
+  return separator === -1 ? version : version.slice(separator + 1);
+}
+
+// posix.join keeps a trailing slash, so `dir/` and `dir` would differ
+function withoutTrailingSlash(path: string): string {
+  return path.replace(/(?<=.)\/$/, '');
 }
 
 function getLocalPathSpecDeclarers(
