@@ -251,14 +251,26 @@ ${statement.replace(/^/gm, '  ')}
       );
       expect(assetResponse.status).toBe(200);
 
-      const checkReloadDocuments = (name: string) => {
-        for (const output of [
+      const checkReloadDocuments = async (name: string) => {
+        const outputs = [
           `dist/${name}/browser/index.html`,
           `dist/${name}/browser/index.original.html`,
           `dist/${name}/server/index.server.html`,
           `dist/${name}/server/index.csr.html`,
-        ]) {
-          const document = readFile(output);
+        ];
+        const deadline = Date.now() + 5000;
+        let documents = outputs.map((output) => readFile(output));
+        while (
+          documents.some(
+            (document) =>
+              [...document.matchAll(reloadScriptPattern)].length !== 1
+          ) &&
+          Date.now() < deadline
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          documents = outputs.map((output) => readFile(output));
+        }
+        for (const document of documents) {
           const reloadScripts = [...document.matchAll(reloadScriptPattern)];
           expect(reloadScripts).toHaveLength(1);
           if (name === app) {
@@ -270,7 +282,6 @@ ${statement.replace(/^/gm, '  ')}
         }
       };
       for (const application of applications) {
-        checkReloadDocuments(application.name);
         const browserResponse = await fetch(
           `http://localhost:${application.devServerPort}/`,
           { headers: { accept: 'text/html' } }
@@ -279,6 +290,7 @@ ${statement.replace(/^/gm, '  ')}
         const browserHtml = await browserResponse.text();
         expect(browserHtml).toContain('id="index-transform-marker"');
         expect(browserHtml.match(reloadScriptPattern) ?? []).toHaveLength(0);
+        await checkReloadDocuments(application.name);
       }
 
       for (const application of applications) {
@@ -398,7 +410,7 @@ ${statement.replace(/^/gm, '  ')}
         const [response] = await finished;
         expect(response.status()).toBe(200);
         await page.waitForLoadState('load');
-        checkReloadDocuments(application.name);
+        await checkReloadDocuments(application.name);
         for (const current of applications) {
           expect(current.navigations).toBe(
             navigationCounts.get(current)! + Number(current === application)
