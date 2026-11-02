@@ -39,6 +39,30 @@ describe('versions(tree)', () => {
     expect(versions(tree).eslintVersion).toMatch(/^\^9\./);
   });
 
+  it.each([
+    ['Angular 20', { '@angular/core': '~20.3.0' }, /^\^9\./],
+    ['Next.js 15', { next: '~15.2.4' }, /^\^9\./],
+    [
+      'Angular 21 and Next.js 16',
+      { '@angular/core': '~21.0.0', next: '~16.0.0' },
+      /^\^10\./,
+    ],
+    [
+      'Angular 20 with ESLint 10 declared',
+      { '@angular/core': '~20.3.0', eslint: '^10.0.0' },
+      /^\^10\./,
+    ],
+  ])('should pick the ESLint major for %s', (_, dependencies, expected) => {
+    const tree = createTreeWithEmptyWorkspace();
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, ...dependencies };
+      return json;
+    });
+
+    expect(versions(tree).eslintVersion).toMatch(expected);
+  });
+
   it('should throw when ESLint v10+ is installed and eslintrc is explicitly requested', () => {
     const tree = createTreeWithEmptyWorkspace();
     updateJson(tree, 'package.json', (json) => {

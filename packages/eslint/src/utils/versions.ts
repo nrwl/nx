@@ -52,8 +52,20 @@ export function versions(tree: Tree): EslintVersions {
   }
   // Fresh install: latest stack (v10) by default. A workspace that stays on
   // eslintrc gets v9, the last major that reads it, so the scaffolded config
-  // stays readable.
-  return useFlatConfig(tree) ? latestVersions : versionMap[9];
+  // stays readable. Angular 20 and Next.js < 16 get v9 too: no release of
+  // angular-eslint 20 or eslint-config-next < 16 supports ESLint v10.
+  return useFlatConfig(tree) && !usesFrameworkWithoutEslintV10Support(tree)
+    ? latestVersions
+    : versionMap[9];
+}
+
+function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
+  const angularVersion = getDeclaredPackageVersion(tree, '@angular/core');
+  const nextVersion = getDeclaredPackageVersion(tree, 'next');
+  return (
+    (!!angularVersion && major(angularVersion) < 21) ||
+    (!!nextVersion && major(nextVersion) < 16)
+  );
 }
 
 // convert-to-flat-config runs only on eslintrc workspaces, which
