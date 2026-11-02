@@ -200,6 +200,20 @@ describe('isTrustedNxInstall', () => {
     );
   });
 
+  it("should point at NX_WORKSPACE_ROOT_PATH when refusing the workspace's own install", () => {
+    vi.spyOn(ownedPrivateDir, 'isTrustedAncestorEntry').mockReturnValue(false);
+
+    expect(
+      isTrustedNxInstall('/shared/ws-b/node_modules', '/shared/ws-b')
+    ).toBe(false);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Set NX_WORKSPACE_ROOT_PATH=/shared/ws-b')
+    );
+    expect(console.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('Install nx in the workspace')
+    );
+  });
+
   it('should judge each directory down to the install', () => {
     const trusted = vi
       .spyOn(ownedPrivateDir, 'isTrustedAncestorEntry')

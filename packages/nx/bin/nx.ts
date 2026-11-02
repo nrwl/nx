@@ -125,15 +125,10 @@ async function main() {
       (Symbol as any).observable = Symbol('observable polyfill');
 
     // Make sure that a local copy of Nx exists in workspace
-    let localNx: string;
-    try {
-      localNx = workspace && resolveNx(workspace);
-    } catch {
-      localNx = null;
-    }
+    const localNx = workspace && tryResolveNx(workspace);
 
     const isLocalInstall =
-      localNx === resolveNx(null) || localNx === __filename;
+      !!localNx && (localNx === tryResolveNx(null) || localNx === __filename);
     const { LOCAL_NX_VERSION, GLOBAL_NX_VERSION } = determineNxVersions(
       localNx,
       workspace,
@@ -251,6 +246,14 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 
   // check for root install
   return resolveNxBinFrom(root);
+}
+
+function tryResolveNx(workspace: WorkspaceTypeAndRoot | null): string | null {
+  try {
+    return resolveNx(workspace);
+  } catch {
+    return null;
+  }
 }
 
 function isNxCloudCommand(command: string): boolean {

@@ -85,7 +85,9 @@ export function isTrustedNxInstall(nodeModules: string, root: string): boolean {
       warnUntrusted(
         `the nx installed in ${nodeModules}`,
         entry,
-        'Install nx in the workspace to use it.'
+        isInside(path.resolve(nodeModules), top)
+          ? `Set NX_WORKSPACE_ROOT_PATH=${root} to use it anyway.`
+          : 'Install nx in the workspace to use it.'
       );
       return false;
     }
