@@ -8,7 +8,7 @@ ESLint v10 removed the eslintrc configuration format outright. Unlike v9, where 
 
 The migration runs in two halves:
 
-1. A deterministic pre-pass that converted the eslintrc configs it could read and replaced the plugins that cannot run on v10.
+1. A deterministic pre-pass that converted the eslintrc configs it could read and replaced the plugins with no release that supports ESLint v10.
 2. This prompt: finish what the pre-pass could not do safely, and leave the workspace lint-passing.
 
 Out of scope: changing what rules the workspace enforces beyond what the removed plugins force, and upgrading any package other than the ESLint plugins named here. Source files are edited only for the cases named in sections 2, 3 and 6: directive comments naming a rule that no longer exists or that section 6 renames, and `/* eslint-env */` comments.

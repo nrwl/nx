@@ -2,7 +2,7 @@
 
 ESLint v10 removed the eslintrc configuration format and the `ESLINT_USE_FLAT_CONFIG` escape hatch, so `.eslintrc.*` files are no longer read at all. It also raised the Node.js floor to `^20.19.0 || ^22.13.0 || >=24`, and a few widely used plugins have no v10 release.
 
-This migration runs when the workspace lands on ESLint v10. It converts the eslintrc configs that are left, replaces the plugins that cannot run on v10, and reports whatever it could not do safely so the paired prompt can finish it.
+This migration runs when the workspace lands on ESLint v10. It converts the eslintrc configs that are left, replaces the plugins with no release that supports ESLint v10, and reports whatever it could not do safely so the paired prompt can finish it.
 
 ##### When the ESLint v10 update is held back
 
@@ -53,15 +53,23 @@ Comments in the original config are not carried over, since the converted file i
 
 `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` peer-depend on ESLint v9 or lower and have no v10 release. The migration removes them from `package.json` and installs `eslint-plugin-import-x` when `eslint-plugin-import` was there. `eslint-plugin-import-x` supports v10 from 4.16.2 and `eslint-plugin-react-hooks` from 7.1.0, so a workspace that declares an older release gets `eslint-plugin-import-x` `^4.17.1` or `eslint-plugin-react-hooks` `7.1.1`.
 
-Two of those removals lose rules outright. `eslint-plugin-import` has a maintained fork in `eslint-plugin-import-x`, so its rules move across, but `eslint-plugin-react` and `eslint-plugin-jsx-a11y` have no equivalent: every `react/` and `jsx-a11y/` rule the workspace was enforcing stops being enforced, and nothing is installed in their place. They are removed rather than left alone because no published release of either declares support for ESLint v10, so keeping them would leave the workspace on plugins its ESLint is outside the supported range of. A workspace that depends on those rules should stay on ESLint v9, which Nx still supports, and move to v10 once the plugins publish a release that supports it.
+Two of those removals lose rules outright. `eslint-plugin-import` has a maintained fork in `eslint-plugin-import-x`, so its rules move across, but `eslint-plugin-react` and `eslint-plugin-jsx-a11y` have no equivalent: every `react/` and `jsx-a11y/` rule the workspace was enforcing stops being enforced, and nothing is installed in their place. They are removed rather than left alone because no published release of either declares support for ESLint v10, so keeping them would leave the workspace on plugins its ESLint is outside the supported range of. A workspace that depends on those rules can stay on ESLint v9, which Nx still supports. Run `nx migrate <version> --include=required` to update only the Nx packages. ESLint and the other third-party packages Nx manages keep their versions, and this migration does not run. A later `nx migrate --include=optional` applies the updates that run deferred, including ESLint v10 and this migration.
 
-On npm, the install that `nx migrate --run-migrations` runs before the migrations can fail with an `ERESOLVE` peer dependency error, because those plugins are still in `package.json` and their peer ranges exclude ESLint v10. Install once with `npm install --legacy-peer-deps` or `npm install --force`, then run `nx migrate --run-migrations --skip-install`. The migration then removes those plugins, so they no longer block later installs.
+On npm, the install that `nx migrate --run-migrations` runs before the migrations can fail with an `ERESOLVE` peer dependency error, because those plugins are still in `package.json` and their peer ranges exclude ESLint v10. Install once with `npm install --legacy-peer-deps`, then run `nx migrate --run-migrations --skip-install`. The migration then removes those plugins, so they no longer block later installs.
 
 Workspaces that get these rules through an Nx preset (`@nx/eslint-plugin`'s `flat/react`, `flat/react-base` and `flat/react-jsx`) need no config change: the presets already resolve `eslint-plugin-import-x` and the classic react-hooks rules on ESLint v10, and they drop the react and jsx-a11y rules for the same reason.
 
-A file ESLint loads as a config (`eslint.config.*`, `.eslintrc.*`) is reported for manual follow-up when it names one of the removed plugins, extends one of their configs (`plugin:react/recommended`), or configures their rules through the `import/`, `react/` or `jsx-a11y/` prefix. Any other module is reported only when it imports one of them by package name, since a rule prefix in an ordinary source file is indistinguishable from an import path. Those references stop resolving once the package is gone, and only the `import` to `import-x` case has an equivalent to move to.
+A file ESLint loads as a config (`eslint.config.*`, `.eslintrc.*`) is reported for manual follow-up when it names one of the removed plugins, extends one of their configs (`plugin:react/recommended`), or configures their rules through the `import/`, `react/` or `jsx-a11y/` prefix. Next.js configs are the exception described below. Any other module is reported only when it imports one of them by package name, since a rule prefix in an ordinary source file is indistinguishable from an import path. Those references stop resolving once the package is gone, and only the `import` to `import-x` case has an equivalent to move to.
 
 Source files are reported too, because a rule that is no longer defined cannot be referenced from a directive comment either: ESLint fails with `Definition for rule '...' was not found` on a leftover `/* eslint-disable react/no-danger */` or an inline `/* eslint import/no-cycle: "error" */`, so those comments have to be rewritten or dropped along with the plugin.
+
+##### Next.js configs
+
+`eslint-config-next` registers `eslint-plugin-react`, `eslint-plugin-jsx-a11y` and `eslint-plugin-import` from its own dependencies, and its 16.4 release supports ESLint v10. A config that spreads it keeps their `react/`, `jsx-a11y/` and `import/` rules, so the migration does not report those rules there, or in the directive comments of the files that config lints.
+
+The same holds for the two shapes Nx generated for Next.js apps: registering the `@next/next` plugin and extending `next` through `FlatCompat`. The `@nx/next` migrations for this release replace those entries with a spread of `eslint-config-next/core-web-vitals`, or list the configs they could not update. They also move `eslint-config-next` and `@next/eslint-plugin-next` from 16.0-16.3 to `^16.4.0`.
+
+A Next.js config is still reported when it imports one of the removed plugins directly or extends a `plugin:react/`, `plugin:jsx-a11y/` or `plugin:import/` config.
 
 ##### Checking the remaining plugins
 
