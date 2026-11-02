@@ -304,6 +304,29 @@ describe('createTempNpmDirectory', () => {
   );
 
   it.skipIf(process.platform === 'win32')(
+    'installs in the shared temp dir when NX_ALLOW_INSECURE_DIRECTORIES is set',
+    async () => {
+      const sharedTmp = stubSharedTmpDir();
+      vi.stubEnv('HOME', '/tmp');
+      vi.stubEnv('NX_ALLOW_INSECURE_DIRECTORIES', 'true');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.resetModules();
+      const { createTempNpmDirectory } = await import('./package-manager');
+
+      const { dir, cleanup } = createTempNpmDirectory(true);
+      try {
+        expect(dirname(dir)).toEqual(sharedTmp);
+        expect(statSync(dir).mode & 0o077).toBe(0);
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining('NX_ALLOW_INSECURE_DIRECTORIES is set')
+        );
+      } finally {
+        await cleanup();
+      }
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
     'refuses to install when ~/.nx is not a private directory',
     async () => {
       const home = join(root, 'home');

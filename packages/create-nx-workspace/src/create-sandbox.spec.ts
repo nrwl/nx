@@ -138,6 +138,41 @@ describe('createSandbox', () => {
   );
 
   it.skipIf(process.platform === 'win32')(
+    'names TMPDIR and NX_ALLOW_INSECURE_DIRECTORIES as remedies when it refuses',
+    async () => {
+      stubSharedTmpDir();
+      vi.stubEnv('HOME', '/tmp');
+      const { createSandbox } = await import('./create-sandbox');
+
+      await expect(createSandbox('npm')).rejects.toMatchObject({
+        message: expect.stringContaining(
+          'Point TMPDIR at a directory only you can write to, or set NX_ALLOW_INSECURE_DIRECTORIES=true'
+        ),
+      });
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
+    'installs in the shared temp dir when NX_ALLOW_INSECURE_DIRECTORIES is set',
+    async () => {
+      const sharedTmp = stubSharedTmpDir();
+      vi.stubEnv('HOME', '/tmp');
+      vi.stubEnv('NX_ALLOW_INSECURE_DIRECTORIES', 'true');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { createSandbox } = await import('./create-sandbox');
+
+      const dir = await createSandbox('npm');
+
+      expect(dirname(dir)).toEqual(sharedTmp);
+      expect(statSync(dir).mode & 0o077).toBe(0);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('NX_ALLOW_INSECURE_DIRECTORIES is set')
+      );
+      expect(mockExecAndWait).toHaveBeenCalledWith(expect.any(String), dir);
+    }
+  );
+
+  it.skipIf(process.platform === 'win32')(
     'refuses to install when the home directory is under the shared temp dir',
     async () => {
       stubSharedTmpDir();

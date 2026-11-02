@@ -108,12 +108,19 @@ function createInPrivateInstallRoot(): string {
     }
     tmpRefusal = `${fallbackRoot} is not a directory owned by you and closed to other users`;
   }
+  if (process.env.NX_ALLOW_INSECURE_DIRECTORIES === 'true') {
+    console.warn(
+      `NX_ALLOW_INSECURE_DIRECTORIES is set, so Nx is installing packages in ${tmp} although ${tmpRefusal}.`
+    );
+    return dirSync({ tmpdir: tmp, prefix: 'nx-install-' }).name;
+  }
   throw new CnwError(
     'SANDBOX_FAILED',
     'Nx cannot install packages because it found no directory closed to other users to install into.\n' +
       `  ~/.nx/tmp: ${homeRefusal}.\n` +
       `  The OS temp directory: ${tmpRefusal}.\n` +
-      'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install where another user could write to it or to any of its parents.'
+      'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install where another user could write to it or to any of its parents.\n' +
+      'Point TMPDIR at a directory only you can write to, or set NX_ALLOW_INSECURE_DIRECTORIES=true to install in the OS temp directory anyway.'
   );
 }
 
