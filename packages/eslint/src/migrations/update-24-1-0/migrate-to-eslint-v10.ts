@@ -576,6 +576,8 @@ function findRemovedPluginUsages(
         `[\\s\\[{,'"](?:plugin:)?${escapeRegExp(prefix)}/`
       ),
       pluginConfig: new RegExp(`['"\`]plugin:${escapeRegExp(prefix)}/`),
+      // A rule id in a directive comment. `@eslint-react/` must not match `react/`.
+      directiveRuleId: new RegExp(`(?<![\\w@/.-])${escapeRegExp(prefix)}/`),
       registeredByEslintConfigNext: ESLINT_CONFIG_NEXT_PLUGINS.has(plugin),
     };
   });
@@ -660,7 +662,9 @@ function findRemovedPluginUsages(
 
     const code = blankOutLiterals(sourceFile, content);
     const matchedPrefixes = matchers
-      .filter(({ prefix }) => hasEslintDirectiveFor(code, prefix))
+      .filter(({ directiveRuleId }) =>
+        hasEslintDirectiveFor(code, directiveRuleId)
+      )
       .filter(
         ({ registeredByEslintConfigNext }) =>
           !registeredByEslintConfigNext ||
@@ -799,9 +803,9 @@ function hasEslintEnvComment(content: string): boolean {
   );
 }
 
-function hasEslintDirectiveFor(content: string, prefix: string): boolean {
+function hasEslintDirectiveFor(content: string, ruleId: RegExp): boolean {
   const carriesRule = (body: string, directive: RegExp): boolean =>
-    directive.test(body) && body.includes(`${prefix}/`);
+    directive.test(body) && ruleId.test(body);
 
   return (
     [...content.matchAll(BLOCK_COMMENT)].some(([, body]) =>
