@@ -53,6 +53,7 @@ import {
   stringifyBunLockfile,
   validatePrunedBunLocalPathClosure,
 } from './bun-parser';
+import type { PinnedManifestSpec } from './bun-parser';
 import {
   getNpmLockfileDependencies,
   getNpmLockfileNodes,
@@ -458,6 +459,7 @@ function buildLockFile(
     onPruneFallback?: (error: Error) => void;
     workspaceRootPath?: string;
     projectRoot?: string;
+    onPinnedSpec?: (pin: PinnedManifestSpec) => void;
   }
 ): string {
   const workspaceRootPath = options?.workspaceRootPath ?? workspaceRoot;
@@ -481,7 +483,8 @@ function buildLockFile(
         content,
         normalizedPackageJson,
         workspaceRootPath,
-        options?.projectRoot
+        options?.projectRoot,
+        options?.onPinnedSpec
       );
     }
     const prunedGraph = pruneProjectGraph(
@@ -552,8 +555,13 @@ function buildLockFile(
  * the closure validation is skipped, and the remaining install-time pieces must
  * not ship local-path artifacts for it (see `getPrunedPnpmInstallArtifacts`).
  *
- * Mutates `packageJson` (the pnpm and Bun specifier relocation and the config
- * strip), so write or emit the manifest after calling this.
+ * A pruned Bun manifest ships without `overrides` and `resolutions`, and a
+ * dependency an override installed outside its declared range declares the
+ * locked version (see `stringifyBunLockfile`).
+ *
+ * Mutates `packageJson` (the pnpm and Bun specifier relocation, the Bun override
+ * strip and pinned versions, and the config strip), so write or emit the
+ * manifest after calling this.
  */
 function createPrunedLockfile(
   packageJson: PackageJson,
@@ -572,6 +580,13 @@ function createPrunedLockfile(
       packageManager
     );
   }
+  if (packageManager === 'bun') {
+    // Bun reads these only from the workspace root, whose effect the pruned
+    // bun.lock already locks, so a project's own block never applied.
+    delete packageJson.overrides;
+    delete packageJson.resolutions;
+  }
+  const pinnedSpecs: PinnedManifestSpec[] = [];
   let pruneError: Error | undefined;
   const lockFileContent = buildLockFile(packageJson, graph, packageManager, {
     onPruneFallback: (error) => {
@@ -579,9 +594,13 @@ function createPrunedLockfile(
     },
     workspaceRootPath,
     projectRoot,
+    onPinnedSpec: (pin) => pinnedSpecs.push(pin),
   });
   const pruned = pruneError === undefined;
   if (pruned) {
+    for (const { depType, name, spec } of pinnedSpecs) {
+      packageJson[depType][name] = spec;
+    }
     stripPrunedLockfilePnpmConfig(packageJson);
     if (packageManager === 'pnpm') {
       validatePrunedLocalPathClosure(
@@ -598,7 +617,8 @@ function createPrunedLockfile(
     }
   } else {
     // The root lockfile matches the manifest as authored, so undo the
-    // specifier relocation and keep the pnpm config it still declares.
+    // specifier relocation and the Bun override strip, and keep the pnpm
+    // config it still declares.
     for (const key of Object.keys(packageJson)) {
       delete (packageJson as unknown as Record<string, unknown>)[key];
     }
@@ -651,8 +671,8 @@ type PrunedDeploySink =
  *
  * Mutates `packageJson` into the form the output must ship (the relocated
  * local-path specifiers, the pnpm config strip, the pnpm <=10 build settings,
- * the Bun root `trustedDependencies` and pruned `patchedDependencies`), so write
- * or emit the manifest after this returns.
+ * the Bun root `trustedDependencies`, pruned `patchedDependencies`, override
+ * strip and pinned versions), so write or emit the manifest after this returns.
  *
  * A Bun workspace on the binary bun.lockb gets no lockfile: it warns and ships
  * nothing, leaving the manifest as authored. A Bun manifest without

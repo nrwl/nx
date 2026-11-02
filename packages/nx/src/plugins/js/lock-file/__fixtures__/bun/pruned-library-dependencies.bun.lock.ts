@@ -129,9 +129,6 @@ export const libraryDependenciesPrunedBunLock = `{
       },
     },
   },
-  "overrides": {
-    "is-buffer": "1.1.5",
-  },
   "packages": {
     "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
