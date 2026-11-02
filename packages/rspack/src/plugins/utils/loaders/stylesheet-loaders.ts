@@ -1,7 +1,6 @@
 import * as path from 'path';
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import type { CssExtractRspackPlugin } from '@rspack/core';
 
 import { getCSSModuleLocalIdent } from '../get-css-module-local-ident';
 import { getOutputHashFormat } from '../hash-format';

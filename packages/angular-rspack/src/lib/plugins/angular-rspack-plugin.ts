@@ -1,6 +1,5 @@
 import {
   augmentAppWithServiceWorker,
-  type BudgetCalculatorResult,
   checkBudgets,
   ThresholdSeverity,
 } from '@angular/build/private';

@@ -1,4 +1,4 @@
-import { ensurePackage, stripIndents, type Tree } from '@nx/devkit';
+import { ensurePackage, type Tree } from '@nx/devkit';
 import { detectLinters } from '@nx/js/internal';
 import { nxVersion } from './versions';
 

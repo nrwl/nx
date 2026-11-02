@@ -1,9 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import {
-  formatFiles,
-  installPackagesTask,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { formatFiles, installPackagesTask } from '@nx/devkit';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import {
   addDependencies,

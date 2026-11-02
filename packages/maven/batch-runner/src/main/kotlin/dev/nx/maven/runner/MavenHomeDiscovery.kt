@@ -201,68 +201,6 @@ class MavenHomeDiscovery(
   }
 
   /**
-   * Extract Maven home by running ./mvnw --version and parsing the output.
-   * The Maven wrapper script prints "Maven home: /path/to/maven" which we extract.
-   */
-  private fun extractMavenHomeFromMvnw(): File? {
-    return try {
-      val mvnwFile = File(workspaceRoot, "mvnw")
-      log.debug("Checking for mvnw in: ${mvnwFile.absolutePath}")
-
-      if (!mvnwFile.exists()) {
-        log.debug("❌ No mvnw script found in workspace root: ${workspaceRoot.absolutePath}")
-        return null
-      }
-
-      log.debug("✓ Found mvnw script, running ./mvnw --version to detect Maven home...")
-
-      val processBuilder = ProcessBuilder("./mvnw", "--version")
-        .directory(workspaceRoot)
-        .redirectErrorStream(true)
-
-      val process = processBuilder.start()
-      val output = process.inputStream.bufferedReader().readText()
-      val exitCode = process.waitFor()
-
-      log.debug("./mvnw --version exit code: $exitCode")
-      log.debug("./mvnw --version output:\n$output")
-
-      if (exitCode != 0) {
-        log.warn("❌ ./mvnw --version exited with code $exitCode")
-        return null
-      }
-
-      // Parse "Maven home: /path/to/maven" from output
-      val matcher = Regex("""Maven home:\s*(.+)""").find(output)
-      if (matcher != null) {
-        val mavenHomePath = matcher.groupValues[1].trim()
-        log.debug("Parsed Maven home path: $mavenHomePath")
-
-        val mavenHome = File(mavenHomePath)
-        val libDir = File(mavenHome, "lib")
-
-        log.debug("Checking if Maven home exists: ${mavenHome.absolutePath}")
-        log.debug("  - Directory exists: ${mavenHome.isDirectory}")
-        log.debug("  - lib exists: ${libDir.isDirectory}")
-
-        if (mavenHome.isDirectory && libDir.isDirectory) {
-          log.debug("✓ Found Maven home from ./mvnw --version: $mavenHomePath")
-          return mavenHome
-        } else {
-          log.warn("❌ Maven home from ./mvnw does not exist or is invalid: $mavenHomePath")
-          log.warn("   Directory exists: ${mavenHome.isDirectory}, lib exists: ${libDir.isDirectory}")
-        }
-      } else {
-        log.debug("❌ Could not parse 'Maven home:' from ./mvnw --version output")
-      }
-      null
-    } catch (e: Exception) {
-      log.warn("❌ Error extracting Maven home from ./mvnw: ${e.message}", e)
-      null
-    }
-  }
-
-  /**
    * Extract Maven home from wrapper configuration if available.
    * Reads the maven-wrapper.properties to find the Maven distribution version
    * and infers the installation path from wrapper cache.

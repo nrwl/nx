@@ -29,7 +29,7 @@ import {
   shouldIncludePnpmMajorRuntimeInput,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
-import { existsSync, readdirSync } from 'fs';
+import { readdirSync } from 'fs';
 import {
   basename,
   dirname,
