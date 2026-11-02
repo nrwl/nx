@@ -63,6 +63,27 @@ export function transformProjectGraphForLocators(
   return ref;
 }
 
+const transferredForProjectMatching = new WeakMap<
+  ProjectGraph,
+  ExternalObject<RustProjectGraph>
+>();
+
+/** Only what project patterns match against: names, roots and tags. */
+export function transformProjectGraphForProjectMatching(
+  graph: ProjectGraph
+): ExternalObject<RustProjectGraph> {
+  let ref = transferredForProjectMatching.get(graph);
+  if (!ref) {
+    const nodes: Record<string, Project> = {};
+    for (const [name, node] of Object.entries(graph.nodes)) {
+      nodes[name] = { root: node.data.root, tags: node.data.tags, targets: {} };
+    }
+    ref = transferProjectGraph({ nodes, externalNodes: {}, dependencies: {} });
+    transferredForProjectMatching.set(graph, ref);
+  }
+  return ref;
+}
+
 /** The graph in Rust's shape, still a JS object. Uncached, so safe to edit. */
 export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
   const dependencies: Record<string, string[]> = {};

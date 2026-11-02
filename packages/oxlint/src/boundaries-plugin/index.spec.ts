@@ -13,39 +13,40 @@ import boundariesPlugin from './index.js';
  * pins the emit shape they depend on.
  */
 describe('@nx/oxlint/boundaries-plugin', () => {
-  it('exposes the enforce-module-boundaries rule under the @nx namespace', () => {
-    // Without this Oxlint falls back to the package name, and the rule would
-    // register as `@nx/oxlint/enforce-module-boundaries` — not the id the docs
-    // tell users to configure.
-    expect(boundariesPlugin.meta.name).toEqual('@nx');
-    expect(Object.keys(boundariesPlugin.rules)).toContain(
-      'enforce-module-boundaries'
-    );
-  });
-
-  it('carries the rule name in meta so the rule is self-describing', () => {
-    const rule = boundariesPlugin.rules['enforce-module-boundaries'] as {
+  const ruleNames = ['enforce-module-boundaries', 'directive-checks'];
+  const rule = (name: string) =>
+    boundariesPlugin.rules[name] as {
       meta?: { name?: string; schema?: unknown };
       create?: unknown;
     };
 
-    // Oxlint itself takes the name from the rules key above, not from here.
-    expect(rule.meta?.name).toEqual('enforce-module-boundaries');
+  it.each(ruleNames)('exposes the %s rule under the @nx namespace', (name) => {
+    // Without this Oxlint falls back to the package name, and the rule would
+    // register as `@nx/oxlint/<rule>`, not the id the docs tell users to
+    // configure.
+    expect(boundariesPlugin.meta.name).toEqual('@nx');
+    expect(Object.keys(boundariesPlugin.rules)).toContain(name);
   });
 
-  it('keeps a schema, without which Oxlint rejects the rule options', () => {
-    const rule = boundariesPlugin.rules['enforce-module-boundaries'] as {
-      meta?: { schema?: unknown };
-    };
+  it.each(ruleNames)(
+    'carries the %s rule name in meta so the rule is self-describing',
+    (name) => {
+      // Oxlint itself takes the name from the rules key above, not from here.
+      expect(rule(name).meta?.name).toEqual(name);
+    }
+  );
 
-    expect(rule.meta?.schema).toBeDefined();
-  });
+  it.each(ruleNames)(
+    'keeps a schema for %s, without which Oxlint rejects the rule options',
+    (name) => {
+      expect(rule(name).meta?.schema).toBeDefined();
+    }
+  );
 
-  it('exposes a create function for Oxlint to call per file', () => {
-    const rule = boundariesPlugin.rules['enforce-module-boundaries'] as {
-      create?: unknown;
-    };
-
-    expect(typeof rule.create).toEqual('function');
-  });
+  it.each(ruleNames)(
+    'exposes a create function for %s for Oxlint to call per file',
+    (name) => {
+      expect(typeof rule(name).create).toEqual('function');
+    }
+  );
 });

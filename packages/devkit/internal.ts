@@ -16,6 +16,8 @@ export {
   createOverrides,
   isAiAgent,
   readShebangHeaders,
+  transformProjectGraphForProjectMatching,
+  unmatchedProjectPatterns,
   // getCatalogManager takes the barrel route here because this file *is*
   // @nx/devkit/internal — first-party consumers only, released in lockstep. Its
   // class-1 siblings in packages/devkit/src/utils/ (semver.ts, package-json.ts)
@@ -119,7 +121,13 @@ export {
 } from './src/utils/require-esm-race';
 export { findPluginForConfigFile } from './src/utils/find-plugin-for-config-file';
 export { getNamedInputs } from './src/utils/get-named-inputs';
-export { parseNxDirectives } from './src/utils/nx-directives';
+export {
+  matchNxDirective,
+  NX_DIRECTIVE_NAMES,
+  parseNxDirectives,
+  readNxDirectiveHeader,
+  type NxDirectiveHeaderLine,
+} from './src/utils/nx-directives';
 export {
   getForwardedArgs,
   getListeningUrl,
@@ -131,6 +139,12 @@ export {
   type ServerAddress,
 } from './src/utils/readiness';
 export { applyTestFileDirectives } from './src/utils/test-file-directives';
+export { dependsOnProjects } from './src/utils/test-file-depends-on';
+export {
+  testFileDirectiveSupport,
+  type TestFileDirective,
+  type TestFileDirectivePlugin,
+} from './src/utils/test-file-directive-support';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';
@@ -232,6 +246,7 @@ export {
   findAllProjectNodeDependencies,
   findInstalledPlugins,
   findMatchingConfigFiles,
+  findClosestMatches,
   findMatchingProjects,
   findMatchingTargetNames,
   findProjectForPath,
@@ -300,6 +315,7 @@ export {
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,
+  readSourceMapsCache,
   readModulePackageJson,
   readNxJsonFromDisk,
   readNxMigrateConfig,

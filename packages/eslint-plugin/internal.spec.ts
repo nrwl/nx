@@ -32,25 +32,27 @@ describe('internal entry emit shape', () => {
   // Drops the `= void 0` initializer TS emits for every named export: it is
   // present under the broken shape too, so counting it would make this unable
   // to fail.
-  const exposures = () =>
+  const exposures = (name: string) =>
     emitted()
       .split('\n')
-      .filter(
-        (line) =>
-          line.includes('enforceModuleBoundaries') && !line.includes('= void 0')
-      );
+      .filter((line) => line.includes(name) && !line.includes('= void 0'));
 
-  it('reaches the CommonJS export surface', () => {
-    expect(exposures()).not.toHaveLength(0);
+  const exportNames = ['directiveChecks', 'enforceModuleBoundaries'];
+
+  it.each(exportNames)('reaches the CommonJS export surface: %s', (name) => {
+    expect(exposures(name)).not.toHaveLength(0);
   });
 
-  it("exposes each export in a shape Node's CJS analyzer can follow", () => {
-    // A plain `exports.x = y` assignment and a getter returning a bare member
-    // expression are both followed; a getter that calls into a helper is not.
-    // Verified against Node 20 and 22, where the calling shape fails to import
-    // and the other two succeed.
-    for (const line of exposures()) {
-      expect(line).not.toMatch(/get: function \(\) \{ return .*\(/);
+  it.each(exportNames)(
+    "exposes %s in a shape Node's CJS analyzer can follow",
+    (name) => {
+      // A plain `exports.x = y` assignment and a getter returning a bare member
+      // expression are both followed; a getter that calls into a helper is not.
+      // Verified against Node 20 and 22, where the calling shape fails to import
+      // and the other two succeed.
+      for (const line of exposures(name)) {
+        expect(line).not.toMatch(/get: function \(\) \{ return .*\(/);
+      }
     }
-  });
+  );
 });

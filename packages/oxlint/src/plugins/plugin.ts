@@ -61,7 +61,7 @@ const LINTABLE_EXTENSIONS = [
 const LINTABLE_FILES_GLOB = `**/*.{${LINTABLE_EXTENSIONS.join(',')}}`;
 // Oxlint honours both, so both decide which files it lints.
 const IGNORE_FILENAMES = ['.eslintignore', '.gitignore'];
-// The one rule that looks across projects; every other rule sees one file.
+// The bridge's rules look across projects; every other rule sees one file.
 const BOUNDARIES_PLUGIN_SPECIFIER = '@nx/oxlint/boundaries-plugin';
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const OXLINT_CONFIG_GLOB = combineGlobPatterns([
