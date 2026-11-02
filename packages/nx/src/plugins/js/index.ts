@@ -101,7 +101,7 @@ async function internalCreateNodes(
     cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
 
     return {
-      externalNodes: await foldLocalPathHashes(
+      externalNodes: foldLocalPathHashes(
         cached.nodes,
         cached.localPathSources ?? {},
         workspaceRoot
@@ -130,7 +130,7 @@ async function internalCreateNodes(
   });
 
   return {
-    externalNodes: await foldLocalPathHashes(
+    externalNodes: foldLocalPathHashes(
       externalNodes,
       localPathSources,
       workspaceRoot
