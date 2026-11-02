@@ -144,7 +144,16 @@
         "eslint-config-next": {
           "version": "^16.4.0",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "24.1.0-@next/eslint-plugin-next": {
+      "version": "24.1.0-beta.0",
+      "requires": {
+        "@next/eslint-plugin-next": ">=16.0.0 <16.4.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
         "@next/eslint-plugin-next": {
           "version": "^16.4.0",
           "alwaysAddToPackageJson": false
