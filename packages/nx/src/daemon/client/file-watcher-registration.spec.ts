@@ -73,12 +73,11 @@ describe('file watcher registration readiness', () => {
       { watchProjects: 'all' },
       vi.fn()
     );
-    const rejected = expect(registration).rejects.toThrow(
-      'Daemon disconnected before watcher registration completed'
-    );
     await vi.waitFor(() => expect(registrations).toHaveLength(1));
     registrations[0].socket.destroy();
-    await rejected;
+    await expect(registration).rejects.toThrow(
+      'Daemon disconnected before watcher registration completed'
+    );
     expect((client as any).fileWatcherRegistrations.size).toBe(0);
     expect((client as any).fileWatcherCallbacks.size).toBe(0);
     expect((client as any).fileWatcherConfigs.size).toBe(0);
@@ -89,12 +88,9 @@ describe('file watcher registration readiness', () => {
       { watchProjects: 'all' },
       vi.fn()
     );
-    const rejected = expect(registration).rejects.toThrow(
-      'Daemon client reset'
-    );
     await vi.waitFor(() => expect(registrations).toHaveLength(1));
     client.reset();
-    await rejected;
+    await expect(registration).rejects.toThrow('Daemon client reset');
     expect((client as any).fileWatcherRegistrations.size).toBe(0);
   });
 
@@ -105,6 +101,7 @@ describe('file watcher registration readiness', () => {
         { watchProjects: 'all' },
         vi.fn()
       );
+      // oxlint-disable-next-line jest/valid-expect -- the timeout rejects inside advanceTimersByTimeAsync, which yields, so the handler must attach first
       const rejected = expect(registration).rejects.toThrow(
         'Timed out waiting for daemon watcher registration'
       );
@@ -153,13 +150,12 @@ describe('file watcher registration readiness', () => {
       { watchProjects: ['second'] },
       vi.fn()
     );
-    const rejected = expect(second).rejects.toThrow(
-      'Daemon disconnected before watcher registration completed'
-    );
     await vi.waitFor(() => expect(registrations).toHaveLength(3));
     unregisterFirst();
     registrations[2].socket.destroy();
-    await rejected;
+    await expect(second).rejects.toThrow(
+      'Daemon disconnected before watcher registration completed'
+    );
     expect((client as any).fileWatcherRegistrations.size).toBe(0);
   });
 
