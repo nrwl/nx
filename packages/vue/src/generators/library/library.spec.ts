@@ -530,6 +530,30 @@ module.exports = [
     });
   });
 
+  describe('eslintrc', () => {
+    it.each([
+      [undefined, 'plugin:vue/essential'],
+      ['^9.33.0', 'plugin:vue/vue3-essential'],
+    ])(
+      'extends the Vue 3 essential config when eslint-plugin-vue is %s',
+      async (declared, expected) => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+        if (declared) {
+          updateJson(tree, 'package.json', (json) => {
+            json.devDependencies['eslint-plugin-vue'] = declared;
+            return json;
+          });
+        }
+
+        await libraryGenerator(tree, defaultSchema);
+
+        expect(readJson(tree, 'my-lib/.eslintrc.json').extends).toContain(
+          expected
+        );
+      }
+    );
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();

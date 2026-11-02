@@ -33,3 +33,13 @@ export function isFlatConfig(configFilePath: string): boolean {
 
   return ESLINT_FLAT_CONFIG_FILENAMES.includes(configFileName);
 }
+
+const ALL_ESLINT_CONFIG_FILENAMES = new Set([
+  ...ESLINT_CONFIG_FILENAMES,
+  ...BASE_ESLINT_CONFIG_FILENAMES,
+  ...BASE_ESLINTRC_FILENAMES,
+]);
+
+export function isEslintConfigFile(filePath: string): boolean {
+  return ALL_ESLINT_CONFIG_FILENAMES.has(basename(filePath));
+}
