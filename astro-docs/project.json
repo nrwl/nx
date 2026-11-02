@@ -3,6 +3,9 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
   "targets": {
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"]
+    },
     "prebuild-banner": {
       "cache": false,
       "inputs": [
