@@ -3181,7 +3181,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       it('should infer the same tsbuildinfo file from the persisted tsconfig cache when rootDir is the workspace root', async () => {
         process.env.NX_CACHE_PROJECT_GRAPH = 'true';
-        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+        configFiles = await applyFilesToTempFsAndContext(tempFs, {
           'tsconfig.base.json': JSON.stringify({
             compilerOptions: { rootDir: '.' },
           }),
