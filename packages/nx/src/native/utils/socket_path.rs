@@ -219,8 +219,11 @@ fn home_tier_is_distinct() -> bool {
     })
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Guard {
+    /// Every level from `/` down, as `connectToDaemonSocket` judges them before
+    /// a dial. A tier the dial would refuse is never established.
+    Ancestry,
     SharedRoot,
     PrivateDir,
 }
@@ -239,6 +242,7 @@ impl Tier {
     fn establish(&self, refusals: &mut Vec<DirRefusal>) -> bool {
         for (dir, guard) in &self.guards {
             let refusal = match guard {
+                Guard::Ancestry => ensure_safe_ancestry(dir).err(),
                 Guard::SharedRoot => ensure_safe_shared_root(dir).err(),
                 Guard::PrivateDir => ensure_owned_private_dir(dir).err(),
             };
@@ -269,6 +273,7 @@ fn socket_root_tiers() -> Vec<Tier> {
     let mut tiers = vec![Tier {
         root: default_socket_root(),
         guards: vec![
+            (PathBuf::from("/tmp"), Guard::Ancestry),
             (nx_tmp_dir(), Guard::SharedRoot),
             (nx_user_tmp_dir(), Guard::PrivateDir),
             (default_socket_root(), Guard::PrivateDir),
@@ -285,6 +290,7 @@ fn socket_root_tiers() -> Vec<Tier> {
             // No shared level to verify: the home directory is the user's own,
             // so there is no container another user could have created first.
             guards: vec![
+                (home.parent().unwrap_or(home).to_path_buf(), Guard::Ancestry),
                 (home.to_path_buf(), Guard::PrivateDir),
                 (root, Guard::PrivateDir),
             ],
@@ -1050,6 +1056,43 @@ mod tests {
         assert!(
             matches!(resolved.outcome, SocketDirOutcome::ConfiguredRefused { configured, .. } if configured == blocker)
         );
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn every_tier_first_judges_the_levels_the_dial_judges() {
+        for tier in socket_root_tiers() {
+            assert_eq!(tier.guards[0].1, Guard::Ancestry);
+            assert!(tier.root.starts_with(&tier.guards[0].0));
+        }
+        assert_eq!(socket_root_tiers()[0].guards[0].0, PathBuf::from("/tmp"));
+    }
+
+    #[cfg(all(not(windows), not(target_family = "wasm")))]
+    #[test]
+    fn a_tier_under_a_world_writable_level_is_not_established() {
+        use crate::native::utils::owned_dir::chmod_real_directory_for_testing;
+
+        let temp = TempDir::new().unwrap();
+        let loose = temp.path().join("loose");
+        std::fs::create_dir(&loose).unwrap();
+        chmod_real_directory_for_testing(&loose, 0o777);
+        let tier = Tier {
+            root: loose.join("shared").join("sockets"),
+            guards: vec![
+                (loose.clone(), Guard::Ancestry),
+                (loose.join("shared"), Guard::SharedRoot),
+                (loose.join("shared").join("sockets"), Guard::PrivateDir),
+            ],
+        };
+        let mut refusals = Vec::new();
+
+        assert!(!tier.establish(&mut refusals));
+        assert!(matches!(
+            refusals.as_slice(),
+            [DirRefusal::PeerWritableNotSticky { .. }]
+        ));
+        assert!(!loose.join("shared").exists());
     }
 
     #[cfg(all(not(windows), not(target_family = "wasm")))]
