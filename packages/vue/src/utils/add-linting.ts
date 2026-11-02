@@ -5,6 +5,7 @@ import {
   Tree,
   joinPathFragments,
 } from '@nx/devkit';
+import { getResolvedPackageVersion } from '@nx/devkit/internal';
 import { LinterType } from '@nx/js';
 import {
   addExtendsToLintConfig,
@@ -65,7 +66,7 @@ export async function addLinting(
         host,
         options.projectRoot,
         [
-          'plugin:vue/vue3-essential',
+          getVueEssentialConfig(host),
           'eslint:recommended',
           '@vue/eslint-config-typescript',
           '@vue/eslint-config-prettier/skip-formatting',
@@ -104,6 +105,18 @@ export async function addLinting(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+// eslint-plugin-vue 10 renamed `vue3-essential` to `essential`, which means Vue 2 on 9.
+function getVueEssentialConfig(tree: Tree): string {
+  const version = getResolvedPackageVersion(
+    tree,
+    'eslint-plugin-vue',
+    eslintPluginVueVersion
+  );
+  return version && Number(version.split('.')[0]) < 10
+    ? 'plugin:vue/vue3-essential'
+    : 'plugin:vue/essential';
 }
 
 function editEslintConfigFiles(tree: Tree, projectRoot: string) {

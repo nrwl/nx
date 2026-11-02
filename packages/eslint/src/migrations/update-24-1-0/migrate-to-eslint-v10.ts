@@ -30,6 +30,7 @@ import {
   BASE_ESLINTRC_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
   ESLINT_OLD_CONFIG_FILENAMES,
+  isEslintConfigFile,
 } from '../../utils/config-file';
 import { convertToFlatConfigGenerator } from '../../generators/convert-to-flat-config/generator';
 import {
@@ -64,13 +65,6 @@ const ESLINT_V10_SUPPORT_FLOORS = {
 
 // eslint@10's `engines.node`.
 const ESLINT_V10_NODE_RANGE = '^20.19.0 || ^22.13.0 || >=24';
-
-const ESLINT_CONFIG_FILENAMES = new Set([
-  ...ESLINT_OLD_CONFIG_FILENAMES,
-  ...ESLINT_FLAT_CONFIG_FILENAMES,
-  ...BASE_ESLINT_CONFIG_FILENAMES,
-  ...BASE_ESLINTRC_FILENAMES,
-]);
 
 const SOURCE_FILE_EXTENSIONS = [
   '.js',
@@ -575,7 +569,7 @@ function findRemovedPluginUsages(
   });
 
   visitNotIgnoredFiles(tree, '', (path) => {
-    const isConfig = ESLINT_CONFIG_FILENAMES.has(basename(path));
+    const isConfig = isEslintConfigFile(path);
     if (
       !isConfig &&
       !SOURCE_FILE_EXTENSIONS.some((ext) => path.endsWith(ext))

@@ -23,6 +23,7 @@ export {
 
 export { addImportToFlatConfig } from './src/generators/utils/flat-config/ast-utils';
 
+export { isEslintConfigFile } from './src/utils/config-file';
 export { useFlatConfig } from './src/utils/flat-config';
 
 export {
