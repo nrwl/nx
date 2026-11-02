@@ -18,6 +18,7 @@ import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 
@@ -196,7 +197,7 @@ if (process.argv[2] === '--worker') {
       const child = spawnSync(
         process.execPath,
         [
-          new URL(import.meta.url).pathname,
+          fileURLToPath(import.meta.url),
           '--worker',
           resolve(binding),
           resolve(fixturePath),
