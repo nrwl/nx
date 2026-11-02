@@ -32,6 +32,7 @@ import {
   generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
+  generateSpreadElement,
   generateTypedLintingFlatConfigOverride,
   hasFlatConfigIgnoresBlock,
   hasOverride,
@@ -1475,6 +1476,42 @@ export function addPredefinedConfigToFlatLintConfig(
   content = addBlockToFlatConfigExport(
     content,
     generateFlatPredefinedConfig(predefinedConfigName, moduleName, spread),
+    { insertAtTheEnd, checkBaseConfig }
+  );
+
+  tree.write(fileName, content);
+}
+
+/**
+ * Imports a module that exports a flat config array and spreads it into the
+ * project's flat config, e.g. `...nextVitals` from
+ * `eslint-config-next/core-web-vitals`.
+ */
+export function addSpreadConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
+): void {
+  const { insertAtTheEnd = true, checkBaseConfig = false } = options;
+
+  if (!useFlatConfig(tree))
+    throw new Error('Spread configs can only be used with flat configs');
+
+  let fileName: string | undefined;
+  for (const f of eslintFlatConfigFilenames) {
+    if (tree.exists(joinPathFragments(root, f))) {
+      fileName = joinPathFragments(root, f);
+      break;
+    }
+  }
+
+  let content = tree.read(fileName, 'utf8');
+  content = addImportToFlatConfig(content, variableName, importPath);
+  content = addBlockToFlatConfigExport(
+    content,
+    generateSpreadElement(variableName),
     { insertAtTheEnd, checkBaseConfig }
   );
 

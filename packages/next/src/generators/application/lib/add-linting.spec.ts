@@ -111,12 +111,12 @@ describe('updateEslint', () => {
 
     expect(tree.read(`${schema.appProjectRoot}/eslint.config.cjs`, 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const nextEslintPluginNext = require("@next/eslint-plugin-next");
-      const nx = require("@nx/eslint-plugin");
+      "const nx = require("@nx/eslint-plugin");
+      const nextVitals = require("eslint-config-next/core-web-vitals");
       const baseConfig = require("../eslint.config.cjs");
 
       module.exports = [
-          { plugins: { "@next/next": nextEslintPluginNext } },
+          ...nextVitals,
 
           ...nx.configs["flat/react-typescript"],
           ...baseConfig,
@@ -150,7 +150,5 @@ describe('updateEslint', () => {
 
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies['eslint']).toBe('^10.0.0');
-    expect(devDependencies['eslint-plugin-import-x']).toBeDefined();
-    expect(devDependencies['eslint-plugin-react']).toBeUndefined();
   });
 });
