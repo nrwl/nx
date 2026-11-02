@@ -9,6 +9,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -711,15 +712,15 @@ export function generatePrunedDeployOutput(
   );
   // A pruned bun.lock is empty for a manifest without dependencies, which
   // ships without one.
-  const artifacts: PrunedDeployArtifact[] =
-    packageManager === 'bun' && lockFileContent === ''
-      ? []
-      : [
-          {
-            path: getPrunedLockFileName(packageManager),
-            content: lockFileContent,
-          },
-        ];
+  const shipsLockFile = !(packageManager === 'bun' && lockFileContent === '');
+  const artifacts: PrunedDeployArtifact[] = shipsLockFile
+    ? [
+        {
+          path: getPrunedLockFileName(packageManager),
+          content: lockFileContent,
+        },
+      ]
+    : [];
   if (packageManager === 'pnpm') {
     artifacts.push(
       ...getPrunedPnpmInstallArtifacts(
@@ -753,6 +754,13 @@ export function generatePrunedDeployOutput(
   // carry an explicitly-present `outputDirectory: undefined` beside `emit`.
   if (options.outputDirectory !== undefined) {
     const { outputDirectory } = options;
+    // Bun rejects a frozen install when a lockfile from a prior deploy sits
+    // beside a manifest without dependencies.
+    if (!shipsLockFile) {
+      rmSync(join(outputDirectory, getPrunedLockFileName(packageManager)), {
+        force: true,
+      });
+    }
     // Directory trees flow through here one file at a time, so dedupe the
     // recursive mkdir per destination directory.
     const createdDirs = new Set<string>();

@@ -232,6 +232,11 @@ On older versions, `prune-lockfile` in a Bun workspace emits only the pruned `pa
 
 In a Bun workspace on the text `bun.lock`, `bun install --frozen-lockfile` accepts the pruned
 `bun.lock` in the output directory.
+An app without dependencies ships no `bun.lock`, because Bun writes none for it.
+Its output needs no install step.
+If the build doesn't clear the output directory, a cached run of `prune-lockfile` doesn't remove a
+`bun.lock` that an earlier run left there.
+A frozen install fails on that file, and `bun install` without `--frozen-lockfile` removes it.
 The emitted `package.json` carries the root `trustedDependencies` list and the
 `patchedDependencies` of the packages the pruned lockfile keeps, with their `.patch` files copied
 under `patches/`.
