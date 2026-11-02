@@ -161,7 +161,8 @@ const config: ConfigArray = tseslint.config({
 
     /**
      * Import rule configurations
-     * https://github.com/benmosher/eslint-plugin-import
+     * https://github.com/import-js/eslint-plugin-import (ESLint v9 and earlier)
+     * https://github.com/un-ts/eslint-plugin-import-x (ESLint v10 and later)
      */
     [`${importPluginName}/first`]: 'error',
     [`${importPluginName}/no-amd`]: 'error',
