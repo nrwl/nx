@@ -674,6 +674,84 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(context).toContain('apps/app1/src/guarded.ts (react)');
   });
 
+  it.each([
+    [
+      'spreads eslint-config-next',
+      `import nextVitals from 'eslint-config-next/core-web-vitals';
+export default [...nextVitals, RULES];`,
+    ],
+    [
+      'registers @next/next',
+      `import nextEslintPluginNext from '@next/eslint-plugin-next';
+export default [{ plugins: { '@next/next': nextEslintPluginNext } }, RULES];`,
+    ],
+    [
+      'extends next through FlatCompat',
+      `import { FlatCompat } from '@eslint/eslintrc';
+const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
+export default [...compat.extends('next', 'next/core-web-vitals'), RULES];`,
+    ],
+  ])(
+    'should not report the rules eslint-config-next registers in a config that %s or in the files it lints',
+    async (_, nextConfig) => {
+      const rules = `{ rules: { 'react/jsx-key': 'off', 'jsx-a11y/alt-text': 'warn', 'import/order': 'warn' } }`;
+      const page = `// eslint-disable-next-line react/no-danger
+export const Page = () => null;`;
+      tree.write('eslint.config.mjs', `export default [];`);
+      tree.write(
+        'apps/web/eslint.config.mjs',
+        nextConfig.replace('RULES', rules)
+      );
+      tree.write('apps/web/src/page.tsx', page);
+      tree.write('apps/other/eslint.config.mjs', `export default [${rules}];`);
+      tree.write('apps/other/src/page.tsx', page);
+      setDevDependencies({
+        'eslint-plugin-import': '2.31.0',
+        'eslint-plugin-jsx-a11y': '6.10.1',
+        'eslint-plugin-react': '^7.35.0',
+      });
+
+      const result = await update(tree);
+
+      const context = result.agentContext.join('\n');
+      expect(context).not.toContain('apps/web/');
+      expect(context).toContain(
+        'apps/other/eslint.config.mjs (eslint-plugin-import, eslint-plugin-jsx-a11y, eslint-plugin-react)'
+      );
+      expect(context).toContain('apps/other/src/page.tsx (react)');
+    }
+  );
+
+  it('should report a config that pulls in eslint-config-next and loads a removed plugin itself', async () => {
+    tree.write('eslint.config.mjs', `export default [];`);
+    tree.write(
+      'apps/web/eslint.config.mjs',
+      `import nextVitals from 'eslint-config-next/core-web-vitals';
+import reactPlugin from 'eslint-plugin-react';
+export default [...nextVitals, reactPlugin.configs.flat['jsx-runtime']];`
+    );
+    tree.write(
+      'apps/admin/eslint.config.mjs',
+      `import { FlatCompat } from '@eslint/eslintrc';
+const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
+export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
+    );
+    setDevDependencies({
+      'eslint-plugin-jsx-a11y': '6.10.1',
+      'eslint-plugin-react': '^7.35.0',
+    });
+
+    const result = await update(tree);
+
+    const context = result.agentContext.join('\n');
+    expect(context).toContain(
+      'apps/web/eslint.config.mjs (eslint-plugin-react)'
+    );
+    expect(context).toContain(
+      'apps/admin/eslint.config.mjs (eslint-plugin-jsx-a11y)'
+    );
+  });
+
   it('should not treat eslint-plugin-import-x as a reference to eslint-plugin-import', async () => {
     tree.write(
       'eslint.config.mjs',
