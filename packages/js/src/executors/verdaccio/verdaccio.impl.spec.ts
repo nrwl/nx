@@ -1,209 +1,193 @@
-import { spawn, type ChildProcess } from 'node:child_process';
-import { once } from 'node:events';
-import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { createServer, type Server } from 'node:http';
-import { networkInterfaces, tmpdir } from 'node:os';
+import type { ExecutorContext } from '@nx/devkit';
+import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
+import { fork } from 'child_process';
+import type { EventEmitter } from 'node:events';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
-// eslint-disable-next-line no-restricted-imports -- Receive real readiness messages without adding a test-only API.
-import { ReadySignalServer } from 'nx/src/tasks-runner/readiness/ready-signal-server';
+import type { VerdaccioExecutorSchema } from './schema';
+import verdaccioExecutor from './verdaccio.impl';
+
+const devkit = vi.hoisted(() => ({
+  emitReadySignal: vi.fn((_url?: string) => true),
+}));
+// The signal API is required lazily, which `vi.mock` cannot reach
+mockCjsModule(import.meta.url, '@nx/devkit', devkit);
+
+const verdaccio = vi.hoisted(() => ({
+  children: [] as Array<EventEmitter & { kill: ReturnType<typeof vi.fn> }>,
+}));
+vi.mock('child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('child_process')>();
+  const { EventEmitter } = await import('node:events');
+  return {
+    ...actual,
+    fork: vi.fn(() => {
+      const child = Object.assign(new EventEmitter(), { kill: vi.fn() });
+      verdaccio.children.push(child);
+      return child;
+    }),
+  };
+});
+
+const detectPort = vi.hoisted(() => vi.fn<(port: number) => Promise<number>>());
+vi.mock('detect-port', () => ({ default: detectPort }));
+
+// The executor resolves verdaccio from the workspace root, which the vitest setup points at a scratch directory
+vi.mock('@nx/devkit/internal', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@nx/devkit/internal')>();
+  return {
+    ...actual,
+    readModulePackageJson: (specifier: string) =>
+      actual.readModulePackageJson(specifier, [__dirname]),
+  };
+});
+
+// Verdaccio's own `--listen` parser, which picks the host and port it binds
+const { getListenAddress } = createRequire(
+  require.resolve('verdaccio/package.json')
+)('@verdaccio/config');
+
+const processEvents = ['exit', 'SIGTERM', 'SIGINT', 'SIGHUP'];
+// `NodeJS.Process` types listeners per event, which rules out a variable name
+const processEmitter: EventEmitter = process;
 
 describe('Verdaccio readiness', () => {
-  const ipv6Loopback = Object.entries(networkInterfaces()).find(
-    ([, addresses]) =>
-      addresses?.some(({ internal, family }) => internal && family === 'IPv6')
-  )?.[0];
-  let root: string;
-  let signals: ReadySignalServer;
-  let received: Array<{ url?: string }>;
-  let child: ChildProcess;
-  let listener: Server;
+  let existingListeners: Map<string, Function[]>;
+  let run: Promise<unknown> | undefined;
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'nx-verdaccio-'));
-    symlinkSync(
-      join(__dirname, '../../../../../node_modules'),
-      join(root, 'node_modules'),
-      'junction'
-    );
-    signals = new ReadySignalServer();
-    received = [];
-    signals.subscribe('registry:serve', (message) => received.push(message));
-    writeFileSync(
-      join(root, 'config.yml'),
-      `storage: ./storage
-auth:
-  htpasswd:
-    file: ./htpasswd
-packages:
-  '**':
-    access: $all
-    publish: $all
-log: { type: stdout, format: json, level: fatal }
-`
+    existingListeners = new Map(
+      processEvents.map((event) => [event, processEmitter.listeners(event)])
     );
   });
 
   afterEach(async () => {
-    if (child && child.exitCode === null && child.signalCode === null) {
-      const exited = once(child, 'exit');
-      child.kill('SIGTERM');
-      await exited;
+    for (const child of verdaccio.children) child.emit('exit', 0, null);
+    await run;
+    run = undefined;
+    verdaccio.children.length = 0;
+    // The executor never removes its listeners
+    for (const event of processEvents) {
+      for (const added of addedListeners(event)) {
+        processEmitter.removeListener(event, added as () => void);
+      }
     }
-    if (listener?.listening) {
-      await new Promise<void>((resolve) => listener.close(() => resolve()));
-    }
-    signals?.close();
-    rmSync(root, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+    vi.clearAllMocks();
   });
 
-  async function start({
-    config = 'config.yml',
-    listenAddress = 'localhost',
-    signal = true,
-    legacyCore = false,
-    occupied = true,
-  } = {}) {
-    listener = createServer((_, response) => response.end('unrelated'));
-    listener.listen(0, 'localhost');
-    await once(listener, 'listening');
-    const port = (listener.address() as { port: number }).port;
-    if (!occupied) {
-      await new Promise<void>((resolve) => listener.close(() => resolve()));
-    }
-    const env: NodeJS.ProcessEnv = {
-      ...process.env,
-      NX_WORKSPACE_ROOT_PATH: root,
-    };
-    delete env.NX_READY_SIGNAL_SOCKET;
-    delete env.NX_READY_SIGNAL_TASK;
-    if (signal) Object.assign(env, await signals.env('registry:serve'));
-    child = spawn(
-      process.execPath,
-      [
-        '-r',
-        require.resolve('@swc-node/register'),
-        '-e',
-        `${
-          legacyCore
-            ? `const id = require.resolve('@nx/devkit');
-          const devkit = require(id);
-          require.cache[id].exports = Object.fromEntries(Object.entries(devkit).filter(([name]) => name !== 'emitReadySignal'));`
-            : ''
-        }
-        require(process.argv[1]).default(JSON.parse(process.argv[2]), { root: process.argv[3] })
-          .then(result => process.exit(result.success ? 0 : 1));`,
-        join(__dirname, 'verdaccio.impl.ts'),
-        JSON.stringify({
-          port,
-          listenAddress,
-          location: 'none',
-          config,
-          storage: join(root, 'storage'),
-          clear: false,
-        }),
-        root,
-      ],
-      { env }
-    );
-    let output = '';
-    child.stdout.on('data', (data) => (output += data));
-    child.stderr.on('data', (data) => (output += data));
-    child.on('error', (error) => (output += error.stack));
-    return { port, output: () => output };
+  function addedListeners(event: string) {
+    return processEmitter
+      .listeners(event)
+      .filter((existing) => !existingListeners.get(event).includes(existing));
+  }
+
+  const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+  async function start(
+    options: Partial<VerdaccioExecutorSchema>,
+    { freePort = 4873 } = {}
+  ) {
+    detectPort.mockResolvedValue(freePort);
+    const settled = vi.fn();
+    run = verdaccioExecutor(
+      {
+        location: 'none',
+        listenAddress: 'localhost',
+        config: 'config.yml',
+        port: 4873,
+        ...options,
+      },
+      { root: '/workspace' } as ExecutorContext
+    ).finally(settled);
+    await settle();
+    expect(verdaccio.children).toHaveLength(1);
+    return { child: verdaccio.children[0], settled, result: run };
   }
 
   it.each([
-    ['localhost', 'localhost'],
-    ['127.0.0.1', '127.0.0.1'],
-    ['http://127.0.0.1', '127.0.0.1'],
-    ['http:127.0.0.1', '127.0.0.1'],
-    ['', 'localhost'],
-    ['http:', 'localhost'],
-    ['http://', 'localhost'],
-    ['0.0.0.0', '127.0.0.1'],
+    ['localhost', 'localhost:4874', 'localhost', 'http://localhost:4874/'],
+    ['127.0.0.1', '127.0.0.1:4874', '127.0.0.1', 'http://127.0.0.1:4874/'],
+    [
+      'http://127.0.0.1',
+      'http://127.0.0.1:4874',
+      '127.0.0.1',
+      'http://127.0.0.1:4874/',
+    ],
+    [
+      'http:127.0.0.1',
+      'http:127.0.0.1:4874',
+      '127.0.0.1',
+      'http://127.0.0.1:4874/',
+    ],
+    ['', '4874', 'localhost', 'http://localhost:4874/'],
+    ['http:', 'http::4874', 'localhost', 'http://localhost:4874/'],
+    ['http://', 'http://:4874', 'localhost', 'http://localhost:4874/'],
+    ['0.0.0.0', '0.0.0.0:4874', '0.0.0.0', 'http://127.0.0.1:4874/'],
+    ['[::]', '[::]:4874', '::', 'http://[::1]:4874/'],
   ])(
-    'reports the owned listener for %j at its fallback port while the executor stays alive',
-    async (listenAddress, hostname) => {
-      const { port, output } = await start({ listenAddress });
-      await vi.waitFor(
-        () => {
-          expect(child.exitCode, output()).toBeNull();
-          expect(received, output()).toHaveLength(1);
-        },
-        { timeout: 15_000 }
-      );
+    'starts %j on the fallback port and reports where Verdaccio listens once it has started',
+    async (listenAddress, listen, host, url) => {
+      vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+      const { child } = await start({ listenAddress }, { freePort: 4874 });
 
-      const url = new URL(received[0].url);
-      expect(url.hostname).toBe(hostname);
-      expect(url.protocol).toBe('http:');
-      expect(Number(url.port)).not.toBe(port);
-      const response = await fetch(new URL('/-/ping', url));
-      expect(response.ok).toBe(true);
-      expect(await response.json()).toEqual({});
-      expect(child.exitCode).toBeNull();
+      expect(vi.mocked(fork).mock.calls[0][1]).toEqual([
+        '--config',
+        join('/workspace', 'config.yml'),
+        '--listen',
+        listen,
+      ]);
+      expect(getListenAddress(listen, console)).toEqual({
+        proto: 'http',
+        host,
+        port: '4874',
+      });
+      child.emit('message', { verdaccio_started: false });
+      expect(devkit.emitReadySignal).not.toHaveBeenCalled();
 
-      const exited = once(child, 'exit');
-      child.kill('SIGTERM');
-      await exited;
-      await expect(fetch(url)).rejects.toThrow();
+      child.emit('message', { verdaccio_started: true });
+
+      expect(devkit.emitReadySignal).toHaveBeenCalledTimes(1);
+      expect(devkit.emitReadySignal).toHaveBeenCalledWith(url);
     }
   );
 
-  it('does not report readiness when startup fails despite an unrelated healthy listener', async () => {
-    const { port, output } = await start({ config: 'missing.yml' });
-    await vi.waitFor(() => expect(child.exitCode, output()).toBe(1), {
-      timeout: 15_000,
-    });
-    expect(received).toEqual([]);
-    expect(output()).toContain('missing.yml');
-    expect(await (await fetch(`http://localhost:${port}`)).text()).toBe(
-      'unrelated'
-    );
+  it('signals readiness without a URL for a scoped IPv6 listener', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+    const { child } = await start({ listenAddress: '[::1%lo0]' });
+
+    child.emit('message', { verdaccio_started: true });
+
+    expect(devkit.emitReadySignal).toHaveBeenCalledWith(undefined);
   });
 
-  it.skipIf(!ipv6Loopback)(
-    'signals readiness without a URL for a scoped IPv6 listener',
-    async () => {
-      const { port, output } = await start({
-        listenAddress: `[::1%${ipv6Loopback}]`,
-        occupied: false,
-      });
-      await vi.waitFor(
-        () => {
-          expect(child.exitCode, output()).toBeNull();
-          expect(received, output()).toHaveLength(1);
-        },
-        { timeout: 15_000 }
-      );
-      expect(received[0]).not.toHaveProperty('url');
-      const response = await fetch(`http://[::1]:${port}/-/ping`);
-      expect(response.ok).toBe(true);
-      expect(await response.json()).toEqual({});
-      expect(child.exitCode).toBeNull();
+  it('does not report readiness when Verdaccio fails to start', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+    const { child, result } = await start({});
 
-      const exited = once(child, 'exit');
-      child.kill('SIGTERM');
-      await exited;
-      await expect(fetch(`http://[::1]:${port}`)).rejects.toThrow();
-    }
-  );
+    child.emit('exit', 1, null);
 
-  it('keeps ordinary startup alive without a signal environment when the core has no readiness API', async () => {
-    const { port, output } = await start({
-      signal: false,
-      legacyCore: true,
-      occupied: false,
-    });
-    await vi.waitFor(
-      async () => {
-        expect(child.exitCode, output()).toBeNull();
-        const response = await fetch(`http://localhost:${port}/-/ping`);
-        expect(response.ok).toBe(true);
-        expect(await response.json()).toEqual({});
-      },
-      { timeout: 15_000 }
-    );
-    expect(received).toEqual([]);
-    expect(child.exitCode).toBeNull();
+    await expect(result).resolves.toMatchObject({ success: false });
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
+  });
+
+  it('does not signal when the task does not wait for readiness', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '');
+    const { child } = await start({});
+
+    child.emit('message', { verdaccio_started: true });
+
+    expect(devkit.emitReadySignal).not.toHaveBeenCalled();
+  });
+
+  it('keeps running while Verdaccio runs and stops it with the signal its process receives', async () => {
+    const { child, settled } = await start({});
+    child.emit('message', { verdaccio_started: true });
+    await settle();
+    expect(settled).not.toHaveBeenCalled();
+
+    for (const listener of addedListeners('SIGTERM')) listener('SIGTERM');
+
+    expect(child.kill).toHaveBeenCalledWith('SIGTERM');
   });
 });
