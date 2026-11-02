@@ -23,6 +23,12 @@ import {
   libraryDependenciesRootBunLock,
   libraryOptionalPeerPrunedBunLock,
 } from './__fixtures__/bun/pruned-library-dependencies.bun.lock';
+import {
+  namesakeOverridePrunedBunLock,
+  namesakeOverrideRootBunLock,
+  overriddenDependencyPrunedBunLock,
+  overriddenDependencyRootBunLock,
+} from './__fixtures__/bun/pruned-overridden-dependency.bun.lock';
 import { patchedDependenciesRootBunLock } from './__fixtures__/bun/pruned-patched-dependencies.bun.lock';
 import {
   siblingOptionalPeerInRangePrunedBunLock,
@@ -35,6 +41,16 @@ import {
   omittedTrustedDependenciesRootBunLock,
   trustedDependenciesRootBunLock,
 } from './__fixtures__/bun/pruned-trusted-dependencies.bun.lock';
+import {
+  unresolvedModulePrunedBunLock,
+  unresolvedModuleRootBunLock,
+  unresolvedOptionalPrunedBunLock,
+  unresolvedOptionalRootBunLock,
+  unresolvedVendoredDroppedPrunedBunLock,
+  unresolvedVendoredDroppedRootBunLock,
+  unresolvedVendoredKeptPrunedBunLock,
+  unresolvedVendoredKeptRootBunLock,
+} from './__fixtures__/bun/pruned-unresolved-optional-dependencies.bun.lock';
 import {
   vendoredPackagesPrunedBunLock,
   vendoredPackagesRootBunLock,
@@ -288,7 +304,8 @@ describe('generatePrunedDeployOutput for bun', () => {
     },
     {
       // `ms` comes from a library and only resolves to a matching version
-      // under that library's workspace scope.
+      // under that library's workspace scope. The locked is-buffer keeps the
+      // override's version without the override.
       scenario:
         'library dependencies and overrides from a lockfileVersion 1 bun.lock',
       rootLockFile: libraryDependenciesRootBunLock,
@@ -363,12 +380,69 @@ describe('generatePrunedDeployOutput for bun', () => {
       packageJson: { name: '@demo/api', version: '0.0.1' },
       expected: undefined,
     },
+    {
+      // The root install resolved no `ms@99.0.0`, and debug's `ms` would
+      // otherwise satisfy the edge.
+      scenario: 'an optional dependency the root install left unresolved',
+      rootLockFile: unresolvedOptionalRootBunLock,
+      packageJson: {
+        name: '@demo/api',
+        version: '1.0.0',
+        dependencies: { debug: '^4.3.0' },
+        optionalDependencies: { ms: '99.0.0' },
+      },
+      expected: unresolvedOptionalPrunedBunLock,
+    },
+    {
+      scenario:
+        'a workspace module whose optional dependency stayed unresolved',
+      rootLockFile: unresolvedModuleRootBunLock,
+      packageJson: {
+        name: '@demo/api',
+        version: '1.0.0',
+        dependencies: { '@demo/util': 'workspace:*', debug: '^4.3.0' },
+      },
+      expected: unresolvedModulePrunedBunLock,
+    },
   ])(
     'ships the bun.lock Bun writes for $scenario',
     ({ rootLockFile, packageJson, expected }) => {
       expect(prune(rootLockFile, packageJson as PackageJson)).toBe(expected);
     }
   );
+
+  // The root overrides ms to 2.1.2. Bun 1.4.4 re-resolves a dependency whose
+  // locked version is outside its declared range unless the manifest
+  // overrides it.
+  it('declares the version an override installs outside the declared range', () => {
+    const manifest: PackageJson = {
+      name: '@demo/api',
+      version: '1.0.0',
+      dependencies: { 'is-odd': '^1.0.0', debug: '^4.3.0', ms: '2.0.0' },
+      overrides: { 'is-buffer': '1.1.5' },
+    };
+
+    expect(prune(overriddenDependencyRootBunLock, manifest)).toBe(
+      overriddenDependencyPrunedBunLock
+    );
+    expect(manifest.dependencies.ms).toBe('2.1.2');
+    expect(manifest.overrides).toBeUndefined();
+  });
+
+  // apps/api is no workspace, and the workspace that shares its manifest name
+  // gets ms 2.1.2 from a scoped override.
+  it("keeps the declared range for a namesake workspace's override", () => {
+    const manifest: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { ms: '2.0.0' },
+    };
+
+    expect(prune(namesakeOverrideRootBunLock, manifest)).toBe(
+      namesakeOverridePrunedBunLock
+    );
+    expect(manifest.dependencies.ms).toBe('2.0.0');
+  });
 
   it.each([
     {
@@ -566,6 +640,47 @@ describe('generatePrunedDeployOutput for bun', () => {
         'linked package lnk requires ms'
       );
     });
+
+    // holder's optional `ms@99.0.0` never resolved, and Bun lists it as
+    // unresolved only while the tree holds another `ms`, here debug's.
+    it.each([
+      {
+        scenario: 'beside another ms',
+        rootLockFile: unresolvedVendoredKeptRootBunLock,
+        dependencies: { debug: '^4.3.0' },
+        expected: unresolvedVendoredKeptPrunedBunLock,
+      },
+      {
+        scenario: 'without another ms',
+        rootLockFile: unresolvedVendoredDroppedRootBunLock,
+        dependencies: { 'is-odd': '^1.0.0' },
+        expected: unresolvedVendoredDroppedPrunedBunLock,
+      },
+    ])(
+      "keeps a vendored package's optional dependency unresolved $scenario",
+      ({ rootLockFile, dependencies, expected }) => {
+        mkdirSync(join(tempDir, 'vendor/holder'), { recursive: true });
+        writeFileSync(
+          join(tempDir, 'vendor/holder/package.json'),
+          JSON.stringify({
+            name: 'holder',
+            version: '1.0.0',
+            optionalDependencies: { ms: '99.0.0' },
+          })
+        );
+
+        expect(
+          prune(rootLockFile, {
+            name: '@demo/api',
+            version: '1.0.0',
+            dependencies: {
+              holder: 'file:../../vendor/holder',
+              ...dependencies,
+            },
+          })
+        ).toBe(expected);
+      }
+    );
   });
 
   it('ships the patches of the packages the pruned bun.lock keeps', () => {

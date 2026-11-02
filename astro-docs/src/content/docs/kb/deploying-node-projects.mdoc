@@ -235,6 +235,10 @@ In a Bun workspace on the text `bun.lock`, `bun install --frozen-lockfile` accep
 The emitted `package.json` carries the root `trustedDependencies` list and the
 `patchedDependencies` of the packages the pruned lockfile keeps, with their `.patch` files copied
 under `patches/`.
+Bun applies `overrides` and `resolutions` only from the workspace root.
+The emitted `package.json` drops them, and the pruned `bun.lock` keeps the versions they installed.
+A non-optional direct dependency that the root overrides to a version outside its declared range
+declares that version instead.
 Bun doesn't install the dependencies of a `file:` dependency that another `file:` dependency
 declares, and workspace libraries ship as `file:` dependencies.
 The emitted `package.json` therefore also lists every workspace library the app reaches through

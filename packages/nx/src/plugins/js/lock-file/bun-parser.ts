@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { isAbsolute, join, posix } from 'node:path';
-import { satisfies, validRange } from 'semver';
+import { satisfies, valid, validRange } from 'semver';
 import {
   DependencyType,
   type ProjectGraph,
@@ -49,6 +49,12 @@ const DEPENDENCY_TYPES = [
   'peerDependencies',
 ] as const;
 
+export interface PinnedManifestSpec {
+  depType: (typeof DEPENDENCY_TYPES)[number];
+  name: string;
+  spec: string;
+}
+
 /**
  * Bun text-based lockfile structure
  * Based on comprehensive analysis of bun.lock.zig source code
@@ -69,6 +75,10 @@ interface BunLockFile {
 
   /** The root manifest's `trustedDependencies` that are installed */
   trustedDependencies?: string[];
+
+  /** The default and named catalogs the workspaces' `catalog:` specs use */
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
 
   /**
    * Workspaces configuration - maps workspace paths to their dependencies
@@ -95,6 +105,9 @@ interface Workspace {
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   optionalPeers?: string[];
+  // Optional dependencies the install left unresolved although the tree has a
+  // package of the same name.
+  unresolved?: string[];
 }
 
 // Union type for different package tuple formats based on resolution protocol
@@ -122,6 +135,7 @@ interface PackageDependencies {
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   optionalPeers?: string[];
+  unresolved?: string[];
   bundled?: boolean;
 }
 
@@ -1585,7 +1599,10 @@ interface PrunedPackage {
  * Workspace modules become the `file:./workspace_modules/<name>` folder
  * dependencies that copy-workspace-modules ships. `projectRoot` is where the
  * manifest's local-path specs resolve from when telling a vendored package from
- * a workspace module of the same name. Returns an empty string for a manifest
+ * a workspace module of the same name. It also locates the project's own
+ * workspace entry, whose resolutions are kept for the specs it declares even
+ * outside their range. `onPinnedSpec` receives the locked version the output
+ * declares for such a dependency. Returns an empty string for a manifest
  * without dependencies, which gets no lockfile.
  */
 export function stringifyBunLockfile(
@@ -1593,7 +1610,8 @@ export function stringifyBunLockfile(
   rootLockFileContent: string,
   packageJson: NormalizedPackageJson,
   workspaceRootPath: string,
-  projectRoot?: string
+  projectRoot?: string,
+  onPinnedSpec?: (pin: PinnedManifestSpec) => void
 ): string {
   const rootLockFile = parseJson<BunLockFile>(rootLockFileContent, {
     allowTrailingComma: true,
@@ -1725,6 +1743,12 @@ export function stringifyBunLockfile(
     if (optionalPeers?.length) {
       shipped.optionalPeers = optionalPeers;
     }
+    const unresolved = workspace.unresolved?.filter(
+      (dep) => shipped.optionalDependencies?.[dep]
+    );
+    if (unresolved?.length) {
+      shipped.unresolved = unresolved;
+    }
     return sortDependencyGroups(shipped);
   };
 
@@ -1818,6 +1842,15 @@ export function stringifyBunLockfile(
     )
       ? [packageJson.name]
       : [];
+  // The project's own entry records what the root install resolved for the
+  // specs it declares.
+  const projectWorkspace =
+    projectRoot !== undefined
+      ? rootLockFile.workspaces[normalizeBunLocalPath(projectRoot)]
+      : undefined;
+  const appWorkspace =
+    projectWorkspace?.name === packageJson.name ? projectWorkspace : undefined;
+  const unresolvedRootDependencies: string[] = [];
   const placedRootDependencies = new Set<string>();
   for (const depType of DEPENDENCY_TYPES) {
     for (const [name, spec] of Object.entries(packageJson[depType] ?? {})) {
@@ -1850,16 +1883,36 @@ export function stringifyBunLockfile(
       ) {
         continue;
       }
+      if (
+        depType === 'optionalDependencies' &&
+        appWorkspace?.unresolved?.includes(name)
+      ) {
+        unresolvedRootDependencies.push(name);
+        continue;
+      }
       const resolvedSpec = resolveCatalog(name, spec);
+      const appSpec = appWorkspace?.[depType]?.[name];
+      const declaredByApp =
+        appSpec !== undefined &&
+        resolveLockfileCatalog(rootLockFile, name, appSpec) === resolvedSpec;
       const key = findManifestDependencyKey(
         rootPackages,
         localSources,
         appScope,
         name,
-        resolvedSpec
+        resolvedSpec,
+        declaredByApp
       );
       if (key) {
         place([], name, createPackage(key, resolvedSpec));
+        const pinnedSpec =
+          declaredByApp && depType !== 'optionalDependencies'
+            ? getOverriddenVersionSpec(rootPackages[key], resolvedSpec)
+            : undefined;
+        if (pinnedSpec) {
+          rootWorkspace[depType][name] = pinnedSpec;
+          onPinnedSpec?.({ depType, name, spec: pinnedSpec });
+        }
       } else if (depType !== 'optionalDependencies') {
         throw new Error(
           `Pruned lock file creation failed. The following package was not found in the root lock file: ${name}@${spec}`
@@ -1890,7 +1943,11 @@ export function stringifyBunLockfile(
         continue;
       }
       for (const name of Object.keys(pkg.dependencies?.[depType] ?? {})) {
-        if (seen.has(name)) {
+        if (
+          seen.has(name) ||
+          (depType === 'optionalDependencies' &&
+            pkg.dependencies.unresolved?.includes(name))
+        ) {
           continue;
         }
         seen.add(name);
@@ -1942,6 +1999,15 @@ export function stringifyBunLockfile(
     }
   }
 
+  const placedNames = new Set(
+    [...placed.values()].map(({ path }) => path[path.length - 1])
+  );
+  const rootUnresolved = unresolvedRootDependencies
+    .filter((name) => placedNames.has(name))
+    .sort(compareStrings);
+  if (rootUnresolved.length) {
+    rootWorkspace.unresolved = rootUnresolved;
+  }
   const workspace: Workspace = {
     ...(packageJson.name && { name: packageJson.name }),
     ...sortDependencyGroups(rootWorkspace),
@@ -1964,7 +2030,7 @@ export function stringifyBunLockfile(
     .sort(comparePrunedPackages)
     .map(
       ({ path, tuple }) =>
-        `    ${JSON.stringify(path.join('/'))}: ${formatInlineBunLockfileValue(tuple)},`
+        `    ${JSON.stringify(path.join('/'))}: ${formatInlineBunLockfileValue(keepPlacedUnresolved(tuple, placedNames))},`
     );
 
   const lines = ['{', `  "lockfileVersion": ${rootLockFile.lockfileVersion},`];
@@ -2032,18 +2098,21 @@ function findNearestBunPackageKey(
 
 /**
  * The root lockfile key for a dependency of the pruned manifest: the app's own
- * resolution when it matches the manifest's spec. A dependency the manifest
- * took from one of the app's workspace libraries (createPackageJson collects
- * those) can resolve under that library's scope instead, so the shallowest key
- * matching the spec is used otherwise. A local package matches by the source
- * the relocated spec names.
+ * resolution when its workspace entry declares that spec, or when it matches
+ * the spec. An override or resolution can install a version outside the
+ * declared range, so a spec the entry declares is not checked. A dependency
+ * the manifest took from one of the app's workspace libraries
+ * (createPackageJson collects those) can resolve under that library's scope
+ * instead, so the shallowest key matching the spec is used otherwise. A local
+ * package matches by the source the relocated spec names.
  */
 function findManifestDependencyKey(
   packages: BunLockFile['packages'],
   localSources: Map<string, BunLocalPathSource>,
   appScope: string[],
   name: string,
-  spec: string
+  spec: string,
+  declaredByApp: boolean
 ): string | undefined {
   const local = getLocalSpecSource(spec);
   const matches = (key: string) => {
@@ -2059,7 +2128,7 @@ function findManifestDependencyKey(
   const key = findNearestBunPackageKey(appScope, name, (candidate) =>
     Object.prototype.hasOwnProperty.call(packages, candidate)
   );
-  if (key && matches(key)) {
+  if (key && (declaredByApp || matches(key))) {
     return key;
   }
   let match: string[] | undefined;
@@ -2123,6 +2192,63 @@ function getShippedLocalResolution(
   return source.kind === 'link'
     ? `${name}@link:./${shippedPath}`
     : `${name}@file:${shippedPath}`;
+}
+
+// A workspace entry keeps its `catalog:` specs as written, and the lockfile
+// records the catalogs the install resolved them against.
+function resolveLockfileCatalog(
+  lockFile: BunLockFile,
+  name: string,
+  spec: string
+): string | undefined {
+  if (!spec.startsWith('catalog:')) {
+    return spec;
+  }
+  const catalogName = spec.slice('catalog:'.length);
+  return catalogName
+    ? lockFile.catalogs?.[catalogName]?.[name]
+    : lockFile.catalog?.[name];
+}
+
+/**
+ * The spec a pruned output declares for a dependency that an override or
+ * resolution installed outside its declared range. The output ships no
+ * overrides, and Bun 1.4.4 re-resolves a required dependency of the root
+ * manifest whose locked registry version is outside its range (1.4.3 keeps
+ * it). Bun checks no other resolution against the range, so it keeps the
+ * declared spec.
+ */
+function getOverriddenVersionSpec(
+  tuple: unknown[],
+  spec: string
+): string | undefined {
+  if (resolvesToSpec(tuple, spec)) {
+    return undefined;
+  }
+  const { name, version, protocol } = getCachedSpecInfo(tuple[0] as string);
+  if (protocol !== 'npm' || !valid(version)) {
+    return undefined;
+  }
+  return spec.startsWith('npm:') ? `npm:${name}@${version}` : version;
+}
+
+// Bun lists an unresolved optional dependency only while the tree holds a
+// package of that name, which loading would otherwise resolve it to.
+function keepPlacedUnresolved(
+  tuple: unknown[],
+  placedNames: Set<string>
+): unknown[] {
+  const meta = extractPackageDependencies(tuple);
+  if (!meta?.unresolved) {
+    return tuple;
+  }
+  const unresolved = meta.unresolved.filter((name) => placedNames.has(name));
+  if (unresolved.length === meta.unresolved.length) {
+    return tuple;
+  }
+  const { unresolved: _, ...rest } = meta;
+  const kept = unresolved.length ? { ...meta, unresolved } : rest;
+  return tuple.map((value) => (value === meta ? kept : value));
 }
 
 // Only a semver range is checked: a git, tarball or tag spec trusts the
@@ -2345,6 +2471,9 @@ function sortDependencyGroups(
   }
   if (groups.optionalPeers) {
     sorted.optionalPeers = groups.optionalPeers;
+  }
+  if (groups.unresolved) {
+    sorted.unresolved = groups.unresolved;
   }
   return sorted;
 }
