@@ -1703,8 +1703,8 @@ export function stringifyBunLockfile(
   // Mirrors the manifest copy-workspace-modules writes for the copy: catalog
   // references resolved and sibling modules pointed at their copies (a peer one
   // moved into dependencies). A frozen install takes a folder dependency's
-  // dependencies from this entry, so leaving out devDependencies keeps Bun
-  // from installing them, or failing on a `workspace:` one the copy keeps.
+  // dependencies from this entry. The entry leaves out devDependencies as the
+  // copy does; otherwise Bun installs them and fails on a `workspace:` one.
   const getShippedModuleDependencies = (
     name: string,
     workspacePath: string,
