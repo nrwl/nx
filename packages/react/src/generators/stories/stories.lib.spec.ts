@@ -50,8 +50,6 @@ describe('react:stories for libraries', () => {
         'utf-8'
       )
     ).toMatchSnapshot();
-
-    JSON.parse(appTree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {

@@ -448,7 +448,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         appName: 'existing',
         targetName: 'lint',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         targetName: 'lint',
       });
       createTestProject(tree, {
@@ -476,7 +476,6 @@ describe('Eslint - Convert Executors To Plugin', () => {
       await convertToInferred(tree, { project: 'myapp', skipFormat: true });
 
       // ASSERT
-      readJson(tree, `${project.root}/project.json`);
       // nx.json modifications
       const nxJsonPlugins = readNxJson(tree).plugins;
       const addedTestEslintPlugin = nxJsonPlugins.find((plugin) => {

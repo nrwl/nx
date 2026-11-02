@@ -39,8 +39,6 @@ describe('nextjs:stories for applications', () => {
     expect(
       tree.exists('test-ui-app/src/components/test.stories.tsx')
     ).toMatchSnapshot();
-
-    JSON.parse(tree.read('package.json', 'utf-8'));
   });
 
   it('should create the stories without interaction tests', async () => {
