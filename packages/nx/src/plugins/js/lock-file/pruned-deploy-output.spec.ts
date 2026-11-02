@@ -374,13 +374,6 @@ describe('generatePrunedDeployOutput for bun', () => {
       expected: siblingOptionalPeerOutOfRangePrunedBunLock,
     },
     {
-      // A frozen install rejects any lockfile for a manifest Bun writes none for.
-      scenario: 'a manifest without dependencies',
-      rootLockFile: libraryDependenciesRootBunLock,
-      packageJson: { name: '@demo/api', version: '0.0.1' },
-      expected: undefined,
-    },
-    {
       // The root install resolved no `ms@99.0.0`, and debug's `ms` would
       // otherwise satisfy the edge.
       scenario: 'an optional dependency the root install left unresolved',
@@ -442,6 +435,19 @@ describe('generatePrunedDeployOutput for bun', () => {
       namesakeOverridePrunedBunLock
     );
     expect(manifest.dependencies.ms).toBe('2.0.0');
+  });
+
+  // A frozen install rejects any lockfile for a manifest Bun writes none for.
+  it('leaves no bun.lock for a manifest without dependencies', () => {
+    const manifest = { name: '@demo/api', version: '0.0.1' };
+    expect(
+      prune(libraryDependenciesRootBunLock, {
+        ...manifest,
+        dependencies: { 'is-odd': '^1.0.0' },
+      })
+    ).toBeDefined();
+
+    expect(prune(libraryDependenciesRootBunLock, manifest)).toBeUndefined();
   });
 
   it.each([
