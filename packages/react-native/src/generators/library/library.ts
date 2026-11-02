@@ -13,7 +13,6 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   runTasksInSerial,
   toJS,
   Tree,
@@ -219,7 +218,6 @@ async function addProject(
     }
   } else {
     if (options.publishable) {
-      readJson(host, 'nx.json');
       await addReleaseConfigForNonTsSolution(host, options.name, project);
     }
     addProjectConfiguration(host, options.name, project);

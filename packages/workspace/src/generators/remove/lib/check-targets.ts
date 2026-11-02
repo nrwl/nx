@@ -64,7 +64,7 @@ function checkIfProjectIsUsed(
     if (typeof value === 'string') {
       callback(value);
     } else if (Array.isArray(value)) {
-      value.forEach((x, idx) => recur(x));
+      value.forEach((x) => recur(x));
     } else if (typeof value === 'object') {
       Object.entries(value).forEach(([, v]) => {
         recur(v);
