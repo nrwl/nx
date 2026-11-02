@@ -194,23 +194,40 @@ describe('app', () => {
     expect(eslintConfig).not.toContain('**/out-tsc');
   });
 
-  it.each<[string, (tree: Tree) => void, boolean]>([
-    ['ESLint v9 is declared', (tree) => declareEslint(tree, '^9.39.0'), true],
-    ['ESLint v10 is declared', (tree) => declareEslint(tree, '^10.0.0'), false],
-    ['no ESLint is declared', () => {}, false],
+  it.each<[string, (tree: Tree) => void, 'eslint' | 'none', boolean]>([
+    [
+      'ESLint v9 is declared',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'eslint',
+      true,
+    ],
+    [
+      'ESLint v10 is declared',
+      (tree) => declareEslint(tree, '^10.0.0'),
+      'eslint',
+      false,
+    ],
+    ['no ESLint is declared', () => {}, 'eslint', false],
     [
       'no ESLint is declared and the root config is eslintrc',
       (tree) => writeJson(tree, '.eslintrc.json', {}),
+      'eslint',
       true,
+    ],
+    [
+      'ESLint v9 is declared but the app does not use ESLint',
+      (tree) => declareEslint(tree, '^9.39.0'),
+      'none',
+      false,
     ],
   ])(
     'should disable jsx-a11y/accessible-emoji in the welcome screen only when jsx-a11y is installed: %s',
-    async (_, setup, disabled) => {
+    async (_, setup, linter, disabled) => {
       setup(appTree);
 
       await expoApplicationGenerator(appTree, {
         directory: 'my-app',
-        linter: 'eslint',
+        linter,
         e2eTestRunner: 'none',
         js: false,
         unitTestRunner: 'none',
