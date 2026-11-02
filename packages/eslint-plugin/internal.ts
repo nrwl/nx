@@ -5,8 +5,10 @@
 // Keep the `const` assignment: `export { default as … } from` breaks the ESM
 // named import on Node below 24.14. `internal.spec.ts` pins the shape and
 // explains why.
+import directiveChecksRule from './src/rules/directive-checks';
 import enforceModuleBoundariesRule from './src/rules/enforce-module-boundaries';
 
-// Keep the annotation: the inferred type names RuleModule via a pnpm store path (TS2883).
+// Keep the annotations: the inferred types name RuleModule via a pnpm store path (TS2883).
+export const directiveChecks: typeof directiveChecksRule = directiveChecksRule;
 export const enforceModuleBoundaries: typeof enforceModuleBoundariesRule =
   enforceModuleBoundariesRule;

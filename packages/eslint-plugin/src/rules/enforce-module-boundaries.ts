@@ -25,6 +25,10 @@ import {
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
+import {
+  findSplitTargets,
+  splitTargetsApply,
+} from '../utils/directive-checks/split-targets';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
@@ -44,6 +48,7 @@ import {
   hasNoneOfTheseTags,
   hasStaticImportOfDynamicResource,
   isAbsoluteImportIntoAnotherProject,
+  isBareImport,
   isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
@@ -260,7 +265,8 @@ export default ESLintUtils.RuleCreator(
     let ignoreServerInputsSpec: boolean | undefined;
     // Atomized e2e specs (`<target>--<spec path>`) with
     // `// @nx-ignore-server-inputs` import app code with bare imports
-    // (`import 'app/feature'`) to hash from it.
+    // (`import 'app/feature'`) to hash from it. Kept when the plugin that
+    // created the split task is unknown.
     function isIgnoreServerInputsImport(
       node: Parameters<typeof run>[1],
       sourceProject: ProjectGraphProjectNode,
@@ -268,20 +274,17 @@ export default ESLintUtils.RuleCreator(
     ): boolean {
       if (
         node.type !== AST_NODE_TYPES.ImportDeclaration ||
-        context.sourceCode.getFirstToken(node, 1).range[0] !==
-          node.source.range[0]
+        !isBareImport(context.sourceCode, node)
       ) {
         return false;
       }
       if (ignoreServerInputsSpec === undefined) {
-        const specPath = normalizePath(
-          relative(sourceProject.data.root, sourceFilePath)
-        );
+        const targets = hasIgnoreServerInputsDirective(context.sourceCode.text)
+          ? findSplitTargets(projectGraph, sourceProject, sourceFilePath)
+          : [];
         ignoreServerInputsSpec =
-          hasIgnoreServerInputsDirective(context.sourceCode.text) &&
-          Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
-            targetName.endsWith(`--${specPath}`)
-          );
+          targets.length > 0 &&
+          splitTargetsApply(targets, 'ignore-server-inputs') !== false;
       }
       return ignoreServerInputsSpec;
     }

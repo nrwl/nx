@@ -28,6 +28,14 @@ vi.mock('@nx/devkit', async () => ({
   workspaceRoot: '/root',
 }));
 
+const { readSourceMapsCache } = vi.hoisted(() => ({
+  readSourceMapsCache: vi.fn(() => null),
+}));
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  readSourceMapsCache,
+}));
+
 vi.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
@@ -2137,6 +2145,15 @@ Violation detected in:
       import '@mycompany/myapp-e2e';
       import 'npm-package';
     `;
+    const options = {
+      depConstraints: [
+        {
+          sourceTag: 'scope:e2e',
+          onlyDependOnLibsWithTags: ['scope:e2e'],
+          bannedExternalImports: ['npm-package'],
+        },
+      ],
+    };
     const allChecks = [
       'noRelativeOrAbsoluteImportsAcrossLibraries',
       'noImportsOfApps',
@@ -2203,15 +2220,7 @@ Violation detected in:
       ],
     ])('%s', (_, file, content, messageIds) => {
       const failures = runRule(
-        {
-          depConstraints: [
-            {
-              sourceTag: 'scope:e2e',
-              onlyDependOnLibsWithTags: ['scope:e2e'],
-              bannedExternalImports: ['npm-package'],
-            },
-          ],
-        },
+        options,
         `${process.cwd()}/proj/apps/shop-e2e/${file}`,
         content,
         projectGraph,
@@ -2219,6 +2228,28 @@ Violation detected in:
       );
 
       expect(failures.map((failure) => failure.messageId)).toEqual(messageIds);
+    });
+
+    it('checks a spec whose split task comes from a plugin that ignores the directive', () => {
+      readSourceMapsCache.mockReturnValueOnce({
+        'apps/shop-e2e': {
+          'targets.e2e-ci--src/checkout.spec.ts': [
+            'apps/shop-e2e/jest.config.ts',
+            '@nx/jest/plugin',
+          ],
+        },
+      });
+
+      const failures = runRule(
+        options,
+        `${process.cwd()}/proj/apps/shop-e2e/src/checkout.spec.ts`,
+        `// @nx-ignore-server-inputs\n${imports}`,
+        // A new graph object: the rule reads the source map once per graph.
+        { ...projectGraph },
+        fileMap
+      );
+
+      expect(failures.map((failure) => failure.messageId)).toEqual(allChecks);
     });
   });
 

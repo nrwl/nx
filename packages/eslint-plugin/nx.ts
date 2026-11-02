@@ -3,6 +3,9 @@ import { workspaceRules } from './src/resolve-workspace-rules';
 import dependencyChecks, {
   RULE_NAME as dependencyChecksRuleName,
 } from './src/rules/dependency-checks';
+import directiveChecks, {
+  RULE_NAME as directiveChecksRuleName,
+} from './src/rules/directive-checks';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './src/rules/enforce-module-boundaries';
@@ -20,6 +23,7 @@ const plugin: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
     [nxPluginChecksRuleName]: nxPluginChecksRule,
     [dependencyChecksRuleName]: dependencyChecks,
+    [directiveChecksRuleName]: directiveChecks,
     // Resolve any custom rules that might exist in the current workspace
     ...workspaceRules,
   },

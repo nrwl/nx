@@ -583,7 +583,7 @@ async function buildPlaywrightTargets(
           ciBaseTargetConfig,
           context.workspaceRoot,
           testFile,
-          { ignoreServerInputs: true }
+          '@nx/playwright/plugin'
         ),
         options: {
           ...ciBaseTargetConfig.options,

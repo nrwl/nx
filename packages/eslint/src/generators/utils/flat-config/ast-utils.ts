@@ -52,7 +52,9 @@ export function removeOverridesFromLintConfig(content: string): string {
 }
 
 // TODO Change name
-function findExportDefault(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+export function findExportDefault(
+  source: ts.SourceFile
+): ts.NodeArray<ts.Node> {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExportAssignment(node) &&
@@ -63,7 +65,9 @@ function findExportDefault(source: ts.SourceFile): ts.NodeArray<ts.Node> {
   });
 }
 
-function findModuleExports(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+export function findModuleExports(
+  source: ts.SourceFile
+): ts.NodeArray<ts.Node> {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExpressionStatement(node) &&
