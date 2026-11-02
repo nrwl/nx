@@ -1,7 +1,6 @@
 import {
   addProjectConfiguration as _addProjectConfiguration,
   joinPathFragments,
-  readJson,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,

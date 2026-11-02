@@ -58,7 +58,7 @@ function removePropertiesFromTargetOptions(
     migrationLogs.addLog({
       executorName: '@nx/vite:dev-server',
       project: projectName,
-      log: `Encountered 'buildLibsFromSource' in project.json. This property will be added to your Vite config file via the '@nx/vite:build' executor migration.`,
+      log: `Encountered 'buildLibsFromSource' in project.json. Inferred Vite targets do not use this option, so it will be removed.`,
     });
     delete targetOptions.buildLibsFromSource;
   }
