@@ -17,12 +17,12 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
-        WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
-        collect_project_file_paths_cached, collect_workspace_file_paths_cached, expand_cached,
-        expand_globs, hash_all_externals, hash_external, hash_files, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
-        hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
+        DirectoryInventory, FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache,
+        ProjectFileSetCache, Source, WorkspaceFileIndex, WorkspaceFileIndicesCache,
+        WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, expand_cached, expand_globs, hash_all_externals,
+        hash_external, hash_files, hash_json_files, hash_project_config, hash_project_files_cached,
+        hash_task_output, hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
     walker::PathPredicate,
@@ -557,6 +557,7 @@ impl TaskHasher {
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<u32, JsonHashResult> = DashMap::new();
         let files_expansion_cache = FilesExpansionCache::new();
+        let directory_inventory = DirectoryInventory::default();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -683,6 +684,7 @@ impl TaskHasher {
                                         workspace_file_set_cache: &self.workspace_file_set_cache,
                                         json_file_set_cache: &json_file_set_cache,
                                         files_expansion_cache: &files_expansion_cache,
+                                        directory_inventory: &directory_inventory,
                                         run_stage,
                                         cwd: cwd_path,
                                         collect_inputs: should_collect_inputs,
@@ -754,6 +756,7 @@ impl TaskHasher {
             workspace_file_set_cache,
             json_file_set_cache,
             files_expansion_cache,
+            directory_inventory,
             run_stage,
             cwd,
             collect_inputs,
@@ -820,14 +823,19 @@ impl TaskHasher {
                 // The index answers from a listing it keeps only while
                 // nothing has run, like the file map; afterwards it reads the
                 // disk for us.
-                let list_directory = |dir: &str, accept: PathPredicate, skip: &[String]| {
-                    self.ignored_index.files_under(
-                        workspace_root,
-                        dir,
-                        run_stage.nothing_ran(),
-                        accept,
-                        skip,
-                    )
+                let list_directory = |dir: &str, accept: PathPredicate, _skip: &[String]| {
+                    directory_inventory.files_under(dir, accept, || {
+                        // A shared inventory cannot prune one fileset's exclusions:
+                        // another fileset may include them. The expansion's predicate
+                        // still applies every negation and nested-project boundary.
+                        self.ignored_index.files_under(
+                            workspace_root,
+                            dir,
+                            run_stage.nothing_ran(),
+                            &|_| true,
+                            &[],
+                        )
+                    })
                 };
                 let key = format!("files#{id}");
                 let expansion = expand_cached(&key, files_expansion_cache, || {
@@ -1061,6 +1069,7 @@ struct HashInstructionArgs<'a> {
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
     json_file_set_cache: &'a DashMap<u32, JsonHashResult>,
     files_expansion_cache: &'a FilesExpansionCache,
+    directory_inventory: &'a DirectoryInventory,
     run_stage: RunStage,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
@@ -1071,6 +1080,125 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
+    use crate::native::tasks::types::InstructionPool;
+    use assert_fs::prelude::*;
+
+    #[test]
+    fn ignored_inventory_is_per_hash_call_and_preserves_source_hashes_and_inputs() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.child("src/main.ts")
+            .write_str("source on disk")
+            .unwrap();
+        temp.child("dist/a.js").write_str("a").unwrap();
+        temp.child("dist/nested/b.js").write_str("b").unwrap();
+        temp.child("dist/a.map").write_str("map").unwrap();
+        let source_hash = "cached-source-hash";
+        let files = Arc::new(vec![FileData {
+            file: "src/main.ts".into(),
+            hash: source_hash.into(),
+        }]);
+        let hasher = TaskHasher {
+            workspace_root: temp.path().to_string_lossy().into_owned(),
+            project_graph: Arc::new(ProjectGraph {
+                nodes: HashMap::new(),
+                dependencies: HashMap::new(),
+                external_nodes: HashMap::new(),
+            }),
+            project_file_map: Arc::new(HashMap::new()),
+            all_workspace_files: files.clone(),
+            ts_config: b"{}".to_vec(),
+            ts_config_paths: HashMap::new(),
+            root_tsconfig_path: None,
+            options: None,
+            ignored_index: Arc::new(IgnoredIndexReader::unwatched()),
+            external_cache: Arc::new(DashMap::new()),
+            workspace_file_set_cache: WorkspaceFileSetCache::new(),
+            project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
+            all_externals_hash: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(files),
+        };
+        let pool = Arc::new(InstructionPool::default());
+        let a = pool.intern(HashInstruction::ignored_files(vec![
+            "dist/**".into(),
+            "src/**".into(),
+        ]));
+        let b = pool.intern(HashInstruction::ignored_files(vec![
+            "dist/**".into(),
+            "!dist/**/*.map".into(),
+        ]));
+        let plans = HashPlans {
+            pool,
+            plans: HashMap::from([("a".into(), vec![a]), ("b".into(), vec![b])]),
+            deferred: Default::default(),
+        };
+        hasher.register_prefixes(&plans);
+        let env = HashMap::new();
+        let run = |plans: &HashPlans, stage, collect| {
+            hasher
+                .hash_plans_impl(
+                    plans,
+                    temp.path().to_string_lossy().into_owned(),
+                    Some(collect),
+                    stage,
+                    |_| &env,
+                )
+                .unwrap()
+        };
+        let compare = || {
+            for stage in [RunStage::NothingRan, RunStage::ATaskMayHaveWritten] {
+                for collect in [false, true] {
+                    let batch = run(&plans, stage, collect);
+                    for (task, ids) in &plans.plans {
+                        let single = HashPlans {
+                            pool: plans.pool.clone(),
+                            plans: HashMap::from([(task.clone(), ids.clone())]),
+                            deferred: Default::default(),
+                        };
+                        let independent = run(&single, stage, collect);
+                        let actual = batch.0.get(task).unwrap();
+                        let expected = independent.0.get(task).unwrap();
+                        assert_eq!(actual.value, expected.value);
+                        assert_eq!(actual.inputs.files, expected.inputs.files);
+                    }
+                }
+            }
+        };
+        compare();
+        let before = run(&plans, RunStage::NothingRan, true);
+        temp.child("src/main.ts")
+            .write_str("changed source on disk")
+            .unwrap();
+        let source_changed = run(&plans, RunStage::NothingRan, true);
+        // The normal up-front source snapshot still wins over the current disk.
+        assert_eq!(
+            before.0.get("a").unwrap().value,
+            source_changed.0.get("a").unwrap().value
+        );
+        assert_eq!(
+            hasher.workspace_file_hash("src/main.ts").as_deref(),
+            Some(source_hash)
+        );
+        temp.child("dist/a.js").write_str("z").unwrap();
+        let rewritten = run(&plans, RunStage::NothingRan, true);
+        assert_ne!(
+            source_changed.0.get("a").unwrap().value,
+            rewritten.0.get("a").unwrap().value
+        );
+        temp.child("dist/new.js").write_str("new").unwrap();
+        std::fs::remove_file(temp.path().join("dist/nested/b.js")).unwrap();
+        compare();
+        let changed = run(&plans, RunStage::NothingRan, true);
+        assert_eq!(
+            changed.0.get("b").unwrap().inputs.files,
+            vec!["dist/a.js", "dist/new.js"]
+        );
+        assert_ne!(
+            rewritten.0.get("b").unwrap().value,
+            changed.0.get("b").unwrap().value
+        );
+    }
 
     #[test]
     fn ranked_assembly_hashes_values_in_key_order_and_folds_shared_keys() {
