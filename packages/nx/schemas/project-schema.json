@@ -38,6 +38,11 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
+          "...": {
+            "type": "boolean",
+            "const": true,
+            "description": "Spread token used when merging target configurations, so keys before it defer to the base (inferred) values and keys after it win."
+          },
           "executor": {
             "description": "The function that Nx will invoke when you run this target",
             "type": "string"
