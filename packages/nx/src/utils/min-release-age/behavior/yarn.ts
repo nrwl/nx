@@ -61,9 +61,7 @@ export async function readYarnPolicy(
     return { outcome: 'inactive' };
   }
 
-  if (
-    isDefaultLockfileMigrationEscape(root, pmVersion, gateMinutes, preapproved)
-  ) {
+  if (isDefaultLockfileMigrationEscape(root, pmVersion, gateMinutes)) {
     return { outcome: 'inactive' };
   }
 
@@ -125,8 +123,7 @@ function readPreapprovedPackages(root: string): string[] {
 function isDefaultLockfileMigrationEscape(
   root: string,
   pmVersion: string,
-  gateMinutes: number,
-  preapproved: string[]
+  gateMinutes: number
 ): boolean {
   if (lt(pmVersion, '4.15.0')) {
     return false;

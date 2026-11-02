@@ -402,6 +402,133 @@ module.exports = composePlugins(withNx(), (config) => config);
     `);
   });
 
+  it('converts a Nest project served by the @nx/js:node executor', async () => {
+    const project: ProjectConfiguration = {
+      name: 'api',
+      root: 'apps/api',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nx/webpack:webpack',
+          outputs: ['{options.outputPath}'],
+          defaultConfiguration: 'production',
+          options: {
+            target: 'node',
+            compiler: 'tsc',
+            outputPath: 'dist/apps/api',
+            main: 'apps/api/src/main.ts',
+            tsConfig: 'apps/api/tsconfig.app.json',
+            assets: ['apps/api/src/assets'],
+            webpackConfig: 'apps/api/webpack.config.js',
+          },
+          configurations: {
+            development: {},
+            production: {},
+          },
+        },
+        serve: {
+          executor: '@nx/js:node',
+          defaultConfiguration: 'development',
+          options: {
+            buildTarget: 'api:build',
+          },
+          configurations: {
+            development: {
+              buildTarget: 'api:build:development',
+            },
+            production: {
+              buildTarget: 'api:build:production',
+            },
+          },
+        },
+      },
+    };
+    addProject(tree, project.name, project);
+    fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
+    writeWebpackConfig(
+      tree,
+      project.root,
+      `const { composePlugins, withNx } = require('@nx/webpack');
+
+module.exports = composePlugins(withNx(), (config) => config);
+`
+    );
+
+    const result = await update(tree);
+
+    expect(result.nextSteps).toBeUndefined();
+    expect(tree.read(`${project.root}/webpack.config.js`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { useLegacyNxPlugin } = require('@nx/webpack');
+
+        // These options were migrated by @nx/webpack:convert-to-inferred from
+        // the project.json file and merged with the options in this file
+        const configValues = {
+          build: {
+            default: {
+              target: 'node',
+              compiler: 'tsc',
+              outputPath: '../../dist/apps/api',
+              main: './src/main.ts',
+              tsConfig: './tsconfig.app.json',
+              assets: ['./src/assets'],
+            },
+          },
+        };
+
+        // Determine the correct configValue to use based on the configuration
+        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+        const buildOptions = {
+          ...configValues.build.default,
+          ...configValues.build[configuration],
+        };
+
+        /**
+         * @type{import('webpack').WebpackOptionsNormalized}
+         */
+        module.exports = async () => ({
+          plugins: [
+            new NxAppWebpackPlugin(buildOptions),
+            // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+            // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+            // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+            // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            await useLegacyNxPlugin(require('./webpack.config.old.js'), buildOptions),
+          ],
+        });
+        "
+      `);
+    expect(readProjectConfiguration(tree, project.name).targets)
+      .toMatchInlineSnapshot(`
+        {
+          "build": {
+            "defaultConfiguration": "production",
+            "outputs": [
+              "{workspaceRoot}/dist/apps/api",
+            ],
+          },
+          "serve": {
+            "configurations": {
+              "development": {
+                "buildTarget": "api:build:development",
+              },
+              "production": {
+                "buildTarget": "api:build:production",
+              },
+            },
+            "defaultConfiguration": "development",
+            "executor": "@nx/js:node",
+            "options": {
+              "buildTarget": "api:build",
+            },
+          },
+        }
+      `);
+  });
+
   it('skips the prompt when no project uses the removed executors', async () => {
     const nxJson = readNxJson(tree);
 

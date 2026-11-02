@@ -7,7 +7,7 @@ import {
   readNxJson,
   TargetDependencies,
 } from '../config/nx-json';
-import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
@@ -302,9 +302,6 @@ async function getTerminalOutputLifeCycle(
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
        */
       const createPatchedLogWrite = (
-        originalWrite:
-          | typeof process.stdout.write
-          | typeof process.stderr.write,
         isError: boolean
       ): typeof process.stdout.write | typeof process.stderr.write => {
         // @ts-ignore
@@ -323,7 +320,6 @@ async function getTerminalOutputLifeCycle(
             );
           }
 
-          // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
           const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
@@ -360,8 +356,8 @@ async function getTerminalOutputLifeCycle(
         };
       };
 
-      process.stdout.write = createPatchedLogWrite(originalStdoutWrite, false);
-      process.stderr.write = createPatchedLogWrite(originalStderrWrite, true);
+      process.stdout.write = createPatchedLogWrite(false);
+      process.stderr.write = createPatchedLogWrite(true);
 
       // The cloud client calls console.log when NX_VERBOSE_LOGGING is set to true
       console.log = createPatchedConsoleMethod(originalConsoleLog);
@@ -414,10 +410,9 @@ async function getTerminalOutputLifeCycle(
     };
   }
 
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
+  getRunner(nxArgs, nxJson);
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
-    runnerOptions,
     nxArgs.specifiedOutputStyle
   );
 
@@ -1249,11 +1244,7 @@ async function convertObservableToPromise(
   });
 }
 
-function shouldUseDynamicLifeCycle(
-  tasks: Task[],
-  options: any,
-  outputStyle: string
-) {
+function shouldUseDynamicLifeCycle(tasks: Task[], outputStyle: string) {
   if (
     process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||

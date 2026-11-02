@@ -10,7 +10,6 @@ import {
 
 const cloud = vi.hoisted(() => ({
   used: true,
-  client: undefined as unknown,
   loadCloudClient: vi.fn(),
 }));
 vi.mock('../utils/nx-cloud-utils', () => ({

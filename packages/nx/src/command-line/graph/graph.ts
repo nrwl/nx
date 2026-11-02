@@ -1150,9 +1150,7 @@ async function createProjectGraphAndSourceMapClientResponse(
   };
 }
 
-async function createTaskGraphClientResponse(
-  pruneExternal: boolean = false
-): Promise<TaskGraphClientResponse> {
+async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse> {
   let graph: ProjectGraph;
   try {
     graph = await createProjectGraphAsync({ exitOnError: false });
@@ -1160,9 +1158,6 @@ async function createTaskGraphClientResponse(
     if (e instanceof ProjectGraphError) {
       graph = e.getPartialProjectGraph();
     }
-  }
-  if (pruneExternal) {
-    graph = pruneExternalNodes(graph);
   }
 
   const nxJson = readNxJson();
@@ -1271,15 +1266,11 @@ async function createExpandedTaskInputResponse(
 
 // Performance optimized functions for lazy loading task graphs
 
-// In-memory cache for task graphs to avoid regeneration
-const taskGraphCache = new Map<string, TaskGraphClientResponse>();
-
 // In-memory cache for expanded task inputs to avoid regeneration
 const expandedTaskInputsCache = new Map<string, Record<string, string[]>>();
 
 // Clear cache when project graph changes
 function clearTaskGraphCache() {
-  taskGraphCache.clear();
   expandedTaskInputsCache.clear();
 }
 

@@ -22,7 +22,7 @@ describe('handleErrors', () => {
         {}
       );
     });
-    const { bodyLines, title } = spy.mock.calls[0][0];
+    const { bodyLines } = spy.mock.calls[0][0];
     const body = bodyLines.join('\n');
     expect(body).toContain('cause message');
     expect(body).toContain('test-plugin');
@@ -42,7 +42,7 @@ describe('handleErrors', () => {
       );
     });
 
-    const { bodyLines, title } = spy.mock.calls[0][0];
+    const { bodyLines } = spy.mock.calls[0][0];
     const body = bodyLines.join('\n');
     expect(body).toContain('cause message');
     expect(body).not.toMatch(/\s+at.*handle-errors.spec.ts/);
@@ -53,7 +53,7 @@ describe('handleErrors', () => {
     await handleErrors(true, async () => {
       throw new Error('misc error');
     });
-    const { bodyLines, title } = spy.mock.calls[0][0];
+    const { bodyLines } = spy.mock.calls[0][0];
     const body = bodyLines.join('\n');
     expect(body).toContain('misc error');
     expect(body).not.toMatch(/[Cc]ause/);
@@ -66,7 +66,7 @@ describe('handleErrors', () => {
       const err = new Error('misc error', { cause });
       throw err;
     });
-    const { bodyLines, title } = spy.mock.calls[0][0];
+    const { bodyLines } = spy.mock.calls[0][0];
     const body = bodyLines.join('\n');
     expect(body).toContain('misc error');
     expect(body).toContain('cause message');

@@ -1,9 +1,5 @@
 import { reverse, filterNodes } from './operators';
-import {
-  DependencyType,
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from '../config/project-graph';
+import { DependencyType, ProjectGraph } from '../config/project-graph';
 
 const graph: ProjectGraph = {
   nodes: {

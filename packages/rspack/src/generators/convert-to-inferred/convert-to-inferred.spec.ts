@@ -11,6 +11,7 @@ import {
   type ProjectGraph,
   type Tree,
   detectPackageManager,
+  logger,
 } from '@nx/devkit';
 import {
   mockCjsModule,
@@ -1368,6 +1369,105 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
         });
         "
       `);
+    });
+
+    it('should drop the "transformers" option and log why', async () => {
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const project = createProject(tree, undefined, {
+        build: { transformers: ['@nestjs/swagger/plugin'] },
+      });
+      writeRspackConfig(tree, project.root);
+
+      await convertToInferred(tree, {});
+
+      expect(tree.read(`${project.root}/rspack.config.js`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+          "const { NxAppRspackPlugin } = require('@nx/rspack/app-plugin');
+          const { NxReactRspackPlugin } = require('@nx/rspack/react-plugin');
+          const { useLegacyNxPlugin } = require('@nx/rspack');
+
+          // These options were migrated by @nx/rspack:convert-to-inferred from
+          // the project.json file and merged with the options in this file
+          const configValues = {
+            build: {
+              default: {
+                outputPath: '../../dist/apps/app1',
+                index: './src/index.html',
+                main: './src/main.tsx',
+                tsConfig: './tsconfig.app.json',
+                assets: ['./src/favicon.ico', './src/assets'],
+                styles: ['./src/styles.scss'],
+              },
+              development: {
+                extractLicenses: false,
+                optimization: false,
+                sourceMap: true,
+                vendorChunk: true,
+              },
+              production: {
+                fileReplacements: [
+                  {
+                    replace: './src/environments/environment.ts',
+                    with: './src/environments/environment.prod.ts',
+                  },
+                ],
+                optimization: true,
+                outputHashing: 'all',
+                sourceMap: false,
+                namedChunks: false,
+                extractLicenses: true,
+                vendorChunk: false,
+              },
+            },
+            serve: {
+              default: {
+                hmr: true,
+                server: { type: 'https', options: { cert: './server.crt', key: './server.key' } },
+                port: 4200,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                historyApiFallback: {
+                  index: '/index.html',
+                  disableDotRule: true,
+                  htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+                },
+              },
+              development: { open: true },
+              production: { hmr: false },
+            },
+          };
+
+          // Determine the correct configValue to use based on the configuration
+          const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+
+          const buildOptions = {
+            ...configValues.build.default,
+            ...configValues.build[configuration],
+          };
+          const devServerOptions = {
+            ...configValues.serve.default,
+            ...configValues.serve[configuration],
+          };
+
+          /**
+           * @type{import('@rspack/core').RspackOptionsNormalized}
+           */
+          module.exports = async () => ({
+            devServer: devServerOptions,
+            plugins: [
+              new NxAppRspackPlugin(buildOptions),
+              new NxReactRspackPlugin(),
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              await useLegacyNxPlugin(require('./rspack.config.old'), buildOptions),
+            ],
+          });
+          "
+        `);
+      expect(
+        warn.mock.calls.some((call) =>
+          String(call[0]).includes('The "transformers" option was removed')
+        )
+      ).toBe(true);
+      warn.mockRestore();
     });
   });
 });
