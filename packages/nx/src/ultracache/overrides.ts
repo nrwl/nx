@@ -28,7 +28,7 @@ function customHasherTaskIds(
   }
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const ids = Object.values(taskGraph.tasks)
     .filter((task) => {
       try {

@@ -151,7 +151,11 @@ export async function setupAiAgentsGeneratorImpl(
 
   if (hasAgent('claude')) {
     const claudePath = join(options.directory, 'CLAUDE.md');
-    writeAgentRules(tree, claudePath, options.writeNxCloudRules);
+    writeAgentRules(
+      tree,
+      importsAgentsMd(tree, claudePath) ? agentsMd : claudePath,
+      options.writeNxCloudRules
+    );
 
     // Configure Claude plugin via marketplace (plugin includes MCP server)
     const claudeSettingsPath = join(
@@ -487,6 +491,20 @@ function withEntries(
   ...values: readonly string[]
 ): string[] {
   return [...new Set([...(existing ?? []), ...values])];
+}
+
+function importsAgentsMd(tree: Tree, claudePath: string): boolean {
+  if (!tree.exists(claudePath)) {
+    return false;
+  }
+  const nxBlock = tree.read(claudePath, 'utf-8').match(rulesRegex)?.[0];
+  return (
+    nxBlock
+      ?.replace(nxRulesMarkerCommentStart, '')
+      .replace(nxRulesMarkerCommentEnd, '')
+      .replace(nxRulesMarkerCommentDescription, '')
+      .trim() === '@AGENTS.md'
+  );
 }
 
 function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {

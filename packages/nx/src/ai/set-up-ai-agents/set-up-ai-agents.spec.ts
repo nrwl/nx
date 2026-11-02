@@ -363,6 +363,31 @@ describe('setup-ai-agents generator', () => {
         expect(tree.exists('.claude/settings.json')).toBe(false);
       });
 
+      it('should keep a CLAUDE.md nx block that imports AGENTS.md and update AGENTS.md instead', async () => {
+        const claudeMd = `<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+@AGENTS.md
+
+<!-- nx configuration end-->
+`;
+        tree.write('CLAUDE.md', claudeMd);
+        tree.write(
+          'AGENTS.md',
+          '<!-- nx configuration start-->\nOutdated\n<!-- nx configuration end-->'
+        );
+
+        await setupAiAgentsGenerator(tree, {
+          directory: '.',
+          agents: ['claude'],
+        });
+
+        expect(tree.read('CLAUDE.md', 'utf-8')).toEqual(claudeMd);
+        expect(tree.read('AGENTS.md', 'utf-8')).toEqual(
+          getAgentRulesWrapped({ writeNxCloudRules: false, useH1: true })
+        );
+      });
+
       it('should create .claude/settings.json with plugin configuration when file does not exist', async () => {
         const options: SetupAiAgentsGeneratorSchema = {
           directory: '.',

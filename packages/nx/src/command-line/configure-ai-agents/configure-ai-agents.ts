@@ -413,7 +413,6 @@ type AgentPromptChoice = {
   value: Agent;
   label: string;
   hint: string;
-  agentConfiguration: AgentConfiguration;
 };
 
 /**
@@ -491,7 +490,6 @@ function getAgentChoiceForPrompt(agent: AgentConfiguration): AgentPromptChoice {
       ? `${agent.displayName} (update available)`
       : agent.displayName,
     hint: getAgentFooterDescription(agent),
-    agentConfiguration: agent,
   };
 }
 

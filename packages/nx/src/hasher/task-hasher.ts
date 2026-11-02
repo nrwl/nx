@@ -476,7 +476,7 @@ export function splitInputsIntoSelfAndDependencies(
         'input' in d &&
         !('fileset' in d) &&
         (('dependencies' in d && d.dependencies && !('projects' in d)) ||
-          // Todo(@AgentEnder): Remove check in v17
+          // TODO(v25): remove the 'dependencies' magic string (NXC-5157)
           ('projects' in d &&
             typeof d.projects === 'string' &&
             d.projects === 'dependencies'))
@@ -490,7 +490,7 @@ export function splitInputsIntoSelfAndDependencies(
         !('fileset' in d) &&
         'projects' in d &&
         d.projects &&
-        // Todo(@AgentEnder): Remove check in v17
+        // TODO(v25): remove the 'self' magic string (NXC-5157)
         !(d.projects === 'self')
       ) {
         projectInputs.push({

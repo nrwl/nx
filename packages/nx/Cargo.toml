@@ -126,6 +126,12 @@ reqwest = { version = "0.12.22", default-features = false, features = [
   # (process.env writes from JS). See telemetry/service.rs.
   "hickory-dns",
 ] }
+# reqwest already builds it with ring; the default provider, aws-lc-rs, would
+# add a C build
+rustls = { version = "0.23", default-features = false, features = [
+  "ring",
+  "std",
+] }
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 notify = "=9.0.0-rc.5"
 machine-uid = "0.5.2"

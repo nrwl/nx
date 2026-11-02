@@ -1,11 +1,11 @@
 ---
-title: Adding Nx to an NPM/Yarn/PNPM Monorepo
-description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM monorepo to gain task scheduling, caching, and improved CI performance.
+title: Adding Nx to an NPM/Yarn/pnpm Monorepo
+description: Learn how to integrate Nx into an existing NPM, Yarn, or pnpm monorepo to gain task scheduling, caching, and improved CI performance.
 filter: 'type:Guides'
 topics:
   - 'Adoption'
 sidebar:
-  label: NPM/Yarn/PNPM monorepos
+  label: NPM/Yarn/pnpm monorepos
 ---
 
 {% aside type="note" title="Migrating from Lerna?" %}
@@ -14,7 +14,7 @@ Modern Lerna already runs its tasks through Nx, so the migration is an increment
 {% /aside %}
 
 Nx has first-class support for [monorepos](/docs/getting-started/tutorials/crafting-your-workspace). Add it to an
-existing NPM, Yarn, or PNPM monorepo and you get
+existing NPM, Yarn, or pnpm monorepo and you get
 
 - fast [task scheduling](/docs/features/run-tasks)
 - high-performance task [caching](/docs/features/cache-task-results)
@@ -24,7 +24,7 @@ None of this is gated on how many packages the monorepo has. The setup installs 
 an `nx.json` for configuring caching and task pipelines. Your workspace layout, your package manager, and your
 `package.json` scripts stay where they are.
 
-{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
+{% course_video src="https://youtu.be/3hW53b1IJ84" courseTitle="From pnpm Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-01-nx-init" /%}
 
 ## Installing Nx
 
@@ -81,8 +81,8 @@ For example, use Nx to run your builds:
 npx nx run-many -t build
 ```
 
-But instead keep using NPM/Yarn/PNPM workspace commands for your tests and other scripts. Here's an example of using
-PNPM commands to run tests across packages
+But instead keep using NPM/Yarn/pnpm workspace commands for your tests and other scripts. Here's an example of using
+pnpm commands to run tests across packages
 
 ```shell
 pnpm run -r test

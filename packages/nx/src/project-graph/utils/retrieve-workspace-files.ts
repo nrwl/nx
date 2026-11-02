@@ -102,7 +102,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
-  const pluginsToLoad = nxJson?.plugins ?? [];
+  const pluginsToLoad = [...(nxJson?.plugins ?? [])];
 
   if (
     shouldMergeAngularProjects(workspaceRoot, true) &&
@@ -115,7 +115,10 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const separatedPlugins = await getPluginsSeparated(nxJson, workspaceRoot);
+  const separatedPlugins = await getPluginsSeparated(
+    { ...nxJson, plugins: pluginsToLoad },
+    workspaceRoot
+  );
 
   const res = await retrieveProjectConfigurations(
     separatedPlugins,

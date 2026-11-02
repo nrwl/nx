@@ -40,16 +40,15 @@ Check your existing Nx Cloud login from the workspace root:
 npx nx login --status
 ```
 
-If you don't have a usable personal access token (PAT), log in:
+If it doesn't report you as logged in, run `npx nx login` yourself and approve the code in your browser:
 
 ```shell
 npx nx login
 ```
 
 The API client reads the workspace's `nxCloudId` and optional `nxCloudUrl` from `nx.json`.
-For PAT authentication, it uses the matching token from your local Nx Cloud configuration at
-`~/.config/nxcloud/nxcloud.ini`.
-You don't need to paste the token into the agent's chat.
+It sends your Nx Cloud login for this host, so you don't paste a token into the agent's chat.
+With `NX_CLOUD_ACCESS_TOKEN` set, it sends that token instead of your login.
 
 For access requirements and CI token authentication, see
 [Authenticate with the Nx Cloud Public API](/docs/kb/authenticate-public-api).

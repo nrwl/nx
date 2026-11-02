@@ -191,12 +191,18 @@ describe('Node Applications + webpack', () => {
       return config;
     });
 
-    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
-      output.includes('Hello World')
+    const p = await runCommandUntil(
+      `serve ${nodeApp1} `,
+      (output) => output.includes('Hello World'),
+      { timeout: 120_000 }
     );
 
-    checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
-    checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    try {
+      checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
+      checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    } finally {
+      await killProcessAndPorts(p.pid);
+    }
   }, 300_000);
 
   it('should wait for the previous process to exit on watch restart so the port is released', async () => {
@@ -223,8 +229,10 @@ describe('Node Applications + webpack', () => {
       `
     );
 
-    const p = await runCommandUntil(`serve ${app}`, (output) =>
-      output.includes(`Listening on ${port}`)
+    const p = await runCommandUntil(
+      `serve ${app}`,
+      (output) => output.includes(`Listening on ${port}`),
+      { timeout: 120_000 }
     );
 
     try {

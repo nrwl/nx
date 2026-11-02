@@ -1,22 +1,9 @@
 import { WorkspaceContext } from '../index';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { dirname, join } from 'path';
-import { readJsonFile } from '../../utils/fileutils';
 import { cacheDirectoryForWorkspace } from '../../utils/cache-directory';
 
 describe('Workspace Context', () => {
-  function createParseConfigurationsFunction(tempDir: string) {
-    return async (filenames: string[]) => {
-      const res = {};
-      for (const filename of filenames) {
-        const json = readJsonFile(join(tempDir, filename));
-        res[dirname(filename)] = json.name;
-      }
-      return res;
-    };
-  }
-
   it('should gather workspace file information', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};

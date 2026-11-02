@@ -1,11 +1,7 @@
 import { join } from 'node:path';
 
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import {
-  NxJsonConfiguration,
-  PluginConfiguration,
-  readNxJson,
-} from '../../config/nx-json';
+import { NxJsonConfiguration, PluginConfiguration } from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';

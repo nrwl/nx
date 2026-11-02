@@ -2494,6 +2494,7 @@ dependencies = [
  "reqwest",
  "rkyv",
  "rusqlite",
+ "rustls",
  "serde",
  "serde_json",
  "sha2",

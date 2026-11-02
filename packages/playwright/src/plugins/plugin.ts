@@ -1159,8 +1159,9 @@ function parseTaskFromCommand(command: string): {
   hasConfiguration: boolean;
 } | null {
   const nxRunRegex =
-    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
-  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+    /^(?:(?:npx|yarn|bun|bunx|bun x|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex =
+    /^(?:(?:npx|yarn|bun|bunx|bun x|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
 
   const nxRunMatch = command.match(nxRunRegex);
   if (nxRunMatch) {

@@ -19,10 +19,6 @@ import {
   mergeCreateNodesResults,
 } from './project-configuration-utils';
 import { mergeProjectConfigurationIntoRootMap } from './project-configuration/project-nodes-manager';
-import {
-  mergeTargetConfigurations,
-  isCompatibleTarget,
-} from './project-configuration/target-merging';
 import type {
   ConfigurationSourceMaps,
   SourceInformation,
@@ -4189,27 +4185,6 @@ class RootMapBuilder {
   getRootMap() {
     return this.rootMap;
   }
-}
-
-function assertCorrectKeysInSourceMap(
-  sourceMaps: ConfigurationSourceMaps,
-  root: string,
-  ...tuples: [string, string][]
-) {
-  const sourceMap = sourceMaps[root];
-  tuples.forEach(([key, value]) => {
-    if (!sourceMap[key]) {
-      throw new Error(`Expected sourceMap to contain key ${key}`);
-    }
-    try {
-      expect(sourceMap[key][0]).toEqual(value);
-    } catch (error) {
-      // Enhancing the error message with the problematic key
-      throw new Error(
-        `Assertion failed for key '${key}': \n ${(error as Error).message}`
-      );
-    }
-  });
 }
 
 function deepFreeze<T>(value: T): T {

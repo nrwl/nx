@@ -160,16 +160,13 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   });
 
   try {
-    return await runInit(options, baseMeta);
+    return await runInit(options);
   } catch (error) {
     await recordInitError(error, baseMeta);
   }
 }
 
-async function runInit(
-  options: InitArgs,
-  baseMeta: Record<string, string | boolean>
-): Promise<void> {
+async function runInit(options: InitArgs): Promise<void> {
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
