@@ -74,10 +74,8 @@ pub(crate) fn copy_and_list(
             remove_path(&dest)?;
         }
         None => {
-            if !dest_parent.exists() {
-                trace!("Creating parent directory: {:?}", dest_parent);
-                fs::create_dir_all(dest_parent)?;
-            }
+            trace!("Ensuring parent directory: {:?}", dest_parent);
+            fs::create_dir_all(dest_parent)?;
         }
     }
 

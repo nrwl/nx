@@ -655,11 +655,19 @@ impl NxCache {
         cached_result: CachedResult,
         outputs: Vec<String>,
     ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
+        let restore_start = crate::native::profiler::start();
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let literal = all_literal(&outputs);
         let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
+
+        if expanded_outputs.is_empty() {
+            crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
+            // Nothing was copied, so the workspace may still hold output files
+            // this call never looked at. `None` keeps the caller globbing.
+            return Ok((0, None));
+        }
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -682,6 +690,7 @@ impl NxCache {
             present.sort();
             restored == present
         };
+        crate::native::profiler::record("cache::copy_files_from_cache", restore_start);
         Ok((size, exact.then_some(files)))
     }
 
@@ -942,6 +951,20 @@ mod test {
             aged.exists(),
             "a symlinked sweep root must be refused, not walked"
         );
+    }
+
+    #[test]
+    fn default_max_cache_size_probes_the_nearest_existing_ancestor() {
+        let dir = std::env::temp_dir();
+        let existing = get_default_max_cache_size(dir.to_string_lossy().to_string());
+        let nested = get_default_max_cache_size(
+            dir.join("nx-does-not-exist")
+                .join("cache")
+                .to_string_lossy()
+                .to_string(),
+        );
+        assert!(existing > 0);
+        assert_eq!(nested, existing);
     }
 
     #[cfg(unix)]

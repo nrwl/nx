@@ -106,6 +106,7 @@ where
 /// Runs once when the native module is loaded, so nothing else has to call it.
 #[module_init]
 fn enable_logger() {
+    crate::native::profiler::init();
     initialize_logger();
 }
 
