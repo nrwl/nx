@@ -1,5 +1,6 @@
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
+  getShebangFilesInContext,
   globWithWorkspaceContext,
   multiGlobWithWorkspaceContext,
 } from '../../utils/workspace-context';
@@ -28,5 +29,16 @@ export async function handleMultiGlob(
   return {
     response: files,
     description: 'handleMultiGlob',
+  };
+}
+
+export async function handleShebangFiles(
+  globs: string[],
+  exclude?: string[]
+): Promise<HandlerResult> {
+  const files = await getShebangFilesInContext(workspaceRoot, globs, exclude);
+  return {
+    response: files,
+    description: 'handleShebangFiles',
   };
 }

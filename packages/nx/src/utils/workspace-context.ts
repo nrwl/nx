@@ -1,6 +1,7 @@
 import type {
   ChangeBatch,
   NxWorkspaceFilesExternals,
+  ShebangFile,
   TaskOutputs,
   WorkspaceContext,
   WorkspaceContextOptions,
@@ -109,6 +110,22 @@ export async function multiGlobWithWorkspaceContext(
     return workspaceContext.multiGlob(globs, exclude);
   }
   return daemonClient.multiGlob(globs, exclude);
+}
+
+/**
+ * The workspace files matching `globs` that start with `#!`, each with the
+ * header the walk recorded, so a plugin can find scripts without opening files.
+ */
+export async function getShebangFilesInContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+): Promise<ShebangFile[]> {
+  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
+    await ensureFilesReady(workspaceRoot);
+    return workspaceContext.shebangFiles(globs, exclude);
+  }
+  return daemonClient.shebangFiles(globs, exclude);
 }
 
 export async function hashWithWorkspaceContext(
