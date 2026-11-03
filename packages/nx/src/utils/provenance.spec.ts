@@ -1,6 +1,14 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import type { MockInstance } from 'vitest';
 import * as packageManager from './package-manager';
-import { ensurePackageHasProvenance } from './provenance';
+import * as minReleaseAgePolicy from './min-release-age/policy';
+import * as minReleaseAgeResolve from './min-release-age/resolve';
+import {
+  ensurePackageHasProvenance,
+  resolveVersionWithProvenance,
+} from './provenance';
 
 describe('ensurePackageHasProvenance', () => {
   const attestationUrl =
@@ -42,15 +50,29 @@ describe('ensurePackageHasProvenance', () => {
     }
   });
 
-  it('does nothing when NX_SKIP_PROVENANCE_CHECK is set', async () => {
+  it('does nothing when NX_SKIP_PROVENANCE_CHECK is true', async () => {
     process.env.NX_SKIP_PROVENANCE_CHECK = 'true';
 
-    await expect(
-      ensurePackageHasProvenance('nx', '1.0.0')
-    ).resolves.toBeUndefined();
+    await expect(ensurePackageHasProvenance('nx', '1.0.0')).resolves.toBe(
+      '1.0.0'
+    );
     expect(packageRegistryViewSpy).not.toHaveBeenCalled();
     expect(global.fetch).not.toHaveBeenCalled();
   });
+
+  it.each(['false', '0', 'no', 'FALSE', ''])(
+    'still checks provenance when NX_SKIP_PROVENANCE_CHECK is "%s"',
+    async (value) => {
+      process.env.NX_SKIP_PROVENANCE_CHECK = value;
+      packageRegistryViewSpy.mockResolvedValue(
+        JSON.stringify(packument('1.0.0', false))
+      );
+
+      await expect(ensurePackageHasProvenance('nx', '1.0.0')).rejects.toThrow(
+        'No attestation URL found'
+      );
+    }
+  );
 
   it('locates the attestation URL when npm returns a bare object (npm <= 11)', async () => {
     packageRegistryViewSpy.mockResolvedValue(
@@ -87,6 +109,17 @@ describe('ensurePackageHasProvenance', () => {
 
     await expect(ensurePackageHasProvenance('nx', '^1.0.0')).rejects.toThrow(
       'Specify an exact version'
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('refuses an exact version the registry answers with another version', async () => {
+    packageRegistryViewSpy.mockResolvedValue(
+      JSON.stringify(packument('1.0.0'))
+    );
+
+    await expect(ensurePackageHasProvenance('nx', '1.0.1')).rejects.toThrow(
+      'the registry returned 1.0.0'
     );
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -216,23 +249,37 @@ describe('ensurePackageHasProvenance', () => {
 
     it('accepts a tagged release built from its own tag', async () => {
       arrange('1.0.0', 'refs/tags/1.0.0');
-      await expect(
-        ensurePackageHasProvenance('nx', '1.0.0')
-      ).resolves.toBeUndefined();
+      await expect(ensurePackageHasProvenance('nx', '1.0.0')).resolves.toBe(
+        '1.0.0'
+      );
+    });
+
+    it('accepts a tagged release built from its v-prefixed tag', async () => {
+      arrange('17.0.6', 'refs/tags/v17.0.6');
+      await expect(ensurePackageHasProvenance('nx', '17.0.6')).resolves.toBe(
+        '17.0.6'
+      );
+    });
+
+    it('rejects a v-prefixed tag for a different version', async () => {
+      arrange('17.0.6', 'refs/tags/v17.0.5');
+      await expect(ensurePackageHasProvenance('nx', '17.0.6')).rejects.toThrow(
+        'Version ref does not match'
+      );
     });
 
     it('accepts a pr release built from master', async () => {
       arrange('23.3.0-pr.36841.f66e88b', 'refs/heads/master');
       await expect(
         ensurePackageHasProvenance('nx', '23.3.0-pr.36841.f66e88b')
-      ).resolves.toBeUndefined();
+      ).resolves.toBe('23.3.0-pr.36841.f66e88b');
     });
 
     it('accepts a canary release built from master', async () => {
       arrange('23.2.0-canary.20260908-89f02c1', 'refs/heads/master');
       await expect(
         ensurePackageHasProvenance('nx', '23.2.0-canary.20260908-89f02c1')
-      ).resolves.toBeUndefined();
+      ).resolves.toBe('23.2.0-canary.20260908-89f02c1');
     });
 
     it('still rejects a tagged release built from master', async () => {
@@ -247,6 +294,82 @@ describe('ensurePackageHasProvenance', () => {
       await expect(
         ensurePackageHasProvenance('nx', '1.0.0-preview.1')
       ).rejects.toThrow('Version ref does not match refs/tags/1.0.0-preview.1');
+    });
+
+    describe('resolveVersionWithProvenance', () => {
+      it('verifies and returns the version a dist-tag resolves to', async () => {
+        vi.spyOn(
+          minReleaseAgePolicy,
+          'readMinReleaseAgePolicy'
+        ).mockResolvedValue({ outcome: 'inactive' });
+        arrange('1.1.0', 'refs/tags/1.1.0');
+
+        await expect(
+          resolveVersionWithProvenance('nx', 'latest')
+        ).resolves.toBe('1.1.0');
+      });
+
+      describe('reads the cooldown policy where the installer reads its config', () => {
+        let root: string;
+        let policySpy: MockInstance;
+
+        beforeEach(() => {
+          root = mkdtempSync(join(tmpdir(), 'nx-provenance-'));
+          mkdirSync(join(root, '.nx', 'installation'), { recursive: true });
+          policySpy = vi
+            .spyOn(minReleaseAgePolicy, 'readMinReleaseAgePolicy')
+            .mockResolvedValue({ outcome: 'inactive' });
+          arrange('1.1.0', 'refs/tags/1.1.0');
+        });
+
+        afterEach(() => {
+          rmSync(root, { recursive: true, force: true });
+        });
+
+        it('uses the Nx installation directory in a non-JS workspace', async () => {
+          await resolveVersionWithProvenance('nx', 'latest', root);
+
+          expect(policySpy).toHaveBeenCalledWith(
+            join(root, '.nx', 'installation')
+          );
+        });
+
+        it('uses the workspace root when it has a package.json', async () => {
+          writeFileSync(join(root, 'package.json'), '{}');
+
+          await resolveVersionWithProvenance('nx', 'latest', root);
+
+          expect(policySpy).toHaveBeenCalledWith(root);
+        });
+      });
+
+      it('verifies the version the minimum release age lets the package manager install', async () => {
+        vi.spyOn(
+          minReleaseAgePolicy,
+          'readMinReleaseAgePolicy'
+        ).mockResolvedValue({ outcome: 'active', policy: {} as any });
+        // `latest` is 1.1.0, too new for the cooldown; the package manager
+        // would fall back to 1.0.0
+        vi.spyOn(
+          minReleaseAgeResolve,
+          'resolveCompliantVersion'
+        ).mockResolvedValue({ version: '1.0.0', unconstrained: '1.1.0' });
+        arrange('1.0.0', 'refs/tags/1.0.0');
+
+        await expect(
+          resolveVersionWithProvenance('nx', 'latest')
+        ).resolves.toBe('1.0.0');
+        expect(packageRegistryViewSpy).toHaveBeenCalledWith(
+          'nx',
+          '1.0.0',
+          expect.anything()
+        );
+        expect(packageRegistryViewSpy).not.toHaveBeenCalledWith(
+          'nx',
+          'latest',
+          expect.anything()
+        );
+      });
     });
   });
 });

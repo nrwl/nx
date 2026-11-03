@@ -90,6 +90,7 @@ import { formatFileContents } from '../../generators/internal-utils/format-chang
 import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
+  resolveVersionWithProvenance,
 } from '../../utils/provenance';
 import {
   type CatalogManager,
@@ -2305,12 +2306,12 @@ async function getPackageMigrationsUsingInstallImpl(
 
   let result: ResolvedMigrationConfiguration;
 
-  if (getNxPackageGroup().includes(packageName)) {
-    await ensurePackageHasProvenance(packageName, packageVersion);
-  }
+  const installVersion = getNxPackageGroup().includes(packageName)
+    ? await resolveVersionWithProvenance(packageName, packageVersion)
+    : packageVersion;
 
   try {
-    const addCommand = `${pmc.add} ${packageName}@${packageVersion}`;
+    const addCommand = `${pmc.add} ${packageName}@${installVersion}`;
     try {
       await execAsync(addCommand, {
         cwd: dir,
@@ -4276,10 +4277,14 @@ export async function runMigration() {
 }
 
 export async function nxCliPath(nxWorkspaceRoot?: string) {
-  const version = process.env.NX_MIGRATE_CLI_VERSION || 'latest';
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  const root = nxWorkspaceRoot ?? workspaceRoot;
 
-  await ensurePackageHasProvenance('nx', version);
+  const version = await resolveVersionWithProvenance(
+    'nx',
+    process.env.NX_MIGRATE_CLI_VERSION || 'latest',
+    root
+  );
 
   try {
     const packageManager = detectPackageManager();
@@ -4293,7 +4298,6 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       },
       license: 'MIT',
     });
-    const root = nxWorkspaceRoot ?? workspaceRoot;
     const isNonJs = !existsSync(join(root, 'package.json'));
     copyPackageManagerConfigurationFiles(
       isNonJs ? getNxInstallationPath(root) : root,

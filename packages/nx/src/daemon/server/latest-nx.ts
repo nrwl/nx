@@ -3,7 +3,7 @@
 // client, all of which would stay resident for the daemon server's lifetime.
 import { installPackageToTmpAsync } from '../../utils/package-json';
 import { detectPackageManager } from '../../utils/package-manager';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { serverLogger } from '../logger';
 
@@ -33,10 +33,10 @@ export async function getLatestNxTmpPath(): Promise<string> {
   installPromise = (async () => {
     try {
       serverLogger.log('[LATEST-NX]: Pulling latest Nx...');
-      await ensurePackageHasProvenance('nx', 'latest');
+      const version = await resolveVersionWithProvenance('nx', 'latest');
       const result = await installPackageToTmpAsync(
         'nx',
-        'latest',
+        version,
         detectPackageManager(workspaceRoot)
       );
       latestNxTmpPath = result.tempDir;
