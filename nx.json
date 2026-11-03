@@ -539,6 +539,8 @@
             "NX_DAEMON_PROCESS",
             "NX_IPC_CHANNEL_ID",
             "NX_PSEUDO_TERMINAL_EXEC_ARGV",
+            "NX_PSEUDO_IPC_PATH",
+            "NX_PSEUDO_IPC_FORK_ID",
             "NX_GENERATE_DOCS_PROCESS",
             "NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG",
             "NX_WORKSPACE_ROOT_PATH",

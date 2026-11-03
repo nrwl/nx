@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { mkdtempSync, rmSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -13,16 +13,15 @@ import { DaemonClient } from './client';
 describe('file watcher registration readiness', () => {
   let server: Server;
   let client: DaemonClient;
+  let socketDir: string;
   let sockets: Set<Socket>;
   let registrations: { socket: Socket; registrationId: string }[];
 
   beforeEach(async () => {
     sockets = new Set();
     registrations = [];
-    const socketPath = join(
-      tmpdir(),
-      `nx-watch-ready-${randomBytes(6).toString('hex')}.sock`
-    );
+    socketDir = mkdtempSync(join(tmpdir(), 'nx-watch-ready-'));
+    const socketPath = join(socketDir, 'd.sock');
     server = createServer((socket) => {
       sockets.add(socket);
       socket.on('close', () => sockets.delete(socket));
@@ -57,6 +56,7 @@ describe('file watcher registration readiness', () => {
     (client as any).fileWatcherMessenger?.close();
     for (const socket of sockets) socket.destroy();
     await new Promise<void>((resolve) => server.close(() => resolve()));
+    rmSync(socketDir, { recursive: true, force: true });
     vi.restoreAllMocks();
   });
 
