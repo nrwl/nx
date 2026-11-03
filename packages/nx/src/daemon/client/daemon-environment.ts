@@ -5,6 +5,14 @@ const DAEMON_ENV_REQUIRED_SETTINGS = {
   NX_CACHE_PROJECTS_CONFIG: 'false',
 };
 
+/**
+ * Logging defaults the daemon runs with when the client's env says nothing,
+ * so `daemon.log` is useful without the user opting in. They are listed in
+ * `DAEMON_ENV_VARS_EXCLUSIONS` to keep them out of the graph identity digest
+ * (`--verbose` alone would otherwise discard the cached graph), so the
+ * reflection loop skips them and `getDaemonEnv` applies the client's value
+ * for them separately.
+ */
 const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
   NX_VERBOSE_LOGGING: 'true',
   NX_PERF_LOGGING: 'true',
@@ -14,7 +22,9 @@ const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
 /**
  * Env vars that should NOT be sent to the daemon because they cannot affect
  * the project graph. Only vars that can actually affect the project graph
- * (e.g. PATH, JAVA_HOME, GRADLE_HOME) should be allowed through.
+ * (e.g. PATH, JAVA_HOME, GRADLE_HOME) should be allowed through. The
+ * `DAEMON_ENV_OVERRIDABLE_SETTINGS` keys are the exception: they are listed
+ * for the digest's sake and still reach the daemon, see `getDaemonEnv`.
  */
 const DAEMON_ENV_VARS_EXCLUSIONS = new Set([
   // Nx task-scoped vars
@@ -293,6 +303,13 @@ export function getDaemonEnv() {
   const env: NodeJS.ProcessEnv = { ...DAEMON_ENV_OVERRIDABLE_SETTINGS };
   for (const key in process.env) {
     if (!isExcludedEnvVar(key)) {
+      env[key] = process.env[key];
+    }
+  }
+  // Excluded from the loop above for the graph identity digest, so the
+  // client's value for them is applied here instead of being dropped.
+  for (const key of Object.keys(DAEMON_ENV_OVERRIDABLE_SETTINGS)) {
+    if (process.env[key] !== undefined) {
       env[key] = process.env[key];
     }
   }
