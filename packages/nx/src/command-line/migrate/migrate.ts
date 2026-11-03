@@ -48,10 +48,12 @@ import {
   readNxMigrateConfig,
 } from '../../utils/package-json';
 import {
+  assertValidPackageName,
   copyPackageManagerConfigurationFiles,
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
+  InvalidResolvedVersionError,
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
@@ -360,6 +362,11 @@ export class Migrator {
     if (!migrationConfig.version) {
       throw new Error(
         `Fetched migration metadata for ${packageName} is invalid: the target version is missing.`
+      );
+    }
+    if (!valid(migrationConfig.version)) {
+      throw new Error(
+        `Fetched migration metadata for ${packageName} is invalid: the target version "${migrationConfig.version}" is not a valid version.`
       );
     }
     return migrationConfig;
@@ -2026,9 +2033,12 @@ export function createFetcher(pmc: PackageManagerCommands) {
         });
       })
       .catch((e) => {
-        // A cooldown violation would fail an install identically (only slower),
-        // so surface it instead of retrying through the package manager.
-        if (e instanceof MinReleaseAgeViolationError) {
+        // A cooldown violation or a malformed release would reach an install
+        // unchanged, so surface it instead of retrying through the package manager.
+        if (
+          e instanceof MinReleaseAgeViolationError ||
+          e instanceof InvalidResolvedVersionError
+        ) {
           throw e;
         }
         logger.verbose(
@@ -2302,6 +2312,7 @@ async function getPackageMigrationsUsingInstallImpl(
   packageVersion: string,
   pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
+  assertValidPackageName(packageName);
   const { dir, cleanup } = createTempNpmDirectory();
 
   let result: ResolvedMigrationConfiguration;
@@ -2311,13 +2322,21 @@ async function getPackageMigrationsUsingInstallImpl(
     : packageVersion;
 
   try {
-    const addCommand = `${pmc.add} ${packageName}@${installVersion}`;
+    const addCommand = [
+      pmc.add,
+      quoteShellArg(`${packageName}@${installVersion}`),
+      pmc.ignoreScriptsFlag,
+    ]
+      .filter(Boolean)
+      .join(' ');
     try {
       await execAsync(addCommand, {
         cwd: dir,
         env: {
           ...process.env,
           npm_config_legacy_peer_deps: 'true',
+          // Yarn Berry has no flag to skip lifecycle scripts.
+          YARN_ENABLE_SCRIPTS: 'false',
         },
       });
     } catch (e) {
@@ -2430,7 +2449,10 @@ async function updatePackageJson(
     }
 
     const dependencyType = updatedPackages[p].addToPackageJson;
-    if (typeof dependencyType === 'string') {
+    if (
+      dependencyType === 'dependencies' ||
+      dependencyType === 'devDependencies'
+    ) {
       json[dependencyType] ??= {};
       if (json[dependencyType][p] !== updatedPackages[p].version) {
         json[dependencyType][p] = updatedPackages[p].version;
@@ -4331,6 +4353,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
       cwd: tmpDir,
       stdio,
       windowsHide: true,
+      env: { ...process.env, YARN_ENABLE_SCRIPTS: 'false' },
     });
 
     // Set NODE_PATH so that these modules can be used for module resolution
