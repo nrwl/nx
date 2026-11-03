@@ -8,6 +8,7 @@ import type {
 } from '@rspack/core';
 import { join, resolve } from 'path';
 import { WriteIndexHtmlPlugin } from '../write-index-html-plugin';
+import { getBrowserslistTargets } from './get-browserslist-targets';
 import { getOutputHashFormat } from './hash-format';
 import { instantiateScriptPlugins } from './instantiate-script-plugins';
 import {
@@ -112,21 +113,24 @@ export function applyWebConfig(
     }
   }
 
+  const browserslistQueries = getBrowserslistTargets(
+    config.target,
+    join(options.root, options.projectRoot)
+  )?.queries;
+
   const minimizer: RspackPluginInstance[] = [];
   if (isProd && stylesOptimization) {
     minimizer.push(
       new LightningCssMinimizerRspackPlugin({
         test: /\.(?:css|scss|sass|less)$/,
+        minimizerOptions: { targets: browserslistQueries },
       })
     );
   }
   if (!options.ssr) {
-    plugins.push(
-      new DefinePlugin(getClientEnvironment(process.env.NODE_ENV).stringified)
-    );
+    plugins.push(new DefinePlugin(getClientEnvironment().stringified));
   }
 
-  const entries: { [key: string]: { import: string[] } } = {};
   const globalStylePaths: string[] = [];
 
   // Determine hashing format.
@@ -169,7 +173,8 @@ export function applyWebConfig(
       use: getCommonLoadersForCssModules(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -179,7 +184,8 @@ export function applyWebConfig(
         ...getCommonLoadersForCssModules(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -203,7 +209,8 @@ export function applyWebConfig(
         ...getCommonLoadersForCssModules(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
@@ -225,7 +232,8 @@ export function applyWebConfig(
       use: getCommonLoadersForGlobalCss(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -235,7 +243,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalCss(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -261,7 +270,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalCss(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
@@ -285,7 +295,8 @@ export function applyWebConfig(
       use: getCommonLoadersForGlobalStyle(
         options,
         includePaths,
-        cssExtractLoader
+        cssExtractLoader,
+        browserslistQueries
       ),
     },
     {
@@ -295,7 +306,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalStyle(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: require.resolve('sass-loader'),
@@ -321,7 +333,8 @@ export function applyWebConfig(
         ...getCommonLoadersForGlobalStyle(
           options,
           includePaths,
-          cssExtractLoader
+          cssExtractLoader,
+          browserslistQueries
         ),
         {
           loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
@@ -372,16 +385,8 @@ export function applyWebConfig(
   if (Array.isArray(config.entry))
     throw new Error('Entry array is not supported. Use an object.');
 
-  Object.entries(entries).forEach(([entryName, entryData]) => {
-    if (useNormalizedEntry) {
-      config.entry[entryName] = { import: entryData.import };
-    } else {
-      config.entry[entryName] = entryData.import;
-    }
-  });
-
   config.optimization = !isProd
-    ? {}
+    ? (config.optimization ?? {})
     : {
         ...(config.optimization ?? {}),
         minimizer: [...(config.optimization?.minimizer ?? []), ...minimizer],
@@ -447,9 +452,7 @@ export function applyWebConfig(
   config.plugins.push(...plugins);
 }
 
-function getClientEnvironment(mode?: string) {
-  // Grab NODE_ENV and NX_PUBLIC_* environment variables and prepare them to be
-  // injected into the application via DefinePlugin in rspack configuration.
+function getClientEnvironment() {
   const nxPublicKeyRegex = /^NX_PUBLIC_/i;
 
   const raw = Object.keys(process.env)

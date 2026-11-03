@@ -53,23 +53,23 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "command": "eslint .",
+      "cache": true,
       "options": {
-        "lintFilePatterns": ["libs/lib1/**/*.ts"]
+        "cwd": "libs/lib1"
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "command": "jest",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "jestConfig": "libs/lib1/jest.config.ts",
+        "cwd": "libs/lib1",
         "passWithNoTests": true
       },
       "configurations": {
         "ci": {
           "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       }
     }
@@ -100,24 +100,24 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "command": "eslint .",
+      "cache": true,
       "options": {
-        "lintFilePatterns": ["libs/lib2/**/*.ts"]
+        "cwd": "libs/lib2"
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "command": "jest",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "jestConfig": "libs/lib2/jest.config.ts",
+        "cwd": "libs/lib2",
         "passWithNoTests": true,
         "testTimeout": 10000
       },
       "configurations": {
         "ci": {
           "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       }
     }
@@ -148,23 +148,23 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "command": "eslint .",
+      "cache": true,
       "options": {
-        "lintFilePatterns": ["libs/lib3/**/*.ts"]
+        "cwd": "libs/lib3"
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "command": "jest",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "jestConfig": "libs/lib3/jest.config.ts",
+        "cwd": "libs/lib3",
         "passWithNoTests": true
       },
       "configurations": {
         "ci": {
           "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       }
     }
@@ -197,23 +197,23 @@ Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-default
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "command": "eslint .",
+      "cache": true,
       "options": {
-        "lintFilePatterns": ["{projectRoot}/**/*.ts"]
+        "cwd": "{projectRoot}"
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "command": "jest",
+      "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "jestConfig": "{projectRoot}/jest.config.ts",
+        "cwd": "{projectRoot}",
         "passWithNoTests": true
       },
       "configurations": {
         "ci": {
           "ci": true,
-          "codeCoverage": true
+          "coverage": true
         }
       }
     }

@@ -3,7 +3,7 @@ import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
 import { terminalLink } from './terminal-link';
-import * as pc from 'picocolors';
+import { httpRequest } from './http-client';
 
 export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
 export const NX_CLOUD_DEMO_URL = 'https://cloud.nx.app/demo/intro';
@@ -56,7 +56,7 @@ export type RecordStatMeta =
   | RecordStatMetaComplete
   | RecordStatMetaError;
 
-export type MessageOptionKey = 'yes' | 'skip' | 'never';
+export type MessageOptionKey = 'yes' | 'skip';
 
 interface MessageData {
   code: string;
@@ -76,7 +76,6 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer:
         '\nFree for small teams. Remote caching and task distribution. 2-minute setup:',
@@ -88,7 +87,6 @@ const messageOptions: Record<string, MessageData[]> = {
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
-        { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer: '\nLearn about it at',
       hint: `\n(it's free and can be disabled any time)`,
@@ -153,20 +151,18 @@ export async function recordStat(opts: {
     if (!shouldRecordStats()) {
       return;
     }
-    const axios = require('axios');
-    await (axios['default'] ?? axios)
-      .create({
-        baseURL: getCloudUrl(),
-        timeout: 400,
-      })
-      .post('/nx-cloud/stats', {
+    await httpRequest(`${getCloudUrl()}/nx-cloud/stats`, {
+      method: 'POST',
+      timeout: 400,
+      data: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
         meta: opts.meta
           ? JSON.stringify({ ...opts.meta, nxVersion: opts.nxVersion })
           : opts.nxVersion,
-      });
+      },
+    });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);

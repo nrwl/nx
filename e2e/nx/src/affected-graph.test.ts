@@ -24,6 +24,7 @@ describe('Nx Affected and Graph Tests', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/eslint',
           '@nx/jest',
@@ -118,7 +119,7 @@ describe('Nx Affected and Graph Tests', () => {
       expect(implicitlyAffectedLibs).toContain(mylib2);
 
       const noAffectedLibsNonExistentFile = runCLI(
-        'show projects --affected --files="tsconfig.json"'
+        'show projects --affected --files="does-not-exist.txt"'
       );
       expect(noAffectedLibsNonExistentFile).not.toContain(mypublishablelib);
       expect(noAffectedLibsNonExistentFile).not.toContain(mylib);
@@ -197,7 +198,7 @@ describe('Nx Affected and Graph Tests', () => {
 
       updateFile('nx.json', JSON.stringify(nxJson));
       runCommand(`git init`);
-      runCommand(`git config user.email "test@test.com"`);
+      runCommand(`git config user.email "test@users.noreply.github.com"`);
       runCommand(`git config user.name "Test"`);
       runCommand(`git config commit.gpgsign false`);
       try {
@@ -357,7 +358,7 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`generate @nx/js:lib ${mylib2} --directory=libs/${mylib2}`);
 
       runCommand(`git init`);
-      runCommand(`git config user.email "test@test.com"`);
+      runCommand(`git config user.email "test@users.noreply.github.com"`);
       runCommand(`git config user.name "Test"`);
       runCommand(`git config commit.gpgsign false`);
       runCommand(
@@ -565,6 +566,7 @@ describe('show projects --affected', () => {
   beforeAll(
     () =>
       (proj = newProject({
+        keepBackup: true,
         packages: [
           '@nx/eslint',
           '@nx/jest',
@@ -624,7 +626,8 @@ describe('show projects --affected', () => {
     );
 
     const { stdout: resWithoutTarget } = await runCLIAsync(
-      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`
+      `show projects --affected --files=apps/${myapp}/src/app/app.element.spec.ts`,
+      { silent: true }
     );
     compareTwoArrays(resWithoutTarget.split('\n').filter(Boolean), [
       `${myapp}-e2e`,

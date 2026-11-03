@@ -32,7 +32,7 @@ pub fn count_all_dependencies(task_id: &str, task_graph: &TaskGraph) -> usize {
             .get(task_id)
             .map(|deps| {
                 deps.iter()
-                    .map(|dep| count_all_dependencies_internal(dep, task_graph, visited))
+                    .map(|dep| count_all_dependencies_internal(&dep.id, task_graph, visited))
                     .sum::<usize>()
             })
             .unwrap_or(0);
@@ -41,7 +41,7 @@ pub fn count_all_dependencies(task_id: &str, task_graph: &TaskGraph) -> usize {
             .get(task_id)
             .map(|deps| {
                 deps.iter()
-                    .map(|dep| count_all_dependencies_internal(dep, task_graph, visited))
+                    .map(|dep| count_all_dependencies_internal(&dep.id, task_graph, visited))
                     .sum::<usize>()
             })
             .unwrap_or(0);
@@ -74,7 +74,8 @@ pub fn collect_all_dependencies_with_levels(
 
         // Collect regular dependencies
         if let Some(direct_deps) = task_graph.dependencies.get(task_id) {
-            for dep_id in direct_deps {
+            for dep in direct_deps {
+                let dep_id = &dep.id;
                 if !all_dependencies.contains(dep_id) {
                     all_dependencies.push(dep_id.clone());
                     dependency_levels.insert(dep_id.clone(), current_level);
@@ -93,7 +94,8 @@ pub fn collect_all_dependencies_with_levels(
 
         // Collect continuous dependencies
         if let Some(continuous_deps) = task_graph.continuous_dependencies.get(task_id) {
-            for dep_id in continuous_deps {
+            for dep in continuous_deps {
+                let dep_id = &dep.id;
                 if !all_dependencies.contains(dep_id) {
                     all_dependencies.push(dep_id.clone());
                     dependency_levels.insert(dep_id.clone(), current_level);

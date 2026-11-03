@@ -41,7 +41,6 @@ async function resolvePromptFiles(
   packageName: string,
   packageVersion: string,
   migrations: MigrationsJson,
-  migrationsDir: string,
   resolveContent: (promptRelPath: string) => string | Promise<string>
 ): Promise<Record<string, string> | undefined> {
   const resolvedPromptFiles: Record<string, string> = {};
@@ -50,7 +49,6 @@ async function resolvePromptFiles(
       continue;
     }
     assertPromptPathWithinMigrationsDir(
-      migrationsDir,
       entry.prompt,
       packageName,
       packageVersion
@@ -71,7 +69,6 @@ async function resolvePromptFiles(
 }
 
 function assertPromptPathWithinMigrationsDir(
-  migrationsDir: string,
   promptRelPath: string,
   packageName: string,
   packageVersion: string
@@ -135,7 +132,6 @@ export function extractPromptFilesFromTarball(
     packageName,
     packageVersion,
     migrations,
-    migrationsDir,
     async (promptRelPath) => {
       const promptInTarball = joinPathFragments(
         'package',
@@ -164,7 +160,6 @@ export function readPromptFilesFromInstall(
     packageName,
     packageVersion,
     migrations,
-    migrationsDir,
     (promptRelPath) => readFileSync(join(migrationsDir, promptRelPath), 'utf-8')
   );
 }

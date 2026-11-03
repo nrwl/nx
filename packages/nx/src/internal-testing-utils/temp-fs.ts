@@ -114,7 +114,7 @@ export class TempFs {
 
   cleanup() {
     try {
-      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      removeDir(this.tempDir);
       setWorkspaceRoot(this.previousWorkspaceRoot);
     } catch (e) {
       // We are experiencing flakiness in CI related to this cleanup, so log only for now
@@ -139,4 +139,31 @@ export class TempFs {
       }
     }
   }
+}
+
+// A workspace context walks on a background thread and writes its files
+// archive under `.nx/workspace-data` when done, which can land mid-delete.
+// `rmSync` never re-deletes entries written after it walked a directory, so
+// retry the whole removal.
+const MAX_REMOVE_ATTEMPTS = 5;
+
+function removeDir(dir: string) {
+  for (let attempt = 1; attempt <= MAX_REMOVE_ATTEMPTS; attempt++) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+      return;
+    } catch (e) {
+      if (
+        attempt === MAX_REMOVE_ATTEMPTS ||
+        !['ENOTEMPTY', 'EBUSY', 'EPERM'].includes(e.code)
+      ) {
+        throw e;
+      }
+      sleepSync(100);
+    }
+  }
+}
+
+function sleepSync(ms: number) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }

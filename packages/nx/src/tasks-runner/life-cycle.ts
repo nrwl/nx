@@ -4,6 +4,7 @@ import {
   BatchStatus,
   ExternalObject,
   PerformanceSummaryPayload,
+  TaskReadiness,
   TaskResult,
   TaskStatus as NativeTaskStatus,
 } from '../native';
@@ -80,6 +81,9 @@ export interface LifeCycle {
   appendTaskOutput?(taskId: string, output: string, isPtyTask: boolean): void;
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
+
+  /** Only continuous tasks that declare a `readyWhen` report readiness. */
+  setTaskReadiness?(taskId: string, readiness: TaskReadiness): void;
 
   setTaskTiming?(taskId: string, startTime: number, endTime: number): void;
 
@@ -218,6 +222,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setTaskStatus) {
         l.setTaskStatus(taskId, status);
+      }
+    }
+  }
+
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskReadiness) {
+        l.setTaskReadiness(taskId, readiness);
       }
     }
   }

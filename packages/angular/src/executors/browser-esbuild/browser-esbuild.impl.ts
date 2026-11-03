@@ -1,6 +1,5 @@
 import type { buildEsbuildBrowser as buildEsbuildBrowserFn } from '@angular-devkit/build-angular/src/builders/browser-esbuild';
 import type { ExecutorContext } from '@nx/devkit';
-import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';
 import type { EsBuildSchema } from './schema';
@@ -18,15 +17,11 @@ export default async function* esbuildExecutor(
     ...delegateExecutorOptions
   } = options;
 
-  let dependencies: DependentBuildableProjectNode[];
-
   if (!buildLibsFromSource) {
-    const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(
-        delegateExecutorOptions.tsConfig,
-        context
-      );
-    dependencies = foundDependencies;
+    const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
+      delegateExecutorOptions.tsConfig,
+      context
+    );
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
 

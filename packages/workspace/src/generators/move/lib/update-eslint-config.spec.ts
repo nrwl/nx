@@ -140,7 +140,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
     // This step is usually handled elsewhere
     tree.rename(
@@ -168,7 +168,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
 
     // Add another parser project to eslint.json
@@ -209,7 +209,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
 
     // Add another parser project to eslint.json
@@ -328,7 +328,7 @@ describe('updateEslint (flat config)', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
     convertToFlat(tree, 'my-lib', { hasParser: true });
     // This step is usually handled elsewhere
@@ -353,7 +353,7 @@ describe('updateEslint (flat config)', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
     // Add another parser project to eslint.json
     const storybookProject = '.storybook/tsconfig.json';
@@ -383,7 +383,7 @@ describe('updateEslint (flat config)', () => {
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'eslint',
-      setParserOptionsProject: true,
+      enableTypedLinting: true,
     });
 
     convertToFlat(tree, 'my-lib', { hasParser: true, isString: true });

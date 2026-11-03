@@ -12,6 +12,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
@@ -21,10 +22,10 @@ import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { Schema } from './schema';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
+vi.mock('@nx/devkit', async () => {
   return {
-    ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn().mockImplementation(() => projectGraph),
+    ...(await vi.importActual<any>('@nx/devkit')),
+    createProjectGraphAsync: vi.fn().mockImplementation(() => projectGraph),
   };
 });
 
@@ -63,6 +64,37 @@ describe('lib', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  describe('pnpm 11 build scripts', () => {
+    it('should record the decisions ng-packagr pulls in for a buildable library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          buildable: true,
+          unitTestRunner: UnitTestRunner.None,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
+
+    it('should record the decisions @angular/build pulls in for a vitest library', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        runLibraryGeneratorWithOpts({
+          unitTestRunner: UnitTestRunner.VitestAnalog,
+          linter: 'none',
+        })
+      );
+
+      const pnpmWorkspace = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(pnpmWorkspace).toMatch(/['"]?esbuild['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?lmdb['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]?msgpackr-extract['"]?: false/);
+      expect(pnpmWorkspace).toMatch(/['"]@parcel\/watcher['"]: false/);
+    });
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -226,7 +258,13 @@ describe('lib', () => {
       const json = readProjectConfiguration(tree, 'my-lib');
       expect(json.root).toEqual('my-lib');
       expect(json.targets.build).toBeDefined();
-      expect(json.targets.test).toBeDefined();
+      // The test target comes from the inferred `@nx/jest/plugin`.
+      expect(json.targets.test).toBeUndefined();
+      expect(
+        readNxJson(tree).plugins.map((p) =>
+          typeof p === 'string' ? p : p.plugin
+        )
+      ).toContain('@nx/jest/plugin');
     });
 
     it('should not generate a module file and index.ts should be empty', async () => {
@@ -1409,7 +1447,7 @@ describe('lib', () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
-          setParserOptionsProject: true,
+          enableTypedLinting: true,
         });
 
         const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');

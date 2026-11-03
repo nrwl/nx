@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   type CreateNodesContext,
   detectPackageManager,
@@ -8,16 +9,19 @@ import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { existsSync, readdirSync, rmSync } from 'fs';
+import { join } from 'path';
 
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({}),
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
+    resolveConfig: vi.fn().mockResolvedValue({}),
   }),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/remix/plugin', () => {
@@ -26,7 +30,14 @@ describe('@nx/remix/plugin', () => {
   let cwd = process.cwd();
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
+    if (existsSync(workspaceDataDirectory)) {
+      for (const file of readdirSync(workspaceDataDirectory)) {
+        if (file.startsWith('remix-')) {
+          rmSync(join(workspaceDataDirectory, file), { force: true });
+        }
+      }
+    }
   });
 
   describe('Remix Classic Compiler', () => {
@@ -46,9 +57,6 @@ describe('@nx/remix/plugin', () => {
               },
               start: {
                 command: 'npm run start',
-              },
-              typecheck: {
-                command: 'tsc',
               },
             },
             namedInputs: {
@@ -82,7 +90,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -95,7 +103,6 @@ module.exports = {
             buildTargetName: 'build',
             devTargetName: 'dev',
             startTargetName: 'start',
-            typecheckTargetName: 'typecheck',
           },
           context
         );
@@ -145,7 +152,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -158,7 +165,6 @@ module.exports = {
             buildTargetName: 'build',
             devTargetName: 'dev',
             startTargetName: 'start',
-            typecheckTargetName: 'tsc',
           },
           context
         );
@@ -179,7 +185,6 @@ module.exports = {
             buildTargetName: 'build',
             devTargetName: 'dev',
             startTargetName: 'start',
-            typecheckTargetName: 'tsc',
           },
           context
         );
@@ -187,85 +192,18 @@ module.exports = {
         expect(nodes).toMatchSnapshot();
       });
 
-      it('should infer typecheck without --build flag when not using TS solution setup', async () => {
-        tempFs.createFileSync(
-          'my-app/package.json',
-          JSON.stringify('{"name": "my-app"}')
-        );
+      it('should not infer a typecheck target', async () => {
+        tempFs.createFileSync('my-app/tsconfig.json', '{}');
 
         const nodes = await createNodesFunction(
           ['my-app/remix.config.cjs'],
-          { typecheckTargetName: 'typecheck' },
+          {},
           context
         );
 
         expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.command
-        ).toEqual(`tsc --noEmit`);
-        expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-          .toMatchInlineSnapshot(`
-          {
-            "description": "Runs type-checking for the project.",
-            "help": {
-              "command": "npx tsc --help",
-              "example": {
-                "options": {
-                  "noEmit": true,
-                },
-              },
-            },
-            "technologies": [
-              "typescript",
-            ],
-          }
-        `);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
+          nodes[0][1].projects['my-app'].targets.typecheck
         ).toBeUndefined();
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-        ).toBeUndefined();
-      });
-
-      it('should infer typecheck with --build flag when using TS solution setup', async () => {
-        (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
-        tempFs.createFileSync(
-          'my-app/package.json',
-          JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
-        );
-
-        const nodes = await createNodesFunction(
-          ['my-app/remix.config.cjs'],
-          { typecheckTargetName: 'typecheck' },
-          context
-        );
-
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.command
-        ).toEqual(`tsc --build --emitDeclarationOnly`);
-        expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
-          .toMatchInlineSnapshot(`
-          {
-            "description": "Runs type-checking for the project.",
-            "help": {
-              "command": "npx tsc --build --help",
-              "example": {
-                "args": [
-                  "--force",
-                ],
-              },
-            },
-            "technologies": [
-              "typescript",
-            ],
-          }
-        `);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
-        ).toEqual([`^typecheck`]);
-        expect(
-          nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
-        ).toEqual(['@nx/js:typescript-sync']);
       });
     });
   });
@@ -287,9 +225,6 @@ module.exports = {
               },
               start: {
                 command: 'npm run start',
-              },
-              typecheck: {
-                command: 'tsc',
               },
             },
             namedInputs: {
@@ -317,8 +252,8 @@ module.exports = {
           });`
         );
         process.chdir(tempFs.tempDir);
-        (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValue({
+          resolveConfig: vi.fn().mockResolvedValue({
             build: {
               lib: {
                 entry: 'index.ts',
@@ -330,7 +265,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -343,7 +278,6 @@ module.exports = {
             buildTargetName: 'build',
             devTargetName: 'dev',
             startTargetName: 'start',
-            typecheckTargetName: 'typecheck',
           },
           context
         );
@@ -381,8 +315,8 @@ module.exports = {
              plugins:[remix()]
           });`
         );
-        (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-          resolveConfig: jest.fn().mockResolvedValue({
+        (loadViteDynamicImport as Mock).mockResolvedValue({
+          resolveConfig: vi.fn().mockResolvedValue({
             build: {
               lib: {
                 entry: 'index.ts',
@@ -401,7 +335,7 @@ module.exports = {
       });
 
       afterEach(() => {
-        jest.resetModules();
+        vi.resetModules();
         tempFs.cleanup();
         process.chdir(cwd);
       });
@@ -414,7 +348,6 @@ module.exports = {
             buildTargetName: 'build',
             devTargetName: 'dev',
             startTargetName: 'start',
-            typecheckTargetName: 'tsc',
           },
           context
         );

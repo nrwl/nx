@@ -17,7 +17,7 @@ describe('change-plugin-version-0-1-11 migration', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.chdir(cwd);
   });
 

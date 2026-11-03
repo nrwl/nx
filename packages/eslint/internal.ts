@@ -37,5 +37,3 @@ export {
   typescriptESLintVersion,
   versions,
 } from './src/utils/versions';
-
-export type { Schema } from './src/executors/lint/schema';

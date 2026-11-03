@@ -1,7 +1,7 @@
 {
   "cli": "nx",
-  "title": "Sets up the nxViteTsPaths plugin.",
-  "description": "Updates vite config files to enable support for workspace libraries via the nxViteTsPaths plugin.",
+  "title": "Enables Vite's native tsconfig paths resolution.",
+  "description": "Updates vite config files to enable support for workspace libraries via Vite's native `resolve.tsconfigPaths` option.",
   "$id": "setup-paths-plugin-vite-plugin",
   "type": "object",
   "properties": {

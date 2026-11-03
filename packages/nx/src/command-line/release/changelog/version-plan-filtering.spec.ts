@@ -179,7 +179,7 @@ describe('version-plan-filtering', () => {
       });
 
       expect(mockGetLatestGitTagForPattern).toHaveBeenCalled();
-      expect(mockGetCommitHash).toHaveBeenCalledWith('v1.0.0');
+      expect(mockGetCommitHash).toHaveBeenCalledWith('refs/tags/v1.0.0');
       expect(result).toBe('tag-sha');
     });
 

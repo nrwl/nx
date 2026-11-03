@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
@@ -11,6 +12,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
+import * as devkitModule from '@nx/devkit';
 
 describe('librarySecondaryEntryPoint generator', () => {
   let tree: Tree;
@@ -268,17 +270,16 @@ describe('librarySecondaryEntryPoint generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
+      formatFilesSpy = vi
         .spyOn(devkitModule, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {

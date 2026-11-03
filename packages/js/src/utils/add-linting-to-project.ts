@@ -34,7 +34,6 @@ export interface AddLintingToProjectOptions {
   project: string;
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
-  addPlugin?: boolean;
   /** ESLint-only. Ignored by other linters. */
   tsConfigPaths?: string[];
   unitTestRunner?: string;
@@ -43,7 +42,6 @@ export interface AddLintingToProjectOptions {
   /** ESLint-only. Ignored by other linters. */
   enableTypedLinting?: boolean;
   /** ESLint-only. Oxlint is inference-only, so it writes no explicit target. */
-  addExplicitTargets?: boolean;
   /**
    * ESLint-only. The `@nx/dependency-checks` rule lints `package.json`, which
    * Oxlint cannot read.
@@ -117,7 +115,6 @@ export async function addLintingToProject(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
-      // No `addPlugin`: `@nx/oxlint` is inference-only, so it always registers.
     });
   }
 
@@ -130,12 +127,10 @@ export async function addLintingToProject(
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
       enableTypedLinting: options.enableTypedLinting,
-      addExplicitTargets: options.addExplicitTargets,
       addPackageJsonDependencyChecks: options.addPackageJsonDependencyChecks,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       keepExistingVersions: options.keepExistingVersions,
-      addPlugin: options.addPlugin,
     });
   }
 

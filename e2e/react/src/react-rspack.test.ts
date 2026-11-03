@@ -3,12 +3,13 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  packageInstall,
   readFile,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Build React applications and libraries with Rspack', () => {
@@ -41,12 +42,12 @@ describe('Build React applications and libraries with Rspack', () => {
     const rspackConfig = readFile(`${appName}/rspack.config.js`);
     expect(rspackConfig).toContain(`port: ${customPort}`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(customPort)).toBeTruthy();
     }
   }, 300_000);
 
@@ -78,12 +79,47 @@ describe('Build React applications and libraries with Rspack', () => {
 
     checkFilesExist(`dist/${appName}/index.html`);
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`, {
         verbose: true,
       });
       expect(e2eResults).toContain('Successfully ran target e2e for project');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPorts(port)).toBeTruthy();
     }
   }, 250_000);
+
+  it('should extract licenses for apps using Module Federation', () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=none --e2eTestRunner=none --useProjectJson=false --no-interactive --skipFormat --linter=none`
+    );
+    // The crash needs a package.json at the project root, which rspack runs from.
+    checkFilesExist(`${appName}/package.json`);
+    packageInstall('@module-federation/enhanced', undefined, '^2.4.0');
+
+    const configPath = `${appName}/rspack.config.js`;
+    updateFile(
+      configPath,
+      readFile(configPath)
+        .replace(
+          "const { join } = require('path');",
+          "const { join } = require('path');\nconst { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');"
+        )
+        .replace(
+          'new NxAppRspackPlugin({',
+          'new NxAppRspackPlugin({\n      extractLicenses: true,'
+        )
+        .replace(
+          'new NxReactRspackPlugin(),',
+          `new NxReactRspackPlugin(),\n    new ModuleFederationPlugin({ name: '${appName.replace(/-/g, '_')}', filename: 'remoteEntry.js' }),`
+        )
+    );
+
+    runCLI(`build ${appName}`, { env: { NODE_ENV: 'production' } });
+
+    expect(readFile(`dist/${appName}/3rdpartylicenses.txt`)).toContain(
+      '@module-federation/runtime'
+    );
+  }, 300_000);
 });

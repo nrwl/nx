@@ -62,7 +62,7 @@ impl HashPlanInspector {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::ProjectFileSet(_, _)
-                    | HashInstruction::IgnoredFileSet(_) => {
+                    | HashInstruction::IgnoredFileSet { .. } => {
                         let builder = self
                             .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
@@ -157,11 +157,15 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::IgnoredFileSet(globs) => {
+            HashInstruction::IgnoredFileSet {
+                globs,
+                project_roots,
+            } => {
                 let workspace_root = std::path::Path::new(&self.workspace_root);
                 let files = collect_ignored_file_paths(
                     workspace_root,
                     globs,
+                    project_roots,
                     &Source::fileset_reading_disk(
                         &|path| self.tracked.tracks(path),
                         workspace_root,

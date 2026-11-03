@@ -5,7 +5,7 @@ import { withVerbose } from '../../yargs-utils/shared-options';
 export const yargsStartCiRunCommand: CommandModule = {
   command: 'start-ci-run [options]',
   describe:
-    'Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#npx-nxcloud-start-ci-run).',
+    'Starts a new CI run for distributed task execution. This command is an alias for [`nx-cloud start-ci-run`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run).',
   builder: (yargs) =>
     withVerbose(yargs)
       .help(false)

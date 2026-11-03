@@ -155,6 +155,7 @@ export function runNxArgvSync(
       `Command failed: nx ${argv.join(' ')} (exit code ${result.status})`
     );
     (error as any).status = result.status ?? 1;
+    (error as any).signal = result.signal;
     throw error;
   }
 }
@@ -234,7 +235,7 @@ export class PseudoTtyProcess {
   }
 
   onOutput(callback: (message: string) => void): void {
-    this.childProcess.onOutput(callback);
+    this.childProcess.onOutput((message) => callback(message));
   }
 
   kill(): void {

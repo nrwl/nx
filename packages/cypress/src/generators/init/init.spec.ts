@@ -1,34 +1,11 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import {
-  NxJsonConfiguration,
-  readJson,
-  type TargetConfiguration,
-  type TargetDefaults,
-  Tree,
-  updateJson,
-} from '@nx/devkit';
+import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
 import { cypressInitGenerator } from './init';
 import { Schema } from './schema';
-
-function getDefault(
-  td: TargetDefaults | undefined,
-  target: string
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  const value = td[target];
-  if (value === undefined) return undefined;
-  if (Array.isArray(value)) {
-    const found = value.find((e) => e.filter === undefined);
-    if (!found) return undefined;
-    const { filter: _f, ...rest } = found;
-    return rest;
-  }
-  return value;
-}
 
 describe('init', () => {
   let tree: Tree;
@@ -36,9 +13,7 @@ describe('init', () => {
   let options: Schema;
 
   beforeEach(() => {
-    options = {
-      addPlugin: true,
-    };
+    options = {};
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
@@ -60,26 +35,6 @@ describe('init', () => {
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies['@nx/cypress']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
-  });
-
-  it('should setup e2e target defaults', async () => {
-    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.namedInputs ??= {};
-      json.namedInputs.production = ['default'];
-      return json;
-    });
-
-    await cypressInitGenerator(tree, { ...options, addPlugin: false });
-
-    expect(
-      getDefault(
-        readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults,
-        'e2e'
-      )
-    ).toEqual({
-      cache: true,
-      inputs: ['default', '^production'],
-    });
   });
 
   it('should setup @nx/cypress/plugin', async () => {

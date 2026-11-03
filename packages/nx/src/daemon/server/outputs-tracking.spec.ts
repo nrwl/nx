@@ -1,54 +1,34 @@
-import { EventType } from '../../native';
+vi.mock('../../utils/workspace-context', () => ({
+  recordOutputsInContext: vi.fn(),
+  outputsUnchangedInContext: vi.fn(() => [true]),
+}));
+
 import {
-  _outputsHashesMatch,
-  _recordOutputsHash,
-  processFileChangesInOutputs,
+  outputsUnchangedInContext,
+  recordOutputsInContext,
+} from '../../utils/workspace-context';
+import {
+  outputsHashesMatchBatch,
+  recordOutputsHashBatch,
 } from './outputs-tracking';
 
 describe('outputs tracking', () => {
-  const now = new Date().getTime() + 10000;
-  it('should record hashes', () => {
-    _recordOutputsHash(['dist/app/app1'], '123');
-    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBeTruthy();
-    expect(_outputsHashesMatch(['dist/app/app1'], '1234')).toBeFalsy();
-    expect(
-      _outputsHashesMatch(['dist/app/app1', 'dist/app/app1/different'], '1234')
-    ).toBeFalsy();
+  const entries = [{ outputs: ['dist/app'], hash: 'h1' }];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should invalidate output when it is exact match', () => {
-    _recordOutputsHash(['dist/app/app1'], '123');
-    processFileChangesInOutputs(
-      [{ path: 'dist/app/app1', type: EventType.update }],
-      now
+  it('records and checks outputs through the workspace context', () => {
+    recordOutputsHashBatch(entries);
+    expect(recordOutputsInContext).toHaveBeenCalledWith(
+      expect.any(String),
+      entries
     );
-    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
-  });
-
-  it('should invalidate output when it is a child', () => {
-    _recordOutputsHash(['dist/app/app1'], '123');
-    processFileChangesInOutputs(
-      [{ path: 'dist/app/app1/child', type: EventType.update }],
-      now
+    expect(outputsHashesMatchBatch(entries)).toEqual([true]);
+    expect(outputsUnchangedInContext).toHaveBeenCalledWith(
+      expect.any(String),
+      entries
     );
-    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
-  });
-
-  it('should invalidate output when it is a parent', () => {
-    _recordOutputsHash(['dist/app/app1'], '123');
-    processFileChangesInOutputs(
-      [{ path: 'dist/app', type: EventType.update }],
-      now
-    );
-    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(false);
-  });
-
-  it('should not invalidate anything when no match', () => {
-    _recordOutputsHash(['dist/app/app1'], '123');
-    processFileChangesInOutputs(
-      [{ path: 'dist/app2', type: EventType.update }],
-      now
-    );
-    expect(_outputsHashesMatch(['dist/app/app1'], '123')).toBe(true);
   });
 });

@@ -23,10 +23,6 @@ export interface Schema {
   unitTestRunner?: UnitTestRunner;
   compilationMode?: 'full' | 'partial';
   enableTypedLinting?: boolean;
-  /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
-   */
-  setParserOptionsProject?: boolean;
   skipModule?: boolean;
   skipPackageJson?: boolean;
   standalone?: boolean;
@@ -39,6 +35,5 @@ export interface Schema {
   skipTests?: boolean;
   selector?: string;
   skipSelector?: boolean;
-  addPlugin?: boolean;
   skipTsConfig?: boolean;
 }

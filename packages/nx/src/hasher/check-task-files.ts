@@ -12,6 +12,7 @@ import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
+  interpolateOutput,
 } from '../tasks-runner/utils';
 import { normalizePath } from '../utils/path';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
@@ -225,10 +226,7 @@ function getUnresolvedOutputs(
   };
 
   return (targetConfig.outputs ?? []).filter((output) =>
-    [...output.matchAll(/\{options\.([^}]+)\}/g)].some(([, key]) => {
-      const value = key.split('.').reduce<any>((acc, k) => acc?.[k], options);
-      return value === undefined;
-    })
+    /{options.*}/.test(interpolateOutput(output, projectNode, options))
   );
 }
 
@@ -275,14 +273,14 @@ function collectUpstreamTaskIds(
   transitive: boolean
 ): string[] {
   const direct = taskGraph.dependencies[rootTaskId] ?? [];
-  if (!transitive) return [...direct];
+  if (!transitive) return direct.map((dep) => dep.id);
 
   const collected = new Set<string>();
   const walk = (id: string): void => {
     for (const dep of taskGraph.dependencies[id] ?? []) {
-      if (collected.has(dep)) continue;
-      collected.add(dep);
-      walk(dep);
+      if (collected.has(dep.id)) continue;
+      collected.add(dep.id);
+      walk(dep.id);
     }
   };
   walk(rootTaskId);

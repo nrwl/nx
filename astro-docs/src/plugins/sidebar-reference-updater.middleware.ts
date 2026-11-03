@@ -91,16 +91,14 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
       item.params.slug !== 'ngcli_adapter'
   );
 
-  const devkitRoutes = devkitOnlyItems.map(
-    (record): SidebarLink => ({
-      type: 'link',
-      label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
-      badge: undefined,
-      isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
-      attrs: {},
-    })
-  );
+  const devkitRoutes = devkitOnlyItems.map((record): SidebarLink => ({
+    type: 'link',
+    label: record.props.doc.data.title,
+    href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
+    badge: undefined,
+    isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
+    attrs: {},
+  }));
 
   const ngcliOverview: SidebarLink = {
     type: 'link',
@@ -111,16 +109,14 @@ async function getDevKitSection({ entry }: StarlightRouteData) {
     attrs: {},
   };
 
-  const ngcliRoutes = ngcliItems.map(
-    (record): SidebarLink => ({
-      type: 'link',
-      label: record.props.doc.data.title,
-      href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
-      badge: undefined,
-      isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
-      attrs: {},
-    })
-  );
+  const ngcliRoutes = ngcliItems.map((record): SidebarLink => ({
+    type: 'link',
+    label: record.props.doc.data.title,
+    href: `/docs/reference/devkit/${record.props.doc.data.slug}`,
+    badge: undefined,
+    isCurrent: entry.id === `reference/devkit/${record.props.doc.data.slug}`,
+    attrs: {},
+  }));
 
   const ngcliSection: SidebarGroup = {
     type: 'group',
@@ -186,16 +182,14 @@ async function getNxPackageSection(
       if (typeof d.data.slug !== 'string') return false;
       return true;
     })
-    .map(
-      (record): SidebarLink => ({
-        type: 'link',
-        label: record.data.title || 'Untitled',
-        href: `/docs/${record.data.slug}`,
-        badge: undefined,
-        isCurrent: entry.id === record.data.slug,
-        attrs: {},
-      })
-    );
+    .map((record): SidebarLink => ({
+      type: 'link',
+      label: record.data.title || 'Untitled',
+      href: `/docs/${record.data.slug}`,
+      badge: undefined,
+      isCurrent: entry.id === record.data.slug,
+      attrs: {},
+    }));
 
   const label =
     packageName === 'nx'

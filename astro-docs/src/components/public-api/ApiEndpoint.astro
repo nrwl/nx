@@ -1,0 +1,68 @@
+---
+import { Badge } from '@astrojs/starlight/components';
+import AnchorHeading from '@astrojs/starlight/components/AnchorHeading.astro';
+import ApiTable from './ApiTable.astro';
+import ApiContent from './ApiContent.astro';
+import ApiResponseDetails from './ApiResponseDetails.astro';
+import type { ReferenceEndpoint } from '../../plugins/utils/openapi-reference';
+interface Props {
+  endpoint: ReferenceEndpoint;
+}
+const { endpoint } = Astro.props;
+---
+
+<section class="api-endpoint" aria-labelledby={endpoint.heading.slug}>
+  <AnchorHeading level={3} id={endpoint.heading.slug}>{endpoint.heading.text}</AnchorHeading>
+  <p class="endpoint-route"><Badge text={endpoint.method} variant="note" size="small" /> <code>{endpoint.path}</code></p>
+  <Fragment set:html={endpoint.description.html} />
+  {endpoint.deprecated && <p><strong>Deprecated operation.</strong></p>}
+  {endpoint.authentication && <><p><strong>Authentication</strong></p><Fragment set:html={endpoint.authentication.html} /></>}
+  {endpoint.parameters.rows.length > 0 && <><p><strong>Parameters</strong></p><ApiTable table={endpoint.parameters} /></>}
+  {endpoint.parameterDetails.map((parameter) => (
+    <><p><strong>Parameter: <code>{parameter.name}</code></strong></p><ApiContent content={parameter.content} /></>
+  ))}
+  {endpoint.requestBody && (
+    <>
+      <p><strong>Request body</strong> — {endpoint.requestBody.required ? 'Required.' : 'Optional.'}</p>
+      <Fragment set:html={endpoint.requestBody.description.html} />
+      <ApiContent content={endpoint.requestBody.content} />
+    </>
+  )}
+  {endpoint.successes.map((response) => response.content.length > 0 ? (
+    <details id={response.id}>
+      <summary>Response body <Badge text={response.label} variant="success" size="small" /></summary>
+      <ApiResponseDetails {response} />
+    </details>
+  ) : (
+    <div id={response.id}>
+      <div class="response-outcome">
+        <Badge text={response.label} variant="success" size="small" />
+        <div set:html={response.description.html} />
+      </div>
+      <ApiResponseDetails {response} description={false} />
+    </div>
+  ))}
+  {endpoint.otherResponses.length > 0 && (
+    <p class="other-responses">Other response codes: {endpoint.otherResponses.map(({ status, label, target }) => (
+      <a href={`#${target}`} aria-label={label}><Badge text={status} size="small" /></a>
+    ))}</p>
+  )}
+</section>
+
+<style>
+  .api-endpoint { margin-block: 2.5rem; }
+  .endpoint-route { display: flex; align-items: baseline; gap: 0.5rem; }
+  .endpoint-route code { min-width: 0; overflow-wrap: anywhere; }
+  .endpoint-route :global(.sl-badge), .response-outcome :global(.sl-badge) { flex-shrink: 0; white-space: nowrap; }
+  summary :global(.sl-badge) { margin-inline-start: 0.5rem; }
+  .response-outcome { display: flex; gap: 0.5rem; align-items: baseline; }
+  .response-outcome :global(p) { margin: 0; }
+  .other-responses { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem; font-size: var(--sl-text-sm); }
+  .other-responses a { text-decoration: none; }
+  .other-responses :global(.sl-badge) {
+    --sl-color-bg-badge: transparent;
+    --sl-color-border-badge: var(--sl-color-hairline);
+    --sl-color-text-badge: var(--sl-color-text);
+  }
+  .other-responses a:hover :global(.sl-badge) { --sl-color-border-badge: var(--sl-color-text-accent); }
+</style>

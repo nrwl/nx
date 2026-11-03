@@ -1,4 +1,9 @@
-import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  type Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   sassVersion,
   vueRouterVersion,
@@ -16,7 +21,8 @@ export async function ensureDependencies(
   const nuxtVersions = await getNuxtDependenciesVersionsToInstall(host);
 
   const devDependencies: Record<string, string> = {
-    '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin and @nx/vite/plugin
+    'vite-tsconfig-paths': '~4.3.2',
+    '@nx/vite': nxVersion, // needed for @nx/vite/plugin
     '@nuxt/devtools': nuxtVersions.nuxtDevtools,
     '@nuxt/kit': nuxtVersions.nuxtKit,
     '@nuxt/schema': nuxtVersions.nuxtSchema,
@@ -29,6 +35,11 @@ export async function ensureDependencies(
   };
 
   if (options.style === 'scss') {
+    // sass pulls in @parcel/watcher, whose install script only builds from
+    // source when npm_config_build_from_source is set.
+    acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+      '@parcel/watcher': false,
+    });
     devDependencies['sass'] = sassVersion;
   }
 

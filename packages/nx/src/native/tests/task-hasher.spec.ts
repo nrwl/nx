@@ -1,7 +1,7 @@
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
-import { transformProjectGraphForRust } from '../transform-objects';
+import { toRustProjectGraph } from '../transform-objects';
 import {
   HashPlanner,
   TaskHasher,
@@ -65,7 +65,7 @@ describe('task hash result conversion and assembly', () => {
       undefined,
       {}
     );
-    const graphRef = transferProjectGraph(transformProjectGraphForRust(graph));
+    const graphRef = transferProjectGraph(toRustProjectGraph(graph));
     const files = testOnlyTransferFileMap({}, [
       { file: 'config.json', hash: 'file-map-snapshot' },
     ]);

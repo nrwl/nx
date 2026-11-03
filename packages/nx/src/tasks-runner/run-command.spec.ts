@@ -1,8 +1,9 @@
-import { TasksRunner } from './tasks-runner';
-import { getRunner, setEnvVarsBasedOnArgs } from './run-command';
+import {
+  getRunner,
+  selectTasksForProjects,
+  setEnvVarsBasedOnArgs,
+} from './run-command';
 import type { NxArgs } from '../utils/command-line-utils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { join } from 'path';
 // getRunner loads the runner with a bare require, so compare against the
 // instance from the same channel rather than the vite-imported copy.
 const {
@@ -11,15 +12,6 @@ const {
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {
-  let nxJson: NxJsonConfiguration;
-  let mockRunner: TasksRunner;
-  let overrides: any;
-
-  beforeEach(() => {
-    nxJson = {};
-    mockRunner = vi.fn();
-  });
-
   it('uses default runner when no tasksRunnerOptions are present', () => {
     // getRunner loads the runner with a bare require, so fetch the expected
     // instance through the same channel rather than mocking the module.
@@ -201,5 +193,49 @@ describe('setEnvVarsBasedOnArgs', () => {
     expect(resolveStreaming({ GITHUB_ACTIONS: 'true', NX_TUI: 'true' })).toBe(
       true
     );
+  });
+});
+
+describe('selectTasksForProjects', () => {
+  const node = (name: string, targets: Record<string, any>) => ({
+    name,
+    type: 'lib' as const,
+    data: { root: `libs/${name}`, targets },
+  });
+  const run = (dependsOn?: string[]) => ({
+    executor: 'nx:run-commands',
+    ...(dependsOn ? { dependsOn } : {}),
+  });
+  const projectGraph = {
+    nodes: {
+      app: node('app', { build: run(['^build']), test: run() }),
+      lib: node('lib', { build: run(), test: run() }),
+    },
+    dependencies: {
+      app: [{ source: 'app', target: 'lib', type: 'static' }],
+      lib: [],
+    },
+  } as any;
+
+  // The projects' own tasks initiate; what they pull in only runs for them.
+  it("initiates the named projects' tasks of the targets, not their dependencies", () => {
+    const selection = selectTasksForProjects(
+      projectGraph,
+      ['app'],
+      { targets: ['build', 'test'] } as NxArgs,
+      {},
+      {},
+      false
+    );
+    expect(Object.keys(selection.taskGraph.tasks).sort()).toEqual([
+      'app:build',
+      'app:test',
+      'lib:build',
+    ]);
+    expect(selection.initiatingTaskIds.sort()).toEqual([
+      'app:build',
+      'app:test',
+    ]);
+    expect(selection.taskIds).toBeUndefined();
   });
 });

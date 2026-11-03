@@ -31,7 +31,6 @@ import {
 } from '@nx/js/internal';
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });
@@ -42,10 +41,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const addTsPlugin = shouldConfigureTsSolutionSetup(
-    host,
-    rawOptions.addPlugin
-  );
+  const addTsPlugin = shouldConfigureTsSolutionSetup(host);
   const jsInitTask = await jsInitGenerator(host, {
     js: rawOptions.js,
     addTsPlugin,

@@ -19,21 +19,21 @@ The pre-pass handled, mechanically:
 - `'verbose'` → `'tree'` and `'basic'` → `['default', { summary: false }]` inside `test.reporters`
 - `VITEST_MAX_{THREADS,FORKS}` → `VITEST_MAX_WORKERS` and `VITE_NODE_DEPS_MODULE_DIRECTORIES` → `VITEST_MODULE_DIRECTORIES` renames in: `package.json` scripts, `.env` / `.env.*` files, `project.json` `options.env` keys, and inline `VAR=value` prefixes inside `project.json` `options.{args,command,commands}`
 
-The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses — a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any conflicts and any CI matches are forwarded to you in `<advisory_context>`.
+The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses, a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`), because YAML structure varies too much. Any conflicts and any CI matches are forwarded to you in `impl.agentContext`.
 
 **The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, inlining of `vitest.workspace.*` files the pre-pass could not inline automatically (+ `defineWorkspace` removal), custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
 
-How to read the wrapper sections above this file:
+How to read the `impl` fields of the step's `nx_migrate_prompt` block:
 
-- `<files_changed>` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
-- `<advisory_context>` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work** — address each one in the relevant section below, not as a separate task.
+- `impl.changes` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
+- `impl.agentContext` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work.** Address each one in the relevant section below, not as a separate task.
 
 A workspace-wide reminder is also emitted as a post-run "next step" about env vars set in CI provider dashboards — those can't be detected from the workspace tree.
 
 </pre_pass_summary>
 
 <handoff_guidance>
-In your handoff `summary` (1–3 sentences per the system prompt), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no custom reporters in this workspace", "no browser-mode configs").
+In your handoff `summary` (1-3 sentences, per the handoff format), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no custom reporters in this workspace", "no browser-mode configs").
 </handoff_guidance>
 
 <prerequisites note="hard runtime requirements; do not edit any vitest config until these are satisfied">
@@ -198,7 +198,7 @@ export default defineConfig({
 **Action Items**:
 
 - [ ] Rename `workspace` property to `projects` in all config files.
-- [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported). The pre-pass already inlined workspace files containing a plain static array of glob strings; the ones you see in `<advisory_context>` were skipped because of dynamic content or because the sibling config could not be merged into mechanically (existing `test.projects`/`test.workspace`, non-object-literal config, or a directory with only a `vite.config.*`). For an existing `test.projects`, merge the workspace entries into it; for a `vite.config.*`-only directory, decide whether its `test` block (if any) and the project list belong in that file or a new `vitest.config.*`.
+- [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported). The pre-pass already inlined workspace files containing a plain static array of glob strings; the ones you see in `impl.agentContext` were skipped because of dynamic content or because the sibling config could not be merged into mechanically (existing `test.projects`/`test.workspace`, non-object-literal config, or a directory with only a `vite.config.*`). For an existing `test.projects`, merge the workspace entries into it; for a `vite.config.*`-only directory, decide whether its `test` block (if any) and the project list belong in that file or a new `vitest.config.*`.
 - [ ] If projects need different pool/environment options, set them inside each project entry rather than via the (now-removed) `poolMatchGlobs` / `environmentMatchGlobs` — see section 1.5.
 
 When you inline a workspace file yourself, also apply these checks (the pre-pass applies them for the files it inlines):

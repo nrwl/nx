@@ -2,8 +2,9 @@ import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/int
 
 let hasWarned = false;
 
+// TODO(v25): remove the deprecated tailwind glob helpers (NXC-5174).
 /**
- * @deprecated `@nx/react/tailwind` will be removed in Nx 24. Migrate to Tailwind CSS v4 which no longer needs glob patterns.
+ * @deprecated `@nx/react/tailwind` will be removed in Nx 25. Migrate to Tailwind CSS v4 which no longer needs glob patterns.
  * See: https://nx.dev/docs/technologies/react/guides/using-tailwind-css-in-react
  */
 export function createGlobPatternsForDependencies(
@@ -13,7 +14,7 @@ export function createGlobPatternsForDependencies(
   if (!hasWarned) {
     hasWarned = true;
     console.warn(
-      `\nWARNING: "@nx/react/tailwind" is deprecated and will be removed in Nx 24.\n` +
+      `\nWARNING: "@nx/react/tailwind" is deprecated and will be removed in Nx 25.\n` +
         `Migrate to Tailwind CSS v4 which no longer needs glob patterns for content detection.\n` +
         `See: https://nx.dev/docs/technologies/react/guides/using-tailwind-css-in-react\n`
     );

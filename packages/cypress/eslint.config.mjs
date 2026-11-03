@@ -32,6 +32,7 @@ export default [
             // Self-reference: resolves the package's own package.json at
             // runtime (see src/utils/versions.ts).
             '@nx/cypress',
+            'cypress',
             'typescript',
             'eslint',
             'rollup',

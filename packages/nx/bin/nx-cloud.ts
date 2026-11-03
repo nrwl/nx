@@ -23,6 +23,17 @@ export async function invokeCommandWithNxCloudClient(
 ) {
   try {
     const client = await getCloudClient(options);
+    if (client.runCLI) {
+      return client
+        .runCLI(process.argv.slice(2))
+        .then((exitCode) =>
+          process.exit(typeof exitCode === 'number' ? exitCode : 0)
+        )
+        .catch((e) => {
+          console.error(e);
+          process.exit(1);
+        });
+    }
     client.invoke(command);
   } catch (e: any) {
     if (e instanceof UnknownCommandError) {

@@ -8,10 +8,10 @@ import {
   reservePort,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 import {
   setupProjectsTest,
@@ -91,7 +91,7 @@ describe('Angular Projects - Build and Test', () => {
     );
 
     // check e2e tests
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       // app1 was generated with --port=app1Port, so its e2e serves there
       expect(() => runCLI(`e2e ${app1}-e2e`)).not.toThrow();
       expect(await killPort(app1Port)).toBeTruthy();
@@ -153,7 +153,7 @@ describe('Angular Projects - Build and Test', () => {
     expect(componentSource).toBeDefined();
     expect(componentSource.content).not.toContain('ɵcmp');
 
-    if (await runE2ETests()) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }
@@ -187,7 +187,7 @@ describe('Angular Projects - Build and Test', () => {
       `generate @nx/angular:app ${app} --port=${port} --e2eTestRunner=playwright --no-interactive`
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
       expect(await killPort(port)).toBeTruthy();
     }

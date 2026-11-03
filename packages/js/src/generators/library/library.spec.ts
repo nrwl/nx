@@ -10,6 +10,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from './library';
 import type { LibraryGeneratorSchema } from './schema';
@@ -44,6 +45,40 @@ describe('lib', () => {
     }
   });
 
+  describe('pnpm 11 build scripts', () => {
+    it('should deny the esbuild build script for the esbuild bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'esbuild',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]?esbuild['"]?: false/
+      );
+    });
+
+    it('should deny the @swc/core build script for the swc bundler', async () => {
+      await withPnpm(tree, '11.2.2', () =>
+        libraryGenerator(tree, {
+          ...defaultOptions,
+          directory: 'my-lib',
+          bundler: 'swc',
+          unitTestRunner: 'none',
+          linter: 'none',
+        } as LibraryGeneratorSchema)
+      );
+
+      expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+        /['"]@swc\/core['"]: false/
+      );
+    });
+  });
+
   it.each`
     bundler
     ${'esbuild'}
@@ -76,6 +111,38 @@ describe('lib', () => {
       expect(compilerOptions.emitDeclarationOnly).not.toBeDefined();
     }
   );
+
+  it('should not change a typecheck-only @nx/js/typescript registration outside TS solution setups', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      json.plugins = [
+        {
+          plugin: '@nx/js/typescript',
+          options: { typecheck: { targetName: 'typecheck' } },
+        },
+      ];
+      return json;
+    });
+
+    await libraryGenerator(tree, {
+      ...defaultOptions,
+      directory: 'my-lib',
+      bundler: 'tsc',
+    });
+
+    expect(
+      readJson(tree, 'nx.json').plugins.filter(
+        (p) => p.plugin === '@nx/js/typescript'
+      )
+    ).toEqual([
+      {
+        plugin: '@nx/js/typescript',
+        options: { typecheck: { targetName: 'typecheck' } },
+      },
+    ]);
+    expect(
+      readProjectConfiguration(tree, 'my-lib').targets.build.executor
+    ).toBe('@nx/js:tsc');
+  });
 
   describe('configs', () => {
     it('should generate an empty ts lib using --config=npm-scripts', async () => {
@@ -1496,7 +1563,7 @@ describe('lib', () => {
         });
 
         it("should warn the user if their defined groups don't match the new project", async () => {
-          const outputSpy = jest
+          const outputSpy = vi
             .spyOn(output, 'warn')
             .mockImplementationOnce(() => {
               return undefined as never;
@@ -1903,24 +1970,12 @@ describe('lib', () => {
       expect(readJson(tree, 'my-lib/project.json')).toMatchInlineSnapshot(`
         {
           "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "// targets": "to see all targets run: nx show project my-lib --web",
           "name": "my-lib",
           "projectType": "library",
           "sourceRoot": "my-lib/src",
           "tags": [],
-          "targets": {
-            "lint": {
-              "executor": "@nx/eslint:lint",
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "my-lib/jest.config.cts",
-              },
-              "outputs": [
-                "{workspaceRoot}/coverage/{projectRoot}",
-              ],
-            },
-          },
+          "targets": {},
         }
       `);
       expect(tree.exists('my-lib/package.json')).toBe(false);
@@ -1963,12 +2018,9 @@ describe('lib', () => {
           directory,
         });
 
-        expect(tree.read('pnpm-workspace.yaml', 'utf-8'))
-          .toMatchInlineSnapshot(`
-          "packages:
-            - '${expected}'
-          "
-        `);
+        expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(
+          `packages:\n  - '${expected}'\n`
+        );
       }
     );
 
@@ -2253,7 +2305,9 @@ describe('lib', () => {
           useProjectJson: false,
         });
 
-        expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
+        expect(readJson(tree, 'my-lib/tsconfig.spec.json').references).toEqual([
+          { path: './tsconfig.lib.json' },
+        ]);
         expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
         expect(tree.exists('my-lib/jest.config.cts')).toBeTruthy();
         expect(tree.read('my-lib/jest.config.cts', 'utf-8'))
@@ -2503,7 +2557,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toStrictEqual({
@@ -2518,7 +2571,6 @@ describe('lib', () => {
         name: '@proj/my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
@@ -2530,7 +2582,6 @@ describe('lib', () => {
         directory: 'my-lib',
         useProjectJson: false,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
@@ -2542,7 +2593,6 @@ describe('lib', () => {
         directory: 'my-lib',
         useProjectJson: true,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('@proj/my-lib');
@@ -2556,7 +2606,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: true,
         bundler: 'none',
-        addPlugin: true,
       });
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
@@ -2575,7 +2624,6 @@ describe('lib', () => {
         name: 'my-lib',
         useProjectJson: true,
         bundler: 'tsc',
-        addPlugin: true,
         skipFormat: true,
       });
 
@@ -2592,7 +2640,6 @@ describe('lib', () => {
         linter: 'eslint',
         bundler: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -2610,7 +2657,6 @@ describe('lib', () => {
         linter: 'eslint',
         bundler: 'none',
         unitTestRunner: 'none',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });

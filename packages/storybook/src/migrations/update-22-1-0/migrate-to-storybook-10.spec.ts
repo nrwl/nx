@@ -1,4 +1,5 @@
-import { Tree, readJson, writeJson } from '@nx/devkit';
+import type { MockInstance } from 'vitest';
+import { Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as utilities from '../../utils/utilities';
 import * as migrate10Generator from '../../generators/migrate-10/migrate-10';
@@ -6,19 +7,19 @@ import migrateToStorybook10 from './migrate-to-storybook-10';
 
 describe('migrate-to-storybook-10 migration', () => {
   let tree: Tree;
-  let storybookMajorVersionSpy: jest.SpyInstance;
-  let migrate10GeneratorSpy: jest.SpyInstance;
+  let storybookMajorVersionSpy: MockInstance;
+  let migrate10GeneratorSpy: MockInstance;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    storybookMajorVersionSpy = jest.spyOn(utilities, 'storybookMajorVersion');
-    migrate10GeneratorSpy = jest
+    storybookMajorVersionSpy = vi.spyOn(utilities, 'storybookMajorVersion');
+    migrate10GeneratorSpy = vi
       .spyOn(migrate10Generator, 'default')
       .mockResolvedValue(undefined);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should call migrate-10 generator when Storybook is installed', async () => {

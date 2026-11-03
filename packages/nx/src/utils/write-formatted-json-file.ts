@@ -1,7 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { formatFileContents } from '../generators/internal-utils/format-changed-files';
 import { serializeJson } from './json';
-import type { JsonSerializeOptions } from './json';
 import { writeJsonFile, type JsonWriteOptions } from './fileutils';
 import { workspaceRoot } from './workspace-root';
 

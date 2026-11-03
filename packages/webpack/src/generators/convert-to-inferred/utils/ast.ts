@@ -57,3 +57,28 @@ export function toExpression(value: unknown): ts.Expression {
     );
   }
 }
+
+/** Whether a top-level `configValues` object written by convert-to-inferred has `key`. */
+export function hasMigratedConfigValues(
+  sourceFile: ts.SourceFile,
+  key: string
+): boolean {
+  return sourceFile.statements.some(
+    (statement) =>
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.declarations.some(
+        (declaration) =>
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.text === 'configValues' &&
+          declaration.initializer !== undefined &&
+          ts.isObjectLiteralExpression(declaration.initializer) &&
+          declaration.initializer.properties.some(
+            (property) =>
+              ts.isPropertyAssignment(property) &&
+              (ts.isIdentifier(property.name) ||
+                ts.isStringLiteral(property.name)) &&
+              property.name.text === key
+          )
+      )
+  );
+}

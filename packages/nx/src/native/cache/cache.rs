@@ -1,5 +1,7 @@
-use std::fs::{create_dir_all, read_dir, read_to_string, remove_file, symlink_metadata, write};
-use std::path::{Component, Path, PathBuf};
+use std::fs::{
+    create_dir_all, metadata, read_dir, read_to_string, remove_file, symlink_metadata, write,
+};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant, SystemTime};
 use tracing::{debug, trace};
@@ -8,14 +10,48 @@ use fs_extra::remove_items;
 use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
-use sysinfo::Disks;
 
-use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
+use crate::native::cache::expand_outputs::{
+    _expand_outputs, all_literal, ensure_negated_outputs_kept, normalize_outputs,
+    outputs_below_a_link,
+};
+use crate::native::cache::file_ops::{
+    copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
+};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
+use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
 use std::sync::{Arc, Mutex};
+
+/// What `put` copied into the cache.
+#[napi(object)]
+pub struct CachedOutputs {
+    /// The output entries that exist, as `expand_outputs` finds them.
+    pub expanded_outputs: Vec<String>,
+    /// Each file copied, stamped as it is in the workspace.
+    pub files: Vec<OutputFile>,
+    /// Outputs that exist only through a linked directory. When there are
+    /// any, nothing is stored and the task is not cached.
+    pub outputs_below_a_link: Vec<String>,
+}
+
+/// Each workspace file in `paths` as it is now. Only a regular file, or a
+/// link to one, is kept: nothing else is an output file to stamp.
+fn stamp_all<'a>(
+    workspace_root: &Path,
+    paths: impl ParallelIterator<Item = &'a PathBuf>,
+) -> Vec<OutputFile> {
+    paths
+        .filter_map(|path| {
+            let relative = path.strip_prefix(workspace_root).ok()?;
+            let metadata = std::fs::metadata(path).ok()?;
+            metadata
+                .is_file()
+                .then(|| OutputFile::new(relative.to_normalized_string(), &metadata))
+        })
+        .collect()
+}
 
 /// Batch logs older than this are swept. Matches `remove_old_cache_records`.
 const BATCH_OUTPUT_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
@@ -202,7 +238,8 @@ impl NxCache {
         // `is_cache_entry` distinguishes a real cache entry, which owns a
         // `<cacheDir>/<hash>` directory, from a row that exists only so the
         // terminal output of an uncacheable run is reachable by the GC. Only
-        // the former may be served as a cache hit — see `get`/`fetch_cache_rows`.
+        // the former may be served as a cache hit, and only while that directory
+        // exists — see `get`/`fetch_cache_rows` and `build_cached_result`.
         let query = if self.link_task_details {
             "CREATE TABLE IF NOT EXISTS cache_outputs (
                 hash    TEXT PRIMARY KEY NOT NULL,
@@ -256,7 +293,10 @@ impl NxCache {
             .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
 
         // Terminal output file read happens AFTER the lock is released.
-        let result = row_data.map(|(code, size)| self.build_cached_result(&hash, code, size));
+        let result = row_data.and_then(|(code, size)| self.build_cached_result(&hash, code, size));
+        if row_data.is_some() && result.is_none() {
+            self.demote_stale_cache_records(std::slice::from_ref(&hash));
+        }
 
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(result)
@@ -276,13 +316,25 @@ impl NxCache {
 
         // 2. For each requested hash, read its terminal output file in
         //    parallel. Misses stay as None so callers can correlate by index.
-        let results = hashes
+        let results: Vec<Option<CachedResult>> = hashes
             .par_iter()
             .map(|hash| {
                 rows.get(hash)
-                    .map(|&(code, size)| self.build_cached_result(hash, code, size))
+                    .and_then(|&(code, size)| self.build_cached_result(hash, code, size))
             })
             .collect();
+
+        // 3. A row whose artifacts are gone is a miss above; demote those rows
+        //    in one transaction rather than from inside the parallel map.
+        let stale: Vec<String> = hashes
+            .iter()
+            .zip(&results)
+            .filter(|(hash, result)| result.is_none() && rows.contains_key(*hash))
+            .map(|(hash, _)| hash.clone())
+            .collect();
+        if !stale.is_empty() {
+            self.demote_stale_cache_records(&stale);
+        }
 
         trace!("GET_BATCH {} hashes {:?}", hashes.len(), start.elapsed());
         Ok(results)
@@ -332,18 +384,25 @@ impl NxCache {
         Ok(rows)
     }
 
-    /// Assemble a `CachedResult` for a confirmed hit by reading its
-    /// terminal output file. Safe to call concurrently — Rayon invokes
-    /// this from multiple threads during `get_batch`.
-    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> CachedResult {
+    /// A cache row can outlive its artifact directory. Serving it as a hit
+    /// would skip the task without restoring its outputs.
+    fn build_cached_result(&self, hash: &str, code: i16, size: i64) -> Option<CachedResult> {
+        let outputs_path = self.cache_path.join(hash);
+        if !outputs_path.is_dir() {
+            debug!(
+                "Cache record {} has no artifacts at {:?}, treating as a miss",
+                hash, &outputs_path
+            );
+            return None;
+        }
         let terminal_output =
             read_to_string(self.get_task_outputs_path_internal(hash)).unwrap_or_default();
-        CachedResult {
+        Some(CachedResult {
             code,
             terminal_output: Some(terminal_output),
-            outputs_path: self.cache_path.join(hash).to_normalized_string(),
+            outputs_path: outputs_path.to_normalized_string(),
             size: Some(size),
-        }
+        })
     }
 
     #[napi]
@@ -353,7 +412,7 @@ impl NxCache {
         terminal_output: String,
         outputs: Vec<String>,
         code: i16,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<CachedOutputs> {
         let start = Instant::now();
         trace!("PUT {}", &hash);
         let task_dir = self.cache_path.join(&hash);
@@ -378,17 +437,33 @@ impl NxCache {
 
         // Expand the outputs
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
+        let linked = outputs_below_a_link(&self.workspace_root, &outputs);
+        if !linked.is_empty() {
+            debug!("PUT {} skipped, outputs below a link: {:?}", &hash, linked);
+            remove_items(&[&task_dir])?;
+            self.record_terminal_outputs(vec![TerminalOutputRecord {
+                hash: hash.clone(),
+                size: total_size,
+            }])?;
+            return Ok(CachedOutputs {
+                expanded_outputs: vec![],
+                files: vec![],
+                outputs_below_a_link: linked,
+            });
+        }
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
         // Copy the outputs to the cache
         let mut copied_files = 0;
+        let mut written = vec![];
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
                 let cached_outputs_dir = task_dir.join(expanded_output);
                 trace!("Copying {:?} -> {:?}", &p, &cached_outputs_dir);
-                let copied_size = _copy(p, cached_outputs_dir)?;
+                let (copied_size, wrote) = copy_and_list(&p, &cached_outputs_dir, None)?;
+                written.extend(wrote);
                 total_size += copied_size;
                 copied_files += 1;
                 trace!(
@@ -404,33 +479,46 @@ impl NxCache {
 
         self.record_to_cache(hash.clone(), code, total_size)?;
         debug!("PUT {} {:?}", &hash, start.elapsed());
-        Ok(expanded_outputs)
+        Ok(CachedOutputs {
+            expanded_outputs,
+            files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
+            outputs_below_a_link: vec![],
+        })
     }
 
+    /// Restores and records a result fetched from a remote cache. Returns
+    /// false, discarding the artifact, when it holds a link that leaves the
+    /// output it sits in.
     #[napi]
     pub fn apply_remote_cache_results(
         &self,
         hash: String,
         result: CachedResult,
         outputs: Option<Vec<String>>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<bool> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash, &result.outputs_path
         );
         let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
-        if let Some(outputs) = outputs {
-            if outputs.len() > 0 && result.code == 0 {
-                size +=
-                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
-            };
+        if let Some(outputs) = outputs.filter(|outputs| !outputs.is_empty()) {
+            let outputs_path = Path::new(&result.outputs_path);
+            let normalized = normalize_outputs(&self.workspace_root, outputs.clone())?;
+            if let Some(link) = find_link_leaving_output(outputs_path, &normalized)? {
+                debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
+                remove_items(&[self.cache_path.join(&hash)])?;
+                return Ok(false);
+            }
+            if result.code == 0 {
+                size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
+            }
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
-        Ok(())
+        Ok(true)
     }
 
     /// Register terminal outputs that were written without a cache entry —
@@ -581,16 +669,31 @@ impl NxCache {
         Ok(())
     }
 
+    /// Restores `outputs`. Returns each file written, stamped as it is now,
+    /// when those are all the output files the workspace now holds: every
+    /// output a path, and each one that exists replaced from the cache. A
+    /// glob or a negation can leave other matching files in place.
     #[napi]
     pub fn copy_files_from_cache(
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-    ) -> anyhow::Result<i64> {
+    ) -> anyhow::Result<Option<Vec<OutputFile>>> {
+        Ok(self.restore(cached_result, outputs)?.1)
+    }
+
+    /// The bytes restored, and the files written when they are all of them.
+    fn restore(
+        &self,
+        cached_result: CachedResult,
+        outputs: Vec<String>,
+    ) -> anyhow::Result<(i64, Option<Vec<OutputFile>>)> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
-        let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
+        let literal = all_literal(&outputs);
+        let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
+        ensure_negated_outputs_kept(&self.workspace_root, &outputs, &expanded_outputs)?;
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -598,7 +701,26 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
+        let (size, written) = copy_outputs_into_workspace(
+            &self.workspace_root,
+            outputs_path,
+            &outputs,
+            &expanded_outputs,
+        )?;
+        // Stamped once the copy is done: a link can be written before the
+        // file it points to.
+        let files = stamp_all(
+            &self.workspace_root,
+            written.par_iter().map(|(_, dest)| dest),
+        );
+        let exact = literal && {
+            let mut restored = expanded_outputs;
+            let mut present = _expand_outputs(&self.workspace_root, outputs)?;
+            restored.sort();
+            present.sort();
+            restored == present
+        };
+        Ok((size, exact.then_some(files)))
     }
 
     #[napi]
@@ -625,6 +747,40 @@ impl NxCache {
         remove_items(&outdated_cache)?;
 
         Ok(())
+    }
+
+    /// Stop counting a row whose `<cacheDir>/<hash>` directory is gone as a
+    /// cache entry: `is_cache_entry` becomes FALSE and `size` the bytes of the
+    /// terminal output it still owns, which `remove_old_cache_records` collects
+    /// as for any output-only row. Nothing is deleted.
+    ///
+    /// The directory is checked again inside an immediate transaction: `put`
+    /// creates it before `record_to_cache` writes the row, and that write
+    /// waits for the lock, so a directory still missing here is not one a
+    /// concurrent `put` has just finished. Errors are logged, not returned;
+    /// the lookup has already reported the miss.
+    fn demote_stale_cache_records(&self, hashes: &[String]) {
+        trace!("Demoting {} cache records without artifacts", hashes.len());
+        let mut db = self.db.lock().unwrap();
+        let outcome = db.transaction_immediate(|conn| {
+            for hash in hashes {
+                if self.cache_path.join(hash).is_dir() {
+                    continue;
+                }
+                let terminal_output_size = metadata(self.get_task_outputs_path_internal(hash))
+                    .map(|m| m.len() as i64)
+                    .unwrap_or(0);
+                conn.execute(
+                    "UPDATE cache_outputs SET is_cache_entry = FALSE, size = ?2
+                     WHERE hash = ?1 AND is_cache_entry",
+                    params![hash, terminal_output_size],
+                )?;
+            }
+            Ok(())
+        });
+        if let Err(e) = outcome {
+            debug!("Unable to demote cache records without artifacts: {e:?}");
+        }
     }
 
     #[napi]
@@ -672,14 +828,24 @@ impl NxCache {
     }
 }
 
+/// A tenth of the filesystem that holds `cache_path`, asked of that one
+/// filesystem through its nearest existing ancestor (the cache directory may
+/// not exist yet). Listing every mounted disk instead costs, on macOS, IOKit
+/// and CacheDelete round trips per mount on the thread that is about to run
+/// tasks, and those stall while disk images attach or detach.
 #[napi]
 fn get_default_max_cache_size(cache_path: String) -> i64 {
-    let disks = Disks::new_with_refreshed_list();
-    let cache_path = PathBuf::from(cache_path);
-
-    for disk in disks.list() {
-        if cache_path.starts_with(disk.mount_point()) {
-            return (disk.total_space() as f64 * 0.1) as i64;
+    for directory in Path::new(&cache_path).ancestors() {
+        match fs4::total_space(directory) {
+            Ok(total) => return (total as f64 * 0.1) as i64,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => {
+                debug!(
+                    "Could not read the filesystem size of {}: {error}",
+                    directory.display()
+                );
+                break;
+            }
         }
     }
 
@@ -711,52 +877,6 @@ where
             }
         }
     }
-}
-
-/// Normalize declared output paths for cache use: relativize an in-workspace
-/// absolute path to the workspace root. Errors if any path resolves outside the
-/// workspace (absolute elsewhere, or relative climbing out via `..`).
-fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Result<Vec<String>> {
-    outputs
-        .into_iter()
-        .map(|output| {
-            let path = Path::new(&output);
-            let relative = if path.is_absolute() {
-                path.strip_prefix(workspace_root).map_err(|_| {
-                    anyhow::anyhow!("Cache output is outside the workspace: {}", output)
-                })?
-            } else {
-                path
-            };
-            if escapes_workspace(relative) {
-                return Err(anyhow::anyhow!(
-                    "Cache output is outside the workspace: {}",
-                    output
-                ));
-            }
-            Ok(relative.to_normalized_string())
-        })
-        .collect()
-}
-
-/// Whether a relative path climbs above its base via `..`.
-fn escapes_workspace(path: &Path) -> bool {
-    let mut depth: i32 = 0;
-    for component in path.components() {
-        match component {
-            Component::ParentDir => {
-                depth -= 1;
-                if depth < 0 {
-                    return true;
-                }
-            }
-            Component::Normal(_) => depth += 1,
-            Component::CurDir => {}
-            // A relative path shouldn't contain a root/prefix; treat as escaping.
-            Component::RootDir | Component::Prefix(_) => return true,
-        }
-    }
-    false
 }
 
 #[cfg(test)]
@@ -902,6 +1022,20 @@ mod test {
         assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
     }
 
+    #[test]
+    fn normalize_outputs_keeps_escapes_in_relative_outputs() {
+        let ws = Path::new(if cfg!(windows) {
+            r"C:\ws\root"
+        } else {
+            "/ws/root"
+        });
+        let outputs = vec![
+            r"app/\(group\)/**".to_string(),
+            r"dist/\[id\].js".to_string(),
+        ];
+        assert_eq!(normalize_outputs(ws, outputs.clone()).unwrap(), outputs);
+    }
+
     #[cfg(windows)]
     #[test]
     fn normalize_outputs_errors_on_paths_outside_workspace() {
@@ -916,5 +1050,629 @@ mod test {
         assert!(
             normalize_outputs(ws, vec!["dist".to_string(), r"..\..\escape".to_string()]).is_err()
         );
+    }
+
+    /// A cache over `db` and `cache_dir` with its workspace at `workspace`.
+    /// Two caches can share `db` (two Nx processes in one workspace) or only
+    /// `cache_dir` (two workspaces on one cache directory).
+    fn cache_with(workspace: &Path, db: &Path, cache_dir: &Path) -> NxCache {
+        create_dir_all(workspace).unwrap();
+        let db = crate::native::db::initialize::initialize_db(db).unwrap();
+        NxCache::new(
+            workspace.to_str().unwrap().to_string(),
+            cache_dir.to_str().unwrap().to_string(),
+            &External::new(Arc::new(Mutex::new(db))),
+            None,
+            None,
+        )
+        .unwrap()
+    }
+
+    /// A workspace, a cache directory and a database of its own under `temp`.
+    fn cache_in(temp: &TempDir) -> NxCache {
+        cache_with(
+            &temp.path().join("workspace"),
+            &temp.path().join("test.db"),
+            &temp.path().join("cache"),
+        )
+    }
+
+    /// `cache_outputs.hash` references `task_details`, which Nx fills in
+    /// before it stores a task.
+    fn record_task(cache: &NxCache, hash: &str) {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .execute(
+                "INSERT OR IGNORE INTO task_details (hash, project, target) VALUES (?1, 'app', 'build')",
+                params![hash],
+            )
+            .unwrap();
+    }
+
+    /// Builds one output file for `hash` in the workspace and stores it with
+    /// the terminal output `log`.
+    fn put_output(cache: &mut NxCache, hash: &str) {
+        record_task(cache, hash);
+        let output = cache.workspace_root.join("dist").join(hash);
+        create_dir_all(&output).unwrap();
+        std::fs::write(output.join("main.js"), b"built").unwrap();
+        cache
+            .put(
+                hash.to_string(),
+                "log".to_string(),
+                vec![format!("dist/{hash}")],
+                0,
+            )
+            .unwrap();
+    }
+
+    /// `(is_cache_entry, size)` of the row for `hash`, if there is one.
+    fn record_for(cache: &NxCache, hash: &str) -> Option<(bool, i64)> {
+        cache
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT is_cache_entry, size FROM cache_outputs WHERE hash = ?1",
+                params![hash],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap()
+    }
+
+    const LOG_SIZE: i64 = "log".len() as i64;
+
+    #[test]
+    fn restore_keeps_a_file_where_a_glob_match_needs_a_directory() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let source = cache.workspace_root.join("src/checkout.ts");
+        create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(&source, "source").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("src/checkout.ts")).unwrap();
+        std::fs::write(artifact.join("src/checkout.ts/x.generated.ts"), "gen").unwrap();
+
+        let result = cache.copy_files_from_cache(
+            CachedResult {
+                outputs_path: artifact.to_str().unwrap().to_string(),
+                ..Default::default()
+            },
+            vec!["src/**/*.generated.ts".to_string()],
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), "source");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_replaces_a_linked_glob_root_without_reading_through_it() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        std::fs::write(elsewhere.join("a"), "outside").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist")).unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("dist/a")).unwrap();
+        std::fs::write(artifact.join("dist/a/main.js"), "built").unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/**/*.js".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").is_symlink());
+        assert_eq!(
+            std::fs::read_to_string(cache.workspace_root.join("dist/a/main.js")).unwrap(),
+            "built"
+        );
+        assert_eq!(
+            std::fs::read_to_string(elsewhere.join("a")).unwrap(),
+            "outside"
+        );
+    }
+
+    #[test]
+    fn get_is_a_miss_once_the_artifact_directory_is_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert!(Path::new(&hit.outputs_path).is_dir());
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
+        assert!(stored_size > LOG_SIZE);
+
+        // The cache directory was emptied, moved or repointed; the database
+        // still holds the row.
+        std::fs::remove_dir_all(&hit.outputs_path).unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        // The row now counts only the terminal output it still owns, which
+        // stays on disk for `remove_old_cache_records`.
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), LOG_SIZE);
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+
+        // The task reruns and its next put is a hit again.
+        put_output(&mut cache, "1");
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
+    }
+
+    #[test]
+    fn get_batch_demotes_only_the_records_whose_artifacts_are_gone() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        put_output(&mut cache, "2");
+        let (_, stored_size) = record_for(&cache, "1").unwrap();
+        std::fs::remove_dir_all(cache.cache_path.join("2")).unwrap();
+
+        let results = cache
+            .get_batch(vec!["1".to_string(), "2".to_string(), "3".to_string()])
+            .unwrap();
+
+        assert!(results[0].is_some());
+        assert!(results[1].is_none());
+        assert!(results[2].is_none());
+        assert_eq!(record_for(&cache, "1"), Some((true, stored_size)));
+        assert_eq!(record_for(&cache, "2"), Some((false, LOG_SIZE)));
+        assert_eq!(record_for(&cache, "3"), None);
+        assert!(cache.get_task_outputs_path_internal("1").is_file());
+        assert!(cache.get_task_outputs_path_internal("2").is_file());
+        assert_eq!(cache.get_cache_size().unwrap(), stored_size + LOG_SIZE);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn put_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        record_task(&cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        create_dir_all(cache.workspace_root.join("dist")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        let stored = cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(stored.expanded_outputs.is_empty());
+        assert!(stored.files.is_empty());
+        assert_eq!(stored.outputs_below_a_link, ["dist/packages/api"]);
+        assert!(!cache.cache_path.join("1").exists());
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+
+        // A linked output is stored as the link, trailing `/` or not.
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert_eq!(
+            cache
+                .cache_path
+                .join("1/dist/packages")
+                .read_link()
+                .unwrap(),
+            elsewhere
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn put_through_a_link_replaces_an_earlier_entry_with_a_miss() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(&artifact).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, artifact.join("dist")).unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/api".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").exists());
+    }
+
+    #[test]
+    fn a_task_with_no_outputs_still_hits() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        // `put` creates the directory whether or not anything is copied into
+        // it, so the directory check cannot turn these into misses.
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), vec![], 0)
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_some());
+        assert!(cache.get_batch(vec!["1".to_string()]).unwrap()[0].is_some());
+    }
+
+    /// `get` and `get_batch` both check the directory in `build_cached_result`
+    /// and then call `demote_stale_cache_records`. Runs a `put` from `other`
+    /// between the two, as a second Nx process would.
+    fn put_between_check_and_cleanup(stale: &mut NxCache, other: &mut NxCache, hash: &str) {
+        let (code, size) = stale.fetch_cache_rows(&[hash.to_string()]).unwrap()[hash];
+        assert!(stale.build_cached_result(hash, code, size).is_none());
+        put_output(other, hash);
+        stale.demote_stale_cache_records(&[hash.to_string()]);
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_in_a_shared_database() {
+        let temp = TempDir::new().unwrap();
+        let workspace = temp.path().join("workspace");
+        let db = temp.path().join("test.db");
+        let cache_dir = temp.path().join("cache");
+        // Two Nx processes in one workspace: two connections to one database.
+        let mut a = cache_with(&workspace, &db, &cache_dir);
+        let mut b = cache_with(&workspace, &db, &cache_dir);
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row is still a cache entry, and both processes hit it with B's
+        // terminal output.
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    #[test]
+    fn cleanup_keeps_a_result_stored_meanwhile_through_a_separate_database() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.path().join("cache");
+        // Two workspaces sharing one cache directory, a database each.
+        let mut a = cache_with(
+            &temp.path().join("a/workspace"),
+            &temp.path().join("a/test.db"),
+            &cache_dir,
+        );
+        let mut b = cache_with(
+            &temp.path().join("b/workspace"),
+            &temp.path().join("b/test.db"),
+            &cache_dir,
+        );
+        put_output(&mut a, "1");
+        let (_, stored_size) = record_for(&a, "1").unwrap();
+        std::fs::remove_dir_all(cache_dir.join("1")).unwrap();
+
+        put_between_check_and_cleanup(&mut a, &mut b, "1");
+
+        // B's row, directory and terminal output are untouched, and A's row
+        // describes a directory that exists again.
+        assert_eq!(record_for(&b, "1"), Some((true, stored_size)));
+        assert!(cache_dir.join("terminalOutputs").join("1").is_file());
+        let hit = b.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(hit.terminal_output.as_deref(), Some("log"));
+        assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
+        assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    /// A remote artifact for `hash` holding `dist/app/main.js`, after `plant`
+    /// adds to its `dist/app`.
+    #[cfg(unix)]
+    fn remote_artifact(cache: &NxCache, hash: &str, plant: impl FnOnce(&Path)) -> CachedResult {
+        record_task(cache, hash);
+        let outputs_path = cache.cache_path.join(hash);
+        let app = outputs_path.join("dist/app");
+        create_dir_all(&app).unwrap();
+        std::fs::write(app.join("main.js"), b"built").unwrap();
+        plant(&app);
+        CachedResult {
+            code: 0,
+            terminal_output: Some("log".to_string()),
+            outputs_path: outputs_path.to_str().unwrap().to_string(),
+            size: None,
+        }
+    }
+
+    #[cfg(unix)]
+    fn apply_remote(cache: &NxCache, hash: &str, result: CachedResult) -> bool {
+        apply_remote_with_output(cache, hash, result, "dist/app")
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_output(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        output: &str,
+    ) -> bool {
+        apply_remote_with_outputs(cache, hash, result, &[output])
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_outputs(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        outputs: &[&str],
+    ) -> bool {
+        let outputs = outputs.iter().map(|output| output.to_string()).collect();
+        cache
+            .apply_remote_cache_results(hash.to_string(), result, Some(outputs))
+            .unwrap()
+    }
+
+    /// Output sets whose roots are `dist/app` or one of its ancestors.
+    #[cfg(unix)]
+    const REMOTE_OUTPUTS: [&[&str]; 4] = [
+        &["dist/app"],
+        &["dist/app/**"],
+        &["dist/app/**", "!dist/app/cache/**"],
+        &["dist/**/*.js"],
+    ];
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_with_links_inside_its_output_is_applied() {
+        use std::os::unix::fs::symlink;
+
+        for outputs in REMOTE_OUTPUTS {
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("main.js", app.join("link.js")).unwrap();
+                symlink("../main.js", app.join("sub/up.js")).unwrap();
+            });
+
+            assert!(
+                apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{outputs:?}"
+            );
+            let app = cache.workspace_root.join("dist/app");
+            assert_eq!(std::fs::read(app.join("link.js")).unwrap(), b"built");
+            assert_eq!(std::fs::read(app.join("sub/up.js")).unwrap(), b"built");
+            assert!(record_for(&cache, "1").is_some(), "{outputs:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_a_glob_output_root() {
+        use std::os::unix::fs::symlink;
+
+        let cases: [(&[&str], fn(&Path)); 3] = [
+            (&["dist/app/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/app/**", "!dist/app/cache/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/**/*.js"], |app| {
+                symlink("../../other.js", app.join("out.js")).unwrap();
+            }),
+        ];
+
+        for (outputs, plant) in cases {
+            let name = format!("{outputs:?}");
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", plant);
+
+            assert!(
+                !apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{name}"
+            );
+            assert_discarded(&cache, &name);
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_its_output() {
+        use std::os::unix::fs::symlink;
+
+        let cases: [(&str, fn(&Path)); 5] = [
+            ("output itself", |app| {
+                std::fs::remove_dir_all(app).unwrap();
+                symlink("../..", app).unwrap();
+            }),
+            ("absolute", |app| symlink("/tmp", app.join("abs")).unwrap()),
+            ("to the output root", |app| {
+                symlink(".", app.join("self")).unwrap()
+            }),
+            ("nested parent", |app| {
+                create_dir_all(app.join("a/b")).unwrap();
+                symlink("../../../other", app.join("a/b/up")).unwrap();
+            }),
+            ("through another link", |app| {
+                create_dir_all(app.join("a/b/c")).unwrap();
+                create_dir_all(app.join("a/x")).unwrap();
+                symlink("../../x", app.join("a/b/c/l")).unwrap();
+                symlink("l/../../..", app.join("a/b/c/esc")).unwrap();
+            }),
+        ];
+
+        // A failed result is recorded without a restore, but a later local
+        // hit would restore it.
+        for code in [0, 1] {
+            for (name, plant) in cases {
+                let name = format!("{name} (code {code})");
+                let temp = TempDir::new().unwrap();
+                let cache = cache_in(&temp);
+                let result = CachedResult {
+                    code,
+                    ..remote_artifact(&cache, "1", plant)
+                };
+
+                assert!(!apply_remote(&cache, "1", result), "{name}");
+                assert_discarded(&cache, &name);
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_an_output_with_a_trailing_slash_is_a_link() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        let result = remote_artifact(&cache, "1", |app: &Path| {
+            std::fs::remove_dir_all(app).unwrap();
+            symlink(&elsewhere, app).unwrap();
+        });
+
+        assert!(!apply_remote_with_output(&cache, "1", result, "dist/app/"));
+        assert_discarded(&cache, "trailing slash");
+    }
+
+    #[cfg(unix)]
+    fn assert_discarded(cache: &NxCache, name: &str) {
+        assert!(
+            std::fs::symlink_metadata(cache.workspace_root.join("dist")).is_err(),
+            "{name}: nothing is restored"
+        );
+        assert!(
+            !cache.cache_path.join("1").exists(),
+            "{name}: artifact removed"
+        );
+        assert_eq!(record_for(cache, "1"), None, "{name}: not recorded");
+    }
+
+    const NEXT_OUTPUTS: [&str; 2] = ["web/.next/**", "!web/.next/cache/**"];
+
+    fn next_outputs() -> Vec<String> {
+        NEXT_OUTPUTS.iter().map(|s| s.to_string()).collect()
+    }
+
+    /// Stores a build of `web` whose `.next/cache` is excluded, and returns
+    /// the cache with its artifact directory.
+    fn put_next_build(temp: &TempDir) -> (NxCache, PathBuf) {
+        let mut cache = cache_in(temp);
+        let next = cache.workspace_root.join("web/.next");
+        create_dir_all(next.join("cache/webpack")).unwrap();
+        write(next.join("BUILD_ID"), b"1").unwrap();
+        write(next.join("cache/webpack/0.pack"), b"local").unwrap();
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), next_outputs(), 0)
+            .unwrap();
+        let artifact = cache.cache_path.join("1");
+        (cache, artifact)
+    }
+
+    fn restore_next_build(cache: &mut NxCache) -> anyhow::Result<()> {
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        cache.copy_files_from_cache(hit, next_outputs()).map(|_| ())
+    }
+
+    #[test]
+    fn put_and_restore_leave_negated_outputs_alone() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
+        assert!(!artifact.join("web/.next/cache").exists());
+
+        create_dir_all(artifact.join("web/.next/cache/webpack")).unwrap();
+        write(artifact.join("web/.next/cache/webpack/other.pack"), b"x").unwrap();
+        restore_next_build(&mut cache).unwrap();
+
+        let webpack = cache.workspace_root.join("web/.next/cache/webpack");
+        assert!(webpack.join("0.pack").is_file());
+        assert!(!webpack.join("other.pack").exists());
+    }
+
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_file() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        write(artifact.join("web/.next/cache"), b"file").unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_link() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        std::os::unix::fs::symlink("elsewhere", artifact.join("web/.next/cache")).unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[test]
+    fn restore_replaces_a_directory_without_negated_outputs() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        let id = cache.workspace_root.join("web/.next/BUILD_ID");
+        std::fs::remove_file(&id).unwrap();
+        create_dir_all(id.join("stale")).unwrap();
+        write(id.join("stale/file"), b"x").unwrap();
+
+        restore_next_build(&mut cache).unwrap();
+        assert_eq!(std::fs::read(&id).unwrap(), b"1");
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
     }
 }

@@ -33,7 +33,7 @@ If you haven't already connected to Nx Cloud, run the following command:
 npx nx@latest connect
 ```
 
-{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=website&utm_campaign=self-healing-ci" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+{% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=self-healing-ci" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
 
 For the full pipeline walkthrough, see [Setting Up CI](/docs/getting-started/setup-ci).
 
@@ -41,17 +41,17 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 ### Configure your CI pipeline
 
-Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx start-nx-agents` and kick off your `nx run-many` or `nx affected` commands.
+Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx-cloud start-workers` and kick off your `nx run-many` or `nx affected` commands.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
 
-These examples distribute tasks across Nx Agents, so they also need a `.nx/ci-config.yaml` file at the workspace root.
+These examples distribute tasks across Workers, so they also need a `.nx/ci-config.yaml` file at the workspace root.
 See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) for every key you can set.
 
 ```yaml
 # .nx/ci-config.yaml
 dte:
-  distribute-on: 3 linux-medium-js
+  distribute-on: 3 linux-large-js
 lifecycle:
   stop-after:
     - lint
@@ -71,12 +71,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      # Your existing steps which check out the repo, start-nx-agents, install
+      # Your existing steps which check out the repo, start-workers, install
       # dependencies, etc.
       # These are just illustrative examples...
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
-      - run: npx nx start-nx-agents
+      - run: npx nx-cloud start-workers
       - run: npm ci
       - run: npx nx affected -t lint test build
 
@@ -97,9 +97,9 @@ stages:
 main:
   stage: build
   script:
-    # Your existing steps which check out the repo, start-nx-agents, install
+    # Your existing steps which check out the repo, start-workers, install
     # dependencies, etc.
-    - npx nx start-nx-agents
+    - npx nx-cloud start-workers
     - npm ci
     - npx nx affected -t lint test build
   # NEW: Add this section at the end of your job if you don't
@@ -123,13 +123,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  # Your existing steps which check out the repo, start-nx-agents, install
+  # Your existing steps which check out the repo, start-workers, install
   # dependencies, etc.
   # These are just illustrative examples...
   - task: NodeTool@0
     inputs:
       versionSpec: '22.x'
-  - script: npx nx start-nx-agents
+  - script: npx nx-cloud start-workers
   - script: npm ci
   - script: npx nx affected -t lint test build
 
@@ -152,10 +152,10 @@ pipelines:
       - step:
           name: CI
           script:
-            # Your existing steps which start-nx-agents, install
+            # Your existing steps which start-workers, install
             # dependencies, etc.
             # These are just illustrative examples...
-            - npx nx start-nx-agents
+            - npx nx-cloud start-workers
             - npm ci
             - npx nx affected -t lint test build
           after-script:
@@ -170,10 +170,6 @@ pipelines:
 {% /tabs %}
 
 > NOTE: If all tasks succeed then the `fix-ci` command becomes a no-op automatically, so that is why "always" is recommended.
-
-{% aside type="note" title="Bringing your own compute?" %}
-Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). When you run the agents on your own CI, Self-Healing CI works the same way. Add `nx fix-ci` to both the **main job** (the orchestrator) and each **agent job** with the appropriate "always run" condition. See the [bring your own compute guide](/docs/kb/bring-your-own-compute) for complete examples.
-{% /aside %}
 
 ## Configuring self-healing CI
 
@@ -402,6 +398,16 @@ After your CI runs, navigate to the CIPE, then the **Configurations** tab to see
 - What the final, effective configuration was
 
 ---
+
+## Related guides
+
+{% cardgrid %}
+
+{% linkcard title="Enable AI features" description="Turn on AI features for your Nx Cloud organization" href="/docs/kb/enable-ai-features" /%}
+
+{% linkcard title="Bring your own AI API key" description="Use your own model provider key for self-healing CI" href="/docs/kb/bring-your-own-ai-api-key" /%}
+
+{% /cardgrid %}
 
 ## Learn more
 

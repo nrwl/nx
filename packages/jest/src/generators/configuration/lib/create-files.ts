@@ -72,6 +72,10 @@ export function createFiles(
     options.isTsSolutionSetup &&
     transformer === 'ts-jest' &&
     moduleResolution === 'node10';
+  // ts-jest drops `composite` and, with `isolatedModules`, compiles each test
+  // file alone. TypeScript 6 then fails with TS5011 unless `rootDir` is set.
+  const rootDir =
+    options.isTsSolutionSetup && transformer === 'ts-jest' ? '.' : undefined;
 
   generateFiles(tree, join(__dirname, commonFilesFolder), projectConfig.root, {
     tmpl: '',
@@ -91,6 +95,7 @@ export function createFiles(
     outDir: options.isTsSolutionSetup
       ? `./out-tsc/jest`
       : `${rootOffset}dist/out-tsc`,
+    rootDir,
     module: usesTsJestModuleSettings ? 'commonjs' : undefined,
     moduleResolution,
     isolatedModules,

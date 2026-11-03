@@ -16,7 +16,7 @@ public static partial class TargetBuilder
         bool isTest,
         bool isExe,
         List<PackageReference> packageRefs,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -28,8 +28,8 @@ public static partial class TargetBuilder
         // Determine the appropriate input for production builds
         var productionInput = GetProductionInput(nxJson);
 
-        AddBuildTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
-        AddBuildReleaseTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+        AddBuildTarget(targets, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+        AddBuildReleaseTarget(targets, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
 
         if (isTest)
         {
@@ -40,18 +40,18 @@ public static partial class TargetBuilder
         // Inputs array, and adding one here would narrow Nx's default-input fallback should a
         // user enable caching on them later.
         AddRestoreTarget(targets, fileName, options);
-        AddCleanTarget(targets, fileName, isTest, options);
+        AddCleanTarget(targets, fileName, options);
         AddWatchTarget(targets, fileName, options);
 
         if (isExe)
         {
-            AddPublishTarget(targets, projectName, fileName, isTest, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+            AddPublishTarget(targets, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
             AddRunTarget(targets, fileName, options);
         }
 
         if (!isExe && !isTest)
         {
-            AddPackTarget(targets, projectName, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
+            AddPackTarget(targets, fileName, properties, projectDirectory, workspaceRoot, options, productionInput, directoryBuildInputs);
         }
 
         return targets;
@@ -69,22 +69,5 @@ public static partial class TargetBuilder
         }
 
         return "default";
-    }
-
-    /// <summary>
-    /// Copies <paramref name="properties"/> with <c>Configuration</c> set to
-    /// <paramref name="configuration"/>, preserving the source comparer. The
-    /// <c>Dictionary</c> copy constructor silently falls back to an ordinal
-    /// comparer, which would hide any property MSBuild reports under a
-    /// non-canonical spelling from every helper reading the copy.
-    /// </summary>
-    private static Dictionary<string, string> WithConfiguration(
-        Dictionary<string, string> properties,
-        string configuration)
-    {
-        return new Dictionary<string, string>(properties, properties.Comparer)
-        {
-            ["Configuration"] = configuration
-        };
     }
 }

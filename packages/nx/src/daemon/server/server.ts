@@ -51,6 +51,14 @@ import {
   isHandleGetRegisteredSyncGeneratorsMessage,
 } from '../message-types/get-registered-sync-generators';
 import {
+  GET_PLUGIN_CAPABILITIES,
+  isHandleGetPluginCapabilitiesMessage,
+} from '../message-types/get-plugin-capabilities';
+import {
+  SELECT_AFFECTED_TASKS,
+  isHandleSelectAffectedTasksMessage,
+} from '../message-types/select-affected-tasks';
+import {
   GET_SYNC_GENERATOR_CHANGES,
   isHandleGetSyncGeneratorChangesMessage,
 } from '../message-types/get-sync-generator-changes';
@@ -113,6 +121,8 @@ import { handleForceShutdown } from './handle-force-shutdown';
 import { handleClientEnv } from './handle-client-env';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
 import { handleGetRegisteredSyncGenerators } from './handle-get-registered-sync-generators';
+import { handleGetPluginCapabilities } from './handle-get-plugin-capabilities';
+import { handleSelectAffectedTasks } from './handle-select-affected-tasks';
 import { handleGetSyncGeneratorChanges } from './handle-get-sync-generator-changes';
 import { handleGlob, handleMultiGlob } from './handle-glob';
 import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
@@ -140,9 +150,9 @@ import {
 } from './handle-tasks-execution-hooks';
 import { handleUpdateWorkspaceContext } from './handle-update-workspace-context';
 import {
-  getOutputsWatcherTerminalError,
-  handleOutputsChanges,
-} from './handle-outputs-changes';
+  getWatchTerminalError,
+  handleWatchEvents,
+} from './handle-watch-events';
 import {
   registerProjectGraphRecomputationListener,
   routeAppliedChanges,
@@ -179,6 +189,7 @@ import {
   subscribeToWorkspaceChanges,
   type WorkspaceChangesListener,
 } from '../../utils/workspace-context';
+import { isCI } from '../../utils/is-ci';
 
 let workspaceWatcherError: Error | undefined;
 
@@ -242,7 +253,7 @@ const server = createServer(async (socket) => {
 });
 registerProcessTerminationListeners();
 
-async function handleMessage(socket: Socket, data: Buffer) {
+export async function handleMessage(socket: Socket, data: Buffer) {
   if (workspaceWatcherError) {
     await respondWithErrorAndExit(
       socket,
@@ -250,12 +261,12 @@ async function handleMessage(socket: Socket, data: Buffer) {
       workspaceWatcherError
     );
   }
-  const outputsWatcherTerminalError = getOutputsWatcherTerminalError();
-  if (outputsWatcherTerminalError) {
+  const watchTerminalError = getWatchTerminalError();
+  if (watchTerminalError) {
     await respondWithErrorAndExit(
       socket,
       `File watcher error in the workspace '${workspaceRoot}'.`,
-      outputsWatcherTerminalError
+      watchTerminalError
     );
   }
 
@@ -328,11 +339,14 @@ async function handleMessage(socket: Socket, data: Buffer) {
       mode
     );
   } else if (payload.type === 'PROCESS_IN_BACKGROUND') {
+    // The client names the module to run, so its failure says nothing about
+    // the daemon's health. Respond, but stay alive for other clients.
     await handleResult(
       socket,
       'PROCESS_IN_BACKGROUND',
       () => handleProcessInBackground(payload),
-      mode
+      mode,
+      respondWithError
     );
   } else if (payload.type === 'RECORD_OUTPUTS_HASH_BATCH') {
     await handleResult(
@@ -357,6 +371,22 @@ async function handleMessage(socket: Socket, data: Buffer) {
     );
   } else if (payload.type === 'REGISTER_FILE_WATCHER') {
     registeredFileWatcherSockets.push({ socket, config: payload.config });
+    // A client must not announce readiness until this socket is subscribed.
+    // Older clients do not request an acknowledgement and expect only changes.
+    if (payload.registrationId) {
+      await handleResult(
+        socket,
+        'REGISTER_FILE_WATCHER',
+        async () => ({
+          description: 'File watcher registered',
+          response: {
+            type: 'FILE_WATCHER_REGISTERED',
+            registrationId: payload.registrationId,
+          },
+        }),
+        mode
+      );
+    }
   } else if (isRegisterProjectGraphListenerMessage(payload)) {
     registeredProjectGraphListenerSockets.push(socket);
   } else if (isHandleGlobMessage(payload)) {
@@ -457,6 +487,20 @@ async function handleMessage(socket: Socket, data: Buffer) {
       () => handleGetRegisteredSyncGenerators(),
       mode
     );
+  } else if (isHandleGetPluginCapabilitiesMessage(payload)) {
+    await handleResult(
+      socket,
+      GET_PLUGIN_CAPABILITIES,
+      () => handleGetPluginCapabilities(),
+      mode
+    );
+  } else if (isHandleSelectAffectedTasksMessage(payload)) {
+    await handleResult(
+      socket,
+      SELECT_AFFECTED_TASKS,
+      () => handleSelectAffectedTasks(payload.request, socket),
+      mode
+    );
   } else if (isHandleUpdateWorkspaceContextMessage(payload)) {
     await handleResult(
       socket,
@@ -529,7 +573,8 @@ export async function handleResult(
   socket: Socket,
   type: string,
   hrFn: () => Promise<HandlerResult>,
-  mode: 'json' | 'v8'
+  mode: 'json' | 'v8',
+  respondToError = respondWithErrorAndExit
 ) {
   let hr: HandlerResult;
   const startMark = new Date();
@@ -540,7 +585,7 @@ export async function handleResult(
   }
   const doneHandlingMark = new Date();
   if (hr.error) {
-    await respondWithErrorAndExit(socket, hr.description, hr.error);
+    await respondToError(socket, hr.description, hr.error);
   } else {
     serverLogger.log(
       `Serializing response for ${type} message in ${mode} mode`
@@ -787,7 +832,7 @@ export async function startServer(): Promise<Server> {
               return;
             }
             if (err || events?.length) {
-              handleOutputsChanges(err, events);
+              handleWatchEvents(err, events);
             }
           });
 
@@ -799,15 +844,16 @@ export async function startServer(): Promise<Server> {
           registerFileChangeListener(clearSyncGeneratorsCache);
           scheduleInitialProjectGraphComputation();
 
-          // Kick off Nx Console check in background to prime the cache
-          handleGetNxConsoleStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
-
-          // Kick off AI agents outdated check in background to prime the cache
-          handleGetConfigureAiAgentsStatus().catch(() => {
-            // Ignore errors, this is a background operation
-          });
+          // Prime the Nx Console and AI agents caches in the background. Both
+          // pull nx@latest, and the CLI never shows their results in CI.
+          if (!isCI()) {
+            handleGetNxConsoleStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+            handleGetConfigureAiAgentsStatus().catch(() => {
+              // Ignore errors, this is a background operation
+            });
+          }
 
           return resolve(server);
         } catch (err) {

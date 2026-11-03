@@ -36,6 +36,19 @@
       "requires": {
         "@rspack/core": ">=2.0.0"
       }
+    },
+    "remove-deprecated-executors": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts targets using the removed `@nx/rspack` executors to inferred tasks; an AI prompt finishes the targets the converter cannot convert safely and validates the project graph.",
+      "implementation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors",
+      "prompt": "./dist/src/migrations/update-24-0-0/finish-inferred-conversion.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/remove-deprecated-executors.md"
+    },
+    "update-24-0-0-migrate-compose-plugins": {
+      "version": "24.0.0-beta.3",
+      "description": "Converts Rspack configs that use the removed `composePlugins`, `withNx`, `withWeb` and `withReact` helpers with `@nx/rspack:convert-config-to-rspack-plugin`, then hands an AI prompt the projects it could not convert and the `.old` configs it left behind.",
+      "implementation": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins",
+      "prompt": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins.md"
     }
   },
   "packageJsonUpdates": {

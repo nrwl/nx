@@ -1,4 +1,6 @@
-import { renameSync, rmSync } from 'node:fs';
+import { mkdtempSync, realpathSync, renameSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   cleanupProject,
   directoryExists,
@@ -62,6 +64,15 @@ function overrideEnv(entries: Record<string, string | undefined>): () => void {
   );
   applyEnv(Object.entries(entries));
   return () => applyEnv(previous);
+}
+
+function withSharedBaseDisabled(callback: () => void): void {
+  const restoreEnv = overrideEnv({ NX_E2E_SKIP_SHARED_BASE: 'true' });
+  try {
+    callback();
+  } finally {
+    restoreEnv();
+  }
 }
 
 /**
@@ -163,7 +174,13 @@ function createYarnBerryProject(): void {
   }
   try {
     activateYarn(yarnBerryVersion);
-    newProject({ packageManager: 'yarn', packages: [] });
+    withSharedBaseDisabled(() =>
+      newProject({
+        keepBackup: true,
+        packageManager: 'yarn',
+        packages: [],
+      })
+    );
   } finally {
     rmSync(backup, { recursive: true, force: true });
     if (directoryExists(classicBackup)) {
@@ -193,12 +210,31 @@ suite('migrate registry configuration', () => {
     const workspaceFile = 'pnpm-workspace.yaml';
     let restoreEnv: () => void;
     let pristineWorkspaceFile: string;
+    let globalStore: string;
 
     beforeAll(() => {
       // PR runs pin the whole suite to npm, and the configuration under test is
       // pnpm's.
       process.env.SELECTED_PM = 'pnpm';
-      newProject({ packageManager: 'pnpm', packages: [] });
+      newProject({
+        keepBackup: true,
+        packageManager: 'pnpm',
+        packages: [],
+      });
+      // migrate must read installed versions through node_modules links that
+      // point outside the workspace.
+      globalStore = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-migrate-registry-store-'))
+      );
+      updateFile(
+        workspaceFile,
+        `${readPristine(workspaceFile)}enableGlobalVirtualStore: true\nstoreDir: ${globalStore}\n`
+      );
+      rmSync(tmpProjPath('node_modules'), { recursive: true, force: true });
+      runCommand('pnpm install', { env: corepackEnv, failOnError: true });
+      expect(realpathSync(tmpProjPath('node_modules/nx'))).toContain(
+        globalStore
+      );
       pinNpmrcToUnreachableRegistry();
       pristineWorkspaceFile = readPristine(workspaceFile);
 
@@ -210,6 +246,9 @@ suite('migrate registry configuration', () => {
     afterAll(() => {
       restoreEnv?.();
       cleanupProject();
+      if (globalStore) {
+        rmSync(globalStore, { recursive: true, force: true });
+      }
     });
 
     const declareRegistry = (registry: string) =>
@@ -265,7 +304,13 @@ suite('migrate registry configuration', () => {
     beforeAll(() => {
       process.env.SELECTED_PM = 'yarn';
       activateYarn(yarnClassicVersion);
-      newProject({ packageManager: 'yarn', packages: [] });
+      withSharedBaseDisabled(() =>
+        newProject({
+          keepBackup: true,
+          packageManager: 'yarn',
+          packages: [],
+        })
+      );
       pinPackageManager(`yarn@${yarnClassicVersion}`);
       pinNpmrcToUnreachableRegistry();
       pristineYarnrc = readPristine('.yarnrc');
@@ -345,7 +390,11 @@ suite('migrate registry configuration', () => {
     // which the suite-wide timeout does not cover.
     beforeAll(() => {
       process.env.SELECTED_PM = 'bun';
-      newProject({ packageManager: 'bun', packages: [scopedPackage] });
+      newProject({
+        keepBackup: true,
+        packageManager: 'bun',
+        packages: [scopedPackage],
+      });
       pinNpmrcToUnreachableRegistry();
       pristineBunfig = readPristine(bunfigFile);
 

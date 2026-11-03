@@ -1,0 +1,4 @@
+{
+  "name": "dev.nx.maven:nx-maven-parent",
+  "implicitDependencies": ["!@nx/nx-source"]
+}

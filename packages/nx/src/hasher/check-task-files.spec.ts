@@ -445,7 +445,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['dep:build'],
+          'myproj:build': [{ id: 'dep:build' }],
           'dep:build': [],
         },
         continuousDependencies: {},
@@ -502,7 +502,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['dep:build'],
+          'myproj:build': [{ id: 'dep:build' }],
           'dep:build': [],
         },
         continuousDependencies: {},
@@ -559,7 +559,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['dep:build'],
+          'myproj:build': [{ id: 'dep:build' }],
           'dep:build': [],
         },
         continuousDependencies: {},
@@ -604,7 +604,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['dep:build'],
+          'myproj:build': [{ id: 'dep:build' }],
           'dep:build': [],
         },
         continuousDependencies: {},
@@ -655,8 +655,8 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['mid:build'],
-          'mid:build': ['deep:build'],
+          'myproj:build': [{ id: 'mid:build' }],
+          'mid:build': [{ id: 'deep:build' }],
           'deep:build': [],
         },
         continuousDependencies: {},
@@ -713,8 +713,8 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
           },
         },
         dependencies: {
-          'myproj:build': ['mid:build'],
-          'mid:build': ['deep:build'],
+          'myproj:build': [{ id: 'mid:build' }],
+          'mid:build': [{ id: 'deep:build' }],
           'deep:build': [],
         },
         continuousDependencies: {},

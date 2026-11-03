@@ -8,10 +8,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './add-trust-proxy-headers';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
-  formatFiles: jest.fn(),
+  formatFiles: vi.fn(),
 }));
 
 const TODO_COMMENT =
@@ -95,19 +95,44 @@ describe('add-trust-proxy-headers migration', () => {
     `);
   });
 
-  it('should not modify an engine that already sets trustProxyHeaders', async () => {
+  it('should add trustProxyHeaders with the parentheses to an engine created without them', async () => {
     addProject('app1', { name: 'app1', root: 'apps/app1' }, [
       'npm:@angular/ssr',
     ]);
-    const input =
-      `import { AngularAppEngine } from '@angular/ssr';\n` +
-      `const angularApp = new AngularAppEngine({\n  trustProxyHeaders: true,\n});\n`;
-    tree.write('apps/app1/server.ts', input);
+    tree.write(
+      'apps/app1/server.ts',
+      `import { AngularAppEngine } from '@angular/ssr';\nconst angularApp = new AngularAppEngine;\n`
+    );
 
     await migration(tree);
 
-    expect(tree.read('apps/app1/server.ts', 'utf-8')).toBe(input);
+    const content = tree.read('apps/app1/server.ts', 'utf-8');
+    expect(content).toMatchInlineSnapshot(`
+      "import { AngularAppEngine } from '@angular/ssr';
+      const angularApp = new AngularAppEngine({
+        // TODO: This is a security-sensitive option. Remove if not needed. For more information, see https://angular.dev/best-practices/security#configuring-trusted-proxy-headers
+        trustProxyHeaders: ['x-forwarded-host', 'x-forwarded-proto'],
+      });
+      "
+    `);
   });
+
+  it.each([`{\n  trustProxyHeaders: true,\n}`, `{ trustProxyHeaders }`])(
+    'should not modify an engine that already sets trustProxyHeaders (%s)',
+    async (options) => {
+      addProject('app1', { name: 'app1', root: 'apps/app1' }, [
+        'npm:@angular/ssr',
+      ]);
+      const input =
+        `import { AngularAppEngine } from '@angular/ssr';\n` +
+        `const angularApp = new AngularAppEngine(${options});\n`;
+      tree.write('apps/app1/server.ts', input);
+
+      await migration(tree);
+
+      expect(tree.read('apps/app1/server.ts', 'utf-8')).toBe(input);
+    }
+  );
 
   it('should be idempotent when the TODO comment is already present', async () => {
     addProject('app1', { name: 'app1', root: 'apps/app1' }, [

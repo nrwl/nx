@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // Exists so vite resolves the files here against this leaf config. Without
+  // it the nearest tsconfig is the root solution file, whose `references` vite
+  // then walks, reading all ~114 project tsconfigs on every test run.
+  // Nothing builds this directory, hence no emit and no composite.
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "noEmit": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["**/*.mts"]
+}

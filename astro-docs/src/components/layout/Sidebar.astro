@@ -18,6 +18,37 @@ function hasCurrentPage(entries: SidebarEntry[]): boolean {
   })
 }
 
+// Same label-to-slug mapping as Breadcrumbs and SidebarGroupCards
+function slugify(label: string): string {
+  return label
+    .replace(/\.NET/g, 'dotnet')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// Group hubs are hidden from the sidebar, so no link is current on them.
+// Match the group whose label-slug path is the page URL instead, and return
+// it with its ancestors so they can be opened.
+function findGroupPath(
+  entries: SidebarEntry[],
+  path: string,
+  slugs: string[] = []
+): SidebarEntry[] {
+  for (const entry of entries) {
+    if (entry.type !== 'group') continue
+    const groupSlugs = [...slugs, slugify(entry.label)]
+    if (`/docs/${groupSlugs.join('/')}` === path) return [entry]
+    const match = findGroupPath(entry.entries, path, groupSlugs)
+    if (match.length > 0) return [entry, ...match]
+  }
+  return []
+}
+
+const currentGroupPath = hasCurrentPage(sidebar)
+  ? []
+  : findGroupPath(sidebar, Astro.url.pathname.replace(/\/$/, ''))
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 // For each tab, resolve its groups from the sidebar using the tab's group labels.
@@ -33,7 +64,10 @@ const tabs = sidebarTabs.map((config) => {
   // Single-group tabs: unwrap the top-level group to avoid redundant heading
   const isSingleGroup = groups.length === 1 && groups[0].type === 'group'
   const entries: SidebarEntry[] = isSingleGroup ? (groups[0] as any).entries : groups
-  const active = hasCurrentPage(groups)
+  const active =
+    currentGroupPath.length > 0
+      ? groups.includes(currentGroupPath[0])
+      : hasCurrentPage(groups)
   return { ...config, entries, active, href }
 })
 
@@ -61,7 +95,7 @@ const anyActive = tabs.some((t) => t.active)
                     tabId={tab.id}
                     active={anyActive ? tab.active : false}
                 >
-                    <SidebarSublist sublist={tab.entries} />
+                    <SidebarSublist sublist={tab.entries} currentGroupPath={currentGroupPath} />
                 </SidebarTabPanel>
             ))}
         </TabbedSidebar>
@@ -107,5 +141,14 @@ const anyActive = tabs.some((t) => t.active)
 
     .sidebar-wrapper :global(details[open] summary .group-label) {
         color: var(--sl-color-text-accent);
+    }
+
+    .sidebar-wrapper :global(summary[aria-current=page]:not(:hover)) {
+        background-color: transparent;
+    }
+
+    .sidebar-wrapper :global(summary[aria-current=page] .group-label .large) {
+        color: var(--sl-color-text-accent);
+        font-weight: var(--font-weight-semibold);
     }
 </style>

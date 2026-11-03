@@ -3,10 +3,12 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::disk_expansion::{
-    FilesExpansion, FilesExpansionCache, Negation, Positive, Source, expand_cached, expand_entries,
+    FilesExpansion, FilesExpansionCache, Negation, Positive, ProjectScope, Source, expand_cached,
+    expand_entries,
 };
 use super::hash_ignored_files::hash_files;
 use crate::native::glob::{build_glob_set, partition_glob};
+use crate::native::utils::path::escapes_workspace;
 use crate::native::workspace::ignored_index::{IgnoredIndex, RunStage};
 
 /// Result of hashing task output files, including the matched file paths
@@ -28,10 +30,12 @@ pub fn expand_task_outputs(
     let key = format!("outputs:[{}]", outputs.join("\n"));
     let expansion = expand_cached(&key, cache, || {
         let (positives, negations) = output_entries(workspace_root, outputs)?;
+        // Declared outputs are read wherever they point, nested projects included.
         expand_entries(
             workspace_root,
             &positives,
             &negations,
+            &ProjectScope::default(),
             &Source::declared_outputs(workspace_root),
         )
     })?;
@@ -170,7 +174,7 @@ fn normalize_output_entry(entry: &str) -> Option<String> {
         Some(rest) => ("!", rest),
         None => ("", entry),
     };
-    if body.starts_with('/') {
+    if body.starts_with('/') || escapes_workspace(Path::new(body)) {
         return None;
     }
     let mut segments: Vec<&str> = Vec::new();

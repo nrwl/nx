@@ -97,4 +97,30 @@ mod test {
             Some("standalone")
         )
     }
+
+    fn project(root: &str) -> Project {
+        Project {
+            tags: None,
+            targets: Default::default(),
+            root: root.into(),
+            named_inputs: None,
+        }
+    }
+
+    /// An empty root is the workspace root, which the walk ends on as `.`.
+    #[test]
+    fn should_find_a_project_whose_root_is_empty() {
+        let mappings = create_project_root_mappings(&HashMap::from([("root".into(), project(""))]));
+        assert_eq!(find_project_for_path("README.md", &mappings), Some("root"));
+    }
+
+    #[test]
+    fn should_find_a_project_whose_root_ends_in_a_slash() {
+        let mappings =
+            create_project_root_mappings(&HashMap::from([("ui".into(), project("libs/ui/"))]));
+        assert_eq!(
+            find_project_for_path("libs/ui/src/index.ts", &mappings),
+            Some("ui")
+        );
+    }
 }

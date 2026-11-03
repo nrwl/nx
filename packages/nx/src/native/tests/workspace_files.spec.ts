@@ -1,22 +1,9 @@
 import { WorkspaceContext } from '../index';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { dirname, join } from 'path';
-import { readJsonFile } from '../../utils/fileutils';
 import { cacheDirectoryForWorkspace } from '../../utils/cache-directory';
 
 describe('Workspace Context', () => {
-  function createParseConfigurationsFunction(tempDir: string) {
-    return async (filenames: string[]) => {
-      const res = {};
-      for (const filename of filenames) {
-        const json = readJsonFile(join(tempDir, filename));
-        res[dirname(filename)] = json.name;
-      }
-      return res;
-    };
-  }
-
   it('should gather workspace file information', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
@@ -227,6 +214,124 @@ describe('Workspace Context', () => {
       fs.renameFile('file0.txt', 'file00.txt');
       let hash2 = newContext.hashFilesMatchingGlob(['**/*.txt']);
       expect(hash1).not.toEqual(hash2);
+    });
+  });
+
+  describe('hashing glob groups', () => {
+    let context: WorkspaceContext;
+    let fs: TempFs;
+
+    beforeEach(async () => {
+      fs = new TempFs('workspace-files');
+      await fs.createFiles({
+        'package.json': '{}',
+        'pnpm-lock.yaml': '',
+        'tsconfig.base.json': '{}',
+        'eslint.config.js': '',
+        'libs/a/.eslintignore': '',
+        'libs/a/tsconfig.json': '{}',
+        'libs/a/src/index.ts': 'a',
+        'libs/a/src/index.spec.ts': 'a',
+        'libs/a/nested/tsconfig.json': '{}',
+        'libs/a/nested/src/deep.ts': 'deep',
+        'libs/a-b/src/index.ts': 'a-b',
+        'libs/a.ts': '',
+        'libs/b/eslint.config.js': '',
+        'libs/b/src/index.ts': 'b',
+        'apps/@scope/pkg/src/main.ts': 'scoped',
+      });
+      context = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+    });
+
+    afterEach(() => {
+      context = null;
+      fs.reset();
+    });
+
+    const groups = [
+      [
+        'libs/a/**/*',
+        'eslint.config.js',
+        'libs/a/.eslintignore',
+        'pnpm-lock.yaml',
+        'tsconfig.base.json',
+        'libs/a/tsconfig.json',
+      ],
+      ['libs/a/nested/**/*', 'pnpm-lock.yaml', 'libs/a/tsconfig.json'],
+      ['libs/a-b/**/*', 'pnpm-lock.yaml', 'libs/a-b/.eslintignore'],
+      ['libs/b/**/*', 'libs/b/eslint.config.js', 'eslint.config.js'],
+      ['apps/@scope/pkg/**/*', 'pnpm-lock.yaml'],
+      ['**/*', 'pnpm-lock.yaml'],
+      ['libs/**/*.spec.ts', 'pnpm-lock.yaml'],
+      ['libs/missing/**/*', 'missing.json'],
+    ];
+
+    it('should match the single-glob hasher for every group', () => {
+      const hashes = context.hashFilesMatchingGlobs(groups);
+      expect(hashes).toHaveLength(groups.length);
+      groups.forEach((globs, i) => {
+        // A non-empty exclude keeps the single-glob hasher on its scanning path.
+        expect(hashes[i]).toEqual(
+          context.hashFilesMatchingGlob(globs, ['never/**'])
+        );
+      });
+    });
+
+    it('should hash the same with or without an exclude for a single group', () => {
+      for (const globs of groups) {
+        expect(context.hashFilesMatchingGlob(globs)).toEqual(
+          context.hashFilesMatchingGlob(globs, ['never/**'])
+        );
+      }
+    });
+
+    it('should treat an empty group as every file, as the scan does', () => {
+      const [empty, everything] = context.hashFilesMatchingGlobs([
+        [],
+        ['**/*'],
+      ]);
+      expect(empty).toEqual(everything);
+      expect(context.hashFilesMatchingGlob([])).toEqual(everything);
+      expect(context.hashFilesMatchingGlob([], ['never/**'])).toEqual(
+        everything
+      );
+    });
+
+    it('should not let sibling or nested projects leak into a root', () => {
+      const [a, nested, aDash] = context.hashFilesMatchingGlobs([
+        ['libs/a/**/*'],
+        ['libs/a/nested/**/*'],
+        ['libs/a-b/**/*'],
+      ]);
+      expect(new Set([a, nested, aDash]).size).toBe(3);
+
+      fs.writeFile('libs/a-b/src/other.ts', 'changed');
+      const next = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+      const [a2, nested2, aDash2] = next.hashFilesMatchingGlobs([
+        ['libs/a/**/*'],
+        ['libs/a/nested/**/*'],
+        ['libs/a-b/**/*'],
+      ]);
+      expect(a2).toEqual(a);
+      expect(nested2).toEqual(nested);
+      expect(aDash2).not.toEqual(aDash);
+    });
+
+    it('should change when a shared literal input changes', () => {
+      const [before] = context.hashFilesMatchingGlobs([groups[0]]);
+      fs.writeFile('tsconfig.base.json', '{"changed":true}');
+      const next = new WorkspaceContext(
+        fs.tempDir,
+        cacheDirectoryForWorkspace(fs.tempDir)
+      );
+      const [after] = next.hashFilesMatchingGlobs([groups[0]]);
+      expect(after).not.toEqual(before);
     });
   });
 

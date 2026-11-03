@@ -5,7 +5,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog, toProjectRelativePath } from '@nx/devkit/internal';
-import { dirname } from 'path/posix';
 import { coerce, major } from 'semver';
 
 export function getConfigFilePath(tree: Tree, configDir: string) {
@@ -28,6 +27,11 @@ export function addConfigValuesToConfigFile(
   const configFileContents = tree.read(configFile, 'utf-8');
 
   const sourceFile = ast(configFileContents);
+  // An earlier run that kept the target already added the block; a second
+  // `const configValues` breaks parsing of the config.
+  if (configFileContents.includes('configValues[nxConfiguration]')) {
+    return;
+  }
   // AST TO GET SECTION TO APPEND TO
   const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   let startPosition = 0;

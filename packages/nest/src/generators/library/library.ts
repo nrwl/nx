@@ -3,7 +3,6 @@ import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
-  logger,
   readJson,
   runTasksInSerial,
   writeJson,
@@ -29,7 +28,6 @@ export async function libraryGenerator(
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
-    addPlugin: false,
     useProjectJson: true,
     ...rawOptions,
   });

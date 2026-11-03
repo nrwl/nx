@@ -1,108 +1,47 @@
 import type { Socket } from 'net';
 import type { Mock } from 'vitest';
-import { win32 } from 'node:path';
 import { deserialize as v8_deserialize } from 'v8';
 import {
+  getForkedProcessOsSocketPath,
+  getFullOsSocketPath,
   getPluginOsSocketPath,
-  getPluginSocketFileName,
   sendMessage,
   serialize,
   serializeWithFallback,
 } from './socket-utils';
 import {
-  getPluginSocketDir,
-  getRefusedConfiguredSocketDir,
-  getSocketDirFallbackCause,
+  getDaemonSocketPath,
+  getForkedProcessSocketPath,
+  getPluginSocketPath,
 } from './tmp-dir';
 
+// Where a socket lives, what it is called, and whether it fits the platform's
+// budget are all decided in native/utils/socket_path.rs and reported by
+// tmp-dir.ts. What is left here is that each entry point asks for its own kind.
 vi.mock('./tmp-dir', () => ({
-  getDaemonSocketDir: vi.fn(),
-  getPluginSocketDir: vi.fn(),
-  getSocketDir: vi.fn(),
-  getSocketDirFallbackCause: vi.fn(),
-  getRefusedConfiguredSocketDir: vi.fn(),
+  getDaemonSocketPath: vi.fn(() => '/tmp/.nx/501/sockets/abc/d.sock'),
+  getForkedProcessSocketPath: vi.fn((id: string) => `/fp/${id}`),
+  getPluginSocketPath: vi.fn((id: string) => `/p/${id}`),
 }));
 
-describe('socket path validation', () => {
+describe('socket paths', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('keeps the plugin socket basename prefix and suffix short', () => {
-    expect(getPluginSocketFileName('123-0-12345678')).toBe(
-      'p123-0-12345678.sock'
-    );
+  it('should ask for the daemon socket', () => {
+    expect(getFullOsSocketPath()).toBe('/tmp/.nx/501/sockets/abc/d.sock');
+    expect(getDaemonSocketPath).toHaveBeenCalled();
   });
 
-  it('keeps the plugin socket within the current Windows budget for an 18-character username', () => {
-    const windowsTempDir = win32.join(
-      'C:\\Users',
-      'u'.repeat(18),
-      'AppData\\Local\\Temp'
-    );
-    const pluginSocketPath = win32.join(
-      windowsTempDir,
-      'f'.repeat(8),
-      getPluginSocketFileName('9999999999-z-ffffffff')
-    );
+  it('should pass the worker id through for the per-worker sockets', () => {
+    // The id is what keeps two plugin workers, or two forked tasks, off each
+    // other's socket.
+    expect(getPluginOsSocketPath('123-0-12345678')).toBe('/p/123-0-12345678');
+    expect(getForkedProcessOsSocketPath('7')).toBe('/fp/7');
 
-    expect(pluginSocketPath).toHaveLength(83);
-    expect(pluginSocketPath.length).toBeLessThanOrEqual(95);
-  });
-
-  it('attaches the default-directory failure when its fallback is too long', () => {
-    const cause = new Error('unsafe default socket root');
-    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as Mock).mockReturnValue(cause);
-
-    let thrown!: Error;
-    try {
-      getPluginOsSocketPath('123-0-12345678');
-      throw new Error('Expected socket path validation to fail');
-    } catch (error) {
-      thrown = error as Error;
-    }
-
-    expect(thrown.message).toContain('Nx fell back');
-    expect(thrown.message).toContain('--verbose');
-    expect(thrown.cause).toBe(cause);
-  });
-
-  it('does not claim an explicit short-path remedy was a fallback', () => {
-    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as Mock).mockReturnValue(undefined);
-
-    expect(() => getPluginOsSocketPath('123-0-12345678')).toThrow(
-      'Set NX_SOCKET_DIR to a shorter path'
-    );
-
-    try {
-      getPluginOsSocketPath('123-0-12345678');
-    } catch (error) {
-      expect((error as Error).message).not.toContain('Nx fell back');
-      expect((error as Error).cause).toBeUndefined();
-    }
-  });
-
-  it('stops advising a shorter NX_SOCKET_DIR once the configured one was refused', () => {
-    // They already set one, and it was rejected for a reason that has nothing
-    // to do with length — a read-only mount, EACCES, a directory they do not
-    // own. Repeating the generic advice sends them round in a circle.
-    (getPluginSocketDir as Mock).mockReturnValue(`/${'a'.repeat(96)}`);
-    (getSocketDirFallbackCause as Mock).mockReturnValue(undefined);
-    (getRefusedConfiguredSocketDir as Mock).mockReturnValue(
-      '/mnt/read-only/sockets'
-    );
-
-    try {
-      getPluginOsSocketPath('123-0-12345678');
-      throw new Error('Expected socket path validation to fail');
-    } catch (error) {
-      const message = (error as Error).message;
-      expect(message).toContain('/mnt/read-only/sockets');
-      expect(message).toContain('could not be used');
-      expect(message).not.toContain('Set NX_SOCKET_DIR to a shorter path');
-    }
+    expect(getPluginSocketPath as Mock).toHaveBeenCalledWith('123-0-12345678');
+    expect(getForkedProcessSocketPath as Mock).toHaveBeenCalledWith('7');
   });
 });
 
@@ -156,44 +95,47 @@ describe('serializeWithFallback', () => {
     const circularWithFunction: any = { fn: () => {} };
     circularWithFunction.self = circularWithFunction;
 
-    expect(() => serializeWithFallback(circularWithFunction, 'json')).toThrow(
-      'could not be cloned'
+    let error: Error;
+    try {
+      serializeWithFallback(circularWithFunction, 'json');
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.message).toContain(
+      'Data could not be serialized using either json or v8 serialization.'
     );
+    expect(error.message).toMatch(
+      /json failed with: TypeError: Converting circular structure[\s\S]*\n\s+at /
+    );
+    expect(error.message).toMatch(
+      /v8 failed with: Error: .* could not be cloned\.\n\s+at /
+    );
+    expect((error.cause as Error).message).toContain('could not be cloned');
   });
 });
 
 describe('serialize', () => {
-  const jsonHostile = { value: 1n };
-
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
-  it('does not fall back when a format is forced', () => {
-    // `processInBackground` forces JSON because its payloads cannot be cloned
-    // by v8 - silently switching formats there would trade one failure for
-    // another, less obvious one.
-    expect(() => serialize(jsonHostile, 'json')).toThrow(
-      'Do not know how to serialize a BigInt'
-    );
-    expect(() => serialize({ fn: () => {} }, 'v8')).toThrow(
-      'could not be cloned'
-    );
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it('honours a forced format when the v8 serializer is enabled', () => {
-    const previous = process.env.NX_USE_V8_SERIALIZER;
-    process.env.NX_USE_V8_SERIALIZER = 'true';
+  it('uses JSON by default', () => {
+    expect(serialize({ a: 1 }).toString('utf8')).toBe('{"a":1}');
+  });
 
-    try {
-      expect(serialize({ a: 1 }, 'json').toString('utf8')).toBe('{"a":1}');
-    } finally {
-      if (previous === undefined) {
-        delete process.env.NX_USE_V8_SERIALIZER;
-      } else {
-        process.env.NX_USE_V8_SERIALIZER = previous;
-      }
-    }
+  it('uses v8 when the v8 serializer is enabled', () => {
+    vi.stubEnv('NX_USE_V8_SERIALIZER', 'true');
+
+    expect(v8_deserialize(serialize({ a: 1 }))).toEqual({ a: 1 });
+  });
+
+  it('falls back to v8 when JSON cannot represent the data', () => {
+    expect(v8_deserialize(serialize({ value: 1n }))).toEqual({ value: 1n });
   });
 });
 
@@ -204,21 +146,10 @@ describe('sendMessage', () => {
       write: (data: Buffer) => writes.push(data),
     } as unknown as Socket;
 
-    sendMessage(socket, { a: 1 }, 'json');
+    sendMessage(socket, { a: 1 });
 
     const [header, payload] = writes;
     expect(header.toString('ascii')).toBe(`NX_MSG_${payload.length}:`);
     expect(payload.toString('utf8')).toBe('{"a":1}');
-  });
-
-  it('passes the forced format through to the serializer', () => {
-    const writes: Buffer[] = [];
-    const socket = {
-      write: (data: Buffer) => writes.push(data),
-    } as unknown as Socket;
-
-    sendMessage(socket, { a: 1 }, 'v8');
-
-    expect(writes[1][0]).toBe(0xff);
   });
 });

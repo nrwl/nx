@@ -13,10 +13,10 @@ import * as tsSolution from '../../../utilities/typescript/ts-solution-setup';
 const { libraryGenerator } = require('@nx/js');
 
 let graph: ProjectGraph;
-jest.mock('@nx/devkit', () => {
+vi.mock('@nx/devkit', async () => {
   return {
-    ...jest.requireActual('@nx/devkit'),
-    createProjectGraphAsync: jest.fn().mockImplementation(() => graph),
+    ...(await vi.importActual<any>('@nx/devkit')),
+    createProjectGraphAsync: vi.fn().mockImplementation(() => graph),
   };
 });
 describe('updateTsconfig', () => {
@@ -215,7 +215,7 @@ describe('updateTsconfig', () => {
   });
 
   it('should work with tsSolution setup', async () => {
-    jest.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
+    vi.spyOn(tsSolution, 'isUsingTsSolutionSetup').mockReturnValue(true);
 
     await libraryGenerator(tree, {
       directory: 'my-lib',

@@ -100,17 +100,6 @@ export function getYarnMajorVersion(path: string): string | undefined {
   }
 }
 
-export function getPnpmVersion(): string | undefined {
-  try {
-    const pnpmVersion = execSync(`pnpm -v`, {
-      encoding: 'utf-8',
-    }).trim();
-    return pnpmVersion;
-  } catch {
-    return undefined;
-  }
-}
-
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',
@@ -155,9 +144,9 @@ export function getStrippedEnvironmentVariables(cwd: string = tmpProjPath()) {
       }
 
       const allowedKeys = [
-        'NX_ADD_PLUGINS',
         'NX_ISOLATE_PLUGINS',
         'NX_VERBOSE_LOGGING',
+        'NX_SKIP_LOG_GROUPING',
         'NX_NATIVE_LOGGING',
         'NX_USE_LOCAL',
       ];

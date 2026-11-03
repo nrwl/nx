@@ -119,14 +119,18 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/eslint:lint"
+          "builder": "nx:run-commands",
+          "options": {
+            "command": "eslint .",
+            "cwd": "${appName}"
+          }
         },
         "test": {
-          "builder": "@nx/jest:jest",
+          "builder": "nx:run-commands",
           "outputs": ["{workspaceRoot}/coverage${appName}"],
           "options": {
-            "jestConfig": "${appName}/jest.config.cts",
-            "passWithNoTests": true
+            "command": "jest --config jest.config.cts --passWithNoTests",
+            "cwd": "${appName}"
           }
         }
       },
@@ -138,14 +142,18 @@ const angularV1Json = (appName: string) => `{
       "projectType": "application",
       "architect": {
         "e2e": {
-          "builder": "@nx/playwright:playwright",
+          "builder": "nx:run-commands",
           "options": {
-            "config": "${appName}-e2e/playwright.config.js"
+            "command": "playwright test",
+            "cwd": "${appName}-e2e"
           }
         },
         "lint": {
-          "builder": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"]
+          "builder": "nx:run-commands",
+          "options": {
+            "command": "eslint .",
+            "cwd": "${appName}-e2e"
+          }
         }
       },
       "tags": [],

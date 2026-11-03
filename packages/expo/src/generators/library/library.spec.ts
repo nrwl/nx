@@ -23,7 +23,6 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     strict: true,
     js: false,
-    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -665,6 +664,11 @@ describe('lib', () => {
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
             "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
           ],
         }
       `);

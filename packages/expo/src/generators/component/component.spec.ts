@@ -42,12 +42,12 @@ describe('component', () => {
       strict: true,
       js: false,
     });
-    jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should generate files', async () => {

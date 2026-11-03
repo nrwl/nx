@@ -18,36 +18,10 @@ describe('getViteE2EWebServerInfo', () => {
 
   afterEach(() => {
     tempFs.cleanup();
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it('should use the default values when no plugin is registered and plugins are not being used', async () => {
-    // ARRANGE
-    const nxJson = readNxJson(tree);
-    nxJson.plugins ??= [];
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    const e2eWebServerInfo = await getViteE2EWebServerInfo(
-      tree,
-      'app',
-      'app/vite.config.ts',
-      false
-    );
-
-    // ASSERT
-    expect(e2eWebServerInfo).toMatchInlineSnapshot(`
-      {
-        "e2eCiBaseUrl": "http://localhost:4300",
-        "e2eCiWebServerCommand": "npx nx run app:preview",
-        "e2eDevServerTarget": "app:dev",
-        "e2eWebServerAddress": "http://localhost:4200",
-        "e2eWebServerCommand": "npx nx run app:dev",
-      }
-    `);
-  });
-
-  it('should use map-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped serve targetDefaults when no plugin is registered', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -64,8 +38,7 @@ describe('getViteE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
-      'app/vite.config.ts',
-      false
+      'app/vite.config.ts'
     );
 
     // ASSERT
@@ -90,8 +63,7 @@ describe('getViteE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
-      'app/vite.config.ts',
-      true
+      'app/vite.config.ts'
     );
 
     // ASSERT
@@ -123,8 +95,7 @@ describe('getViteE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
-      'app/vite.config.ts',
-      true
+      'app/vite.config.ts'
     );
 
     // ASSERT
@@ -156,8 +127,7 @@ describe('getViteE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
-      'app/vite.config.ts',
-      true
+      'app/vite.config.ts'
     );
 
     // ASSERT
@@ -198,8 +168,7 @@ describe('getViteE2EWebServerInfo', () => {
     const e2eWebServerInfo = await getViteE2EWebServerInfo(
       tree,
       'app',
-      'app/vite.config.ts',
-      true
+      'app/vite.config.ts'
     );
 
     // ASSERT

@@ -1,4 +1,4 @@
-import type { JsonInput } from '../native';
+import type { JsonInput, TaskUltracacheSettings } from '../native';
 import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
@@ -174,6 +174,90 @@ export interface TargetMetadata {
   };
 }
 
+/**
+ * Authoring form of a property merged key-by-key: permits the `'...'` spread
+ * token alongside the resolved keys. Merging resolves the token, so it never
+ * appears on the resolved shape.
+ */
+export type Spreadable<T> = T & { '...'?: true };
+
+/**
+ * Ultracache settings for a target's tasks.
+ *
+ * The resolved shape rides on each Task instance (`Task['ultracache']`), which
+ * is why it is shared with the native task definition. Authoring additionally
+ * permits `'...'`, which target merging resolves away.
+ */
+export type TargetUltracacheSettings = Spreadable<TaskUltracacheSettings>;
+
+export interface ReadyWhenOptions {
+  /**
+   * Milliseconds to wait for readiness before failing dependents that wait
+   * for it. Default is 600000 (10 minutes).
+   */
+  timeout?: number;
+
+  /**
+   * Milliseconds between probe attempts. Default is 250. Unused by
+   * `logMatches` and `signal`.
+   */
+  interval?: number;
+}
+
+/**
+ * Readiness probe of a continuous target. Exactly one of `url`, `port`,
+ * `command`, `logMatches` or `signal` must be set. Strings may use the `{workspaceRoot}`,
+ * `{projectRoot}`, `{projectName}`, `{options.*}` and `{env.*}` placeholders,
+ * resolved against the options and environment the task runs with. A
+ * placeholder can list fallbacks, as in `{options.port ?? env.PORT ?? 4200}`.
+ */
+export type ReadyWhen =
+  | ({
+      /**
+       * Ready when an HTTP or HTTPS GET gets a status from 200 to 403. A
+       * redirect counts as ready and is not followed.
+       */
+      url: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when a TCP connection to the port succeeds. A string can be a
+       * port number, `"auto"`, or a placeholder such as `{options.port}`.
+       * With `0` or `"auto"` the server picks its port, so Nx runs no check
+       * and the target counts as ready once it starts.
+       */
+      port: number | string;
+
+      /**
+       * Host to connect to. By default 127.0.0.1 and ::1 are both tried.
+       */
+      host?: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when the command, run through the shell at the workspace root,
+       * exits with code 0. It runs with the env the task runs with, and the
+       * task's options as JSON in `NX_TASK_OPTIONS`.
+       */
+      command: string;
+    } & ReadyWhenOptions)
+  | ({
+      /**
+       * Ready when every one of these substrings has appeared in the task's
+       * output.
+       */
+      logMatches: string | string[];
+    } & ReadyWhenOptions)
+  | {
+      /**
+       * Ready when the task reports it with `emitReadySignal` from
+       * `@nx/devkit`.
+       */
+      signal: true;
+
+      timeout?: number;
+    };
+
 export interface TargetDependencyConfig {
   /**
    * A list of projects that have `target`.
@@ -202,18 +286,47 @@ export interface TargetDependencyConfig {
    * Whether to forward task options to the dependency target.
    */
   options?: 'ignore' | 'forward';
+
+  /**
+   * Set to `false` to keep a continuous dependency's inputs out of this
+   * target's hash. It still runs first. Has no effect on other dependencies.
+   */
+  inputs?: boolean;
+
+  /**
+   * When the dependency is a continuous task, whether this target waits for
+   * it to have started (default) or to be ready per its `readyWhen`.
+   * Ignored when the dependency is not continuous or declares no `readyWhen`.
+   */
+  waitFor?: 'started' | 'ready';
 }
 
 // TODO: import the remaining variants from '../native' so the TS types stay
 // in sync with the Rust/napi-generated shapes. Some variants (fileset/input
 // discrimination, workingDirectory literal union) carry richer TS semantics
 // than their native counterparts and will need a layered type to preserve.
+/**
+ * `always`: the files the input resolves to stay in the hash even when the task
+ * is hashed from its ultracache recording.
+ * `dependencies` with `projects`: the selected projects' dependencies (as `^input`
+ * resolves for each), not the projects themselves.
+ */
 export type InputDefinition =
-  | { input: string; projects: string | string[] }
-  | { input: string; dependencies: true }
-  | { input: string }
-  | { fileset: string; includeIgnored?: boolean }
-  | { fileset: string; dependencies: true; includeIgnored?: boolean }
+  | {
+      input: string;
+      projects: string | string[];
+      dependencies?: boolean;
+      always?: boolean;
+    }
+  | { input: string; dependencies: true; always?: boolean }
+  | { input: string; always?: boolean }
+  | { fileset: string; includeIgnored?: boolean; always?: boolean }
+  | {
+      fileset: string;
+      dependencies: true;
+      includeIgnored?: boolean;
+      always?: boolean;
+    }
   | { runtime: string }
   | { externalDependencies: string[] }
   | { dependentTasksOutputFiles: string; transitive?: boolean }
@@ -274,6 +387,11 @@ export interface TargetConfiguration<T = any> {
   cache?: boolean;
 
   /**
+   * Configures ultracache for tasks of this target. Nx Cloud only.
+   */
+  ultracache?: TargetUltracacheSettings;
+
+  /**
    * Metadata about the target
    */
   metadata?: TargetMetadata;
@@ -288,6 +406,14 @@ export interface TargetConfiguration<T = any> {
    * Whether this target runs continuously
    */
   continuous?: boolean;
+
+  /**
+   * How Nx detects that this continuous target is ready. Only honored when
+   * `continuous` is true; dependents opt in with `waitFor: 'ready'` on their
+   * `dependsOn` entry. `null` turns off a check inherited from a plugin or
+   * `targetDefaults`.
+   */
+  readyWhen?: ReadyWhen | null;
 
   /**
    * List of generators to run before the target to ensure the workspace

@@ -21,9 +21,6 @@
   "include": ["**/*.ts", "**/*.js"],
   "references": [
     {
-      "path": "../../packages/angular/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/devkit/tsconfig.lib.json"
     },
     {

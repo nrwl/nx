@@ -4,8 +4,24 @@ import { defineConfig } from 'cypress';
 import { createNodesV2 } from './plugin';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import { resetWorkspaceContext } from '@nx/devkit/internal';
+
+// `var` so the hoisted mock reads the empty value instead of hitting the TDZ.
+var mockWorkspaceDataDir = '';
+vi.mock('nx/src/utils/cache-directory', async () => {
+  const actual = await vi.importActual<any>('nx/src/utils/cache-directory');
+  return {
+    ...actual,
+    get workspaceDataDirectory() {
+      return mockWorkspaceDataDir || actual.workspaceDataDirectory;
+    },
+  };
+});
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -46,7 +62,8 @@ describe('@nx/cypress/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
+    resetCjsMocks();
     tempFs.cleanup();
     tempFs = null;
     process.chdir(cwd);
@@ -104,6 +121,7 @@ describe('@nx/cypress/plugin', () => {
                           "my-app",
                         ],
                         "target": "serve",
+                        "waitFor": "ready",
                       },
                     ],
                     "inputs": [
@@ -113,6 +131,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -334,6 +355,9 @@ describe('@nx/cypress/plugin', () => {
                           "cypress",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
@@ -529,6 +553,7 @@ describe('@nx/cypress/plugin', () => {
                           "my-app",
                         ],
                         "target": "serve",
+                        "waitFor": "ready",
                       },
                     ],
                     "inputs": [
@@ -538,6 +563,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -615,6 +643,7 @@ describe('@nx/cypress/plugin', () => {
                           "my-app",
                         ],
                         "target": "serve-static",
+                        "waitFor": "ready",
                       },
                     ],
                     "inputs": [
@@ -685,6 +714,152 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
+  describe('a spec file with an @nx-depends-on directive', () => {
+    async function atomizedTargets() {
+      mockCypressConfig(
+        defineConfig({
+          e2e: {
+            ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+              webServerCommands: { default: 'npx nx run my-app:serve' },
+              ciWebServerCommand: 'npx nx run my-app:serve-static',
+            }),
+            specPattern: '**/*.cy.ts',
+          },
+        })
+      );
+      const nodes = await createNodesFunction(
+        ['cypress.config.js'],
+        { targetName: 'e2e' },
+        context
+      );
+      return nodes[0][1].projects['.'].targets;
+    }
+
+    it("scopes its atomized target's dependency inputs and server edge", async () => {
+      await tempFs.createFiles({
+        'src/feature.cy.ts':
+          '/*\n * @nx-depends-on: feature, feature-utils\n */\ndescribe("feature", () => {});\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['e2e-ci--src/feature.cy.ts'].inputs).toEqual([
+        'default',
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          always: true,
+        },
+        {
+          input: 'production',
+          projects: ['feature', 'feature-utils'],
+          dependencies: true,
+          always: true,
+        },
+        { externalDependencies: ['cypress'] },
+      ]);
+      expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([
+        {
+          target: 'serve-static',
+          projects: ['my-app'],
+          waitFor: 'ready',
+          inputs: false,
+        },
+      ]);
+      // Files without the directive keep today's targets exactly.
+      expect(targets['e2e-ci--src/test.cy.ts'].inputs).toEqual([
+        'default',
+        '^production',
+        { externalDependencies: ['cypress'] },
+      ]);
+      expect(targets['e2e-ci--src/test.cy.ts'].dependsOn).toEqual([
+        { target: 'serve-static', projects: ['my-app'], waitFor: 'ready' },
+      ]);
+    });
+
+    it('ignores a directive that lists no projects, with a warning naming the spec', async () => {
+      await tempFs.createFiles({
+        'src/feature.cy.ts': '// @nx-depends-on: ,\n',
+      });
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const targets = await atomizedTargets();
+
+        expect(targets['e2e-ci--src/feature.cy.ts'].inputs).toEqual([
+          'default',
+          '^production',
+          { externalDependencies: ['cypress'] },
+        ]);
+        expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([
+          { target: 'serve-static', projects: ['my-app'], waitFor: 'ready' },
+        ]);
+        expect(warn).toHaveBeenCalledWith(
+          'src/feature.cy.ts: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.'
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('keeps the server inputs out and the inputs unchanged with "@nx-ignore-server-inputs"', async () => {
+      await tempFs.createFiles({
+        'src/feature.cy.ts':
+          '// @nx-ignore-server-inputs\nimport "../../my-app/src/feature";\n',
+      });
+
+      const targets = await atomizedTargets();
+
+      expect(targets['e2e-ci--src/feature.cy.ts'].inputs).toEqual([
+        'default',
+        '^production',
+        { externalDependencies: ['cypress'] },
+      ]);
+      expect(targets['e2e-ci--src/feature.cy.ts'].dependsOn).toEqual([
+        {
+          target: 'serve-static',
+          projects: ['my-app'],
+          waitFor: 'ready',
+          inputs: false,
+        },
+      ]);
+    });
+  });
+
+  it('should not wait for the web server to be ready when waitForServerReady is false', async () => {
+    mockCypressConfig(
+      defineConfig({
+        e2e: {
+          ...nxE2EPreset(join(tempFs.tempDir, 'cypress.config.js'), {
+            webServerCommands: { default: 'npx nx run my-app:serve' },
+            ciWebServerCommand: 'npx nx run my-app:serve-static',
+          }),
+          specPattern: '**/*.cy.ts',
+        },
+      })
+    );
+    const nodes = await createNodesFunction(
+      ['cypress.config.js'],
+      { targetName: 'e2e', ciTargetName: 'e2e-ci', waitForServerReady: false },
+      context
+    );
+    const targets = nodes[0][1].projects['.'].targets;
+
+    expect(targets['e2e'].dependsOn).toEqual([
+      { projects: ['my-app'], target: 'serve' },
+    ]);
+    expect(targets['e2e-ci--src/test.cy.ts'].dependsOn).toEqual([
+      { target: 'serve-static', projects: ['my-app'] },
+    ]);
+    expect(targets['e2e-ci'].dependsOn).toEqual([
+      {
+        target: 'e2e-ci--src/test.cy.ts',
+        params: 'forward',
+        options: 'forward',
+      },
+    ]);
+  });
+
   it('should set parallelism to false and not infer commands in dependsOn if reuseExistingServer is false', async () => {
     mockCypressConfig(
       defineConfig({
@@ -743,6 +918,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -1168,6 +1346,9 @@ describe('@nx/cypress/plugin', () => {
                           "cypress",
                         ],
                       },
+                      {
+                        "env": "CI",
+                      },
                     ],
                     "metadata": {
                       "description": "Runs Cypress Tests",
@@ -1563,10 +1744,11 @@ describe('@nx/cypress/plugin', () => {
         screenshotsFolder: join(tempFs.tempDir, 'dist/screenshots'),
       },
     });
-    jest.mock(
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(
+      import.meta.url,
       join(tempFs.tempDir, 'apps/myapp/cypress.config.js'),
-      () => ({ default: cypressConfig }),
-      { virtual: true }
+      { default: cypressConfig }
     );
 
     const nodes = await createNodesFunction(
@@ -1602,6 +1784,9 @@ describe('@nx/cypress/plugin', () => {
                         "externalDependencies": [
                           "cypress",
                         ],
+                      },
+                      {
+                        "env": "CI",
                       },
                     ],
                     "metadata": {
@@ -1744,19 +1929,126 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
+  it('should rebuild cached targets when CI changes', async () => {
+    const originalCI = process.env.CI;
+    delete process.env.CI;
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        'apps/e2e/cypress.config.js': `module.exports = {
+  e2e: {
+    env: {
+      webServerCommands: {
+        default: process.env['CI'] ? 'nx run my-app:serve-static' : 'nx run my-app:serve',
+      },
+    },
+  },
+};`,
+      });
+
+      const run = async () =>
+        (
+          await createNodesFunction(['apps/e2e/cypress.config.js'], {}, context)
+        )[0][1].projects['apps/e2e'].targets;
+
+      expect((await run())['e2e'].dependsOn).toEqual([
+        { projects: ['my-app'], target: 'serve', waitFor: 'ready' },
+      ]);
+
+      process.env.CI = 'true';
+      expect((await run())['e2e'].dependsOn).toEqual([
+        { projects: ['my-app'], target: 'serve-static', waitFor: 'ready' },
+      ]);
+    } finally {
+      mockWorkspaceDataDir = '';
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalCI === undefined) {
+        delete process.env.CI;
+      } else {
+        process.env.CI = originalCI;
+      }
+    }
+  });
+
+  it('should reuse cached targets when the config sets an env var while loading', async () => {
+    const originalComponentTest = process.env.NX_CYPRESS_COMPONENT_TEST;
+    const globals = globalThis as { __cypressConfigLoads?: number };
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    mockWorkspaceDataDir = join(tempFs.tempDir, '.nx', 'workspace-data');
+
+    try {
+      await tempFs.createFiles({
+        'apps/e2e/project.json': '{}',
+        // Sets the env var the way nxBaseCypressPreset does.
+        'apps/e2e/cypress.config.js': `globalThis.__cypressConfigLoads = (globalThis.__cypressConfigLoads ?? 0) + 1;
+process.env.NX_CYPRESS_COMPONENT_TEST = 'false';
+module.exports = {
+  e2e: {
+    env: {
+      webServerCommands: { default: 'nx run my-app:serve' },
+    },
+  },
+};`,
+      });
+
+      // Each run starts with the var unset, as a fresh daemonless process does.
+      const run = async () => {
+        delete process.env.NX_CYPRESS_COMPONENT_TEST;
+        await createNodesFunction(['apps/e2e/cypress.config.js'], {}, context);
+      };
+
+      await run();
+      await run();
+
+      expect(globals.__cypressConfigLoads).toBe(1);
+    } finally {
+      delete globals.__cypressConfigLoads;
+      mockWorkspaceDataDir = '';
+      process.env.NX_CACHE_PROJECT_GRAPH = 'false';
+      if (originalComponentTest === undefined) {
+        delete process.env.NX_CYPRESS_COMPONENT_TEST;
+      } else {
+        process.env.NX_CYPRESS_COMPONENT_TEST = originalComponentTest;
+      }
+    }
+  });
+
+  it('should keep the default web server command for configs that share preset options', async () => {
+    const sharedOptions = {
+      webServerCommands: { default: 'nx run my-app:serve' },
+    };
+    for (const project of ['a-e2e', 'b-e2e']) {
+      const configFile = `apps/${project}/cypress.config.js`;
+      tempFs.createFileSync(`apps/${project}/project.json`, '{}');
+      tempFs.createFileSync(configFile, '');
+      mockCjsModule(import.meta.url, join(tempFs.tempDir, configFile), {
+        default: defineConfig({
+          e2e: nxE2EPreset(join(tempFs.tempDir, configFile), sharedOptions),
+        }),
+      });
+    }
+
+    const [[, a], [, b]] = await createNodesFunction(
+      ['apps/a-e2e/cypress.config.js', 'apps/b-e2e/cypress.config.js'],
+      {},
+      context
+    );
+
+    const serve = [{ projects: ['my-app'], target: 'serve', waitFor: 'ready' }];
+    expect(a.projects['apps/a-e2e'].targets['e2e'].dependsOn).toEqual(serve);
+    expect(b.projects['apps/b-e2e'].targets['e2e'].dependsOn).toEqual(serve);
+  });
+
   function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
     // This isn't JS, but all that really matters here
     // is that the hash is different after updating the
     // config file. The actual config read is mocked below.
     tempFs.createFileSync('cypress.config.js', JSON.stringify(cypressConfig));
-    jest.mock(
-      join(tempFs.tempDir, 'cypress.config.js'),
-      () => ({
-        default: cypressConfig,
-      }),
-      {
-        virtual: true,
-      }
-    );
+    mockCjsModule(import.meta.url, join(tempFs.tempDir, 'cypress.config.js'), {
+      default: cypressConfig,
+    });
   }
 });

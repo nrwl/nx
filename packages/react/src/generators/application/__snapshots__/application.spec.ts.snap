@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`app --minimal should create default application without Nx welcome component 1`] = `
+exports[`app > --minimal > should create default application without Nx welcome component 1`] = `
 "// Uncomment this line to use CSS modules
 // import styles from './app.module.css';
 
@@ -44,7 +44,7 @@ if (import.meta.vitest) {
 "
 `;
 
-exports[`app --style none should exclude styles 1`] = `
+exports[`app > --style none > should exclude styles 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
@@ -74,22 +74,17 @@ module.exports = {
       outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
       optimization: process.env['NODE_ENV'] === 'production',
     }),
-    new NxReactWebpackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
+    new NxReactWebpackPlugin(),
   ],
 };
 "
 `;
 
-exports[`app --style none should not break if bundler is vite 1`] = `
+exports[`app > --style none > should not break if bundler is vite 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -102,10 +97,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -119,7 +117,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app --style scss should generate scss styles 1`] = `
+exports[`app > --style scss > should generate scss styles 1`] = `
 "// Uncomment this line to use CSS modules
 // import styles from './app.module.scss';
 import NxWelcome from "./nx-welcome";
@@ -138,12 +136,11 @@ export default App;
 "
 `;
 
-exports[`app not nested should add vite types to tsconfigs 1`] = `
+exports[`app > not nested > should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -156,10 +153,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -185,7 +185,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app not nested should generate files 1`] = `
+exports[`app > not nested > should generate files 1`] = `
 "// Uncomment this line to use CSS modules
 // import styles from './app.module.css';
 import NxWelcome from './nx-welcome';
@@ -202,12 +202,11 @@ export default App;
 "
 `;
 
-exports[`app not nested should use preview vite types to tsconfigs 1`] = `
+exports[`app > not nested > should use preview vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -220,10 +219,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -249,9 +251,9 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app setup React app with --bundler=vite should setup targets with vite configuration 1`] = `null`;
+exports[`app > setup React app with --bundler=vite > should setup targets with vite configuration 1`] = `null`;
 
-exports[`app should add custom webpack config 1`] = `
+exports[`app > should add custom webpack config 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
@@ -281,17 +283,13 @@ module.exports = {
       outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
       optimization: process.env['NODE_ENV'] === 'production',
     }),
-    new NxReactWebpackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
+    new NxReactWebpackPlugin(),
   ],
 };
 "
 `;
 
-exports[`app should create Nx specific template 1`] = `
+exports[`app > should create Nx specific template 1`] = `
 "// Uncomment this line to use CSS modules
 // import styles from './app.module.css';
 import NxWelcome from "./nx-welcome";
@@ -310,12 +308,11 @@ export default App;
 "
 `;
 
-exports[`app should setup vite if bundler is vite 1`] = `
+exports[`app > should setup vite if bundler is vite 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxReadySignal } from '@nx/vite/plugins/nx-ready-signal.plugin';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -328,10 +325,13 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [react(), nxReadySignal()],
   // Uncomment this if you are using workers.
   // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
+  //  plugins: [],
   // },
   build: {
     outDir: '../dist/my-app',
@@ -345,7 +345,7 @@ export default defineConfig(() => ({
 "
 `;
 
-exports[`app should setup webpack 1`] = `
+exports[`app > should setup webpack 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
@@ -375,11 +375,7 @@ module.exports = {
       outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
       optimization: process.env['NODE_ENV'] === 'production',
     }),
-    new NxReactWebpackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
+    new NxReactWebpackPlugin(),
   ],
 };
 "

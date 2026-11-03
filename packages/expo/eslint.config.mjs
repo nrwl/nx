@@ -29,7 +29,6 @@ export default [
             'nx',
             '@nx/jest',
             '@nx/rollup',
-            '@nx/web',
             '@nx/webpack',
             '@nx/cypress',
             '@nx/playwright',
@@ -37,6 +36,8 @@ export default [
             'typescript',
             'eslint',
             'expo',
+            // Resolved from the @expo/cli that `expo` runs
+            '@expo/env',
             'react',
             '@expo/cli',
             'eas-cli',

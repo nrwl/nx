@@ -74,27 +74,7 @@ export default [
 {% /tabitem %}
 {% /tabs %}
 
-Additionally, you need to adjust your `lintFilePatterns` to include the project's `package.json` file::
-
-```jsonc {% meta="{8}" %}
-// <your-project-root>/project.json
-{
-  // ... project.json config
-  "targets": {
-    // ... more targets
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "libs/my-lib/**/*.{ts,tsx,js,jsx}",
-          "libs/my-lib/package.json", // add this line
-        ],
-      },
-    },
-  },
-}
-```
+The inferred `lint` target runs `eslint .` from the project root, so ESLint checks `package.json` once your config covers `*.json` files.
 
 ### Overriding defaults
 

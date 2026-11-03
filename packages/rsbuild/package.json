@@ -47,6 +47,12 @@
       ],
       "src/*.js": [
         "dist/src/*.d.ts"
+      ],
+      "ready-check": [
+        "dist/ready-check.d.ts"
+      ],
+      "ready-signal": [
+        "dist/ready-signal.d.ts"
       ]
     }
   },
@@ -96,6 +102,16 @@
       "@nx/nx-source": "./config-utils.ts",
       "types": "./dist/config-utils.d.ts",
       "default": "./dist/config-utils.js"
+    },
+    "./ready-check": {
+      "@nx/nx-source": "./ready-check.ts",
+      "types": "./dist/ready-check.d.ts",
+      "default": "./dist/ready-check.js"
+    },
+    "./ready-signal": {
+      "@nx/nx-source": "./ready-signal.ts",
+      "types": "./dist/ready-signal.d.ts",
+      "default": "./dist/ready-signal.js"
     },
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",

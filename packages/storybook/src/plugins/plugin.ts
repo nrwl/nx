@@ -5,10 +5,10 @@ import {
   PluginCache,
   workspaceDataDirectory,
   hashObject,
+  getReadyCheckReadyWhen,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -26,6 +26,7 @@ import type { StorybookConfig } from 'storybook/internal/types';
 import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import { findStorybookAndBuildTargetsAndCompiler } from '../utils/utilities';
+import { getStartStorybookReadyWhen } from '../utils/dev-server-ready-check';
 
 export interface StorybookPluginOptions {
   buildStorybookTargetName?: string;
@@ -37,13 +38,6 @@ export interface StorybookPluginOptions {
 }
 
 type StorybookTargets = Record<string, TargetConfiguration>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 
@@ -195,8 +189,6 @@ async function buildStorybookTargets(
   angularBuildTarget: string | undefined,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
-  const buildOutputs = getOutputs();
-
   const namedInputs = getNamedInputs(projectRoot, context);
 
   // First attempt to do a very fast lookup for the framework
@@ -209,6 +201,7 @@ async function buildStorybookTargets(
   );
 
   const frameworkIsAngular = storybookFramework === '@storybook/angular';
+  const buildOutputs = getOutputs(frameworkIsAngular);
 
   if (frameworkIsAngular && !projectName) {
     throw new Error(
@@ -363,6 +356,7 @@ function serveTarget(
         // the port the non-Angular `storybook dev` target serves on.
         port: 6006,
       },
+      readyWhen: getStartStorybookReadyWhen(),
     };
   } else {
     return {
@@ -370,6 +364,7 @@ function serveTarget(
       inputs: [...inputs],
       command: `storybook dev`,
       options: { cwd: projectRoot },
+      readyWhen: getReadyCheckReadyWhen('@nx/storybook/ready-check'),
     };
   }
 }
@@ -422,6 +417,7 @@ function serveStaticTarget(
       buildTarget: `${options.buildStorybookTargetName}`,
       staticFilePath: joinPathFragments(projectRoot, 'storybook-static'),
     },
+    readyWhen: { signal: true },
   };
 
   return targetConfig;
@@ -503,15 +499,16 @@ async function getStorybookFullyResolvedFramework(
   return typeof framework === 'string' ? framework : framework.name;
 }
 
-function getOutputs(): string[] {
-  const outputs = [
+function getOutputs(frameworkIsAngular: boolean): string[] {
+  // `storybook build` runs from the project root, so its output flags are
+  // project-relative; the Angular builder takes a workspace-relative outputDir.
+  const optionRoot = frameworkIsAngular ? '' : '{projectRoot}/';
+  return [
     `{projectRoot}/storybook-static`,
-    `{options.output-dir}`,
-    `{options.outputDir}`,
-    `{options.o}`,
+    `${optionRoot}{options.output-dir}`,
+    `${optionRoot}{options.outputDir}`,
+    `${optionRoot}{options.o}`,
   ];
-
-  return outputs;
 }
 
 interface StorybookEntry {

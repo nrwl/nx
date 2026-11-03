@@ -50,7 +50,7 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-With Nx, distribution is a single job. `nx run-many` runs every check, and one `distribute-on` line in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Nx Agents](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+With Nx, distribution is a single job. `nx run-many` runs every check, and one `distribute-on` line in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Workers](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
 
 ```yaml
 # .nx/ci-config.yaml (Nx)
@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: npm ci
-      - run: npx nx-cloud start-nx-agents
+      - run: npx nx-cloud start-workers
       - run: npx nx run-many -t lint test build e2e
 ```
 
@@ -108,7 +108,7 @@ jobs:
 
 Blacksmith has no test splitting and no automated flaky-test detection or re-running. Its test analytics only report failing tests in PR comments, which neither shortens a slow suite nor stops a flake from failing the build.
 
-Nx Cloud acts on what it detects. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits e2e suites into per-file tasks that distribute across agents, [flaky task detection](/docs/features/ci-features/flaky-tasks) retries nondeterministic tasks in isolation instead of failing the pipeline, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for real failures.
+Nx Cloud acts on what it detects. [Atomizer](/docs/kb/split-e2e-tasks) splits e2e suites into per-file tasks that distribute across agents, [flaky task detection](/docs/kb/flaky-tasks) retries nondeterministic tasks in isolation instead of failing the pipeline, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for real failures.
 
 ## Observability
 
@@ -131,7 +131,7 @@ Blacksmith alone is enough only when:
 - You want a one-line runner swap and nothing beyond faster machines.
 - The bottleneck is raw machine speed on a repository small enough to run everything each push.
 
-Nx runs on your existing CI, so you can cut CI time and add distribution without switching runner providers. Nx Agents also run on sized resource classes, so you get faster machines too, not just a one-time raw-speed bump. If you want CI that scales with your team, [set up Nx Agents](/docs/features/ci-features/distribute-task-execution#enable-nx-agents).
+Nx runs on your existing CI, so you can cut CI time and add distribution without switching runner providers. Workers also run on sized resource classes, so you get faster machines too, not just a one-time raw-speed bump. If you want CI that scales with your team, [set up Nx Cloud workers](/docs/features/ci-features/distribute-task-execution#set-up-nx-cloud-workers).
 
 ## Resources
 

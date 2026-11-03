@@ -1,8 +1,10 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   GeneratorCallback,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { esbuildVersion } from '@nx/js/internal';
 import {
   expressVersions,
@@ -11,6 +13,7 @@ import {
   nodeTypesVersions,
   nxVersion,
   tslibVersion,
+  tsxVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -59,6 +62,14 @@ export function addProjectDependencies(
     fastify: {},
   };
 
+  if (options.bundler === 'esbuild') {
+    // esbuild's install script only validates the prebuilt binary that ships as
+    // an optional dependency.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      esbuild: false,
+    });
+  }
+
   const typesNodeVersion = nodeTypesVersions(tree).typesNodeVersion;
 
   return {
@@ -72,6 +83,7 @@ export function addProjectDependencies(
         ...frameworkDevDependencies[options.framework],
         ...bundlers[options.bundler],
         '@types/node': typesNodeVersion,
+        ...(options.serveRuntime === 'tsx' && { tsx: tsxVersion }),
       },
       undefined,
       options.keepExistingVersions ?? true

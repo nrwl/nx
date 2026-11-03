@@ -56,7 +56,7 @@ The configuration directory must also contain a `package.json` or `project.json`
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/playwright configuration
 
@@ -88,26 +88,63 @@ The Playwright docs suggest setting `reuseExistingServer` to `!process.env.CI`.
 Set it to `true` instead, since Nx already runs the web server as a task dependency.
 With `false`, Nx skips that task and Playwright starts its own server inside each Playwright task.
 
-If that `webServer` also sets a `port` or `url`, Nx infers an extra task, named
-`<targetName>--wait-for-webserver` (`e2e--wait-for-webserver` by default), that waits for the
-server to be ready.
-The atomized CI tasks share that task when it would wait for the same servers, depend on the
-same serve tasks, and load the same env files.
-Otherwise they get their own `<ciTargetName>--wait-for-webserver` task.
-Playwright then finds the server already running and reuses it.
+The Playwright tasks wait for the serve task's [`readyWhen` check](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready) before Playwright starts, so Playwright finds the server running and reuses it.
+The Vite, webpack, Rspack, Rsbuild, Angular, Next.js, Expo, Nuxt, React Router, React Native, and Storybook plugins infer `readyWhen` on the server targets they can check.
+Generated Angular dev server, Angular Storybook, and `@nx/web:file-server` targets set it too.
+So do the Next.js `serve-custom-server` target and the `serve` target of generated Express, Fastify, Koa, and NestJS apps.
+A `storybook dev` target without a set port counts as ready once it has started, and an Angular Storybook target waits for its port.
+For the details, see [wait for Storybook to be ready](/docs/technologies/test-tools/storybook/introduction#wait-for-storybook-to-be-ready).
+The tasks get the address the server reported in the `NX_READY_URL` environment variable, which
+generated Playwright configs use for `baseURL` and `webServer.url`.
+To make another serve target report readiness, see [signal readiness from the task](/docs/reference/project-configuration#signal-readiness-from-the-task).
 
-The `webServerTimeout` option sets how long, in milliseconds, that task waits before failing.
-Set the `waitForWebServer` option to `false` to opt out of that task.
-For the `webServer` shapes Nx leaves to Playwright and for how Nx caches and re-infers the server
-address, see [Playwright web server readiness](/docs/kb/playwright-web-server-readiness).
+For the `webServer` shapes Nx leaves to Playwright, see [Playwright web server readiness](/docs/kb/playwright-web-server-readiness).
+
+{% aside type="caution" title="Serve targets without a readyWhen" %}
+A serve target without a `readyWhen`, such as a `run-commands` server or a community executor, counts as ready as soon as it starts.
+Playwright then probes the server once, and when the probe misses it starts the server itself, next to the one Nx started, which fails with `EADDRINUSE` or runs a second copy on another port.
+Set `readyWhen` on that target, or set the `waitForWebServer` plugin option to `true` to infer a `<targetName>--wait-for-webserver` task that probes the server's `port` or `url` before the tests run, as earlier versions did.
+The same applies when `waitForServerReady` is `false`, which the Nx 24 beta migrations wrote: remove it, or turn `waitForWebServer` on.
+{% /aside %}
+
+To start the Playwright tasks as soon as the serve task starts instead, set the `waitForServerReady` plugin option to `false`.
+`waitForServerReady`, `waitForWebServer`, `webServerTimeout`, and the `@nx/playwright:wait-for-webserver` executor are deprecated and will be removed in Nx 25.
+
+In a Playwright config you wrote yourself, pass the address through `getReadyUrl` from `@nx/devkit`
+for both `baseURL` and `webServer.url`.
+It returns the address unchanged when Nx reports none, and otherwise moves it to the reported port:
+
+```ts
+// apps/myapp-e2e/playwright.config.ts
+import { defineConfig } from '@playwright/test';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const baseURL = getReadyUrl('http://localhost:4200');
+
+export default defineConfig({
+  use: { baseURL },
+  webServer: {
+    command: 'npx nx run myapp:serve',
+    url: baseURL,
+    reuseExistingServer: true,
+    cwd: workspaceRoot,
+  },
+});
+```
+
+With `webServer.url` set the same way, Playwright reuses the server Nx started instead of starting another.
 
 ### Splitting E2E tests
 
 The `targetName` task runs the complete Playwright suite and caches the configured test and reporter
 outputs.
-The `ciTargetName` task uses the [Atomizer](/docs/features/ci-features/split-e2e-tasks).
+The `ciTargetName` task uses the [Atomizer](/docs/kb/split-e2e-tasks).
 
 Both options accept task names as strings. To run the non-atomized suite in CI, invoke the `targetName` task (the default is `e2e`) instead of the `ciTargetName` task.
+
+An atomized task reruns when the app, any project the app depends on, or any test file changes.
+To scope it to the code its test file exercises, see
+[skip unaffected split e2e tests](/docs/kb/skip-unaffected-e2e-tests).
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/playwright/plugin`.
 
@@ -135,6 +172,58 @@ Pass `--webServerCommand` and `--webServerAddress` to skip the prompts.
 nx g @nx/playwright:configuration --project=your-app-name --webServerCommand="npx nx serve your-project-name" --webServerAddress="http://localhost:4200"
 ```
 
+### Choosing the web server per environment
+
+Most application generators pass two servers to the Playwright configuration: the dev server for
+local runs and a production build for CI.
+The generated config reads the `CI` environment variable and picks between them.
+
+```ts frame="none"
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const isCI = !!process.env['CI'];
+// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(
+  isCI ? 'http://localhost:4300' : 'http://localhost:4200'
+);
+
+export default defineConfig({
+  // ... rest of the config
+  webServer: {
+    command: isCI
+      ? 'npx nx run <your-app-name>:preview'
+      : 'npx nx run <your-app-name>:dev',
+    url: webServerAddress,
+    reuseExistingServer: true,
+    cwd: workspaceRoot,
+  },
+});
+```
+
+The dev server avoids a rebuild on every change, and the CI run tests the output you ship.
+
+These applications run against the dev server in CI as well:
+
+- React applications that use React Router (`--useReactRouter`)
+- Expo applications
+
+Web applications generated with `--bundler=none` have no dev server, so they run against
+`serve-static` locally as well.
+
+Pass `--ciWebServerCommand` and `--ciWebServerAddress` to choose the CI side yourself.
+Each one defaults to its local counterpart, so leaving both unset generates a config with a single
+server.
+
+```shell
+nx g @nx/playwright:configuration --project=<your-app-name> --webServerCommand="npx nx run <your-app-name>:dev" --webServerAddress="http://localhost:4200" --ciWebServerCommand="npx nx run <your-app-name>:preview" --ciWebServerAddress="http://localhost:4300"
+```
+
+The inferred Playwright targets include the `CI` environment variable in their inputs, so local and
+CI runs don't share cached results.
+An `inputs` list you set for these targets in `targetDefaults` or in a project configuration
+replaces the inferred inputs unless it contains `"..."`.
+Add `{ "env": "CI" }` to that list, or add `"..."` to keep the inferred inputs.
+
 ### Testing applications
 
 Run `nx e2e <your-app-name>` to execute e2e tests with Playwright
@@ -157,8 +246,10 @@ nx e2e frontend-e2e --grepInvert="feat-a"
 By default, Playwright will run in headless mode. You will have the result of all the tests and errors (if any) in your
 terminal. Test output such as reports, screenshots, and videos will be accessible in `dist/.playwright/apps/<your-app-name>/`. This can be configured with the `outputDir` configuration options.
 
+If a test passes and fails without a code change, use the [flaky Playwright test guide](/docs/technologies/test-tools/playwright/guides/flaky-tests) to reproduce the failure, inspect its trace, and fix its cause.
+
 {% aside type="note" title="Output Caching" %}
-If changing the output directory or report output, make sure to update the [target outputs](/docs/concepts/how-caching-works#what-is-cached) so the artifacts are correctly cached
+If changing the output directory or report output, make sure to update the [target outputs](/docs/features/cache-task-results#what-nx-caches) so the artifacts are correctly cached
 {% /aside %}
 
 ### Watching for changes
@@ -264,10 +355,10 @@ By default Nx, provides a `nxE2EPreset` with predefined configuration for Playwr
 ```ts frame="none"
 import { defineConfig } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4200');
 
 /**
  * Read environment variables from file.
@@ -286,7 +377,6 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npx nx serve <your-app-name>',
     url: baseURL,

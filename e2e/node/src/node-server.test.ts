@@ -24,7 +24,7 @@ describe('Node Applications + webpack', () => {
   // TODO(nicholas): Look into how this can work with npm instead of forcing pnpm.
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/node', '@nx/nest', '@nx/webpack'],
+      packages: ['@nx/node', '@nx/nest', '@nx/webpack', '@nx/vitest'],
       // npm has resolution for ajv some packages require ajv6 and some require ajv8 and npm resolves it to ajv6 (Error: Cannot find module 'ajv/dist/compile/codegen')
       // - ajv@6 (fork-ts-checker-webpack-plugin, terser-webpack-plugin, webpack)
       // - ajv@8 (babel-loader)
@@ -36,26 +36,18 @@ describe('Node Applications + webpack', () => {
   afterAll(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
-    const content = readFile(`apps/${appName}/src/main.ts`);
-    if (importPath) {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '${importPath}';
-      ${content}
+    const mainFile = `apps/${appName}/src/main.ts`;
+    const content = readFile(mainFile);
+    // Keep the shebang first so the inferred serve target still resolves.
+    const header = content.match(/^#!.*\n(?:\/\/.*\n)*/)?.[0] ?? '';
+    updateFile(
+      mainFile,
+      `${header}
+      import { ${libName} } from '${importPath ?? `@${proj}/${libName}`}';
+      ${content.slice(header.length)}
       console.log(${libName}());
       `
-      );
-    } else {
-      updateFile(
-        `apps/${appName}/src/main.ts`,
-        `
-      import { ${libName} } from '@${proj}/${libName}';
-      ${content}
-      console.log(${libName}());
-      `
-      );
-    }
+    );
   }
 
   async function runE2eTests(appName: string, port: number) {
@@ -96,7 +88,7 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${expressApp} --framework=express --port=${expressPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${fastifyApp} --framework=fastify --port=${fastifyPort} --no-interactive --linter=eslint --unitTestRunner=vitest --e2eTestRunner=jest`
       );
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=${koaPort} --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
@@ -189,22 +181,28 @@ describe('Node Applications + webpack', () => {
 
     // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app apps/${nodeApp1} --framework=none --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp1} --framework=none --bundler=webpack --no-interactive --port=${nodeApp1Port} --linter=eslint --unitTestRunner=jest`
     );
     runCLI(
-      `generate @nx/node:app apps/${nodeApp2} --framework=none --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${nodeApp2} --framework=none --bundler=webpack --no-interactive --port=${nodeApp2Port} --linter=eslint --unitTestRunner=jest`
     );
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;
     });
 
-    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
-      output.includes('Hello World')
+    const p = await runCommandUntil(
+      `serve ${nodeApp1} `,
+      (output) => output.includes('Hello World'),
+      { timeout: 120_000 }
     );
 
-    checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
-    checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    try {
+      checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
+      checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+    } finally {
+      await killProcessAndPorts(p.pid);
+    }
   }, 300_000);
 
   it('should wait for the previous process to exit on watch restart so the port is released', async () => {
@@ -212,7 +210,7 @@ describe('Node Applications + webpack', () => {
     const port = await reservePort();
 
     runCLI(
-      `generate @nx/node:app apps/${app} --framework=none --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/node:app apps/${app} --framework=none --bundler=webpack --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
     );
 
     // Server with a slow graceful shutdown that holds the port after SIGTERM.
@@ -231,8 +229,10 @@ describe('Node Applications + webpack', () => {
       `
     );
 
-    const p = await runCommandUntil(`serve ${app}`, (output) =>
-      output.includes(`Listening on ${port}`)
+    const p = await runCommandUntil(
+      `serve ${app}`,
+      (output) => output.includes(`Listening on ${port}`),
+      { timeout: 120_000 }
     );
 
     try {

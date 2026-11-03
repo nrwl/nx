@@ -1,4 +1,4 @@
-import { runCLI, runE2ETests } from '@nx/e2e-utils';
+import { runCLI, shouldRunCypressTests } from '@nx/e2e-utils';
 import {
   setupCypressComponentTests,
   cleanupCypressComponentTests,
@@ -6,7 +6,8 @@ import {
   CypressComponentTestsSetup,
 } from './cypress-component-tests-setup';
 
-describe('Angular Cypress Component Tests - Buildable Lib', () => {
+// TODO(leosvelperez): Re-enable once a Cypress release fixes https://github.com/cypress-io/cypress/issues/34259
+xdescribe('Angular Cypress Component Tests - Buildable Lib', () => {
   let setup: CypressComponentTestsSetup;
 
   beforeAll(async () => {
@@ -30,7 +31,7 @@ describe('Angular Cypress Component Tests - Buildable Lib', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    if (await runE2ETests('cypress')) {
+    if (await shouldRunCypressTests()) {
       expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );

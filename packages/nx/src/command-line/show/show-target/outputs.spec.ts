@@ -249,6 +249,36 @@ describe('show target outputs', () => {
     expect(parsed.unresolvedOutputs).toContain('{options.outputFile}');
   });
 
+  it('should flag {options.*} outputs by the value they resolve to, fallbacks included', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                options: { outputFile: '' },
+                outputs: [
+                  '{options.outputPath ?? {projectRoot}/dist}',
+                  '{options.outputFile}',
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    await showTargetOutputsHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as Mock).mock.calls[0][0]);
+    expect(parsed.outputPaths).toEqual(['apps/my-app/dist']);
+    expect(parsed.unresolvedOutputs).toEqual(['{options.outputFile}']);
+  });
+
   it('should resolve {options.*} from the defaultConfiguration when none is given', async () => {
     setGraph(
       new GraphBuilder()

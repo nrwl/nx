@@ -15,7 +15,6 @@ export type AddJestOptions = {
   strict: boolean;
   runtimeTsconfigFileName: 'tsconfig.app.json' | 'tsconfig.lib.json';
   zoneless: boolean;
-  addPlugin?: boolean;
 };
 
 export async function addJest(
@@ -57,8 +56,6 @@ export async function addJest(
     skipSerializers: false,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addPlugin: options.addPlugin ?? false,
-    addExplicitTargets: !options.addPlugin,
   });
 
   const setupFile = joinPathFragments(

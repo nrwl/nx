@@ -17,6 +17,7 @@ import {
  * Generates an array of paths to watch based on the project dependencies.
  *
  * @param {string} dirname The absolute path to the Remix project, typically `__dirname`.
+ * @deprecated Migrate to React Router with `@nx/react`. This will be removed in Nx 25.
  */
 export async function createWatchPaths(dirname: string): Promise<string[]> {
   const graph = await createProjectGraphAsync();

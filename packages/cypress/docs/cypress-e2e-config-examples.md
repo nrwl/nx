@@ -17,4 +17,4 @@ nx g @nx/cypress:configuration --project=my-cool-project --devServerTarget=some-
 ```
 
 Providing a `--devServerTarget` is optional if you provide a `--baseUrl` or the project you're adding the configuration to has a `serve` target already.
-Otherwise, a `--devServerTarget` is recommend for the `@nx/cypress:cypress` executor to spin up the dev server for you automatically when needed.
+Otherwise, pass `--devServerTarget` so the `e2e` target starts the dev server before the tests run.

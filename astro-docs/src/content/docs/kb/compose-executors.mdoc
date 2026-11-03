@@ -22,28 +22,26 @@ export default async function (
 }
 ```
 
-This only works when you know what executor you want to invoke. Sometimes, however, you need to invoke a target. For instance, the e2e target is often configured like this:
+This only works when you know what executor you want to invoke. Sometimes, however, you need to invoke a target. For instance, a custom e2e executor might take a `devServerTarget` option:
 
 ```json
 // project.json
 {
   "e2e": {
-    "builder": "@nx/cypress:cypress",
+    "executor": "@myorg/tools:e2e",
     "options": {
-      "cypressConfig": "apps/myapp-e2e/cypress.json",
-      "tsConfig": "apps/myapp-e2e/tsconfig.e2e.json",
       "devServerTarget": "myapp:serve"
     }
   }
 }
 ```
 
-In this case we need to invoke the target configured in devSeverTarget. We can do it as follows:
+In this case we need to invoke the target configured in `devServerTarget`. We can do it as follows:
 
 ```typescript
 // example-executor.ts
 async function* startDevServer(
-  opts: CypressExecutorOptions,
+  opts: E2eExecutorOptions,
   context: ExecutorContext
 ) {
   const { project, target, configuration } = parseTargetString(

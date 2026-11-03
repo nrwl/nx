@@ -2,6 +2,7 @@ use crate::native::glob::{NxGlobSet, build_glob_set};
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use hashbrown::HashSet;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 struct ProjectPattern<'a> {
     exclude: bool,
@@ -14,13 +15,14 @@ enum ProjectPatternType {
     Directory,
     Unlabeled,
 }
-impl From<&str> for ProjectPatternType {
-    fn from(value: &str) -> Self {
-        match value {
-            "name" => ProjectPatternType::Name,
-            "tag" => ProjectPatternType::Tag,
-            "directory" => ProjectPatternType::Directory,
-            _ => ProjectPatternType::Unlabeled,
+impl ProjectPatternType {
+    fn from_label(label: &str) -> Option<Self> {
+        match label {
+            "name" => Some(ProjectPatternType::Name),
+            "tag" => Some(ProjectPatternType::Tag),
+            "directory" => Some(ProjectPatternType::Directory),
+            "unlabeled" => Some(ProjectPatternType::Unlabeled),
+            _ => None,
         }
     }
 }
@@ -136,10 +138,17 @@ fn parse_string_pattern<'a>(
         let index_of_first_separator =
             index_of_first_potential_separator.expect("separator was already checked");
         let (prefix, value) = pattern.split_at(index_of_first_separator);
-        ProjectPattern {
-            exclude: is_exclude,
-            pattern_type: prefix.into(),
-            value: &value[1..],
+        match ProjectPatternType::from_label(prefix) {
+            Some(pattern_type) => ProjectPattern {
+                exclude: is_exclude,
+                pattern_type,
+                value: &value[1..],
+            },
+            None => ProjectPattern {
+                exclude: is_exclude,
+                pattern_type: ProjectPatternType::Unlabeled,
+                value: pattern,
+            },
         }
     }
 }
@@ -162,8 +171,8 @@ fn add_matching_projects_by_name<'a>(
         return Ok(());
     }
 
-    let glob = build_glob_set(&[pattern.value])?;
-    get_matching_strings(pattern.value, &glob, project_names)
+    let glob = pattern_glob(pattern.value);
+    get_matching_strings(pattern.value, glob.as_deref(), project_names)
         .iter()
         .for_each(|item| {
             if pattern.exclude {
@@ -181,13 +190,13 @@ fn add_matching_projects_by_directory<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let glob = build_glob_set(&[pattern.value])?;
+    let glob = pattern_glob(pattern.value);
     for project_name in project_names {
         let Some(root) = projects.get(*project_name).map(|p| p.root.as_str()) else {
             continue;
         };
 
-        if !get_matching_strings(pattern.value, &glob, &[root]).is_empty() {
+        if !get_matching_strings(pattern.value, glob.as_deref(), &[root]).is_empty() {
             if pattern.exclude {
                 matched_projects.remove(project_name);
             } else {
@@ -205,7 +214,7 @@ fn add_matching_projects_by_tag<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let glob = build_glob_set(&[pattern.value])?;
+    let glob = pattern_glob(pattern.value);
     for project_name in project_names {
         let project_tags = projects
             .get(*project_name)
@@ -224,7 +233,7 @@ fn add_matching_projects_by_tag<'a>(
             continue;
         }
 
-        if !get_matching_strings(pattern.value, &glob, &tags).is_empty() {
+        if !get_matching_strings(pattern.value, glob.as_deref(), &tags).is_empty() {
             if pattern.exclude {
                 matched_projects.remove(project_name);
             } else {
@@ -236,10 +245,87 @@ fn add_matching_projects_by_tag<'a>(
     Ok(())
 }
 
-fn get_matching_strings<'a>(pattern: &str, glob: &NxGlobSet, items: &[&'a str]) -> Vec<&'a str> {
+/// A pattern that is not a valid glob (`tag:wip(`) still matches exactly.
+fn pattern_glob(pattern: &str) -> Option<Arc<NxGlobSet>> {
+    build_glob_set(&[pattern]).ok()
+}
+
+fn get_matching_strings<'a>(
+    pattern: &str,
+    glob: Option<&NxGlobSet>,
+    items: &[&'a str],
+) -> Vec<&'a str> {
     items
         .iter()
-        .filter(|item| *item == &pattern || glob.is_match(item))
+        .filter(|item| *item == &pattern || glob.is_some_and(|glob| glob.is_match(item)))
         .copied()
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn graph(projects: &[(&str, &str, &[&str])]) -> ProjectGraph {
+        let nodes = projects
+            .iter()
+            .map(|(name, root, tags)| {
+                let project = Project {
+                    root: root.to_string(),
+                    named_inputs: None,
+                    tags: Some(tags.iter().map(|tag| tag.to_string()).collect()),
+                    targets: HashMap::new(),
+                };
+                (name.to_string(), project)
+            })
+            .collect();
+        ProjectGraph {
+            nodes,
+            dependencies: HashMap::new(),
+            external_nodes: HashMap::new(),
+        }
+    }
+
+    fn matching(patterns: &[&str], graph: &ProjectGraph) -> Vec<String> {
+        let mut found: Vec<String> = find_matching_projects(patterns, graph)
+            .unwrap()
+            .into_iter()
+            .map(String::from)
+            .collect();
+        found.sort();
+        found
+    }
+
+    #[test]
+    fn a_pattern_that_is_not_a_glob_matches_exactly() {
+        let graph = graph(&[
+            ("a", "libs/a", &["wip("]),
+            ("b", "libs/b(", &[]),
+            ("c", "libs/c", &["wip"]),
+        ]);
+        assert_eq!(matching(&["tag:wip("], &graph), ["a"]);
+        assert_eq!(matching(&["directory:libs/b("], &graph), ["b"]);
+        assert!(matching(&["name:a("], &graph).is_empty());
+        assert!(matching(&["c("], &graph).is_empty());
+    }
+
+    #[test]
+    fn an_unknown_prefix_is_part_of_the_pattern() {
+        let graph = graph(&[
+            ("dev.nx.maven:core", "maven/core", &[]),
+            ("dev.nx.maven:plugin", "maven/plugin", &[]),
+            (":gradle-lib", "gradle/lib", &[]),
+            ("app", "apps/app", &[]),
+        ]);
+        assert_eq!(
+            matching(&["dev.nx.maven:*"], &graph),
+            ["dev.nx.maven:core", "dev.nx.maven:plugin"]
+        );
+        assert_eq!(
+            matching(&["*", "!dev.nx.maven:*"], &graph),
+            [":gradle-lib", "app"]
+        );
+        assert_eq!(matching(&[":gradle-*"], &graph), [":gradle-lib"]);
+        assert!(matching(&["typo:app"], &graph).is_empty());
+    }
 }

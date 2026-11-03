@@ -53,13 +53,8 @@
     "ignore": "^7.0.5"
   },
   "devDependencies": {
-    "@types/jest": "catalog:jest",
     "@types/node": "catalog:typescript",
-    "jest": "catalog:jest",
-    "memfs": "^4.9.2",
-    "nx": "workspace:*",
-    "ts-jest": "catalog:jest",
-    "typescript": "catalog:typescript"
+    "nx": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

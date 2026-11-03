@@ -13,7 +13,6 @@ import {
   addDepsToPackageJson,
   initCloud,
   runInstall,
-  setNeverConnectToCloud,
   updateGitIgnore,
 } from '../utils';
 import { setupIntegratedWorkspace } from './integrated-workspace';
@@ -77,8 +76,6 @@ export async function addNxToAngularCliRepo(options: Options) {
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     await initCloud('nx-init-angular');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 }
 

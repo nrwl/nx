@@ -9,8 +9,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration, { rulesToRemove } from './remove-angular-eslint-rules';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
 }));
 

@@ -48,10 +48,15 @@ export default defineConfig({
       await preset.setupNodeEvents(on, config);
 
       // Register your listeners here
+
+      return config;
     },
   },
 });
 ```
+
+When Nx has already started the dev server, the preset sets `config.baseUrl` to the address the server reported.
+Return `config` from your function so Cypress uses that address.
 
 {% aside type="note" title="Note on async-await" %}
 The `setupNodeEvents` function from our Cypress preset returns a promise, so make sure to await the result.

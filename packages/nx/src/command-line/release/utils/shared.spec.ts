@@ -18,10 +18,10 @@ vi.mock('../../../config/nx-json', async () => ({
   readNxJson: vi.fn(),
 }));
 
-// Mock getPlugins to return an empty array, avoiding plugin worker spawning
-// while still allowing filterAffected to run its real logic
-vi.mock('../../../project-graph/plugins/get-plugins', () => ({
-  getPlugins: vi.fn().mockResolvedValue([]),
+// Stubbed so no plugin workers start; filterAffected still runs for real.
+vi.mock('../../../project-graph/plugins/get-plugins', async () => ({
+  ...(await vi.importActual('../../../project-graph/plugins/get-plugins')),
+  capabilitiesOfConfiguredPlugins: vi.fn().mockResolvedValue([]),
 }));
 
 import { createVersionConfig } from './test/test-utils';
@@ -350,6 +350,30 @@ describe('shared', () => {
       );
 
       expect(tags).toEqual(['my-group-1.1.0']);
+    });
+
+    it('should reject a fallback whose placeholder a fixed group has no value for', () => {
+      const { releaseGroup, releaseGroupToFilteredProjects } =
+        setUpReleaseGroup();
+      releaseGroup.releaseTag.pattern =
+        '{projectName ?? releaseGroupName}-v{version}';
+
+      expect(() =>
+        createGitTagValues([releaseGroup], releaseGroupToFilteredProjects, {
+          a: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+          b: {
+            currentVersion: '1.0.0',
+            dependentProjects: [],
+            newVersion: '1.1.0',
+          },
+        })
+      ).toThrow(
+        "Release configuration '{projectName ?? releaseGroupName}-v{version}' is invalid. It can't use ?? fallbacks"
+      );
     });
 
     it('should not tag if fixed group is not bumping', () => {

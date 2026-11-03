@@ -1,9 +1,9 @@
 use super::process_killer::{ProcessKiller, normalize_signal};
-use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, PtyOutput, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::Either;
-use napi::bindgen_prelude::External;
+use napi::bindgen_prelude::{External, FnArgs};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking};
 use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::{Mutex, RwLock};
@@ -21,7 +21,7 @@ pub struct ChildProcess {
     parser: Arc<RwLock<Parser>>,
     pid: i32,
     process_killer: ProcessKiller,
-    message_receiver: Receiver<String>,
+    message_receiver: Receiver<PtyOutput>,
     pub(crate) wait_receiver: Receiver<String>,
     thread_handles: Vec<Sender<()>>,
     writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
@@ -35,7 +35,7 @@ impl ChildProcess {
         master_arc: MasterArc,
         pid: i32,
         process_killer: ProcessKiller,
-        message_receiver: Receiver<String>,
+        message_receiver: Receiver<PtyOutput>,
         exit_receiver: Receiver<String>,
     ) -> Self {
         Self {
@@ -97,10 +97,11 @@ impl ChildProcess {
     #[napi]
     pub fn on_output(
         &mut self,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: ThreadsafeFunction<
-            String,
+        #[napi(ts_arg_type = "(message: string, isCommandHeader: boolean) => void")]
+        callback: ThreadsafeFunction<
+            FnArgs<(String, bool)>,
             Unknown<'static>,
-            String,
+            FnArgs<(String, bool)>,
             Status,
             false,
         >,
@@ -117,13 +118,17 @@ impl ChildProcess {
                     },
                     recv(rx) -> msg => {
                         match msg {
-                            Ok(content) => {
+                            Ok(output) => {
+                                let (content, is_command_header) = match output {
+                                    PtyOutput::CommandHeader(content) => (content, true),
+                                    PtyOutput::Process(content) => (content, false),
+                                };
                                 // windows will add `ESC[6n` to the beginning of the output,
                                 // we dont want to store this ANSI code in cache, because replays will cause issues
                                 // remove it before sending it to js
                                 #[cfg(windows)]
                                 let content = content.replace("\x1B[6n", "");
-                                callback.call(content, NonBlocking);
+                                callback.call((content, is_command_header).into(), NonBlocking);
                             },
                             Err(_) => {
                                 break;

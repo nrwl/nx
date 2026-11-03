@@ -1,6 +1,6 @@
 <%_ if (isUsingTsSolutionConfig) { _%>
 /* eslint-disable */
-import { readFileSync } from 'fs';
+<% if (js) { %>const { readFileSync } = require('fs');<% } else { %>import { readFileSync } from 'fs';<% } %>
 
 // Reading the SWC compilation config for the spec files
 const swcJestConfig = JSON.parse(
@@ -11,7 +11,7 @@ const swcJestConfig = JSON.parse(
 swcJestConfig.swcrc = false;
 
 <%_ } _%>
-export default {
+<% if (js) { %>module.exports =<% } else { %>export default<% } %> {
   displayName: '<%= e2eProjectName %>',
   preset: '<%= offsetFromRoot %><%= jestPreset %>',
   globalSetup: '<rootDir>/src/support/global-setup.ts',

@@ -1,0 +1,29 @@
+<svg width="730" height="250" viewBox="0 0 730 250" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">
+<defs>
+<marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-indigo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" stroke="#6366F1" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect x="80" y="140" width="190" height="50" rx="8" fill="#6366F1"/>
+<text x="175" y="162" text-anchor="middle" font-size="15" fill="white">button.spec.ts</text>
+<text x="175" y="180" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">changed in libs/ui</text>
+<rect x="370" y="20" width="110" height="50" rx="8" fill="#94A3B8"/>
+<text x="425" y="42" text-anchor="middle" font-size="15" fill="white">web</text>
+<text x="425" y="60" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">test</text>
+<rect x="540" y="20" width="110" height="50" rx="8" fill="#94A3B8"/>
+<text x="595" y="42" text-anchor="middle" font-size="15" fill="white">web</text>
+<text x="595" y="60" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">build</text>
+<rect x="370" y="140" width="110" height="50" rx="8" fill="#F43F5E"/>
+<text x="425" y="162" text-anchor="middle" font-size="15" fill="white">ui</text>
+<text x="425" y="180" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">test</text>
+<rect x="540" y="140" width="110" height="50" rx="8" fill="#94A3B8"/>
+<text x="595" y="162" text-anchor="middle" font-size="15" fill="white">ui</text>
+<text x="595" y="180" text-anchor="middle" font-size="11" fill="white" fill-opacity="0.85">build</text>
+<path d="M595 72V138" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+<path d="M272 165H366" stroke="#6366F1" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow-indigo)"/>
+<rect x="190" y="220" width="12" height="12" rx="3" fill="#F43F5E"/>
+<text x="210" y="231" font-size="13" fill="#94A3B8">affected, runs</text>
+<rect x="340" y="220" width="12" height="12" rx="3" fill="#94A3B8"/>
+<text x="360" y="231" font-size="13" fill="#94A3B8">not affected, skipped</text>
+<path d="M500 226H530" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+<text x="538" y="231" font-size="13" fill="#94A3B8">depends on</text>
+</svg>

@@ -450,8 +450,12 @@ describe('calculateDependenciesFromTaskGraph', () => {
     };
     const taskGraph: TaskGraph = {
       dependencies: {
-        'lib1:build': ['lib2:build', 'lib3:build'],
-        'lib2:build': ['lib2:build-base', 'lib3:build', 'lib4:build'],
+        'lib1:build': [{ id: 'lib2:build' }, { id: 'lib3:build' }],
+        'lib2:build': [
+          { id: 'lib2:build-base' },
+          { id: 'lib3:build' },
+          { id: 'lib4:build' },
+        ],
         'lib2:build-base': [],
         'lib3:build': [],
         'lib4:build': [],
@@ -633,13 +637,13 @@ describe('calculateDependenciesFromTaskGraph', () => {
     };
     const taskGraph: TaskGraph = {
       dependencies: {
-        'lib1:build': ['lib1:build-base'],
-        'lib1:build-base': ['lib2:build', 'lib3:build'],
-        'lib2:build': ['lib2:build-base'],
-        'lib2:build-base': ['lib3:build', 'lib4:build'],
-        'lib3:build': ['lib3:build-base'],
+        'lib1:build': [{ id: 'lib1:build-base' }],
+        'lib1:build-base': [{ id: 'lib2:build' }, { id: 'lib3:build' }],
+        'lib2:build': [{ id: 'lib2:build-base' }],
+        'lib2:build-base': [{ id: 'lib3:build' }, { id: 'lib4:build' }],
+        'lib3:build': [{ id: 'lib3:build-base' }],
         'lib3:build-base': [],
-        'lib4:build': ['lib4:build-base'],
+        'lib4:build': [{ id: 'lib4:build-base' }],
         'lib4:build-base': [],
       },
       continuousDependencies: {},

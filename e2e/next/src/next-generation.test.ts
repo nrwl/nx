@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  getSelectedPackageManager,
   readFile,
   runCLI,
   uniq,
@@ -30,6 +31,24 @@ describe('Next.js Applications - Generation', () => {
   });
 
   afterAll(() => cleanupNextTest());
+
+  it('should record allowBuilds decisions for sharp and @swc/core on pnpm', () => {
+    if (getSelectedPackageManager() !== 'pnpm') {
+      return;
+    }
+
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/next:app ${appName} --no-interactive --unitTestRunner=none --e2eTestRunner=none`
+    );
+
+    // pnpm 11 refuses to install deps whose build scripts are neither allowed
+    // nor denied: next pulls in sharp and the swc custom server setup pulls
+    // in @swc/core, so the generators must have recorded a decision for both
+    const workspaceYaml = readFile('pnpm-workspace.yaml');
+    expect(workspaceYaml).toContain('sharp: false');
+    expect(workspaceYaml).toMatch(/['"]@swc\/core['"]: false/);
+  }, 300_000);
 
   it('should support generating projects with the new name and root format', () => {
     const { proj } = setup;

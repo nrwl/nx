@@ -7,6 +7,7 @@
  * - Fake the FESM2022 outputs pointing them to the ESM2022 outputs.
  */
 
+import type { BuildGraph } from 'ng-packagr/src/lib/graph/build-graph';
 import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import {
@@ -14,6 +15,8 @@ import {
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/src/lib/ng-package/nodes';
+import * as ngPackagrNodes from 'ng-packagr/src/lib/ng-package/nodes';
+import type { EntryPointNode } from 'ng-packagr/src/lib/ng-package/nodes';
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
 import { NgPackage } from 'ng-packagr/src/lib/ng-package/package';
 import { ensureUnixPath } from 'ng-packagr/src/lib/utils/path';
@@ -34,9 +37,18 @@ async function shouldWriteFile(
   }
 }
 
+// ng-packagr 22.2.0 to 22.2.3 build entry points in parallel and export this
+// to find the one a graph is scoped to. 22.2.4 reverted that:
+// https://github.com/ng-packagr/ng-packagr/issues/3451
+const { getActiveEntryPoint } = ngPackagrNodes as {
+  getActiveEntryPoint?: (graph: BuildGraph) => EntryPointNode;
+};
+
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   return transformFromPromise(async (graph) => {
-    const entryPointNode = graph.find(isEntryPointInProgress());
+    const entryPointNode = getActiveEntryPoint
+      ? getActiveEntryPoint(graph)
+      : graph.find(isEntryPointInProgress());
     if (!entryPointNode) {
       return;
     }

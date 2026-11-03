@@ -69,7 +69,7 @@ npx create-nx-workspace@latest --template=empty
 Converting your largest repository in place works too, but then everything you import afterwards has to be reconciled against conventions that were set before the migration started.
 
 Settle your [folder structure](/docs/kb/folder-structure) before importing anything.
-`nx import` puts files where you tell it to, so the destination conventions win.
+`nx import` puts files where you tell it to, so the destination conventions decide where everything lands.
 Deciding that applications live in `apps/` and libraries in `packages/` now saves a round of renames later.
 
 {% aside type="caution" title="The destination directory must be empty" %}

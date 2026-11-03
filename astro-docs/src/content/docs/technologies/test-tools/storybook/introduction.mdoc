@@ -52,7 +52,7 @@ The project directory that contains `.storybook` must also contain a `package.js
 
 ### View inferred tasks
 
-To view inferred tasks for a project, open the [project details view](/docs/concepts/mental-model#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+To view inferred tasks for a project, open the [project details view](/docs/features/run-tasks#inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
 ### @nx/storybook configuration
 
@@ -87,6 +87,25 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 | `watchDepsTargetName`       | `watch-deps`       | Watches project dependencies.                       |
 
 Use `include` and `exclude` glob patterns on the plugin entry to scope inference. A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter must use the exact identifier `@nx/storybook/plugin`.
+
+### Wait for Storybook to be ready
+
+The inferred `storybook` and `static-storybook` targets come with a `readyWhen` check.
+With it, a task can wait until Storybook accepts connections instead of only until it has started.
+A dependent task waits for it only when its `dependsOn` entry sets `waitFor` to `ready`.
+
+- Outside Angular projects, the `storybook` target runs `storybook dev`.
+  Its check runs when the task runs, with the task's environment and options.
+  From Storybook 10.5, it takes the port from `--port`, then `SBCONFIG_PORT`, then `PORT`.
+  Earlier versions take `SBCONFIG_PORT` over `--port` and don't read `PORT`.
+  With no port set, Storybook picks a free port, and the target counts as ready once it has started.
+- In Angular projects, the `storybook` target runs `@storybook/angular:start-storybook`, which reports no address.
+  Its check waits for the port in `SBCONFIG_PORT`, else the `port` option, else 9009.
+  Generated Angular targets have the same check, and a migration adds it to existing ones.
+- The `static-storybook` target's file server reports its address once it listens.
+
+A `readyWhen` on the target in `targetDefaults` or in the project configuration replaces the inferred check, and `null` turns it off.
+For the other checks, see [wait for a continuous task to be ready](/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready).
 
 ## Using Storybook
 

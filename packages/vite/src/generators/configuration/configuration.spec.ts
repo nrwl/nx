@@ -4,6 +4,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
   writeJson,
@@ -23,6 +24,15 @@ import {
 
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { LibraryGeneratorSchema } from '@nx/js/internal';
+import { confirmationPrompt } from '@nx/devkit/internal';
+
+vi.mock('@nx/devkit/internal', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit/internal');
+  return {
+    ...actual,
+    confirmationPrompt: vi.fn(actual.confirmationPrompt),
+  };
+});
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -40,7 +50,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
         projectType: 'application',
@@ -101,7 +110,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-test-web-app',
       });
@@ -144,7 +152,6 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-angular-app',
         });
@@ -164,15 +171,12 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should throw when trying to convert something unknown and user denies conversion', async () => {
-      const devkitInternal = require('@nx/devkit/internal');
-      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
-      confirmSpy.mockResolvedValue(false);
+      vi.mocked(confirmationPrompt).mockResolvedValue(false);
 
       expect.assertions(2);
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -183,6 +187,26 @@ describe('@nx/vite:configuration', () => {
         );
       }
     });
+  });
+
+  it('should refuse to convert a project with targets on removed executors', async () => {
+    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    mockReactAppGenerator(tree);
+    writeJson(tree, 'apps/my-test-react-app/project.json', {
+      root: 'apps/my-test-react-app',
+      projectType: 'application',
+      targets: { build: { executor: '@nx/webpack:webpack' } },
+    });
+
+    await expect(
+      viteConfigurationGenerator(tree, {
+        uiFramework: 'react',
+        project: 'my-test-react-app',
+      })
+    ).rejects.toThrow(
+      'removed executors: build (@nx/webpack:webpack). Convert them to inferred targets first, for example with "nx g @nx/workspace:infer-targets --project=my-test-react-app".'
+    );
+    expect(tree.exists('apps/my-test-react-app/webpack.config.ts')).toBe(true);
   });
 
   describe('vitest', () => {
@@ -197,7 +221,6 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'my-test-react-app',
         includeVitest: true,
@@ -222,7 +245,6 @@ describe('@nx/vite:configuration', () => {
     it('should add config for building library', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',
@@ -237,7 +259,6 @@ describe('@nx/vite:configuration', () => {
     it('should set up non buildable library correctly', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         project: 'react-lib-nonb-jest',
         includeVitest: true,
@@ -248,15 +269,12 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should set up non buildable library which already has vite.config.mts correctly', async () => {
-      const devkitInternal = require('@nx/devkit/internal');
-      const confirmSpy = jest.spyOn(devkitInternal, 'confirmationPrompt');
-      confirmSpy.mockResolvedValue(true);
+      vi.mocked(confirmationPrompt).mockResolvedValue(true);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);
 
       try {
         await viteConfigurationGenerator(tree, {
-          addPlugin: true,
           uiFramework: 'react',
           project: 'react-lib-nonb-vitest',
           includeVitest: true,
@@ -366,7 +384,7 @@ describe('@nx/vite:configuration', () => {
       ${'none'}      | ${undefined}
       ${'jest'}      | ${'my-lib/jest.config.cts'}
     `(
-      'should respect provided unitTestRunner="$unitTestRunner"',
+      'should respect provided unitTestRunner=$unitTestRunner',
       async ({ unitTestRunner, configPath }) => {
         await jsLibraryGenerator(tree, {
           ...defaultOptions,
@@ -414,6 +432,25 @@ describe('@nx/vite:configuration', () => {
       });
     });
 
+    it('should register @nx/js/typescript', async () => {
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        newProject: true,
+      });
+
+      expect(readNxJson(tree).plugins).toContainEqual(
+        expect.objectContaining({ plugin: '@nx/js/typescript' })
+      );
+    });
+
     it('should create package.json with exports field for libraries', async () => {
       addProjectConfiguration(tree, 'my-lib', {
         root: 'packages/my-lib',
@@ -422,7 +459,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'packages/my-lib/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -463,7 +499,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'packages/my-lib/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -484,7 +519,6 @@ describe('@nx/vite:configuration', () => {
       writeJson(tree, 'apps/my-app/tsconfig.json', {});
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-app',
         projectType: 'application',
@@ -509,7 +543,6 @@ describe('@nx/vite:configuration', () => {
       tree.write('packages/my-lib/src/index.ts', '');
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'none',
         project: 'my-lib',
         projectType: 'library',
@@ -563,17 +596,15 @@ describe('@nx/vite:configuration', () => {
     });
   });
 
-  // TODO(v24): swap to vite-tsconfig-paths in the non-ts-solution branch.
-  describe('legacy non-ts-solution plugin emit', () => {
+  describe('path-based workspace config', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     });
 
-    it('should still emit the deprecated helpers for non-ts-solution libraries', async () => {
+    it('should emit native resolution and asset copying for non-ts-solution libraries', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
 
       await viteConfigurationGenerator(tree, {
-        addPlugin: true,
         uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',
@@ -581,57 +612,65 @@ describe('@nx/vite:configuration', () => {
 
       expect(tree.read('libs/react-lib-nonb-jest/vite.config.mts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/// <reference types='vitest' />
-        import { defineConfig } from 'vite';
-        import react from '@vitejs/plugin-react';
-        import dts from 'vite-plugin-dts';
-        import * as path from 'path';
-        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+          "/// <reference types='vitest' />
+          import { defineConfig } from 'vite';
+          import react from '@vitejs/plugin-react';
+          import dts from 'vite-plugin-dts';
+          import * as path from 'path';
 
-        export default defineConfig(() => ({
-          root: import.meta.dirname,
-          cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
-          plugins: [
-            react(),
-            nxViteTsPaths(),
-            nxCopyAssetsPlugin(['*.md']),
-            dts({
-              entryRoot: 'src',
-              tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
-              pathsToAliases: false,
-            }),
-          ],
-          // Uncomment this if you are using workers.
-          // worker: {
-          //   plugins: () => [ nxViteTsPaths() ],
-          // },
-          // Configuration for building your library.
-          // See: https://vite.dev/guide/build.html#library-mode
-          build: {
-            outDir: '../../dist/libs/react-lib-nonb-jest',
-            emptyOutDir: true,
-            reportCompressedSize: true,
-            commonjsOptions: {
-              transformMixedEsModules: true,
+          export default defineConfig(() => ({
+            root: import.meta.dirname,
+            cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
+            resolve: {
+              tsconfigPaths: true,
             },
-            lib: {
-              // Could also be a dictionary or array of multiple entry points.
-              entry: 'src/index.ts',
-              name: 'react-lib-nonb-jest',
-              fileName: 'index',
-              // Change this to the formats you want to support.
-              // Don't forget to update your package.json as well.
-              formats: ['es' as const],
+            plugins: [
+              react(),
+              import('vite-plugin-static-copy').then(({ viteStaticCopy }) =>
+                viteStaticCopy({
+                  targets: [
+                    { src: '*.md', dest: '.' },
+                    { src: 'package.json', dest: '.', overwrite: false },
+                  ],
+                  silent: true,
+                }),
+              ),
+              dts({
+                entryRoot: 'src',
+                tsconfigPath: path.join(import.meta.dirname, 'tsconfig.lib.json'),
+                pathsToAliases: false,
+              }),
+            ],
+            // Uncomment this if you are using workers.
+            // worker: {
+            //  plugins: [],
+            // },
+            // Configuration for building your library.
+            // See: https://vite.dev/guide/build.html#library-mode
+            build: {
+              outDir: '../../dist/libs/react-lib-nonb-jest',
+              emptyOutDir: true,
+              reportCompressedSize: true,
+              commonjsOptions: {
+                transformMixedEsModules: true,
+              },
+              lib: {
+                // Could also be a dictionary or array of multiple entry points.
+                entry: 'src/index.ts',
+                name: 'react-lib-nonb-jest',
+                fileName: 'index',
+                // Change this to the formats you want to support.
+                // Don't forget to update your package.json as well.
+                formats: ['es' as const],
+              },
+              rolldownOptions: {
+                // External packages that should not be bundled into your library.
+                external: ['react', 'react-dom', 'react/jsx-runtime'],
+              },
             },
-            rolldownOptions: {
-              // External packages that should not be bundled into your library.
-              external: ['react', 'react-dom', 'react/jsx-runtime'],
-            },
-          },
-        }));
-        "
-      `);
+          }));
+          "
+        `);
     });
   });
 });

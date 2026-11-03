@@ -5,7 +5,7 @@
     "moduleResolution": "nodenext",
     "noEmit": false,
     "incremental": true,
-    <% if(hasPlugin && compiler === 'tsc') { %>
+    <% if(compiler === 'tsc') { %>
     "tsBuildInfoFile": "<%= offsetFromRoot %>tmp/buildcache/<%= projectRoot %>/server",
     <% } %>
     "types": [

@@ -22,9 +22,8 @@ describe('add-jest-resolver migration', () => {
     );
 
     // Mock loadConfigFile to read from the in-memory tree
-    jest
-      .spyOn(nxDevkitConfigUtils, 'loadConfigFile')
-      .mockImplementation(async (filePath: string) => {
+    vi.spyOn(nxDevkitConfigUtils, 'loadConfigFile').mockImplementation(
+      async (filePath: string) => {
         // Convert absolute path to relative path for tree.read
         const relativePath = path.relative(tree.root, filePath);
 
@@ -56,11 +55,12 @@ describe('add-jest-resolver migration', () => {
           }
         }
         return null; // Should not reach here for valid app config files
-      });
+      }
+    );
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should add jest resolver to expo projects', async () => {

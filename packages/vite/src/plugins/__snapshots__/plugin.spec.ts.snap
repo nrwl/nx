@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/vite/plugin Library mode should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
+exports[`@nx/vite/plugin > Library mode > should exclude serve and preview targets when vite.config.ts is in library mode 1`] = `
 [
   [
     "my-lib/vite.config.ts",
@@ -68,7 +68,7 @@ exports[`@nx/vite/plugin Library mode should exclude serve and preview targets w
 ]
 `;
 
-exports[`@nx/vite/plugin not root project should create nodes 1`] = `
+exports[`@nx/vite/plugin > not root project > should create nodes 1`] = `
 [
   [
     "my-app/vite.config.ts",
@@ -150,6 +150,10 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                "interval": 1000,
+              },
             },
             "my-serve": {
               "command": "vite",
@@ -180,6 +184,10 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               },
               "options": {
                 "cwd": "my-app",
+              },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                "interval": 1000,
               },
             },
             "preview-site": {
@@ -214,9 +222,16 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "options": {
                 "cwd": "my-app",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
+                "interval": 1000,
+              },
             },
             "serve-static": {
               "continuous": true,
+              "dependsOn": [
+                "build-something",
+              ],
               "executor": "@nx/web:file-server",
               "inputs": [
                 "production",
@@ -230,6 +245,9 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               "options": {
                 "buildTarget": "build-something",
                 "spa": true,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
             "watch-deps": {
@@ -247,7 +265,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
 ]
 `;
 
-exports[`@nx/vite/plugin root project should create nodes 1`] = `
+exports[`@nx/vite/plugin > root project > should create nodes 1`] = `
 [
   [
     "vite.config.ts",
@@ -324,6 +342,10 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                "interval": 1000,
+              },
             },
             "preview": {
               "command": "vite preview",
@@ -357,6 +379,10 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
+                "interval": 1000,
+              },
             },
             "serve": {
               "command": "vite",
@@ -388,9 +414,16 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "options": {
                 "cwd": ".",
               },
+              "readyWhen": {
+                "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                "interval": 1000,
+              },
             },
             "serve-static": {
               "continuous": true,
+              "dependsOn": [
+                "build",
+              ],
               "executor": "@nx/web:file-server",
               "inputs": [
                 "production",
@@ -404,6 +437,9 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               "options": {
                 "buildTarget": "build",
                 "spa": true,
+              },
+              "readyWhen": {
+                "signal": true,
               },
             },
           },

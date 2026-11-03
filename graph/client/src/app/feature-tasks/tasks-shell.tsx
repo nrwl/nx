@@ -4,7 +4,7 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import type { ProjectGraphProjectNode } from '@nx/devkit';
+import type { ProjectGraphProjectNode, TaskGraph } from '@nx/devkit';
 
 import { useTaskGraphContext, NxGraphTaskGraphProvider } from '@nx/graph/tasks';
 import {
@@ -189,7 +189,7 @@ function TasksShellInner() {
     send({
       type: 'initGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksData.taskGraph,
+      taskGraph: withEdgeIds(tasksData.taskGraph),
     });
   }, [orchestrator]);
 
@@ -199,7 +199,7 @@ function TasksShellInner() {
     send({
       type: 'mergeGraph',
       projects: selectedWorkspaceLoaderData.projects,
-      taskGraph: tasksData.taskGraph,
+      taskGraph: withEdgeIds(tasksData.taskGraph),
     });
   }, [orchestrator, tasksData.taskGraph]);
 
@@ -665,4 +665,20 @@ function TaskGraphControlsPanel({
       </NxGraphProjectListControl>
     </NxGraphPanel>
   );
+}
+
+// @nx/graph builds its edges from task ids, not edge objects.
+function withEdgeIds(taskGraph: TaskGraph): TaskGraph {
+  const ids = (edges: Record<string, Array<string | { id: string }>>) =>
+    Object.fromEntries(
+      Object.entries(edges).map(([taskId, deps]) => [
+        taskId,
+        deps.map((dep) => (typeof dep === 'string' ? dep : dep.id)),
+      ])
+    );
+  return {
+    ...taskGraph,
+    dependencies: ids(taskGraph.dependencies),
+    continuousDependencies: ids(taskGraph.continuousDependencies),
+  } as unknown as TaskGraph;
 }

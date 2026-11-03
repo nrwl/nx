@@ -3,8 +3,10 @@ import '@nx/devkit/internal-testing-utils/mock-project-graph';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
-import { scamGenerator } from '../scam/scam';
-import { generateTestApplication } from '../utils/testing';
+import {
+  generateTestApplication,
+  generateTestInlineScam,
+} from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 import { stripIndents } from '@nx/devkit';
 
@@ -29,10 +31,9 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should generate stories file for scam component', async () => {
-    await scamGenerator(tree, {
+    await generateTestInlineScam(tree, {
       name: 'my-scam',
       path: `${appName}/src/app/my-scam/my-scam`,
-      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, { name: appName });
@@ -43,10 +44,9 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should ignore paths', async () => {
-    await scamGenerator(tree, {
+    await generateTestInlineScam(tree, {
       name: 'my-scam',
       path: `${appName}/src/app/my-scam/my-scam`,
-      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, {
@@ -56,25 +56,24 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
+      tree.exists(`${appName}/src/app/my-scam/my-scam.stories.ts`)
     ).toBeFalsy();
   });
 
   it('should ignore paths when full path to component is provided', async () => {
-    await scamGenerator(tree, {
+    await generateTestInlineScam(tree, {
       name: 'my-scam',
       path: `${appName}/src/app/my-scam/my-scam`,
-      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, {
       name: appName,
-      ignorePaths: [`${appName}/src/app/my-scam/my-scam.component.ts`],
+      ignorePaths: [`${appName}/src/app/my-scam/my-scam.ts`],
       skipFormat: true,
     });
 
     expect(
-      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
+      tree.exists(`${appName}/src/app/my-scam/my-scam.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -151,11 +150,9 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should generate stories file for inline scam component', async () => {
-    await scamGenerator(tree, {
+    await generateTestInlineScam(tree, {
       name: 'my-scam',
       path: `${appName}/src/app/my-scam/my-scam`,
-      inlineScam: true,
-      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, { name: appName, skipFormat: true });

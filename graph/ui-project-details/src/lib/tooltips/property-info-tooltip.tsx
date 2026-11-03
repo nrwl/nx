@@ -13,7 +13,8 @@ type PropertyInfoTooltipType =
   | 'release'
   | 'parallelism'
   | 'syncGenerators'
-  | 'continuous';
+  | 'continuous'
+  | 'readyWhen';
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl?: string;
@@ -102,6 +103,14 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     description:
       'This is marked as continuous. Nx will not wait for this task to finish before running other tasks.',
     docsUrl: 'TODO ADD LINK',
+  },
+  readyWhen: {
+    heading: 'Ready When',
+    docsLinkText: 'Learn more about readiness checks',
+    description:
+      'How Nx detects that this continuous task is ready. A task that depends on it with `"waitFor": "ready"` starts once the check passes, and fails if the timeout runs out first.',
+    docsUrl:
+      'https://nx.dev/docs/reference/project-configuration#wait-for-a-continuous-task-to-be-ready',
   },
 };
 

@@ -42,13 +42,15 @@ describe('Invoke Runner', () => {
       } = require('nx/src/project-graph/project-graph');
       const { readNxJson } = require('nx/src/config/nx-json');
 
-      function makeTaskGraph(tasks) {
+      function makeTaskGraph(tasks, edges = {}) {
         return {
           roots: tasks.map((t) => t.id),
           tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
-          dependencies: Object.fromEntries(tasks.map((t) => [t.id, []])),
+          dependencies: Object.fromEntries(
+            tasks.map((t) => [t.id, edges[t.id]?.dependencies ?? []])
+          ),
           continuousDependencies: Object.fromEntries(
-            tasks.map((t) => [t.id, []])
+            tasks.map((t) => [t.id, edges[t.id]?.continuousDependencies ?? []])
           ),
         };
       }
@@ -67,18 +69,6 @@ describe('Invoke Runner', () => {
           continuous: false,
           cache: false,
         }));
-        const handles = await runDiscreteTasks(
-          discrete,
-          projectGraph,
-          makeTaskGraph(discrete),
-          nxJson,
-          lifeCycle
-        );
-        const results = (await Promise.all(handles)).flat();
-        for (const r of results) {
-          console.log('DISCRETE', r.task.id, r.status);
-        }
-
         const serve = {
           id: '${mylib}:serve',
           target: { project: '${mylib}', target: 'serve' },
@@ -88,6 +78,26 @@ describe('Invoke Runner', () => {
           continuous: true,
           cache: false,
         };
+        // A client bundle built before task graph edges became objects hands
+        // the full graph with plain task ids on both maps
+        const legacyFullTaskGraph = makeTaskGraph([...discrete, serve], {
+          ['${mylib}:build']: {
+            dependencies: ['${mylib}:prebuild'],
+            continuousDependencies: ['${mylib}:serve'],
+          },
+        });
+        const handles = await runDiscreteTasks(
+          discrete,
+          projectGraph,
+          legacyFullTaskGraph,
+          nxJson,
+          lifeCycle
+        );
+        const results = (await Promise.all(handles)).flat();
+        for (const r of results) {
+          console.log('DISCRETE', r.task.id, r.status);
+        }
+
         const running = await runContinuousTasks(
           [serve],
           projectGraph,
@@ -113,8 +123,8 @@ describe('Invoke Runner', () => {
     );
 
     const q = runCommand('node runner.js');
-    expect(q).toContain(`DISCRETE ${mylib}:prebuild`);
-    expect(q).toContain(`DISCRETE ${mylib}:build`);
+    expect(q).toContain(`DISCRETE ${mylib}:prebuild success`);
+    expect(q).toContain(`DISCRETE ${mylib}:build success`);
     expect(q).toContain(`CONTINUOUS ${mylib}:serve`);
     expect(q).toContain(`DONE`);
   });

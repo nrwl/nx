@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import * as pc from 'picocolors';
 
+import { warnWebpackSsrDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { TargetOptions, WebSsrDevServerOptions } from './schema';
 import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
@@ -15,6 +16,8 @@ export async function* ssrDevServerExecutor(
   options: WebSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  warnWebpackSsrDevServerExecutorDeprecation();
+
   const browserTarget = parseTargetString(
     options.browserTarget,
     context.projectGraph

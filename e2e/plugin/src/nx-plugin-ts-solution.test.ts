@@ -74,7 +74,7 @@ describe('Nx Plugin (TS solution)', () => {
       `generate @nx/plugin:generator packages/${plugin}/src/generators/${generator}/generator --name ${generator}`
     );
     runCLI(
-      `generate @nx/plugin:executor packages/${plugin}/src/executors/${executor}/executor --name ${executor} --includeHasher`
+      `generate @nx/plugin:executor packages/${plugin}/src/executors/${executor}/executor --name ${executor}`
     );
     runCLI(
       `generate @nx/plugin:migration packages/${plugin}/src/migrations/update-${migrationVersion}/update-${migrationVersion} --packageVersion=${migrationVersion} --packageJsonUpdates=false`
@@ -103,8 +103,6 @@ describe('Nx Plugin (TS solution)', () => {
       `packages/${plugin}/dist/executors/${executor}/schema.d.ts`,
       `packages/${plugin}/dist/executors/${executor}/executor.js`,
       `packages/${plugin}/dist/executors/${executor}/executor.d.ts`,
-      `packages/${plugin}/dist/executors/${executor}/hasher.js`,
-      `packages/${plugin}/dist/executors/${executor}/hasher.d.ts`,
       // migration
       `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.js`,
       `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.d.ts`

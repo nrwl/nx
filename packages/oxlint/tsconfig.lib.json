@@ -16,7 +16,8 @@
     "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "**/*.spec-util.ts"
   ],
   "include": ["*.ts", "src/**/*.ts"],
   "references": [

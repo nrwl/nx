@@ -4,10 +4,11 @@
     "outDir": "out-tsc/<%= e2eProjectName %>",
     "esModuleInterop": true,
     "noUnusedLocals": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "types": <%- testRunner === 'vitest' ? '["vitest/globals", "node"]' : '["jest", "node"]' %>
   },
   "include": [
-    "jest.config.ts",
+    "<%= testRunner === 'vitest' ? 'vitest.config.mts' : 'jest.config.ts' %>",
     "src/**/*.ts"
   ],
   "references": []

@@ -45,6 +45,7 @@ export const pluginToTechnology: Record<string, string> = {
   webpack: 'build-tools',
   vite: 'build-tools',
   rollup: 'build-tools',
+  rolldown: 'build-tools',
   esbuild: 'build-tools',
   rspack: 'build-tools',
   rsbuild: 'build-tools',

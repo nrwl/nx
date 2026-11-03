@@ -1,13 +1,14 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashObject,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
@@ -20,6 +21,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   workspaceRoot,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
@@ -30,7 +32,7 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
 export interface WebpackPluginOptions {
@@ -43,13 +45,6 @@ export interface WebpackPluginOptions {
 }
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
@@ -245,6 +240,11 @@ async function createWebpackTargets(
     },
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    webpackOptions
+  );
+
   targets[options.serveTargetName] = {
     continuous: true,
     inputs: [...buildInputs],
@@ -253,6 +253,7 @@ async function createWebpackTargets(
       cwd: projectRoot,
       env: { NODE_ENV: 'development' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server',
@@ -275,6 +276,7 @@ async function createWebpackTargets(
       cwd: projectRoot,
       env: { NODE_ENV: 'production' },
     },
+    readyWhen: devServerReadyWhen,
     metadata: {
       technologies: ['webpack'],
       description: 'Starts Webpack dev server in production mode',
@@ -298,6 +300,7 @@ async function createWebpackTargets(
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -349,9 +352,8 @@ function normalizeOutputPath(
        * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
        * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
        */
-      return `{workspaceRoot}/${relative(
-        workspaceRoot,
-        resolve(workspaceRoot, outputPath)
+      return `{workspaceRoot}/${normalizePath(
+        relative(workspaceRoot, resolve(workspaceRoot, outputPath))
       )}`;
     } else {
       if (outputPath.startsWith('..')) {
@@ -413,4 +415,25 @@ function normalizeOptions(
     buildDepsTargetName: 'build-deps',
     watchDepsTargetName: 'watch-deps',
   };
+}
+
+// A dev server whose config loads NxAppWebpackPlugin or NxReadySignalPlugin reports
+// when it listens. Otherwise the check reads the config when the task runs,
+// with the task's env and options, and waits for the dev server's port.
+function getDevServerReadyWhen(
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
+): TargetConfiguration['readyWhen'] {
+  // webpack-cli starts a dev server for each config with devServer. Only the
+  // first one to listen would signal, so several get the check that waits
+  // for each of them.
+  const withDevServer = configs.filter((config) => config.devServer);
+  const signals =
+    withDevServer.length === 1 && sendsReadySignal(withDevServer[0]);
+  return signals
+    ? { signal: true }
+    : getReadyCheckReadyWhen(
+        '@nx/webpack/ready-check',
+        basename(configFilePath)
+      );
 }

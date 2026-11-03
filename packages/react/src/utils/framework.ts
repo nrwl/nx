@@ -10,11 +10,7 @@ export function getUiFramework(
 ): '@storybook/react-vite' | '@storybook/react-webpack5' {
   const projectConfig = readProjectConfiguration(tree, project);
 
-  if (
-    findWebpackConfig(tree, projectConfig.root) ||
-    projectConfig.targets?.['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets?.['build']?.executor === '@nx/expo:build'
-  ) {
+  if (findWebpackConfig(tree, projectConfig.root)) {
     return '@storybook/react-webpack5';
   }
 

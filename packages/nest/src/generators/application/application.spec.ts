@@ -1,12 +1,14 @@
+import * as devkit from '@nx/devkit';
+import type { MockInstance } from 'vitest';
 // Pin the detected package manager so inferred lock-file outputs (e.g.
 // prune-lockfile) and package-manager commands are deterministic regardless of
 // which package manager runs the tests.
-jest.mock('@nx/devkit', () => {
-  const actual = jest.requireActual('@nx/devkit');
+vi.mock('@nx/devkit', async () => {
+  const actual = await vi.importActual<any>('@nx/devkit');
   return {
     ...actual,
-    detectPackageManager: jest.fn(() => 'npm'),
-    getPackageManagerCommand: jest.fn((pm = 'npm') =>
+    detectPackageManager: vi.fn(() => 'npm'),
+    getPackageManagerCommand: vi.fn((pm = 'npm') =>
       actual.getPackageManagerCommand(pm)
     ),
   };
@@ -29,13 +31,12 @@ describe('application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate project configurations', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
-      addPlugin: true,
     });
 
     const projectConfigurations = getProjects(tree);
@@ -104,6 +105,9 @@ describe('application generator', () => {
               "buildTarget": "my-node-app:build",
               "runBuildTargetDependencies": false,
             },
+            "readyWhen": {
+              "signal": true,
+            },
           },
           "test": {
             "options": {
@@ -123,7 +127,6 @@ describe('application generator', () => {
 
     await applicationGenerator(unformatted, {
       directory: appDirectory,
-      addPlugin: true,
       formatter: 'prettier',
     });
 
@@ -137,10 +140,11 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       linter: 'eslint',
       directory: appDirectory,
-      addPlugin: true,
     });
 
-    expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
+    const main = tree.read(`${appDirectory}/src/main.ts`, 'utf-8');
+    expect(main).toContain("load('@nx/js/ready-signal')");
+    expect(main).toContain('emitReadySignal(app.getHttpServer())');
 
     expect(
       tree.exists(`${appDirectory}/src/app/app.controller.ts`)
@@ -153,7 +157,6 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
       unitTestRunner: 'jest',
-      addPlugin: true,
     });
 
     expect(
@@ -169,7 +172,6 @@ describe('application generator', () => {
       directory: appDirectory,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'none',
-      addPlugin: true,
     });
 
     expect(tree.exists(`${appDirectory}/vitest.config.mts`)).toBeTruthy();
@@ -199,7 +201,6 @@ describe('application generator', () => {
             directory: appDirectory,
             unitTestRunner: 'vitest',
             e2eTestRunner: 'none',
-            addPlugin: true,
           })
         ).rejects.toThrow(/requires Vite 8 or later/);
       }
@@ -213,7 +214,6 @@ describe('application generator', () => {
           directory: appDirectory,
           unitTestRunner: 'vitest',
           e2eTestRunner: 'none',
-          addPlugin: true,
         })
       ).resolves.toBeDefined();
     });
@@ -224,7 +224,6 @@ describe('application generator', () => {
           directory: appDirectory,
           unitTestRunner: 'vitest',
           e2eTestRunner: 'none',
-          addPlugin: true,
         })
       ).resolves.toBeDefined();
     });
@@ -237,7 +236,6 @@ describe('application generator', () => {
           directory: appDirectory,
           unitTestRunner: 'jest',
           e2eTestRunner: 'none',
-          addPlugin: true,
         })
       ).resolves.toBeDefined();
     });
@@ -253,7 +251,6 @@ describe('application generator', () => {
 
     await applicationGenerator(tree, {
       directory: appDirectory,
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -278,7 +275,6 @@ describe('application generator', () => {
 
     await applicationGenerator(tree, {
       directory: appDirectory,
-      addPlugin: true,
     });
 
     const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
@@ -289,7 +285,6 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
       strict: true,
-      addPlugin: true,
     });
     const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
 
@@ -303,23 +298,21 @@ describe('application generator', () => {
   });
 
   describe('--skipFormat', () => {
-    let formatFilesSpy: jest.SpyInstance;
+    let formatFilesSpy: MockInstance;
 
     beforeEach(() => {
-      const devkitModule = require('@nx/devkit');
-      formatFilesSpy = jest
-        .spyOn(devkitModule, 'formatFiles')
+      formatFilesSpy = vi
+        .spyOn(devkit, 'formatFiles')
         .mockImplementation(() => Promise.resolve());
     });
 
     afterAll(() => {
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     it('should format files', async () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
-        addPlugin: true,
       });
 
       expect(formatFilesSpy).toHaveBeenCalled();
@@ -329,7 +322,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         skipFormat: true,
-        addPlugin: true,
       });
 
       expect(formatFilesSpy).not.toHaveBeenCalled();
@@ -341,7 +333,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         directory: appDirectory,
         e2eTestRunner: 'none',
-        addPlugin: true,
       });
 
       const projectConfigurations = getProjects(tree);
@@ -375,7 +366,6 @@ describe('application generator', () => {
         linter: 'eslint',
         directory: 'myapp',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -457,6 +447,9 @@ describe('application generator', () => {
                 "options": {
                   "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
+                },
+                "readyWhen": {
+                  "signal": true,
                 },
               },
               "test": {
@@ -552,7 +545,6 @@ describe('application generator', () => {
         directory: 'myapp',
         name: 'myapp',
         unitTestRunner: 'jest',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -579,7 +571,6 @@ describe('application generator', () => {
         directory: 'myapp',
         e2eTestRunner: 'jest',
         useProjectJson: true,
-        addPlugin: true,
         skipFormat: true,
       });
 
@@ -647,6 +638,9 @@ describe('application generator', () => {
                 "buildTarget": "@proj/myapp:build",
                 "runBuildTargetDependencies": false,
               },
+              "readyWhen": {
+                "signal": true,
+              },
             },
             "test": {
               "options": {
@@ -670,14 +664,13 @@ describe('application generator', () => {
           "root": "myapp-e2e",
           "targets": {
             "e2e": {
+              "command": "jest --passWithNoTests",
               "dependsOn": [
                 "@proj/myapp:build",
                 "@proj/myapp:serve",
               ],
-              "executor": "@nx/jest:jest",
               "options": {
-                "jestConfig": "myapp-e2e/jest.config.cts",
-                "passWithNoTests": true,
+                "cwd": "myapp-e2e",
               },
               "outputs": [
                 "{workspaceRoot}/coverage/{e2eProjectRoot}",

@@ -85,9 +85,20 @@
         "x-repair-skip": {
           "type": "boolean",
           "description": "Exclude this migration when users run `nx repair`."
+        },
+        "optionalUpdate": {
+          "type": "boolean",
+          "description": "Marks a migration that applies an optional dependency update, such as a major version bump that also rewrites code. `nx migrate --include=required` skips it, and `nx migrate --include=optional` runs it whenever `requires` is met. Requires `requires`, set to the versions the migration updates from."
         }
       },
       "required": ["version"],
+      "if": {
+        "properties": { "optionalUpdate": { "const": true } },
+        "required": ["optionalUpdate"]
+      },
+      "then": {
+        "required": ["requires"]
+      },
       "anyOf": [
         {
           "required": ["implementation"]

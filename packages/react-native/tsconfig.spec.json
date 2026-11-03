@@ -3,7 +3,7 @@
   "compilerOptions": {
     "customConditions": ["@nx/nx-source"],
     "outDir": "out-tsc/spec",
-    "types": ["jest", "node"],
+    "types": ["vitest/globals", "node"],
     "noEmit": true,
     "composite": true,
     "rootDir": "."
@@ -18,7 +18,7 @@
     "**/*.spec.jsx",
     "**/*.test.jsx",
     "**/*.d.ts",
-    "jest.config.ts",
+    "vitest.config.mts",
     "*.json"
   ],
   "references": [

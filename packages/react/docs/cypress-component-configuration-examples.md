@@ -4,8 +4,6 @@ React component testing with Nx requires **Cypress version 10.7.0** and up.
 You can migrate with to v11 via the [migrate-to-cypress-11 generator](/nx-api/cypress/generators/migrate-to-cypress-11).
 
 This generator is for Cypress based component testing.
-
-If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/react/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 19.
 :::
 
 This generator is designed to get your React project up and running with Cypress Component Testing.
@@ -60,15 +58,18 @@ export default defineConfig({
 
 ## The `bundler` option
 
-Component testing supports two different bundlers: `webpack` and `vite`. The Nx generator will pick up the bundler used in the specified project's build target. If the build target is using `@nx/webpack:webpack`, then the generator will use `webpack` as the bundler. If the build target is using `@nx/vite:build`, then the generator will use `vite` as the bundler.
+Component testing supports two bundlers: `webpack` and `vite`.
+The generator picks `webpack` when `@nx/webpack/plugin` infers the build target, and `vite` when
+`@nx/vite/plugin` infers it.
 
 You can manually set the bundler by passing `--bundler=webpack` or `--bundler=vite` to the generator, but that is not needed since the generator will pick up the correct bundler for you. However, if you want to use a different bundler than the one that is used in the build target, then you can manually set it using that flag.
 
 ## Specifying a Build Target
 
-Component testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/concepts/mental-model#the-project-graph) if one isn't provided.
+Component testing requires a _build target_ to correctly run the component test dev server. This option can be manually specified with `--build-target=some-react-app:build`, but Nx will infer this usage from the [project graph](/docs/features/explore-graph#explore-the-project-graph) if one isn't provided.
 
-For React projects, the build target needs to be using the `@nx/webpack:webpack` executor.
+For React projects, `@nx/vite/plugin` or `@nx/webpack/plugin` must infer the build target from a
+Vite or webpack config file at the project root.
 The generator will throw an error if a build target can't be found and suggest passing one in manually.
 
 Letting Nx infer the build target by default
@@ -80,7 +81,7 @@ nx g @nx/react:cypress-component-configuration --project=my-cool-react-project
 Manually specifying the build target
 
 ```shell
-nx g @nx/react:cypress-component-configuration --project=my-cool-react-project --build-target:some-react-app:build --generate-tests
+nx g @nx/react:cypress-component-configuration --project=my-cool-react-project --build-target=some-react-app:build --generate-tests
 ```
 
 :::note[Build Target with Configuration]
@@ -98,28 +99,12 @@ nx g @nx/react:cypress-component-configuration --project=my-cool-react-project -
 
 ## Running Component Tests
 
-A new `component-test` target will be added to the specified project to run your component tests.
+The `@nx/cypress/plugin` plugin infers a `component-test` target from the project's `cypress.config.ts`.
 
 ```shell
-nx g component-test my-cool-react-project
+nx component-test my-cool-react-project
 ```
 
-Here is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.
-
-```json title="project.json"
-{
-  "targets" {
-    "component-test": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "<path-to-project-root>/cypress.config.ts",
-        "testingType": "component",
-        "devServerTarget": "some-react-app:build",
-        "skipServe": true
-      }
-    }
-  }
-}
-```
+The generator passes the `--build-target` option to `nxComponentTestingPreset` in `cypress.config.ts` as `buildTarget`. Change it there as needed.
 
 Nx also supports [Angular component testing](/nx-api/angular/generators/cypress-component-configuration).

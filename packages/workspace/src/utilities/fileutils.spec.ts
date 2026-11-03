@@ -1,7 +1,7 @@
 import { fs } from 'memfs';
 import { createDirectory, isRelativePath } from './fileutils';
 
-jest.mock('node:fs', () => fs);
+vi.mock('node:fs', () => fs);
 
 describe('fileutils', () => {
   describe(createDirectory.name, () => {

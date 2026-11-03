@@ -14,7 +14,7 @@ import { oxfmtVersion } from './versions';
 
 export function generateOxfmtSetup(
   tree: Tree,
-  options: { skipPackageJson?: boolean }
+  options: { skipPackageJson?: boolean; keepExistingVersions?: boolean }
 ): GeneratorCallback {
   assertNxSupportsFormatters();
 
@@ -41,5 +41,11 @@ export function generateOxfmtSetup(
 
   return options.skipPackageJson
     ? () => {}
-    : addDependenciesToPackageJson(tree, {}, { oxfmt: oxfmtVersion });
+    : addDependenciesToPackageJson(
+        tree,
+        {},
+        { oxfmt: oxfmtVersion },
+        undefined,
+        options.keepExistingVersions ?? true
+      );
 }

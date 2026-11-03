@@ -7,11 +7,13 @@ import {
 import {
   createProjectGraphAsync,
   formatFiles,
+  logger,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2, type CypressPluginOptions } from '../../plugins/plugin';
 import { assertSupportedCypressVersion } from '../../utils/assert-supported-cypress-version';
+import { addBuildTargetToComponentTestingPreset } from './lib/add-build-target-to-ct-preset';
 import { addDevServerTargetToConfig } from './lib/add-dev-server-target-to-config';
 import { addExcludeSpecPattern } from './lib/add-exclude-spec-pattern';
 import { targetOptionsToCliMap } from './lib/target-options-map';
@@ -64,6 +66,14 @@ function postTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ): TargetConfiguration {
+  if (target.options?.testingType === 'component') {
+    moveBuildTargetToComponentTestingPreset(
+      tree,
+      target,
+      projectDetails.projectName
+    );
+  }
+
   if (target.options) {
     handlePropertiesInOptions(
       tree,
@@ -108,6 +118,48 @@ function postTargetTransformer(
   }
 
   return target;
+}
+
+function moveBuildTargetToComponentTestingPreset(
+  tree: Tree,
+  target: TargetConfiguration,
+  projectName: string
+) {
+  const defaultConfiguration = target.defaultConfiguration
+    ? target.configurations?.[target.defaultConfiguration]
+    : undefined;
+  const buildTarget: string | undefined =
+    defaultConfiguration?.devServerTarget ?? target.options.devServerTarget;
+  const { cypressConfig } = target.options;
+  if (
+    buildTarget &&
+    !(
+      cypressConfig &&
+      addBuildTargetToComponentTestingPreset(tree, cypressConfig, buildTarget)
+    )
+  ) {
+    logger.warn(
+      `Could not set the component testing build target of project "${projectName}" in its Cypress config. Pass it to nxComponentTestingPreset as buildTarget: "${buildTarget}".`
+    );
+  }
+
+  const removeDevServerTarget = (
+    options: Record<string, any> | undefined,
+    location: string
+  ) => {
+    if (options?.devServerTarget && options.devServerTarget !== buildTarget) {
+      logger.warn(
+        `Removed devServerTarget "${options.devServerTarget}" from the ${location} of project "${projectName}". Component testing uses the single buildTarget passed to nxComponentTestingPreset.`
+      );
+    }
+    delete options?.devServerTarget;
+  };
+  removeDevServerTarget(target.options, 'options');
+  for (const [name, configuration] of Object.entries(
+    target.configurations ?? {}
+  )) {
+    removeDevServerTarget(configuration, `"${name}" configuration`);
+  }
 }
 
 function handlePropertiesInOptions(

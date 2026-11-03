@@ -1,6 +1,7 @@
 import * as mfVersions from './mf-versions';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
+  nxVersion,
   reactVersion,
   reactDomVersion,
   typesReactVersion,
@@ -58,6 +59,7 @@ function bundlerDeps(bundler: SupportedBundler): DepsBundle {
         devDependencies: {
           '@module-federation/vite':
             mfVersions.moduleFederationVitePluginVersion,
+          '@nx/vite': nxVersion,
           '@vitejs/plugin-react': mfVersions.vitejsPluginReactVersion,
           vite: mfVersions.viteVersion,
         },
@@ -68,6 +70,7 @@ function bundlerDeps(bundler: SupportedBundler): DepsBundle {
         devDependencies: {
           '@module-federation/rsbuild-plugin':
             mfVersions.moduleFederationRsbuildPluginVersion,
+          '@nx/rsbuild': nxVersion,
           '@rsbuild/core': mfVersions.rsbuildCoreVersion,
           '@rsbuild/plugin-react': mfVersions.rsbuildPluginReactVersion,
         },
@@ -81,9 +84,13 @@ function bundlerDeps(bundler: SupportedBundler): DepsBundle {
             mfVersions.moduleFederationEnhancedVersion,
         },
         devDependencies: {
+          '@nx/rspack': nxVersion,
           '@rspack/cli': mfVersions.rspackCliVersion,
           '@rspack/core': mfVersions.rspackCoreVersion,
           '@rspack/dev-server': mfVersions.rspackDevServerVersion,
+          '@rspack/plugin-react-refresh':
+            mfVersions.rspackPluginReactRefreshVersion,
+          'react-refresh': mfVersions.reactRefreshVersion,
         },
       };
   }

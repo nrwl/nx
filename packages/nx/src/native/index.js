@@ -77,10 +77,6 @@ function removeIfPresent(path) {
   }
 }
 
-function isNoExecError(e) {
-  return e.code === 'EACCES' || e.code === 'EPERM';
-}
-
 // We override the _load function so that when a native file is required,
 // we copy it to a cache directory and require it from there.
 // This prevents the file being loaded from node_modules and causing file locking issues.
@@ -135,17 +131,24 @@ Module._load = function (request, parent, isMain) {
       existingFileStats?.size === expectedFileSize &&
       existingFileStats.mtimeMs >= sourceStats.mtimeMs;
 
-    // If the file to be loaded already exists and is current, just load it
-    if (isFresh) {
+    const loadFromCache = () => {
       try {
         return originalLoad.apply(this, [tmpFile, parent, isMain]);
       } catch (e) {
-        // If loading from cache fails due to noexec, fall back to original location
-        if (isNoExecError(e)) {
+        if (
+          e.code === 'EACCES' ||
+          e.code === 'EPERM' ||
+          e.code === 'MODULE_NOT_FOUND' ||
+          e.code === 'ERR_DLOPEN_FAILED'
+        ) {
           return originalLoad.apply(this, [nativeLocation, parent, isMain]);
         }
         throw e;
       }
+    };
+
+    if (isFresh) {
+      return loadFromCache();
     }
 
     // Retry copying up to 3 times, validating after each copy
@@ -177,15 +180,7 @@ Module._load = function (request, parent, isMain) {
           removeIfPresent(tmpTmpFile);
           break;
         }
-        try {
-          return originalLoad.apply(this, [tmpFile, parent, isMain]);
-        } catch (e) {
-          // If loading from cache fails due to noexec, fall back to original location
-          if (isNoExecError(e)) {
-            return originalLoad.apply(this, [nativeLocation, parent, isMain]);
-          }
-          throw e;
-        }
+        return loadFromCache();
       }
 
       // Copy failed validation, clean up the malformed file
@@ -209,7 +204,12 @@ Module._load = function (request, parent, isMain) {
 };
 
 const indexModulePath = require.resolve('./native-bindings.js');
-delete require.cache[indexModulePath];
+// Absent on Node 22.15–22.22.2 and 24.0–24.11.0 under a `module.registerHooks()`
+// load hook (Playwright 1.64): node evaluates CJS imported from ESM with its
+// internal loader there.
+if (require.cache) {
+  delete require.cache[indexModulePath];
+}
 // A direct re-export: node's CommonJS export lexer follows this form, so ESM
 // importers see the named exports. Assigning via a variable hides them.
 module.exports = require('./native-bindings.js');

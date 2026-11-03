@@ -92,12 +92,12 @@ class TaskGraphClientCache {
       rootsSet.add(root);
     }
 
-    const mergedDependencies = this.mergeStringCollectionRecord(
+    const mergedDependencies = this.mergeCollectionRecord(
       this.cached?.taskGraph.dependencies,
       response.taskGraph.dependencies
     );
 
-    const mergedContinuousDependencies = this.mergeStringCollectionRecord(
+    const mergedContinuousDependencies = this.mergeCollectionRecord(
       this.cached?.taskGraph.continuousDependencies,
       response.taskGraph.continuousDependencies
     );
@@ -109,7 +109,7 @@ class TaskGraphClientCache {
       continuousDependencies: mergedContinuousDependencies,
     };
 
-    const mergedPlans = this.mergeStringCollectionRecord(
+    const mergedPlans = this.mergeCollectionRecord(
       this.cached?.plans,
       response.plans
     );
@@ -128,22 +128,25 @@ class TaskGraphClientCache {
     this.fetchedSet.clear();
   }
 
-  private mergeStringCollectionRecord(
-    cachedRecord?: Record<string, string[]>,
-    responseRecord?: Record<string, string[]>
+  private mergeCollectionRecord<T>(
+    cachedRecord?: Record<string, T[]>,
+    responseRecord?: Record<string, T[]>
   ) {
-    const mergedRecord: Record<string, string[]> = {};
+    const mergedRecord: Record<string, T[]> = {};
 
     for (const taskId in cachedRecord) {
       mergedRecord[taskId] = cachedRecord[taskId];
     }
 
     for (const taskId in responseRecord) {
-      const collectionSet = new Set([
+      const byValue = new Map<string, T>();
+      for (const item of [
         ...(mergedRecord[taskId] || []),
         ...(responseRecord[taskId] || []),
-      ]);
-      mergedRecord[taskId] = Array.from(collectionSet);
+      ]) {
+        byValue.set(JSON.stringify(item), item);
+      }
+      mergedRecord[taskId] = Array.from(byValue.values());
     }
 
     return mergedRecord;

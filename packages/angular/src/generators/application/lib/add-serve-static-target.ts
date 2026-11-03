@@ -31,6 +31,8 @@ function addFileServerTarget(
   const projectConfig = readProjectConfiguration(tree, options.name);
   projectConfig.targets[targetName] = {
     continuous: true,
+    readyWhen: { signal: true },
+    dependsOn: ['build'],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.name}:build`,

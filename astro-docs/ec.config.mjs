@@ -88,4 +88,20 @@ function shellPrompts() {
 
 export default {
   plugins: [shellPrompts()],
+  // Neutral grays with blue accents, which fit the Nx brand palette. The
+  // frames around the code take their colors from the Starlight tokens in
+  // global.css.
+  themes: ['github-dark-default', 'github-light-default'],
+  useStarlightUiThemeColors: true,
+  customizeTheme: (theme) => {
+    // Code sits on the brand surface color: Neutral 900 on the dark canvas,
+    // Neutral 100 on the light one.
+    const surface = 'var(--sl-color-gray-7)';
+    Object.assign(theme.styleOverrides.frames, {
+      editorBackground: surface,
+      terminalBackground: surface,
+      editorActiveTabBackground: surface,
+    });
+    return theme;
+  },
 };

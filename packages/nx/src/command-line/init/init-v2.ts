@@ -6,7 +6,6 @@ import {
   multiselectPrompt,
   confirmationPrompt,
 } from '../../utils/prompt-helpers';
-import { prerelease } from 'semver';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
@@ -36,11 +35,10 @@ import {
   isMonorepo,
   printFinalMessage,
   readErrorStderr,
-  setNeverConnectToCloud,
   toErrorString,
   updateGitIgnore,
 } from './implementation/utils';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { handleImport } from '../../utils/handle-import';
 import { isAiAgent } from '../../native';
 import { Agent, agentConfigWriteBlockedLines } from '../../ai/utils';
@@ -83,10 +81,14 @@ export async function initHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp(
+    const version = await resolveVersionWithProvenance(
       'nx',
       'latest',
+      process.cwd()
+    );
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      version,
       detectPackageManager(process.cwd())
     );
     cleanup = packageInstallResults.cleanup;
@@ -161,18 +163,15 @@ async function initHandlerImpl(options: InitArgs): Promise<void> {
   });
 
   try {
-    return await runInit(options, baseMeta);
+    return await runInit(options);
   } catch (error) {
     await recordInitError(error, baseMeta);
   }
 }
 
-async function runInit(
-  options: InitArgs,
-  baseMeta: Record<string, string | boolean>
-): Promise<void> {
-  const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
+async function runInit(options: InitArgs): Promise<void> {
+  // Resolving `latest` here would install a version nothing has verified.
+  const version = process.env.NX_VERSION ?? nxVersion;
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
   }
@@ -493,8 +492,6 @@ async function runInit(
   }
   if (nxCloudChoice === 'yes') {
     await initCloud('nx-init');
-  } else if (nxCloudChoice === 'never') {
-    setNeverConnectToCloud(repoRoot);
   }
 
   const analyticsPrompt = await ensureAnalyticsPreferenceSet(
@@ -570,7 +567,6 @@ export function getPluginReason(plugin: string): string {
     '@nx/next': 'next.js detected in dependencies',
     '@nx/nuxt': 'nuxt detected in dependencies',
     '@nx/react-native': 'react-native detected in dependencies',
-    '@nx/remix': '@remix-run/dev detected in dependencies',
     '@nx/rsbuild': '@rsbuild/core detected in dependencies',
     '@nx/react': '@react-router/dev detected in dependencies',
     '@nx/gradle': 'gradlew detected in workspace',
@@ -625,7 +621,6 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   next: '@nx/next',
   nuxt: '@nx/nuxt',
   'react-native': '@nx/react-native',
-  '@remix-run/dev': '@nx/remix',
   '@rsbuild/core': '@nx/rsbuild',
   '@react-router/dev': '@nx/react',
 };

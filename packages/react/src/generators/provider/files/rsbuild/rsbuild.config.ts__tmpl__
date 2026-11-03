@@ -1,6 +1,7 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
 const PORT = <%= port %>;
 const NAME = '<%= federationName %>';
@@ -27,5 +28,6 @@ export default defineConfig({
       },
       shared: ['react', 'react-dom'],
     }),
+    pluginNxReadySignal(),
   ],
 });

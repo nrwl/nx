@@ -7,9 +7,9 @@ import { nxVersion, rollupVersion } from '../../utils/versions';
 import { rollupInitGenerator } from './init';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual<any>('@nx/devkit'),
-  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn().mockImplementation(async () => {
     return projectGraph;
   }),
 }));

@@ -34,17 +34,17 @@ The pre-pass does NOT:
 - Decide whether a generated `FlatCompat` shim should become flat-native config.
 - Make the workspace pass lint after ESLint v9 changed which rules its preset defaults enable.
 
-Everything the pre-pass could not finish is forwarded to you in `<advisory_context>`.
+Everything the pre-pass could not finish is forwarded to you in `impl.agentContext`.
 
-How to read the wrapper sections above this file:
+How to read the `impl` fields of the step's `nx_migrate_prompt` block:
 
-- `<files_changed>` lists files the pre-pass wrote. Verify the new shape is in place; do not re-apply the same edit. It is absent when the pre-pass made no changes (for example a workspace that was already on flat config).
-- `<advisory_context>` lists detections the pre-pass forwarded because it could not safely complete them. Every entry is pending work. Address each one in the relevant section below.
+- `impl.changes` lists files the pre-pass wrote. Verify the new shape is in place; do not re-apply the same edit. It is empty when the pre-pass made no changes (for example a workspace that was already on flat config).
+- `impl.agentContext` lists detections the pre-pass forwarded because it could not safely complete them. Every entry is pending work. Address each one in the relevant section below.
 
 </pre_pass_summary>
 
 <handoff_guidance>
-In your handoff `summary` (1 to 3 sentences per the system prompt), name the sections you applied and explicitly call out any you skipped because they did not apply (for example "no JavaScript-based configs and no removed formatters in this workspace").
+In your handoff `summary` (1 to 3 sentences, per the handoff format), name the sections you applied and explicitly call out any you skipped because they did not apply (for example "no JavaScript-based configs and no removed formatters in this workspace").
 </handoff_guidance>
 
 ## Pre-Migration Checklist
@@ -87,7 +87,7 @@ If the workspace already uses `eslint.config.*` at the root and in every project
 
 ## 2. Convert JavaScript-based ESLint configs the pre-pass skipped
 
-**Search pattern**: `.eslintrc.js` and `.eslintrc.cjs` files (forwarded in `<advisory_context>`).
+**Search pattern**: `.eslintrc.js` and `.eslintrc.cjs` files (forwarded in `impl.agentContext`).
 
 **What changed**: the pre-pass only converts JSON and YAML eslintrc files. JavaScript-based configs run arbitrary code, so they need manual conversion.
 
@@ -126,7 +126,7 @@ export default [
 
 ## 3. Convert FlatCompat shims to flat-native config where low-risk
 
-**Search pattern**: `FlatCompat`, `@eslint/eslintrc`, `compat.extends(`, `compat.config(` in the generated `eslint.config.*` files (listed in `<files_changed>`).
+**Search pattern**: `FlatCompat`, `@eslint/eslintrc`, `compat.extends(`, `compat.config(` in the generated `eslint.config.*` files (listed in `impl.changes`).
 
 **What changed**: `FlatCompat` is a runtime shim that adapts eslintrc-style `extends` into flat config. Many plugins now ship native flat presets, which are clearer and avoid the shim.
 
@@ -169,7 +169,7 @@ This is the core requirement of the migration: the workspace must lint cleanly w
 
 ESLint v9 and typescript-eslint v8 changed which rules their recommended sets enable. A rule the user never configured may now report errors. Disable those rules; do not edit source files to satisfy them.
 
-The set of rules the user explicitly configured before the migration is in `<advisory_context>` (the entry that starts with "Passing-state requirement").
+The set of rules the user explicitly configured before the migration is in `impl.agentContext` (the entry that starts with "Passing-state requirement").
 
 **Procedure**:
 
@@ -213,7 +213,7 @@ You cannot make lint pass without either editing source files or disabling a rul
 
 ## 5. Fix removed output formatters
 
-**Search pattern**: the `format` option on lint targets (forwarded in `<advisory_context>`).
+**Search pattern**: the `format` option on lint targets (forwarded in `impl.agentContext`).
 
 **What changed**: ESLint v9 removed several built-in output formatters. The built-ins that remain are `stylish`, `html`, `json`, and `json-with-metadata`. Removed: `compact`, `codeframe`, `unix`, `visualstudio`, `table`, `checkstyle`, `jslint-xml`, `junit`, `tap`.
 

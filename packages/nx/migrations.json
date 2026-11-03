@@ -175,11 +175,6 @@
       "implementation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore",
       "documentation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore.md"
     },
-    "23-0-0-consolidate-release-tag-config": {
-      "version": "23.0.0-beta.16",
-      "description": "Consolidates any remaining legacy releaseTag* flat properties into the nested releaseTag object. The flat properties were removed in Nx 23.",
-      "implementation": "./dist/src/migrations/update-23-0-0/consolidate-release-tag-config"
-    },
     "23-0-0-add-migrate-runs-to-git-ignore": {
       "version": "23.0.0-beta.18",
       "description": "Adds .nx/migrate-runs to .gitignore",
@@ -187,9 +182,28 @@
     },
     "23-2-0-set-cache-on-executor-target-defaults": {
       "version": "23.2.0-beta.8",
-      "description": "Sets \"cache\" on some executor-based target defaults whose caching was previously enabled by a target name default, maintaining compatibility with how cacheability resolved before Nx 23. Keys the migration cannot decide are left alone and keep working through a deprecated runtime fallback.",
+      "description": "Sets \"cache\" on some executor-based target defaults whose caching was previously enabled by a target name default, maintaining compatibility with how cacheability resolved before Nx 23. Keys the migration cannot decide are left alone, and the targets resolving through them need \"cache\" set by hand.",
       "implementation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults",
       "documentation": "./dist/src/migrations/update-23-2-0/set-cache-on-executor-target-defaults.md"
+    },
+    "24-0-0-move-custom-hashers-to-inputs": {
+      "version": "24.0.0-beta.0",
+      "description": "Finds local executors that declare a custom hasher, which is deprecated and will be removed in Nx 25. Rewriting a hasher as target inputs means reading what its code hashes, so the rewrite is driven by an AI prompt; the generator only reports each hasher.",
+      "implementation": "./dist/src/migrations/update-24-0-0/find-custom-hashers",
+      "prompt": "./dist/src/migrations/update-24-0-0/move-custom-hashers-to-inputs.md",
+      "documentation": "./dist/src/migrations/update-24-0-0/find-custom-hashers.md"
+    },
+    "24-0-0-enable-legacy-affected": {
+      "version": "24.0.0-beta.3",
+      "description": "Sets affected.legacy to true in nx.json so nx affected keeps selecting whole projects. Nx 24 selects individual affected tasks by default.",
+      "implementation": "./dist/src/migrations/update-24-0-0/enable-legacy-affected",
+      "documentation": "./dist/src/migrations/update-24-0-0/enable-legacy-affected.md"
+    },
+    "24-0-0-rename-ultracache-ignore-options": {
+      "version": "24.0.0-beta.3",
+      "description": "Renames the ultracache target options \"ignoredReads\" and \"ignoredWrites\" to \"ignoreReads\" and \"ignoreWrites\", and renames .nx/workflows/sandboxing-config.yaml to ultracache-config.yaml with its \"exclude-reads\" and \"exclude-writes\" keys renamed to \"ignore-reads\" and \"ignore-writes\".",
+      "implementation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options",
+      "documentation": "./dist/src/migrations/update-24-0-0/rename-ultracache-ignore-options.md"
     }
   }
 }

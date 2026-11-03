@@ -1,7 +1,7 @@
 ---
 name: setup-review-sandbox
 description: One-time setup of the sandbox prerequisites used by the reproduce-issue skill and the reproduce-verifier agent — Docker, the isolation runtime (gVisor on Linux / Colima on macOS), healthy container networking, and the nx-review-sandbox toolchain image (built from the repo's mise.toml). Idempotent; re-run any time to verify or repair. Use when the user says "set up the review sandbox", "install the sandbox prereqs", "build the sandbox image", or a reproduce-issue preflight reports something MISSING.
-allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*), Bash(.claude/tools/sandbox *)
+allowed-tools: Read, Grep, Glob, Bash(uname *), Bash(docker info *), Bash(docker run *), Bash(docker build *), Bash(docker image inspect *), Bash(docker images *), Bash(command -v *), Bash(lsmod *), Bash(bash tools/review-sandbox/*), Bash(tools/review-sandbox/sandbox *)
 ---
 
 # Set up the review sandbox (one-time)
@@ -102,8 +102,8 @@ Green when: the kernel is NOT your host kernel, and node/java/dotnet report vers
 Reviews clean up after themselves (`sandbox stop` deletes the review's `/work/<id>` subtree), and `sandbox prune` sweeps subtrees whose registry row is gone. What neither touches is the shared state, because that state is the cache:
 
 ```bash
-.claude/tools/sandbox prune --store   # pnpm store prune + git gc in the shared repo
-.claude/tools/sandbox prune --host    # destroy the shared host; next start rebuilds it cold
+tools/review-sandbox/sandbox prune --store   # pnpm store prune + git gc in the shared repo
+tools/review-sandbox/sandbox prune --host    # destroy the shared host; next start rebuilds it cold
 ```
 
 Both refuse while any sandbox row is live — they would be deleting files a running review is reading. After an image rebuild you do not need `--host` to pick the new toolchain up: the host is named after the image's resolved id, so the next `start` builds a fresh one on its own. `--host` is how you reclaim the superseded host's several GB, and the mitigation worth knowing about: reviews share a pnpm store, so a malicious PR could in principle poison it for a later review. That stays inside the container and cannot reach the host, but it can corrupt a later review's findings.

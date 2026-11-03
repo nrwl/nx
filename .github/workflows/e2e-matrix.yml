@@ -324,7 +324,7 @@ jobs:
       - name: Configure git metadata (needed for lerna smoke tests)
         if: ${{ (matrix.os != 'macos-latest') || (matrix.os == 'macos-latest' && steps.reset-simulators.outcome == 'success') }}
         run: |
-          git config --global user.email test@test.com
+          git config --global user.email test@users.noreply.github.com
           git config --global user.name 'Test Test'
 
       - name: Set starting timestamp
@@ -385,18 +385,31 @@ jobs:
         if: ${{ always() }}
         id: save-matrix
         shell: bash
+        env:
+          MATRIX: ${{ toJSON(matrix) }}
+          E2E_STARTED_AT: ${{ steps.before-e2e.outputs.timestamp }}
+          E2E_OUTCOME: ${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}
+          JOB_STATUS: ${{ job.status }}
         run: |
-          before=${{ steps.before-e2e.outputs.timestamp }}
-          now=$(date +%s)
-          delta=$(($now - $before))
+          duration=0
+          test_started=false
+          if [[ -n "$E2E_STARTED_AT" ]]; then
+            duration=$(($(date +%s) - E2E_STARTED_AT))
+            test_started=true
+          fi
 
-          # Determine the outcome based on which step ran
-          outcome='${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}'
+          case "$JOB_STATUS:$E2E_OUTCOME" in
+            cancelled:*|*:cancelled) outcome=cancelled ;;
+            failure:*|*:failure) outcome=failure ;;
+            success:success) outcome=success ;;
+            *) outcome=failure ;;
+          esac
 
-          matrix=$((
-            echo '${{ toJSON(matrix) }}'
-          ) | jq --argjson delta $delta -c '. + { "status": "'"$outcome"'", "duration": $delta }')
-          echo "$matrix" > 'outputs/matrix.json'
+          mkdir -p outputs
+          jq --arg status "$outcome" --argjson duration "$duration" \
+            --argjson test_started "$test_started" \
+            '. + {status: $status, duration: $duration, test_started: $test_started}' \
+            <<< "$MATRIX" > outputs/matrix.json
 
       - name: Upload matrix config
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -417,7 +430,7 @@ jobs:
   process-result:
     if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    needs: e2e
+    needs: [prepare-matrix, e2e]
     timeout-minutes: 15
     outputs:
       message: ${{ steps.process-json.outputs.slack_message }}
@@ -443,15 +456,25 @@ jobs:
       - name: Join and stringify matrix configs
         id: combine-json
         run: |
-          combined=$(jq -sc . outputs/*/matrix.json)
-          echo "combined=$combined" >> $GITHUB_OUTPUT
+          shopt -s nullglob
+          files=(outputs/*/matrix.json)
+          if [[ -f outputs/matrix.json ]]; then
+            files+=(outputs/matrix.json)
+          fi
+          combined='[]'
+          if (( ${#files[@]} )); then
+            combined=$(jq -sc . "${files[@]}")
+          fi
+          echo "combined=$combined" >> "$GITHUB_OUTPUT"
 
       - name: Process results and collect failure details
         id: process-json
         env:
           GH_TOKEN: ${{ github.token }}
+          EXPECTED_MATRIX: ${{ needs.prepare-matrix.outputs.matrix }}
+          MATRIX_RESULTS: ${{ steps.combine-json.outputs.combined }}
         run: |
-          echo '${{ steps.combine-json.outputs.combined }}' | npx tsx .github/workflows/nightly/process-result.ts
+          printf '%s' "$MATRIX_RESULTS" | npx tsx .github/workflows/nightly/process-result.ts
 
   report-failure:
     if: ${{ always() && needs.process-result.outputs.has_golden_failures == 'true' && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
