@@ -90,11 +90,15 @@ class TestClassDiscovery() {
             return null
         }
 
+        // Comments and string literals contain prose like "a top-level class name", which string
+        // matching cannot tell apart from a declaration, so only scan actual code
+        val code = withoutCommentsAndLiterals(content)
+
         // Extract package name (simple approach)
-        val packageName = extractPackageName(content)
+        val packageName = extractPackageName(code)
 
         // Extract class name (simple approach)
-        val className = extractClassName(content) ?: return null
+        val className = extractClassName(code) ?: return null
 
         // Double check: does this class actually have test methods?
         if (!hasTestMethodsInClass(content, className)) {
@@ -112,6 +116,22 @@ class TestClassDiscovery() {
             packageName = packageName
         )
     }
+
+    // Line comment, block comment, text block, string literal. Leftmost-first matching is what
+    // keeps a literal's own comment markers from opening a comment, and """ must precede "
+    private val commentOrLiteral = Regex(
+        """//[^\n]*|/\*[\s\S]*?\*/|"{3}[\s\S]*?"{3}|"(?:\\.|[^"\\\n])*""""
+    )
+    private val nonLineBreak = Regex("[^\n]")
+
+    /**
+     * Blank out comments and string literals, keeping line breaks so the result can still be
+     * scanned line by line. Without this, a Javadoc block or a string literal that happens to
+     * contain "class " is read as the class declaration: two files whose comments both mention it
+     * end up with the same generated target name, which produces a cyclic task graph.
+     */
+    private fun withoutCommentsAndLiterals(content: String): String =
+        commentOrLiteral.replace(content) { it.value.replace(nonLineBreak, " ") }
 
     /**
      * Extract package name from Java file content using simple string matching
