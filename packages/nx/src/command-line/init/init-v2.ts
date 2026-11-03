@@ -276,7 +276,12 @@ async function runInit(options: InitArgs): Promise<void> {
 
   // AI mode defaults to minimum setup, humans can choose
   let guided = !aiMode; // Default to minimum (false) for AI, guided (true) for humans
-  if (options.interactive && !(_isTurborepo || _isNonJs)) {
+  // An explicit --plugins only applies to the guided setup, so skip the question
+  if (
+    options.interactive &&
+    options.plugins === undefined &&
+    !(_isTurborepo || _isNonJs)
+  ) {
     const setupType = await selectPrompt({
       message: 'Would you like a minimum or guided setup?',
       choices: [{ value: 'Minimum' }, { value: 'Guided' }],
@@ -418,13 +423,28 @@ async function runInit(options: InitArgs): Promise<void> {
       );
     }
   } else if (guided) {
-    // Non-AI guided mode: existing behavior with interactive prompts
-    output.log({ title: '🧐 Checking dependencies' });
+    // Non-AI guided mode: honor --plugins when given, otherwise prompt
+    // (or install everything detected when running non-interactively)
+    const parsedPlugins = parsePluginsFlag(options.plugins);
 
-    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
-      await detectPlugins(nxJson, packageJson, options.interactive);
-    pluginsToInstall = _plugins;
-    updatePackageScripts = _updatePackageScripts;
+    if (parsedPlugins === 'skip') {
+      pluginsToInstall = [];
+    } else if (Array.isArray(parsedPlugins)) {
+      pluginsToInstall = parsedPlugins;
+      updatePackageScripts = true;
+    } else {
+      output.log({ title: '🧐 Checking dependencies' });
+
+      // `all` means "no prompts, take everything detected"
+      const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+        await detectPlugins(
+          nxJson,
+          packageJson,
+          options.interactive && parsedPlugins !== 'all'
+        );
+      pluginsToInstall = _plugins;
+      updatePackageScripts = _updatePackageScripts;
+    }
 
     if (pluginsToInstall.length > 0) {
       output.log({ title: '📦 Installing Nx' });
