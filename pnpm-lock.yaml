@@ -613,7 +613,6 @@ overrides:
   undici@>=6.0.0 <6.29.1: ^6.29.1
   undici@>=7.0.0 <7.30.1: ^7.30.1
   undici@>=8.0.0 <8.12.2: ^8.12.2
-  '@jest/diff-sequences@30.0.1': 30.3.0
   follow-redirects@>=1.16.0 <1.16.1: 1.16.1
   '@xmldom/xmldom@>=0.8.0 <0.8.15': 0.8.15
   '@xmldom/xmldom@>=0.9.0 <0.9.12': 0.9.12
@@ -3363,8 +3362,8 @@ importers:
         specifier: 'catalog:'
         version: 1.7.0
       '@jest/diff-sequences':
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.0.1
+        version: 30.0.1
       '@napi-rs/wasm-runtime':
         specifier: 0.2.4
         version: 0.2.4
@@ -8645,6 +8644,10 @@ packages:
 
   '@jest/create-cache-key-function@30.2.0':
     resolution: {integrity: sha512-44F4l4Enf+MirJN8X/NhdGkl71k5rBYiwdVlo4HxOwbu0sHV8QKrGEedb1VUU4K3W7fBKE0HGfbn7eZm0Ti3zg==}
+    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
+  '@jest/diff-sequences@30.0.1':
+    resolution: {integrity: sha512-n5H8QLDJ47QqbCNn5SuFjCRDrOLEZ0h8vAHCK5RL9Ls7Xa8AQLa/YxAc9UjFqoEDM48muwtBGjtMY5cr0PLDCw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jest/diff-sequences@30.3.0':
@@ -33675,6 +33678,8 @@ snapshots:
     dependencies:
       '@jest/types': 30.2.0
 
+  '@jest/diff-sequences@30.0.1': {}
+
   '@jest/diff-sequences@30.3.0': {}
 
   '@jest/environment-jsdom-abstract@30.0.2(jsdom@26.1.0(supports-color@8.1.1))':
@@ -53176,7 +53181,7 @@ snapshots:
       '@emnapi/core': 1.4.5
       '@emnapi/runtime': 1.4.5
       '@emnapi/wasi-threads': 1.0.4
-      '@jest/diff-sequences': 30.3.0
+      '@jest/diff-sequences': 30.0.1
       '@napi-rs/wasm-runtime': 0.2.4
       '@tybys/wasm-util': 0.9.0
       '@yarnpkg/lockfile': 1.1.0
