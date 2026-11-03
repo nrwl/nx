@@ -4,7 +4,13 @@ import { PassThrough } from 'stream';
 import type { TaskGraph } from '../config/task-graph';
 import { BatchMessageType } from './batch/batch-messages';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { getProcessMetricsService } from './process-metrics-service';
 import { pruneTaskGraph } from './prune-task-graph';
+import {
+  BatchPidUpdate,
+  getTaskIOService,
+  TaskPidUpdate,
+} from './task-io-service';
 
 vi.mock('child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('child_process')>()),
@@ -53,9 +59,11 @@ function graph(): TaskGraph {
 
 describe('task graph transport to worker processes', () => {
   let child: any;
+  let childPid: number | undefined;
   const streams: PassThrough[] = [];
 
   beforeEach(() => {
+    childPid = undefined;
     vi.mocked(fork).mockImplementation((() => {
       const stdout = new PassThrough();
       const stderr = new PassThrough();
@@ -67,6 +75,7 @@ describe('task graph transport to worker processes', () => {
         // BatchProcess.send forwards only while the channel is connected.
         connected: true,
         send: vi.fn(),
+        pid: childPid,
       });
       return child;
     }) as typeof fork);
@@ -144,5 +153,34 @@ describe('task graph transport to worker processes', () => {
     expect(message.fullTaskGraph).toBe(pruneTaskGraph(full));
     expect(Object.keys(message.batchTaskGraph.tasks)).toEqual(['a', 'b']);
     expect(message.fullTaskGraph.tasks.c).not.toHaveProperty('hash');
+  });
+
+  it('reports the batch worker pid once for the whole batch', async () => {
+    const batchUpdates: BatchPidUpdate[] = [];
+    const taskUpdates: TaskPidUpdate[] = [];
+    getTaskIOService().subscribeToBatchPids((u) => batchUpdates.push(u));
+    getTaskIOService().subscribeToTaskPids((u) => taskUpdates.push(u));
+    const registerBatch = vi
+      .spyOn(getProcessMetricsService(), 'registerBatch')
+      .mockImplementation(() => {});
+    childPid = 4321;
+    const full = graph();
+    const batch: TaskGraph = {
+      ...full,
+      tasks: { a: full.tasks.a, b: full.tasks.b },
+      roots: ['a'],
+    };
+    const runner = new ForkedProcessTaskRunner({ lifeCycle: {} } as any, false);
+    await runner.forkProcessForBatch(
+      { id: 'nx:noop 1', executorName: 'nx:noop', taskGraph: batch },
+      { nodes: {}, dependencies: {} } as any,
+      full,
+      {}
+    );
+    expect(batchUpdates).toEqual([
+      { batchId: 'nx:noop 1', taskIds: ['a', 'b'], pid: 4321 },
+    ]);
+    expect(taskUpdates).toEqual([]);
+    expect(registerBatch).toHaveBeenCalledWith('nx:noop 1', ['a', 'b'], 4321);
   });
 });

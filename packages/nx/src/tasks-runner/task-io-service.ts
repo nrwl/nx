@@ -15,6 +15,18 @@ export type TaskPidUpdate = {
 
 export type TaskPidCallback = (update: TaskPidUpdate) => void;
 
+/**
+ * A batch worker process and the tasks it runs. Every task in the batch
+ * runs inside the same `pid`.
+ */
+export type BatchPidUpdate = {
+  batchId: string;
+  taskIds: string[];
+  pid: number;
+};
+
+export type BatchPidCallback = (update: BatchPidUpdate) => void;
+
 export type TaskInputInfo = {
   taskId: string;
   inputs: {
@@ -48,6 +60,7 @@ export type TaskOutputsCallback = (update: TaskOutputsUpdate) => void;
 class TaskIOService {
   // Subscription state
   private pidCallbacks: TaskPidCallback[] = [];
+  private batchPidCallbacks: BatchPidCallback[] = [];
   private taskInputCallbacks: TaskInputCallback[] = [];
   private taskOutputsCallbacks: TaskOutputsCallback[] = [];
 
@@ -57,6 +70,14 @@ class TaskIOService {
    */
   subscribeToTaskPids(callback: TaskPidCallback): void {
     this.pidCallbacks.push(callback);
+  }
+
+  /**
+   * Subscribe to batch worker PID updates.
+   * Batched tasks are not reported through `subscribeToTaskPids`.
+   */
+  subscribeToBatchPids(callback: BatchPidCallback): void {
+    this.batchPidCallbacks.push(callback);
   }
 
   /**
@@ -143,6 +164,16 @@ class TaskIOService {
       }
     }
   }
+
+  notifyBatchPidUpdate(update: BatchPidUpdate): void {
+    for (const cb of this.batchPidCallbacks) {
+      try {
+        cb(update);
+      } catch {
+        // Silent failure - don't let one callback break others
+      }
+    }
+  }
 }
 
 // Singleton
@@ -179,4 +210,16 @@ export function registerTaskProcessStart(
     getTaskIOService().notifyPidUpdate({ taskId: task.id, pid });
   }
   getProcessMetricsService().registerTaskProcess(task.id, pid);
+}
+
+/**
+ * Notify IO subscribers that a batch worker process has started.
+ * Metrics are registered separately via `ProcessMetricsService.registerBatch`.
+ */
+export function registerBatchProcessStart(
+  batchId: string,
+  taskIds: string[],
+  pid: number
+): void {
+  getTaskIOService().notifyBatchPidUpdate({ batchId, taskIds, pid });
 }

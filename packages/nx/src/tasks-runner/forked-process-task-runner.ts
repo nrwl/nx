@@ -21,7 +21,10 @@ import {
   NodeChildProcessWithNonDirectOutput,
 } from './running-tasks/node-child-process';
 import { RunningTask } from './running-tasks/running-task';
-import { registerTaskProcessStart } from './task-io-service';
+import {
+  registerBatchProcessStart,
+  registerTaskProcessStart,
+} from './task-io-service';
 import { Batch } from './tasks-schedule';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 
@@ -82,6 +85,7 @@ export class ForkedProcessTaskRunner {
     if (p.pid) {
       const taskIds = Object.keys(batchTaskGraph.tasks);
       getProcessMetricsService().registerBatch(batchId, taskIds, p.pid);
+      registerBatchProcessStart(batchId, taskIds, p.pid);
     }
 
     const cp = new BatchProcess(p, executorName, printsOutput, batchId);

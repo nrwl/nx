@@ -1,5 +1,7 @@
 import {
+  BatchPidUpdate,
   getTaskIOService,
+  registerBatchProcessStart,
   registerTaskProcessStart,
   TaskPidUpdate,
 } from './task-io-service';
@@ -84,5 +86,55 @@ describe('registerTaskProcessStart', () => {
     registerTaskProcessStart({ id: 'proj:same' }, 401);
 
     expect(updates).toEqual([{ taskId: 'proj:same', pid: 401 }]);
+  });
+});
+
+describe('registerBatchProcessStart', () => {
+  it('does not replay a batch to a later subscriber', () => {
+    registerBatchProcessStart('nx:noop 0', ['proj:early'], 499);
+    const late = vi.fn();
+
+    getTaskIOService().subscribeToBatchPids(late);
+
+    expect(late).not.toHaveBeenCalled();
+  });
+
+  describe('with subscribers', () => {
+    const batchUpdates: BatchPidUpdate[] = [];
+    const taskUpdates: TaskPidUpdate[] = [];
+
+    beforeAll(() => {
+      getTaskIOService().subscribeToBatchPids((update) =>
+        batchUpdates.push(update)
+      );
+      getTaskIOService().subscribeToTaskPids((update) =>
+        taskUpdates.push(update)
+      );
+    });
+
+    beforeEach(() => {
+      batchUpdates.length = 0;
+      taskUpdates.length = 0;
+    });
+
+    it('notifies batch subscribers once with every task in the batch', () => {
+      registerBatchProcessStart('nx:noop 1', ['proj:a', 'proj:b'], 500);
+
+      expect(batchUpdates).toEqual([
+        { batchId: 'nx:noop 1', taskIds: ['proj:a', 'proj:b'], pid: 500 },
+      ]);
+      expect(taskUpdates).toEqual([]);
+    });
+
+    it('keeps notifying when a subscriber throws', () => {
+      getTaskIOService().subscribeToBatchPids(() => {
+        throw new Error('subscriber failed');
+      });
+
+      registerBatchProcessStart('nx:noop 2', ['proj:c'], 501);
+      registerBatchProcessStart('nx:noop 3', ['proj:d'], 502);
+
+      expect(batchUpdates.map((u) => u.pid)).toEqual([501, 502]);
+    });
   });
 });
