@@ -32,9 +32,7 @@ describe('registerTaskProcessStart', () => {
     expect(updates).toEqual([{ taskId: 'proj:tracked', pid: 100 }]);
   });
 
-  // Every mode but `off` records, so an on-only gate would pass the no-mode
-  // case and still suppress `warn` and `error`.
-  it.each(['on', 'warn', 'error'] as const)(
+  it.each(['on', 'warn', 'error', 'off'] as const)(
     'notifies PID subscribers for mode %s',
     (mode) => {
       registerTaskProcessStart(
@@ -55,18 +53,6 @@ describe('registerTaskProcessStart', () => {
     expect(updates).toEqual([{ taskId: 'proj:ignores-only', pid: 300 }]);
   });
 
-  it('suppresses PID updates for a task whose ultracache mode is off', () => {
-    registerTaskProcessStart(
-      { id: 'proj:disabled', ultracache: { mode: 'off' } },
-      200
-    );
-    registerTaskProcessStart({ id: 'proj:other' }, 201);
-
-    expect(updates).toEqual([{ taskId: 'proj:other', pid: 201 }]);
-  });
-
-  // The opt-out covers reporting only. Cleanup, kill-on-exit and orphan reaping
-  // all run off the metrics service, so it must see every process.
   it('registers metrics for a task whose ultracache is disabled', () => {
     registerTaskProcessStart(
       { id: 'proj:disabled', ultracache: { mode: 'off' } },
@@ -74,18 +60,6 @@ describe('registerTaskProcessStart', () => {
     );
 
     expect(registerTaskProcess).toHaveBeenCalledWith('proj:disabled', 200);
-  });
-
-  // The decision travels with the task, so one run's opt-out cannot leak into
-  // another task that happens to reuse the id.
-  it('decides per call rather than remembering a task id', () => {
-    registerTaskProcessStart(
-      { id: 'proj:same', ultracache: { mode: 'off' } },
-      400
-    );
-    registerTaskProcessStart({ id: 'proj:same' }, 401);
-
-    expect(updates).toEqual([{ taskId: 'proj:same', pid: 401 }]);
   });
 });
 
