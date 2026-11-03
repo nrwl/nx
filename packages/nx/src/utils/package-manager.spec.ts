@@ -1131,6 +1131,19 @@ describe('package-manager', () => {
       );
 
       it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
+        'should leave the registry to %s when none is given',
+        (packageManager) => {
+          const { args } = getPackageManagerCommand(packageManager).publishArgv(
+            'dist/packages/my-pkg',
+            undefined,
+            '@org:registry',
+            'latest'
+          );
+          expect(args.some((arg) => arg.includes('registry'))).toBe(false);
+        }
+      );
+
+      it.each(['npm', 'yarn', 'pnpm', 'bun'] as const)(
         'should keep a %s tag carrying a line break in one argv element',
         (packageManager) => {
           const { args } = getPackageManagerCommand(packageManager).publishArgv(

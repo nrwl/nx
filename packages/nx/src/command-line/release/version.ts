@@ -14,6 +14,7 @@ import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import type { ProjectGraph } from '../../config/project-graph';
 import { handleErrors } from '../../utils/handle-errors';
 import { orange, output } from '../../utils/output';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { VersionOptions } from './command-object';
@@ -438,7 +439,7 @@ export function createAPI(
 
     if (args.gitPush ?? nxReleaseConfig.version.git.push) {
       output.logSingleLine(
-        `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+        `Pushing to git remote "${redactUrlCredentials(args.gitRemote ?? 'origin')}"`
       );
       await gitPush({
         gitRemote: args.gitRemote,
