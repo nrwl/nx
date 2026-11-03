@@ -16,6 +16,11 @@ import {
 } from './isolation';
 import { resetResolvePluginCache } from './resolve-plugin';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
+import {
+  adoptBerryBinFoldersOnPath,
+  getLiveClientBerryEnv,
+  withTrustedBerryBinFolders,
+} from '../../daemon/client/daemon-environment';
 import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 import {
   capabilitiesOfNxPluginsReadFromCache,
@@ -87,6 +92,28 @@ export function resetIsolationFallbackForTesting() {
   isolationRefusedInThisProcess = false;
 }
 
+let daemonHostsPlugins = false;
+
+/** Whether this daemon has loaded a plugin into its own process. */
+export function daemonHostsPluginsInProcess(): boolean {
+  return daemonHostsPlugins;
+}
+
+function loadNxPluginInProcess(
+  plugin: PluginConfiguration,
+  root: string,
+  index?: number
+): Promise<LoadedNxPlugin> {
+  if (isOnDaemon() && !daemonHostsPlugins) {
+    daemonHostsPlugins = true;
+    // Later client envs keep this in sync; see handleClientEnv.
+    adoptBerryBinFoldersOnPath(
+      withTrustedBerryBinFolders(getLiveClientBerryEnv())
+    );
+  }
+  return loadNxPlugin(plugin, root, index);
+}
+
 /**
  * Loads a plugin in a worker, falling back to this process when the worker's
  * socket was refused.
@@ -108,7 +135,7 @@ export const loadingMethod = async (
   index?: number
 ): Promise<LoadedNxPlugin> => {
   if (!isIsolationEnabled() || isolationRefusedInThisProcess) {
-    return loadNxPlugin(plugin, root, index);
+    return loadNxPluginInProcess(plugin, root, index);
   }
 
   // Awaited here rather than handed on, because the worker failure surfaces on
@@ -154,7 +181,7 @@ export const loadingMethod = async (
       });
     }
 
-    return loadNxPlugin(plugin, root, index);
+    return loadNxPluginInProcess(plugin, root, index);
   }
 };
 
