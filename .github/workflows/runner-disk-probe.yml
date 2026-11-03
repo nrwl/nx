@@ -1,0 +1,55 @@
+# Temporary: compare disk space on ubuntu-24.04 and ubuntu-26.04. Do not merge.
+name: runner-disk-probe
+
+on:
+  push:
+    branches:
+      - lourw/runner-disk-probe
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
+        attempt: [1, 2, 3]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Image and disks
+        run: |
+          echo "ImageOS=$ImageOS ImageVersion=$ImageVersion user=$(whoami) home=$HOME"
+          lsblk -o NAME,SIZE,MOUNTPOINT
+          df -BG / /mnt "$HOME" /tmp 2>/dev/null
+          echo "ROOT_AVAIL_GB=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)"
+
+      - name: Preinstalled directory sizes
+        run: |
+          sudo du -sh /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/local/share/boost /opt/hostedtoolcache /usr/share/swift /usr/local/julia* \
+            /usr/share/miniconda /usr/local/share/powershell /usr/local/lib/node_modules \
+            /opt/microsoft /opt/google /usr/lib/jvm /var/lib/docker 2>/dev/null | sort -h
+          docker system df || true
+
+      - name: Checkout (same as main-linux)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          corepack prepare --activate
+          pnpm install --frozen-lockfile
+
+      - name: Disk after setup
+        run: |
+          df -BG /
+          du -sh "$GITHUB_WORKSPACE" "$(pnpm store path)" 2>/dev/null
+          echo "ROOT_AVAIL_AFTER_SETUP_GB=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)"
