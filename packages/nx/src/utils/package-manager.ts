@@ -45,7 +45,6 @@ import { PackageJson, readModulePackageJson } from './package-json';
 import type { NpmConfigEnv } from './registry-config';
 import { redactUrlCredentials } from './redact-url-credentials';
 import { quoteShellArg } from './shell-quoting';
-import { redactUrlCredentials } from './redact-url-credentials';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
