@@ -3,17 +3,67 @@ import type { Mock } from 'vitest';
 import { output } from '../../../../utils/output';
 import { GitLabRemoteReleaseClient } from './gitlab';
 
+vi.mock('node:child_process', async () => ({
+  ...require('node:child_process'),
+  execSync: vi.fn(require('node:child_process').execSync),
+}));
+
 vi.mock('../../../../utils/prompt-helpers', () => ({
   selectPrompt: vi.fn(),
 }));
 
+import { execSync } from 'node:child_process';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 
+const execSyncMock = execSync as Mock;
 const selectPromptMock = selectPrompt as Mock;
 
 describe('GitLabRemoteReleaseClient', () => {
   afterEach(() => {
     vi.resetAllMocks();
+  });
+
+  describe('resolveRepoData', () => {
+    let originalVerbose: string | undefined;
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      originalVerbose = process.env.NX_VERBOSE_LOGGING;
+      process.env.NX_VERBOSE_LOGGING = 'true';
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      if (originalVerbose === undefined) {
+        delete process.env.NX_VERBOSE_LOGGING;
+      } else {
+        process.env.NX_VERBOSE_LOGGING = originalVerbose;
+      }
+    });
+
+    it('should redact credentials of an unrecognized remote URL', () => {
+      execSyncMock.mockReturnValue(
+        'https://oauth2:s3cr3t-token@git.example.com/nrwl/nx.git\n'
+      );
+
+      expect(GitLabRemoteReleaseClient.resolveRepoData(false)).toBeNull();
+
+      const printed = inspect(errorSpy.mock.calls);
+      expect(printed).toContain('https://***@git.example.com/nrwl/nx.git');
+      expect(printed).not.toContain('s3cr3t-token');
+    });
+
+    it('should redact credentials of a remote passed as a URL', () => {
+      expect(
+        GitLabRemoteReleaseClient.resolveRepoData(
+          false,
+          'https://x-access-token:s3cr3t-token@git.example.com/nrwl/nx.git'
+        )
+      ).toBeNull();
+
+      expect(errorSpy).toHaveBeenCalled();
+      expect(inspect(errorSpy.mock.calls)).not.toContain('s3cr3t-token');
+    });
   });
 
   describe('handleError', () => {

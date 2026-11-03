@@ -788,6 +788,54 @@ describe('release-publish executor', () => {
       expect(distTagArgs).toContain(`--registry=${REGISTRY_PAYLOAD}`);
     });
 
+    it('should leave the registry to npm when none was resolved', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: undefined,
+        tag: 'latest',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExec
+        .mockReturnValueOnce(
+          JSON.stringify({
+            name: '@scope/test-package',
+            version: '1.0.0',
+            'dist-tags[latest]': '0.9.0',
+          })
+        ) // npm view: the version already exists, so the dist-tag path runs
+        .mockReturnValueOnce(''); // npm dist-tag add
+
+      const result = await runExecutor(options, context);
+
+      expect(result.success).toBe(true);
+      for (const subcommand of ['view', 'dist-tag']) {
+        expect(argvFor('npm', subcommand)).not.toContainEqual(
+          expect.stringMatching(/registry=/)
+        );
+      }
+    });
+
+    it('should not pass a registry flag to publish when none was resolved', async () => {
+      mockParseRegistryOptions.mockResolvedValue({
+        registry: undefined,
+        tag: 'latest',
+        registryConfigKey: '@scope:registry',
+      });
+      mockExec
+        .mockImplementationOnce(() => {
+          throw npmViewNotFoundError();
+        }) // npm view: version not published yet
+        .mockReturnValueOnce('{}'); // npm publish
+      vi.spyOn(extractModule, 'extractNpmPublishJsonData').mockReturnValue(
+        null
+      );
+
+      await runExecutor(options, context);
+
+      expect(argvFor('npm', 'publish')).not.toContainEqual(
+        expect.stringMatching(/registry=/)
+      );
+    });
+
     it('should pass otp and access through as single argv elements', async () => {
       mockExec
         .mockImplementationOnce(() => {
