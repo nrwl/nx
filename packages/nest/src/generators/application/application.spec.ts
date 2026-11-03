@@ -621,6 +621,26 @@ describe('application generator', () => {
       `);
     });
 
+    it('should set up jest for Nest 12 under the package name', async () => {
+      setNodeVersion('24.9.0');
+
+      try {
+        await applicationGenerator(tree, {
+          directory: 'myapp',
+          unitTestRunner: 'jest',
+          e2eTestRunner: 'none',
+          useProjectJson: false,
+          skipFormat: true,
+        });
+      } finally {
+        setNodeVersion(realNodeVersion);
+      }
+
+      expect(
+        readProjectConfiguration(tree, '@proj/myapp').targets.test.options.env
+      ).toEqual({ '...': true, NODE_OPTIONS: '--experimental-vm-modules' });
+    });
+
     it('should respect the provided name', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
