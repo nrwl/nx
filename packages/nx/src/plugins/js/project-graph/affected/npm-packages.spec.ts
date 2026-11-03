@@ -325,6 +325,74 @@ describe('getTouchedNpmPackages', () => {
     );
   });
 
+  it('should mark all projects as affected when nx itself is changed and is not in the project graph', () => {
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    warnSpy.mockClear();
+
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['devDependencies', 'nx'],
+              value: {
+                lhs: '22.7.5',
+                rhs: '23.1.0',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      nxJson,
+      {
+        devDependencies: {
+          nx: '23.1.0',
+        },
+      },
+      projectGraph
+    );
+
+    expect(result).toEqual(['proj1', 'proj2']);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('should mark all projects as affected when a plugin package is changed and is not in the project graph', () => {
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    warnSpy.mockClear();
+
+    const result = getTouchedNpmPackages(
+      [
+        {
+          file: 'package.json',
+          getChanges: () => [
+            {
+              type: JsonDiffType.Modified,
+              path: ['devDependencies', '@nx/happy-plugin'],
+              value: {
+                lhs: '0.0.1',
+                rhs: '0.0.2',
+              },
+            },
+          ],
+        },
+      ],
+      projectsConfigurations,
+      { ...nxJson, plugins: ['@nx/happy-plugin/plugin'] },
+      {
+        devDependencies: {
+          '@nx/happy-plugin': '0.0.2',
+        },
+      },
+      projectGraph
+    );
+
+    expect(result).toEqual(['proj1', 'proj2']);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
   it('should mark all projects as affected when overrides are changed for unknown packages', () => {
     const result = getTouchedNpmPackages(
       [
