@@ -21,7 +21,7 @@ import {
   detectPackageManager,
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
-import { ensurePackageHasProvenance } from '../../utils/provenance';
+import { resolveVersionWithProvenance } from '../../utils/provenance';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ConfigureAiAgentsOptions } from './command-object';
@@ -62,10 +62,10 @@ export async function configureAiAgentsHandler(
 
   let cleanup: () => void | undefined;
   try {
-    await ensurePackageHasProvenance('nx', 'latest');
+    const version = await resolveVersionWithProvenance('nx', 'latest');
     const packageInstallResults = installPackageToTmp(
       'nx',
-      'latest',
+      version,
       detectPackageManager(workspaceRoot)
     );
     cleanup = packageInstallResults.cleanup;
