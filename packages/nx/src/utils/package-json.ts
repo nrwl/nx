@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
+import which from 'which';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
@@ -490,10 +491,14 @@ function preparePackageInstallation(
     bun: '--omit=peer',
     pnpm: '--config.auto-install-peers=false',
   };
-  const skipPeerDependenciesEnv: NodeJS.ProcessEnv =
-    packageManager === 'pnpm'
+  // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
+  // Apply this defensively for all package managers when pulling nx@latest to tmp.
+  const installEnv: NodeJS.ProcessEnv = {
+    YARN_ENABLE_SCRIPTS: 'false',
+    ...(packageManager === 'pnpm'
       ? { PNPM_CONFIG_AUTO_INSTALL_PEERS: 'false' }
-      : {};
+      : {}),
+  };
   const installCommand = [
     pmCommands.addDev,
     `${pkg}@${requiredVersion}`,
@@ -507,13 +512,7 @@ function preparePackageInstallation(
     cwd: tempDir,
     stdio: isVerbose ? 'inherit' : 'ignore',
     windowsHide: true,
-    // Yarn Berry requires an environment variable (not a CLI flag) to disable lifecycle scripts.
-    // Apply this defensively for all package managers when pulling nx@latest to tmp.
-    env: {
-      ...process.env,
-      YARN_ENABLE_SCRIPTS: 'false',
-      ...skipPeerDependenciesEnv,
-    },
+    env: { ...process.env, ...installEnv },
   } as const;
 
   return {
@@ -522,6 +521,7 @@ function preparePackageInstallation(
     preInstallCommand,
     installCommand,
     execOptions,
+    installEnv,
   };
 }
 
@@ -549,24 +549,49 @@ export function installPackageToTmp(
   };
 }
 
+/**
+ * @param options.env Base env for each install command, read as the command
+ * starts. Defaults to `process.env`. With it, a `yarn` that only Corepack
+ * provides runs through Corepack.
+ */
 export async function installPackageToTmpAsync(
   pkg: string,
   requiredVersion: string,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  options: { env?: () => NodeJS.ProcessEnv } = {}
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
 }> {
-  const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion, packageManager);
+  const {
+    tempDir,
+    cleanup,
+    preInstallCommand,
+    installCommand,
+    execOptions,
+    installEnv,
+  } = preparePackageInstallation(pkg, requiredVersion, packageManager);
+
+  const run = (command: string) => {
+    if (!options.env) {
+      return execAsync(command, execOptions);
+    }
+    const env = { ...options.env(), ...installEnv };
+    return execAsync(
+      packageManager === 'yarn'
+        ? yarnThroughCorepackIfNeeded(command, env)
+        : command,
+      { ...execOptions, env }
+    );
+  };
 
   try {
     if (preInstallCommand) {
       // ensure package.json and repo in tmp folder is set to a proper package manager state
-      await execAsync(preInstallCommand, execOptions);
+      await run(preInstallCommand);
     }
 
-    await execAsync(installCommand, execOptions);
+    await run(installCommand);
 
     return {
       tempDir,
@@ -577,6 +602,20 @@ export async function installPackageToTmpAsync(
     cleanup();
     throw error;
   }
+}
+
+function yarnThroughCorepackIfNeeded(
+  command: string,
+  env: NodeJS.ProcessEnv
+): string {
+  const path =
+    Object.entries(env).find(([key]) => key.toUpperCase() === 'PATH')?.[1] ??
+    '';
+  const onPath = (bin: string) =>
+    !!path && !!which.sync(bin, { path, nothrow: true });
+  return !onPath('yarn') && onPath('corepack')
+    ? `corepack ${command}`
+    : command;
 }
 
 /**
