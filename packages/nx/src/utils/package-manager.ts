@@ -44,6 +44,7 @@ import { PackageJson, readModulePackageJson } from './package-json';
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
 import { quoteShellArg } from './shell-quoting';
+import { redactUrlCredentials } from './redact-url-credentials';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -801,11 +802,6 @@ export async function resolvePackageVersionUsingRegistry(
       cause: redactErrorCause(e),
     });
   }
-}
-
-// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
-function redactUrlCredentials(text: string): string {
-  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
 function redactErrorCause(error: unknown): unknown {
