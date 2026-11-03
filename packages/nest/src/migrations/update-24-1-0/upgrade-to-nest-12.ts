@@ -16,7 +16,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 // Keep these versions pinned; versions.ts advances to later majors.
-// 12.0.0 shipped with its peers still on ^11.
+// Core packages start at 12.0.1 because 12.0.0 shipped with its peers still on ^11.
 const NEST_12_VERSIONS: Record<string, string> = {
   '@nestjs/common': '^12.0.1',
   '@nestjs/core': '^12.0.1',
@@ -28,6 +28,29 @@ const NEST_12_VERSIONS: Record<string, string> = {
   '@nestjs/schematics': '^12.0.1',
   '@nestjs/testing': '^12.0.1',
   '@nestjs/websockets': '^12.0.1',
+  // Add-ons: the first release whose peer range accepts Nest 12.
+  '@nestjs/apollo': '^14.0.0',
+  '@nestjs/axios': '^12.0.0',
+  '@nestjs/bull': '^12.0.0',
+  '@nestjs/bullmq': '^12.0.0',
+  '@nestjs/cache-manager': '^12.0.0',
+  '@nestjs/config': '^12.0.0',
+  '@nestjs/cqrs': '^12.0.0',
+  '@nestjs/elasticsearch': '^12.0.0',
+  '@nestjs/event-emitter': '^12.0.0',
+  '@nestjs/graphql': '^14.0.0',
+  '@nestjs/jwt': '^12.0.0',
+  '@nestjs/mapped-types': '^12.0.0',
+  '@nestjs/mercurius': '^14.0.0',
+  '@nestjs/mongoose': '^12.0.0',
+  '@nestjs/passport': '^12.0.0',
+  '@nestjs/schedule': '^12.0.0',
+  '@nestjs/sequelize': '^12.0.0',
+  '@nestjs/serve-static': '^12.0.0',
+  '@nestjs/swagger': '^12.0.0',
+  '@nestjs/terminus': '^12.0.0',
+  '@nestjs/throttler': '^6.6.0',
+  '@nestjs/typeorm': '^12.0.0',
 };
 const JEST_CONFIG_FILES = [
   'jest.config.ts',

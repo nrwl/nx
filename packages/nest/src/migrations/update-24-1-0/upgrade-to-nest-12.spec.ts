@@ -82,6 +82,32 @@ describe('upgrade-to-nest-12 migration', () => {
     );
   });
 
+  it('should bump declared Nest add-on packages to a release that accepts Nest 12', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = {
+        ...json.dependencies,
+        '@nestjs/config': '^4.0.0',
+        '@nestjs/graphql': '^13.0.0',
+        '@nestjs/mapped-types': '^2.0.0',
+        '@nestjs/swagger': '^11.0.0',
+        '@nestjs/throttler': '^6.7.1',
+        '@nestjs/typeorm': '^11.0.0',
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    expect(readJson(tree, 'package.json').dependencies).toMatchObject({
+      '@nestjs/config': '^12.0.0',
+      '@nestjs/graphql': '^14.0.0',
+      '@nestjs/mapped-types': '^12.0.0',
+      '@nestjs/swagger': '^12.0.0',
+      '@nestjs/throttler': '^6.7.1',
+      '@nestjs/typeorm': '^12.0.0',
+    });
+  });
+
   it('should upgrade typescript 5 for @nestjs/schematics 12', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies.typescript = '~5.9.2';
