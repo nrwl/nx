@@ -74,6 +74,27 @@ export function excludedProjectsWarning(
   )} instead of centralizing it: their target identity is authored outside the plugin (a project.json executor/command, or a package.json script/nx.targets entry), so a plugin-scoped default would not resolve for them. Those projects keep their full per-project configuration; review them if you expected shared configuration.`;
 }
 
+/** A non-migrated project was excluded so the plugin does not replace its target. */
+export function takenOverTargetWarning(
+  pluginPath: string,
+  projectName: string,
+  root: string,
+  targetName: string,
+  existingTarget: TargetConfiguration,
+  excludeGlob: string
+): string {
+  const command =
+    existingTarget.command ??
+    existingTarget.options?.command ??
+    existingTarget.options?.commands?.join(' && ');
+  const source = command
+    ? `runs "${command}"`
+    : existingTarget.executor
+      ? `uses the "${existingTarget.executor}" executor`
+      : 'is configured outside the plugin';
+  return `convert-to-inferred did not apply ${pluginPath} to project "${projectName}" (${root}): it was not migrated and its "${targetName}" target ${source}, which the plugin's inferred "${targetName}" target would replace. The registration excludes "${excludeGlob}"; remove that entry to let the plugin infer the project.`;
+}
+
 /** A hoisted target was reverted because it reached a non-migrated root. */
 export function revertedTargetsWarning(
   targetNames: string[],
