@@ -785,6 +785,30 @@ describe('Eslint - Convert Executors To Plugin', () => {
   });
 
   describe('--all', () => {
+    it('should not take over a lint target another plugin provides to a non-migrated project', async () => {
+      createTestProject(tree, { appRoot: 'libs', appName: 'libs' });
+      const proto = createTestProject(tree, {
+        appRoot: 'libs/proto',
+        appName: 'proto',
+      });
+      updateProjectConfiguration(tree, 'proto', { ...proto, targets: {} });
+      projectGraph.nodes.proto.data.targets = {
+        lint: {
+          executor: 'nx:run-commands',
+          options: { command: './gradlew :libs:proto:lint' },
+        },
+      };
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const registrations = readNxJson(tree).plugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/eslint/plugin'
+      );
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0].exclude).toEqual(['libs/proto/**/*']);
+    });
+
     it('should successfully migrate a project using Eslint executors to plugin', async () => {
       createTestProject(tree);
 

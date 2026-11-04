@@ -4746,3 +4746,237 @@ describe('projects the plugin does not infer', () => {
     `);
   });
 });
+
+describe('targets another source already provides', () => {
+  const GRADLE_PLUGIN_PATH = '@acme/gradle/plugin';
+  const gradleCreateNodes: CreateNodes<SyntheticPluginOptions> = [
+    '**/build.gradle',
+    (configFiles) =>
+      configFiles.map((file) => {
+        const root = dirname(file);
+        return [
+          file,
+          {
+            projects: {
+              [root]: { targets: { build: { command: './gradlew build' } } },
+            },
+          },
+        ] as const;
+      }),
+  ];
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function registerGradlePlugin() {
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [GRADLE_PLUGIN_PATH, ...(nxJson.plugins ?? [])];
+    updateNxJson(ctx.tree, nxJson);
+  }
+
+  // A project whose `build` comes from the gradle plugin and which also has a
+  // config file the migrated plugin detects.
+  function addGradleProject(name: string, root: string) {
+    writeJson(ctx.tree, `${root}/project.json`, { name });
+    ctx.fs.createFileSync(`${root}/project.json`, JSON.stringify({ name }));
+    ctx.fs.createFileSync(`${root}/build.gradle`, '');
+    ctx.fs.createFileSync(`${root}/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    ctx.projectGraph.nodes[name] = {
+      name,
+      type: 'lib',
+      data: {
+        root,
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            options: { command: './gradlew build', cwd: root },
+          },
+        },
+      } as any,
+    };
+  }
+
+  function syntheticRegistrations() {
+    return (readNxJson(ctx.tree).plugins ?? []).filter(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+  }
+
+  async function migrate(warn = vi.fn()) {
+    const plugin = createSyntheticPlugin();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+    return { plugin, warn };
+  }
+
+  it('keeps a sibling project out of the registration (include stays scoped)', async () => {
+    ctx = setupFixture('collision-sibling');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+    addGradleProject('proto', 'libs/proto');
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['apps/app1/**/*', 'apps/app2/**/*']);
+    expect(registration.exclude).toBeUndefined();
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+  });
+
+  it('excludes a nested project the include would reach and keeps the exclude when the include is dropped', async () => {
+    ctx = setupFixture('collision-nested');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toBeUndefined();
+    expect(registration.exclude).toEqual(['libs/proto/**/*']);
+    expect(warn.mock.calls.map(([message]) => message)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
+    );
+    expect(warn.mock.calls.map(([message]) => message)).toContainEqual(
+      expect.stringContaining('./gradlew build')
+    );
+    const resolved = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    // migrated projects still infer the target
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+    expect(resolved['apps/app1'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not exclude a nested project without a target of that name', async () => {
+    ctx = setupFixture('collision-no-existing-target');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'nested',
+      root: 'libs/nested',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+
+    await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+  });
+
+  it('excludes a nested project the include would reach when an existing registration is extended', async () => {
+    ctx = setupFixture('collision-existing-registration');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'extra',
+      root: 'extra',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['other/**/*', 'libs/**/*']);
+    expect(registration.exclude).toEqual(['libs/proto/**/*']);
+  });
+
+  it('leaves a project the existing registration already reaches', async () => {
+    ctx = setupFixture('collision-already-reached');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['libs/proto/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+    expect(warn.mock.calls.map(([message]) => message)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+  });
+});

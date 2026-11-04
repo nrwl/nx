@@ -58,6 +58,7 @@ import {
   uninferredTargetWarning,
   type MissingPair,
   retainedResidualsWarning,
+  takenOverTargetWarning,
   type PackageJsonIdentitySource,
   revertedTargetsWarning,
   unverifiedPairsWarning,
@@ -1575,9 +1576,11 @@ export async function inferOncePerOptionSet<T>(
   rawMatchedConfigFiles: string[];
   inferredExecutors: Set<string>;
   inferredRoots: Set<string>;
+  nonMigratedInferredTargetNames: Map<string, Set<string>>;
   createNodesErrors: CreateNodesFileError[];
 }> {
   const inferredTargetsByOptionSet: InferredTargetsByOptionSet = new Map();
+  const nonMigratedInferredTargetNames = new Map<string, Set<string>>();
   const rawMatchedFiles = new Set<string>();
   const inferredRoots = new Set<string>();
   const erroredConfigFiles = new Set<string>();
@@ -1592,6 +1595,7 @@ export async function inferOncePerOptionSet<T>(
       erroredConfigFiles: [],
       inferredExecutors,
       inferredRoots,
+      nonMigratedInferredTargetNames,
       createNodesErrors,
     };
   }
@@ -1651,6 +1655,14 @@ export async function inferOncePerOptionSet<T>(
         // every inferred root would retain up to (option sets x roots) targets
         // for nothing.
         if (!group.migratedRoots.has(root)) {
+          for (const targetName of group.targetNames) {
+            if (projectConfig.targets?.[targetName]) {
+              if (!nonMigratedInferredTargetNames.has(root)) {
+                nonMigratedInferredTargetNames.set(root, new Set());
+              }
+              nonMigratedInferredTargetNames.get(root).add(targetName);
+            }
+          }
           continue;
         }
 
@@ -1700,6 +1712,10 @@ export async function inferOncePerOptionSet<T>(
     erroredConfigFiles: [...erroredConfigFiles],
     inferredExecutors,
     inferredRoots,
+    // Roots outside an option set's migrated roots, with the option set's target
+    // names the plugin infers for them. A root migrated under another option set
+    // can appear here too.
+    nonMigratedInferredTargetNames,
     createNodesErrors,
   };
 }
@@ -2383,6 +2399,7 @@ async function migrateProjects<T>(
     rawMatchedConfigFiles,
     inferredExecutors,
     inferredRoots,
+    nonMigratedInferredTargetNames,
     createNodesErrors,
   } = await inferOncePerOptionSet(
     tree,
@@ -2444,6 +2461,17 @@ async function migrateProjects<T>(
   const pluginPreRegistered = (readNxJson(tree).plugins ?? []).some((plugin) =>
     isRegistrationOfPlugin(plugin, pluginPath)
   );
+  const migratedTargetNamesByProject = new Map<string, Set<string>>();
+  for (const { targetAndProjects } of scope.executorScopes) {
+    for (const [targetName, projectNames] of targetAndProjects) {
+      for (const projectName of projectNames) {
+        if (!migratedTargetNamesByProject.has(projectName)) {
+          migratedTargetNamesByProject.set(projectName, new Set());
+        }
+        migratedTargetNamesByProject.get(projectName).add(targetName);
+      }
+    }
+  }
   addPluginRegistrations(
     tree,
     projects,
@@ -2453,7 +2481,10 @@ async function migrateProjects<T>(
     spinner,
     matchedConfigFiles,
     erroredConfigFilesFromInference,
-    rawMatchedConfigFiles
+    rawMatchedConfigFiles,
+    migratedTargetNamesByProject,
+    nonMigratedInferredTargetNames,
+    logger ?? devkitLogger
   );
 
   // An open batch session (`infer-targets` with several plugins selected)
@@ -2561,7 +2592,10 @@ function addPluginRegistrations<T>(
   // this migration's inference pass produced a project from. Used to detect
   // config files owned by NON-MIGRATED projects that the plugin would infer once
   // the registration is workspace-wide, see below.
-  rawMatchedConfigFiles: string[]
+  rawMatchedConfigFiles: string[],
+  migratedTargetNamesByProject: Map<string, Set<string>>,
+  nonMigratedInferredTargetNames: Map<string, Set<string>>,
+  logger: typeof devkitLogger
 ) {
   const nxJson = readNxJson(tree);
 
@@ -2580,13 +2614,14 @@ function addPluginRegistrations<T>(
       migratedRoots.add(root);
     }
   }
-  const nonMigratedProjectRoots = new Set<string>();
+  const nonMigratedNodesByRoot = new Map<string, ProjectGraphProjectNode>();
   for (const node of Object.values(projectGraph.nodes)) {
     const root = node?.data?.root;
     if (root && !migratedRoots.has(root)) {
-      nonMigratedProjectRoots.add(root);
+      nonMigratedNodesByRoot.set(root, node);
     }
   }
+  const nonMigratedProjectRoots = new Set(nonMigratedNodesByRoot.keys());
   const nonMigratedProjectConfigFiles = rawMatchedConfigFiles.filter((file) =>
     isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)
   );
@@ -2601,24 +2636,81 @@ function addPluginRegistrations<T>(
     ...nonMigratedProjectConfigFiles,
   ];
 
+  const takenOver = findTakenOverTargets(
+    nonMigratedInferredTargetNames,
+    nonMigratedNodesByRoot,
+    rawMatchedConfigFiles
+  );
+  const excludeTakenOverTargets = (
+    registration: ExpandedPluginConfiguration,
+    before: Pick<ExpandedPluginConfiguration, 'include' | 'exclude'> | null,
+    targetNames: Set<string>
+  ): string[] => {
+    const excluded: string[] = [];
+    for (const { node, targetName, configFiles } of takenOver) {
+      if (
+        !targetNames.has(targetName) ||
+        !reachesConfigFiles(registration, configFiles) ||
+        (before && reachesConfigFiles(before, configFiles))
+      ) {
+        continue;
+      }
+      const glob = rootIncludeGlob(node.data.root);
+      if (!excluded.includes(glob)) {
+        excluded.push(glob);
+      }
+      logger.warn(
+        takenOverTargetWarning(
+          pluginPath,
+          node.name,
+          node.data.root,
+          targetName,
+          node.data.targets[targetName],
+          glob
+        )
+      );
+    }
+    if (excluded.length > 0) {
+      registration.exclude = [...(registration.exclude ?? []), ...excluded];
+    }
+    return excluded;
+  };
+  // Files fenced off by an exclude this run adds need no include coverage, so
+  // the include can still be dropped while the exclude stays.
+  const coverageOutside = (excluded: string[]) =>
+    excluded.length > 0
+      ? findMatchingConfigFiles(coverageConfigFiles, [], excluded)
+      : coverageConfigFiles;
+
   const registrationGroups = new Map<
     string,
-    { options: Record<string, string>; include: string[] }
+    {
+      options: Record<string, string>;
+      include: string[];
+      targetNames: Set<string>;
+    }
   >();
   for (const [project, options] of projects.entries()) {
-    const projectIncludeGlob =
-      projectGraph.nodes[project].data.root === '.'
-        ? '*'
-        : join(projectGraph.nodes[project].data.root, '**/*');
+    const projectIncludeGlob = rootIncludeGlob(
+      projectGraph.nodes[project].data.root
+    );
     const key = stableStringify(options);
     if (!registrationGroups.has(key)) {
-      registrationGroups.set(key, { options, include: [] });
+      registrationGroups.set(key, {
+        options,
+        include: [],
+        targetNames: new Set(),
+      });
     }
-    registrationGroups.get(key).include.push(projectIncludeGlob);
+    const group = registrationGroups.get(key);
+    group.include.push(projectIncludeGlob);
+    for (const targetName of migratedTargetNamesByProject.get(project) ?? []) {
+      group.targetNames.add(targetName);
+    }
   }
 
   let index = 0;
-  for (const { options, include } of registrationGroups.values()) {
+  for (const { options, include, targetNames } of registrationGroups.values()) {
     index++;
     spinner.updateText(
       `${index}/${registrationGroups.size} - Applying plugin configuration...`
@@ -2642,12 +2734,13 @@ function addPluginRegistrations<T>(
         options,
         include: [...include],
       };
+      const excluded = excludeTakenOverTargets(plugin, null, targetNames);
 
       if (
         includeCoversAllConfigFiles(
           plugin.include,
           plugin.exclude,
-          coverageConfigFiles
+          coverageOutside(excluded)
         )
       ) {
         delete plugin.include;
@@ -2655,6 +2748,10 @@ function addPluginRegistrations<T>(
 
       nxJson.plugins.push(plugin);
     } else if (existingPlugin.include) {
+      const before = {
+        include: [...existingPlugin.include],
+        exclude: existingPlugin.exclude,
+      };
       for (const projectIncludeGlob of include) {
         if (
           !existingPlugin.include.some((include) =>
@@ -2664,12 +2761,17 @@ function addPluginRegistrations<T>(
           existingPlugin.include.push(projectIncludeGlob);
         }
       }
+      const excluded = excludeTakenOverTargets(
+        existingPlugin,
+        before,
+        targetNames
+      );
 
       if (
         includeCoversAllConfigFiles(
           existingPlugin.include,
           existingPlugin.exclude,
-          coverageConfigFiles
+          coverageOutside(excluded)
         )
       ) {
         delete existingPlugin.include;
@@ -2679,6 +2781,77 @@ function addPluginRegistrations<T>(
   spinner.updateText(`Migrations done`);
 
   updateNxJson(tree, nxJson);
+}
+
+function rootIncludeGlob(root: string): string {
+  return root === '.' ? '*' : join(root, '**/*');
+}
+
+function reachesConfigFiles(
+  registration: Pick<ExpandedPluginConfiguration, 'include' | 'exclude'>,
+  configFiles: string[]
+): boolean {
+  return (
+    findMatchingConfigFiles(
+      configFiles,
+      registration.include ?? [],
+      registration.exclude ?? []
+    ).length > 0
+  );
+}
+
+interface TakenOverTarget {
+  node: ProjectGraphProjectNode;
+  targetName: string;
+  /** The plugin's matched config files the project's root owns. */
+  configFiles: string[];
+}
+
+/**
+ * Targets of non-migrated projects that the plugin infers under the same name.
+ * A registration reaching such a project would replace the target its current
+ * source provides.
+ */
+function findTakenOverTargets(
+  nonMigratedInferredTargetNames: Map<string, Set<string>>,
+  nonMigratedNodesByRoot: Map<string, ProjectGraphProjectNode>,
+  rawMatchedConfigFiles: string[]
+): TakenOverTarget[] {
+  const takenOver: TakenOverTarget[] = [];
+  const configFilesByRoot = new Map<string, string[]>();
+  for (const [root, targetNames] of nonMigratedInferredTargetNames) {
+    const node = nonMigratedNodesByRoot.get(root);
+    for (const targetName of targetNames) {
+      if (!node?.data.targets?.[targetName]) {
+        continue;
+      }
+      if (!configFilesByRoot.has(root)) {
+        configFilesByRoot.set(root, []);
+      }
+      takenOver.push({
+        node,
+        targetName,
+        configFiles: configFilesByRoot.get(root),
+      });
+    }
+  }
+  if (takenOver.length === 0) {
+    return takenOver;
+  }
+  for (const file of rawMatchedConfigFiles) {
+    let slash = file.lastIndexOf('/');
+    if (slash === -1) {
+      configFilesByRoot.get('.')?.push(file);
+      continue;
+    }
+    let dir = file;
+    while (slash !== -1) {
+      dir = dir.slice(0, slash);
+      configFilesByRoot.get(dir)?.push(file);
+      slash = dir.lastIndexOf('/');
+    }
+  }
+  return takenOver;
 }
 
 interface CreateNodesFileError {
