@@ -443,6 +443,26 @@ describe('@nx/vite/plugin', () => {
   });
 
   describe('Library mode', () => {
+    // Runs the config hooks Vite runs before resolving: the user's plugins, then
+    // the injected one. As in Vite, the resolved config always has a server.
+    function mockResolveConfig(
+      getUserConfig: (command: 'build' | 'serve') => Record<string, any>
+    ) {
+      return vi.fn(async ({ plugins }, command) => {
+        let config = getUserConfig(command);
+        for (const plugin of [...(config.plugins ?? []), ...plugins]) {
+          if (!plugin.apply || plugin.apply === command) {
+            const hook = plugin.config?.handler ?? plugin.config;
+            config = { ...config, ...(await hook?.(config, { command })) };
+          }
+        }
+        return {
+          ...config,
+          server: { port: 5173, host: 'localhost', ...config.server },
+        };
+      });
+    }
+
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
       const tempFs = new TempFs('test');
       ((loadViteDynamicImport as Mock).mockResolvedValue({
@@ -512,8 +532,7 @@ describe('@nx/vite/plugin', () => {
         },
       };
       ((loadViteDynamicImport as Mock).mockResolvedValue({
-        resolveConfig: vi.fn().mockResolvedValue(userConfig),
-        loadConfigFromFile: vi.fn().mockResolvedValue({ config: userConfig }),
+        resolveConfig: mockResolveConfig(() => userConfig),
       }),
         (context = {
           nxJsonConfiguration: {
