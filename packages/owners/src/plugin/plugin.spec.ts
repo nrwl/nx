@@ -671,6 +671,109 @@ describe('createMetadata()', () => {
     });
   });
 
+  describe('GitLab sections', () => {
+    it('should apply ownership declared in sections, inheriting section defaultOwners like the generated CODEOWNERS file does', async () => {
+      ({ projectGraph, workspaceFileMap } =
+        createProjectGraphAndWorkspaceFileMap([
+          { projectName: 'ui', projectFiles: ['index.ts'] },
+          { projectName: 'data', projectFiles: ['index.ts', 'README.md'] },
+        ]));
+      mockCreateFileMapUsingProjectGraph.mockResolvedValue(workspaceFileMap);
+      nxJson = {
+        owners: {
+          format: 'gitlab',
+          sections: [
+            {
+              name: 'Frontend',
+              patterns: [{ projects: ['ui'], owners: ['@frontend'] }],
+            },
+            {
+              name: 'Docs',
+              defaultOwners: ['@docs'],
+              patterns: [{ files: ['*.md'] }],
+            },
+          ],
+        },
+      };
+
+      const result = await createMetadata(
+        projectGraph,
+        {},
+        {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: '',
+        }
+      );
+
+      expect(result['ui']!.metadata!.owners).toEqual({
+        '@frontend': {
+          ownedFiles: [
+            {
+              files: ['*'],
+              fromConfig: {
+                filePath: 'nx.json',
+                location: { startLine: 13, endLine: 13 },
+              },
+            },
+          ],
+        },
+      });
+      expect(result['data']!.metadata!.owners).toEqual({
+        '@docs': {
+          ownedFiles: [
+            {
+              files: ['libs/data/README.md'],
+              fromConfig: {
+                filePath: 'nx.json',
+                location: { startLine: 21, endLine: 21 },
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    it('should not add section defaultOwners to a project that a section pattern gives explicit owners', async () => {
+      ({ projectGraph, workspaceFileMap } =
+        createProjectGraphAndWorkspaceFileMap([
+          { projectName: 'ui-core', projectFiles: ['index.ts'] },
+          { projectName: 'ui-button', projectFiles: ['index.ts'] },
+        ]));
+      mockCreateFileMapUsingProjectGraph.mockResolvedValue(workspaceFileMap);
+      nxJson = {
+        owners: {
+          format: 'gitlab',
+          sections: [
+            {
+              name: 'Frontend',
+              defaultOwners: ['@frontend'],
+              patterns: [
+                { projects: ['ui-*'] },
+                { projects: ['ui-core'], owners: ['@core-team'] },
+              ],
+            },
+          ],
+        },
+      };
+
+      const result = await createMetadata(
+        projectGraph,
+        {},
+        {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: '',
+        }
+      );
+
+      expect(Object.keys(result['ui-core']!.metadata!.owners)).toEqual([
+        '@core-team',
+      ]);
+      expect(Object.keys(result['ui-button']!.metadata!.owners)).toEqual([
+        '@frontend',
+      ]);
+    });
+  });
+
   describe('project.json owners config', () => {
     it('should return project metadata based on resolving **/* owners configuration from project.json files', async () => {
       const projectLevelOwnersConfig: ProjectOwnersConfig = {

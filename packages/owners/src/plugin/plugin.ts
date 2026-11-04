@@ -16,6 +16,8 @@ import {
   type ProjectMetadata,
 } from '@nx/devkit/internal';
 import {
+  OwnerId,
+  OwnershipPattern,
   ProjectOwnersConfig,
   RootOwnersConfig,
   validateAndSetDefaultsForRootConfig,
@@ -59,7 +61,12 @@ export const createMetadata: CreateMetadata = async (
   if (hasRootConfig) {
     const fileToProjectMap: Record<string, string> = {};
     // Preprocess to invert the mapping to be file -> project name (only do this if "files" is used at least once)
-    if (rootOwners.patterns.some((pattern) => 'files' in pattern)) {
+    if (
+      [
+        ...rootOwners.patterns,
+        ...(rootOwners.sections ?? []).flatMap((section) => section.patterns),
+      ].some((pattern) => 'files' in pattern)
+    ) {
       for (const [projectName, fileData] of Object.entries(
         fileMap.projectFileMap
       )) {
@@ -108,137 +115,183 @@ function applyRootConfigToProjectMetadata(
 ) {
   const nxJsonNode = getJsonNode(nxJsonContents);
 
-  for (let i = 0; i < rootOwners.patterns.length; i++) {
-    const pattern = rootOwners.patterns[i];
+  const patternGroups: Array<{
+    patterns: OwnershipPattern[];
+    jsonPath: (string | number)[];
+    defaultOwners?: OwnerId[];
+  }> = [{ patterns: rootOwners.patterns, jsonPath: ['owners', 'patterns'] }];
+  (rootOwners.sections ?? []).forEach((section, s) =>
+    patternGroups.push({
+      patterns: section.patterns,
+      jsonPath: ['owners', 'sections', s, 'patterns'],
+      defaultOwners: section.defaultOwners,
+    })
+  );
 
-    /**
-     * We start with file ownership, because it's the most granular and then project level
-     * ownership can naturally override it.
-     */
-    if ('files' in pattern && !('projects' in pattern)) {
-      const matchingFiles = allWorkspaceFiles.filter(({ file }) => {
-        for (const filePattern of pattern.files) {
-          if (matchesCodeownersStylePattern(file, filePattern)) {
-            return true;
-          }
-        }
-        return false;
-      });
+  for (const group of patternGroups) {
+    // The generator merges a section's project patterns into one line per project,
+    // where explicit owners replace the section's defaultOwners
+    const explicitlyOwnedProjects = new Set(
+      group.patterns
+        .filter(
+          (pattern) =>
+            'projects' in pattern &&
+            !('files' in pattern) &&
+            Array.isArray(pattern.owners) &&
+            pattern.owners.length > 0
+        )
+        .flatMap((pattern) =>
+          findMatchingProjects(
+            (pattern as { projects: string[] }).projects,
+            projectGraph.nodes
+          )
+        )
+    );
 
-      const projectsToProjectFiles = new Map<string, string[]>();
-      for (const file of matchingFiles) {
-        const projectName = fileToProjectMap[file.file];
-        if (!projectName) {
-          continue;
-        }
-        if (!projectsToProjectFiles.has(fileToProjectMap[file.file])) {
-          projectsToProjectFiles.set(projectName, []);
-        }
-        projectsToProjectFiles.get(projectName)?.push(file.file);
-      }
-
-      for (const [
-        projectName,
-        projectFiles,
-      ] of projectsToProjectFiles.entries()) {
-        metadata[projectName] ??= {};
-        metadata[projectName].metadata ??= {};
-        metadata[projectName].metadata.owners ??= {};
-
-        if (pattern.owners === false) {
-          continue;
-        }
-
-        for (let j = 0; j < pattern.owners.length; j++) {
-          const ownerId = pattern.owners[j];
-          const fromConfig = resolveFromConfigDataForJsonAtFilePath(
+    for (let i = 0; i < group.patterns.length; i++) {
+      const { owners } = group.patterns[i];
+      // Section patterns without owners inherit the section's defaultOwners, as in the generated CODEOWNERS file
+      const ownerJsonPath = owners
+        ? [...group.jsonPath, i, 'owners']
+        : [...group.jsonPath.slice(0, -1), 'defaultOwners'];
+      const resolvedOwners =
+        owners !== false &&
+        (owners ?? group.defaultOwners ?? []).map((ownerId, j) => ({
+          ownerId,
+          fromConfig: resolveFromConfigDataForJsonAtFilePath(
             'nx.json',
             nxJsonNode,
             nxJsonContents,
-            ['owners', 'patterns', i, 'owners', j]
-          );
+            [...ownerJsonPath, j]
+          ),
+        }));
+      applyPatternToProjectMetadata(
+        group.patterns[i],
+        resolvedOwners,
+        projectGraph,
+        metadata,
+        allWorkspaceFiles,
+        fileToProjectMap,
+        fileMap,
+        owners ? undefined : explicitlyOwnedProjects
+      );
+    }
+  }
+}
 
+function applyPatternToProjectMetadata(
+  pattern: OwnershipPattern,
+  owners: Array<{ ownerId: OwnerId; fromConfig?: FromConfig }> | false,
+  projectGraph: ProjectGraph,
+  metadata: ProjectsMetadata,
+  allWorkspaceFiles: FileData[],
+  fileToProjectMap: Record<string, string>,
+  fileMap: { projectFileMap: Record<string, FileData[]> },
+  projectsWithExplicitOwners?: Set<string>
+) {
+  /**
+   * We start with file ownership, because it's the most granular and then project level
+   * ownership can naturally override it.
+   */
+  if ('files' in pattern && !('projects' in pattern)) {
+    const matchingFiles = allWorkspaceFiles.filter(({ file }) => {
+      for (const filePattern of pattern.files) {
+        if (matchesCodeownersStylePattern(file, filePattern)) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    const projectsToProjectFiles = new Map<string, string[]>();
+    for (const file of matchingFiles) {
+      const projectName = fileToProjectMap[file.file];
+      if (!projectName) {
+        continue;
+      }
+      if (!projectsToProjectFiles.has(fileToProjectMap[file.file])) {
+        projectsToProjectFiles.set(projectName, []);
+      }
+      projectsToProjectFiles.get(projectName)?.push(file.file);
+    }
+
+    for (const [
+      projectName,
+      projectFiles,
+    ] of projectsToProjectFiles.entries()) {
+      metadata[projectName] ??= {};
+      metadata[projectName].metadata ??= {};
+      metadata[projectName].metadata.owners ??= {};
+
+      if (owners === false) {
+        continue;
+      }
+
+      for (const { ownerId, fromConfig } of owners) {
+        if (!metadata[projectName].metadata.owners[ownerId]) {
+          metadata[projectName].metadata.owners[ownerId] = {
+            ownedFiles: [],
+          };
+        }
+        metadata[projectName].metadata.owners[ownerId].ownedFiles.push({
+          files: projectFiles,
+          fromConfig,
+        });
+      }
+    }
+  }
+
+  if ('projects' in pattern) {
+    const projectNames = findMatchingProjects(
+      pattern.projects,
+      projectGraph.nodes
+    );
+
+    // When both projects and files are present, scope file patterns to matched project roots
+    const hasScopedFiles = 'files' in pattern;
+
+    for (const projectName of projectNames) {
+      metadata[projectName] ??= {};
+      metadata[projectName].metadata ??= {};
+      metadata[projectName].metadata.owners ??= {};
+
+      if (owners === false) {
+        continue;
+      }
+
+      if (hasScopedFiles) {
+        // Resolve which project files match the file patterns
+        const projectRoot = projectGraph.nodes[projectName]?.data?.root;
+        const scopedPatterns = pattern.files.map((fp) =>
+          joinPathFragments(projectRoot, fp)
+        );
+        const projectFileMap = fileMap.projectFileMap[projectName] || [];
+        const matchingProjectFiles = projectFileMap
+          .filter((f) => scopedPatterns.some((p) => minimatch(f.file, p)))
+          .map((f) => f.file);
+
+        for (const { ownerId, fromConfig } of owners) {
           if (!metadata[projectName].metadata.owners[ownerId]) {
             metadata[projectName].metadata.owners[ownerId] = {
               ownedFiles: [],
             };
           }
           metadata[projectName].metadata.owners[ownerId].ownedFiles.push({
-            files: projectFiles,
+            files: matchingProjectFiles,
             fromConfig,
           });
         }
-      }
-    }
-
-    if ('projects' in pattern) {
-      const projectNames = findMatchingProjects(
-        pattern.projects,
-        projectGraph.nodes
-      );
-
-      // When both projects and files are present, scope file patterns to matched project roots
-      const hasScopedFiles = 'files' in pattern;
-
-      for (const projectName of projectNames) {
-        metadata[projectName] ??= {};
-        metadata[projectName].metadata ??= {};
-        metadata[projectName].metadata.owners ??= {};
-
-        if (pattern.owners === false) {
-          continue;
-        }
-
-        if (hasScopedFiles) {
-          // Resolve which project files match the file patterns
-          const projectRoot = projectGraph.nodes[projectName]?.data?.root;
-          const scopedPatterns = pattern.files.map((fp) =>
-            joinPathFragments(projectRoot, fp)
-          );
-          const projectFileMap = fileMap.projectFileMap[projectName] || [];
-          const matchingProjectFiles = projectFileMap
-            .filter((f) => scopedPatterns.some((p) => minimatch(f.file, p)))
-            .map((f) => f.file);
-
-          for (let j = 0; j < pattern.owners.length; j++) {
-            const ownerId = pattern.owners[j];
-            const fromConfig = resolveFromConfigDataForJsonAtFilePath(
-              'nx.json',
-              nxJsonNode,
-              nxJsonContents,
-              ['owners', 'patterns', i, 'owners', j]
-            );
-
-            if (!metadata[projectName].metadata.owners[ownerId]) {
-              metadata[projectName].metadata.owners[ownerId] = {
-                ownedFiles: [],
-              };
-            }
-            metadata[projectName].metadata.owners[ownerId].ownedFiles.push({
-              files: matchingProjectFiles,
-              fromConfig,
-            });
-          }
-        } else {
-          for (let j = 0; j < pattern.owners.length; j++) {
-            const ownerId = pattern.owners[j];
-            const fromConfig = resolveFromConfigDataForJsonAtFilePath(
-              'nx.json',
-              nxJsonNode,
-              nxJsonContents,
-              ['owners', 'patterns', i, 'owners', j]
-            );
-
-            // If there is already an entry for owner for this project, we can always overwrite because project level should take priority
-            metadata[projectName].metadata.owners[ownerId] = {
-              ownedFiles: [
-                {
-                  files: ['*'],
-                  fromConfig,
-                },
-              ],
-            };
-          }
+      } else if (!projectsWithExplicitOwners?.has(projectName)) {
+        for (const { ownerId, fromConfig } of owners) {
+          // If there is already an entry for owner for this project, we can always overwrite because project level should take priority
+          metadata[projectName].metadata.owners[ownerId] = {
+            ownedFiles: [
+              {
+                files: ['*'],
+                fromConfig,
+              },
+            ],
+          };
         }
       }
     }
