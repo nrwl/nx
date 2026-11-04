@@ -341,5 +341,25 @@ describe('@nx/vitest:convert-to-inferred', () => {
         }
       `);
     });
+
+    it('keeps a target-name default from reaching the converted target when the executor default applied before', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: { cache: true, dependsOn: ['^build'] },
+        '@nx/vitest:test': { cache: true, inputs: ['default', '^production'] },
+      };
+      updateNxJson(tree, nxJson);
+      createTestProject(tree);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readNxJson(tree).targetDefaults.test).toEqual([
+        { cache: true, dependsOn: ['^build'] },
+        {
+          filter: { plugin: '@nx/vitest', projects: ['myapp'] },
+          dependsOn: [],
+        },
+      ]);
+    });
   });
 });

@@ -2,9 +2,11 @@ import { dirname } from 'node:path/posix';
 import type {
   CreateNodes,
   ExpandedPluginConfiguration,
+  TargetConfiguration,
   TargetDefaults,
 } from 'nx/src/devkit-exports';
 import {
+  addProjectConfiguration,
   readNxJson,
   readJson,
   updateNxJson,
@@ -23,6 +25,7 @@ import {
   migrateProjectExecutorsToPlugin,
   readTargetDefaultsForExecutor,
 } from './executor-to-plugin-migrator';
+import { finalizeBatchConversion } from './batch-conversion-finalize';
 import { openBatchConversionSession } from './batch-conversion-session';
 import {
   addExecutorProject,
@@ -453,19 +456,21 @@ describe('computeResidualByProject (Phase 2)', () => {
       undefined
     );
     const nxJson = readNxJson(ctx.tree);
-    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
-      ctx.tree,
-      plugin.pluginPath,
-      plugin.createNodes,
-      undefined,
-      nxJson,
-      scope
-    );
+    const { inferredTargetsByOptionSet, rawInferredTargetsByOptionSet } =
+      await inferOncePerOptionSet(
+        ctx.tree,
+        plugin.pluginPath,
+        plugin.createNodes,
+        undefined,
+        nxJson,
+        scope
+      );
     const residualByProject = await computeResidualByProject(
       ctx.tree,
       ctx.projectGraph,
       scope,
       inferredTargetsByOptionSet,
+      rawInferredTargetsByOptionSet,
       nxJson
     );
     const inferredByRoot = inferredTargetsByOptionSet.get(
@@ -574,19 +579,21 @@ describe('computeResidualByProject (Phase 2)', () => {
     expect(scope.optionSetGroups).toHaveLength(2);
 
     const nxJson = readNxJson(ctx.tree);
-    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
-      ctx.tree,
-      plugin.pluginPath,
-      plugin.createNodes,
-      undefined,
-      nxJson,
-      scope
-    );
+    const { inferredTargetsByOptionSet, rawInferredTargetsByOptionSet } =
+      await inferOncePerOptionSet(
+        ctx.tree,
+        plugin.pluginPath,
+        plugin.createNodes,
+        undefined,
+        nxJson,
+        scope
+      );
     const residualByProject = await computeResidualByProject(
       ctx.tree,
       ctx.projectGraph,
       scope,
       inferredTargetsByOptionSet,
+      rawInferredTargetsByOptionSet,
       nxJson
     );
 
@@ -646,19 +653,21 @@ describe('computeResidualByProject (Phase 2)', () => {
       undefined
     );
     const nxJson = readNxJson(ctx.tree);
-    const { inferredTargetsByOptionSet } = await inferOncePerOptionSet(
-      ctx.tree,
-      plugin.pluginPath,
-      plugin.createNodes,
-      undefined,
-      nxJson,
-      scope
-    );
+    const { inferredTargetsByOptionSet, rawInferredTargetsByOptionSet } =
+      await inferOncePerOptionSet(
+        ctx.tree,
+        plugin.pluginPath,
+        plugin.createNodes,
+        undefined,
+        nxJson,
+        scope
+      );
     const residualByProject = await computeResidualByProject(
       ctx.tree,
       ctx.projectGraph,
       scope,
       inferredTargetsByOptionSet,
+      rawInferredTargetsByOptionSet,
       nxJson
     );
     const expectedResidual = structuredClone(
@@ -4744,5 +4753,370 @@ describe('projects the plugin does not infer', () => {
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/nested/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
       ]
     `);
+  });
+});
+
+describe('targetDefaults resolution across the conversion', () => {
+  const TEST_EXECUTOR = '@acme/tool:test';
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  function testMigrations() {
+    return [{ ...syntheticMigrations()[0], executors: [TEST_EXECUTOR] }];
+  }
+
+  function setup(label: string, targetDefaults: TargetDefaults) {
+    ctx = setupFixture(label);
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: name,
+        targetName: 'test',
+        executor: TEST_EXECUTOR,
+        target: { options: { config: SYNTHETIC_CONFIG_FILE } },
+      });
+    }
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.targetDefaults = targetDefaults;
+    updateNxJson(ctx.tree, nxJson);
+  }
+
+  function migrate(
+    plugin: ReturnType<typeof createSyntheticPlugin>,
+    warn = vi.fn(),
+    specificProject?: string
+  ) {
+    return migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'test' },
+      testMigrations(),
+      specificProject,
+      { warn } as any
+    );
+  }
+
+  // The synthetic plugin infers `cache: true` and no `dependsOn`, so these two
+  // fields are decided by targetDefaults alone on both sides of the conversion.
+  function defaultsDecidedFields(target: TargetConfiguration) {
+    return { cache: target.cache ?? false, dependsOn: target.dependsOn ?? [] };
+  }
+
+  const shapes: Array<[string, TargetDefaults]> = [
+    [
+      'A: a target-name key and an executor key',
+      {
+        test: { cache: true, dependsOn: ['^build'] },
+        [TEST_EXECUTOR]: { cache: true, inputs: ['production'] },
+      },
+    ],
+    [
+      'B: a target-name key only',
+      { test: { cache: true, dependsOn: ['^build'] } },
+    ],
+    [
+      'C: a target-name key and an inferred-executor key',
+      {
+        test: { cache: true, dependsOn: ['^build'] },
+        'nx:run-commands': { cache: false },
+      },
+    ],
+    [
+      'D: a target-name array with a plugin-filtered entry',
+      {
+        test: [
+          { cache: true },
+          { filter: { plugin: SYNTHETIC_PLUGIN_PATH }, dependsOn: ['^build'] },
+        ],
+      },
+    ],
+  ];
+
+  it.each(shapes)(
+    'keeps what the converted target resolved before (%s)',
+    async (_label, targetDefaults) => {
+      setup('td-shift', targetDefaults);
+      const plugin = createSyntheticPlugin();
+      const before = await resolveThroughRealPipeline(
+        ctx,
+        plugin.pluginPath,
+        plugin.createNodes
+      );
+      const warn = vi.fn();
+
+      await migrate(plugin, warn);
+
+      const after = await resolveThroughRealPipeline(
+        ctx,
+        plugin.pluginPath,
+        plugin.createNodes
+      );
+      for (const name of ['app1', 'app2']) {
+        expect(after[name].test.executor).toBe('nx:run-commands');
+        expect(defaultsDecidedFields(after[name].test)).toEqual(
+          defaultsDecidedFields(before[name].test)
+        );
+      }
+      expect(warn).not.toHaveBeenCalled();
+    }
+  );
+
+  it('writes a plugin- and project-filtered entry under the key that wins after conversion', async () => {
+    setup('td-shift-entry', {
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    const plugin = createSyntheticPlugin();
+
+    await migrate(plugin);
+
+    expect(readNxJson(ctx.tree).targetDefaults).toStrictEqual({
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': [
+        { cache: false },
+        {
+          filter: { plugin: SYNTHETIC_PLUGIN_PATH, projects: ['app1', 'app2'] },
+          cache: true,
+          dependsOn: ['^build'],
+        },
+      ],
+    });
+  });
+
+  it('writes no correction when the resolution did not shift', async () => {
+    const targetDefaults = { test: { cache: true, dependsOn: ['^build'] } };
+    setup('td-shift-none', targetDefaults);
+    const plugin = createSyntheticPlugin();
+
+    await migrate(plugin);
+
+    expect(readNxJson(ctx.tree).targetDefaults).toStrictEqual(targetDefaults);
+  });
+
+  it('leaves the defaults of a project the plugin already inferred untouched', async () => {
+    setup('td-shift-inferred-only', {
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      { plugin: SYNTHETIC_PLUGIN_PATH, options: { targetName: 'test' } },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+    addProjectConfiguration(ctx.tree, 'app3', { root: 'app3' });
+    ctx.projectGraph.nodes.app3 = {
+      name: 'app3',
+      type: 'app',
+      data: { root: 'app3', targets: {} },
+    };
+    ctx.fs.createFileSync(`app3/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const plugin = createSyntheticPlugin();
+    const before = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+
+    await migrate(plugin);
+
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    expect(after.app3.test).toEqual(before.app3.test);
+    expect(after.app3.test.cache).toBe(false);
+    for (const name of ['app1', 'app2']) {
+      expect(defaultsDecidedFields(after[name].test)).toEqual(
+        defaultsDecidedFields(before[name].test)
+      );
+    }
+  });
+
+  it('writes the correction into project.json when the winning key also reaches a sibling target', async () => {
+    setup('td-shift-sibling', {
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles) =>
+        configFiles.map((file) => {
+          const root = dirname(file);
+          return [
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    test: defaultInferredTarget(root),
+                    lint: { command: 'acme-lint', cache: true },
+                  },
+                },
+              },
+            },
+          ] as const;
+        }),
+    ];
+    const before = await resolveThroughRealPipeline(
+      ctx,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes
+    );
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'test' },
+      testMigrations(),
+      undefined,
+      { warn: vi.fn() } as any
+    );
+
+    expect(readNxJson(ctx.tree).targetDefaults).toStrictEqual({
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(readJson(ctx.tree, `${name}/project.json`).targets.test).toEqual({
+        cache: true,
+        dependsOn: ['^build'],
+      });
+      expect(defaultsDecidedFields(after[name].test)).toEqual(
+        defaultsDecidedFields(before[name].test)
+      );
+      expect(after[name].lint.cache).toBe(false);
+    }
+  });
+
+  it('falls back to the default named input, shared globals included, when nothing set inputs before', async () => {
+    setup('td-shift-default-inputs', {
+      'nx:run-commands': { inputs: ['{projectRoot}/src/**/*'] },
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.namedInputs = {
+      sharedGlobals: ['{workspaceRoot}/tsconfig.base.json'],
+      default: ['{projectRoot}/**/*', 'sharedGlobals'],
+    };
+    updateNxJson(ctx.tree, nxJson);
+    const plugin = createSyntheticPlugin((root, targetName) => {
+      const { inputs: _inputs, ...target } = defaultInferredTarget(
+        root,
+        targetName
+      );
+      return target;
+    });
+
+    await migrate(plugin);
+
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      // Unset inputs hash as `default` + `^default`, so `sharedGlobals` stays in.
+      expect(after[name].test.inputs).toEqual(['default', '^default']);
+    }
+  });
+
+  it('warns about a default option that no correction can unset', async () => {
+    setup('td-shift-unexpressible', {
+      'nx:run-commands': { options: { reporter: 'dot' } },
+    });
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    await migrate(plugin, warn);
+
+    expect(warn).toHaveBeenCalledWith(
+      'convert-to-inferred could not keep the targetDefaults that app1 > test (options.reporter), app2 > test (options.reporter) resolved before the migration: targetDefaults now apply there that set these fields, and no later targetDefaults entry can unset them. Review these targets manually.'
+    );
+  });
+
+  it('scopes the correction to the migrated project in single-project mode', async () => {
+    setup('td-shift-single-project', {
+      test: [
+        { cache: true },
+        { filter: { plugin: SYNTHETIC_PLUGIN_PATH }, dependsOn: ['^build'] },
+      ],
+    });
+    const plugin = createSyntheticPlugin();
+
+    await migrate(plugin, vi.fn(), 'app1');
+
+    expect(readNxJson(ctx.tree).targetDefaults.test).toStrictEqual([
+      { cache: true },
+      { filter: { plugin: SYNTHETIC_PLUGIN_PATH }, dependsOn: ['^build'] },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH, projects: ['app1'] },
+        dependsOn: [],
+      },
+    ]);
+  });
+
+  it('corrects against the nx.json the batch finalize writes', async () => {
+    setup('td-shift-batch', {
+      test: { cache: true, dependsOn: ['^build'] },
+      [TEST_EXECUTOR]: { cache: true, inputs: ['production'] },
+    });
+    const plugin = createSyntheticPlugin();
+    const before = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+
+    const session = openBatchConversionSession(ctx.tree);
+    try {
+      await session.runChild(() => migrate(plugin));
+      // the child defers: the shift is still uncorrected here
+      expect(readNxJson(ctx.tree).targetDefaults.test).toStrictEqual({
+        cache: true,
+        dependsOn: ['^build'],
+      });
+      await finalizeBatchConversion(ctx.tree, session);
+    } finally {
+      session.close();
+    }
+
+    const targetDefaults = readNxJson(ctx.tree).targetDefaults;
+    expect(targetDefaults[TEST_EXECUTOR]).toBeUndefined();
+    expect(targetDefaults.test).toStrictEqual([
+      { cache: true, dependsOn: ['^build'] },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH },
+        inputs: ['production', { externalDependencies: ['acme-tool'] }],
+      },
+      {
+        filter: { plugin: SYNTHETIC_PLUGIN_PATH, projects: ['app1', 'app2'] },
+        dependsOn: [],
+      },
+    ]);
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(defaultsDecidedFields(after[name].test)).toEqual(
+        defaultsDecidedFields(before[name].test)
+      );
+    }
   });
 });

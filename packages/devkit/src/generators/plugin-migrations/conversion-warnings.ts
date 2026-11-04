@@ -145,3 +145,15 @@ export function verificationErrorsWarning(
     '; '
   )}.${outcome}`;
 }
+
+/** Defaults that now reach migrated targets and that no later default can unset. */
+export function unexpressibleTargetDefaultsWarning(
+  fieldsByPair: Map<string, string[]>
+): string {
+  const pairs = [...fieldsByPair.keys()]
+    .sort()
+    .map((pair) => `${pair} (${fieldsByPair.get(pair).join(', ')})`);
+  return `convert-to-inferred could not keep the targetDefaults that ${pairs.join(
+    ', '
+  )} resolved before the migration: targetDefaults now apply there that set these fields, and no later targetDefaults entry can unset them. Review these targets manually.`;
+}
