@@ -4,6 +4,10 @@ Nx 24 removes the `@nx/eslint:lint` executor and its `@nrwl/linter:eslint` alias
 
 The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
 
+The inferred task passes its options and command-line flags to the ESLint CLI, which only accepts kebab-case names such as `--max-warnings`, `--output-file`, and `--format`. The migration renames options in project configuration, but scripts and CI commands that pass `--maxWarnings` or `--outputFile` need the ESLint names.
+
+The inferred task also runs ESLint from the project root instead of the workspace root, so in legacy eslintrc mode a `.eslintignore` at the workspace root no longer applies. See [Troubleshoot convert-to-inferred](https://nx.dev/docs/kb/troubleshoot-convert-to-inferred#eslint-and-vitest-tasks-run-from-the-project-root) for how to handle it.
+
 #### Sample code changes
 
 ##### Before

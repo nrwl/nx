@@ -55,6 +55,54 @@ task, or migrate that target by hand.
 If the configuration already supports the task, open an issue on GitHub with details about your
 project structure.
 
+## Tasks miss the cache after conversion
+
+An inferred task that lost its plugin's `externalDependencies` input hashes every external
+dependency in the workspace, so any lockfile change invalidates it.
+This happens when `inputs` in `targetDefaults` or `project.json` replace the inferred inputs.
+Add `"..."` to those `inputs` to keep the inferred ones, as shown in
+[Keep cache inputs tight](/docs/kb/convert-to-inferred#keep-cache-inputs-tight).
+
+## ESLint and Vitest: tasks run from the project root
+
+Inferred `@nx/eslint` and `@nx/vitest` tasks run from the project root.
+The removed `@nx/eslint:lint` and `@nx/vitest:test` executors ran from the workspace root, so
+anything the tool resolves against the working directory can change after conversion:
+
+- ESLint in legacy eslintrc mode reads `.eslintignore` from the working directory, so a
+  `.eslintignore` at the workspace root no longer applies.
+- Code that resolves a relative path from a `.env` file against the working directory now gets a
+  path under the project root.
+
+For Vitest, a `targetDefaults` entry scoped to the plugin restores the old working directory.
+It sets `cwd` to the workspace root and passes the project root to Vitest as `--root`:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "options": {
+          "cwd": "{workspaceRoot}",
+          "args": ["--root={projectRoot}"]
+        }
+      }
+    ]
+  }
+}
+```
+
+Use your inferred target name as the key, and set `filter.plugin` to the plugin as it appears in
+the `plugins` array of `nx.json`.
+
+ESLint can't use the same entry, because the inferred command lints `.`, which from the workspace
+root is the whole workspace.
+Move the ignore patterns into an `.eslintignore` in each project root, or into `ignorePatterns` in
+the project's ESLint configuration.
+The inferred lint task already tracks a project-root `.eslintignore` as an input.
+
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
 
 The `outputPath` option from `@nx/next:build` is ignored because it

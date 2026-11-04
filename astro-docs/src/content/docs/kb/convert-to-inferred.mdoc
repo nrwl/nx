@@ -306,6 +306,38 @@ configuration for the affected targets and prints a warning.
 This step is skipped for single-project (`--project`) migrations, since centralizing one
 project's configuration would leak it onto its siblings.
 
+### Keep cache inputs tight
+
+A removed `@nx/*` executor hashed its own package and that package's npm dependencies.
+An inferred task runs through `nx:run-commands`, so Nx can't tell which packages it uses.
+Without an `externalDependencies` input, Nx [hashes every external dependency](/docs/reference/inputs#external-dependencies)
+in the workspace, and any lockfile change invalidates the task.
+The first-party plugins declare that input for you, for example `{ "externalDependencies": ["vitest"] }`
+on inferred Vitest tasks.
+
+`inputs` set in `targetDefaults` or `project.json` replace the inputs a plugin infers, including
+its `externalDependencies` entry.
+Put the [spread token](/docs/reference/nx-json#spread-token) (`"..."`) in those `inputs` to keep the
+inferred ones alongside your own:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "inputs": ["...", "{workspaceRoot}/vitest.shared.ts"]
+      }
+    ]
+  }
+}
+```
+
+Inferred ESLint and Vitest tasks also run from the project root instead of the workspace root.
+See [Troubleshoot convert-to-inferred](/docs/kb/troubleshoot-convert-to-inferred#eslint-and-vitest-tasks-run-from-the-project-root)
+for what that changes.
+
 ## Verify the migration
 
 The migrations maintain the same targets and configurations for each project, thus to verify it you should run the affected targets.

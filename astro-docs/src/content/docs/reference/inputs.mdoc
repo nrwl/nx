@@ -302,7 +302,8 @@ This default behavior can be overridden by adding any external dependency inputs
 }
 ```
 
-Targets which use an executor from a Nx Plugin maintained by the Nx Team will have the correct set of external dependencies considered when calculating the hash.
+A target that uses an `@nx/*` executor hashes that executor's package and the package's npm dependencies instead of every external dependency.
+Inferred tasks run through `nx:run-commands`, so they follow the default above unless they declare an `externalDependencies` input.
 
 ### Outputs of dependent tasks
 
