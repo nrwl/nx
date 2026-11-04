@@ -90,10 +90,20 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.reportsDirectory;
   }
 
-  if ('testFiles' in targetOptions) {
-    targetOptions.testNamePattern = `"/(${targetOptions.testFiles
-      .map((f) => f.replace('.', '\\.'))
-      .join('|')})/"`;
-    delete targetOptions.testFiles;
+  for (const name of ['testFiles', 'testFile']) {
+    if (name in targetOptions) {
+      targetOptions.args = targetOptions[name].map((filter: string) =>
+        toProjectFilter(filter, projectRoot)
+      );
+      delete targetOptions[name];
+    }
   }
+}
+
+// Vitest resolves a relative filter against the cwd, which is now the project root
+function toProjectFilter(filter: string, projectRoot: string): string {
+  const prefix = `${projectRoot}/`;
+  return projectRoot !== '.' && filter.startsWith(prefix)
+    ? filter.slice(prefix.length)
+    : filter;
 }

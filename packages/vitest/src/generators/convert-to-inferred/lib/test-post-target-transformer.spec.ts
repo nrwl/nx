@@ -50,12 +50,20 @@ describe('testPostTargetTransformer', () => {
     );
   });
 
-  it('translates testFiles into a testNamePattern regex', () => {
+  it('translates testFiles into project-relative file filters', () => {
     const tree = createTreeWithEmptyWorkspace();
     const target = {
       options: {
         configFile: 'libs/lib1/vite.config.ts',
-        testFiles: ['foo.spec.ts', 'bar.spec.ts'],
+        testFiles: [
+          'src/foo.spec.ts',
+          'libs/lib1/src/bar.spec.ts',
+          'baz',
+          '/abs/libs/lib1/qux.spec.ts',
+        ],
+      },
+      configurations: {
+        single: { testFile: ['libs/lib1/src/one.spec.ts'] },
       },
     };
 
@@ -66,10 +74,31 @@ describe('testPostTargetTransformer', () => {
       {}
     );
 
-    expect(result.options.testNamePattern).toBe(
-      `"/(foo\\.spec.ts|bar\\.spec.ts)/"`
-    );
+    expect(result.options.args).toEqual([
+      'src/foo.spec.ts',
+      'src/bar.spec.ts',
+      'baz',
+      '/abs/libs/lib1/qux.spec.ts',
+    ]);
     expect(result.options.testFiles).toBeUndefined();
+    expect(result.options.testNamePattern).toBeUndefined();
+    expect(result.configurations.single).toEqual({
+      args: ['src/one.spec.ts'],
+    });
+  });
+
+  it('keeps testFiles unchanged for a root project', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const target = { options: { testFiles: ['src/foo.spec.ts'] } };
+
+    const result = testPostTargetTransformer(
+      target,
+      tree,
+      { projectName: 'root', root: '.' },
+      {}
+    );
+
+    expect(result.options.args).toEqual(['src/foo.spec.ts']);
   });
 
   it('drops empty configurations and stale defaultConfiguration', () => {
