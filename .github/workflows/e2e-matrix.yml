@@ -192,10 +192,14 @@ jobs:
         run: |
           # Workaround to provide additional free space for testing.
           # https://github.com/actions/virtual-environments/issues/2840
+          df -h /
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf /usr/local/lib/android
           sudo rm -rf '/usr/local/share/boost'
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h /
           sudo apt-get install lsof
           echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
@@ -380,6 +384,10 @@ jobs:
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
+
+      - name: Report disk usage
+        if: ${{ always() && matrix.os == 'ubuntu-latest' }}
+        run: df -h /
 
       - name: Save matrix config in file
         if: ${{ always() }}
