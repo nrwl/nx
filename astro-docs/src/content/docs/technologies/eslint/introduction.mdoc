@@ -81,12 +81,19 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-| Option       | Type     | Default                                           | Description                                     |
-| ------------ | -------- | ------------------------------------------------- | ----------------------------------------------- |
-| `targetName` | string   | `lint`                                            | Name of the ESLint task.                        |
-| `extensions` | string[] | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task. |
+| Option       | Type                             | Default                                           | Description                                                                                      |
+| ------------ | -------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `targetName` | string                           | `lint`                                            | Name of the ESLint task.                                                                         |
+| `extensions` | string[]                         | `ts, cts, mts, tsx, js, cjs, mjs, jsx, html, vue` | File extensions Nx checks before adding a task.                                                  |
+| `cwd`        | `projectRoot` or `workspaceRoot` | `projectRoot`                                     | Directory ESLint runs from. `workspaceRoot` runs `eslint <projectRoot>` from the workspace root. |
 
-The lint task runs ESLint from the project root and is cached, with inputs based on your ESLint configuration.
+The lint task runs ESLint from the project root by default and is cached, with inputs based on your ESLint configuration.
+
+Set `cwd` to `workspaceRoot` if your ESLint setup expects the workspace root as its working directory.
+In legacy eslintrc mode, ESLint reads `.eslintignore` only from the working directory, so a root `.eslintignore` applies to your projects only when ESLint runs from the workspace root.
+Nx then tracks the root `.eslintignore` as a task input and applies it when deciding whether a project has files to lint.
+In flat config mode, Nx ignores `cwd` for a project that has its own `eslint.config.*` and logs a warning, because ESLint run from the workspace root would skip that config.
+
 Nx passes the task's ESLint options and command-line flags to the
 [ESLint CLI](https://eslint.org/docs/latest/use/command-line-interface), so use its kebab-case names,
 such as `--max-warnings`, `--output-file`, and `--format`.
