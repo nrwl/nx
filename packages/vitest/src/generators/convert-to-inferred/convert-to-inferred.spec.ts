@@ -273,6 +273,37 @@ describe('@nx/vitest:convert-to-inferred', () => {
       );
       expect(vitestRegistrations).toHaveLength(1);
       expect(vitestRegistrations[0].options?.testTargetName).toBe('test');
+      expect(vitestRegistrations[0].options?.testMode).toBe('run');
+    });
+
+    it('does not add converted projects to an existing watch-mode registration', async () => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins = [
+        {
+          plugin: '@nx/vitest',
+          include: ['existing/**/*'],
+          options: { testTargetName: 'test' },
+        },
+      ];
+      updateNxJson(tree, nxJson);
+      createTestProject(tree);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const vitestRegistrations = readNxJson(tree).plugins.filter(
+        (p): p is ExpandedPluginConfiguration<VitestPluginOptions> =>
+          typeof p !== 'string' && p.plugin === '@nx/vitest'
+      );
+      expect(vitestRegistrations).toEqual([
+        {
+          plugin: '@nx/vitest',
+          include: ['existing/**/*'],
+          options: { testTargetName: 'test' },
+        },
+        expect.objectContaining({
+          options: { testTargetName: 'test', testMode: 'run' },
+        }),
+      ]);
     });
 
     it('creates separate plugin registrations for projects with different test target names', async () => {
