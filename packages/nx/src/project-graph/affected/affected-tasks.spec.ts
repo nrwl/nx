@@ -835,6 +835,9 @@ describe('the run graph with --exclude-task-dependencies', () => {
     expect(Object.keys(result.taskSelection.taskGraph.tasks)).toEqual([
       'app:test',
     ]);
+    expect(result.taskSelection.tasksRunWithoutDependencies).toEqual([
+      'app:test',
+    ]);
   });
 
   // The flag drops what runs, not what carries a change: lib:build is only a
@@ -870,6 +873,9 @@ describe('the run graph with --exclude-task-dependencies', () => {
     });
     expect([...result.affectedTaskIds]).toEqual(['app:test']);
     expect(Object.keys(result.taskSelection.taskGraph.tasks)).toEqual([
+      'app:test',
+    ]);
+    expect(result.taskSelection.tasksRunWithoutDependencies).toEqual([
       'app:test',
     ]);
   });

@@ -76,6 +76,11 @@ export interface TaskSelection {
   planningContext?: TaskPlanningContext;
   /** The Ultracache configurations selection planned with; the run hashes with the same ones. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  /**
+   * Tasks run with a dependency task omitted. Their results are not written
+   * to the cache; a hit may still be restored.
+   */
+  tasksRunWithoutDependencies?: readonly string[];
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -468,6 +473,7 @@ export function selectTasksForProjects(
   extraTargetDependencies: TargetDependencies,
   excludeTaskDependencies: boolean
 ): TaskSelection {
+  const tasksRunWithoutDependencies: string[] = [];
   const taskGraph = createTaskGraph(
     projectGraph,
     extraTargetDependencies,
@@ -475,7 +481,8 @@ export function selectTasksForProjects(
     nxArgs.targets,
     nxArgs.configuration,
     overrides,
-    excludeTaskDependencies
+    excludeTaskDependencies,
+    tasksRunWithoutDependencies
   );
   const projects = new Set(projectNames);
   return {
@@ -487,6 +494,9 @@ export function selectTasksForProjects(
           nxArgs.targets.includes(t.target.target)
       )
       .map((t) => t.id),
+    ...(tasksRunWithoutDependencies.length
+      ? { tasksRunWithoutDependencies }
+      : {}),
   };
 }
 
@@ -650,6 +660,7 @@ export async function runTasksForCommand(
       planningContext: taskSelection.planningContext,
       ultracacheConfigurationOutcome:
         taskSelection.ultracacheConfigurationOutcome,
+      tasksRunWithoutDependencies: taskSelection.tasksRunWithoutDependencies,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -878,14 +889,17 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       ),
     ];
     projectGraph = await createProjectGraphAsync();
-    const rebuilt = selectTasksForProjects(
+    const rebuiltSelection = selectTasksForProjects(
       projectGraph,
       projectNames,
       nxArgs,
       overrides,
       extraTargetDependencies ?? {},
       extraOptions.excludeTaskDependencies
-    ).taskGraph;
+    );
+    taskSelection.tasksRunWithoutDependencies =
+      rebuiltSelection.tasksRunWithoutDependencies;
+    const rebuilt = rebuiltSelection.taskGraph;
     taskGraph = runValidations(
       projectGraph,
       // Before validation, so a cycle or atomizer error names what will actually run.
@@ -1028,6 +1042,7 @@ export async function invokeTasksRunner({
   initiatingTasks,
   planningContext,
   ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
+  tasksRunWithoutDependencies,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1041,6 +1056,7 @@ export async function invokeTasksRunner({
   planningContext?: TaskPlanningContext;
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
+  tasksRunWithoutDependencies?: readonly string[];
 }): Promise<{
   taskResults: { [id: string]: TaskResult };
   taskStatuses?: Record<string, TaskStatus>;
@@ -1178,6 +1194,9 @@ export async function invokeTasksRunner({
       },
       daemon: daemonClient,
       hashingDeferredTaskIds,
+      tasksRunWithoutDependencies: tasksRunWithoutDependencies?.length
+        ? new Set(tasksRunWithoutDependencies)
+        : undefined,
     }
   );
   if ((promiseOrObservable as any).subscribe) {

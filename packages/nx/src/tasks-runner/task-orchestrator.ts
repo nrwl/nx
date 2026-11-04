@@ -325,7 +325,9 @@ export class TaskOrchestrator {
     private readonly resolvedOutputStyle: OutputStyle,
     private readonly fullTaskGraph: TaskGraph = taskGraph,
     /** Tasks the up-front pass left to hash once the tasks they read from have run. */
-    private readonly hashingDeferredTaskIds?: ReadonlySet<string>
+    private readonly hashingDeferredTaskIds?: ReadonlySet<string>,
+    /** Tasks whose results must not be written to the cache. */
+    private readonly tasksRunWithoutDependencies?: ReadonlySet<string>
   ) {}
 
   async init() {
@@ -2634,7 +2636,7 @@ export class TaskOrchestrator {
             : 1,
         outputs: result.task.outputs,
       }))
-      .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+      .filter(({ task, code }) => this.shouldWriteTaskResultToCache(task, code))
       .filter(({ terminalOutput, outputs }) => terminalOutput || outputs);
   }
 
@@ -2893,6 +2895,15 @@ export class TaskOrchestrator {
     return (
       task.cache &&
       (process.env.NX_CACHE_FAILURES == 'true' ? true : code === 0)
+    );
+  }
+
+  // Same hash as a full run, but the dependency tasks did not run. Storing the
+  // result would make the next full run restore it. Cache reads still apply.
+  private shouldWriteTaskResultToCache(task: Task, code: number) {
+    return (
+      this.shouldCacheTaskResult(task, code) &&
+      !this.tasksRunWithoutDependencies?.has(task.id)
     );
   }
 
