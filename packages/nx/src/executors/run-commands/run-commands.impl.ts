@@ -13,6 +13,7 @@ import {
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
+import { logger } from '../../utils/logger';
 import { isAlreadyQuoted, needsShellQuoting } from '../../utils/shell-quoting';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -59,6 +60,7 @@ const propKeys = [
   'parallel',
   'no-parallel',
   'readyWhen',
+  'readyWhenStatus',
   'cwd',
   'args',
   'envFile',
@@ -107,6 +109,15 @@ export async function runCommands(
   task?: Pick<Task, 'id' | 'ultracache' | 'continuous'>,
   baseEnv?: NodeJS.ProcessEnv
 ) {
+  // The orchestrator's in-process path passes the task with a stub context,
+  // so prefer it.
+  const resolvedTaskId =
+    task?.id ??
+    createTaskId(
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
   let env: NodeJS.ProcessEnv;
   const normalized = normalizeOptions(
     options,
@@ -117,7 +128,8 @@ export async function runCommands(
         options.env ?? {},
         options.envFile,
         baseEnv
-      ))
+      )),
+    resolvedTaskId
   );
 
   if (normalized.readyWhenStatus.length && !normalized.parallel) {
@@ -157,18 +169,9 @@ export async function runCommands(
   const tuiEnabled = isTuiEnabled();
 
   try {
-    // The orchestrator's in-process path passes the task with a stub context,
-    // so prefer it. `runExecutor` can name a target the task graph does not
-    // hold, hence the project lookup; `convert-nx-executor` has neither graph,
-    // and only then is the config unknowable, which counts as tracked and
-    // discrete.
-    const resolvedTaskId =
-      task?.id ??
-      createTaskId(
-        context.projectName,
-        context.targetName,
-        context.configurationName
-      );
+    // `runExecutor` can name a target the task graph does not hold, hence the
+    // project lookup; `convert-nx-executor` has neither graph, and only then
+    // is the config unknowable, which counts as tracked and discrete.
     // `projectGraph` is typed as present, but `convert-nx-executor` passes
     // null for both graphs.
     const targetConfiguration =
@@ -217,7 +220,8 @@ export async function runCommands(
 
 function normalizeOptions(
   options: RunCommandsOptions,
-  env: () => NodeJS.ProcessEnv
+  env: () => NodeJS.ProcessEnv,
+  taskId: string
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
     options.readyWhenStatus = [
@@ -248,15 +252,28 @@ function normalizeOptions(
 
   Object.assign(options, normalizeArgs(options));
 
-  (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
+  const normalized = options as NormalizedRunCommandsOptions;
+  let forwardsUnknownOptions = false;
+  normalized.commands.forEach((c) => {
+    const forwardAllArgs = c.forwardAllArgs ?? options.forwardAllArgs ?? true;
+    forwardsUnknownOptions ||=
+      c.command.indexOf('{args.') === -1 &&
+      (c.command.indexOf('{args}') > -1 || forwardAllArgs);
     c.command = interpolateArgsIntoCommand(
       c.command,
-      options as NormalizedRunCommandsOptions,
-      c.forwardAllArgs ?? options.forwardAllArgs ?? true,
+      normalized,
+      forwardAllArgs,
       env
     );
   });
-  return options as NormalizedRunCommandsOptions;
+  if (forwardsUnknownOptions) {
+    for (const option of droppedUnknownOptions(normalized)) {
+      logger.warn(
+        `Option "${option}" was not forwarded to the command for ${taskId} because its value is an object or array. Use "args" to pass extra values to the command.`
+      );
+    }
+  }
+  return normalized;
 }
 
 /** The options `interpolateArgsIntoCommand` reads, from the task's options. */
@@ -355,6 +372,18 @@ export function interpolateArgsIntoCommand(
   } else {
     return command;
   }
+}
+
+// `null` unsets an option, so it is skipped without a warning.
+function droppedUnknownOptions(
+  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | 'unknownOptions'>
+) {
+  return Object.keys(opts.unknownOptions ?? {}).filter(
+    (k) =>
+      typeof opts.unknownOptions[k] === 'object' &&
+      opts.unknownOptions[k] !== null &&
+      opts.parsedArgs[k] === opts.unknownOptions[k]
+  );
 }
 
 function unknownOptionsToArgsArray(
