@@ -8,6 +8,12 @@ import {
   type Tree,
 } from 'nx/src/devkit-exports';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
+import {
+  nxProjectGraph,
+  nxSourceMaps,
+} from 'nx/src/project-graph/nx-deps-cache';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { NoTargetsToMigrateError } from './executor-to-plugin-migrator';
 import { migrateRemovedExecutors } from './remove-executors';
 
@@ -203,5 +209,131 @@ describe('migrateRemovedExecutors', () => {
     );
     expect(result.nextSteps.join('\n')).toContain('test');
     warn.mockRestore();
+  });
+
+  describe('targets created by plugins', () => {
+    function writeCachedGraph(
+      targets: Record<string, { executor: string }>,
+      sourceMap: Record<string, [string, string]>
+    ) {
+      mkdirSync(dirname(nxProjectGraph), { recursive: true });
+      writeFileSync(
+        nxProjectGraph,
+        JSON.stringify({
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: 'app', targets } },
+          },
+          dependencies: {},
+        })
+      );
+      writeFileSync(nxSourceMaps, JSON.stringify({ app: sourceMap }));
+    }
+
+    afterEach(() => {
+      rmSync(nxProjectGraph, { force: true });
+      rmSync(nxSourceMaps, { force: true });
+    });
+
+    it('names them with the plugin that creates them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', { root: 'app' });
+      writeCachedGraph(
+        { 'e2e-ci--a': { executor: executors[0] } },
+        { 'targets.e2e-ci--a.executor': ['app/e2e.ts', './tools/atomizer'] }
+      );
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const convert = vi.fn();
+      const result = await migrateRemovedExecutors(tree, executors, convert);
+      expect(result.skipAgentic).not.toBe(true);
+      expect(convert).not.toHaveBeenCalled();
+      const expected = `app:e2e-ci--a (${executors[0]}, from ./tools/atomizer)`;
+      expect(result.nextSteps.join('\n')).toContain(expected);
+      expect(result.agentContext.join('\n')).toContain(expected);
+      warn.mockRestore();
+    });
+
+    it('names a plugin target that project configuration only adds options to', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', {
+        root: 'app',
+        targets: { e2e: { options: { ci: true } } },
+      });
+      writeCachedGraph(
+        { e2e: { executor: executors[0] } },
+        { 'targets.e2e': ['app/e2e.ts', './tools/atomizer'] }
+      );
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const result = await migrateRemovedExecutors(tree, executors, vi.fn());
+      expect(result.nextSteps.join('\n')).toContain(
+        'app:e2e (@nx/next:build, from ./tools/atomizer)'
+      );
+      warn.mockRestore();
+    });
+
+    it('keeps executor defaults that still configure them', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', { root: 'app' });
+      const targetDefaults = { [executors[0]]: { cache: true } };
+      updateNxJson(tree, { targetDefaults });
+      writeCachedGraph(
+        { e2e: { executor: executors[0] } },
+        { 'targets.e2e': ['app/e2e.ts', './tools/atomizer'] }
+      );
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      await migrateRemovedExecutors(tree, executors, vi.fn());
+      expect(readNxJson(tree).targetDefaults).toEqual(targetDefaults);
+      warn.mockRestore();
+    });
+
+    it('leaves targets declared in project configuration to the converter', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', {
+        root: 'app',
+        targets: { build: { executor: executors[0] } },
+      });
+      writeCachedGraph({ build: { executor: executors[0] } }, {});
+      const result = await migrateRemovedExecutors(tree, executors, async () =>
+        removeTarget(tree, 'app', 'build')
+      );
+      expect(result.nextSteps).toBeUndefined();
+      expect(result.agentContext.join('\n')).not.toContain(
+        'created by plugins'
+      );
+    });
+
+    it('leaves executors inherited from targetDefaults to the defaults report', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', {
+        root: 'app',
+        targets: { test: {} },
+      });
+      updateNxJson(tree, {
+        targetDefaults: { test: { executor: executors[0] } },
+      });
+      writeCachedGraph(
+        { test: { executor: executors[0] } },
+        { 'targets.test.executor': ['nx.json', 'nx/target-defaults'] }
+      );
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const result = await migrateRemovedExecutors(tree, executors, vi.fn());
+      expect(result.agentContext.join('\n')).not.toContain(
+        'created by plugins'
+      );
+      warn.mockRestore();
+    });
+
+    it('notes that they were not checked when no graph is cached', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', {
+        root: 'app',
+        targets: { build: { executor: executors[0] } },
+      });
+      const result = await migrateRemovedExecutors(tree, executors, async () =>
+        removeTarget(tree, 'app', 'build')
+      );
+      expect(result.agentContext.join('\n')).toContain(
+        'targets created by plugins were not checked'
+      );
+    });
   });
 });
