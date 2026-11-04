@@ -80,7 +80,7 @@ Fix generators are only applied for rules whose final status is not `disabled`.
 
 If `@nx/conformance` isn't installed, both commands tell you to run `nx add @nx/conformance`.
 
-In a workspace connected to Nx Cloud, both commands run through the Nx Cloud client, the same as `nx-cloud conformance`. Rules configured in your Nx Cloud organization, `nx-cloud:` rules, and result reporting in CI all work from `nx conformance`. In a workspace that isn't connected, the commands run locally, and an `nx-cloud:` rule fails with a message telling you to run `nx connect`.
+Both commands run the rules configured in `nx.json` locally, whether or not the workspace is connected to Nx Cloud, and don't need an Nx Cloud connection, key, or license. Rules configured in your Nx Cloud organization (`nx-cloud:` rules) and result reporting to Nx Cloud require Nx Cloud Enterprise and run through [`nx-cloud conformance`](/docs/reference/nx-cloud-cli#nx-cloud-conformance) and [`nx-cloud conformance:check`](/docs/reference/nx-cloud-cli#nx-cloud-conformancecheck). If `nx.json` contains an `nx-cloud:` rule, `nx conformance` fails with a message telling you to run `nx-cloud conformance` instead.
 
 {% tabs %}
 {% tabitem label="Nx CLI" %}
@@ -107,13 +107,13 @@ Pass `--printConfig` to either command to print the resolved conformance configu
 
 ## Taking things further with Nx Cloud Enterprise
 
-Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/docs/enterprise/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/docs/enterprise/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx conformance` or `nx conformance:check` runs in a workspace connected to Nx Cloud.
+Organizations on the Nx Cloud Enterprise plan can [publish custom conformance rules](/docs/enterprise/publish-conformance-rules-to-nx-cloud) to their Nx Cloud organization without the friction of a custom registry, and then [configure the rules](/docs/enterprise/configure-conformance-rules-in-nx-cloud) to apply to the workspaces in their organization automatically when `nx-cloud conformance` or `nx-cloud conformance:check` runs in a workspace connected to Nx Cloud.
 
-Add `nx conformance:check` to your CI process, and Nx Cloud merges the rules configured in your organization with any local rules:
+Add `nx-cloud conformance:check` to your CI process, and Nx Cloud merges the rules configured in your organization with any local rules:
 
 ```yaml
 - name: Enforce all conformance rules
-  run: npx nx record -- npx nx conformance:check
+  run: npx nx-cloud conformance:check
 ```
 
 Learn more about [publishing](/docs/enterprise/publish-conformance-rules-to-nx-cloud) and [configuring conformance rules in Nx Cloud](/docs/enterprise/configure-conformance-rules-in-nx-cloud).

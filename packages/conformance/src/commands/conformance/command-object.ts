@@ -30,8 +30,7 @@ export const yargsConformanceCheckCommand: CommandModule = {
 
 function withPrintConfig(yargs: Argv) {
   return yargs.option('printConfig', {
-    describe:
-      'Prints the resolved conformance rules, including any Nx Cloud Enterprise data, if applicable.',
+    describe: 'Prints the resolved conformance rules.',
     type: 'boolean',
   });
 }

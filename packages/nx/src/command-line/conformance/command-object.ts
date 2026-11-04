@@ -1,5 +1,4 @@
 import type { Argv, CommandModule } from 'yargs';
-import { handleImport } from '../../utils/handle-import';
 import { output } from '../../utils/output';
 import { withVerbose } from '../yargs-utils/shared-options';
 
@@ -23,12 +22,6 @@ export function resolveConformanceCommandObject(
     ...commandObject,
     builder: (yargs) =>
       (commandObject.builder as (yargs: Argv) => Argv)(withVerbose(yargs)),
-    handler: async (args) =>
-      (await handleImport('./conformance.js', __dirname)).conformanceHandler(
-        command,
-        args,
-        commandObject.handler
-      ),
   };
 }
 
