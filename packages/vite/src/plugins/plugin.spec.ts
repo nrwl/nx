@@ -443,6 +443,9 @@ describe('@nx/vite/plugin', () => {
   });
 
   describe('Library mode', () => {
+    const lib = { entry: 'index.ts', name: 'my-lib' };
+    const applicationTargets = ['dev', 'serve', 'preview', 'serve-static'];
+
     // Runs the config hooks Vite runs before resolving: the user's plugins, then
     // the injected one. As in Vite, the resolved config always has a server.
     function mockResolveConfig(
@@ -461,6 +464,50 @@ describe('@nx/vite/plugin', () => {
           server: { port: 5173, host: 'localhost', ...config.server },
         };
       });
+    }
+
+    async function inferProject(
+      resolveConfig: Mock,
+      extraFiles: string[] = []
+    ) {
+      const tempFs = new TempFs('test-library');
+      (loadViteDynamicImport as Mock).mockResolvedValue({ resolveConfig });
+      context = {
+        nxJsonConfiguration: {
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: tempFs.tempDir,
+      };
+      tempFs.createFileSync(
+        'my-lib/project.json',
+        JSON.stringify({ name: 'my-lib' })
+      );
+      // Unique content, so the plugin's target cache can't answer for the mock.
+      tempFs.createFileSync('my-lib/vite.config.ts', `// ${tempFs.tempDir}`);
+      tempFs.createFileSync('package-lock.json', '{}');
+      extraFiles.forEach((file) => tempFs.createFileSync(file, ''));
+
+      const nodes = await createNodesFunction(
+        ['my-lib/vite.config.ts'],
+        {},
+        context
+      );
+      tempFs.cleanup();
+
+      const { targets, projectType } = nodes[0][1].projects['my-lib'];
+      return {
+        targets,
+        projectType,
+        inferredApplicationTargets: applicationTargets.filter(
+          (target) => target in targets
+        ),
+        resolvedCommands: resolveConfig.mock.calls.map(
+          ([, command]) => command
+        ),
+      };
     }
 
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
@@ -757,5 +804,126 @@ describe('@nx/vite/plugin', () => {
         ]
       `);
     });
+
+    it('should keep the application targets when only the serve config has a server, with build outputs from the build config', async () => {
+      const resolveConfig = mockResolveConfig((command) => ({
+        build: {
+          lib,
+          outDir: command === 'build' ? 'dist-build' : 'dist-serve',
+        },
+        server: command === 'serve' ? { port: 4200 } : undefined,
+      }));
+
+      const {
+        targets,
+        projectType,
+        inferredApplicationTargets,
+        resolvedCommands,
+      } = await inferProject(resolveConfig);
+
+      expect(inferredApplicationTargets).toEqual(applicationTargets);
+      expect(targets.build.outputs).toEqual(['{projectRoot}/dist-build']);
+      expect(projectType).toEqual('library');
+      expect(resolvedCommands).toEqual(['build', 'serve']);
+    });
+
+    it.each([
+      ['in both modes', {}, ['build']],
+      ['only in serve mode', { apply: 'serve' }, ['build', 'serve']],
+    ])(
+      'should keep the application targets when a plugin config hook sets the server %s',
+      async (_, pluginOptions, expectedCommands) => {
+        const resolveConfig = mockResolveConfig(() => ({
+          build: { lib },
+          plugins: [
+            {
+              name: 'user-plugin',
+              config: () => ({ server: { port: 4200 } }),
+              ...pluginOptions,
+            },
+          ],
+        }));
+
+        const { inferredApplicationTargets, resolvedCommands } =
+          await inferProject(resolveConfig);
+
+        expect(inferredApplicationTargets).toEqual(applicationTargets);
+        expect(resolvedCommands).toEqual(expectedCommands);
+      }
+    );
+
+    it('should keep the build target and omit the application targets when the config throws in serve mode', async () => {
+      const resolveConfig = mockResolveConfig((command) => {
+        if (command === 'serve') {
+          throw new Error('This config only builds');
+        }
+        return { build: { lib } };
+      });
+
+      const { targets, inferredApplicationTargets } =
+        await inferProject(resolveConfig);
+
+      expect(targets.build.command).toEqual('vite build');
+      expect(inferredApplicationTargets).toEqual([]);
+      expect(resolveConfig).toHaveBeenLastCalledWith(
+        expect.objectContaining({ logLevel: 'silent' }),
+        'serve'
+      );
+    });
+
+    it('should keep the application targets for an explicit empty server block', async () => {
+      const { inferredApplicationTargets, resolvedCommands } =
+        await inferProject(
+          mockResolveConfig(() => ({ build: { lib }, server: {} }))
+        );
+
+      expect(inferredApplicationTargets).toEqual(applicationTargets);
+      expect(resolvedCommands).toEqual(['build']);
+    });
+
+    it('should exclude the application targets when neither mode has a server', async () => {
+      const { inferredApplicationTargets, resolvedCommands } =
+        await inferProject(mockResolveConfig(() => ({ build: { lib } })));
+
+      expect(inferredApplicationTargets).toEqual([]);
+      expect(resolvedCommands).toEqual(['build', 'serve']);
+    });
+
+    it.each([
+      ['an application', { build: {} }, ['my-lib/index.html']],
+      [
+        'a library with a build mode server',
+        { build: { lib }, server: { port: 3000 } },
+        [],
+      ],
+    ])(
+      'should resolve the config once for %s',
+      async (_, userConfig, extraFiles) => {
+        const resolveConfig = mockResolveConfig(() => userConfig);
+
+        const { inferredApplicationTargets, resolvedCommands } =
+          await inferProject(resolveConfig, extraFiles);
+
+        expect(inferredApplicationTargets).toEqual(applicationTargets);
+        expect(resolvedCommands).toEqual(['build']);
+        expect(resolveConfig.mock.calls[0][0].logLevel).toBeUndefined();
+      }
+    );
+
+    it.each([
+      ['a Remix plugin', { plugins: [{ name: 'remix' }] }, []],
+      ['a React Router config', {}, ['my-lib/react-router.config.ts']],
+    ])(
+      'should not check serve mode for a library with %s',
+      async (_, userConfig, extraFiles) => {
+        const { targets, resolvedCommands } = await inferProject(
+          mockResolveConfig(() => ({ build: { lib }, ...userConfig })),
+          extraFiles
+        );
+
+        expect(targets.build).toBeUndefined();
+        expect(resolvedCommands).toEqual(['build']);
+      }
+    );
   });
 });
