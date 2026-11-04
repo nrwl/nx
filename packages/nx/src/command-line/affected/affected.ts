@@ -131,6 +131,7 @@ export async function affected(
         extraTargetDependencies,
         extraOptions.excludeTaskDependencies
       );
+      taskSelection.ultracacheSkippedTaskIds = [];
     }
   }
 

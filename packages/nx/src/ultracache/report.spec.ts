@@ -37,6 +37,19 @@ describe('formatUltracacheSummary', () => {
     ]);
   });
 
+  it.each([
+    [undefined, []],
+    [0, ['0 tasks skipped by Ultracache']],
+    [1, ['1 task skipped by Ultracache']],
+  ])('with %s skipped, reports %j', (skipped, expected) => {
+    const { bodyLines } = formatUltracacheSummary(
+      { used: [], diagnostics: [], resolution },
+      'fetched',
+      skipped
+    );
+    expect(bodyLines.slice(2)).toEqual(expected);
+  });
+
   it('says none were used when the configurations could not be read', () => {
     expect(
       formatUltracacheSummary(

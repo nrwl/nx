@@ -869,7 +869,7 @@ export declare function getTransformableOutputs(outputs: Array<string>): Array<s
  */
 export declare function getUltracacheDeferredTaskIds(configurations: UltracacheConfigurations, taskGraph: TaskGraph): Array<string>
 
-/** The eligibility report, for the run summary. */
+/** The eligibility report, for the run summary and the skipped task report. */
 export declare function getUltracacheReport(configurations: UltracacheConfigurations, tasks: Record<string, TaskUltracacheSettings | null>, options?: UltracacheEligibilityOptions | undefined | null): UltracacheReport
 
 /**
