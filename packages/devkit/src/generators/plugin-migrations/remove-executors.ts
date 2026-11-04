@@ -1,10 +1,12 @@
 import {
   getProjects,
   logger,
+  readCachedProjectGraph,
   readNxJson,
   type Tree,
   updateNxJson,
 } from 'nx/src/devkit-exports';
+import { readSourceMapsCache } from 'nx/src/devkit-internals';
 import { formatFiles } from '../format-files';
 import {
   NoTargetsToMigrateError,
@@ -38,7 +40,12 @@ export async function migrateRemovedExecutors(
       removed.has(target.executor)
     )
   );
-  if (!affected.length && !Object.keys(relevantDefaults).length) {
+  const pluginTargets = findPluginTargets(removed, projects);
+  if (
+    !affected.length &&
+    !Object.keys(relevantDefaults).length &&
+    !pluginTargets?.length
+  ) {
     return { skipAgentic: true };
   }
 
@@ -73,7 +80,9 @@ export async function migrateRemovedExecutors(
   // some ignore `@nrwl` aliases. Re-scan so those are named rather than
   // inferred from silence.
   const leftovers: string[] = [];
-  const usedExecutors = new Set<string>();
+  const usedExecutors = new Set(
+    pluginTargets?.map((target) => target.executor)
+  );
   for (const [name, project] of getProjects(tree)) {
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
       if (removed.has(target.executor)) {
@@ -93,6 +102,23 @@ export async function migrateRemovedExecutors(
         ', '
       )}. Replace each one; the converter could not.`
     );
+  }
+
+  if (pluginTargets === null) {
+    agentContext.push(
+      'No cached project graph was available, so targets created by plugins were not checked for removed executors. Inspect the project graph for targets that still use them, and change the plugin that creates each one.'
+    );
+  } else if (pluginTargets.length) {
+    const names = pluginTargets
+      .map(
+        ({ project, target, executor, plugin }) =>
+          `${project}:${target} (${executor}${plugin ? `, from ${plugin}` : ''})`
+      )
+      .join(', ');
+    const message = `These targets are created by plugins and use removed executors: ${names}. This migration cannot convert them; change the plugin that creates each one before running them.`;
+    logger.warn(message);
+    nextSteps.push(message);
+    agentContext.push(message);
   }
 
   removeDeadExecutorDefaults(tree, removed, usedExecutors);
@@ -117,6 +143,66 @@ export async function migrateRemovedExecutors(
   );
   await formatFiles(tree);
   return nextSteps.length ? { nextSteps, agentContext } : { agentContext };
+}
+
+interface PluginTarget {
+  project: string;
+  target: string;
+  executor: string;
+  plugin?: string;
+}
+
+const configurationPlugins = new Set([
+  'nx/core/project-json',
+  'nx/core/package-json',
+  'nx/target-defaults',
+]);
+
+/**
+ * Targets in the cached graph that use a removed executor which project
+ * configuration does not declare. Returns `null` when no graph is cached.
+ */
+function findPluginTargets(
+  removed: Set<string>,
+  projects: ReturnType<typeof getProjects>
+): PluginTarget[] | null {
+  let graph: ReturnType<typeof readCachedProjectGraph>;
+  try {
+    graph = readCachedProjectGraph();
+  } catch {
+    return null;
+  }
+  // Older nx versions do not export the source map reader.
+  const sourceMaps =
+    typeof readSourceMapsCache === 'function' ? readSourceMapsCache() : null;
+  const found: PluginTarget[] = [];
+  for (const [name, node] of Object.entries(graph.nodes)) {
+    const declared = projects.get(name)?.targets ?? {};
+    const sourceMap = sourceMaps?.[node.data.root] ?? {};
+    for (const [targetName, target] of Object.entries(
+      node.data.targets ?? {}
+    )) {
+      if (
+        !removed.has(target.executor) ||
+        declared[targetName]?.executor ||
+        declared[targetName]?.command
+      ) {
+        continue;
+      }
+      const plugin = (sourceMap[`targets.${targetName}.executor`] ??
+        sourceMap[`targets.${targetName}`])?.[1];
+      if (configurationPlugins.has(plugin)) {
+        continue;
+      }
+      found.push({
+        project: name,
+        target: targetName,
+        executor: target.executor,
+        plugin,
+      });
+    }
+  }
+  return found;
 }
 
 // The converters merge an unfiltered executor-keyed default into every target
