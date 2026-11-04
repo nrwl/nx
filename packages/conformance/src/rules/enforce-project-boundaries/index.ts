@@ -100,40 +100,23 @@ function checkViolations(
   projectGraph: ProjectGraph
 ): ConformanceViolation[] {
   // Only compute project dependency files once for this combination of source and target projects
-  let filesWithDataContainingProjectDependencies: FileData[] | undefined =
-    undefined;
-  let filesContainingProjectDependencies: string[] = [];
+  let filesContainingProjectDependencies: (string | undefined)[] | undefined;
 
-  const getFilesContainingProjectDependencies = <T extends boolean = false>(
-    withData?: T
-  ): T extends true ? FileData[] : string[] => {
-    if (filesWithDataContainingProjectDependencies === undefined) {
-      let filesWithData: FileData[] | undefined;
-
+  const getFilesContainingProjectDependencies = (): (string | undefined)[] => {
+    if (filesContainingProjectDependencies === undefined) {
       // Implicit dependencies must have originated from nx configuration
-      if (dependencyType === DependencyType.implicit) {
-        const projectFiles = fileMap[sourceProject.name];
-        filesWithData = projectFiles.filter((file) =>
-          file.file.endsWith('project.json')
-        );
-      } else {
-        filesWithData = findFileDataContainingProjectDependencies(
-          sourceProject.name,
-          targetProject.name,
-          fileMap
-        );
-      }
-      filesWithDataContainingProjectDependencies = filesWithData;
-      filesContainingProjectDependencies = filesWithData.map(
-        (file) => file.file
-      );
+      const files =
+        dependencyType === DependencyType.implicit
+          ? findProjectConfigurationFiles(fileMap[sourceProject.name] ?? [])
+          : findFileDataContainingProjectDependencies(
+              sourceProject.name,
+              targetProject.name,
+              fileMap
+            ).map((file) => file.file);
+      // A dependency with no attributable file is reported against the project alone
+      filesContainingProjectDependencies = files.length ? files : [undefined];
     }
-
-    return (
-      withData
-        ? filesWithDataContainingProjectDependencies
-        : filesContainingProjectDependencies
-    ) as T extends true ? FileData[] : string[];
+    return filesContainingProjectDependencies;
   };
 
   const violations: ConformanceViolation[] = [];
@@ -235,17 +218,7 @@ function checkViolations(
       return violations;
     }
 
-    for (const constraint of ruleOptions.depConstraints) {
-      const sourceTags = isComboDepConstraint(constraint)
-        ? constraint.allSourceTags
-        : [constraint.sourceTag];
-      const hasSourceTags = sourceTags.some((tag) =>
-        hasTag(sourceProject, tag)
-      );
-      if (!hasSourceTags) {
-        continue;
-      }
-
+    for (const constraint of constraints) {
       if (
         constraint.onlyDependOnProjectsWithTags &&
         constraint.onlyDependOnProjectsWithTags.length &&
@@ -308,6 +281,16 @@ function findFileDataContainingProjectDependencies(
   return sourceProjectFiles.filter((fileData) =>
     fileData.deps?.some((dep) => fileDataDepTarget(dep) === targetProjectName)
   );
+}
+
+function findProjectConfigurationFiles(projectFiles: FileData[]): string[] {
+  const files = projectFiles.map((file) => file.file);
+  const projectJsonFiles = files.filter((file) =>
+    file.endsWith('project.json')
+  );
+  return projectJsonFiles.length
+    ? projectJsonFiles
+    : files.filter((file) => file.endsWith('package.json'));
 }
 
 function findConstraintsFor(

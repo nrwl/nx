@@ -38,7 +38,7 @@ async function failingCloudRuleResolver(
 ): ReturnType<typeof resolveRule> {
   return {
     error: new Error(
-      `Found Nx Cloud rule "${rule}" in the conformance config, but this workspace is not connected to Nx Cloud. Run \`nx connect\` to use Nx Cloud rules.`
+      `Found Nx Cloud rule "${rule}" in the conformance config. Nx Cloud rules run through \`nx-cloud conformance\`, not \`nx conformance\`.`
     ),
     data: null,
   };
@@ -157,26 +157,19 @@ export async function conformanceHandler(
           applyFixGenerators: false,
         });
 
-        for (const ruleResult of resultAfterFixes.ruleResults) {
-          for (let i = 0; i < result.ruleResults.length; i++) {
-            if (
-              result.ruleResults[i].ruleData.name === ruleResult.ruleData.name
-            ) {
-              result.ruleResults[i] = {
-                ...ruleResult,
-                runnerData: {
-                  ...result.ruleResults[i].runnerData,
-                  countOfViolationsFixedByGenerator:
-                    result.ruleResults[i].runnerData.countOfOriginalViolations -
-                    result.ruleResults[i].runnerData
-                      .countOfViolationsFilteredByProjects -
-                    ruleResult.details.violations.length,
-                },
-              };
-              break;
-            }
-          }
-        }
+        resultAfterFixes.ruleResults.forEach((ruleResult, i) => {
+          const original = result.ruleResults[i];
+          result.ruleResults[i] = {
+            ...ruleResult,
+            runnerData: {
+              ...original.runnerData,
+              countOfViolationsFixedByGenerator:
+                original.runnerData.countOfOriginalViolations -
+                original.runnerData.countOfViolationsFilteredByProjects -
+                ruleResult.details.violations.length,
+            },
+          };
+        });
       }
     }
 
@@ -195,7 +188,7 @@ export async function conformanceHandler(
         return;
       }
 
-      // If any rule has more than one violation that is enforced (i.e. not disabled or evaluated), the overall conformance runner should exit with code 1
+      // Any violation of an enforced rule exits with code 1
       if (ruleResult.resolvedStatus === 'enforced') {
         exitCode = 1;
       }

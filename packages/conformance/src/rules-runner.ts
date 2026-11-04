@@ -41,8 +41,8 @@ export async function conformanceRulesRunner({
     matchers: string[],
     projects: Record<string, ProjectGraphProjectNode>
   ) => {
-    // Sort for a consistent cache key
-    const cacheKey = matchers.sort().join(',');
+    // Matcher order is significant, so the key keeps it
+    const cacheKey = matchers.join(',');
     if (findMatchingProjectsCache.has(cacheKey)) {
       return findMatchingProjectsCache.get(cacheKey) as string[];
     }
@@ -146,7 +146,7 @@ export async function conformanceRulesRunner({
           tree: convertToReadOnly(tree),
           projectGraph,
           fileMapCache,
-          ruleOptions,
+          ruleOptions: ruleOptions ?? {},
         });
         const endTime = performance.now();
 

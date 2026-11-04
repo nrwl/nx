@@ -869,6 +869,32 @@ describe('conformanceRulesRunner', () => {
     });
   });
 
+  it('should pass empty rule options to a rule configured without options', async () => {
+    await conformanceRulesRunner({
+      tree,
+      projectGraph,
+      fileMapCache: mockFileMapCache,
+      loadedRules: [
+        {
+          ruleSpecifier: 'test',
+          ruleModule: {
+            implementation: mockRuleImplementation.mockReturnValue({
+              details: { violations: [] },
+            }),
+            name: 'test',
+            category: 'consistency',
+            description: 'test',
+          },
+          ruleOptions: undefined,
+        },
+      ],
+      applyFixGenerators: false,
+    });
+    expect(mockRuleImplementation).toHaveBeenCalledWith(
+      expect.objectContaining({ ruleOptions: {} })
+    );
+  });
+
   describe('projects', () => {
     it('should only report violations for matching projects and count the ones filtered out', async () => {
       const ruleResults = await conformanceRulesRunner({
@@ -910,6 +936,45 @@ describe('conformanceRulesRunner', () => {
       ]);
       expect(result.runnerData.countOfOriginalViolations).toBe(2);
       expect(result.runnerData.countOfViolationsFilteredByProjects).toBe(1);
+    });
+
+    it('should apply exclusions after the positive matchers they follow', async () => {
+      const ruleResults = await conformanceRulesRunner({
+        tree,
+        projectGraph: {
+          nodes: {
+            a: { name: 'a', type: 'lib', data: { root: 'libs/a' } },
+            b: { name: 'b', type: 'lib', data: { root: 'libs/b' } },
+          },
+          dependencies: {},
+        },
+        fileMapCache: mockFileMapCache,
+        loadedRules: ['first', 'second'].map((name, i) => ({
+          ruleSpecifier: name,
+          ruleModule: {
+            implementation: vi.fn().mockReturnValue({
+              details: {
+                violations: [
+                  { message: 'In a', sourceProject: 'a' },
+                  { message: 'In b', sourceProject: 'b' },
+                ],
+              },
+            }),
+            name,
+            category: 'consistency' as const,
+            description: name,
+          },
+          ruleOptions: {},
+          projects: i === 0 ? ['*', '!b'] : ['!b', '*'],
+        })),
+        applyFixGenerators: false,
+      });
+
+      expect(
+        ruleResults.ruleResults.map((r) =>
+          r.details.violations.map((v) => v.sourceProject)
+        )
+      ).toEqual([['a'], ['a', 'b']]);
     });
   });
 });
