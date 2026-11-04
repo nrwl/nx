@@ -1,6 +1,7 @@
 import {
   createProjectGraphAsync,
   formatFiles,
+  joinPathFragments,
   type NxJsonConfiguration,
   ProjectGraph,
   readNxJson,
@@ -18,15 +19,17 @@ import {
   validateAndSetDefaultsForRootConfig,
 } from '../../config';
 
+type FileOverrides = Record<
+  string,
+  { owners: OwnerId[]; description?: string }
+>;
+
 type ProjectOwnersConfigMap = Map<
   string,
   {
-    owners: string[];
+    owners?: OwnerId[];
     description?: string;
-    scopedFileOverrides?: Record<
-      string,
-      { owners: string[]; description?: string }
-    >;
+    scopedFileOverrides?: FileOverrides;
   }
 >;
 
@@ -70,13 +73,14 @@ export async function syncCodeownersFileGenerator(
     }
   }
 
-  codeowners += generateContentForPatterns(
+  const patternContent = generateContentForPatterns(
     patternsWithOwners, // only apply the patterns with owners upfront
     projectGraph,
     projectOwnersConfig,
     rootOwners.prefix
   );
 
+  const rootContent = { rootProjectEntry: '', projectEntries: '' };
   for (const [projectName, projectConfig] of Object.entries(
     projectGraph.nodes
   )) {
@@ -84,17 +88,6 @@ export async function syncCodeownersFileGenerator(
     const ownersFromRootConfig = matchingProjectOwnersConfig?.owners ?? [];
     const ownersFromProjectConfig: ProjectOwnersConfig =
       (projectConfig.data as any).owners ?? {};
-
-    if (
-      ownersFromRootConfig.length === 0 &&
-      Object.keys(ownersFromProjectConfig).length === 0
-    ) {
-      continue;
-    }
-
-    // A leading / anchors the entry to the workspace root, see
-    // https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-    const projectRootWithLeadingSlash = `/${projectConfig.data.root}`;
 
     // If there is `**/*` or `*` in the project config, it means that the root config should not be applied to this project
     const ownerIdsForProjectRoot =
@@ -113,20 +106,11 @@ export async function syncCodeownersFileGenerator(
       new Set(ownerIdsForProjectRootArr)
     );
 
-    if (dedupedOwnerIdsForProjectRoot.length > 0) {
-      codeowners += createCodeownersEntry(
-        `${projectRootWithLeadingSlash}/`,
-        dedupedOwnerIdsForProjectRoot,
-        matchingProjectOwnersConfig?.description?.split('\n')
-      );
-    }
-
     // Merge scoped file overrides from root config with project-level overrides
     // Project.json entries take precedence for duplicate file patterns
-    const mergedFileOverrides: Record<
-      string,
-      { owners: OwnerId[]; description?: string }
-    > = { ...matchingProjectOwnersConfig?.scopedFileOverrides };
+    const mergedFileOverrides: FileOverrides = {
+      ...matchingProjectOwnersConfig?.scopedFileOverrides,
+    };
 
     // Project-level overrides win for duplicate file patterns
     for (const [pathOverride, config] of Object.entries(
@@ -142,17 +126,30 @@ export async function syncCodeownersFileGenerator(
       mergedFileOverrides[pathOverride] = { owners, description };
     }
 
-    for (const [pathOverride, { owners, description }] of Object.entries(
-      mergedFileOverrides
-    )) {
-      codeowners += createCodeownersEntry(
-        `${projectRootWithLeadingSlash}/${pathOverride}`,
-        owners,
-        description?.split('\n')
-      );
+    if (
+      dedupedOwnerIdsForProjectRoot.length === 0 &&
+      Object.keys(mergedFileOverrides).length === 0
+    ) {
+      continue;
     }
-    codeowners += '\n';
+
+    addProjectEntries(
+      rootContent,
+      projectConfig.data.root,
+      dedupedOwnerIdsForProjectRoot.length > 0
+        ? dedupedOwnerIdsForProjectRoot
+        : undefined,
+      matchingProjectOwnersConfig?.description,
+      mergedFileOverrides
+    );
+    rootContent.projectEntries += '\n';
   }
+
+  codeowners +=
+    rootContent.rootProjectEntry +
+    (rootContent.rootProjectEntry ? '\n' : '') +
+    patternContent +
+    rootContent.projectEntries;
 
   if (rootOwners.format === 'gitlab' && rootOwners.sections) {
     for (const section of rootOwners.sections) {
@@ -171,23 +168,27 @@ export async function syncCodeownersFileGenerator(
 
       // we create a local projectOwnersConfig for the section to avoid polluting the global one
       const innerProjectOwnersConfig: ProjectOwnersConfigMap = new Map();
-      codeowners += generateContentForPatterns(
+      const sectionPatternContent = generateContentForPatterns(
         section.patterns,
         projectGraph,
         innerProjectOwnersConfig,
         rootOwners.prefix
       );
+      const sectionContent = { rootProjectEntry: '', projectEntries: '' };
+      for (const [project, projectConfig] of innerProjectOwnersConfig) {
+        addProjectEntries(
+          sectionContent,
+          projectGraph.nodes[project].data.root,
+          projectConfig.owners,
+          projectConfig.description,
+          projectConfig.scopedFileOverrides ?? {}
+        );
+      }
+      codeowners +=
+        sectionContent.rootProjectEntry +
+        sectionPatternContent +
+        sectionContent.projectEntries;
       if (innerProjectOwnersConfig.size > 0) {
-        for (const project of innerProjectOwnersConfig.keys()) {
-          const projectConfig = innerProjectOwnersConfig.get(project);
-          if (projectConfig) {
-            codeowners += createCodeownersEntry(
-              `/${projectGraph.nodes[project].data.root}/`,
-              projectConfig.owners,
-              projectConfig.description?.split('\n')
-            );
-          }
-        }
         codeowners += '\n';
       }
     }
@@ -227,6 +228,40 @@ function createCodeownersEntry(
   }${pattern}${owners && owners.length ? ` ${owners.join(' ')}` : ''}\n`;
 }
 
+// A leading / anchors the entry to the workspace root, see
+// https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+// A root project owns the whole repo as `*`, which must precede every other
+// entry so that last-match-wins lets them override it
+function addProjectEntries(
+  content: { rootProjectEntry: string; projectEntries: string },
+  projectRoot: string,
+  owners: OwnerId[] | undefined,
+  description: string | undefined,
+  fileOverrides: FileOverrides
+): void {
+  const anchoredRoot = joinPathFragments('/', projectRoot);
+  if (owners) {
+    const isRootProject = anchoredRoot === '/';
+    const entry = createCodeownersEntry(
+      isRootProject ? '*' : `${anchoredRoot}/`,
+      owners,
+      description?.split('\n')
+    );
+    if (isRootProject) {
+      content.rootProjectEntry += entry;
+    } else {
+      content.projectEntries += entry;
+    }
+  }
+  for (const [pathOverride, override] of Object.entries(fileOverrides)) {
+    content.projectEntries += createCodeownersEntry(
+      joinPathFragments(anchoredRoot, pathOverride),
+      override.owners,
+      override.description?.split('\n')
+    );
+  }
+}
+
 function generateContentForPatterns(
   patterns: Array<OwnershipPattern>,
   projectGraph: ProjectGraph,
@@ -252,7 +287,9 @@ function generateContentForPatterns(
         projectGraph.nodes
       );
       const effectivePrefix = config.prefix ?? ownersPrefix;
-      const ownersWithPrefix: OwnerId[] | false = Array.isArray(config.owners)
+      const ownersWithPrefix: OwnerId[] | false | undefined = Array.isArray(
+        config.owners
+      )
         ? applyPrefixIfNeeded(
             config.owners,
             effectivePrefix,
@@ -262,21 +299,20 @@ function generateContentForPatterns(
 
       for (const project of matchingProjects) {
         if (!projectOwnersConfig.has(project)) {
-          projectOwnersConfig.set(project, {
-            owners: [],
-          });
+          projectOwnersConfig.set(project, {});
         }
         const projectConfig = projectOwnersConfig.get(project)!;
         if (!projectConfig.scopedFileOverrides) {
           projectConfig.scopedFileOverrides = {};
         }
 
-        if (Array.isArray(ownersWithPrefix)) {
+        // Owners are only absent for section patterns, which inherit the section's defaultOwners
+        if (ownersWithPrefix !== false) {
           for (const filePattern of config.files) {
             // Only set if not already claimed by a previous pattern (first writer wins for scoped overrides from root config)
             if (!projectConfig.scopedFileOverrides[filePattern]) {
               projectConfig.scopedFileOverrides[filePattern] = {
-                owners: ownersWithPrefix,
+                owners: ownersWithPrefix ?? [],
                 description: config.description,
               };
             }
@@ -323,6 +359,7 @@ function generateContentForPatterns(
       }
       const projectConfig = projectOwnersConfig.get(project);
       if (projectConfig) {
+        projectConfig.owners ??= [];
         if (Array.isArray(config.owners)) {
           const effectivePrefix = config.prefix ?? ownersPrefix;
           projectConfig.owners.push(
@@ -334,7 +371,10 @@ function generateContentForPatterns(
           );
         }
         // Merge multiple unique descriptions for the same project (separated by newline)
-        if (projectConfig.description !== config.description) {
+        if (
+          config.description &&
+          projectConfig.description !== config.description
+        ) {
           projectConfig.description = projectConfig.description
             ? projectConfig.description + `\n` + config.description
             : config.description;
