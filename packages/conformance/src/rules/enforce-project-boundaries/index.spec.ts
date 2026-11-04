@@ -647,4 +647,85 @@ describe('enforce-project-boundaries', () => {
 `);
     });
   });
+
+  it('should only apply an allSourceTags constraint when the project has every tag', async () => {
+    applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, [
+      {
+        projectNode: {
+          name: 'uiName',
+          type: 'lib',
+          data: { root: 'libs/ui', tags: ['type:ui'] },
+        },
+        projectFiles: [
+          {
+            projectRootRelativeFile: 'src/main.ts',
+            depsItCreates: ['utilName'],
+          },
+        ],
+      },
+      {
+        projectNode: {
+          name: 'utilName',
+          type: 'lib',
+          data: { root: 'libs/util', tags: ['type:util'] },
+        },
+      },
+    ]);
+
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: {
+        depConstraints: [
+          {
+            allSourceTags: ['scope:shared', 'type:ui'],
+            onlyDependOnProjectsWithTags: ['scope:shared'],
+          },
+          { sourceTag: 'type:ui', onlyDependOnProjectsWithTags: ['type:util'] },
+        ],
+      },
+    });
+    expect(result.details.violations).toEqual([]);
+  });
+
+  it('should attribute an implicit dependency to package.json when the project has no project.json', async () => {
+    applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, [
+      {
+        projectNode: {
+          name: 'mylibName',
+          type: 'lib',
+          data: { root: 'libs/mylib' },
+        },
+        projectFiles: [
+          {
+            projectRootRelativeFile: 'package.json',
+            depsItCreates: [['myE2eName', DependencyType.implicit]],
+          },
+        ],
+      },
+      {
+        projectNode: {
+          name: 'myE2eName',
+          type: 'e2e',
+          data: { root: 'apps/my-e2e' },
+        },
+      },
+    ]);
+
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: {},
+    });
+    expect(result.details.violations).toEqual([
+      {
+        file: 'libs/mylib/package.json',
+        message:
+          'A dependency on an e2e project is forbidden (found "myE2eName")',
+        sourceProject: 'mylibName',
+      },
+    ]);
+  });
 });
