@@ -453,6 +453,7 @@ describe('remove-deprecated-executors', () => {
       expect(app2.test.configurations).toEqual({
         ci: { command: 'jest --config ./apps/app2/jest.ci.config.js' },
       });
+      projectGraph.nodes.app2.data = readProjectConfiguration(tree, 'app2');
       expect(await getJestProjectsAsync()).toEqual([
         '<rootDir>/apps/app2/jest.app.config.js',
         '<rootDir>/apps/app2/jest.ci.config.js',
