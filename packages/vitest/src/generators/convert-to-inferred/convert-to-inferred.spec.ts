@@ -192,6 +192,16 @@ export default defineConfig({
   return project;
 }
 
+function addE2eTarget(tree: Tree, projectName: string) {
+  const project = readProjectConfiguration(tree, projectName);
+  project.targets['e2e-test'] = {
+    executor: '@nx/vitest:test',
+    options: { configFile: `${project.root}/vitest.config.e2e.mts` },
+  };
+  updateProjectConfiguration(tree, projectName, project);
+  fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
+}
+
 describe('@nx/vitest:convert-to-inferred', () => {
   let tree: Tree;
 
@@ -213,6 +223,29 @@ describe('@nx/vitest:convert-to-inferred', () => {
   });
 
   describe('--project', () => {
+    it('runs a target on a config file the plugin does not infer only in the named project', async () => {
+      createTestProject(tree);
+      addE2eTarget(tree, 'myapp');
+      createTestProject(tree, { appRoot: 'other', appName: 'other' });
+      addE2eTarget(tree, 'other');
+      const otherTargets = readProjectConfiguration(tree, 'other').targets;
+
+      await convertToInferred(tree, { project: 'myapp', skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'myapp').targets['e2e-test']
+      ).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: 'vitest run --root myapp --config ./vitest.config.e2e.mts',
+          cwd: '.',
+        },
+      });
+      expect(readProjectConfiguration(tree, 'other').targets).toEqual(
+        otherTargets
+      );
+    });
+
     it('migrates only the requested project and scopes the new plugin entry to it', async () => {
       createTestProject(tree, {
         appRoot: 'other',
@@ -250,6 +283,26 @@ describe('@nx/vitest:convert-to-inferred', () => {
   });
 
   describe('--all', () => {
+    it('runs a target on a config file the plugin does not infer when it is the only vitest target', async () => {
+      const project = createTestProject(tree);
+      const configured = readProjectConfiguration(tree, project.name);
+      delete configured.targets.test;
+      updateProjectConfiguration(tree, project.name, configured);
+      addE2eTarget(tree, project.name);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        'e2e-test': {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'vitest run --root myapp --config ./vitest.config.e2e.mts',
+            cwd: '.',
+          },
+        },
+      });
+    });
+
     it('registers a single @nx/vitest plugin entry when all projects share the same test target name', async () => {
       const project = createTestProject(tree);
 

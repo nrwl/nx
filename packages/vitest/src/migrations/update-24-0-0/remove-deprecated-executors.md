@@ -6,7 +6,7 @@ The executor ran Vitest once unless you passed `--watch`, so the migration regis
 
 The executor's `testFiles` option becomes `args`, a list of file filters relative to the project root. On the command line, pass file filters as positional arguments instead of `--testFiles`, and pass `--coverage.reportsDirectory` instead of `--reportsDirectory`.
 
-The plugin only infers a target from `vite.config.<ext>` or `vitest.config.<ext>` in the project root. A target that runs any other config file, such as `vitest.config.e2e.mts`, becomes an `nx:run-commands` target that runs `vitest run --root <project root> --config <file>` from the workspace root, as the executor did. It keeps the options, configurations and target defaults it used.
+The plugin only infers a target from `vite.config.<ext>` or `vitest.config.<ext>` in the project root. A target that runs any other config file, such as `vitest.config.e2e.mts`, becomes an `nx:run-commands` target that runs `vitest run --root <project root> --config <file>` from the workspace root, as the executor did. It keeps the options, configurations and target defaults it used. Running `nx g @nx/vitest:convert-to-inferred` by hand applies the same rewrite.
 
 The rewrite accepts only these options, in the target and in each configuration:
 

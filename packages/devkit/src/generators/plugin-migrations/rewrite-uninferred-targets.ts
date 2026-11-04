@@ -14,6 +14,7 @@ import {
   resolveNxTokensInOptions,
 } from 'nx/src/devkit-internals';
 import { readTargetDefaultsForTarget } from '../target-defaults-utils';
+import { NoTargetsToMigrateError } from './executor-to-plugin-migrator';
 
 type TargetsByProject = Map<string, Record<string, TargetConfiguration>>;
 
@@ -40,16 +41,26 @@ export interface UninferredTargetRewrite {
  * Runs `convert` after turning targets the inference plugin cannot produce into
  * explicit commands. A target that can't be rewritten is held back from the
  * converter, which would switch it to the project's default config, and
- * restored on its executor afterwards.
+ * restored on its executor afterwards. Scoped to `project` when given.
  */
-export async function convertWithUninferredTargetsRewritten<T>(
+export async function convertWithUninferredTargetsRewritten(
   tree: Tree,
   rewrite: UninferredTargetRewrite,
-  convert: () => Promise<T>
-): Promise<T> {
-  const heldBack = rewriteUninferredTargets(tree, rewrite);
+  convert: () => Promise<unknown>,
+  project?: string
+): Promise<void> {
+  const { heldBack, rewritten } = rewriteUninferredTargets(
+    tree,
+    rewrite,
+    project
+  );
   try {
-    return await convert();
+    await convert();
+  } catch (error) {
+    // The rewrite already converted every target the converter would have seen
+    if (!(error instanceof NoTargetsToMigrateError && rewritten > 0)) {
+      throw error;
+    }
   } finally {
     restoreTargets(tree, heldBack);
   }
@@ -57,11 +68,16 @@ export async function convertWithUninferredTargetsRewritten<T>(
 
 function rewriteUninferredTargets(
   tree: Tree,
-  rewrite: UninferredTargetRewrite
-): TargetsByProject {
+  rewrite: UninferredTargetRewrite,
+  onlyProject: string | undefined
+): { heldBack: TargetsByProject; rewritten: number } {
   const targetDefaults = readNxJson(tree)?.targetDefaults;
   const heldBackByProject: TargetsByProject = new Map();
+  let rewritten = 0;
   for (const [projectName, project] of getProjects(tree)) {
+    if (onlyProject && projectName !== onlyProject) {
+      continue;
+    }
     const heldBack: Record<string, TargetConfiguration> = {};
     let changed = false;
     for (const [targetName, target] of Object.entries(project.targets ?? {})) {
@@ -86,13 +102,17 @@ function rewriteUninferredTargets(
           continue;
         }
         uninferred = true;
-        const rewritten = rewrite.toRunCommandsTarget(resolved, project);
+        const runCommandsTarget = rewrite.toRunCommandsTarget(
+          resolved,
+          project
+        );
         assertDefaultsKeepTarget(
-          rewritten,
+          runCommandsTarget,
           executorDefaults,
           readDefaults('nx:run-commands')
         );
-        project.targets[targetName] = rewritten;
+        project.targets[targetName] = runCommandsTarget;
+        rewritten++;
         changed = true;
       } catch (error) {
         logger.warn(
@@ -112,7 +132,7 @@ function rewriteUninferredTargets(
       heldBackByProject.set(projectName, heldBack);
     }
   }
-  return heldBackByProject;
+  return { heldBack: heldBackByProject, rewritten };
 }
 
 function restoreTargets(tree: Tree, targetsByProject: TargetsByProject) {
