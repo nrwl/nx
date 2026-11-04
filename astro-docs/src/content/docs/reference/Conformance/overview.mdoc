@@ -38,7 +38,7 @@ The `@nx/conformance` plugin enables two commands:
 
 If `@nx/conformance` isn't installed, both commands tell you to run `nx add @nx/conformance`.
 
-In a workspace connected to Nx Cloud, both commands run through the Nx Cloud client, the same as `nx-cloud conformance`. Rules configured in your Nx Cloud organization, `nx-cloud:` rules, and result reporting in CI all work from `nx conformance`. In a workspace that isn't connected, the commands run locally, and an `nx-cloud:` rule fails with a message telling you to run `nx connect`.
+Both commands run the rules configured in `nx.json` locally, whether or not the workspace is connected to Nx Cloud, and don't need an Nx Cloud connection, key, or license. Rules configured in your Nx Cloud organization (`nx-cloud:` rules) and result reporting to Nx Cloud require Nx Cloud Enterprise and run through [`nx-cloud conformance`](/docs/reference/nx-cloud-cli#nx-cloud-conformance) and [`nx-cloud conformance:check`](/docs/reference/nx-cloud-cli#nx-cloud-conformancecheck). If `nx.json` contains an `nx-cloud:` rule, `nx conformance` fails with a message telling you to run `nx-cloud conformance` instead.
 
 {% tabs %}
 {% tabitem label="Local Development" %}
