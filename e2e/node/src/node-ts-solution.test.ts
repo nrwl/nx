@@ -150,7 +150,7 @@ describe('Node Applications', () => {
     const port = await reservePort();
     process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=vitest`
     );
 
     expect(() => runCLI(`lint ${nestapp}`)).not.toThrow();
