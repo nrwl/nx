@@ -26,6 +26,26 @@ describe('testPostTargetTransformer', () => {
     expect(result.inputs).toBeUndefined();
   });
 
+  it('preserves a reportsDirectory anchored at the project root', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const target = {
+      options: {
+        reportsDirectory: '{projectRoot}/../../coverage/libs/a',
+      },
+    };
+
+    const result = testPostTargetTransformer(
+      target,
+      tree,
+      { projectName: 'a', root: 'libs/a' },
+      {}
+    );
+
+    expect(result.options['coverage.reportsDirectory']).toBe(
+      '../../coverage/libs/a'
+    );
+  });
+
   it('translates testFiles into a testNamePattern regex', () => {
     const tree = createTreeWithEmptyWorkspace();
     const target = {

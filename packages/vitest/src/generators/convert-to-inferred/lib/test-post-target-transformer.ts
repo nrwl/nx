@@ -1,5 +1,6 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
 import { processTargetOutputs } from '@nx/devkit/internal';
+import { join } from 'path/posix';
 import { toProjectRelativePath } from './utils';
 
 export function testPostTargetTransformer(
@@ -68,7 +69,12 @@ function removePropertiesFromTargetOptions(
   }
 
   if ('reportsDirectory' in targetOptions) {
-    if (targetOptions.reportsDirectory.startsWith('../')) {
+    if (targetOptions.reportsDirectory.startsWith('{projectRoot}/')) {
+      targetOptions.reportsDirectory = join(
+        projectRoot,
+        targetOptions.reportsDirectory.slice('{projectRoot}/'.length)
+      );
+    } else if (targetOptions.reportsDirectory.startsWith('../')) {
       targetOptions.reportsDirectory = targetOptions.reportsDirectory.replace(
         /(\.\.\/)+/,
         ''
