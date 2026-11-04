@@ -216,7 +216,7 @@ pub(crate) fn resolve<'a>(
     }
 }
 
-/// The eligibility report, for the run summary.
+/// The eligibility report, for the run summary and the skipped task report.
 #[napi]
 pub fn get_ultracache_report(
     configurations: &UltracacheConfigurations,
