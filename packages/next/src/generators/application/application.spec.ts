@@ -490,7 +490,7 @@ describe('app', () => {
           import nextVitals from 'eslint-config-next/core-web-vitals';
           import baseConfig from '../eslint.config.mjs';
 
-          export default [
+          const eslintConfig = [
             ...nextVitals,
             ...nx.configs['flat/react-typescript'],
             ...baseConfig,
@@ -498,6 +498,8 @@ describe('app', () => {
               ignores: ['.next/**/*'],
             },
           ];
+
+          export default eslintConfig;
           "
         `);
       });
@@ -740,7 +742,7 @@ describe('app', () => {
           "import nextVitals from 'eslint-config-next/core-web-vitals';
           import nx from '@nx/eslint-plugin';
 
-          export default [
+          const eslintConfig = [
             ...nextVitals,
             ...nx.configs['flat/base'],
             ...nx.configs['flat/typescript'],
@@ -766,6 +768,8 @@ describe('app', () => {
             },
             ...nx.configs['flat/react-typescript'],
           ];
+
+          export default eslintConfig;
           "
         `);
         process.env['ESLINT_USE_FLAT_CONFIG'] =

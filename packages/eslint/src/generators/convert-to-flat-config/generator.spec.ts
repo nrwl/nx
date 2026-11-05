@@ -1022,7 +1022,7 @@ describe('convert-to-flat-config generator', () => {
           recommendedConfig: js.configs.recommended,
         });
 
-        export default [
+        const eslintConfig = [
           ...compat.extends('plugin:storybook/recommended'),
           ...nx.configs['flat/base'],
           {
@@ -1046,13 +1046,15 @@ describe('convert-to-flat-config generator', () => {
           ...nx.configs['flat/typescript'],
           ...nx.configs['flat/javascript'],
         ];
+
+        export default eslintConfig;
         "
       `);
       expect(tree.read('libs/test-lib/eslint.config.mjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import baseConfig from '../../eslint.config.mjs';
 
-        export default [
+        const eslintConfig = [
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -1070,6 +1072,8 @@ describe('convert-to-flat-config generator', () => {
             rules: {},
           },
         ];
+
+        export default eslintConfig;
         "
       `);
       expect(
@@ -1261,7 +1265,7 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
         "import nx from '@nx/eslint-plugin';
 
-        export default [
+        const eslintConfig = [
           ...nx.configs['flat/base'],
           {
             linterOptions: {
@@ -1289,6 +1293,8 @@ describe('convert-to-flat-config generator', () => {
           ...nx.configs['flat/typescript'],
           ...nx.configs['flat/javascript'],
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -1402,7 +1408,7 @@ describe('convert-to-flat-config generator', () => {
         .toMatchInlineSnapshot(`
         "import baseConfig from '../../eslint.config.mjs';
 
-        export default [
+        const eslintConfig = [
           ...baseConfig,
           {
             files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -1428,6 +1434,8 @@ describe('convert-to-flat-config generator', () => {
             ignores: ['__fixtures__/**/*'],
           },
         ];
+
+        export default eslintConfig;
         "
       `);
     });

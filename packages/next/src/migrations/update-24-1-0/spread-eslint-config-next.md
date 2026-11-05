@@ -7,6 +7,8 @@ Replaces the Next.js entries Nx generated in flat ESLint configs with a spread o
 
 The migration also removes the `@next/eslint-plugin-next`, `FlatCompat` and `fixupConfigRules` setup once no other entry uses it.
 
+An ESM config also gets a named export (`const eslintConfig = [...]; export default eslintConfig;`). eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`. A config that already uses the name `eslintConfig` keeps its unnamed export.
+
 It leaves a config unchanged and lists it, with the steps to finish by hand, when:
 
 - the config already imports `eslint-config-next`.
@@ -39,7 +41,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nx from '@nx/eslint-plugin';
 import baseConfig from '../../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...nextVitals,
   ...nx.configs['flat/react-typescript'],
   ...baseConfig,
@@ -47,4 +49,6 @@ export default [
     ignores: ['.next/**/*'],
   },
 ];
+
+export default eslintConfig;
 ```

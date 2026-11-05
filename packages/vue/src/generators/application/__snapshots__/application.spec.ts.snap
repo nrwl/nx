@@ -3,7 +3,7 @@
 exports[`application generator > should set up project correctly for cypress 1`] = `
 "import nx from '@nx/eslint-plugin';
 
-export default [
+const eslintConfig = [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
@@ -48,6 +48,8 @@ export default [
     rules: {},
   },
 ];
+
+export default eslintConfig;
 "
 `;
 
@@ -57,7 +59,7 @@ exports[`application generator > should set up project correctly for cypress 3`]
 "import vue from 'eslint-plugin-vue';
 import baseConfig from '../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...baseConfig,
   ...vue.configs['flat/recommended'],
   {
@@ -75,6 +77,8 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;
 "
 `;
 
@@ -180,7 +184,7 @@ exports[`application generator > should set up project correctly for rsbuild 3`]
 exports[`application generator > should set up project correctly with given options 1`] = `
 "import nx from '@nx/eslint-plugin';
 
-export default [
+const eslintConfig = [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
@@ -225,6 +229,8 @@ export default [
     rules: {},
   },
 ];
+
+export default eslintConfig;
 "
 `;
 
@@ -234,7 +240,7 @@ exports[`application generator > should set up project correctly with given opti
 "import vue from 'eslint-plugin-vue';
 import baseConfig from '../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...baseConfig,
   ...vue.configs['flat/recommended'],
   {
@@ -252,6 +258,8 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;
 "
 `;
 

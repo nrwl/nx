@@ -38,13 +38,15 @@ module.exports = {
 // eslint.config.mjs
 import baseConfig from '../../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...baseConfig,
   {
     files: ['**/*.ts'],
     rules: { '@typescript-eslint/no-explicit-any': 'error' },
   },
 ];
+
+export default eslintConfig;
 ```
 
 Comments in the original config are not carried over, since the converted file is generated from the config values rather than rewritten in place.
