@@ -24,25 +24,20 @@ describe('add-directive-checks-rule migration', () => {
   let tree: Tree;
   let envBackup: string | undefined;
 
-  function addE2eProject(specContent: string) {
-    addProjectConfiguration(tree, 'e2e', {
-      root: 'apps/e2e',
-      targets: { 'e2e-ci--src/checkout.spec.ts': {} },
-    });
+  /** Adds a test file and the targets a runner plugin infers for it. */
+  function addE2eProject(
+    specContent: string,
+    { ciTargetName = 'e2e-ci', file = 'src/checkout.spec.ts' } = {}
+  ) {
+    const targets = { [ciTargetName]: {}, [`${ciTargetName}--${file}`]: {} };
+    addProjectConfiguration(tree, 'e2e', { root: 'apps/e2e', targets });
     projectGraph = {
       dependencies: {},
       nodes: {
-        e2e: {
-          name: 'e2e',
-          type: 'e2e',
-          data: {
-            root: 'apps/e2e',
-            targets: { 'e2e-ci--src/checkout.spec.ts': {} },
-          },
-        },
+        e2e: { name: 'e2e', type: 'e2e', data: { root: 'apps/e2e', targets } },
       },
     };
-    tree.write('apps/e2e/src/checkout.spec.ts', specContent);
+    tree.write(`apps/e2e/${file}`, specContent);
   }
 
   beforeEach(() => {
@@ -111,6 +106,30 @@ describe('add-directive-checks-rule migration', () => {
 
     it('should not add the rule when a directive is outside the leading comment block', async () => {
       addE2eProject("import x from 'x';\n// @nx-ignore-server-inputs\n");
+
+      await update(tree);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(FLAT_CONFIG);
+    });
+
+    it.each([
+      ['a CI target name', { ciTargetName: 'browser--ci' }],
+      ['a file path', { file: 'src/checkout--mobile.spec.ts' }],
+    ])('should add the rule when %s contains "--"', async (_, names) => {
+      addE2eProject('// @nx-ignore-server-inputs\n', names);
+
+      await update(tree);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+        "'@nx/directive-checks': 'error'"
+      );
+    });
+
+    it('should not read a file that only the end of a split file path names', async () => {
+      addE2eProject("test('checks out', () => {});\n", {
+        file: 'src/checkout--mobile.spec.ts',
+      });
+      tree.write('apps/e2e/mobile.spec.ts', '// @nx-ignore-server-inputs\n');
 
       await update(tree);
 
