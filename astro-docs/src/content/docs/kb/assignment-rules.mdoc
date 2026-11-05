@@ -138,7 +138,7 @@ A list of string globs that matches against configurations in your workspace.
 Specification of which agent and how to run your tasks:
 
 - **agent**: the type of agent to run on (`linux-medium`, `linux-large`)
-- **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute
+- **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute. With dynamic task packing on, it is ignored
 
 ### Glob reference
 
@@ -330,7 +330,8 @@ Scheduling constraints decide which tasks can run on the same agent at the same 
 Nx Cloud applies both, so a task goes only to an agent type its rule allows, and only while no conflicting task runs on that agent.
 
 Constraints apply on every agent, whichever rule sent the tasks there, and never move a task to another agent type.
-Parallelism from a rule caps how many tasks an agent takes, and constraints keep conflicting tasks apart within that cap.
+With dynamic task packing on, Nx Cloud ignores `parallelism` from assignment rules. Each agent takes as many tasks as fit its CPU and memory, and constraints keep conflicting tasks apart among them.
+Without packing, a rule's `parallelism` caps how many tasks an agent runs at once, and constraints apply within that cap.
 For the full constraint format, see the [`dte.scheduling-constraints` reference](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
 Nx Cloud enforces constraints only when continuous task assignment is on, which [dynamic task packing](/docs/features/ci-features/distribute-task-execution#turn-on-dynamic-task-packing) turns on.
 

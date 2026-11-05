@@ -403,6 +403,7 @@ dte:
 
 Each inline rule matches tasks by `projects`, `targets`, and `configurations` globs, and routes them to the agents listed under `run-on`.
 `run-on` is required on every rule. Each `run-on` entry needs an `agent`, with optional `parallelism`.
+With [dynamic task packing](/docs/features/ci-features/distribute-task-execution#turn-on-dynamic-task-packing) on, `parallelism` is ignored and each agent takes as many tasks as fit its CPU and memory.
 
 ## `workers`
 
