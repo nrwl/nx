@@ -5119,4 +5119,48 @@ describe('targetDefaults resolution across the conversion', () => {
       );
     }
   });
+
+  const executorStatingShapes: Array<[string, TargetDefaults]> = [
+    [
+      'the pre-conversion executor',
+      { test: { executor: TEST_EXECUTOR, dependsOn: ['^build'] } },
+    ],
+    [
+      'the inferred executor',
+      { test: { executor: 'nx:run-commands', dependsOn: ['^build'] } },
+    ],
+    [
+      'a third executor, next to an inferred-executor key',
+      {
+        test: { executor: 'other:exec', dependsOn: ['^build'] },
+        'nx:run-commands': { cache: false },
+      },
+    ],
+  ];
+
+  it.each(executorStatingShapes)(
+    'skips a default that states %s when the target runs another executor',
+    async (_label, targetDefaults) => {
+      setup('td-shift-executor-entry', targetDefaults);
+      const plugin = createSyntheticPlugin();
+      const before = await resolveThroughRealPipeline(
+        ctx,
+        plugin.pluginPath,
+        plugin.createNodes
+      );
+
+      await migrate(plugin);
+
+      const after = await resolveThroughRealPipeline(
+        ctx,
+        plugin.pluginPath,
+        plugin.createNodes
+      );
+      for (const name of ['app1', 'app2']) {
+        expect(after[name].test.dependsOn ?? []).toEqual(
+          before[name].test.dependsOn ?? []
+        );
+      }
+    }
+  );
 });

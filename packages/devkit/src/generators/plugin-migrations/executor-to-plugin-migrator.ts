@@ -36,6 +36,7 @@ import {
   isGlobPattern,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  resolveApplicableTargetDefaults,
   retrieveProjectConfigurations,
   globalSpinner,
 } from 'nx/src/devkit-internals';
@@ -507,12 +508,12 @@ export async function computeResidualByProject<T>(
         }
         const targetDefaultsShift: TargetDefaultsShiftInputs = {
           defaultsBefore:
-            readTargetDefaultsForTarget(
+            resolveApplicableTargetDefaults(
               targetName,
               nxJson.targetDefaults,
               preMigrationTarget.executor,
               { projectName, projectNode: projectGraph.nodes[projectName] }
-            ) ?? {},
+            )?.config ?? {},
           projectOwned: {
             fields: [
               ...new Set([...projectOwnedFields, ...Object.keys(residual)]),

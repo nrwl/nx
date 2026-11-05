@@ -8,7 +8,7 @@ import type {
 import {
   isGlobPattern,
   mergeTargetConfigurations,
-  readTargetDefaultsForTarget,
+  resolveApplicableTargetDefaults,
 } from 'nx/src/devkit-internals';
 import { isExactTargetNameKey } from '../target-defaults-utils';
 import { stableStringify } from './plugin-migration-utils';
@@ -103,19 +103,21 @@ export function correctTargetDefaultsShift(
     const executor = identityInProjectConfig
       ? (written.executor ?? 'nx:run-commands')
       : inputs.inferredExecutor;
-    const opts = {
-      projectName,
-      projectNode: pair.projectNode,
-      sourcePlugin: identityInProjectConfig ? undefined : pluginPath,
-    };
-    const after = readTargetDefaultsForTarget(
+    const after = resolveApplicableTargetDefaults(
       targetName,
       nxJson.targetDefaults,
       executor,
-      opts
+      {
+        projectName,
+        projectNode: pair.projectNode,
+        sourcePlugin: identityInProjectConfig ? undefined : pluginPath,
+      }
     );
 
-    const { correction, unexpressible } = diffAgainstBefore(after, pair);
+    const { correction, unexpressible } = diffAgainstBefore(
+      after?.config ?? {},
+      pair
+    );
     if (unexpressible.length > 0) {
       result.unexpressible.set(`${projectName} > ${targetName}`, unexpressible);
     }
@@ -123,10 +125,7 @@ export function correctTargetDefaultsShift(
       continue;
     }
 
-    const key =
-      after === null
-        ? targetName
-        : winningKey(nxJson, targetName, executor, opts);
+    const key = after?.key ?? targetName;
     const entryReachesSibling = Object.entries(inputs.siblingExecutors).some(
       ([siblingName, siblingExecutor]) =>
         siblingExecutor === key ||
@@ -193,11 +192,11 @@ export function appendTargetDefaultEntry(
 }
 
 function diffAgainstBefore(
-  after: Partial<TargetConfiguration> | null,
+  after: Partial<TargetConfiguration>,
   pair: ShiftPair
 ): { correction: Partial<TargetConfiguration>; unexpressible: string[] } {
   const { inputs, written } = pair;
-  const got = overInferred(after ?? {}, inputs.rawInferred);
+  const got = overInferred(after, inputs.rawInferred);
   const want = overInferred(inputs.defaultsBefore, inputs.rawInferred);
   const ownedFields = new Set([
     ...inputs.projectOwned.fields,
@@ -271,43 +270,5 @@ function overInferred(
   return mergeTargetConfigurations(
     structuredClone(rest),
     structuredClone(rawInferred)
-  );
-}
-
-/**
- * The `targetDefaults` key whose entries resolve for the target, in the
- * reader's precedence order: executor, exact name, then globs longest first.
- */
-function winningKey(
-  nxJson: NxJsonConfiguration,
-  targetName: string,
-  executor: string | undefined,
-  opts: Parameters<typeof readTargetDefaultsForTarget>[3]
-): string {
-  const targetDefaults = nxJson.targetDefaults ?? {};
-  const globKeys = Object.keys(targetDefaults)
-    .filter(
-      (key) =>
-        key !== targetName &&
-        key !== executor &&
-        isGlobPattern(key) &&
-        minimatch(targetName, key)
-    )
-    .sort((a, b) => b.length - a.length);
-  const candidates = [
-    ...(executor !== undefined && executor in targetDefaults ? [executor] : []),
-    ...(targetName in targetDefaults && targetName !== executor
-      ? [targetName]
-      : []),
-    ...globKeys,
-  ];
-  return candidates.find(
-    (key) =>
-      readTargetDefaultsForTarget(
-        targetName,
-        { [key]: targetDefaults[key] },
-        executor,
-        opts
-      ) !== null
   );
 }
