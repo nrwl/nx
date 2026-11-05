@@ -1,3 +1,4 @@
+import { resolveFromWorkspace } from '../../../utils/installation-directory';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
@@ -46,28 +47,38 @@ export function isTypeScriptResolvable(): boolean {
   }
 }
 
+/**
+ * @param extendedConfigCache Shared across reads so each extended tsconfig is
+ * parsed once. TypeScript 7.1 doesn't use it.
+ */
 export function readTsConfig(
   tsConfigPath: string,
-  host?: TsConfigHost
+  host?: TsConfigHost,
+  extendedConfigCache?: Map<string, ts.ExtendedConfigCacheEntry>
 ): ts.ParsedCommandLine {
-  return parseTsConfig(tsConfigPath, host, true);
+  return parseTsConfig(tsConfigPath, host, true, extendedConfigCache);
 }
 
 /**
  * Reads a tsconfig without scanning for its source files, for callers that
  * only need its options. `fileNames` can come back empty.
+ *
+ * @param extendedConfigCache Shared across reads so each extended tsconfig is
+ * parsed once. TypeScript 7.1 doesn't use it.
  */
 export function readTsConfigWithoutFiles(
   tsConfigPath: string,
-  host?: TsConfigHost
+  host?: TsConfigHost,
+  extendedConfigCache?: Map<string, ts.ExtendedConfigCacheEntry>
 ): ts.ParsedCommandLine {
-  return parseTsConfig(tsConfigPath, host, false);
+  return parseTsConfig(tsConfigPath, host, false, extendedConfigCache);
 }
 
 function parseTsConfig(
   tsConfigPath: string,
   host: TsConfigHost | undefined,
-  scanFiles: boolean
+  scanFiles: boolean,
+  extendedConfigCache: Map<string, ts.ExtendedConfigCacheEntry> | undefined
 ): ts.ParsedCommandLine {
   const backend = getTypescriptBackend();
   switch (backend.kind) {
@@ -81,7 +92,12 @@ function parseTsConfig(
       return tsModule.parseJsonConfigFileContent(
         readResult.config,
         parseHost,
-        dirname(tsConfigPath)
+        dirname(tsConfigPath),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        extendedConfigCache
       );
     }
     case 'api':

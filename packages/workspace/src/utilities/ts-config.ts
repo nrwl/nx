@@ -1,24 +1,14 @@
 import { offsetFromRoot, Tree, workspaceRoot } from '@nx/devkit';
+import { readTsConfig as readTsConfigWithBackend } from '@nx/devkit/internal';
 import { existsSync } from 'fs';
-import { dirname, join } from 'path';
-import type { Node, SyntaxKind } from 'typescript';
+import { join } from 'path';
+import type { Node, ParsedCommandLine, SyntaxKind } from 'typescript';
 import { ensureTypescript } from './typescript';
 
-let tsModule: typeof import('typescript');
-
-export function readTsConfig(tsConfigPath: string) {
-  if (!tsModule) {
-    tsModule = ensureTypescript();
-  }
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    tsModule.sys,
-    dirname(tsConfigPath)
-  );
+export function readTsConfig(tsConfigPath: string): ParsedCommandLine {
+  // Installs a temporary TypeScript when the workspace has none.
+  ensureTypescript();
+  return readTsConfigWithBackend(tsConfigPath);
 }
 
 export function getRootTsConfigPathInTree(tree: Tree): string | null {
