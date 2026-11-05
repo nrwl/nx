@@ -231,7 +231,6 @@ export class ParallelRunningTasks implements RunningTask {
       const failFast = (childProcess: RunningNodeProcess) => {
         if (failedProcess) return;
         failedProcess = childProcess;
-        // Immediately terminate all other running processes
         this.terminateRemainingProcesses(runningProcesses, childProcess);
       };
 
