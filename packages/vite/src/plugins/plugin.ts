@@ -206,20 +206,42 @@ async function buildViteTargets(
     // do nothing
   }
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await retryOnRequireEsmRace(() =>
-    resolveConfig(
-      {
-        configFile: absoluteConfigFilePath,
-        mode: 'development',
-        root: projectRoot,
-      },
-      'build'
-    )
-  );
+  const resolveConfigForInference = async (command: 'build' | 'serve') => {
+    // Vite always resolves default server settings, so capture whether the
+    // config or one of its plugins set them before that happens.
+    let hasExplicitServer = false;
+    const config = await retryOnRequireEsmRace(() =>
+      resolveConfig(
+        {
+          configFile: absoluteConfigFilePath,
+          mode: 'development',
+          root: projectRoot,
+          // The serve resolution is optional and allowed to fail.
+          logLevel: command === 'serve' ? 'silent' : undefined,
+          plugins: [
+            {
+              name: 'nx-capture-explicit-vite-server',
+              enforce: 'post' as const,
+              config: {
+                order: 'post' as const,
+                handler(userConfig: { server?: unknown }) {
+                  hasExplicitServer = Boolean(userConfig.server);
+                },
+              },
+            },
+          ],
+        },
+        command
+      )
+    );
+    return { config, hasExplicitServer };
+  };
+  const { config: viteBuildConfig, hasExplicitServer: hasBuildServerConfig } =
+    await resolveConfigForInference('build');
 
   const metadata: ProjectConfiguration['metadata'] = {};
 
-  const { buildOutputs, isBuildable, hasServeConfig } = getOutputs(
+  const { buildOutputs, isBuildable } = getOutputs(
     viteBuildConfig,
     projectRoot,
     context.workspaceRoot
@@ -245,6 +267,17 @@ async function buildViteTargets(
       isUsingTsSolutionSetup,
       pmc
     );
+
+    let hasServeConfig = hasBuildServerConfig;
+
+    if (viteBuildConfig.build?.lib && !hasServeConfig) {
+      try {
+        hasServeConfig = (await resolveConfigForInference('serve'))
+          .hasExplicitServer;
+      } catch {
+        // Build-only configs may reject serve mode.
+      }
+    }
 
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
@@ -513,13 +546,12 @@ function getOutputs(
 ): {
   buildOutputs: string[];
   isBuildable: boolean;
-  hasServeConfig: boolean;
 } {
   // TODO(jack): Remove this cast when @nx/vite switches to moduleResolution:
   // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
   // resolvable under moduleResolution: "node", which breaks rolldownOptions
   // on ResolvedConfig.
-  const { build, server } = viteBuildConfig as any;
+  const { build } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -536,12 +568,9 @@ function getOutputs(
     existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
-  const hasServeConfig = Boolean(server?.host || server?.port);
-
   return {
     buildOutputs: [buildOutputPath],
     isBuildable,
-    hasServeConfig,
   };
 }
 
