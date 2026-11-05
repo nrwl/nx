@@ -107,7 +107,8 @@ export async function runCommands(
   options: RunCommandsOptions,
   context: ExecutorContext,
   task?: Pick<Task, 'id' | 'ultracache' | 'continuous'>,
-  baseEnv?: NodeJS.ProcessEnv
+  baseEnv?: NodeJS.ProcessEnv,
+  warn: (message: string) => void = (message) => logger.warn(message)
 ) {
   // The orchestrator's in-process path passes the task with a stub context,
   // so prefer it.
@@ -129,7 +130,8 @@ export async function runCommands(
         options.envFile,
         baseEnv
       )),
-    resolvedTaskId
+    resolvedTaskId,
+    warn
   );
 
   if (normalized.readyWhenStatus.length && !normalized.parallel) {
@@ -221,7 +223,8 @@ export async function runCommands(
 function normalizeOptions(
   options: RunCommandsOptions,
   env: () => NodeJS.ProcessEnv,
-  taskId: string
+  taskId: string,
+  warn: (message: string) => void
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
     options.readyWhenStatus = [
@@ -268,7 +271,7 @@ function normalizeOptions(
   });
   if (forwardsUnknownOptions) {
     for (const option of droppedUnknownOptions(normalized)) {
-      logger.warn(
+      warn(
         `Option "${option}" was not forwarded to the command for ${taskId} because its value is an object or array. Use "args" to pass extra values to the command.`
       );
     }

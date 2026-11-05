@@ -3790,6 +3790,32 @@ describe('TaskOrchestrator', () => {
       }
     );
 
+    it('shows a dropped run-commands option in the TUI task output', async () => {
+      const { orchestrator, task } = createOrchestrator();
+      await useRealExecutorSchema();
+      orchestrator.tuiEnabled = true;
+      orchestrator.options.lifeCycle.registerRunningTask = vi.fn();
+      const build = orchestrator.projects.app.targets.build;
+      build.options = { command: 'echo hi', lintFilePatterns: ['a.ts'] };
+
+      const runningTask = await orchestrator.runTask(
+        task,
+        false,
+        process.env,
+        orchestrator.cache.temporaryOutputPath(),
+        false
+      );
+      await runningTask.getResults();
+
+      expect(
+        orchestrator.options.lifeCycle.appendTaskOutput.mock.calls
+      ).toContainEqual([
+        task.id,
+        expect.stringContaining('"lintFilePatterns" was not forwarded'),
+        false,
+      ]);
+    });
+
     it('prints a failure of the post-run steps once', async () => {
       const { orchestrator, task } = createOrchestrator();
       orchestrator.runTask = vi.fn(async () => ({
