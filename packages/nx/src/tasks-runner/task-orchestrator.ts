@@ -2968,9 +2968,12 @@ export class TaskOrchestrator {
         ownsRunningTasksService,
         reason
       );
-    } else if (!this.isContinuousTaskNeeded(task.id)) {
-      // No remaining tasks depend on this — the task was about to be
-      // killed by cleanUpUnneededContinuousTasks anyway.
+    } else if (
+      !this.isContinuousTaskNeeded(task.id) &&
+      !this.isInitiatingTaskFailure(task.id, code)
+    ) {
+      // No remaining tasks depend on this: a dependency was about to be killed
+      // by cleanUpUnneededContinuousTasks anyway, an initiating task exited cleanly.
       await this.completeContinuousTask(
         task,
         groupId,
@@ -2998,6 +3001,17 @@ export class TaskOrchestrator {
           (edge) => edge.id === taskId
         )
       );
+  }
+
+  // Nothing kills a task the user asked for, so a non-zero exit before the
+  // run stops is the task failing on its own.
+  private isInitiatingTaskFailure(taskId: string, code: number): boolean {
+    return (
+      code !== 0 &&
+      this.initializingTaskIds.has(taskId) &&
+      !this.stopRequested &&
+      !this.cleanupPromise
+    );
   }
 
   private async completeContinuousTask(
