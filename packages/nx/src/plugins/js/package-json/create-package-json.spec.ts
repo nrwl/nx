@@ -1809,27 +1809,55 @@ describe('createPackageJson', () => {
       [
         'pnpm',
         'npm:left-pad@1.3.0',
+        'link:../../../vendor/x',
         'npm:left-pad@1.3.0',
         'npm:left-pad@1.3.0',
       ],
-      ['bun', 'npm:left-pad@1.3.0', 'npm:left-pad@1.3.0', 'npm:left-pad@1.3.0'],
-      ['pnpm', 'link:../../../vendor/x', undefined, 'link:../../vendor/x'],
-      ['bun', 'link:./vendor/x', undefined, 'link:../../vendor/x'],
+      [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'link:../../../vendor/x',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'file:1.3.0',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'pnpm',
+        'link:../../../vendor/x',
+        'link:../../../vendor/x',
+        undefined,
+        'link:../../vendor/x',
+      ],
+      [
+        'bun',
+        'link:./vendor/x',
+        'link:../../../vendor/x',
+        undefined,
+        'link:../../vendor/x',
+      ],
       [
         'pnpm',
         'npm:@s/x-real@file:vendor/@s/x',
+        'link:../../../vendor/x',
         'file:./vendor/@s/x',
         'file:../../vendor/@s/x',
       ],
       [
         'bun',
         'npm:@s/x-real@file:vendor/@s/x',
+        'link:../../../vendor/x',
         'file:./vendor/@s/x',
         'file:../../vendor/@s/x',
       ],
     ] as const)(
-      'should rebase a declared local-path spec only for the graph version it records on %s (%s)',
-      (packageManager, graphVersion, rootSpec, expected) => {
+      'should rebase a declared local-path spec only for the graph version it records on %s (%s, lib2 declares %s)',
+      (packageManager, graphVersion, lib2Spec, rootSpec, expected) => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager },
         });
@@ -1845,7 +1873,7 @@ describe('createPackageJson', () => {
         );
         vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) =>
           path === 'libs/nested/lib2/package.json'
-            ? { name: 'lib2', dependencies: { x: 'link:../../../vendor/x' } }
+            ? { name: 'lib2', dependencies: { x: lib2Spec } }
             : {
                 name: 'root-package',
                 dependencies: rootSpec ? { x: rootSpec } : {},

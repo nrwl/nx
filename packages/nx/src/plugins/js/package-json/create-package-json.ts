@@ -133,8 +133,9 @@ export function createPackageJson(
       return projectVersion;
     }
 
-    // A local package's graph version is a path, never a semver version
-    if (!valid(version)) {
+    // A local package's graph version, or the version its `npm:` alias names,
+    // is a path, never a semver version
+    if (!valid(getAliasedVersion(version))) {
       const localPathSpec = getInheritedLocalPathSpec(
         packageName,
         version,
@@ -354,8 +355,8 @@ export function createPackageJson(
  * workspace that declares the same spec, so for Bun the root manifest comes
  * first. The other workspace projects the project depends on come last. A
  * declarer counts only when its spec resolves to the path the graph version
- * records, so a same-named package another project vendors never replaces a
- * registry version or registry alias.
+ * records, so a same-named package another project vendors never replaces the
+ * one the graph version selects.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,
