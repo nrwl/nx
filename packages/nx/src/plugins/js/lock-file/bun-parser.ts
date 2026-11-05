@@ -1555,8 +1555,6 @@ function findBestVersionMatch(
   return best.version;
 }
 
-// ===== PRUNED LOCKFILE =====
-
 // Bun resolutions that point into the workspace's own file tree. The pruned
 // output ships the local packages `getBunLocalPathSources` lists, and no other.
 const LOCAL_RESOLUTION_PROTOCOLS = new Set([
