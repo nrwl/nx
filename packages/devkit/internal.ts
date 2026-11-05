@@ -148,6 +148,7 @@ export {
   type TestFileDirective,
 } from './src/utils/test-file-directives';
 export { dependsOnProjects } from './src/utils/test-file-depends-on';
+export { tsquery } from './src/utils/tsquery';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';
 export { eachValueFrom } from './src/utils/rxjs-for-await';

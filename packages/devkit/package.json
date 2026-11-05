@@ -60,6 +60,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "ejs": "5.0.1",
+    "esquery": "catalog:",
     "tslib": "catalog:typescript",
     "semver": "catalog:",
     "yargs-parser": "catalog:",

@@ -302,6 +302,9 @@ catalogs:
     chalk:
       specifier: ^4.1.0
       version: 4.1.2
+    esquery:
+      specifier: ^1.7.0
+      version: 1.7.0
     gpt3-tokenizer:
       specifier: ^1.1.5
       version: 1.1.5
@@ -923,6 +926,9 @@ importers:
       '@swc/jest':
         specifier: catalog:jest
         version: 0.2.39(@swc/core@1.15.10(@swc/helpers@0.5.18))
+      '@types/esquery':
+        specifier: ^1.5.4
+        version: 1.5.4
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -2474,6 +2480,9 @@ importers:
       ejs:
         specifier: 5.0.1
         version: 5.0.1
+      esquery:
+        specifier: 'catalog:'
+        version: 1.7.0
       minimatch:
         specifier: 'catalog:'
         version: 11.0.8
@@ -39683,7 +39692,7 @@ snapshots:
 
   '@types/esquery@1.5.4':
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   '@types/esrecurse@4.3.1': {}
 
