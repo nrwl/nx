@@ -32,6 +32,8 @@ export async function waitForSocketConnection(
       error: NodeJS.ErrnoException,
       socketPath: string
     ) => boolean | void;
+    /** How to dial. Defaults to `net.connect`. */
+    connect?: (socketPath: string, onConnect: () => void) => Socket;
   }
 ): Promise<Socket | null> {
   const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
@@ -46,7 +48,7 @@ export async function waitForSocketConnection(
 
     const path = typeof socketPath === 'function' ? socketPath() : socketPath;
     if (path) {
-      const result = await tryConnect(path);
+      const result = await tryConnect(path, options?.connect ?? connect);
       if (result.socket) {
         return result.socket;
       }
@@ -63,11 +65,12 @@ export async function waitForSocketConnection(
 }
 
 function tryConnect(
-  socketPath: string
+  socketPath: string,
+  dial: (socketPath: string, onConnect: () => void) => Socket
 ): Promise<{ socket?: Socket; error?: NodeJS.ErrnoException }> {
   return new Promise((resolve) => {
     try {
-      const socket = connect(socketPath, () => {
+      const socket = dial(socketPath, () => {
         resolve({ socket });
       });
       socket.once('error', (error) => {

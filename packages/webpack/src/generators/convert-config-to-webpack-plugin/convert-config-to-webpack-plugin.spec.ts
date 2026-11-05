@@ -2,6 +2,7 @@ import {
   ProjectConfiguration,
   Tree,
   addProjectConfiguration,
+  readProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import convertConfigToWebpackPluginGenerator from './convert-config-to-webpack-plugin';
@@ -363,25 +364,148 @@ describe('convertConfigToWebpackPluginGenerator', () => {
     );
   });
 
-  it('should throw an error if the project is a Nest project', async () => {
-    const project = createProject(tree, {
-      name: 'my-app',
-      root: 'my-app',
-      additionalTargets: {
+  it('should migrate a Nest project served by the @nx/js:node executor', async () => {
+    addProjectConfiguration(tree, 'api', {
+      root: 'apps/api',
+      sourceRoot: 'apps/api/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nx/webpack:webpack',
+          outputs: ['{options.outputPath}'],
+          defaultConfiguration: 'production',
+          options: {
+            target: 'node',
+            compiler: 'tsc',
+            outputPath: 'dist/apps/api',
+            main: 'apps/api/src/main.ts',
+            tsConfig: 'apps/api/tsconfig.app.json',
+            assets: ['apps/api/src/assets'],
+            webpackConfig: 'apps/api/webpack.config.js',
+          },
+          configurations: {
+            development: {},
+            production: {},
+          },
+        },
         serve: {
           executor: '@nx/js:node',
+          defaultConfiguration: 'development',
           options: {
-            buildTarget: 'my-app:build',
+            buildTarget: 'api:build',
+          },
+          configurations: {
+            development: {
+              buildTarget: 'api:build:development',
+            },
+            production: {
+              buildTarget: 'api:build:production',
+            },
           },
         },
       },
     });
+    tree.write(
+      'apps/api/webpack.config.js',
+      `const { composePlugins, withNx } = require('@nx/webpack');
 
-    await expect(
-      convertConfigToWebpackPluginGenerator(tree, { project: project.name })
-    ).rejects.toThrow(
-      `The project ${project.name} is using the '@nx/js:node' executor. At the moment, we do not support migrating such projects.`
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
     );
+
+    await convertConfigToWebpackPluginGenerator(tree, { project: 'api' });
+
+    expect(tree.read('apps/api/webpack.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { useLegacyNxPlugin } = require('@nx/webpack');
+
+        // This file was migrated using @nx/webpack:convert-config-to-webpack-plugin from your './webpack.config.old.js'
+        // Please check that the options here are correct as they were moved from the old webpack.config.js to this file.
+        const options = {};
+
+        /**
+         * @type{import('webpack').WebpackOptionsNormalized}
+         */
+        module.exports = async () => ({
+          plugins: [
+            new NxAppWebpackPlugin(),
+            // NOTE: useLegacyNxPlugin ensures that the non-standard Webpack configuration file previously used still works.
+            // To remove its usage, move options such as "plugins" into this file as standard Webpack configuration options.
+            // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \\\`apply\\\` method.
+            // e.g. \\\`{ apply: (compiler) => { /* modify compiler.options */ }\\\`
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            await useLegacyNxPlugin(require('./webpack.config.old.js'), options),
+          ],
+        });
+        "
+      `);
+    expect(tree.read('apps/api/webpack.config.old.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+        "// Nx plugins for webpack.
+        module.exports = composeLegacyPlugins((config) => {
+          // Update the webpack config as needed here.
+          // e.g. \`config.plugins.push(new MyPlugin())\`
+          return config;
+        });
+        function composeLegacyPlugins(...plugins) {
+          return async (config, ctx) => {
+            for (const plugin of plugins) {
+              config = await (await plugin)(config, ctx);
+            }
+            return config;
+          };
+        }
+        "
+      `);
+    expect(readProjectConfiguration(tree, 'api').targets)
+      .toMatchInlineSnapshot(`
+        {
+          "build": {
+            "configurations": {
+              "development": {},
+              "production": {},
+            },
+            "defaultConfiguration": "production",
+            "executor": "@nx/webpack:webpack",
+            "options": {
+              "assets": [
+                "apps/api/src/assets",
+              ],
+              "compiler": "tsc",
+              "main": "apps/api/src/main.ts",
+              "outputPath": "dist/apps/api",
+              "standardWebpackConfigFunction": true,
+              "target": "node",
+              "tsConfig": "apps/api/tsconfig.app.json",
+              "webpackConfig": "apps/api/webpack.config.js",
+            },
+            "outputs": [
+              "{options.outputPath}",
+            ],
+          },
+          "serve": {
+            "configurations": {
+              "development": {
+                "buildTarget": "api:build:development",
+              },
+              "production": {
+                "buildTarget": "api:build:production",
+              },
+            },
+            "defaultConfiguration": "development",
+            "executor": "@nx/js:node",
+            "options": {
+              "buildTarget": "api:build",
+            },
+          },
+        }
+      `);
   });
 
   it('should not migrate a webpack config that is already using NxAppWebpackPlugin', async () => {

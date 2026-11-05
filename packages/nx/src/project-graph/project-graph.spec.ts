@@ -45,7 +45,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       createNodes: [
         '*',
         vi.fn().mockImplementation(async () => {
-          const graph = await buildProjectGraphAndSourceMapsWithoutDaemon();
+          await buildProjectGraphAndSourceMapsWithoutDaemon();
           return [];
         }),
       ],
@@ -64,7 +64,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
     }));
 
     try {
-      const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
+      await buildProjectGraphAndSourceMapsWithoutDaemon();
     } catch (e) {
       const stack = (e as Error).stack?.toString() || '';
       const messageWithoutCallStack = stack.split('Call stack:')[0];
@@ -86,7 +86,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
         '*',
         vi.fn().mockImplementation(async () => {
           if (!global.NX_GRAPH_CREATION) {
-            const graph = await buildProjectGraphAndSourceMapsWithoutDaemon();
+            await buildProjectGraphAndSourceMapsWithoutDaemon();
           }
           return [];
         }),
@@ -104,7 +104,7 @@ describe('buildProjectGraphAndSourceMapsWithoutDaemon', () => {
       defaultPlugins: [],
     }));
 
-    const p = await buildProjectGraphAndSourceMapsWithoutDaemon();
+    await buildProjectGraphAndSourceMapsWithoutDaemon();
     expect(testPlugin.createNodes[1]).toHaveBeenCalled();
   });
 

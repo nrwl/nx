@@ -28,7 +28,7 @@ function customHasherTaskIds(
   }
   const projects =
     readProjectsConfigurationFromProjectGraph(projectGraph).projects;
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   const ids = Object.values(taskGraph.tasks)
     .filter((task) => {
       try {
@@ -76,7 +76,7 @@ export function ultracacheEligibilityOptions(
  * Reports which tasks in `taskGraph` hash from `configurations` and why the rest
  * do not, with the same eligibility walk the planner uses, without building a
  * planner (no project-graph transfer). Never fetches, never throws. Feeds
- * the `--verbose` run summary.
+ * the `--verbose` run summary and the tasks `nx affected` reports as skipped.
  */
 export function buildUltracacheOverrides(
   projectGraph: ProjectGraph,

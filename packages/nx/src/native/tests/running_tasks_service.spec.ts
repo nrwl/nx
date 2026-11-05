@@ -1,4 +1,4 @@
-import { RunningTasksService, TaskDetails } from '../index';
+import { RunningTasksService } from '../index';
 import { join } from 'path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { rmSync } from 'fs';

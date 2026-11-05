@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
+import { getDefaultUnitTestRunner } from '../../../utils/unit-test-runner';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
@@ -12,24 +13,29 @@ export async function normalizeOptions(
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
   await ensureRootProjectName(options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  const {
+    projectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   return {
     ...options,
     strict: options.strict ?? false,
-    appProjectName,
+    appProjectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     appProjectRoot,
     linter: await normalizeLinterOption(tree, options.linter),
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    unitTestRunner: options.unitTestRunner ?? getDefaultUnitTestRunner(tree),
     e2eTestRunner: options.e2eTestRunner ?? 'jest',
-    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionSetup(tree),
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

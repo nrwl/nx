@@ -45,6 +45,7 @@ export interface ServerRenderingInputs {
    * `@angular/build` >= 22.2 does.
    */
   criticalCssPlans: CriticalCssPlan[] | undefined;
+  emitsOriginalIndex?: boolean;
 }
 
 /**
@@ -62,6 +63,7 @@ export interface IndexHtmlPluginOptions extends IndexHtmlGeneratorOptions {
   isSsr: boolean;
   outputPath: string;
   serverRenderingInputs?: SharedServerRenderingInputs;
+  serverPostTransform?: IndexHtmlGeneratorOptions['postTransform'];
 }
 
 const PLUGIN_NAME = 'IndexHtmlPlugin';
@@ -127,6 +129,10 @@ export class IndexHtmlPlugin
     const emitServerIndexAsOriginal = emitsServerIndexAsOriginal(
       this.options.index
     );
+    const emitOriginalIndex =
+      emitServerIndexAsOriginal ||
+      (!!this.options.serverPostTransform &&
+        getIndexOutputFile(this.options.index) !== 'index.original.html');
     const compileCriticalCssPlans =
       isAngularBuildVersionAtLeast('22.2.0') &&
       !!this.options.optimization?.styles.inlineCritical;
@@ -242,12 +248,18 @@ export class IndexHtmlPlugin
                 );
                 // Unlike the browser index, these match the documents the
                 // `@angular/build` application builder generates for a server.
-                const [server, csr] = await Promise.all([
+                let [server, csr] = await Promise.all([
                   addEventDispatchContract(this.#sharedIndexContent).then(
                     addNonce
                   ),
                   addNgcmAttribute(csrContent),
                 ]);
+                if (this.options.serverPostTransform) {
+                  [server, csr] = await Promise.all([
+                    this.options.serverPostTransform(server).then(addNonce),
+                    this.options.serverPostTransform(csr).then(addNonce),
+                  ]);
+                }
                 const assetsDir = `${SERVER_INDEX_ASSETS_DIR}/${serverIndexAssets.length}`;
                 const serverIndexAsset = {
                   locale,
@@ -303,16 +315,31 @@ export class IndexHtmlPlugin
                 csr: csrContent,
                 nonce: (await findNonce(serverContent)) ?? undefined,
               });
-              if (emitServerIndexAsOriginal) {
+              if (emitOriginalIndex) {
+                let originalContent = serverContent;
+                if (
+                  !emitServerIndexAsOriginal &&
+                  this.options.serverPostTransform
+                ) {
+                  const browserContent = compilation.assets[
+                    join(outputPath, getIndexOutputFile(this.options.index))
+                  ]
+                    .source()
+                    .toString();
+                  originalContent = await this.options
+                    .serverPostTransform(browserContent)
+                    .then(addNonce);
+                }
                 compilation.emitAsset(
                   join(outputPath, 'index.original.html'),
-                  new compiler.rspack.sources.RawSource(serverContent)
+                  new compiler.rspack.sources.RawSource(originalContent)
                 );
               }
             }
 
             this.#pendingServerRenderingInputs = {
               indexHtml,
+              emitsOriginalIndex: emitOriginalIndex,
               criticalCssPlans: compileCriticalCssPlans
                 ? await this.#compileCriticalCssPlans(compilation)
                 : undefined,

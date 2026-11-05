@@ -1,8 +1,10 @@
+import { inspect } from 'node:util';
 import * as pc from 'picocolors';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execSync } from 'node:child_process';
 import { openUrl } from '../../../../native';
 import { orange, output } from '../../../../utils/output';
+import { redactUrlCredentials } from '../../../../utils/redact-url-credentials';
 import type { PostGitTask } from '../../changelog';
 import type { ResolvedCreateRemoteReleaseProvider } from '../../config/config';
 import type { Reference } from '../git';
@@ -91,7 +93,7 @@ export class GitLabRemoteReleaseClient extends RemoteReleaseClient<GitLabRelease
       }
     } catch (err) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.error(err);
+        console.error(redactUrlCredentials(inspect(err)));
       }
       return null;
     }

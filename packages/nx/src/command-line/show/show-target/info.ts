@@ -136,7 +136,7 @@ function resolveTargetInfoData(t: ResolvedTarget) {
       ? {
           dependsOn,
           _depSources: depSourceIndices,
-          _continuousDeps: continuousDeps,
+          continuousDependencies: continuousDeps,
         }
       : {}),
     ...(transitiveTasks.length > 0 ? { transitiveTasks } : {}),
@@ -456,7 +456,6 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
       _inputSources,
       _depSources,
       _commandSourceKey,
-      _continuousDeps,
       ultracacheMode,
       ultracacheInCI,
       ...jsonData
@@ -512,7 +511,7 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
         srcIdx !== undefined && srcIdx >= 0
           ? sourceHint(`dependsOn.${srcIdx}`, 'dependsOn')
           : sourceHint('dependsOn');
-      const continuousDep = data._continuousDeps?.[data.dependsOn[i]];
+      const continuousDep = data.continuousDependencies?.[data.dependsOn[i]];
       const note = continuousDep
         ? ` ${c.dim(
             continuousDep.waitsForReady
@@ -548,7 +547,7 @@ function renderTargetInfo(data: TargetInfoData, args: ShowTargetBaseOptions) {
     console.log(`${c.bold('Ultracache')}: ${notice} ${ultracacheDocsLink()}`);
   }
 
-  const hashedContinuousDeps = Object.entries(data._continuousDeps ?? {})
+  const hashedContinuousDeps = Object.entries(data.continuousDependencies ?? {})
     .filter(([, { inputsHashed }]) => inputsHashed)
     .map(([depId]) => depId);
   if (data.inputs?.length || hashedContinuousDeps.length) {

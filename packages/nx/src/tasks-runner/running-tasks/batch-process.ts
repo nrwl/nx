@@ -81,7 +81,7 @@ export class BatchProcess {
     private childProcess: ChildProcess,
     private executorName: string,
     /**
-     * Whether the active output style puts task bytes on the terminal at all.
+     * Whether the worker's output is written to the terminal as it streams.
      * `summary` does not, and its life cycle cannot enforce that here: this
      * class writes to `output` directly from a stream handler, so without being
      * told it would print a whole batch into a run that asked for log paths.

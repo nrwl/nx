@@ -1,5 +1,4 @@
 import { logger } from './logger';
-import { handleImport } from './handle-import';
 import {
   selectPrompt,
   multiselectPrompt,

@@ -457,6 +457,22 @@ describe('is terminal run', () => {
     expect(isTerminalRun()).toBe(false);
   });
 
+  it('is a terminal run when bun lint runs the rule on Mac', () => {
+    // Mac: $run bun lint .
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'lint', '.']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is a terminal run when bun lint runs the rule on Windows', () => {
+    mockProcessArgv(['C:\\Users\\user\\.bun\\bin\\bun.exe', 'lint']);
+    expect(isTerminalRun()).toBe(true);
+  });
+
+  it('is not a terminal run for other bun commands', () => {
+    mockProcessArgv(['/Users/user/.bun/bin/bun', 'run', 'dev']);
+    expect(isTerminalRun()).toBe(false);
+  });
+
   it('is not a terminal run when the is started from the IDE', () => {
     // Visual Studio Code mac
     mockProcessArgv([

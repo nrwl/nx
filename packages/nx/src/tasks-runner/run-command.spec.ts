@@ -1,12 +1,9 @@
-import { TasksRunner } from './tasks-runner';
 import {
   getRunner,
   selectTasksForProjects,
   setEnvVarsBasedOnArgs,
 } from './run-command';
 import type { NxArgs } from '../utils/command-line-utils';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { join } from 'path';
 // getRunner loads the runner with a bare require, so compare against the
 // instance from the same channel rather than the vite-imported copy.
 const {
@@ -15,15 +12,6 @@ const {
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {
-  let nxJson: NxJsonConfiguration;
-  let mockRunner: TasksRunner;
-  let overrides: any;
-
-  beforeEach(() => {
-    nxJson = {};
-    mockRunner = vi.fn();
-  });
-
   it('uses default runner when no tasksRunnerOptions are present', () => {
     // getRunner loads the runner with a bare require, so fetch the expected
     // instance through the same channel rather than mocking the module.

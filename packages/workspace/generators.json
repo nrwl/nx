@@ -6,7 +6,6 @@
       "factory": "./dist/src/generators/preset/preset#presetGenerator",
       "schema": "./dist/src/generators/preset/schema.json",
       "description": "Create application in an empty workspace.",
-      "x-use-standalone-layout": true,
       "hidden": true
     },
     "move": {

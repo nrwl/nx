@@ -9,9 +9,8 @@ import * as path from 'path';
  * seconds later — another parallel process could be handed the same port in
  * between.
  *
- * Starts at 6100 (outside the framework-default zone of 3000/4200/5173/8080/etc.)
- * so reserved ports never collide with parallel tests that generate apps
- * without explicitly pinning the dev-server port.
+ * Starts at 10000 to avoid common framework and debugger ports. The Node
+ * inspector can claim 9229 after the availability check.
  *
  * Caveat: this reserves the port *number* against other `reservePort()`
  * callers; it does not hold the OS socket open. A consumer that binds the
@@ -21,7 +20,7 @@ import * as path from 'path';
 const LOCK_DIR = path.join(os.tmpdir(), 'nx-e2e-port-locks');
 fs.mkdirSync(LOCK_DIR, { recursive: true });
 
-const RANGE_FLOOR = 6100;
+const RANGE_FLOOR = 10000;
 const RANGE_CEILING = 65000;
 // Spread of the randomised scan origin (see reservePort). Wide enough that
 // reservations scatter thinly across nearly the whole range, so a squatter

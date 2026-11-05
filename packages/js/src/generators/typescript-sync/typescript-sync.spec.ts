@@ -262,6 +262,41 @@ describe('syncGenerator()', () => {
       `);
     });
 
+    it('should keep existing references to tsconfig files that are not project directories', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        // a missing reference to packages/b forces the references to be rewritten
+        references: [
+          { path: './packages/a' },
+          { path: './tsconfig.workspace.json' },
+        ],
+      });
+      writeJson(tree, 'tsconfig.workspace.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+
+      await syncGenerator(tree);
+
+      const rootTsconfig = readJson(tree, 'tsconfig.json');
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./packages/a",
+          },
+          {
+            "path": "./tsconfig.workspace.json",
+          },
+          {
+            "path": "./packages/b",
+          },
+        ]
+      `);
+    });
+
     it('should leave comments outside of references untouched in the tsconfig.json when patching', async () => {
       tree.write(
         'tsconfig.json',

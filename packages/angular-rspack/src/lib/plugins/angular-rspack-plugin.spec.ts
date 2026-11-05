@@ -144,6 +144,11 @@ describe('AngularRspackPlugin', () => {
     skipTypeChecking: false,
     sourceMap: { scripts: true, styles: true, hidden: false, vendor: false },
     advancedOptimizations: false,
+    optimization: {
+      fonts: { inline: false },
+      scripts: true,
+      styles: { minify: true, inlineCritical: false },
+    },
     budgets: [],
     verbose: false,
     outputPath: { browser: '/root/dist/browser' },
@@ -175,6 +180,28 @@ describe('AngularRspackPlugin', () => {
     plugin.apply(compiler as never);
     return compiler;
   }
+
+  it.each([true, false])(
+    'passes component style minification to the compiler (%s)',
+    async (minify) => {
+      const compiler = createFakeCompiler();
+      const plugin = new AngularRspackPlugin({
+        ...options,
+        optimization: {
+          ...options.optimization,
+          styles: { ...options.optimization.styles, minify },
+        },
+      });
+      plugin.apply(compiler as never);
+
+      await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
+      await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+      expect(setupCompilationMock.mock.calls[0][1]).toEqual(
+        expect.objectContaining({ minifyStyles: minify })
+      );
+    }
+  );
 
   async function runBuildStart(
     compiler: ReturnType<typeof createFakeCompiler>
@@ -533,10 +560,23 @@ describe('AngularRspackPlugin', () => {
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
   });
 
-  it('should start diagnostics with the build and reuse the result on emit', async () => {
-    const diagnoseFiles = vi
-      .fn()
-      .mockResolvedValue({ errors: [{ text: 'type error' }] });
+  it('should start diagnostics with the build and reuse the result, with locations, on emit', async () => {
+    const diagnoseFiles = vi.fn().mockResolvedValue({
+      errors: [
+        {
+          text: 'type error',
+          location: { file: '/root/src/app.ts', line: 5, column: 8 },
+        },
+        { text: 'global error' },
+        { text: 'file-only error', location: { file: '/root/src/app.html' } },
+      ],
+      warnings: [
+        {
+          text: 'type warning',
+          location: { file: '/root/src/app.ts', line: 3, column: 2 },
+        },
+      ],
+    });
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles },
       collectedStylesheetAssets: [],
@@ -550,9 +590,27 @@ describe('AngularRspackPlugin', () => {
     await fireAsyncTaps(compiler.hooks.emit, compilation);
 
     expect(diagnoseFiles).toHaveBeenCalledTimes(1);
-    expect(
-      compilation.errors.some((error) => error.message.includes('type error'))
-    ).toBe(true);
+    expect(compilation.errors).toEqual([
+      expect.objectContaining({
+        message: 'type error',
+        file: '/root/src/app.ts',
+        loc: { start: { line: 5, column: 9 } },
+      }),
+      expect.objectContaining({ message: 'global error', file: undefined }),
+      expect.objectContaining({
+        message: 'file-only error',
+        file: '/root/src/app.html',
+      }),
+    ]);
+    expect(compilation.errors[1]).not.toHaveProperty('loc');
+    expect(compilation.errors[2]).not.toHaveProperty('loc');
+    expect(compilation.warnings).toEqual([
+      expect.objectContaining({
+        message: 'type warning',
+        file: '/root/src/app.ts',
+        loc: { start: { line: 3, column: 3 } },
+      }),
+    ]);
   });
 
   it('should use a persistent cache path scoped to the project', () => {

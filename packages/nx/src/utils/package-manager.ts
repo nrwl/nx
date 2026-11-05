@@ -14,8 +14,8 @@ import {
 } from 'fs';
 import { rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'path';
-import { gte, lt, parse, satisfies } from 'semver';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
+import { gte, lt, parse, satisfies, valid } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import {
@@ -31,6 +31,7 @@ import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
 import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
+  fileExists,
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
@@ -42,6 +43,7 @@ import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
+import { redactUrlCredentials } from './redact-url-credentials';
 import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
@@ -82,6 +84,24 @@ function execPackageManagerSync(
   return execFileSync(pm, args, options);
 }
 
+// The `@` keeps a scoped name from reading as an option, so its parts may start with `-` or `_`.
+const PACKAGE_NAME =
+  /^(?:@[a-z0-9~_-][a-z0-9-._~]*\/[a-z0-9~_-]|[a-z0-9~])[a-z0-9-._~]*$/i;
+
+/**
+ * Package managers read an argument starting with `-` as an option, and a
+ * path, URL or git remote wherever a name goes. `nx migrate` passes names
+ * read from fetched migration metadata, so only a registry-shaped name may
+ * reach a package manager command line.
+ */
+export function assertValidPackageName(packageName: string): void {
+  if (!PACKAGE_NAME.test(packageName)) {
+    throw new Error(
+      `Invalid package name: "${packageName}". Expected an npm package name such as "my-package" or "@scope/my-package".`
+    );
+  }
+}
+
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
@@ -105,13 +125,13 @@ export interface PackageManagerCommands {
    */
   publish: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => string;
   publishArgv: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => { command: string; args: string[] };
@@ -120,22 +140,64 @@ export interface PackageManagerCommands {
 }
 
 /**
- * Detects which package manager is used in the workspace based on the lock file.
+ * Detects the package manager from the CLI override or directory lockfiles.
+ * Project directories in the current workspace can fall back to its root lockfile.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(
+  dir: string = workspaceRoot
+): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
-      ? 'bun'
-      : existsSync(join(dir, 'yarn.lock'))
-        ? 'yarn'
-        : existsSync(join(dir, 'pnpm-lock.yaml'))
-          ? 'pnpm'
-          : existsSync(join(dir, 'package-lock.json'))
-            ? 'npm'
-            : detectInvokedPackageManager())
-  );
+  if (nxJson.cli?.packageManager) {
+    return nxJson.cli.packageManager;
+  }
+
+  const dirsToCheck = isCurrentWorkspaceSubdirectory(dir)
+    ? [dir, workspaceRoot]
+    : [dir];
+  for (const directory of dirsToCheck) {
+    if (
+      existsSync(join(directory, 'bun.lockb')) ||
+      existsSync(join(directory, 'bun.lock'))
+    ) {
+      return 'bun';
+    }
+    if (existsSync(join(directory, 'yarn.lock'))) {
+      return 'yarn';
+    }
+    if (existsSync(join(directory, 'pnpm-lock.yaml'))) {
+      return 'pnpm';
+    }
+    if (existsSync(join(directory, 'package-lock.json'))) {
+      return 'npm';
+    }
+  }
+
+  return detectInvokedPackageManager();
+}
+
+function isCurrentWorkspaceSubdirectory(dir: string): boolean {
+  let directory = resolve(dir);
+  const relativePath = relative(workspaceRoot, directory);
+  if (
+    !relativePath ||
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    return false;
+  }
+
+  while (relative(workspaceRoot, directory) !== '') {
+    if (
+      ['nx.json', 'nx', 'nx.bat'].some((file) =>
+        fileExists(join(directory, file))
+      )
+    ) {
+      return false;
+    }
+    directory = dirname(directory);
+  }
+  return true;
 }
 
 /**
@@ -240,7 +302,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -309,13 +371,17 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}`,
+          ...(registry
+            ? [
+                `--${
+                  configForm
+                    ? `config.${registryConfigKey}`
+                    : scopedForm
+                      ? registryConfigKey
+                      : 'registry'
+                }=${registry}`,
+              ]
+            : []),
           `--tag=${tag}`,
           '--no-git-checks',
         ],
@@ -362,7 +428,7 @@ export function getPackageManagerCommand(
           'publish',
           packageRoot,
           '--json',
-          `--${registryConfigKey}=${registry}`,
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -398,7 +464,7 @@ export function getPackageManagerCommand(
           'publish',
           `--cwd=${packageRoot}`,
           '--json',
-          `--registry=${registry}`,
+          ...(registry ? [`--registry=${registry}`] : []),
           `--tag=${tag}`,
         ],
       });
@@ -657,23 +723,23 @@ export function copyPackageManagerConfigurationFiles(
  * A non-JS workspace has no root package.json and keeps its package manager
  * files under the Nx installation directory instead.
  */
-function getPackageManagerConfigRoot(): string {
-  if (existsSync(join(workspaceRoot, 'package.json'))) {
-    return workspaceRoot;
+export function getPackageManagerConfigRoot(
+  root: string = workspaceRoot
+): string {
+  if (existsSync(join(root, 'package.json'))) {
+    return root;
   }
-  const installationPath = getNxInstallationPath(workspaceRoot);
+  const installationPath = getNxInstallationPath(root);
   // The installation directory can be missing or not a directory, and spawning
   // with such a cwd fails outright (ENOENT/ENOTDIR).
   try {
-    return statSync(installationPath).isDirectory()
-      ? installationPath
-      : workspaceRoot;
+    return statSync(installationPath).isDirectory() ? installationPath : root;
   } catch (e) {
     logger.verbose(
       `Failed to stat the Nx installation directory at "${installationPath}".`,
       e
     );
-    return workspaceRoot;
+    return root;
   }
 }
 
@@ -708,6 +774,25 @@ export function createTempNpmDirectory(skipCopy = false) {
   return { dir, cleanup };
 }
 
+export class InvalidResolvedVersionError extends Error {
+  constructor(packageName: string, version: unknown) {
+    super(
+      `${packageName} reports "${version}" as its version, which is not a valid version.`
+    );
+    this.name = 'InvalidResolvedVersionError';
+  }
+}
+
+// A manifest's `version` is publisher-written and need not match the key it is
+// listed under. Callers reuse it after `<package>@`, where a non-version is a
+// spec of its own (git URL, tarball, path).
+function assertResolvedVersion(packageName: string, version: string): string {
+  if (!valid(version)) {
+    throw new InvalidResolvedVersionError(packageName, version);
+  }
+  return version;
+}
+
 /**
  * Returns the resolved version for a given package and version tag using the
  * NPM registry (when using Yarn it will fall back to NPM to fetch the info).
@@ -734,7 +819,7 @@ export async function resolvePackageVersionUsingRegistry(
 
     const lines = result.split('\n');
     if (lines.length === 1) {
-      return lines[0];
+      return assertResolvedVersion(packageName, lines[0]);
     }
 
     /**
@@ -750,19 +835,17 @@ export async function resolvePackageVersionUsingRegistry(
       .pop()
       .replace(/'/g, '');
 
-    return finalResolvedVersion;
+    return assertResolvedVersion(packageName, finalResolvedVersion);
   } catch (e) {
+    if (e instanceof InvalidResolvedVersionError) {
+      throw e;
+    }
     // npm masks a URL credential only in the password position, so a bare token
     // in the registry URL survives into the error kept as the cause.
     throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
       cause: redactErrorCause(e),
     });
   }
-}
-
-// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
-function redactUrlCredentials(text: string): string {
-  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
 function redactErrorCause(error: unknown): unknown {
@@ -787,6 +870,7 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
+  assertValidPackageName(packageName);
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
@@ -806,14 +890,23 @@ export async function resolvePackageVersionUsingInstallation(
     }
 
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
+    const addCommand = [
+      pmc.add,
+      quoteShellArg(`${packageName}@${resolvedVersion}`),
+      pmc.ignoreScriptsFlag,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    await execAsync(addCommand, {
       cwd: dir,
       windowsHide: true,
+      // Yarn Berry has no flag to skip lifecycle scripts.
+      env: { ...process.env, YARN_ENABLE_SCRIPTS: 'false' },
     });
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
-    return packageJson.version;
+    return assertResolvedVersion(packageName, packageJson.version);
   } finally {
     await cleanup();
   }
@@ -911,11 +1004,16 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
     if (!URL.canParse(value)) {
       return null;
     }
-    const protocol = new URL(value).protocol;
-    if (protocol !== 'http:' && protocol !== 'https:') {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return null;
     }
-    return redactUrlCredentials(value);
+    if (!url.username && !url.password) {
+      return value;
+    }
+    url.username = '***';
+    url.password = '';
+    return url.href;
   }
   return null;
 }
@@ -970,6 +1068,7 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
+  assertValidPackageName(pkg);
   const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
     createRegistrySpawnContext(pkg);
   const { pm, env } = resolveRegistrySpawnTarget(
@@ -1029,6 +1128,7 @@ export async function packageRegistryPack(
     bypassMinReleaseAge?: boolean;
   }
 ): Promise<{ tarballPath: string }> {
+  assertValidPackageName(pkg);
   const pm = 'npm';
 
   const { configRoot, buildEnv } = createRegistrySpawnContext(pkg);
@@ -1046,6 +1146,8 @@ export async function packageRegistryPack(
           // downgrade npm's devEngines.packageManager enforcement (onFail:
           // error) to a warning so pack still runs in a non-npm workspace
           npm_config_force: 'true',
+          // callers only read files out of the tarball
+          npm_config_ignore_scripts: 'true',
           ...(options?.bypassMinReleaseAge
             ? { npm_config_min_release_age: '0' }
             : {}),

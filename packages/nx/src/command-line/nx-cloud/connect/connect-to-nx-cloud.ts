@@ -1,4 +1,3 @@
-import { handleImport } from '../../../utils/handle-import';
 import { selectPrompt } from '../../../utils/prompt-helpers';
 import { output } from '../../../utils/output';
 import { readNxJson } from '../../../config/configuration';

@@ -28,11 +28,12 @@ async function runMigrationProcess() {
   };
 
   try {
-    const gitRefBefore = execSync('git rev-parse HEAD', {
+    // Validate HEAD before the migration can change the working tree.
+    execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
       windowsHide: true,
-    }).trim();
+    });
 
     // Snapshot package.json deps now so we can detect post-migration drift
     // and run a single install, whether commits are on or off.
