@@ -292,7 +292,7 @@ describe('remove-deprecated-executors', () => {
           "e2e-test": {
             "configurations": {
               "ci": {
-                "coverage": true,
+                "coverage.enabled": true,
               },
             },
             "executor": "nx:run-commands",

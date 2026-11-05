@@ -4,7 +4,7 @@ Nx 24 removes the `@nx/vitest:test` executor and its `@nrwl/vitest:test` alias. 
 
 The executor ran Vitest once unless you passed `--watch`, so the migration registers the plugin with `testMode: "run"`. Pass `--watch` to watch. A `test.watch` setting in the config file no longer applies.
 
-The executor's `testFiles` option becomes `args`, a list of file filters relative to the project root. On the command line, pass file filters as positional arguments instead of `--testFiles`, and pass `--coverage.reportsDirectory` instead of `--reportsDirectory`.
+The executor's `testFiles` option becomes `args`, a list of file filters relative to the project root. On the command line, pass file filters as positional arguments instead of `--testFiles`, and pass `--coverage.reportsDirectory` instead of `--reportsDirectory`. Pass `--coverage.enabled` instead of `--coverage`, because `--coverage` replaces the whole `coverage` object, including `reportsDirectory`.
 
 The plugin only infers a target from `vite.config.<ext>` or `vitest.config.<ext>` in the project root. A target that runs any other config file, such as `vitest.config.e2e.mts`, becomes an `nx:run-commands` target that runs `vitest run --root <project root> --config <file>` from the workspace root, as the executor did. It keeps the options, configurations and target defaults it used. Running `nx g @nx/vitest:convert-to-inferred` by hand applies the same rewrite.
 
@@ -14,7 +14,8 @@ The rewrite accepts only these options, in the target and in each configuration:
 - `testFiles`, a list of such paths. It becomes `args`.
 - `reportsDirectory`, such a path. It becomes `coverage.reportsDirectory`, relative to the project root. An output that reads `{options.reportsDirectory}` names the directory instead.
 - `mode`, set to a word made of letters, digits and `_ . -`.
-- `coverage`, `passWithNoTests`, `silent` and `watch`, set to `true` or `false`.
+- `coverage`, set to `true` or `false`. It becomes `coverage.enabled`.
+- `passWithNoTests`, `silent` and `watch`, set to `true` or `false`.
 
 The target keeps the removed executor, and the migration lists it, in these cases:
 
