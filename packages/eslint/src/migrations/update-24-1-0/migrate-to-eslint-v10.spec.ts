@@ -8,7 +8,6 @@ import {
 } from '@nx/devkit';
 import { withPnpm } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 // vi.spyOn must target the module the code under test binds (packages/devkit
@@ -17,7 +16,7 @@ import { join } from 'node:path';
 // oxlint-disable-next-line no-restricted-imports
 import * as devkitInternals from 'nx/src/devkit-internals';
 import { coerce } from 'semver';
-import type * as ts from 'typescript';
+import * as ts from 'typescript';
 
 import update, {
   ESLINT_PLUGIN_IMPORT_X_VERSION,
@@ -1122,13 +1121,15 @@ export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
   // The plugin list is a frozen copy of `@nx/react`'s ESLint <10 stack; `@nx/eslint`
   // cannot import it. Fail here when that stack gains or loses a plugin.
   it('should stay in sync with the plugin set @nx/react installs for ESLint <10', () => {
-    const lintSource = readFileSync(
+    const legacyDependencies = readTopLevelInitializer(
       join(__dirname, '../../../../react/src/utils/lint.ts'),
-      'utf-8'
-    );
-    const [devDependencies] = query<ts.PropertyAssignment>(
-      ast(lintSource),
-      'VariableDeclaration[name.name=eslintLegacyDependencies] PropertyAssignment[name.name=devDependencies]'
+      'eslintLegacyDependencies'
+    ) as ts.ObjectLiteralExpression | undefined;
+    const devDependencies = legacyDependencies?.properties.find(
+      (property): property is ts.PropertyAssignment =>
+        ts.isPropertyAssignment(property) &&
+        ts.isIdentifier(property.name) &&
+        property.name.text === 'devDependencies'
     );
     const installedPlugins = (
       devDependencies?.initializer as ts.ObjectLiteralExpression
@@ -1143,19 +1144,13 @@ export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
 
   // Same frozen-copy problem for the two replacement versions this migration installs.
   it('should stay in sync with the plugin versions @nx/react installs for ESLint v10', () => {
-    const versionsSource = ast(
-      readFileSync(
-        join(__dirname, '../../../../react/src/utils/versions.ts'),
-        'utf-8'
-      )
-    );
-    const readVersion = (name: string): string | undefined => {
-      const [declaration] = query<ts.VariableDeclaration>(
-        versionsSource,
-        `VariableDeclaration[name.name=${name}]`
-      );
-      return (declaration?.initializer as ts.StringLiteral | undefined)?.text;
-    };
+    const readVersion = (name: string): string | undefined =>
+      (
+        readTopLevelInitializer(
+          join(__dirname, '../../../../react/src/utils/versions.ts'),
+          name
+        ) as ts.StringLiteral | undefined
+      )?.text;
 
     expect(readVersion('eslintPluginImportXVersion')).toBe(
       ESLINT_PLUGIN_IMPORT_X_VERSION
@@ -1165,3 +1160,21 @@ export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
     );
   });
 });
+
+function readTopLevelInitializer(
+  filePath: string,
+  name: string
+): ts.Expression | undefined {
+  const source = ts.createSourceFile(
+    filePath,
+    readFileSync(filePath, 'utf-8'),
+    ts.ScriptTarget.Latest
+  );
+  return source.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => statement.declarationList.declarations)
+    .find(
+      (declaration) =>
+        ts.isIdentifier(declaration.name) && declaration.name.text === name
+    )?.initializer;
+}
