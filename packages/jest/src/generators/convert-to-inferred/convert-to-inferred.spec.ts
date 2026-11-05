@@ -74,6 +74,7 @@ function addProject(tree: Tree, name: string, project: ProjectConfiguration) {
     name: name,
     type: project.projectType === 'application' ? 'app' : 'lib',
     data: {
+      name,
       projectType: project.projectType,
       root: project.root,
       targets: project.targets,
@@ -157,11 +158,16 @@ function createTestProject(
   return project;
 }
 
-function addSwaggerTarget(tree: Tree, project: ProjectConfiguration) {
-  writeJestConfig(tree, project.root, undefined, 'jest.config.swagger.js');
-  project.targets['generate-swagger-spec'] = {
+function addSwaggerTarget(
+  tree: Tree,
+  project: ProjectConfiguration,
+  configFileName = 'jest.swagger.config.js',
+  targetName = 'generate-swagger-spec'
+) {
+  writeJestConfig(tree, project.root, undefined, configFileName);
+  project.targets[targetName] = {
     executor: '@nx/jest:jest',
-    options: { jestConfig: `${project.root}/jest.config.swagger.js` },
+    options: { jestConfig: `${project.root}/${configFileName}` },
   };
   updateProjectConfiguration(tree, project.name, project);
   fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
@@ -195,6 +201,158 @@ describe('Jest - Convert Executors To Plugin', () => {
     jest.resetModules();
   });
 
+  describe('configToTargetName', () => {
+    it('infers the targets on other config files in the project root', async () => {
+      const project = createTestProject(tree, {
+        appName: 'api',
+        appRoot: 'apps/api',
+      });
+      addSwaggerTarget(tree, project, 'jest.config.e2e.ts', 'e2e');
+      addSwaggerTarget(tree, project, 'jest.config.swagger.ts');
+      const configured = readProjectConfiguration(tree, project.name);
+      configured.targets.e2e.configurations = {
+        ci: { jestConfig: 'apps/api/jest.config.e2e.ts', ci: true },
+      };
+      updateProjectConfiguration(tree, project.name, configured);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readNxJson(tree).plugins).toEqual([
+        {
+          plugin: '@nx/jest/plugin',
+          options: {
+            targetName: 'test',
+            configToTargetName: {
+              'jest.config.e2e.ts': 'e2e',
+              'jest.config.swagger.ts': 'generate-swagger-spec',
+            },
+          },
+        },
+      ]);
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        e2e: { configurations: { ci: { ci: true } } },
+      });
+    });
+
+    it('registers projects that map different config files separately', async () => {
+      const app1 = createTestProject(tree);
+      addSwaggerTarget(tree, app1, 'jest.config.swagger.js');
+      const app2 = createTestProject(tree, {
+        appRoot: 'apps/app2',
+        appName: 'app2',
+      });
+      addSwaggerTarget(tree, app2, 'jest.config.e2e.js', 'e2e');
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readNxJson(tree).plugins).toEqual([
+        {
+          plugin: '@nx/jest/plugin',
+          options: {
+            targetName: 'test',
+            configToTargetName: {
+              'jest.config.swagger.js': 'generate-swagger-spec',
+            },
+          },
+          include: ['apps/app1/**/*'],
+        },
+        {
+          plugin: '@nx/jest/plugin',
+          options: {
+            targetName: 'test',
+            configToTargetName: { 'jest.config.e2e.js': 'e2e' },
+          },
+          include: ['apps/app2/**/*'],
+        },
+      ]);
+    });
+
+    it('runs a second target on the same config file as a command', async () => {
+      const project = createTestProject(tree);
+      addSwaggerTarget(tree, project, 'jest.config.swagger.js');
+      addSwaggerTarget(tree, project, 'jest.config.swagger.js', 'swagger');
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readNxJson(tree).plugins).toEqual([
+        {
+          plugin: '@nx/jest/plugin',
+          options: {
+            targetName: 'test',
+            configToTargetName: {
+              'jest.config.swagger.js': 'generate-swagger-spec',
+            },
+          },
+        },
+      ]);
+      expect(readProjectConfiguration(tree, project.name).targets).toEqual({
+        swagger: {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'jest --config ./apps/app1/jest.config.swagger.js',
+            cwd: '.',
+            env: tsNodeEnv,
+          },
+        },
+      });
+    });
+
+    it('runs a test target on another config file as a command when the project has jest.config.<ext>', async () => {
+      const project = createTestProject(tree, { targetName: 'unit' });
+      addSwaggerTarget(tree, project, 'jest.config.e2e.js', 'test');
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readProjectConfiguration(tree, project.name).targets.test).toEqual(
+        {
+          executor: 'nx:run-commands',
+          options: {
+            command: 'jest --config ./apps/app1/jest.config.e2e.js',
+            cwd: '.',
+            env: tsNodeEnv,
+          },
+        }
+      );
+    });
+
+    it('runs a target on a missing config file as a command', async () => {
+      const project = createTestProject(tree);
+      const configured = readProjectConfiguration(tree, project.name);
+      configured.targets.e2e = {
+        executor: '@nx/jest:jest',
+        options: { jestConfig: 'apps/app1/jest.config.e2e.js' },
+      };
+      updateProjectConfiguration(tree, project.name, configured);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets.e2e.executor
+      ).toBe('nx:run-commands');
+    });
+
+    it('runs a target as a command when a configuration switches its config file', async () => {
+      const project = createTestProject(tree);
+      addSwaggerTarget(tree, project, 'jest.config.swagger.js');
+      const configured = readProjectConfiguration(tree, project.name);
+      configured.targets['generate-swagger-spec'].configurations = {
+        ci: { jestConfig: 'apps/app1/jest.config.js' },
+      };
+      updateProjectConfiguration(tree, project.name, configured);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets[
+          'generate-swagger-spec'
+        ].executor
+      ).toBe('nx:run-commands');
+      expect(readNxJson(tree).plugins).toEqual([
+        { plugin: '@nx/jest/plugin', options: { targetName: 'test' } },
+      ]);
+    });
+  });
+
   describe('--project', () => {
     it('runs a target on a config file the plugin does not infer only in the named project', async () => {
       const project = createTestProject(tree);
@@ -221,7 +379,7 @@ describe('Jest - Convert Executors To Plugin', () => {
       ).toEqual({
         executor: 'nx:run-commands',
         options: {
-          command: 'jest --config ./apps/app1/jest.config.swagger.js',
+          command: 'jest --config ./apps/app1/jest.swagger.config.js',
           cwd: '.',
           env: tsNodeEnv,
         },
@@ -1158,7 +1316,7 @@ describe('Jest - Convert Executors To Plugin', () => {
         'generate-swagger-spec': {
           executor: 'nx:run-commands',
           options: {
-            command: 'jest --config ./apps/swagger-only/jest.config.swagger.js',
+            command: 'jest --config ./apps/swagger-only/jest.swagger.config.js',
             cwd: '.',
             env: tsNodeEnv,
           },

@@ -13,7 +13,10 @@ import {
   type UninferredTargetRewrite,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
-import { jestConfigExtensions } from '../../../utils/config/config-file';
+import {
+  jestConfigExtensions,
+  jestConfigFileNamePatterns,
+} from '../../../utils/config/config-file';
 
 const executors = ['@nx/jest:jest', '@nrwl/jest:jest'];
 
@@ -50,22 +53,104 @@ const acceptedOptions = new Map<string, (value: unknown) => boolean>([
 ]);
 
 /**
- * @nx/jest/plugin infers a project's target only from `jest.config.<ext>` in
- * its root, so a target running another config becomes an explicit command.
+ * @nx/jest/plugin infers a project's target from `jest.config.<ext>` in its
+ * root, or from another config in its root through `configToTargetName`. A
+ * target running any other config becomes an explicit command.
  */
 export const jestConfigRewrite: UninferredTargetRewrite = {
   executors,
   tool: 'Jest',
   isInferred: (
-    _tree: Tree,
+    tree: Tree,
     target: TargetConfiguration,
-    project: ProjectConfiguration
+    project: ProjectConfiguration,
+    targetName: string
   ) => {
     const jestConfig = target.options?.jestConfig;
-    return !jestConfig || isProjectRootJestConfig(jestConfig, project.root);
+    return (
+      !jestConfig ||
+      isProjectRootJestConfig(jestConfig, project.root) ||
+      mappedJestConfigFileName(tree, target, project, targetName) !== undefined
+    );
   },
   toRunCommandsTarget,
 };
+
+/**
+ * The file name to map to the target in `configToTargetName`, or undefined
+ * when the plugin cannot infer the target that way.
+ */
+export function mappedJestConfigFileName(
+  tree: Tree,
+  target: TargetConfiguration,
+  project: ProjectConfiguration,
+  targetName: string
+): string | undefined {
+  const jestConfig = target.options?.jestConfig;
+  if (typeof jestConfig !== 'string') {
+    return undefined;
+  }
+  const path = posix.normalize(jestConfig);
+  const fileName = posix.basename(path);
+  if (
+    posix.dirname(path) !== posix.normalize(project.root) ||
+    jestConfigFileNamePatterns.defaultName.test(fileName) ||
+    !jestConfigFileNamePatterns.mappableName.test(fileName) ||
+    !tree.exists(path)
+  ) {
+    return undefined;
+  }
+  // The inferred command names the config, so a configuration can't switch it
+  const switchesConfig = Object.values(target.configurations ?? {}).some(
+    ({ jestConfig: configured }) =>
+      configured !== undefined && posix.normalize(configured) !== path
+  );
+  // The registration's default targetName infers `test` from jest.config.<ext>,
+  // unless it is a workspace config the plugin skips
+  const collidesWithDefault =
+    targetName === 'test' &&
+    jestConfigExtensions.some((ext) => {
+      const path = posix.join(project.root, `jest.config.${ext}`);
+      return (
+        tree.exists(path) &&
+        !tree.read(path, 'utf-8').includes('getJestProjectsAsync()')
+      );
+    });
+  if (
+    switchesConfig ||
+    collidesWithDefault ||
+    isClaimedByEarlierTarget(project, targetName, path)
+  ) {
+    return undefined;
+  }
+  return fileName;
+}
+
+// configToTargetName maps each config file to one target
+function isClaimedByEarlierTarget(
+  project: ProjectConfiguration,
+  targetName: string,
+  path: string
+): boolean {
+  for (const [name, target] of Object.entries(project.targets ?? {})) {
+    if (name === targetName) {
+      return false;
+    }
+    const jestConfig = target.options?.jestConfig;
+    if (
+      executors.includes(target.executor) &&
+      typeof jestConfig === 'string' &&
+      posix.normalize(
+        jestConfig
+          .replace('{workspaceRoot}/', '')
+          .replace('{projectRoot}', project.root)
+      ) === path
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function isProjectRootJestConfig(jestConfig: string, projectRoot: string) {
   const path = posix.normalize(jestConfig);

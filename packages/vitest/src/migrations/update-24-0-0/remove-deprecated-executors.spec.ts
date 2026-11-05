@@ -103,6 +103,7 @@ function addProjectConfiguration(
     name: name,
     type: project.projectType === 'application' ? 'app' : 'lib',
     data: {
+      name,
       projectType: project.projectType,
       root: project.root,
       targets: project.targets,

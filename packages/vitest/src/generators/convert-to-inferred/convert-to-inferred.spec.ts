@@ -102,6 +102,7 @@ function addProjectConfiguration(
     name: name,
     type: project.projectType === 'application' ? 'app' : 'lib',
     data: {
+      name,
       projectType: project.projectType,
       root: project.root,
       targets: project.targets,
@@ -202,6 +203,17 @@ function addE2eTarget(tree: Tree, projectName: string) {
   fs.createFileSync(`${project.root}/project.json`, JSON.stringify(project));
 }
 
+function writeE2eConfig(projectRoot: string) {
+  const configFile = `${projectRoot}/vitest.config.e2e.mts`;
+  const contents = `export default { test: { include: ['e2e/**/*.spec.ts'] } };`;
+  mockedConfigs[configFile] = {
+    build: {},
+    test: { include: ['e2e/**/*.spec.ts'] },
+  };
+  fs.createFileSync(configFile, contents);
+  return contents;
+}
+
 describe('@nx/vitest:convert-to-inferred', () => {
   let tree: Tree;
 
@@ -220,6 +232,46 @@ describe('@nx/vitest:convert-to-inferred', () => {
 
   afterEach(() => {
     fs.reset();
+  });
+
+  describe('configToTargetName', () => {
+    it('infers a target on another config file in the project root', async () => {
+      createTestProject(tree);
+      tree.write('myapp/vitest.config.e2e.mts', writeE2eConfig('myapp'));
+      const project = readProjectConfiguration(tree, 'myapp');
+      project.targets['e2e-test'] = {
+        executor: '@nx/vitest:test',
+        options: {
+          configFile: 'myapp/vitest.config.e2e.mts',
+          passWithNoTests: true,
+        },
+        configurations: {
+          ci: { configFile: 'myapp/vitest.config.e2e.mts', coverage: true },
+        },
+      };
+      updateProjectConfiguration(tree, 'myapp', project);
+      fs.createFileSync('myapp/project.json', JSON.stringify(project));
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(readNxJson(tree).plugins).toEqual([
+        {
+          plugin: '@nx/vitest',
+          options: {
+            testTargetName: 'test',
+            testMode: 'run',
+            configToTargetName: { 'vitest.config.e2e.mts': 'e2e-test' },
+          },
+        },
+      ]);
+      expect(readProjectConfiguration(tree, 'myapp').targets).toEqual({
+        test: { options: { config: './vite.config.ts' } },
+        'e2e-test': {
+          options: { passWithNoTests: true },
+          configurations: { ci: { 'coverage.enabled': true } },
+        },
+      });
+    });
   });
 
   describe('--project', () => {
