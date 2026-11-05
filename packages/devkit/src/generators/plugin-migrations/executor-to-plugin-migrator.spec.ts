@@ -5256,4 +5256,43 @@ describe('targetDefaults resolution across the conversion', () => {
       );
     }
   });
+
+  it('restores a configuration the conversion stopped applying', async () => {
+    setup('td-shift-lost-configuration', {
+      test: { configurations: { ci: { reporter: 'dot' } } },
+      'nx:run-commands': { cache: false },
+    });
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    await migrate(plugin, warn);
+
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(after[name].test.configurations).toEqual({
+        ci: { reporter: 'dot' },
+      });
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('warns about a default configuration that no correction can unset', async () => {
+    setup('td-shift-gained-configuration', {
+      'nx:run-commands': { configurations: { ci: { reporter: 'dot' } } },
+    });
+    const plugin = createSyntheticPlugin();
+    const warn = vi.fn();
+
+    await migrate(plugin, warn);
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'app1 > test (configurations.ci), app2 > test (configurations.ci)'
+      )
+    );
+  });
 });

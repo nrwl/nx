@@ -246,39 +246,74 @@ function diffAgainstBefore(
     }
   }
 
-  const optionCorrection: Record<string, unknown> = {};
-  const optionKeys = new Set([
-    ...Object.keys(got.options ?? {}),
-    ...Object.keys(want.options ?? {}),
-  ]);
-  for (const option of [...optionKeys].sort()) {
-    if (ownedOptions.has(option)) {
-      continue;
-    }
-    const gotValue = got.options?.[option];
-    const wantValue = want.options?.[option];
-    if (stableStringify(gotValue) === stableStringify(wantValue)) {
-      continue;
-    }
-    if (wantValue === undefined) {
-      unexpressible.push(`options.${option}`);
-    } else {
-      optionCorrection[option] = structuredClone(wantValue);
-    }
-  }
+  const optionCorrection = diffKeys(
+    got.options,
+    want.options,
+    ownedOptions,
+    'options',
+    unexpressible
+  );
   if (Object.keys(optionCorrection).length > 0) {
     correction.options = optionCorrection;
   }
 
-  if (
-    !ownedFields.has('configurations') &&
-    stableStringify(got.configurations ?? {}) !==
-      stableStringify(want.configurations ?? {})
-  ) {
-    unexpressible.push('configurations');
+  if (!ownedFields.has('configurations')) {
+    const configurationCorrection: Record<string, Record<string, unknown>> = {};
+    const names = new Set([
+      ...Object.keys(got.configurations ?? {}),
+      ...Object.keys(want.configurations ?? {}),
+    ]);
+    for (const name of [...names].sort()) {
+      if (want.configurations?.[name] === undefined) {
+        unexpressible.push(`configurations.${name}`);
+        continue;
+      }
+      const nameCorrection = diffKeys(
+        got.configurations?.[name],
+        want.configurations[name],
+        new Set(),
+        `configurations.${name}`,
+        unexpressible
+      );
+      if (Object.keys(nameCorrection).length > 0) {
+        configurationCorrection[name] = nameCorrection;
+      }
+    }
+    if (Object.keys(configurationCorrection).length > 0) {
+      correction.configurations = configurationCorrection;
+    }
   }
 
   return { correction, unexpressible };
+}
+
+/**
+ * The keys of `want` that `got` lacks or differs on. A key only `got` sets is
+ * pushed to `unexpressible` as `<path>.<key>`, since merging cannot unset it.
+ */
+function diffKeys(
+  got: Record<string, unknown> | undefined,
+  want: Record<string, unknown> | undefined,
+  owned: Set<string>,
+  path: string,
+  unexpressible: string[]
+): Record<string, unknown> {
+  const correction: Record<string, unknown> = {};
+  const keys = new Set([...Object.keys(got ?? {}), ...Object.keys(want ?? {})]);
+  for (const key of [...keys].sort()) {
+    if (owned.has(key)) {
+      continue;
+    }
+    if (stableStringify(got?.[key]) === stableStringify(want?.[key])) {
+      continue;
+    }
+    if (want?.[key] === undefined) {
+      unexpressible.push(`${path}.${key}`);
+    } else {
+      correction[key] = structuredClone(want[key]);
+    }
+  }
+  return correction;
 }
 
 /** `defaults` layered over the inferred target, the way graph construction merges them. */
