@@ -5,13 +5,13 @@ import {
 import {
   CreateNodesContext,
   getOutputsForTargetAndConfiguration,
-  logger,
   type ProjectGraphProjectNode,
 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2, EslintPluginOptions } from './plugin';
-import { mkdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, rmSync } from 'fs';
+import { join } from 'path';
 
 vi.mock('@nx/devkit/internal', async () => {
   const actual = await vi.importActual<any>('@nx/devkit/internal');
@@ -1257,6 +1257,13 @@ describe('@nx/eslint/plugin', () => {
           'apps/.eslintrc.json': `{}`,
         },
       ],
+      [
+        'its own config',
+        {
+          '.eslintrc.json': `{}`,
+          'apps/my-app/.eslintrc.json': `{}`,
+        },
+      ],
     ])(
       'should apply the workspace root .eslintignore when inferring the target with %s',
       async (_, files) => {
@@ -1282,105 +1289,82 @@ describe('@nx/eslint/plugin', () => {
       }
     );
 
-    describe("a project's own config", () => {
-      let warnSpy: ReturnType<typeof vi.spyOn>;
-      beforeEach(() => {
-        warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
-      });
-      afterEach(() => {
-        warnSpy.mockRestore();
-      });
-
-      async function inferBoth(projectRoot: string) {
-        const projectRootTarget = (
-          await invokeCreateNodesOnMatchingFiles(context, {
-            targetName: 'lint',
-          })
-        ).projects[projectRoot].targets.lint;
-        const target = (
-          await invokeCreateNodesOnMatchingFiles(context, {
-            targetName: 'lint',
-            cwd: 'workspaceRoot',
-          })
-        ).projects[projectRoot].targets.lint;
-        return { projectRootTarget, target };
+    describe('flat config outside the workspace root', () => {
+      async function inferTarget(projectRoot: string) {
+        const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+          targetName: 'lint',
+          cwd: 'workspaceRoot',
+        });
+        return projects[projectRoot].targets.lint;
       }
 
-      it('should ignore the option for a flat config project with its own config, with a warning', async () => {
+      it("should pass a project's own config", async () => {
         createFiles({
           'eslint.config.cjs': `module.exports = [];`,
           'apps/flat-own/eslint.config.cjs': `module.exports = [];`,
           'apps/flat-own/project.json': `{}`,
           'apps/flat-own/index.ts': `console.log('hello world')`,
         });
-        const { projectRootTarget, target } = await inferBoth('apps/flat-own');
+        const target = await inferTarget('apps/flat-own');
 
-        expect(target).toEqual(projectRootTarget);
-        expect(target.command).toBe('eslint .');
-        expect(warnSpy).toHaveBeenCalledTimes(1);
-        expect(warnSpy.mock.calls[0][0]).toContain('apps/flat-own');
+        expect(target.command).toBe(
+          'eslint apps/flat-own --config apps/flat-own/eslint.config.cjs'
+        );
+        expect(target.options).toEqual({ cwd: '.' });
       });
 
-      it('should warn once for a project across createNodes calls', async () => {
+      it('should pass a config in a parent directory', async () => {
         createFiles({
           'eslint.config.cjs': `module.exports = [];`,
-          'apps/flat-once/eslint.config.cjs': `module.exports = [];`,
-          'apps/flat-once/project.json': `{}`,
-          'apps/flat-once/index.ts': `console.log('hello world')`,
+          'apps/eslint.config.cjs': `module.exports = [];`,
+          'apps/x/project.json': `{}`,
+          'apps/x/index.js': `console.log('hello world')`,
         });
-        const options: EslintPluginOptions = {
-          targetName: 'lint',
-          cwd: 'workspaceRoot',
-        };
-        await invokeCreateNodesOnMatchingFiles(context, options);
-        await invokeCreateNodesOnMatchingFiles(context, options);
+        const target = await inferTarget('apps/x');
 
-        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
       });
 
-      it('should keep the option for a flat config project without its own config', async () => {
-        createFiles({
-          'eslint.config.cjs': `module.exports = [];`,
-          'apps/flat-root/project.json': `{}`,
-          'apps/flat-root/index.js': `console.log('hello world')`,
-        });
-        const { target } = await inferBoth('apps/flat-root');
-
-        expect(target.command).toBe('eslint apps/flat-root');
-        expect(target.options.cwd).toBe('.');
-        expect(warnSpy).not.toHaveBeenCalled();
-      });
-
-      it('should keep the option for an eslintrc project with its own config', async () => {
+      it('should pass a parent config under a legacy root config', async () => {
         createFiles({
           '.eslintrc.json': `{}`,
-          'apps/rc-own/.eslintrc.json': `{}`,
-          'apps/rc-own/project.json': `{}`,
-          'apps/rc-own/index.ts': `console.log('hello world')`,
+          'apps/eslint.config.cjs': `module.exports = [];`,
+          'apps/x/project.json': `{}`,
+          'apps/x/index.js': `console.log('hello world')`,
         });
-        const { target } = await inferBoth('apps/rc-own');
+        const target = await inferTarget('apps/x');
 
-        expect(target.command).toBe('eslint apps/rc-own');
-        expect(target.options.cwd).toBe('.');
-        expect(warnSpy).not.toHaveBeenCalled();
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
       });
 
-      it('should keep the option for an eslintrc config entry beside a flat config file', async () => {
+      it('should not search above the workspace root without a root config', async () => {
+        const parentConfigMarker = join(tempFs.tempDir, 'parent-config-ran');
+        tempFs.createFileSync(
+          'eslint.config.cjs',
+          `require('fs').writeFileSync(${JSON.stringify(parentConfigMarker)}, '');
+module.exports = [];`
+        );
+        context = { ...context, workspaceRoot: join(tempFs.tempDir, 'ws') };
         createFiles({
-          '.eslintrc.json': `{}`,
-          'apps/rc-mixed/eslint.config.cjs': `module.exports = [];`,
-          'apps/rc-mixed/.eslintrc.json': `{}`,
-          'apps/rc-mixed/project.json': `{}`,
-          'apps/rc-mixed/index.ts': `console.log('hello world')`,
+          'ws/package-lock.json': '{}',
+          'ws/apps/eslint.config.cjs': `module.exports = [];`,
+          'ws/apps/x/project.json': `{}`,
+          'ws/apps/x/index.js': `console.log('hello world')`,
         });
-        configFiles = configFiles.filter((file) => !file.endsWith('.cjs'));
-        const { target } = await inferBoth('apps/rc-mixed');
+        configFiles = configFiles.map((file) => file.replace(/^ws\//, ''));
 
-        expect(target.options.env).toEqual({ ESLINT_USE_FLAT_CONFIG: 'false' });
-        expect(target.command).toBe('eslint apps/rc-mixed');
+        const target = await inferTarget('apps/x');
+
+        expect(target.command).toBe(
+          'eslint apps/x --config apps/eslint.config.cjs'
+        );
+        expect(existsSync(parentConfigMarker)).toBe(false);
       });
     });
-
     it('should leave a root project unchanged', async () => {
       createFiles({
         '.eslintrc.json': `{}`,
