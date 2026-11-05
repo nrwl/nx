@@ -16,12 +16,12 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { typeDefinitions } from './type-definitions';
-import { resolvePathsBaseUrl } from '@nx/js';
+import { readTsConfig, resolvePathsBaseUrl } from '@nx/js';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
-import { dirname, join, parse } from 'node:path';
+import { join, parse } from 'node:path';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';
@@ -41,7 +41,7 @@ const json = require('@rollup/plugin-json');
 
 // Use our inlined postcss plugin instead of external rollup-plugin-postcss
 import { postcss } from '../postcss';
-import { PackageJson } from '@nx/devkit/internal';
+import { ModuleKind, PackageJson } from '@nx/devkit/internal';
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -116,12 +116,7 @@ export function withNx(
   let tsConfig: ReturnType<typeof ts.parseJsonConfigFileContent>;
   if (!global.NX_GRAPH_CREATION) {
     ensureTypeScript();
-    const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
-    tsConfig = ts.parseJsonConfigFileContent(
-      tsConfigFile.config,
-      ts.sys,
-      dirname(tsConfigPath)
-    );
+    tsConfig = readTsConfig(tsConfigPath);
   }
 
   if (!options.format || !options.format.length) {
@@ -384,8 +379,7 @@ function createTsCompilerOptions(
     declaration: true,
     paths: compilerOptionPaths,
   };
-  ensureTypeScript();
-  if (config.options.module === ts.ModuleKind.CommonJS) {
+  if (config.options.module === ModuleKind.CommonJS) {
     compilerOptions['module'] = 'ESNext';
   }
   if (options.compiler === 'swc') {
@@ -397,11 +391,10 @@ function createTsCompilerOptions(
 function readCompatibleFormats(
   config: ReturnType<typeof ts.parseJsonConfigFileContent>
 ): ('cjs' | 'esm')[] {
-  ensureTypeScript();
   switch (config.options.module) {
-    case ts.ModuleKind.CommonJS:
-    case ts.ModuleKind.UMD:
-    case ts.ModuleKind.AMD:
+    case ModuleKind.CommonJS:
+    case ModuleKind.UMD:
+    case ModuleKind.AMD:
       return ['cjs'];
     default:
       return ['esm'];

@@ -17,6 +17,11 @@ import {
   type ApiTypescriptBackend,
   type TypescriptBackend,
 } from './typescript-backend';
+import {
+  ModuleKind,
+  ModuleResolutionKind,
+  ScriptTarget,
+} from './typescript-enums';
 import { createRequire } from 'node:module';
 
 // Node passes a stand-in require, without a cache, require.extensions or
@@ -26,11 +31,6 @@ if (!require.cache) require = createRequire(__filename);
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
-
-// Compiler-option enum values, the same in every TypeScript version Nx supports.
-const MODULE_KIND_COMMONJS = 1;
-const MODULE_RESOLUTION_KIND_NODE10 = 2;
-const SCRIPT_TARGET_ES2021 = 8;
 
 let isTsEsmLoaderRegistered = false;
 
@@ -841,9 +841,9 @@ export function getTranspiler(
   const backend = getTypescriptBackend();
 
   compilerOptions.lib = ['es2021'];
-  compilerOptions.module = MODULE_KIND_COMMONJS;
+  compilerOptions.module = ModuleKind.CommonJS;
   compilerOptions.customConditions = null;
-  compilerOptions.target = SCRIPT_TARGET_ES2021;
+  compilerOptions.target = ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
   // These options are different per project, and since they are not needed for transpilation, we can remove them so we have more cache hits.
@@ -864,7 +864,7 @@ export function getTranspiler(
   let tsNodeOptions: TsConfigOptions | undefined;
   switch (backend.kind) {
     case 'classic':
-      compilerOptions.moduleResolution = MODULE_RESOLUTION_KIND_NODE10;
+      compilerOptions.moduleResolution = ModuleResolutionKind.Node10;
       // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
       // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
       if (parseInt(backend.version, 10) >= 6) {

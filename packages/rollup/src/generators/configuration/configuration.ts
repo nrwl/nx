@@ -1,4 +1,4 @@
-import type { PackageJson } from '@nx/devkit/internal';
+import { ModuleKind, type PackageJson } from '@nx/devkit/internal';
 import {
   formatFiles,
   GeneratorCallback,
@@ -15,7 +15,6 @@ import { getUpdatedPackageJsonContent, readTsConfig } from '@nx/js';
 import {
   getImportPath,
   createTreeParseConfigHost,
-  ensureTypescript,
   getDefinedCustomConditionName,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
@@ -25,8 +24,6 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedRollupVersion } from '../../utils/versions';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
-
-let ts: typeof import('typescript');
 
 export async function configurationGenerator(
   tree: Tree,
@@ -181,17 +178,13 @@ function updateTsConfig(tree: Tree, options: RollupProjectSchema): void {
     );
   }
 
-  if (!ts) {
-    ts = ensureTypescript();
-  }
-
   const parsedTsConfig = readTsConfig(
     tsconfigPath,
     createTreeParseConfigHost(tree)
   );
 
   updateJson(tree, tsconfigPath, (json) => {
-    if (parsedTsConfig.options.module === ts.ModuleKind.NodeNext) {
+    if (parsedTsConfig.options.module === ModuleKind.NodeNext) {
       json.compilerOptions ??= {};
       json.compilerOptions.module = 'esnext';
       json.compilerOptions.moduleResolution = 'bundler';

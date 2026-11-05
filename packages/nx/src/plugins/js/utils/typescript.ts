@@ -140,21 +140,7 @@ export function readTsConfigOptions(tsConfigPath: string): ts.CompilerOptions {
   return options;
 }
 
-let moduleResolver:
-  | {
-      kind: 'classic';
-      tsModule: typeof ts;
-      host: ts.CompilerHost;
-      options: ts.CompilerOptions;
-      moduleResolutionCache: ts.ModuleResolutionCache;
-    }
-  | {
-      kind: 'api';
-      backend: ApiTypescriptBackend;
-      options: ApiCompilerOptions;
-      api: TypescriptApi;
-      resolver: ApiModuleResolver;
-    };
+let moduleResolver: TsModuleResolver | undefined;
 
 /**
  * Find a module based on its import
@@ -168,42 +154,9 @@ export function resolveModuleByImport(
   filePath: string,
   tsConfigPath: string
 ) {
-  moduleResolver ??= createModuleResolver(tsConfigPath);
+  moduleResolver ??= createTsModuleResolver(readTsConfigOptions(tsConfigPath));
 
-  let resolvedFileName: string | undefined;
-  switch (moduleResolver.kind) {
-    case 'classic': {
-      const { tsModule, options, host, moduleResolutionCache } = moduleResolver;
-      resolvedFileName = tsModule.resolveModuleName(
-        importExpr,
-        filePath,
-        options,
-        host,
-        moduleResolutionCache
-      ).resolvedModule?.resolvedFileName;
-      break;
-    }
-    case 'api': {
-      const current = moduleResolver;
-      resolvedFileName = withTypescriptApi(current.backend, (api) => {
-        // The resolver lives in the API's server process, so a replaced
-        // instance needs a new one.
-        if (api !== current.api) {
-          current.api = api;
-          current.resolver = api.createModuleResolver(current.options);
-        }
-        // The 7.1 resolver takes the containing directory, not a file.
-        return current.resolver.resolveModuleName(importExpr, dirname(filePath))
-          .resolvedModule?.resolvedFileName;
-      });
-      break;
-    }
-    default: {
-      const unhandled: never = moduleResolver;
-      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
-    }
-  }
-
+  const resolvedFileName = moduleResolver(importExpr, filePath);
   if (!resolvedFileName) {
     return;
   } else {
@@ -211,34 +164,54 @@ export function resolveModuleByImport(
   }
 }
 
-function createModuleResolver(tsConfigPath: string): typeof moduleResolver {
+type TsModuleResolver = (
+  moduleName: string,
+  containingFile: string
+) => string | undefined;
+
+/**
+ * Creates a function that resolves module names the way TypeScript does with
+ * `compilerOptions` and returns the resolved file name. Read the options from
+ * an absolute tsconfig path: the TypeScript 7.1 resolver ignores a relative
+ * `baseUrl`.
+ */
+export function createTsModuleResolver(
+  compilerOptions: ts.CompilerOptions
+): TsModuleResolver {
   const backend = getTypescriptBackend();
   switch (backend.kind) {
     case 'classic': {
-      const options = readTsConfigOptions(tsConfigPath);
       const tsModule = backend.ts;
-      const host = tsModule.createCompilerHost(options, true);
+      const host = tsModule.createCompilerHost(compilerOptions, true);
       const moduleResolutionCache = tsModule.createModuleResolutionCache(
         workspaceRoot,
         host.getCanonicalFileName
       );
-      return {
-        kind: 'classic',
-        tsModule,
-        host,
-        options,
-        moduleResolutionCache,
-      };
+      return (moduleName, containingFile) =>
+        tsModule.resolveModuleName(
+          moduleName,
+          containingFile,
+          compilerOptions,
+          host,
+          moduleResolutionCache
+        ).resolvedModule?.resolvedFileName;
     }
     case 'api': {
-      const { options } = parseConfigFileWithApi(backend, tsConfigPath);
-      return withTypescriptApi(backend, (api): typeof moduleResolver => ({
-        kind: 'api',
-        backend,
-        options,
-        api,
-        resolver: api.createModuleResolver(options),
-      }));
+      const options = compilerOptions as unknown as ApiCompilerOptions;
+      let api: TypescriptApi | undefined;
+      let resolver: ApiModuleResolver | undefined;
+      return (moduleName, containingFile) =>
+        withTypescriptApi(backend, (current) => {
+          // The resolver lives in the API's server process, so a replaced
+          // instance needs a new one.
+          if (current !== api) {
+            api = current;
+            resolver = current.createModuleResolver(options);
+          }
+          // The 7.1 resolver takes the containing directory, not a file.
+          return resolver.resolveModuleName(moduleName, dirname(containingFile))
+            .resolvedModule?.resolvedFileName;
+        });
     }
     default: {
       const unhandled: never = backend;
