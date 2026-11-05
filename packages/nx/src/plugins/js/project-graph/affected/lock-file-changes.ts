@@ -48,6 +48,9 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
       allProjectNames
     );
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
+    if (!changedLockFile) {
+      return [];
+    }
     return findMatchingProjects(
       projectsAffectedByDependencyUpdates,
       projectGraphNodes
