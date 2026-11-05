@@ -35,12 +35,12 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
 ): string[] => {
   const { projectsAffectedByDependencyUpdates } = readJsPluginConfig(nxJson);
   const changedLockFile = findChangedLockFile(fileChanges);
+  if (!changedLockFile) {
+    return [];
+  }
   const allProjectNames = Object.values(projectGraphNodes).map((p) => p.name);
 
   if (projectsAffectedByDependencyUpdates === 'auto') {
-    if (!changedLockFile) {
-      return [];
-    }
     // External node names, which the reverse walk in filterAffected carries
     // back to the projects depending on them.
     return (
@@ -48,16 +48,13 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
       allProjectNames
     );
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
-    if (!changedLockFile) {
-      return [];
-    }
     return findMatchingProjects(
       projectsAffectedByDependencyUpdates,
       projectGraphNodes
     );
   }
 
-  return changedLockFile ? allProjectNames : [];
+  return allProjectNames;
 };
 
 /**
