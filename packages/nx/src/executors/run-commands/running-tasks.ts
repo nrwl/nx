@@ -22,7 +22,7 @@ import {
 import { readEnv } from '../../tasks-runner/tokens';
 import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
-import { whenStdioClosed } from '../../utils/child-process';
+import { hasExited, whenStdioClosed } from '../../utils/child-process';
 import { signalToCode } from '../../utils/exit-codes';
 import { output as cliOutput } from '../../utils/output';
 import {
@@ -649,11 +649,9 @@ class RunningNodeProcess implements RunningTask {
     if (!this.childProcess.pid) return Promise.resolve();
     // An exited child's pid is free for reuse, so signalling it could reach an
     // unrelated process.
-    const signalled =
-      this.childProcess.exitCode !== null ||
-      this.childProcess.signalCode !== null
-        ? Promise.resolve()
-        : killProcessTreeGraceful(this.childProcess.pid, signal);
+    const signalled = hasExited(this.childProcess)
+      ? Promise.resolve()
+      : killProcessTreeGraceful(this.childProcess.pid, signal);
     // Cache the promise so concurrent callers (e.g. cleanup() after a
     // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
     // same in-progress operation instead of no-oping.

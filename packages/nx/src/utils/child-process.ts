@@ -216,6 +216,10 @@ export async function runNxAsync(
   });
 }
 
+export function hasExited(child: NodeChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
 /**
  * Settles once `child`'s stdio has closed, which Node reports after 'exit'.
  * Call it at spawn time: a 'close' emitted before the call is missed. Gives up

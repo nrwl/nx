@@ -6,7 +6,7 @@ import {
   createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
-import { whenStdioClosed } from '../../utils/child-process';
+import { hasExited, whenStdioClosed } from '../../utils/child-process';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 
 export interface RunScriptOptions {
@@ -80,14 +80,12 @@ function nodeProcess(
       }
     });
 
-    const hasExited = () => cp.exitCode !== null || cp.signalCode !== null;
-
     const exitHandler = (signal: NodeJS.Signals) => {
       // An exited child's pid is free for reuse, and its exit code decides
       // the result, also when the kill is what made it exit.
-      if (cp && cp.pid && !cp.killed && !hasExited()) {
+      if (cp && cp.pid && !cp.killed && !hasExited(cp)) {
         killProcessTreeGraceful(cp.pid, signal).finally(() => {
-          if (!hasExited()) {
+          if (!hasExited(cp)) {
             res();
           }
         });
