@@ -1,4 +1,5 @@
 import { isAbsolute, join, relative } from 'path';
+import { rcompare, valid } from 'semver';
 import {
   joinPathFragments,
   normalizePath,
@@ -201,12 +202,9 @@ function collectHelperDependencies(
 ): void {
   if (runtimeHelpers?.length > 0) {
     for (const helper of runtimeHelpers) {
-      if (
-        !npmDeps[helper] &&
-        projectGraph.externalNodes[`npm:${helper}`]?.type === 'npm'
-      ) {
-        npmDeps[helper] =
-          projectGraph.externalNodes[`npm:${helper}`].data.version;
+      const version = findHelperVersion(projectGraph, sourceProject, helper);
+      if (!npmDeps[helper] && version) {
+        npmDeps[helper] = version;
       }
     }
 
@@ -218,11 +216,11 @@ function collectHelperDependencies(
 
   if (target.executor === '@nx/js:tsc' && target.options?.tsConfig) {
     const tsConfig = readTsConfig(join(workspaceRoot, target.options.tsConfig));
-    if (
+    const version =
       tsConfig?.options['importHelpers'] &&
-      projectGraph.externalNodes['npm:tslib']?.type === 'npm'
-    ) {
-      npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+      findHelperVersion(projectGraph, sourceProject, 'tslib');
+    if (version) {
+      npmDeps['tslib'] = version;
     }
   }
   if (target.executor === '@nx/js:swc') {
@@ -232,12 +230,11 @@ function collectHelperDependencies(
     const swcConfig = fileExists(swcConfigPath)
       ? readJsonFile(swcConfigPath)
       : {};
-    if (
+    const version =
       swcConfig?.jsc?.externalHelpers &&
-      projectGraph.externalNodes['npm:@swc/helpers']?.type === 'npm'
-    ) {
-      npmDeps['@swc/helpers'] =
-        projectGraph.externalNodes['npm:@swc/helpers'].data.version;
+      findHelperVersion(projectGraph, sourceProject, '@swc/helpers');
+    if (version) {
+      npmDeps['@swc/helpers'] = version;
     }
   }
 
@@ -253,14 +250,42 @@ function collectHelperDependencies(
     );
     if (tsConfigPath) {
       const tsConfig = readTsConfig(tsConfigPath);
-      if (
+      const version =
         tsConfig?.options['importHelpers'] &&
-        projectGraph.externalNodes['npm:tslib']?.type === 'npm'
-      ) {
-        npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+        findHelperVersion(projectGraph, sourceProject, 'tslib');
+      if (version) {
+        npmDeps['tslib'] = version;
       }
     }
   }
+}
+
+function findHelperVersion(
+  projectGraph: ProjectGraph,
+  sourceProject: ProjectGraphProjectNode,
+  helper: string
+): string | undefined {
+  const bareNode = projectGraph.externalNodes[`npm:${helper}`];
+  if (bareNode) {
+    return bareNode.type === 'npm' ? bareNode.data.version : undefined;
+  }
+  // A helper with several versions can have only versioned nodes, for
+  // example when the pnpm root importer does not declare it. Prefer the
+  // version that the project depends on, else the highest.
+  const isHelperNode = (name: string) =>
+    projectGraph.externalNodes[name]?.type === 'npm' &&
+    projectGraph.externalNodes[name].data.packageName === helper;
+  const projectDependency = projectGraph.dependencies[sourceProject.name]?.find(
+    (dependency) => isHelperNode(dependency.target)
+  );
+  if (projectDependency) {
+    return projectGraph.externalNodes[projectDependency.target].data.version;
+  }
+  return Object.keys(projectGraph.externalNodes)
+    .filter(isHelperNode)
+    .map((name) => projectGraph.externalNodes[name].data.version)
+    .filter((version) => valid(version) !== null)
+    .sort(rcompare)[0];
 }
 
 function resolveTsConfigForRunCommandsTarget(

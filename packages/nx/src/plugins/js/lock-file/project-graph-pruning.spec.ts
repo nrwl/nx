@@ -93,6 +93,27 @@ describe('project-graph-pruning', () => {
       expect(node?.name).toBe('npm:lodash@4.17.20');
     });
 
+    it('should sort local-path versions after semver versions', () => {
+      delete graph.externalNodes['npm:lodash'];
+      graph.externalNodes['npm:lodash@file:vendor/lodash.tgz'] = {
+        type: 'npm',
+        name: 'npm:lodash@file:vendor/lodash.tgz',
+        data: {
+          packageName: 'lodash',
+          version: 'file:vendor/lodash.tgz',
+        },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', '^3.0.0')?.name).toBe(
+        'npm:lodash@3.0.0'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', 'latest')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
     it('should handle latest version', () => {
       const node = findNodeMatchingVersion(graph, 'lodash', 'latest');
       expect(node).toBeDefined();

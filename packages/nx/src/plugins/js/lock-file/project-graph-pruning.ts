@@ -1,4 +1,4 @@
-import { gte, satisfies } from 'semver';
+import { rcompare, satisfies, valid } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -229,16 +229,12 @@ export function findNodeMatchingVersion(
   }
   const nodes = Object.values(graph.externalNodes)
     .filter((n) => n.data.packageName === packageName)
-    .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
+    .sort(compareVersionsDescending);
 
   // A package with several versions can have no bare node, for example
   // when the pnpm root importer does not declare it.
-  if (versionExpr === '*') {
+  if (versionExpr === '*' || versionExpr === 'latest') {
     return nodes[0];
-  }
-
-  if (versionExpr === 'latest') {
-    return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
   }
   if (
     graph.externalNodes[`npm:${packageName}`] &&
@@ -250,6 +246,20 @@ export function findNodeMatchingVersion(
     return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
+}
+
+// Local-path and other non-semver versions, such as file:vendor/foo.tgz,
+// sort after every semver version.
+function compareVersionsDescending(
+  a: ProjectGraphExternalNode,
+  b: ProjectGraphExternalNode
+): number {
+  const aIsSemver = valid(a.data.version) !== null;
+  const bIsSemver = valid(b.data.version) !== null;
+  if (aIsSemver && bIsSemver) {
+    return rcompare(a.data.version, b.data.version);
+  }
+  return Number(bIsSemver) - Number(aIsSemver);
 }
 
 export function addNodesAndDependencies(
