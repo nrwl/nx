@@ -374,15 +374,21 @@ export function interpolateArgsIntoCommand(
   }
 }
 
-// `null` unsets an option, so it is skipped without a warning.
+// `null` unsets an option, so it is skipped without a warning. A dotted flag
+// such as `--a.b=1` reaches the command through `__unparsed__`.
 function droppedUnknownOptions(
-  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | 'unknownOptions'>
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'parsedArgs' | 'unknownOptions' | 'unparsedCommandArgs'
+  >
 ) {
+  const unparsedKeys = Object.keys(opts.unparsedCommandArgs ?? {});
   return Object.keys(opts.unknownOptions ?? {}).filter(
     (k) =>
       typeof opts.unknownOptions[k] === 'object' &&
       opts.unknownOptions[k] !== null &&
-      opts.parsedArgs[k] === opts.unknownOptions[k]
+      opts.parsedArgs[k] === opts.unknownOptions[k] &&
+      !unparsedKeys.some((u) => u.startsWith(`${k}.`))
   );
 }
 

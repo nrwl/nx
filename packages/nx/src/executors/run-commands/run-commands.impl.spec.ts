@@ -261,6 +261,19 @@ describe('Run Commands', () => {
       expect(warn).not.toHaveBeenCalled();
     });
 
+    it('should not warn for an object option built from a forwarded dotted flag', async () => {
+      const result = await runCommands(
+        {
+          command: 'echo vitest',
+          coverage: { enabled: true },
+          __unparsed__: ['--coverage.enabled=true'],
+        },
+        lintContext
+      );
+      expect(result.terminalOutput).toContain('vitest --coverage.enabled=true');
+      expect(warn).not.toHaveBeenCalled();
+    });
+
     it('should not warn when unknown options are not forwarded', async () => {
       await runCommands(
         {
