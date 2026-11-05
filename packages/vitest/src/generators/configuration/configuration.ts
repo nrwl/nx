@@ -701,7 +701,7 @@ function rootConfigDeclaresProjects(
   configPath: string
 ): 'declares' | 'missing' | 'unknown' {
   ts ??= ensureTypescript();
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
 
   let sourceFile: SourceFile;
   try {

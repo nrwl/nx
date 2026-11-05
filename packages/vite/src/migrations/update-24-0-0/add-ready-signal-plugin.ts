@@ -83,7 +83,7 @@ export default async function addReadySignalPlugin(tree: Tree) {
 }
 
 function addPlugin(content: string, configPath: string): EditResult {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const ts: typeof import('typescript') = require('typescript');
   const file: SourceFile = tsquery.ast(
     content,

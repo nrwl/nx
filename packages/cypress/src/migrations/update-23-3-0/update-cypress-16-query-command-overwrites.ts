@@ -7,7 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import type {
   CallExpression,
   ElementAccessExpression,
@@ -108,15 +108,17 @@ export default async function updateCypress16QueryCommandOverwrites(
 function findQueryOverwrites(sourceFile: Node): CallExpression[] {
   ts ??= ensureTypescript();
 
-  return query<CallExpression>(sourceFile, 'CallExpression').filter((call) => {
-    const [commandName] = call.arguments;
-    return (
-      isCypressCommandsMember(call.expression, 'overwrite') &&
-      commandName !== undefined &&
-      isStringLiteral(commandName) &&
-      QUERY_COMMANDS.includes(commandName.text)
-    );
-  });
+  return tsquery
+    .query<CallExpression>(sourceFile, 'CallExpression')
+    .filter((call) => {
+      const [commandName] = call.arguments;
+      return (
+        isCypressCommandsMember(call.expression, 'overwrite') &&
+        commandName !== undefined &&
+        isStringLiteral(commandName) &&
+        QUERY_COMMANDS.includes(commandName.text)
+      );
+    });
 }
 
 type MemberAccess = PropertyAccessExpression | ElementAccessExpression;

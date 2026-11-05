@@ -89,8 +89,7 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/react": "workspace:*",
-    "@nx/web": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript"
+    "@nx/web": "workspace:*"
   },
   "devDependencies": {
     "@nx/cypress": "workspace:*",

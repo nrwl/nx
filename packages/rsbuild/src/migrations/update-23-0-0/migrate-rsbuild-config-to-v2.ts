@@ -1,5 +1,5 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { ast } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import * as ts from 'typescript';
 
 /**
@@ -100,7 +100,7 @@ function getPropertyName(prop: ts.PropertyAssignment): string | undefined {
 export function renameSetupMiddlewares(source: string): string {
   if (!source.includes('setupMiddlewares')) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
@@ -141,7 +141,7 @@ export function renameSetupMiddlewares(source: string): string {
 export function dropRemoveMomentLocale(source: string): string {
   if (!source.includes('removeMomentLocale')) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
@@ -194,7 +194,7 @@ export function dropRemoveMomentLocale(source: string): string {
 export function moveSourceAliasToResolve(source: string): string {
   if (!/\balias(?:Strategy)?\b/.test(source)) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
   const ALIAS_KEYS = new Set(['alias', 'aliasStrategy']);
 
@@ -321,7 +321,7 @@ function isProxyEntryObject(obj: ts.ObjectLiteralExpression): boolean {
 export function renameProxyContext(source: string): string {
   if (!source.includes('context')) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
@@ -367,7 +367,7 @@ export function groupProxyEventHandlers(source: string): string {
     return source;
   }
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {

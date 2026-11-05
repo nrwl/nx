@@ -9,7 +9,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import type { SourceFile, StringLiteralLike } from 'typescript';
 import { hasLocalValueBinding, parseSourceFile } from '../../utils/migrations';
 
@@ -114,29 +114,31 @@ function removeDeprecatedPackage(tree: Tree): void {
 function findModuleSpecifiers(sourceFile: SourceFile): StringLiteralLike[] {
   ts ??= ensureTypescript();
 
-  return query<StringLiteralLike>(
-    sourceFile,
-    `:matches(StringLiteral, NoSubstitutionTemplateLiteral)`
-  ).filter((literal) => {
-    if (!OLD_SPECIFIERS.has(literal.text)) {
-      return false;
-    }
-    const parent = literal.parent;
-    if (
-      ts.isImportDeclaration(parent) ||
-      ts.isExportDeclaration(parent) ||
-      ts.isExternalModuleReference(parent) ||
-      (ts.isLiteralTypeNode(parent) && ts.isImportTypeNode(parent.parent))
-    ) {
-      return true;
-    }
-    return (
-      (ts.isCallExpression(parent) &&
-        parent.arguments[0] === literal &&
-        parent.expression.kind === ts.SyntaxKind.ImportKeyword) ||
-      isRequireArgument(literal)
-    );
-  });
+  return tsquery
+    .query<StringLiteralLike>(
+      sourceFile,
+      `:matches(StringLiteral, NoSubstitutionTemplateLiteral)`
+    )
+    .filter((literal) => {
+      if (!OLD_SPECIFIERS.has(literal.text)) {
+        return false;
+      }
+      const parent = literal.parent;
+      if (
+        ts.isImportDeclaration(parent) ||
+        ts.isExportDeclaration(parent) ||
+        ts.isExternalModuleReference(parent) ||
+        (ts.isLiteralTypeNode(parent) && ts.isImportTypeNode(parent.parent))
+      ) {
+        return true;
+      }
+      return (
+        (ts.isCallExpression(parent) &&
+          parent.arguments[0] === literal &&
+          parent.expression.kind === ts.SyntaxKind.ImportKeyword) ||
+        isRequireArgument(literal)
+      );
+    });
 }
 
 function isRequireArgument(literal: StringLiteralLike): boolean {

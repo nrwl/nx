@@ -545,7 +545,7 @@ export function determineFrameworkAndTarget(
 ): { target: 'node' | 'web'; framework?: Framework } {
   ensureTypescript();
 
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
 
   // First try to infer if the target is node
   if (options.target !== 'node') {

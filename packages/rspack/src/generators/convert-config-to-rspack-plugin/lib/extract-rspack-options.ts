@@ -1,23 +1,29 @@
 import { Tree } from '@nx/devkit';
-import { ast, query, replace } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import * as ts from 'typescript';
 
 export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
   const source = tree.read(rspackConfigPath).toString('utf-8');
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
 
   const withNxQuery = 'CallExpression:has(Identifier[name="withNx"])';
   const withReactQuery = 'CallExpression:has(Identifier[name="withReact"])';
   const withWebQuery = 'CallExpression:has(Identifier[name="withWeb"])';
 
-  const withNxCall = query(sourceFile, withNxQuery) as ts.CallExpression[];
+  const withNxCall = tsquery.query(
+    sourceFile,
+    withNxQuery
+  ) as ts.CallExpression[];
 
-  const withReactCall = query(
+  const withReactCall = tsquery.query(
     sourceFile,
     withReactQuery
   ) as ts.CallExpression[];
 
-  const withWebCall = query(sourceFile, withWebQuery) as ts.CallExpression[];
+  const withWebCall = tsquery.query(
+    sourceFile,
+    withWebQuery
+  ) as ts.CallExpression[];
 
   // If the config is empty set to empty string to avoid undefined. Undefined is used to check if the withNx exists inside of the config file.
   let withNxConfig: ts.Node | '' | undefined,
@@ -88,7 +94,8 @@ const REMOVED_HELPERS = new Set([
 ]);
 
 function findHelperReferences(source: string): string[] {
-  const names = query<ts.Identifier>(ast(source), 'Identifier')
+  const names = tsquery
+    .query<ts.Identifier>(tsquery.ast(source), 'Identifier')
     .map((node) => node.text)
     .filter((name) => REMOVED_HELPERS.has(name));
   return [...new Set(names)];
@@ -98,7 +105,7 @@ function findHelperReferences(source: string): string[] {
 // remaining callbacks with a local copy.
 function inlineComposePlugins(source: string): string {
   let found = false;
-  const updatedSource = replace(
+  const updatedSource = tsquery.replace(
     source,
     'CallExpression > Identifier[name="composePlugins"]',
     (node) => {
@@ -131,9 +138,13 @@ function removeCallExpressions(
   functionNames.forEach((functionName) => {
     const callExpressionQuery = `CallExpression:has(Identifier[name="composePlugins"]) > CallExpression:has(Identifier[name="${functionName}"])`;
 
-    modifiedSource = replace(modifiedSource, callExpressionQuery, () => {
-      return ''; // Removes the entire CallExpression
-    });
+    modifiedSource = tsquery.replace(
+      modifiedSource,
+      callExpressionQuery,
+      () => {
+        return ''; // Removes the entire CallExpression
+      }
+    );
   });
 
   return modifiedSource;
@@ -144,7 +155,7 @@ function removeImportDeclarations(
   importName: string,
   moduleName: string
 ) {
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
 
   const modifiedStatements = sourceFile.statements
     .map((statement) => {

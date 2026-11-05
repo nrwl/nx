@@ -82,7 +82,7 @@ function shouldExportInEntryPoint(
   }
 
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
   const moduleImportPath = getRelativeImportToFile(entryPoint, modulePath);
   const entryPointContent = tree.read(entryPoint, 'utf-8');
   const entryPointAst = ast(entryPointContent);

@@ -6,6 +6,7 @@ import {
   workspaceDataDirectory,
   hashObject,
   getReadyCheckReadyWhen,
+  tsquery,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
@@ -23,7 +24,6 @@ import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { getLockFileName } from '@nx/js';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { query } from '@phenomnomnominal/tsquery';
 import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 import {
   findStorybookAndBuildTargetsAndCompiler,
@@ -449,7 +449,7 @@ async function getStorybookFramework(
 ): Promise<string | undefined> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
   const mainTsJs = readFileSync(resolvedPath, 'utf-8');
-  const importDeclarations = query(
+  const importDeclarations = tsquery.query(
     mainTsJs,
     'ImportDeclaration:has(ImportSpecifier:has([text="StorybookConfig"]))'
   )?.[0];
@@ -458,7 +458,7 @@ async function getStorybookFramework(
     return parseFrameworkName(mainTsJs);
   }
 
-  const storybookConfigImportPackage = query(
+  const storybookConfigImportPackage = tsquery.query(
     importDeclarations,
     'StringLiteral'
   )?.[0];
@@ -473,7 +473,7 @@ async function getStorybookFramework(
 }
 
 function parseFrameworkName(mainTsJs: string) {
-  const frameworkPropertyAssignment = query(
+  const frameworkPropertyAssignment = tsquery.query(
     mainTsJs,
     `PropertyAssignment:has(Identifier:has([text="framework"]))`
   )?.[0];
@@ -482,7 +482,7 @@ function parseFrameworkName(mainTsJs: string) {
     return undefined;
   }
 
-  const propertyAssignments = query(
+  const propertyAssignments = tsquery.query(
     frameworkPropertyAssignment,
     `PropertyAssignment:has(Identifier:has([text="name"]))`
   );
@@ -492,7 +492,7 @@ function parseFrameworkName(mainTsJs: string) {
   });
 
   if (!namePropertyAssignment) {
-    const storybookConfigImportPackage = query(
+    const storybookConfigImportPackage = tsquery.query(
       frameworkPropertyAssignment,
       'StringLiteral'
     )?.[0];
@@ -500,7 +500,7 @@ function parseFrameworkName(mainTsJs: string) {
   }
 
   return stringLiteralValue(
-    query(namePropertyAssignment, `StringLiteral`)?.[0]
+    tsquery.query(namePropertyAssignment, `StringLiteral`)?.[0]
   );
 }
 

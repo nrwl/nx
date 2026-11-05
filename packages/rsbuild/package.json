@@ -63,8 +63,7 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "minimatch": "catalog:",
-    "semver": "catalog:",
-    "@phenomnomnominal/tsquery": "catalog:typescript"
+    "semver": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"

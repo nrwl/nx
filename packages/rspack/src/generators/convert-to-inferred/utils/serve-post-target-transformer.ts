@@ -1,13 +1,13 @@
 import {
   processTargetOutputs,
   toProjectRelativePath,
+  tsquery,
 } from '@nx/devkit/internal';
 import {
   parseTargetString,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { basename, resolve } from 'path';
 import * as ts from 'typescript';
 import type { RspackOptionsNormalized } from '@rspack/core';
@@ -198,7 +198,7 @@ function updateRspackConfig(
 
   const updateSources = () => {
     rspackConfigText = tree.read(rspackConfigPath, 'utf-8');
-    sourceFile = ast(rspackConfigText);
+    sourceFile = tsquery.ast(rspackConfigText);
   };
   updateSources();
 
@@ -237,7 +237,7 @@ function setOptionsInRspackConfig(
 
   const configValuesSelector =
     'VariableDeclaration:has(Identifier[name=configValues]) ObjectLiteralExpression';
-  const configValuesObject = query<ts.ObjectLiteralExpression>(
+  const configValuesObject = tsquery.query<ts.ObjectLiteralExpression>(
     sourceFile,
     configValuesSelector
   )[0];
@@ -295,10 +295,10 @@ function setOptionsInRspackConfig(
 
   tree.write(rspackConfigPath, text);
 
-  sourceFile = ast(text);
+  sourceFile = tsquery.ast(text);
   const buildOptionsSelector =
     'VariableStatement:has(VariableDeclaration:has(Identifier[name=buildOptions]))';
-  const buildOptionsStatement = query<ts.VariableStatement>(
+  const buildOptionsStatement = tsquery.query<ts.VariableStatement>(
     sourceFile,
     buildOptionsSelector
   )[0];
@@ -321,7 +321,7 @@ function setDevServerOptionsInRspackConfig(
 ) {
   const rspackConfigDevServerSelector =
     'ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=devServer])';
-  const rspackConfigDevServer = query<ts.PropertyAssignment>(
+  const rspackConfigDevServer = tsquery.query<ts.PropertyAssignment>(
     sourceFile,
     rspackConfigDevServerSelector
   )[0];
@@ -347,7 +347,7 @@ function setDevServerOptionsInRspackConfig(
 
   const rspackConfigSelector =
     'ObjectLiteralExpression:has(PropertyAssignment:has(Identifier[name=plugins]))';
-  const rspackConfig = query<ts.ObjectLiteralExpression>(
+  const rspackConfig = tsquery.query<ts.ObjectLiteralExpression>(
     sourceFile,
     rspackConfigSelector
   )[0];

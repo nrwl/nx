@@ -1,4 +1,4 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import { forEachExecutorOptions, tsquery } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -7,7 +7,6 @@ import {
   ChangeType,
   type StringChange,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
 export default async function addSvgrToNextConfig(tree: Tree) {
@@ -25,11 +24,11 @@ export default async function addSvgrToNextConfig(tree: Tree) {
       const content = tree.read(nextConfigPath, 'utf-8');
 
       if (!content.includes('withNx')) return;
-      const sourceFile = ast(content);
+      const sourceFile = tsquery.ast(content);
 
       let svgrValue: boolean | Record<string, unknown> | undefined;
 
-      const nextConfigDeclarations = query(
+      const nextConfigDeclarations = tsquery.query(
         sourceFile,
         'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
       );
@@ -94,10 +93,10 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   // Update next.config.js files to add SVGR webpack configuration
   for (const [nextConfigPath, config] of projects.entries()) {
     let content = tree.read(nextConfigPath, 'utf-8');
-    const sourceFile = ast(content);
+    const sourceFile = tsquery.ast(content);
     const changes: StringChange[] = [];
 
-    const nextConfigDeclarations = query(
+    const nextConfigDeclarations = tsquery.query(
       sourceFile,
       'VariableDeclaration:has(Identifier[name=nextConfig]) > ObjectLiteralExpression'
     );
@@ -231,7 +230,7 @@ export default async function addSvgrToNextConfig(tree: Tree) {
   return config;
 };`;
 
-      const pluginsArrayDeclarations = query(
+      const pluginsArrayDeclarations = tsquery.query(
         sourceFile,
         'VariableDeclaration:has(Identifier[name=plugins]) ArrayLiteralExpression'
       );
@@ -248,7 +247,7 @@ export default async function addSvgrToNextConfig(tree: Tree) {
         });
       }
 
-      const composePluginsCalls = query(
+      const composePluginsCalls = tsquery.query(
         sourceFile,
         'CallExpression[expression.name=composePlugins]'
       );

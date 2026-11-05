@@ -1,4 +1,4 @@
-import { query, replace } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
 
 /**
@@ -17,12 +17,12 @@ export function addTransformerToConfig(
   transformer: string
 ): string {
   // TODO make sure there isn't an existing matching transformer regex
-  const transformerConfig = query<ObjectLiteralExpression>(
+  const transformerConfig = tsquery.query<ObjectLiteralExpression>(
     configContents,
     `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"])`
   );
   if (transformerConfig.length === 0) {
-    return replace(
+    return tsquery.replace(
       configContents,
       `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression`,
       (node: ObjectLiteralExpression) => {
@@ -33,7 +33,7 @@ transform: { ${transformer} }
       }
     );
   }
-  return replace(
+  return tsquery.replace(
     configContents,
     `${TS_QUERY_JEST_CONFIG_PREFIX} > ObjectLiteralExpression PropertyAssignment:has(Identifier[name="transform"])`,
     (node: PropertyAssignment) => {

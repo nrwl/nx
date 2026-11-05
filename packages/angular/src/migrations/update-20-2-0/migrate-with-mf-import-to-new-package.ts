@@ -1,4 +1,4 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import { forEachExecutorOptions, tsquery } from '@nx/devkit/internal';
 import {
   type Tree,
   formatFiles,
@@ -6,7 +6,6 @@ import {
   visitNotIgnoredFiles,
   addDependenciesToPackageJson,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import { nxVersion } from '../../utils/versions';
 
 const NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR =
@@ -35,8 +34,8 @@ export default async function migrateWithMfImport(tree: Tree) {
         return;
       }
 
-      const sourceFile = ast(contents);
-      const importNodes = query(
+      const sourceFile = tsquery.ast(contents);
+      const importNodes = tsquery.query(
         sourceFile,
         NX_ANGULAR_MODULE_FEDERATION_IMPORT_SELECTOR
       );

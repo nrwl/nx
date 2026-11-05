@@ -1,5 +1,5 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { ast } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import * as ts from 'typescript';
 
 // Rewrite rspack.config.{js,ts,mjs,cjs} for @rspack/core@2:
@@ -74,7 +74,7 @@ function isInsideObjectKeyed(
 export function rewriteLibraryTarget(source: string): string {
   if (!source.includes('libraryTarget')) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
@@ -120,7 +120,7 @@ export function disableLazyCompilationForModuleFederation(
   }
   if (source.includes('lazyCompilation')) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const insertIntoObject = (obj: ts.ObjectLiteralExpression) => {
@@ -164,7 +164,7 @@ export function disableLazyCompilationForModuleFederation(
 export function rewriteExperimentsCss(source: string): string {
   if (!/\bcss\s*:/.test(source)) return source;
 
-  const sourceFile = ast(source);
+  const sourceFile = tsquery.ast(source);
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {

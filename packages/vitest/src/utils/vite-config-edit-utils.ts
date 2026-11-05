@@ -72,7 +72,7 @@ function handleBuildOrTestNode(
   configContentObject: {},
   name: 'build' | 'test'
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const buildOrTestNode = tsquery.query(
     updatedFileContent,
     `PropertyAssignment:has(Identifier[name="${name}"])`
@@ -221,7 +221,7 @@ function transformCurrentBuildObject(
   if (!returnStatements?.[index]) {
     return undefined;
   }
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const currentBuildObject = tsquery
     .query(returnStatements[index], 'ObjectLiteralExpression')?.[0]
     .getText();
@@ -260,7 +260,7 @@ function transformConditionalConfig(
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const { SyntaxKind } = require('typescript');
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
@@ -333,7 +333,7 @@ function handlePluginNode(
   imports: string[],
   plugins: string[]
 ): string | undefined {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
@@ -448,7 +448,7 @@ function handlePluginNode(
 }
 
 function filterImport(appFileContent: string, imports: string[]): string[] {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const file = tsquery.ast(appFileContent);
   const importNodes = tsquery.query(
     file,
@@ -470,7 +470,7 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
  * when the config's shape hides the object we would have to edit.
  */
 export function addTsconfigPathsResolution(appFileContent: string): string {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const tsModule: typeof import('typescript') = require('typescript');
 
   const file = tsquery.ast(appFileContent);
@@ -591,7 +591,7 @@ function stripQuotes(text: string): string {
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
 
   const file = tsquery.ast(appFileContent);
   const cacheDirNode = tsquery.query(

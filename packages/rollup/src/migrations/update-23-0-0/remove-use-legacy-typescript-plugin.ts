@@ -9,7 +9,7 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import type {
   PropertyAssignment,
   ShorthandPropertyAssignment,
@@ -144,10 +144,10 @@ function stripFromRollupConfig(tree: Tree, filePath: string): boolean {
   // Also handle shorthand `{ useLegacyTypescriptPlugin }` — strip the entry, leave
   // the variable declaration behind (not our problem).
   const matches = (
-    query(ast(original), 'PropertyAssignment, ShorthandPropertyAssignment') as (
-      | PropertyAssignment
-      | ShorthandPropertyAssignment
-    )[]
+    tsquery.query(
+      tsquery.ast(original),
+      'PropertyAssignment, ShorthandPropertyAssignment'
+    ) as (PropertyAssignment | ShorthandPropertyAssignment)[]
   ).filter((p) => p.name && (p.name as any).text === PROPERTY_NAME);
   if (matches.length === 0) return false;
 
