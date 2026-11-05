@@ -346,6 +346,7 @@ export {
   registerTsProject,
   relocatePrunedLocalPathSpec,
   removeTasksFromTaskGraph,
+  requireClassicTypescript,
   requireWithTsconfigFallback,
   resetWorkspaceContext,
   resolveCommandSyntacticSugar,
