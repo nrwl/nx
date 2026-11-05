@@ -200,6 +200,23 @@ describe('run-commands completion', () => {
     }
   );
 
+  it('settles a second after exit when the pipes stay open, keeping output read in that turn', async () => {
+    const task = await start({ parallel: false });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      mockSpawned.exit(1);
+      // Node reads the pipes after running expired timers, so this read lands
+      // in the same turn as the timer that gives up on them.
+      setImmediate(() => mockSpawned.stdout.emit('data', 'LATE\n'));
+      vi.advanceTimersByTime(1000);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const { terminalOutput } = await task.getResults();
+    expect(terminalOutput).toContain('LATE');
+  });
+
   it('completes at readyWhen text read after a non-zero exit', async () => {
     const task = await start({ parallel: true, readyWhen: 'READY' });
     mockSpawned.exit(1);

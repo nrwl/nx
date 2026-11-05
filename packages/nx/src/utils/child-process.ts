@@ -229,7 +229,9 @@ export function whenStdioClosed(child: NodeChildProcess): Promise<void> {
       resolve();
     });
     child.once('exit', () => {
-      timeout = setTimeout(resolve, 1000);
+      // Node runs expired timers before it reads the pipes, so a blocked event
+      // loop would otherwise give up on output that is already there.
+      timeout = setTimeout(() => setImmediate(resolve), 1000);
     });
   });
 }
