@@ -84,34 +84,88 @@ export async function convertToFlatConfigGenerator(
 
   options.eslintConfigFormat ??= 'mjs';
 
+  const rootConversions = planRootConversions(
+    tree,
+    eslintFile,
+    options.eslintConfigFormat
+  );
+  const nxJson = readNxJson(tree);
+  const projectPlans = [...getProjects(tree)].map(
+    ([project, projectConfig]) => ({
+      project,
+      projectConfig,
+      plan: planProjectConversion(
+        tree,
+        project,
+        projectConfig,
+        nxJson,
+        rootConversions,
+        options.eslintConfigFormat
+      ),
+    })
+  );
+  const convertedEslintrcFiles = new Set(
+    [
+      ...rootConversions,
+      ...projectPlans.flatMap(({ plan }) =>
+        plan.kind === 'convert' ? [plan.conversion] : []
+      ),
+    ].map(({ root, source }) => joinPathFragments(root, source))
+  );
+
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
   const targetDefaultIgnorePaths = findTargetDefaultIgnorePaths(tree);
 
-  // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
-  convertRootToFlatConfig(
-    tree,
-    eslintFile,
-    options.eslintConfigFormat,
-    [...targetDefaultIgnorePaths.values()],
-    options.keepExistingVersions
-  );
+  for (const conversion of rootConversions) {
+    convertConfigToFlatConfig(
+      tree,
+      conversion,
+      options.eslintConfigFormat,
+      [...targetDefaultIgnorePaths.values()],
+      convertedEslintrcFiles,
+      options.keepExistingVersions
+    );
+  }
   removeEslintrcOnlyTargetDefaultOptions(tree, targetDefaultIgnorePaths);
   for (const ignorePath of targetDefaultIgnorePaths.values()) {
     eslintIgnoreFiles.add(ignorePath);
   }
 
-  // convert project eslint files to eslint.config.cjs
-  const projects = getProjects(tree);
-  for (const [project, projectConfig] of projects) {
-    convertProjectToFlatConfig(
-      tree,
-      project,
-      projectConfig,
-      readNxJson(tree),
-      eslintIgnoreFiles,
-      options.eslintConfigFormat,
-      options.keepExistingVersions
-    );
+  for (const { project, projectConfig, plan } of projectPlans) {
+    switch (plan.kind) {
+      case 'convert':
+        convertProjectToFlatConfig(
+          tree,
+          project,
+          projectConfig,
+          readNxJson(tree),
+          plan.conversion,
+          eslintIgnoreFiles,
+          options.eslintConfigFormat,
+          convertedEslintrcFiles,
+          options.keepExistingVersions
+        );
+        break;
+      case 'flat':
+        // The project lints with a flat config: its own, or the root one from here on.
+        removeEslintrcOnlyTargetOptions(
+          tree,
+          project,
+          projectConfig,
+          readNxJson(tree),
+          new Map()
+        );
+        break;
+      case 'skip':
+        logger.warn(plan.reason);
+        break;
+      default: {
+        const unhandled: never = plan;
+        throw new Error(
+          `Unhandled conversion plan: ${JSON.stringify(unhandled)}`
+        );
+      }
+    }
   }
 
   // Flat config never reads an ignore file. Keep one another tool may read,
@@ -153,43 +207,47 @@ export async function convertToFlatConfigGenerator(
 
 export default convertToFlatConfigGenerator;
 
-function convertRootToFlatConfig(
+interface EslintrcConversion {
+  root: string;
+  source: string;
+  target: string;
+  config: ESLint.ConfigData;
+}
+
+type ProjectConversionPlan =
+  | { kind: 'convert'; conversion: EslintrcConversion }
+  | { kind: 'flat' }
+  | { kind: 'skip'; reason: string };
+
+function planRootConversions(
   tree: Tree,
   eslintFile: string,
-  format: 'cjs' | 'mjs',
-  ignorePaths: string[],
-  keepExistingVersions?: boolean
-) {
+  format: 'cjs' | 'mjs'
+): EslintrcConversion[] {
   // Every generated config extends the root one, so a root config that holds
   // nothing cannot be skipped the way a project's can: the conversion would
   // leave every project pointing at a file that was never written.
-  const convertRoot = (source: string, target: string) => {
-    if (
-      !convertConfigToFlatConfig(
-        tree,
-        '',
-        source,
-        target,
-        format,
-        ignorePaths,
-        keepExistingVersions
-      )
-    ) {
+  const planRoot = (source: string, target: string): EslintrcConversion => {
+    const config = readEslintrcConfig(tree, '', source);
+    if (!config) {
       throw new Error(
         `Cannot convert "${source}": it does not hold an ESLint configuration. Delete it or convert it to flat config manually.`
       );
     }
+    return { root: '', source, target, config };
   };
 
+  const conversions: EslintrcConversion[] = [];
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
-    convertRoot(eslintFile, `eslint.base.config.${format}`);
+    conversions.push(planRoot(eslintFile, `eslint.base.config.${format}`));
   }
   // A workspace can ship `.eslintrc.base.json` without a sibling root config, so
   // only convert the non-base root config when it actually exists.
   const rootEslintFile = eslintFile.replace('.base.', '.');
   if (tree.exists(rootEslintFile)) {
-    convertRoot(rootEslintFile, `eslint.config.${format}`);
+    conversions.push(planRoot(rootEslintFile, `eslint.config.${format}`));
   }
+  return conversions;
 }
 
 function hasMatchingEslintTargetDefault(
@@ -216,26 +274,25 @@ function hasMatchingEslintTargetDefault(
   });
 }
 
-function convertProjectToFlatConfig(
+function planProjectConversion(
   tree: Tree,
   project: string,
   projectConfig: ProjectConfiguration,
   nxJson: NxJsonConfiguration,
-  eslintIgnoreFiles: Set<string>,
-  format: 'cjs' | 'mjs',
-  keepExistingVersions?: boolean
-) {
+  rootConversions: EslintrcConversion[],
+  format: 'cjs' | 'mjs'
+): ProjectConversionPlan {
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  if (!eslintFile) {
-    // The project lints with the root config, which is flat from here on.
-    removeEslintrcOnlyTargetOptions(
-      tree,
-      project,
-      projectConfig,
-      nxJson,
-      new Map()
-    );
-    return;
+  if (
+    !eslintFile ||
+    ESLINT_FLAT_CONFIG_FILENAMES.includes(eslintFile) ||
+    // A root project's eslintrc is the root config, which converts on its own.
+    rootConversions.some(
+      ({ source }) =>
+        source === joinPathFragments(projectConfig.root, eslintFile)
+    )
+  ) {
+    return { kind: 'flat' };
   }
   if (JS_ESLINTRC_FILENAMES.includes(eslintFile)) {
     const result = readStaticJsEslintrcFromTree(
@@ -244,30 +301,64 @@ function convertProjectToFlatConfig(
       eslintFile
     );
     if (result.kind === 'unsupported') {
-      logger.warn(
-        `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config that cannot be converted automatically because ${result.reason}. Convert it to flat config manually.`
-      );
-      return;
+      return {
+        kind: 'skip',
+        reason: `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config that cannot be converted automatically because ${result.reason}. Convert it to flat config manually.`,
+      };
     }
-  } else if (ESLINT_FLAT_CONFIG_FILENAMES.includes(eslintFile)) {
-    // Already on a flat config; nothing to convert.
-    removeEslintrcOnlyTargetOptions(
-      tree,
-      project,
-      projectConfig,
-      nxJson,
-      new Map()
-    );
-    return;
   }
 
-  // Clean up obsolete target options and detect explicit ESLint targets
+  if (
+    getEslintTargetNames(projectConfig).length === 0 &&
+    !hasMatchingEslintTargetDefault(projectConfig, nxJson.targetDefaults) &&
+    !hasEslintPlugin(tree)
+  ) {
+    return {
+      kind: 'skip',
+      reason: `Skipping "${project}": found ${eslintFile} but no ESLint lint target detected. Convert manually if needed.`,
+    };
+  }
+
+  const config = readEslintrcConfig(tree, projectConfig.root, eslintFile);
+  if (!config) {
+    // An empty or comment-only file parses to nothing. It carries no rules, so
+    // there is nothing to convert, but leaving it behind silently would hide it.
+    return {
+      kind: 'skip',
+      reason: `Skipping "${projectConfig.root}/${eslintFile}": it does not hold an ESLint configuration. Delete it or convert it to flat config manually.`,
+    };
+  }
+  return {
+    kind: 'convert',
+    conversion: {
+      root: projectConfig.root,
+      source: eslintFile,
+      target: `eslint.config.${format}`,
+      config,
+    },
+  };
+}
+
+function getEslintTargetNames(projectConfig: ProjectConfiguration): string[] {
+  return Object.keys(projectConfig.targets ?? {}).filter((t) =>
+    isEslintTarget(projectConfig.targets[t])
+  );
+}
+
+function convertProjectToFlatConfig(
+  tree: Tree,
+  project: string,
+  projectConfig: ProjectConfiguration,
+  nxJson: NxJsonConfiguration,
+  conversion: EslintrcConversion,
+  eslintIgnoreFiles: Set<string>,
+  format: 'cjs' | 'mjs',
+  convertedEslintrcFiles: ReadonlySet<string>,
+  keepExistingVersions?: boolean
+) {
+  // Clean up obsolete target options
   let ignorePath: string | undefined;
-  const eslintTargets = projectConfig.targets
-    ? Object.keys(projectConfig.targets).filter((t) =>
-        isEslintTarget(projectConfig.targets[t])
-      )
-    : [];
+  const eslintTargets = getEslintTargetNames(projectConfig);
   for (const target of eslintTargets) {
     if (projectConfig.targets[target].options?.eslintConfig) {
       delete projectConfig.targets[target].options.eslintConfig;
@@ -280,47 +371,23 @@ function convertProjectToFlatConfig(
   if (eslintTargets.length > 0) {
     updateProjectConfiguration(tree, project, projectConfig);
   }
-  const hasEslintTargetDefaults = hasMatchingEslintTargetDefault(
-    projectConfig,
-    nxJson.targetDefaults
-  );
-
-  if (
-    eslintTargets.length === 0 &&
-    !hasEslintTargetDefaults &&
-    !hasEslintPlugin(tree)
-  ) {
-    logger.warn(
-      `Skipping "${project}": found ${eslintFile} but no ESLint lint target detected. Convert manually if needed.`
-    );
-    return;
-  }
 
   const inferredTargetIgnorePaths = findInferredTargetIgnorePaths(
     tree,
     projectConfig,
     nxJson
   );
-  const converted = convertConfigToFlatConfig(
+  convertConfigToFlatConfig(
     tree,
-    projectConfig.root,
-    eslintFile,
-    `eslint.config.${format}`,
+    conversion,
     format,
     [
       ...(ignorePath ? [ignorePath] : []),
       ...inferredTargetIgnorePaths.values(),
     ],
+    convertedEslintrcFiles,
     keepExistingVersions
   );
-  if (!converted) {
-    // An empty or comment-only file parses to nothing. It carries no rules, so
-    // there is nothing to convert, but leaving it behind silently would hide it.
-    logger.warn(
-      `Skipping "${projectConfig.root}/${eslintFile}": it does not hold an ESLint configuration. Delete it or convert it to flat config manually.`
-    );
-    return;
-  }
   // Only once the config is gone: flat config never reads .eslintignore, but an
   // eslintrc that is still there does.
   eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
@@ -669,28 +736,23 @@ function inputsEqual(
 
 function convertConfigToFlatConfig(
   tree: Tree,
-  root: string,
-  source: string,
-  target: string,
+  { root, source, target, config }: EslintrcConversion,
   format: 'cjs' | 'mjs',
   extraIgnorePaths: string[],
+  convertedEslintrcFiles: ReadonlySet<string>,
   keepExistingVersions?: boolean
-): boolean {
+): void {
   const ignorePaths = [
     ...new Set([...extraIgnorePaths, joinPathFragments(root, '.eslintignore')]),
   ];
-
-  const config = readEslintrcConfig(tree, root, source);
-  if (!config) {
-    return false;
-  }
 
   const conversionResult = convertEslintJsonToFlatConfig(
     tree,
     root,
     config,
     ignorePaths,
-    format
+    format,
+    convertedEslintrcFiles
   );
   processConvertedConfig(
     tree,
@@ -700,8 +762,6 @@ function convertConfigToFlatConfig(
     conversionResult,
     keepExistingVersions
   );
-
-  return true;
 }
 
 // JavaScript-based configs are read statically, never executed, so only the ones
