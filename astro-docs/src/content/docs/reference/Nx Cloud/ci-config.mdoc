@@ -216,7 +216,165 @@ dte:
 ```
 
 Tasks outside the constraint still share the agent with them.
-To give a task an agent to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
+Constraints only apply within one agent, so matching tasks still run at the same time on different agents.
+
+{% aside type="caution" title="Constraints need continuous task assignment" %}
+Nx Cloud enforces scheduling constraints only when continuous task assignment is on for the run.
+Turning on [dynamic task packing](/docs/features/ci-features/distribute-task-execution#turn-on-dynamic-task-packing) also turns it on, and so does setting `NX_CLOUD_CONTINUOUS_ASSIGNMENT=true` in the main job.
+Without it, Nx Cloud ignores the constraints instead of failing the run, and the pipeline's configuration in Nx Cloud shows a **Constraints not applied** warning.
+{% /aside %}
+
+#### Constraint format
+
+| Key               | Required                                                | Value                                                                                                                             |
+| ----------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `projects`        | At least one of `projects`, `targets`, `configurations` | Globs matched against the task's project.                                                                                         |
+| `targets`         | At least one of `projects`, `targets`, `configurations` | Globs matched against the task's target.                                                                                          |
+| `configurations`  | At least one of `projects`, `targets`, `configurations` | Globs matched against the task's configuration. A task run without a configuration matches `default`.                             |
+| `cannot-run-with` | Yes                                                     | A non-empty list of selectors. Each selector sets at least one of `projects`, `targets`, and `configurations`, and no other keys. |
+
+The top-level keys select the tasks a constraint applies to.
+While one of them runs on an agent, Nx Cloud doesn't start a task there that matches any selector in its `cannot-run-with` list, and the other way round.
+
+Every selector key takes a non-empty list of strings.
+A task matches a selector when it matches every key the selector sets, and it matches a key when it matches any glob in that key's list.
+Globs use the [assignment rule glob syntax](/docs/kb/assignment-rules#glob-reference): `*`, `?`, a leading `!` to negate a glob, and comma-separated globs in one entry that must all match.
+
+Nx Cloud also applies these rules:
+
+- A task never conflicts with itself, so a constraint can name the same tasks on both sides, as in the example above.
+- A task runs its continuous dependencies, such as the `serve` task an e2e task needs, on its own agent. Nx Cloud checks those against the constraints as well.
+- Tasks matched by a constraint's top-level keys, and the tasks they depend on, are scheduled ahead of unconstrained work, so they don't queue up at the end of the run.
+- Tasks whose outputs overlap never run on the same agent at the same time, even without a constraint.
+
+#### Self-referential selectors
+
+Inside `cannot-run-with`, a selector value can refer to the task the constraint matched.
+Each token stands for that task's own value and matches tasks that share it:
+
+| Token                   | Allowed under    | Matches tasks with the same                                 |
+| ----------------------- | ---------------- | ----------------------------------------------------------- |
+| `${self.project}`       | `projects`       | project                                                     |
+| `${self.target}`        | `targets`        | target                                                      |
+| `${self.configuration}` | `configurations` | configuration, where a task without one counts as `default` |
+
+For example, the e2e tests of one project might all start a dev server on the same port, while tests of different projects use different ports:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    # e2e tasks of one project share its dev server port
+    - targets: ['e2e-ci*']
+      cannot-run-with:
+        - projects: ['${self.project}']
+          targets: ['e2e-ci*']
+```
+
+`app-a:e2e-ci--login.spec.ts` and `app-a:e2e-ci--cart.spec.ts` never run on one agent at the same time.
+`app-a:e2e-ci--login.spec.ts` and `app-b:e2e-ci--login.spec.ts` can.
+
+A token can sit next to other globs in the same list.
+`projects: ['${self.project}', 'shared-db']` matches tasks of the same project and tasks of `shared-db`.
+
+Nx Cloud rejects a token that breaks any of these rules:
+
+- Use tokens only in `cannot-run-with` selectors, never in a constraint's top-level keys.
+- Quote the value, and make the token the whole value. `'${self.project}'` works, while an unquoted `${self.project}` or `'app-${self.project}'` doesn't.
+- Put each token only under its own key. `${self.project}` under `targets` is rejected.
+
+#### Constraints in a separate file
+
+Set `dte.scheduling-constraints` to a file path instead of a list.
+Nx Cloud treats the value as a path when it contains a `/` or ends in `.yaml` or `.yml`, and resolves it from the workspace root.
+The file wraps the list in a top-level `scheduling-constraints:` key.
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints: .nx/scheduling-constraints.yaml
+```
+
+```yaml
+# .nx/scheduling-constraints.yaml
+scheduling-constraints:
+  - targets: ['e2e*']
+    cannot-run-with:
+      - targets: ['e2e*']
+```
+
+An empty file, or a file without the top-level `scheduling-constraints` key, fails the run.
+
+The file that `dte.distribute-on` points at can also hold a `scheduling-constraints:` list next to `distribute-on:`.
+Nx Cloud uses that list only when `.nx/ci-config.yaml` sets no `dte.scheduling-constraints` for the current environment.
+
+An [override](#overrides) for an environment replaces the whole list.
+Set it to an empty list to turn constraints off in that environment:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints: .nx/scheduling-constraints.yaml
+overrides:
+  nightly:
+    dte:
+      scheduling-constraints: []
+```
+
+#### Non-parallel tasks
+
+A target that sets `parallelism: false` in [project configuration](/docs/reference/project-configuration) runs differently depending on dynamic task packing:
+
+- **Packing on:** the task shares its worker with other tasks. Two `parallelism: false` tasks that share a project or a target never run on the same worker at the same time.
+- **Packing off:** the task runs alone. Nx Cloud assigns it only to an agent with no other work, and sends that agent nothing else until the task finishes.
+
+With packing on, give a task an agent to itself with a constraint whose `cannot-run-with` matches every task:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    # The load test measures the whole machine, so nothing else may run beside it
+    - projects: ['api']
+      targets: ['load-test']
+      cannot-run-with:
+        - projects: ['*']
+```
+
+This selector also matches the task's own continuous dependencies, which must run beside it.
+For a task that has them, narrow the selector, for example with `targets: ['!serve']`.
+
+#### Validation errors
+
+Nx Cloud checks every constraint before the run starts and lists each problem with its path, line, and column:
+
+```plaintext
+Invalid scheduling constraints:
+- scheduling-constraints[0].project: unknown key; only cannot-run-with, configurations, projects, targets are accepted (unknown-key; invalid: project) at 2:5 in .nx/scheduling-constraints.yaml
+```
+
+| Code                      | Cause                                                                                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unknown-key`             | A key other than the four above, such as `project` or `target` in the singular. Selectors in `cannot-run-with` don't accept `cannot-run-with`. |
+| `duplicate-key`           | The same key twice in one mapping, including a second top-level `scheduling-constraints` key.                                                  |
+| `missing-selector`        | A constraint or a `cannot-run-with` selector without `projects`, `targets`, or `configurations`.                                               |
+| `missing-cannot-run-with` | A constraint without `cannot-run-with`, or with an empty list.                                                                                 |
+| `empty-selector`          | A selector key set to an empty list, such as `targets: []`.                                                                                    |
+| `invalid-node-type`       | A value of the wrong shape, such as `targets: e2e` instead of `targets: ['e2e']`.                                                              |
+| `non-string-selector`     | A selector value YAML doesn't read as a string, such as `42` or `true`. Quote it.                                                              |
+| `invalid-self-token`      | A self-referential token that breaks one of the [token rules](#self-referential-selectors).                                                    |
+
+A file that isn't valid YAML, isn't a mapping, or is missing its top-level key fails with `Invalid scheduling constraints YAML` and the reason.
+
+A constraint can also contradict the task graph.
+A task and the continuous tasks it depends on have to run on one agent, so a run fails when a constraint keeps them apart:
+
+```plaintext
+Scheduling constraints contradict required continuous-task overlap (1 conflict(s)): ...
+```
+
+The message names each pair of conflicting tasks and the dependency chain that forces them together.
+Narrow the constraint so it no longer matches both tasks.
 
 ### `dte.assignment-rules`
 
