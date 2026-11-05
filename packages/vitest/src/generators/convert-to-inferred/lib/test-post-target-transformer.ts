@@ -91,6 +91,12 @@ function removePropertiesFromTargetOptions(
     delete targetOptions.reportsDirectory;
   }
 
+  // A later --coverage replaces the whole coverage object on the Vitest CLI
+  if (typeof targetOptions.coverage === 'boolean') {
+    targetOptions['coverage.enabled'] = targetOptions.coverage;
+    delete targetOptions.coverage;
+  }
+
   for (const name of ['testFiles', 'testFile']) {
     if (name in targetOptions) {
       const filters: string[] = resolveNxTokensInOptions(
