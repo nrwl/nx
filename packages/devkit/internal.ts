@@ -114,6 +114,12 @@ export {
 } from './src/utils/calculate-hash-for-create-nodes';
 export { loadConfigFile, clearRequireCache } from './src/utils/config-utils';
 export {
+  assertUniqueConfigTargetNames,
+  readConfigToTargetName,
+  type ConfigFileNamePatterns,
+  type ConfigFileTargets,
+} from './src/utils/config-to-target-name';
+export {
   isRequireEsmRaceError,
   retryOnRequireEsmRace,
 } from './src/utils/require-esm-race';
@@ -348,6 +354,7 @@ export {
   convertWithUninferredTargetsRewritten,
   isPlainPath,
   optionsFor,
+  readResolvedTarget,
   type TargetOptions,
   type UninferredTargetRewrite,
 } from './src/generators/plugin-migrations/rewrite-uninferred-targets';

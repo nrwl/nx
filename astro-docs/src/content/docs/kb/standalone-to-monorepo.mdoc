@@ -58,7 +58,7 @@ For this recipe, we'll assume that the root-level app is named `my-app`. The hig
    {% aside title="Jest configuration" type="note" %}
    In a new workspace, the root project's Jest config is `jest.config.ts`, so copy it to `apps/temp`.
 
-   A workspace created before Nx 24 can have `jest.config.app.ts` (any extension) in the root next to a workspace `jest.config.ts` that lists the projects. Leave `jest.config.ts` in the root. Copy `jest.config.app.ts` to `apps/temp` as `jest.config.ts`, and update the references to it, such as the `include` list in `tsconfig.spec.json` and the `--config` flag of the project's `test` target in `project.json`.
+   A workspace created before Nx 24 can have `jest.config.app.ts` (any extension) in the root next to a workspace `jest.config.ts` that lists the projects. Leave `jest.config.ts` in the root. Copy `jest.config.app.ts` to `apps/temp` as `jest.config.ts`, and update the references to it, such as the `include` list in `tsconfig.spec.json` and the `--config` flag of the project's `test` target in `project.json`. If an `@nx/jest/plugin` entry in `nx.json` maps it through `configToTargetName`, remove that key, because the plugin infers `apps/temp/jest.config.ts` without one.
    {% /aside %}
 
 5. Update the paths of the project-specific config files that were copied into `apps/temp`.
