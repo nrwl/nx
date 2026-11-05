@@ -19,6 +19,8 @@ import type * as ts from 'typescript';
 const NEXT_VITALS = 'nextVitals';
 const NEXT_VITALS_IMPORT = 'eslint-config-next/core-web-vitals';
 const NEXT_PLUGIN_IMPORT = '@next/eslint-plugin-next';
+// The name the @nx/eslint generators give the exported config array.
+const CONFIG_VARIABLE = 'eslintConfig';
 const GENERATED_COMPAT_CONFIGS = ['next', 'next/core-web-vitals'];
 // Modules of the FlatCompat and `@next/next` setup that Nx generated next to the Next.js entries.
 const SETUP_MODULES = new Set([
@@ -157,6 +159,7 @@ function spreadNextVitals(source: ts.SourceFile): string | undefined {
   let updated = applyChangesToString(content, changes);
   updated = addImportToFlatConfig(updated, NEXT_VITALS, NEXT_VITALS_IMPORT);
   updated = removeUnusedSetup(updated);
+  updated = nameExportedArray(updated);
 
   const usage = getEslintConfigNextUsage(updated);
   return usage.registersNextPlugin || usage.extendsNextThroughCompat
@@ -438,12 +441,13 @@ function getExportedArrayElements(
   source: ts.SourceFile
 ): ts.NodeArray<ts.Expression> | undefined {
   for (const statement of source.statements) {
-    if (
-      tsModule.isExportAssignment(statement) &&
-      !statement.isExportEquals &&
-      tsModule.isArrayLiteralExpression(statement.expression)
-    ) {
-      return statement.expression.elements;
+    if (tsModule.isExportAssignment(statement) && !statement.isExportEquals) {
+      const exported = tsModule.isIdentifier(statement.expression)
+        ? findConstInitializer(source, statement.expression.text)
+        : statement.expression;
+      if (exported && tsModule.isArrayLiteralExpression(exported)) {
+        return exported.elements;
+      }
     }
     if (
       tsModule.isExpressionStatement(statement) &&
@@ -457,6 +461,65 @@ function getExportedArrayElements(
     }
   }
   return undefined;
+}
+
+// A `let` or `var` is skipped because a later assignment can replace its value.
+function findConstInitializer(
+  source: ts.SourceFile,
+  name: string
+): ts.Expression | undefined {
+  for (const statement of source.statements) {
+    if (
+      !tsModule.isVariableStatement(statement) ||
+      (statement.declarationList.flags & tsModule.NodeFlags.BlockScoped) !==
+        tsModule.NodeFlags.Const
+    ) {
+      continue;
+    }
+    const declaration = statement.declarationList.declarations.find(
+      (declaration) =>
+        tsModule.isIdentifier(declaration.name) &&
+        declaration.name.text === name
+    );
+    if (declaration) {
+      return declaration.initializer;
+    }
+  }
+  return undefined;
+}
+
+// eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
+function nameExportedArray(content: string): string {
+  const source = parse(content);
+  const exportDefault = source.statements.find(
+    (statement): statement is ts.ExportAssignment =>
+      tsModule.isExportAssignment(statement) && !statement.isExportEquals
+  );
+  if (
+    !exportDefault ||
+    !tsModule.isArrayLiteralExpression(exportDefault.expression) ||
+    hasIdentifier(source, CONFIG_VARIABLE)
+  ) {
+    return content;
+  }
+  const start = exportDefault.getStart();
+  return applyChangesToString(content, [
+    {
+      type: ChangeType.Delete,
+      start,
+      length: exportDefault.expression.getStart() - start,
+    },
+    {
+      type: ChangeType.Insert,
+      index: start,
+      text: `const ${CONFIG_VARIABLE} = `,
+    },
+    {
+      type: ChangeType.Insert,
+      index: exportDefault.end,
+      text: `\n\nexport default ${CONFIG_VARIABLE};`,
+    },
+  ]);
 }
 
 function hasIdentifier(source: ts.SourceFile, name: string): boolean {

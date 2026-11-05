@@ -87,7 +87,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             {
                 files: [
@@ -143,6 +143,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 ]
             }
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -219,7 +221,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...baseConfig,
             ...nx.configs["flat/react-typescript"],
             ...compat.extends("next", "next/core-web-vitals"),
@@ -281,6 +283,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 ]
             }
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -315,7 +319,7 @@ describe('convertEslintJsonToFlatConfig', () => {
       expect(content).toMatchInlineSnapshot(`
         "import nx from "@nx/eslint-plugin";
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             {
@@ -328,6 +332,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 }
             }
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -374,7 +380,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...compat.config({
                 parser: "@typescript-eslint/parser",
                 parserOptions: {
@@ -397,6 +403,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 }
             }))
         ];
+
+        export default eslintConfig;
         "
       `);
     });
@@ -492,7 +500,7 @@ describe('convertEslintJsonToFlatConfig', () => {
         });
 
 
-        export default [
+        const eslintConfig = [
             ...nx.configs["flat/base"],
             ...nx.configs["flat/typescript"],
             ...compat.config({
@@ -511,6 +519,8 @@ describe('convertEslintJsonToFlatConfig', () => {
                 }
             }))
         ];
+
+        export default eslintConfig;
         "
       `);
     });

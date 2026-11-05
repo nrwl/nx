@@ -383,7 +383,7 @@ describe('addLinting generator', () => {
       "import nx from "@nx/eslint-plugin";
       import baseConfig from "../../eslint.config.mjs";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/angular"],
           ...nx.configs["flat/angular-template"],
           ...baseConfig,
@@ -436,12 +436,14 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
       "import nx from "@nx/eslint-plugin";
 
-      export default [
+      const eslintConfig = [
           ...nx.configs["flat/base"],
           ...nx.configs["flat/typescript"],
           ...nx.configs["flat/javascript"],
@@ -493,6 +495,8 @@ describe('addLinting generator', () => {
               rules: {}
           }
       ];
+
+      export default eslintConfig;
       "
     `);
   });
