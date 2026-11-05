@@ -49,11 +49,11 @@ function getNxInitDate(): string | null {
 }
 
 async function createNxCloudWorkspaceV1(
+  apiUrl: string,
   workspaceName: string,
   installationSource: string,
   nxInitDate: string | null
 ): Promise<{ token: string; url: string }> {
-  const apiUrl = getCloudUrl();
   const response = await httpRequest(
     `${apiUrl}/nx-cloud/create-org-and-workspace`,
     {
@@ -74,11 +74,11 @@ async function createNxCloudWorkspaceV1(
 }
 
 async function createNxCloudWorkspaceV2(
+  apiUrl: string,
   workspaceName: string,
   installationSource: string,
   nxInitDate: string | null
 ): Promise<{ nxCloudId: string; url: string }> {
-  const apiUrl = getCloudUrl();
   const response = await httpRequest(
     `${apiUrl}/nx-cloud/v2/create-org-and-workspace`,
     {
@@ -211,8 +211,10 @@ export async function connectToNxCloud(
   )
     return null;
 
+  const apiUrl = getCloudUrl(join(tree.root, schema.directory ?? ''));
   try {
     responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
+      apiUrl,
       getRootPackageName(tree, schema.directory),
       schema.installationSource,
       getNxInitDate()
@@ -220,6 +222,7 @@ export async function connectToNxCloud(
   } catch (e) {
     if (e.response?.status === 404) {
       responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
+        apiUrl,
         getRootPackageName(tree, schema.directory),
         schema.installationSource,
         getNxInitDate()

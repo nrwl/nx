@@ -17,7 +17,6 @@ import {
   isEslintConfigSupported,
   updateOverrideInLintConfig,
   useFlatConfig,
-  addImportToFlatConfig,
 } from '@nx/eslint/internal';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,

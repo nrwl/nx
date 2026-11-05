@@ -16,6 +16,7 @@ import { interpolateReleaseConfig } from './utils/interpolate-release-config';
 import { handleErrors } from '../../utils/handle-errors';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
+import { redactUrlCredentials } from '../../utils/redact-url-credentials';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
@@ -875,7 +876,7 @@ async function applyChangesAndExit(
 
   if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
     output.logSingleLine(
-      `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+      `Pushing to git remote "${redactUrlCredentials(args.gitRemote ?? 'origin')}"`
     );
     await gitPush({
       gitRemote: args.gitRemote,

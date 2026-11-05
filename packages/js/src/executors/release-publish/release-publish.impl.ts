@@ -209,6 +209,9 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     warnFn
   );
 
+  const registryArgs = registry ? [`--${registryConfigKey}=${registry}`] : [];
+  const registryLabel = describeRegistry(registry, registryConfigKey);
+
   // Use bun info when bun is the package manager, otherwise use npm view
   // (npm view works across npm/pnpm/yarn environments and is the established default)
   const npmViewDistTagField = `dist-tags[${tag}]`;
@@ -216,12 +219,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
     pm === 'bun'
       ? {
           command: 'bun',
-          args: [
-            'info',
-            packageName,
-            '--json',
-            `--${registryConfigKey}=${registry}`,
-          ],
+          args: ['info', packageName, '--json', ...registryArgs],
         }
       : {
           command: 'npm',
@@ -232,7 +230,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
             'version',
             npmViewDistTagField,
             '--json',
-            `--${registryConfigKey}=${registry}`,
+            ...registryArgs,
           ],
         };
   const npmDistTagAddCommand = {
@@ -242,7 +240,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
       'add',
       `${packageName}@${packageJson.version}`,
       tag,
-      `--${registryConfigKey}=${registry}`,
+      ...registryArgs,
     ],
   };
 
@@ -312,7 +310,7 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
 
       if (distTagVersion === currentVersion) {
         console.warn(
-          `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
+          `Skipped ${packageTxt} because v${currentVersion} already exists in ${registryLabel} with tag "${tag}"`
         );
         return {
           success: true,
@@ -333,11 +331,11 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
                 }
               );
               console.log(
-                `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+                `Added the dist-tag ${tag} to v${currentVersion} for registry ${registryLabel}.\n`
               );
             } else {
               console.log(
-                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+                `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registryLabel}, but ${chalk.keyword(
                   'orange'
                 )('[dry-run]')} was set.\n`
               );
@@ -444,13 +442,20 @@ Please update the local dependency on "${depName}" to be a valid semantic versio
   });
 }
 
+function describeRegistry(
+  registry: string | undefined,
+  registryConfigKey: string
+): string {
+  return registry ?? `the configured ${registryConfigKey}`;
+}
+
 interface RunPublishContext {
   pm: ReturnType<typeof detectPackageManager>;
   options: PublishExecutorSchema;
   context: ExecutorContext;
   packageRoot: string;
   packageJson: any;
-  registry: string;
+  registry: string | undefined;
   registryConfigKey: string;
   tag: string;
   isDryRun: boolean;
@@ -472,6 +477,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     isNpmInstalled,
     packageTxt,
   } = ctx;
+  const registryLabel = describeRegistry(registry, registryConfigKey);
   const pmCommand = getPackageManagerCommand(pm);
   const { command: publishCommand, args: publishArgs } = pmCommand.publishArgv(
     packageRoot,
@@ -503,10 +509,10 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
     const dryRunVersionPlaceholder = 'X.X.X-dry-run';
 
     const publishSummaryMessage = isDryRun
-      ? `Would publish to ${registry} with tag "${tag}", but ${chalk.keyword(
+      ? `Would publish to ${registryLabel} with tag "${tag}", but ${chalk.keyword(
           'orange'
         )('[dry-run]')} was set`
-      : `Published to ${registry} with tag "${tag}"`;
+      : `Published to ${registryLabel} with tag "${tag}"`;
 
     // bun publish does not support outputting JSON, so we need to modify and print the output string directly
     if (pm === 'bun') {
@@ -625,7 +631,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
         const stdout = err.stdout?.toString() || '';
         if (isAlreadyPublishedPublishError(undefined, stderr, stdout)) {
           console.warn(
-            `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+            `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registryLabel} with tag "${tag}"`
           );
           return {
             success: true,
@@ -646,7 +652,7 @@ function runPublish(ctx: RunPublishContext): { success: boolean } {
         )
       ) {
         console.warn(
-          `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registry} with tag "${tag}"`
+          `Skipped ${packageTxt}, as v${packageJson.version} has already been published to ${registryLabel} with tag "${tag}"`
         );
         return {
           success: true,

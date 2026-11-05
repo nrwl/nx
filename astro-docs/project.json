@@ -3,6 +3,9 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "comment": "package.json#scripts runs in the project root directory with astro assumes is where the node_modules is. which fails. so run the scripts in project.json#targets with --root command instead",
   "targets": {
+    "lint": {
+      "dependsOn": ["build-native", "^build-native"]
+    },
     "prebuild-banner": {
       "cache": false,
       "inputs": [
@@ -21,6 +24,11 @@
     },
     "serve": {
       "continuous": true,
+      "readyWhen": {
+        "command": "node astro-docs/scripts/check-server.mjs http://localhost:{options.port ?? 4321}/docs",
+        "timeout": 120000,
+        "interval": 1000
+      },
       "dependsOn": [
         "prebuild-banner",
         {
@@ -113,6 +121,11 @@
         { "dependentTasksOutputFiles": "**/*" }
       ],
       "continuous": true,
+      "readyWhen": {
+        "command": "node astro-docs/scripts/check-server.mjs http://localhost:{options.port ?? 4321}/docs",
+        "timeout": 120000,
+        "interval": 1000
+      },
       "options": {
         "cwd": "astro-docs"
       }
@@ -124,11 +137,11 @@
       }
     },
     "pw-e2e": {
-      "dependsOn": ["serve"],
+      "dependsOn": [{ "target": "serve", "waitFor": "ready" }],
       "parallelism": true
     },
     "e2e-ci--**/*": {
-      "dependsOn": ["preview"],
+      "dependsOn": [{ "target": "preview", "waitFor": "ready" }],
       "parallelism": true,
       "options": {
         "args": []

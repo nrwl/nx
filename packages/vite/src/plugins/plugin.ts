@@ -145,8 +145,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
                 hasReactRouterConfig,
                 isUsingTsSolutionSetup,
                 context,
-                pmc,
-                tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+                pmc
               )
             );
           }
@@ -190,8 +189,7 @@ async function buildViteTargets(
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext,
-  pmc: ReturnType<typeof getPackageManagerCommand>,
-  tsconfigInputs: string[]
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,

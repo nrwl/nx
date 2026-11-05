@@ -482,12 +482,11 @@ describe('Storybook - Convert To Inferred', () => {
         undefined,
         true
       );
-      const project2 = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'apps/project2',
         appName: 'project2',
       });
 
-      const project2Targets = project2.targets;
       // ACT
       await convertToInferred(tree, {
         project: project.name,

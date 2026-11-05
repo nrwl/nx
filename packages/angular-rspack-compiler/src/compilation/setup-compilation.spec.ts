@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadCompilerCli } from '../utils';
 import {
+  disposeComponentStylesheetBundler,
   setupCompilation,
   type SetupCompilationOptions,
 } from './setup-compilation';
 
-const { isAngularBuildVersionAtLeastMock } = vi.hoisted(() => ({
-  isAngularBuildVersionAtLeastMock: vi.fn((_version: string) => true),
-}));
+const { isAngularBuildVersionAtLeastMock, stylesheetBundlerOptionsMock } =
+  vi.hoisted(() => ({
+    isAngularBuildVersionAtLeastMock: vi.fn((_version: string) => true),
+    stylesheetBundlerOptionsMock: vi.fn(),
+  }));
 
 vi.mock('../utils/angular-build-version', () => ({
   isAngularBuildVersionAtLeast: isAngularBuildVersionAtLeastMock,
@@ -31,7 +34,12 @@ vi.mock('../utils/assert-supported-versions', () => ({
 }));
 
 vi.mock('@angular/build/private', () => ({
-  ComponentStylesheetBundler: class {},
+  ComponentStylesheetBundler: class {
+    constructor(options: unknown) {
+      stylesheetBundlerOptionsMock(options);
+    }
+    dispose() {}
+  },
   findTailwindConfiguration: vi.fn().mockReturnValue(undefined),
   generateSearchDirectories: vi.fn().mockResolvedValue([]),
   loadPostcssConfiguration: vi.fn().mockResolvedValue(undefined),
@@ -39,7 +47,8 @@ vi.mock('@angular/build/private', () => ({
 }));
 
 describe('setupCompilation', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await disposeComponentStylesheetBundler();
     isAngularBuildVersionAtLeastMock.mockReturnValue(true);
   });
 
@@ -50,6 +59,20 @@ describe('setupCompilation', () => {
     inlineStyleLanguage: 'css',
     fileReplacements: [],
   };
+
+  it.each([true, false])(
+    'uses the requested component style minification setting (%s)',
+    async (minifyStyles) => {
+      await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        { ...options, minifyStyles }
+      );
+
+      expect(stylesheetBundlerOptionsMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ optimization: minifyStyles })
+      );
+    }
+  );
 
   it('should not emit TS sourcemaps when script sourcemaps are disabled', async () => {
     const { compilerOptions } = await setupCompilation(

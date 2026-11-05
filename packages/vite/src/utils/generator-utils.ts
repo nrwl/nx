@@ -438,8 +438,6 @@ ${
       testOption,
       reportsDirectory,
       cacheDir,
-      projectRoot,
-      offsetFromRoot(projectRoot),
       projectAlreadyHasViteTargets,
       useNativePaths
     );
@@ -602,8 +600,6 @@ function handleViteConfigFileExists(
   testOption: string,
   reportsDirectory: string,
   cacheDir: string,
-  projectRoot: string,
-  offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags,
   resolveTsconfigPaths?: boolean
 ) {

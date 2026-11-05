@@ -163,25 +163,13 @@ function handlePropertiesFromTargetOptions(
 
   if ('docsMode' in options) {
     configValues.docsMode = options.docsMode;
-    moveDocsModeToConfigFile(
-      tree,
-      configDir,
-      projectName,
-      migrationLogs,
-      configDir === defaultConfigDir
-    );
+    moveDocsModeToConfigFile(tree, configDir, projectName, migrationLogs);
     delete options.docsMode;
   }
 
   if ('staticDir' in options) {
     configValues.staticDir = options.staticDir;
-    moveStaticDirToConfigFile(
-      tree,
-      configDir,
-      projectName,
-      migrationLogs,
-      configDir === defaultConfigDir
-    );
+    moveStaticDirToConfigFile(tree, configDir, projectName, migrationLogs);
     delete options.staticDir;
   }
 
@@ -199,8 +187,7 @@ function moveDocsModeToConfigFile(
   tree: Tree,
   configDir: string,
   projectName: string,
-  migrationLogs: AggregatedLog,
-  useConfigValues = true
+  migrationLogs: AggregatedLog
 ) {
   const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');
@@ -256,8 +243,7 @@ function moveStaticDirToConfigFile(
   tree: Tree,
   configDir: string,
   projectName: string,
-  migrationLogs: AggregatedLog,
-  useConfigValues = true
+  migrationLogs: AggregatedLog
 ) {
   const configFilePath = getConfigFilePath(tree, configDir);
   const configFileContents = tree.read(configFilePath, 'utf-8');

@@ -1,13 +1,4 @@
-import {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  formatFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  readProjectConfiguration,
-  runTasksInSerial,
-  Tree,
-} from '@nx/devkit';
+import { formatFiles, joinPathFragments, Tree } from '@nx/devkit';
 import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import componentStoryGenerator from '../component-story/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';
@@ -19,7 +10,6 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
 import picomatch = require('picomatch');
-import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(
   tree: Tree,
