@@ -403,6 +403,12 @@ export interface TargetConfiguration<T = any> {
   parallelism?: boolean;
 
   /**
+   * How many of the `--parallel` slots this target occupies while running.
+   * Use for targets that start their own worker pool. Default is 1
+   */
+  weight?: number;
+
+  /**
    * Whether this target runs continuously
    */
   continuous?: boolean;

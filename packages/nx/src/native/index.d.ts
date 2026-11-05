@@ -1370,6 +1370,8 @@ export interface Task {
   cache: boolean
   /** Determines if a given task should be parallelizable. */
   parallelism?: boolean
+  /** How many of the `--parallel` slots this task occupies while running. */
+  weight?: number
   /** This denotes if the task runs continuously */
   continuous?: boolean
   /** The target's Ultracache settings, if declared */

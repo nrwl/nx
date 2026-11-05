@@ -429,6 +429,9 @@ export class ProcessTasks {
       ),
       cache: project.data.targets[target].cache ?? false,
       parallelism: project.data.targets[target].parallelism ?? true,
+      ...(project.data.targets[target].weight !== undefined
+        ? { weight: project.data.targets[target].weight }
+        : {}),
       continuous: project.data.targets[target].continuous ?? false,
       ultracache: project.data.targets[target].ultracache,
     };

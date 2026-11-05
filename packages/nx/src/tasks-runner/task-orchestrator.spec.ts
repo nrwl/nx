@@ -3488,6 +3488,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.cacheMissedHashes = new Set();
       orchestrator.processedTasks = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.waitingForTasks = [];
       orchestrator.groups = [];
       orchestrator.bailed = false;
@@ -3632,6 +3633,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.completedTasks = new Map();
       orchestrator.processedTasks = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.waitingForTasks = [];
       orchestrator.groups = [];
       orchestrator.bailed = false;
@@ -3789,6 +3791,7 @@ describe('TaskOrchestrator', () => {
       orchestrator.runningRunCommandsTasks = new Map();
       orchestrator.discreteTaskExitHandled = new Map();
       orchestrator.pendingDiscreteWorkers = new Set();
+      orchestrator.discreteWorkerWeight = 0;
       orchestrator.groups = [];
       orchestrator.waitingForTasks = [];
       orchestrator.options = {
@@ -3865,7 +3868,7 @@ describe('TaskOrchestrator', () => {
         });
         await setup(orchestrator);
 
-        orchestrator.dispatchDiscreteWorker(true, task, 0);
+        orchestrator.dispatchDiscreteWorker(true, task, 0, 1);
         await Promise.all(orchestrator.pendingDiscreteWorkers);
 
         expect(orchestrator.postRunSteps).toHaveBeenCalledWith(
@@ -3906,7 +3909,7 @@ describe('TaskOrchestrator', () => {
         throw new Error('cache write failed');
       });
 
-      orchestrator.dispatchDiscreteWorker(true, task, 0);
+      orchestrator.dispatchDiscreteWorker(true, task, 0, 1);
       await Promise.allSettled(orchestrator.pendingDiscreteWorkers);
 
       expect(
