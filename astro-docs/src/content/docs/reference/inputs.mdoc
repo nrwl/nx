@@ -303,7 +303,7 @@ This default behavior can be overridden by adding any external dependency inputs
 ```
 
 A target that uses an `@nx/*` executor hashes that executor's package and the package's npm dependencies instead of every external dependency.
-Inferred tasks run through `nx:run-commands`, so they follow the default above unless they declare an `externalDependencies` input.
+Inferred tasks that run through `nx:run-commands` follow the default above unless they declare an `externalDependencies` input.
 
 ### Outputs of dependent tasks
 

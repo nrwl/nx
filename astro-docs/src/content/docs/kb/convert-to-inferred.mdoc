@@ -309,10 +309,10 @@ project's configuration would leak it onto its siblings.
 ### Keep cache inputs tight
 
 A removed `@nx/*` executor hashed its own package and that package's npm dependencies.
-An inferred task runs through `nx:run-commands`, so Nx can't tell which packages it uses.
+The inferred task that replaces it runs through `nx:run-commands`, so Nx can't tell which packages it uses.
 Without an `externalDependencies` input, Nx [hashes every external dependency](/docs/reference/inputs#external-dependencies)
-in the workspace, and any lockfile change invalidates the task.
-The first-party plugins declare that input for you, for example `{ "externalDependencies": ["vitest"] }`
+in the workspace, and any change to a resolved package invalidates the task.
+Plugins with a `convert-to-inferred` generator declare that input for you, for example `{ "externalDependencies": ["vitest"] }`
 on inferred Vitest tasks.
 
 `inputs` set in `targetDefaults` or `project.json` replace the inputs a plugin infers, including
@@ -333,10 +333,6 @@ inferred ones alongside your own:
   }
 }
 ```
-
-Inferred ESLint and Vitest tasks also run from the project root instead of the workspace root.
-See [Troubleshoot convert-to-inferred](/docs/kb/troubleshoot-convert-to-inferred#eslint-and-vitest-tasks-run-from-the-project-root)
-for what that changes.
 
 ## Verify the migration
 
@@ -371,3 +367,5 @@ To enable Atomizer, make sure that you are [connected to Nx Cloud](/docs/getting
 ## Troubleshooting
 
 If you run into any issues during the migration, refer to the [troubleshooting guide](/docs/kb/troubleshoot-convert-to-inferred).
+It also covers inferred ESLint and Vitest tasks, which run from the project root instead of the
+workspace root.

@@ -58,7 +58,7 @@ project structure.
 ## Tasks miss the cache after conversion
 
 An inferred task that lost its plugin's `externalDependencies` input hashes every external
-dependency in the workspace, so any lockfile change invalidates it.
+dependency in the workspace, so any change to a resolved package invalidates it.
 This happens when `inputs` in `targetDefaults` or `project.json` replace the inferred inputs.
 Add `"..."` to those `inputs` to keep the inferred ones, as shown in
 [Keep cache inputs tight](/docs/kb/convert-to-inferred#keep-cache-inputs-tight).
