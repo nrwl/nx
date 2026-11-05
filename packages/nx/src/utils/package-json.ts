@@ -377,43 +377,51 @@ export function readModulePackageJson(
   packageJson: PackageJson;
   path: string;
 } {
-  let packageJsonPath: string;
-  let packageJson: PackageJson;
-
+  let exported: { packageJson: PackageJson; path: string } | undefined;
   try {
-    ({ path: packageJsonPath, packageJson } =
-      readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
-  } catch {
-    const lookupPathMatch = findPackageJsonInLookupPaths(
+    exported = readModulePackageJsonWithoutFallbacks(
       moduleSpecifier,
       requirePaths
     );
-    if (lookupPathMatch) {
-      return {
-        packageJson: readJsonFile(lookupPathMatch),
-        path: lookupPathMatch,
-      };
-    }
+  } catch {}
+  // A wildcard export can map package.json to a nested `{"type": ...}` stub,
+  // so a nameless manifest is kept only when the lookup step finds no other.
+  if (exported?.packageJson.name) {
+    return exported;
+  }
 
-    const entryPoint = resolveWithoutCachePollution(
-      moduleSpecifier,
-      requirePaths
-    );
+  const lookupPathMatch = findPackageJsonInLookupPaths(
+    moduleSpecifier,
+    requirePaths
+  );
+  if (lookupPathMatch) {
+    return {
+      packageJson: readJsonFile(lookupPathMatch),
+      path: lookupPathMatch,
+    };
+  }
+  if (exported) {
+    return exported;
+  }
 
-    let moduleRootPath = dirname(entryPoint);
+  const entryPoint = resolveWithoutCachePollution(
+    moduleSpecifier,
+    requirePaths
+  );
+
+  let moduleRootPath = dirname(entryPoint);
+  let packageJsonPath = join(moduleRootPath, 'package.json');
+
+  while (!existsSync(packageJsonPath)) {
+    moduleRootPath = dirname(moduleRootPath);
     packageJsonPath = join(moduleRootPath, 'package.json');
+  }
 
-    while (!existsSync(packageJsonPath)) {
-      moduleRootPath = dirname(moduleRootPath);
-      packageJsonPath = join(moduleRootPath, 'package.json');
-    }
-
-    packageJson = readJsonFile(packageJsonPath);
-    if (packageJson.name && packageJson.name !== moduleSpecifier) {
-      throw new Error(
-        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
-      );
-    }
+  const packageJson: PackageJson = readJsonFile(packageJsonPath);
+  if (packageJson.name && packageJson.name !== moduleSpecifier) {
+    throw new Error(
+      `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
+    );
   }
 
   return {

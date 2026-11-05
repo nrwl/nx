@@ -705,6 +705,24 @@ describe('readModulePackageJson', () => {
     }
   });
 
+  it('reads a local package directory whose package.json has no name', () => {
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+    );
+    try {
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ 'nx-migrations': './migrations.json' })
+      );
+
+      expect(readModulePackageJson(dir, [dir]).path).toBe(
+        join(dir, 'package.json')
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   describe('when the exports map does not expose package.json', () => {
     let dir: string;
 
@@ -763,6 +781,11 @@ describe('readModulePackageJson', () => {
           'dist/cjs/package.json': '{"type":"commonjs"}',
           'dist/esm/index.js': '',
         },
+      ],
+      [
+        'a wildcard entry into a folder with a package.json stub',
+        { '.': './dist/index.js', './*': './dist/*' },
+        { 'dist/index.js': '', 'dist/package.json': '{"type":"commonjs"}' },
       ],
     ])('reads the package root package.json for %s', (_, exports, files) => {
       const pkgDir = join(dir, 'node_modules', 'hidden-manifest');
