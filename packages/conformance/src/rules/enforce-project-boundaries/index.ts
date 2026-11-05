@@ -4,6 +4,7 @@ import {
   type ProjectFileMap,
   type ProjectGraph,
   type ProjectGraphProjectNode,
+  joinPathFragments,
 } from '@nx/devkit';
 import {
   checkCircularPath,
@@ -107,7 +108,7 @@ function checkViolations(
       // Implicit dependencies must have originated from nx configuration
       const files =
         dependencyType === DependencyType.implicit
-          ? findProjectConfigurationFiles(fileMap[sourceProject.name] ?? [])
+          ? findProjectConfigurationFiles(sourceProject, fileMap)
           : findFileDataContainingProjectDependencies(
               sourceProject.name,
               targetProject.name,
@@ -283,14 +284,17 @@ function findFileDataContainingProjectDependencies(
   );
 }
 
-function findProjectConfigurationFiles(projectFiles: FileData[]): string[] {
-  const files = projectFiles.map((file) => file.file);
-  const projectJsonFiles = files.filter((file) =>
-    file.endsWith('project.json')
-  );
-  return projectJsonFiles.length
-    ? projectJsonFiles
-    : files.filter((file) => file.endsWith('package.json'));
+function findProjectConfigurationFiles(
+  project: ProjectGraphProjectNode,
+  fileMap: ProjectFileMap
+): string[] {
+  const files = new Set((fileMap[project.name] ?? []).map((file) => file.file));
+  const projectJson = joinPathFragments(project.data.root, 'project.json');
+  if (files.has(projectJson)) {
+    return [projectJson];
+  }
+  const packageJson = joinPathFragments(project.data.root, 'package.json');
+  return files.has(packageJson) ? [packageJson] : [];
 }
 
 function findConstraintsFor(
