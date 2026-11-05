@@ -5,10 +5,9 @@ import {
   visitNotIgnoredFiles,
   type Tree,
 } from '@nx/devkit';
-import { getInstalledPackageVersion } from '@nx/devkit/internal';
+import { getInstalledPackageVersion, tsquery } from '@nx/devkit/internal';
 import { addVitestTempFilesToGitIgnore } from '../../utils/ignore-vitest-temp-files';
 import { major } from 'semver';
-import { ast, query } from '@phenomnomnominal/tsquery';
 import type {
   CallExpression,
   ExportSpecifier,
@@ -44,7 +43,7 @@ export default async function migrateToVitest5(tree: Tree) {
     const hasSequential = contents.includes('sequential');
     if (!hasEntryPoints && !hasSequential) return;
 
-    const sourceFile = ast(contents);
+    const sourceFile = tsquery.ast(contents);
     if (hasEntryPoints) {
       rewriteRemovedEntryPoints(
         tree,
@@ -167,7 +166,8 @@ function reportUnrewritableSpecifiers(
     moduleSpecifiers.map((node) => node.getStart(sourceFile))
   );
   const stragglers = new Set(
-    query<StringLiteral>(sourceFile, 'StringLiteral')
+    tsquery
+      .query<StringLiteral>(sourceFile, 'StringLiteral')
       .filter(
         (node) =>
           node.text in REMOVED_ENTRY_POINTS &&
@@ -190,16 +190,16 @@ function rewriteRemovedEntryPoints(
   sourceFile: SourceFile,
   unhandled: string[]
 ): void {
-  const specifiers = query<StringLiteral>(
+  const specifiers = tsquery.query<StringLiteral>(
     sourceFile,
     'ImportDeclaration > StringLiteral, ExportDeclaration > StringLiteral'
   );
   reportUnrewritableSpecifiers(sourceFile, specifiers, filePath, unhandled);
 
   const opaqueStarts = new Set(
-    query<StringLiteral>(sourceFile, OPAQUE_DECLARATIONS).map((node) =>
-      node.getStart(sourceFile)
-    )
+    tsquery
+      .query<StringLiteral>(sourceFile, OPAQUE_DECLARATIONS)
+      .map((node) => node.getStart(sourceFile))
   );
 
   let updated = contents;
@@ -265,10 +265,12 @@ function whyNotRewritable(
 }
 
 function boundNamesOf(specifier: StringLiteral): string[] {
-  return query<ImportSpecifier | ExportSpecifier>(
-    specifier.parent,
-    'ImportSpecifier, ExportSpecifier'
-  ).map((element) => (element.propertyName ?? element.name).text);
+  return tsquery
+    .query<ImportSpecifier | ExportSpecifier>(
+      specifier.parent,
+      'ImportSpecifier, ExportSpecifier'
+    )
+    .map((element) => (element.propertyName ?? element.name).text);
 }
 
 /**
@@ -284,26 +286,30 @@ function detectSequentialUsage(
 ): void {
   // Both AST forms of a property key, and only in an options object handed to
   // a test or suite call. A loose `{ sequential: true }` is someone else's API.
-  const optionKeys = query(
-    sourceFile,
-    'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
-  ).filter((key) => {
-    // PropertyAssignment < ObjectLiteralExpression < CallExpression.
-    const call = key.parent?.parent?.parent as CallExpression | undefined;
-    return (
-      !!call &&
-      'arguments' in call &&
-      TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
+  const optionKeys = tsquery
+    .query(
+      sourceFile,
+      'PropertyAssignment > :matches(Identifier[name=sequential], StringLiteral[value=sequential])'
+    )
+    .filter((key) => {
+      // PropertyAssignment < ObjectLiteralExpression < CallExpression.
+      const call = key.parent?.parent?.parent as CallExpression | undefined;
+      return (
+        !!call &&
+        'arguments' in call &&
+        TEST_CALLEES.has(call.expression.getText(sourceFile).split('.')[0])
+      );
+    });
+  const modifiers = tsquery
+    .query<PropertyAccessExpression>(
+      sourceFile,
+      'PropertyAccessExpression:has(Identifier[name=sequential])'
+    )
+    .filter(
+      (node) =>
+        node.name.text === 'sequential' &&
+        TEST_CALLEES.has(node.expression.getText(sourceFile))
     );
-  });
-  const modifiers = query<PropertyAccessExpression>(
-    sourceFile,
-    'PropertyAccessExpression:has(Identifier[name=sequential])'
-  ).filter(
-    (node) =>
-      node.name.text === 'sequential' &&
-      TEST_CALLEES.has(node.expression.getText(sourceFile))
-  );
   const usages = [...optionKeys, ...modifiers];
   if (usages.length === 0) return;
 

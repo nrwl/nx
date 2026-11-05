@@ -1,6 +1,6 @@
 import { relative, resolve } from 'path/posix';
 import { workspaceRoot, type Tree, joinPathFragments } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 
 export function toProjectRelativePath(
   path: string,
@@ -39,14 +39,14 @@ export function addConfigValuesToViteConfig(
   const IMPORT_PROPERTY_SELECTOR = 'ImportDeclaration';
   const viteConfigContents = tree.read(configFile, 'utf-8');
 
-  const sourceFile = ast(viteConfigContents);
+  const sourceFile = tsquery.ast(viteConfigContents);
   // An earlier run that kept the target already added the block; a second
   // `const configValues` breaks parsing of the config.
   if (viteConfigContents.includes('configValues[nxConfiguration]')) {
     return;
   }
   // AST TO GET SECTION TO APPEND TO
-  const importNodes = query(sourceFile, IMPORT_PROPERTY_SELECTOR);
+  const importNodes = tsquery.query(sourceFile, IMPORT_PROPERTY_SELECTOR);
   if (importNodes.length === 0) {
     return;
   }

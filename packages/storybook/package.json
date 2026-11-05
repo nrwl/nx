@@ -98,7 +98,6 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/js": "workspace:*",

@@ -541,9 +541,6 @@ catalogs:
       specifier: ^2.4.0
       version: 2.6.0
   typescript:
-    '@phenomnomnominal/tsquery':
-      specifier: ~6.2.0
-      version: 6.2.0
     '@types/node':
       specifier: ^24.11.0
       version: 24.12.2
@@ -745,7 +742,7 @@ importers:
         version: 1.7.0
       '@eslint/js':
         specifier: ^9.39.4
-        version: 9.39.4
+        version: 9.39.5
       '@floating-ui/react':
         specifier: 0.26.28
         version: 0.26.28(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2141,9 +2138,6 @@ importers:
       '@nx/webpack':
         specifier: workspace:*
         version: link:../webpack
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@schematics/angular':
         specifier: catalog:angular-supported-versions
         version: 22.2.3(chokidar@5.0.0)
@@ -2412,9 +2406,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       cypress:
         specifier: '>= 13 < 17'
         version: 16.0.0
@@ -2587,9 +2578,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@typescript-eslint/parser':
         specifier: ^8.0.0
         version: 8.73.0(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(typescript@7.1.0-beta)
@@ -2732,9 +2720,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       identity-obj-proxy:
         specifier: catalog:jest
         version: 3.0.0
@@ -2985,9 +2970,6 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       copy-webpack-plugin:
         specifier: ^14.0.0
         version: 14.0.0(webpack@5.111.0)
@@ -3397,9 +3379,6 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
@@ -3565,9 +3544,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@rollup/plugin-babel':
         specifier: ^6.0.4
         version: 6.0.4(@babel/core@7.29.7(supports-color@10.2.2))(@types/babel__core@7.20.5)(rollup@4.62.4)(supports-color@10.2.2)
@@ -3626,9 +3602,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@rsbuild/core':
         specifier: ^1.0.0 || ^2.0.0
         version: 2.0.15(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(core-js@3.36.1)
@@ -3657,9 +3630,6 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       '@rspack/core':
         specifier: ^1.0.0 || ^2.0.0
         version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
@@ -3757,9 +3727,6 @@ importers:
       '@nx/web':
         specifier: workspace:*
         version: link:../web
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -3785,9 +3752,6 @@ importers:
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
@@ -3822,9 +3786,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -3954,9 +3915,6 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
-      '@phenomnomnominal/tsquery':
-        specifier: catalog:typescript
-        version: 6.2.0(typescript@6.0.3)
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
@@ -7501,10 +7459,6 @@ packages:
 
   '@eslint/eslintrc@3.3.7':
     resolution: {integrity: sha512-F42g89Qd5oAWtp0k0nnSrjziAKza7w8SVT4mStc18LZMaRb4J1HQAHLCalEtDCxrTuksx7NU9qsmeLwpOfPqWw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@eslint/js@9.39.4':
-    resolution: {integrity: sha512-nE7DEIchvtiFTwBw4Lfbu59PG+kCofhjsKaCWzxTpt4lfRjRMqG6uMBzKXuEcyXhOHoUp9riAm7/aWYGhXZ9cw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/js@9.39.5':
@@ -31946,8 +31900,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/js@9.39.4': {}
-
   '@eslint/js@9.39.5': {}
 
   '@eslint/object-schema@2.1.7': {}
@@ -44070,6 +44022,7 @@ snapshots:
   dtrace-provider@0.8.8:
     dependencies:
       nan: 2.23.0
+    optional: true
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
     optionalDependencies:
@@ -45886,6 +45839,7 @@ snapshots:
       minimatch: 10.2.5
       once: 1.4.0
       path-is-absolute: 1.0.1
+    optional: true
 
   glob@7.2.3:
     dependencies:
@@ -50712,7 +50666,8 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  moment@2.30.1: {}
+  moment@2.30.1:
+    optional: true
 
   motion-dom@11.18.1:
     dependencies:
@@ -50804,6 +50759,7 @@ snapshots:
       mkdirp: 0.5.6
       ncp: 2.0.0
       rimraf: 2.4.5
+    optional: true
 
   mz@2.7.0:
     dependencies:
@@ -50811,7 +50767,8 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
-  nan@2.23.0: {}
+  nan@2.23.0:
+    optional: true
 
   nanoid@3.3.20: {}
 
@@ -50823,7 +50780,8 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  ncp@2.0.0: {}
+  ncp@2.0.0:
+    optional: true
 
   needle@2.9.1(supports-color@10.2.2):
     dependencies:
@@ -54214,6 +54172,7 @@ snapshots:
   rimraf@2.4.5:
     dependencies:
       glob: 6.0.4
+    optional: true
 
   rimraf@3.0.2:
     dependencies:
@@ -54402,7 +54361,8 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-json-stringify@1.2.0: {}
+  safe-json-stringify@1.2.0:
+    optional: true
 
   safe-regex-test@1.1.0:
     dependencies:

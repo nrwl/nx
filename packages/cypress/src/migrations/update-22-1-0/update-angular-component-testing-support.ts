@@ -8,7 +8,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { ast, query, replace } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import { lt, valid } from 'semver';
 import type { ImportDeclaration, Printer } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
@@ -114,8 +114,8 @@ function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
     }
 
     const originalContent = tree.read(filePath, 'utf-8');
-    const sourceFile = ast(originalContent);
-    const updatedContent = replace(
+    const sourceFile = tsquery.ast(originalContent);
+    const updatedContent = tsquery.replace(
       originalContent,
       'ImportDeclaration',
       (node: ImportDeclaration) => {
@@ -156,7 +156,9 @@ function resolveFramework(
 ): 'angular' | 'react' | null {
   ts ??= ensureTypescript();
 
-  const frameworkProperty = query<import('typescript').PropertyAssignment>(
+  const frameworkProperty = tsquery.query<
+    import('typescript').PropertyAssignment
+  >(
     config,
     'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=framework])'
   )[0];
@@ -167,7 +169,7 @@ function resolveFramework(
       : null;
   }
 
-  const sourceFile = ast(cypressConfig);
+  const sourceFile = tsquery.ast(cypressConfig);
   const nxPresetModuleSpecifiers = [
     '@nx/angular/plugins/component-testing',
     '@nx/react/plugins/component-testing',
@@ -175,7 +177,10 @@ function resolveFramework(
     '@nx/remix/plugins/component-testing',
   ];
 
-  const imports = query<ImportDeclaration>(sourceFile, 'ImportDeclaration');
+  const imports = tsquery.query<ImportDeclaration>(
+    sourceFile,
+    'ImportDeclaration'
+  );
 
   const nxPresetImport = imports.find((decl) => {
     const moduleSpec = decl.moduleSpecifier.getText().replace(/['"`]/g, '');

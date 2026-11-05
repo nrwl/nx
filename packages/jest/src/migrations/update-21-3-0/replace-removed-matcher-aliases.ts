@@ -1,5 +1,5 @@
 import { formatFiles, globAsync, logger, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import { SearchSource } from 'jest';
 import { readConfig } from 'jest-config';
 import Runtime from 'jest-runtime';
@@ -45,13 +45,13 @@ function replaceMatcherAliases(fileContent: string): string {
     return fileContent;
   }
 
-  const sourceFile = ast(fileContent);
+  const sourceFile = tsquery.ast(fileContent);
   const updates: Array<{ start: number; end: number; text: string }> = [];
 
   // Query for all deprecated matcher identifiers in expect() chains
   // The selector matches: expect(...).toBeCalled(), expect(...).not.toBeCalled(), etc.
   const selector = `CallExpression PropertyAccessExpression:has(CallExpression Identifier[name=expect]) Identifier[name=/^(${aliasPattern})$/]`;
-  const matchedNodes = query<Identifier>(sourceFile, selector);
+  const matchedNodes = tsquery.query<Identifier>(sourceFile, selector);
 
   for (const node of matchedNodes) {
     const alias = node.text;

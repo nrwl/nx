@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ast, query } from '@phenomnomnominal/tsquery';
+import { tsquery } from '@nx/devkit/internal';
 import * as ts from 'typescript';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
@@ -37,9 +37,9 @@ function processFile(tree: Tree, filePath: string): void {
     return;
   }
 
-  const sourceFile = ast(content);
+  const sourceFile = tsquery.ast(content);
 
-  const providersArray = query<ts.ArrayLiteralExpression>(
+  const providersArray = tsquery.query<ts.ArrayLiteralExpression>(
     sourceFile,
     'PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression'
   )[0];

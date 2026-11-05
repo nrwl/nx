@@ -81,8 +81,7 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript",
-    "semver": "catalog:",
-    "@phenomnomnominal/tsquery": "catalog:typescript"
+    "semver": "catalog:"
   },
   "peerDependencies": {
     "@nx/eslint": "workspace:*",

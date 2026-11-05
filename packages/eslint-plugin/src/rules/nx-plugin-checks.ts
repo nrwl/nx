@@ -2,7 +2,6 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { AST } from 'jsonc-eslint-parser';
 import { readFileSync } from 'fs';
-import { query } from '@phenomnomnominal/tsquery';
 
 import {
   ProjectConfiguration,
@@ -17,6 +16,7 @@ import {
   resolvePrompt,
   resolveSchema,
   SchemaResolutionError,
+  tsquery,
 } from '@nx/devkit/internal';
 import * as path from 'path';
 import { valid } from 'semver';
@@ -664,7 +664,7 @@ export function checkIfIdentifierIsFunction(
       true
     );
 
-    const exportedFunctions = query(
+    const exportedFunctions = tsquery.query(
       sourceFile,
       `
       FunctionDeclaration[name.text="${identifier}"][modifiers],

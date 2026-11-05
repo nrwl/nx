@@ -162,7 +162,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "autoprefixer": "catalog:css",
     "browserslist": "^4.26.0",
     "css-loader": "^7.1.4",

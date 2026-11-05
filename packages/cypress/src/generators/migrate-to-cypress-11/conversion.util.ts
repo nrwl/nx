@@ -13,7 +13,7 @@ import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
 
 let tsModule: typeof import('typescript');
-let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
+let tsquery: typeof import('@nx/devkit/internal').tsquery;
 
 const validFilesEndingsToUpdate = [
   '.js',
@@ -273,7 +273,7 @@ export function updateImports(
   }
   if (!tsquery) {
     ensureTypescript();
-    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+    tsquery = require('@nx/devkit/internal').tsquery;
   }
   const { isCallExpression, isExportDeclaration, isImportDeclaration } =
     tsModule;

@@ -111,7 +111,6 @@
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "@nx/js": "workspace:*",
     "@nx/vitest": "workspace:*",
     "picomatch": "catalog:",

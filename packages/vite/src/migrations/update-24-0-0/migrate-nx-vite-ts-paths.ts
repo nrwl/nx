@@ -66,7 +66,7 @@ export default async function migrateNxViteTsPaths(tree: Tree): Promise<void> {
  * handles what this leaves behind.
  */
 function removePluginUsage(content: string): string {
-  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { tsquery } = require('@nx/devkit/internal');
   const tsModule: typeof import('typescript') = require('typescript');
   const file = tsquery.ast(content);
 

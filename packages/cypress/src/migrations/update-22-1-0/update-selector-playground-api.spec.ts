@@ -127,14 +127,15 @@ Cypress.SelectorPlayground.defaults({
 
     expect(tree.read('apps/web-e2e/src/support/multiple.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "Cypress.ElementSelector.defaults({
-        selectorPriority: ['data-cy'],
-      });
-      Cypress.ElementSelector.defaults({
-        selectorPriority: ['data-test'],
-      });
-      "
-    `);
+        "Cypress.ElementSelector.defaults({
+          selectorPriority: ['data-cy'],
+        });
+
+        Cypress.ElementSelector.defaults({
+          selectorPriority: ['data-test'],
+        });
+        "
+      `);
   });
 
   it('should handle onElement as the only property', async () => {

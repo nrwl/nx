@@ -102,7 +102,6 @@
   },
   "dependencies": {
     "@babel/preset-react": "^7.22.5",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
     "minimatch": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",

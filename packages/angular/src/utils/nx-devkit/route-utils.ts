@@ -30,7 +30,7 @@ export function addRoute(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
 
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
@@ -108,7 +108,7 @@ export function addProviderToRoute(
   }
 
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
   let routesFileContents = tree.read(routesFile, 'utf-8');
 
   const sourceFile = ast(routesFileContents);

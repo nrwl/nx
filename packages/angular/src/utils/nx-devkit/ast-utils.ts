@@ -711,7 +711,7 @@ export function isNgStandaloneApp(tree: Tree, projectName: string) {
   }
 
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
 
   const mainFileContents = tree.read(mainFile, 'utf-8');
 
@@ -734,7 +734,7 @@ export function addProviderToBootstrapApplication(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
   const PROVIDERS_ARRAY_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication]) ObjectLiteralExpression > PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
@@ -773,7 +773,7 @@ export function addProviderToAppConfig(
   providerToAdd: string
 ) {
   ensureTypescript();
-  const { ast, query } = require('@phenomnomnominal/tsquery');
+  const { ast, query } = require('@nx/devkit/internal').tsquery;
   const PROVIDERS_ARRAY_SELECTOR =
     'VariableDeclaration:has(TypeReference > Identifier[name=ApplicationConfig]) > ObjectLiteralExpression  PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
 
