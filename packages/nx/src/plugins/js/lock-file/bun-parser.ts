@@ -1162,8 +1162,12 @@ function processSingleDependency(
     return null;
   }
 
-  // O(1) check using index
-  if (isWorkspacePackage(packageName, index, workspacePackages)) {
+  // A local package can share a workspace package's name, and only the path
+  // this parent resolved it to tells whether it installs that one.
+  if (
+    isWorkspacePackage(packageName, index, workspacePackages) &&
+    !isNonWorkspaceLocalPackage(`${sourcePackageKey}/${packageName}`, index)
+  ) {
     return null;
   }
 

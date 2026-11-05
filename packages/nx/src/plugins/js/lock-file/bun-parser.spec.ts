@@ -16,6 +16,7 @@ import { scopedPackagesBunLock } from './__fixtures__/bun/scoped-packages.bun.lo
 import { tarballDependenciesLockFile } from './__fixtures__/bun/tarball-dependencies.bun.lock';
 import { tupleShapesBunLock } from './__fixtures__/bun/tuple-shapes.bun.lock';
 import {
+  transitiveWorkspaceNameBunLock,
   vendoredPackagesBunLock,
   workspaceFileDependencyBunLock,
 } from './__fixtures__/bun/vendored-packages.bun.lock';
@@ -2276,42 +2277,53 @@ describe('Bun Parser', () => {
       `);
     });
 
-    it('should create dependencies of vendored packages', () => {
-      const externalNodes = getBunTextLockfileNodes(
-        vendoredPackagesBunLock,
-        BASIC_LOCK_FILE_HASH
-      );
-      const ctx: CreateDependenciesContext = {
-        externalNodes,
-        projects: {},
-        fileMap: { projectFileMap: {}, nonProjectFiles: [] },
-        filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
-        nxJsonConfiguration: {},
-        workspaceRoot: '/root',
-      };
+    it.each([
+      {
+        scenario: 'nested and hoisted vendored packages',
+        lockFile: vendoredPackagesBunLock,
+        hash: BASIC_LOCK_FILE_HASH,
+        // An import of `vend` resolves to its bare node, which carries the
+        // same dependencies.
+        expected: [
+          'npm:is-number@3.0.0 -> npm:kind-of@3.2.2',
+          'npm:is-odd@1.0.0 -> npm:is-number@3.0.0',
+          'npm:is-odd@file:vendor/is-odd -> npm:ms@2.1.3',
+          'npm:kind-of@3.2.2 -> npm:is-buffer@1.1.6',
+          'npm:vend -> npm:inner@file:vendor/inner',
+          'npm:vend -> npm:ms@2.1.3',
+          'npm:vend -> npm:ttar@../ttar-1.0.0.tgz',
+          'npm:vend@file:vendor/vend -> npm:inner@file:vendor/inner',
+          'npm:vend@file:vendor/vend -> npm:ms@2.1.3',
+          'npm:vend@file:vendor/vend -> npm:ttar@../ttar-1.0.0.tgz',
+        ],
+      },
+      {
+        scenario: 'a vendored package named like a workspace package',
+        lockFile: transitiveWorkspaceNameBunLock,
+        hash: 'transitive-workspace-name-hash',
+        expected: [
+          'npm:holder@file:vendor/holder -> npm:util@file:vendor/util',
+        ],
+      },
+    ])(
+      'should create dependencies of vendored packages ($scenario)',
+      ({ lockFile, hash, expected }) => {
+        const externalNodes = getBunTextLockfileNodes(lockFile, hash);
+        const ctx: CreateDependenciesContext = {
+          externalNodes,
+          projects: {},
+          fileMap: { projectFileMap: {}, nonProjectFiles: [] },
+          filesToProcess: { projectFileMap: {}, nonProjectFiles: [] },
+          nxJsonConfiguration: {},
+          workspaceRoot: '/root',
+        };
 
-      const result = getBunTextLockfileDependencies(
-        vendoredPackagesBunLock,
-        BASIC_LOCK_FILE_HASH,
-        ctx
-      );
+        const result = getBunTextLockfileDependencies(lockFile, hash, ctx);
 
-      // An import of `vend` resolves to its bare node, which carries the same
-      // dependencies.
-      expect(
-        result.map(({ source, target }) => `${source} -> ${target}`).sort()
-      ).toEqual([
-        'npm:is-number@3.0.0 -> npm:kind-of@3.2.2',
-        'npm:is-odd@1.0.0 -> npm:is-number@3.0.0',
-        'npm:is-odd@file:vendor/is-odd -> npm:ms@2.1.3',
-        'npm:kind-of@3.2.2 -> npm:is-buffer@1.1.6',
-        'npm:vend -> npm:inner@file:vendor/inner',
-        'npm:vend -> npm:ms@2.1.3',
-        'npm:vend -> npm:ttar@../ttar-1.0.0.tgz',
-        'npm:vend@file:vendor/vend -> npm:inner@file:vendor/inner',
-        'npm:vend@file:vendor/vend -> npm:ms@2.1.3',
-        'npm:vend@file:vendor/vend -> npm:ttar@../ttar-1.0.0.tgz',
-      ]);
-    });
+        expect(
+          result.map(({ source, target }) => `${source} -> ${target}`).sort()
+        ).toEqual(expected);
+      }
+    );
   });
 });
