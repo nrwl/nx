@@ -4,6 +4,7 @@ import {
   hashObject,
   combineGlobPatterns,
   globWithWorkspaceContext,
+  quoteShellArg,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
 import {
@@ -35,6 +36,7 @@ import { resolveESLintClass } from '../utils/resolve-eslint-class';
 export interface EslintPluginOptions {
   targetName?: string;
   extensions?: string[];
+  cwd?: 'projectRoot' | 'workspaceRoot';
 }
 
 const DEFAULT_EXTENSIONS = [
@@ -71,14 +73,32 @@ const internalCreateNodesV2 = async (
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
-  let sharedEslint: ESLintType;
-  const getEslint = (projectRoot: string) => {
-    if (existsSync(join(context.workspaceRoot, projectRoot, '.eslintignore'))) {
-      return new ESLint({ cwd: join(context.workspaceRoot, projectRoot) });
+  const runsFromWorkspaceRoot = options.cwd === 'workspaceRoot';
+  const eslintConfigs = getEslintConfigs(configFilePath, context.workspaceRoot);
+  const lintCwd = (projectRoot: string) =>
+    runsFromWorkspaceRoot ? '.' : projectRoot;
+  // ESLint 9 looks up a flat config from its cwd only, so a nested one is
+  // passed explicitly.
+  const lintConfigFile =
+    runsFromWorkspaceRoot && configDir !== '.' && isFlatConfig(configFilePath)
+      ? configFilePath
+      : undefined;
+  let sharedEslint: Promise<ESLintType>;
+  const getEslint = (projectRoot: string): Promise<ESLintType> => {
+    if (
+      !runsFromWorkspaceRoot &&
+      existsSync(join(context.workspaceRoot, projectRoot, '.eslintignore'))
+    ) {
+      return Promise.resolve(
+        new ESLint({ cwd: join(context.workspaceRoot, projectRoot) })
+      );
     }
-    sharedEslint ??= new ESLint({
-      cwd: join(context.workspaceRoot, configDir),
-    });
+    sharedEslint ??= createSharedEslint(
+      ESLint,
+      context.workspaceRoot,
+      runsFromWorkspaceRoot ? '.' : configDir,
+      lintConfigFile
+    );
     return sharedEslint;
   };
 
@@ -98,8 +118,12 @@ const internalCreateNodesV2 = async (
       }
 
       let hasNonIgnoredLintableFiles = false;
-      if (configDir !== projectRoot || projectRoot === '.') {
-        const eslint = getEslint(projectRoot);
+      if (
+        configDir !== projectRoot ||
+        projectRoot === '.' ||
+        runsFromWorkspaceRoot
+      ) {
+        const eslint = await getEslint(projectRoot);
         for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
           if (
             !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
@@ -119,8 +143,10 @@ const internalCreateNodesV2 = async (
       }
 
       const project = getProjectUsingESLintConfig(
-        configFilePath,
+        eslintConfigs,
         projectRoot,
+        lintCwd(projectRoot),
+        lintConfigFile,
         options,
         context,
         pmc,
@@ -196,9 +222,13 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
           (_, index) =>
             root === '.' || configDirectories[index].startsWith(prefix)
         );
+        const ignoreFiles = new Set([join(root, '.eslintignore')]);
+        if (options.cwd === 'workspaceRoot') {
+          ignoreFiles.add('.eslintignore');
+        }
         return [
           ...descendantConfigs,
-          join(root, '.eslintignore'),
+          ...ignoreFiles,
           lockFilePattern,
           ...(tsconfigChainsByProjectRoot.get(root) ?? []),
         ];
@@ -247,6 +277,25 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+async function createSharedEslint(
+  ESLint: typeof ESLintType,
+  workspaceRoot: string,
+  cwd: string,
+  overrideConfigFile: string | undefined
+): Promise<ESLintType> {
+  if (!overrideConfigFile) {
+    return new ESLint({ cwd: join(workspaceRoot, cwd) });
+  }
+  // The flat class: a legacy root config selects the eslintrc one.
+  const FlatESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: true,
+  });
+  return new FlatESLint({
+    cwd: join(workspaceRoot, cwd),
+    overrideConfigFile: join(workspaceRoot, overrideConfigFile),
+  });
+}
 
 function splitConfigFiles(configFiles: readonly string[]): {
   eslintConfigFiles: string[];
@@ -409,20 +458,33 @@ function getRootForDirectory(
   return roots.has(currentPath) ? currentPath : null;
 }
 
-function getProjectUsingESLintConfig(
+function getEslintConfigs(
   configFilePath: string,
+  workspaceRoot: string
+): string[] {
+  const rootEslintConfig = [
+    baseEsLintConfigFile,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
+    ...ESLINT_CONFIG_FILENAMES,
+  ].find((f) => existsSync(join(workspaceRoot, f)));
+
+  const eslintConfigs = [configFilePath];
+  if (rootEslintConfig && !eslintConfigs.includes(rootEslintConfig)) {
+    eslintConfigs.unshift(rootEslintConfig);
+  }
+  return eslintConfigs;
+}
+
+function getProjectUsingESLintConfig(
+  eslintConfigs: string[],
   projectRoot: string,
+  lintCwd: string,
+  lintConfigFile: string | undefined,
   options: EslintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigChainOutsideProjectRoot: string[]
 ): CreateNodesResult['projects'][string] | null {
-  const rootEslintConfig = [
-    baseEsLintConfigFile,
-    ...BASE_ESLINT_CONFIG_FILENAMES,
-    ...ESLINT_CONFIG_FILENAMES,
-  ].find((f) => existsSync(join(context.workspaceRoot, f)));
-
   // Add a lint target for each child project without an eslint config, with the root level config as an input
   const standaloneSrcPath = getStandaloneSrcPath(
     projectRoot,
@@ -432,16 +494,12 @@ function getProjectUsingESLintConfig(
     return null;
   }
 
-  const eslintConfigs = [configFilePath];
-
-  if (rootEslintConfig && !eslintConfigs.includes(rootEslintConfig)) {
-    eslintConfigs.unshift(rootEslintConfig);
-  }
-
   return {
     targets: buildEslintTargets(
       eslintConfigs,
       projectRoot,
+      lintCwd,
+      lintConfigFile,
       context.workspaceRoot,
       options,
       pmc,
@@ -478,16 +536,26 @@ export const lintReportOutput =
 
 export function getLintCommand(
   projectRoot: string,
-  standaloneSrcPath: string | undefined
+  standaloneSrcPath: string | undefined,
+  lintCwd = projectRoot,
+  configFile?: string
 ): string {
-  return `eslint ${
-    projectRoot === '.' && standaloneSrcPath ? `./${standaloneSrcPath}` : '.'
+  if (projectRoot === '.') {
+    return `eslint ${standaloneSrcPath ? `./${standaloneSrcPath}` : '.'}`;
+  }
+  if (lintCwd === projectRoot) {
+    return 'eslint .';
+  }
+  return `eslint ${quoteShellArg(projectRoot)}${
+    configFile ? ` --config ${quoteShellArg(configFile)}` : ''
   }`;
 }
 
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
+  lintCwd: string,
+  lintConfigFile: string | undefined,
   workspaceRoot: string,
   options: EslintPluginOptions,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -497,18 +565,23 @@ function buildEslintTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   const targetConfig: TargetConfiguration = {
-    command: getLintCommand(projectRoot, standaloneSrcPath),
+    command: getLintCommand(
+      projectRoot,
+      standaloneSrcPath,
+      lintCwd,
+      lintConfigFile
+    ),
     cache: true,
     options: {
-      cwd: projectRoot,
+      cwd: lintCwd,
     },
     inputs: [
       'default',
       // Certain lint rules can be impacted by changes to dependencies
       '^default',
       ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
-      ...(existsSync(join(workspaceRoot, projectRoot, '.eslintignore'))
-        ? [join('{workspaceRoot}', projectRoot, '.eslintignore')]
+      ...(existsSync(join(workspaceRoot, lintCwd, '.eslintignore'))
+        ? [join('{workspaceRoot}', lintCwd, '.eslintignore')]
         : []),
       // Tsconfig files reached via `extends` that live outside the project
       // root — declared so the cache invalidates on upstream changes.
@@ -551,6 +624,9 @@ function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   const normalizedOptions: EslintPluginOptions = {
     targetName: options?.targetName ?? 'lint',
   };
+  if (options?.cwd) {
+    normalizedOptions.cwd = options.cwd;
+  }
 
   // Normalize user input for extensions (strip leading . characters)
   if (Array.isArray(options?.extensions)) {
