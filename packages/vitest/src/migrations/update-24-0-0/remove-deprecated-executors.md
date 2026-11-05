@@ -22,7 +22,7 @@ The target keeps the removed executor, and the migration lists it, in these case
 - It sets any other option, such as `runMode`, or sets an accepted option to another kind of value.
 - It has no `configFile` and the project has no config file the plugin infers.
 - An output reads `{options.reportsDirectory}`, and the directory differs between configurations or points outside the workspace.
-- `targetDefaults` that apply to `nx:run-commands` targets would change it.
+- `targetDefaults` that apply to `nx:run-commands` targets would change it. An entry keyed by the target name applies to both executors, so it holds the target back when it sets an option the rewrite renames.
 
 The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
 

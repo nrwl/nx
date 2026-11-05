@@ -16,7 +16,7 @@ The target keeps the removed executor, and the migration lists it, in these case
 - It sets any other option, or sets an accepted option to another kind of value.
 - It sets `runInBand: true` together with `maxWorkers`, also through a configuration. Jest's CLI rejects that pair.
 - An output reads an option the rewrite removes or renames, such as `{options.tsConfig}`.
-- `targetDefaults` that apply to `nx:run-commands` targets would change it.
+- `targetDefaults` that apply to `nx:run-commands` targets would change it. An entry keyed by the target name applies to both executors, so it holds the target back when it sets an option the rewrite renames.
 
 The migration lists the targets the converter cannot convert safely. In agentic runs, an AI prompt finishes them and validates the project graph.
 

@@ -108,7 +108,6 @@ function rewriteUninferredTargets(
         );
         assertDefaultsKeepTarget(
           runCommandsTarget,
-          executorDefaults,
           readDefaults('nx:run-commands')
         );
         project.targets[targetName] = runCommandsTarget;
@@ -172,20 +171,14 @@ function resolveTarget(
 }
 
 /**
- * Target defaults are matched by executor, so the rewritten target can get
- * entries the removed executor never did. They must not change it.
+ * The defaults that apply to nx:run-commands still apply to the rewritten
+ * target at run time, untranslated. They must not change it.
  */
 function assertDefaultsKeepTarget(
   target: TargetConfiguration,
-  executorDefaults: Partial<TargetConfiguration> | null,
   runCommandsDefaults: Partial<TargetConfiguration> | null
 ) {
   if (!runCommandsDefaults) {
-    return;
-  }
-  // The executor got these entries too, and the target holds their values
-  // translated for the tool's CLI
-  if (isDeepStrictEqual(executorDefaults, runCommandsDefaults)) {
     return;
   }
   if (

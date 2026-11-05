@@ -8,6 +8,7 @@ import {
   readProjectConfiguration,
   type TargetConfiguration,
   type Tree,
+  updateNxJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -360,6 +361,29 @@ describe('remove-deprecated-executors', () => {
       });
       expect(result.nextSteps).toEqual([
         'These targets still use removed executors: no-config:test (@nx/vitest:test). Replace each one before running them.',
+      ]);
+    });
+
+    it('keeps a target on its executor when a target-name default sets an option the rewrite renames', async () => {
+      const project = createTestProject(tree);
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        'e2e-test': { options: { reportsDirectory: 'coverage/e2e' } },
+      };
+      updateNxJson(tree, nxJson);
+      const e2e: TargetConfiguration = {
+        executor: '@nx/vitest:test',
+        options: { configFile: `${project.root}/vitest.config.e2e.mts` },
+      };
+      addTarget(project.name, 'e2e-test', e2e);
+
+      const result = await update(tree);
+
+      expect(
+        readProjectConfiguration(tree, project.name).targets['e2e-test']
+      ).toEqual(e2e);
+      expect(result.nextSteps).toEqual([
+        'These targets still use removed executors: myapp:e2e-test (@nx/vitest:test). Replace each one before running them.',
       ]);
     });
 
