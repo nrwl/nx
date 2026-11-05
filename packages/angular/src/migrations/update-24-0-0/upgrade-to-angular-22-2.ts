@@ -12,6 +12,7 @@ import {
   isBuiltinModuleImport,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { basename, dirname } from 'path';
@@ -88,7 +89,7 @@ type WorkspaceScan = {
   moduleFederationFiles: string[];
 };
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function upgradeToAngular222(tree: Tree) {
   const scan = scanWorkspace(tree);

@@ -2,8 +2,9 @@ import type { Tree } from '@nx/devkit';
 import { addGlobal, removeChange } from '@nx/js';
 import { ensureTypescript } from '@nx/js/internal';
 import type { NormalizedOptions } from '../schema';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function addExportsToBarrelFile(
   tree: Tree,

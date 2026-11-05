@@ -2,8 +2,9 @@ import type * as ts from 'typescript';
 import { findNodes } from '@nx/js';
 import { ChangeType, logger, StringChange, StringInsertion } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function addImport(
   source: ts.SourceFile,

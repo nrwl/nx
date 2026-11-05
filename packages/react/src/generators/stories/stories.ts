@@ -20,8 +20,9 @@ import {
 import { getUiFramework } from '../../utils/framework';
 import componentStoryGenerator from '../component-story/component-story';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export interface StorybookStoriesSchema {
   project: string;

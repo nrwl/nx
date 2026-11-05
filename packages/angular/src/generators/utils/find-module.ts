@@ -7,8 +7,9 @@ import {
   insertNgModuleProperty,
   ngModuleDecoratorProperty,
 } from './insert-ngmodule-import';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function findModule(tree: Tree, path: string, module?: string) {
   const candidatePaths: string[] = [];

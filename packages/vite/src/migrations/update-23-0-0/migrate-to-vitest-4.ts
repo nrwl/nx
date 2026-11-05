@@ -1,6 +1,6 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery } from '@nx/devkit/internal';
+import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
 import picomatch = require('picomatch');
 import type {
   ArrayLiteralExpression,
@@ -26,7 +26,7 @@ import {
   visitVitestConfigFiles,
 } from './lib/vitest-config-files';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 /**
  * Hybrid migration paired with `ai-instructions-for-vitest-4.md`. Applies the

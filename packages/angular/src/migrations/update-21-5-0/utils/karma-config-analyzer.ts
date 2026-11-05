@@ -24,6 +24,7 @@ import type {
   PropertyAssignment,
   StringLiteral,
 } from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
 export interface RequireInfo {
   module: string;
@@ -46,7 +47,7 @@ export interface KarmaConfigAnalysis {
   hasUnsupportedValues: boolean;
 }
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 /**
  * Analyzes the content of a Karma configuration file to extract its settings.

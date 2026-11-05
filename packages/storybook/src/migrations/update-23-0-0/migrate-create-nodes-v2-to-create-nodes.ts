@@ -7,6 +7,7 @@ import {
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import type {
   ExportDeclaration,
@@ -31,7 +32,7 @@ const TARGET_SPECIFIERS: ReadonlySet<string> = new Set([
   '@nx/storybook/plugin',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function migrateCreateNodesV2ToCreateNodes(
   tree: Tree

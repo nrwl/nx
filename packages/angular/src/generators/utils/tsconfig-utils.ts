@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeParseConfigHost, ensureTypescript } from '@nx/js/internal';
-import { dirname, join } from 'node:path';
+import { readTsConfig } from '@nx/js';
+import { createTreeParseConfigHost } from '@nx/js/internal';
+import { join } from 'node:path';
 import type * as ts from 'typescript';
 
 /**
@@ -30,16 +31,11 @@ export function readResolvedTsConfig(
   tree: Tree,
   tsConfigPath: string
 ): ts.ParsedCommandLine {
-  const ts = ensureTypescript();
-  const host = createTreeParseConfigHost(tree);
   // an absolute path is what makes the inherited entries come back relative to
   // this config
-  const absoluteTsConfigPath = join(tree.root, tsConfigPath);
-
-  return ts.parseJsonConfigFileContent(
-    ts.readConfigFile(absoluteTsConfigPath, host.readFile).config,
-    host,
-    dirname(absoluteTsConfigPath)
+  return readTsConfig(
+    join(tree.root, tsConfigPath),
+    createTreeParseConfigHost(tree)
   );
 }
 
@@ -47,14 +43,5 @@ export function readCompilerOptionsFromTsConfig(
   tree: Tree,
   tsConfigPath: string
 ): ts.CompilerOptions {
-  const ts = ensureTypescript();
-  const host = createTreeParseConfigHost(tree);
-
-  const parsed = ts.parseJsonConfigFileContent(
-    ts.readConfigFile(tsConfigPath, host.readFile).config,
-    host,
-    dirname(tsConfigPath)
-  );
-
-  return parsed.options;
+  return readTsConfig(tsConfigPath, createTreeParseConfigHost(tree)).options;
 }

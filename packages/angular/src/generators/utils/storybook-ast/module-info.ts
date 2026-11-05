@@ -16,8 +16,9 @@ import type {
 import { getDecoratorMetadata } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function getModuleDeclarations(
   file: SourceFile,

@@ -15,8 +15,9 @@ import {
 import { getComponentPropDefaults } from '../../utils/component-props';
 import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export async function componentTestGenerator(
   tree: Tree,

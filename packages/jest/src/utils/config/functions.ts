@@ -4,8 +4,9 @@ import { Config } from '@jest/types';
 import { createContext, runInContext } from 'vm';
 import { dirname, join } from 'path';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function makeTextToInsert(
   value: unknown,

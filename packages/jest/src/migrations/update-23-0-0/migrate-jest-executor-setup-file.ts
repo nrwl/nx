@@ -3,6 +3,7 @@ import {
   updateTargetDefault,
   interpolate,
   readTargetDefaultsForTarget,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import {
   formatFiles,
@@ -28,7 +29,7 @@ const SETUP_FILE = 'setupFile';
 const JEST_CONFIG = 'jestConfig';
 const ROOT_DIR = 'rootDir';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 type RewriteResult =
   | 'written'

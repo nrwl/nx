@@ -1,4 +1,9 @@
 import { ensurePackage, workspaceRoot } from '@nx/devkit';
+import {
+  getTypescriptAst,
+  requireClassicTypescript,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { dirname } from 'path';
 import type * as ts from 'typescript';
 import { typescriptVersion } from '../utils/versions';
@@ -10,7 +15,8 @@ let tsModule: typeof import('typescript');
 
 function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
-    tsModule = ensureTypescript();
+    ensureTypescript();
+    tsModule = requireClassicTypescript('Resolving a module by its import');
   }
 
   const readResult = tsModule.readConfigFile(
@@ -78,9 +84,19 @@ function getCompilerHost(tsConfigPath: string) {
   return { options, host, moduleResolutionCache };
 }
 
-export function ensureTypescript() {
-  return ensurePackage<typeof import('typescript')>(
-    'typescript',
-    typescriptVersion
-  );
+/**
+ * Returns {@link TypescriptAst} for the workspace's TypeScript. When the
+ * workspace has no TypeScript, installs `typescriptVersion` to a temporary
+ * directory first.
+ */
+export function ensureTypescript(): TypescriptAst {
+  try {
+    return getTypescriptAst();
+  } catch (e) {
+    if (e?.code !== 'MODULE_NOT_FOUND') {
+      throw e;
+    }
+  }
+  ensurePackage('typescript', typescriptVersion);
+  return getTypescriptAst();
 }

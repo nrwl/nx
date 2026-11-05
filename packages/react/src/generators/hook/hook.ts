@@ -1,6 +1,7 @@
 import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 // TODO(jack): Remove inline renderHook function when RTL releases with its own version
@@ -60,7 +61,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {

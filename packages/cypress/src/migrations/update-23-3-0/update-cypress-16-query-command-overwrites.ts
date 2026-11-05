@@ -7,7 +7,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery } from '@nx/devkit/internal';
+import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   CallExpression,
   ElementAccessExpression,
@@ -27,7 +27,7 @@ const QUERY_COMMANDS = [
   'getAllSessionStorage',
 ];
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateCypress16QueryCommandOverwrites(
   tree: Tree

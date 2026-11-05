@@ -1,6 +1,6 @@
 import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import { tsquery } from '@nx/devkit/internal';
+import { tsquery, type TypescriptAst } from '@nx/devkit/internal';
 import type { CallExpression, PropertyAssignment } from 'typescript';
 import {
   JIT_COMPILE_DISABLE_COMMENT,
@@ -16,7 +16,7 @@ import {
 // (webpack only) does not apply even though the preset takes no bundler option.
 const NX_VITE_CT_PRESET = '@nx/remix/plugins/component-testing';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function disableWebpackCtJustInTimeCompile(tree: Tree) {
   let wereProjectsMigrated = false;

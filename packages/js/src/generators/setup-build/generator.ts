@@ -2,6 +2,7 @@ import {
   addBuildTargetDefaults,
   readTargetDefaultsForTarget,
   mergeTargetConfigurations,
+  ModuleKind,
   type PackageJson,
 } from '@nx/devkit/internal';
 import {
@@ -28,7 +29,6 @@ import {
 } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
   createTreeParseConfigHost,
@@ -41,8 +41,6 @@ import {
 } from '../../utils/typescript/ts-solution-setup';
 import { nxVersion } from '../../utils/versions';
 import { SetupBuildGeneratorSchema } from './schema';
-
-let ts: typeof import('typescript');
 
 export async function setupBuildGenerator(
   tree: Tree,
@@ -229,10 +227,6 @@ function updatePackageJsonForTsc(
   options: SetupBuildGeneratorSchema,
   project: ProjectConfiguration
 ) {
-  if (!ts) {
-    ts = ensureTypescript();
-  }
-
   const tsconfig = readTsConfig(
     options.tsConfig,
     createTreeParseConfigHost(tree)
@@ -264,8 +258,8 @@ function updatePackageJsonForTsc(
     }
   }
 
-  const module = Object.keys(ts.ModuleKind).find(
-    (m) => ts.ModuleKind[m] === tsconfig.options.module
+  const module = Object.keys(ModuleKind).find(
+    (m) => ModuleKind[m] === tsconfig.options.module
   );
   const format: SupportedFormat[] = module.toLowerCase().startsWith('es')
     ? ['esm']

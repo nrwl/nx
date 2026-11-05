@@ -7,7 +7,7 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ModuleKind, ModuleResolutionKind } from '@nx/devkit/internal';
 import { join } from 'path';
 import { readCompilerOptionsFromTsConfig } from '../../utils/tsconfig-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -105,10 +105,9 @@ export function generateTsConfigServerJsonForBrowserBuilder(
       tsconfigServerPath
     );
 
-    const ts = ensureTypescript();
     if (
-      compilerOptions.module === ts.ModuleKind.Preserve &&
-      compilerOptions.moduleResolution === ts.ModuleResolutionKind.Bundler
+      compilerOptions.module === ModuleKind.Preserve &&
+      compilerOptions.moduleResolution === ModuleResolutionKind.Bundler
     ) {
       return;
     }

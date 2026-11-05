@@ -11,8 +11,9 @@ import {
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 let tsquery: typeof import('@nx/devkit/internal').tsquery;
 
 export function addHydration(tree: Tree, options: NormalizedGeneratorOptions) {

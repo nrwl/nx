@@ -11,6 +11,7 @@ import {
   type ApiCompilerOptions,
   type ApiTypescriptBackend,
   type TypescriptApi,
+  type TypescriptApiFileSystem,
 } from './typescript-backend';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
@@ -220,6 +221,48 @@ export function createTsModuleResolver(
   }
 }
 
+/**
+ * Parses tsconfig JSON as if read from a file in `configDirectory`, with its
+ * `extends` chain applied. Enum-valued options come back as the workspace's
+ * TypeScript numbers them.
+ */
+export function parseTsConfigContent(
+  json: object,
+  configDirectory: string,
+  host?: TsConfigHost
+): ts.ParsedCommandLine {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const tsModule = backend.ts;
+      return tsModule.parseJsonConfigFileContent(
+        json,
+        toParseConfigHost(tsModule.sys, host, true),
+        configDirectory
+      );
+    }
+    case 'api': {
+      const cwd = host?.getCurrentDirectory?.() ?? process.cwd();
+      const parse = (api: TypescriptApi) =>
+        api.parseJsonConfigFileContent(json, {
+          configDirectory: resolve(cwd, configDirectory),
+        });
+      const parsed = host
+        ? withHostedTypescriptApi(backend, toApiFileSystem(host, true), parse)
+        : withTypescriptApi(backend, parse);
+      return toClassicParsedCommandLine(
+        parsed,
+        cwd,
+        isAbsolute(configDirectory)
+      );
+    }
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
 function readTsConfigWithApi(
   backend: ApiTypescriptBackend,
   tsConfigPath: string,
@@ -231,22 +274,36 @@ function readTsConfigWithApi(
   const parsed = host
     ? withHostedTypescriptApi(
         backend,
-        {
-          readFile: host.readFile && ((path) => host.readFile(path)),
-          fileExists: host.fileExists && ((path) => host.fileExists(path)),
-          directoryExists:
-            host.directoryExists && ((path) => host.directoryExists(path)),
-          getAccessibleEntries: scanFiles
-            ? undefined
-            : () => ({ files: [], directories: [] }),
-        },
+        toApiFileSystem(host, scanFiles),
         (api) => api.parseConfigFile(absolutePath)
       )
     : parseConfigFileWithApi(backend, absolutePath);
+  return toClassicParsedCommandLine(parsed, cwd, isAbsolute(tsConfigPath));
+}
 
+function toApiFileSystem(
+  host: TsConfigHost,
+  scanFiles: boolean
+): TypescriptApiFileSystem {
+  return {
+    readFile: host.readFile && ((path: string) => host.readFile(path)),
+    fileExists: host.fileExists && ((path: string) => host.fileExists(path)),
+    directoryExists:
+      host.directoryExists && ((path: string) => host.directoryExists(path)),
+    getAccessibleEntries: scanFiles
+      ? undefined
+      : () => ({ files: [], directories: [] }),
+  };
+}
+
+function toClassicParsedCommandLine(
+  parsed: ApiParsedCommandLine,
+  cwd: string,
+  keepAbsolutePaths: boolean
+): ts.ParsedCommandLine {
   // TypeScript 6 keeps the paths read from a relative tsconfig path relative;
   // the 7.1 API makes them absolute.
-  const toResultPath = isAbsolute(tsConfigPath)
+  const toResultPath = keepAbsolutePaths
     ? (path: string) => path
     : (path: string) => relative(cwd, path).replace(/\\/g, '/') || '.';
   const options = { ...parsed.options } as unknown as ts.CompilerOptions;
@@ -259,8 +316,8 @@ function readTsConfigWithApi(
     options[key] = options[key]?.map(toResultPath);
   }
 
-  // The option values Nx reads, enums included, are the same in both APIs;
-  // the enum types differ only in members one of them lacks.
+  // `module`, `moduleResolution`, `target` and `jsx` values match TypeScript
+  // 6's where both have the member; `newLine` and `moduleDetection` differ.
   return {
     options,
     fileNames: parsed.fileNames.map(toResultPath),

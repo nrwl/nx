@@ -4,6 +4,11 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
+import {
+  ModuleKind,
+  ModuleResolutionKind,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { readCompilerOptionsFromTsConfig } from '../../generators/utils/tsconfig-utils';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
@@ -22,7 +27,7 @@ const serverExecutors = new Set([
   '@nx/angular:webpack-server',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function (tree: Tree) {
   const projects = await getProjectsFilteredByDependencies([
@@ -98,8 +103,8 @@ function updateTsConfigServer(tree: Tree, tsConfigPath: string): boolean {
   const compilerOptions = readCompilerOptionsFromTsConfig(tree, tsConfigPath);
 
   if (
-    compilerOptions.module === ts.ModuleKind.Preserve &&
-    compilerOptions.moduleResolution === ts.ModuleResolutionKind.Bundler
+    compilerOptions.module === ModuleKind.Preserve &&
+    compilerOptions.moduleResolution === ModuleResolutionKind.Bundler
   ) {
     // Already configured correctly, skip
     return false;

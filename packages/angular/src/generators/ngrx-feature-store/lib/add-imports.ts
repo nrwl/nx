@@ -11,8 +11,9 @@ import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils';
 import type { NormalizedNgRxFeatureStoreGeneratorOptions } from './normalize-options';
 import { ensureTypescript } from '@nx/js/internal';
 import { insertImport } from '@nx/js';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function addStoreForFeatureImport(
   tree: Tree,

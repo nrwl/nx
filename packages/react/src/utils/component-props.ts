@@ -1,8 +1,9 @@
 import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import { parseComponentPropsInfo } from './ast-utils';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 // TODO: candidate to refactor with the angular component story
 export function getArgsDefaultValue(property: ts.SyntaxKind): string {

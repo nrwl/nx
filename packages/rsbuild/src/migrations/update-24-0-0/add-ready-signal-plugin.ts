@@ -9,12 +9,13 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import { addBuildPlugin, findConfigObject } from '../../utils/add-build-plugin';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
 const CONFIG_EXTENSIONS = ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs'];
 const IMPORT_PATH = '@nx/rsbuild/ready-signal';
 const PLUGIN_NAME = 'pluginNxReadySignal';
 
-let tsModule: typeof ts;
+let tsModule: TypescriptAst;
 
 export default async function update(
   tree: Tree

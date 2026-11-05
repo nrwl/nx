@@ -2,7 +2,7 @@ import { formatFiles, globAsync, logger, type Tree } from '@nx/devkit';
 import { basename, dirname } from 'node:path';
 import { applyEdits, getNodeValue, modify, parseTree } from 'jsonc-parser';
 import type * as ts from 'typescript';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
+import { ensureClassicTypescript } from '../../utils/typescript/ensure-typescript';
 import {
   createTreeParseConfigHost,
   extendsResolutionFailed,
@@ -59,7 +59,9 @@ type CompilerOptions = Record<string, unknown>;
  * its own.
  */
 export default async function (tree: Tree) {
-  tsModule ??= ensureTypescript();
+  tsModule ??= ensureClassicTypescript(
+    'The "add-ignore-deprecations-for-ts6" migration'
+  );
   const ts = tsModule;
   // Tree-faithful host so TypeScript resolves `extends` against pass 1's pending
   // writes and against package-provided bases (a naive `tree.read` host misses

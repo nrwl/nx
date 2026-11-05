@@ -23,8 +23,9 @@ import { NormalizedSchema } from '../schema';
 import { normalizePathSlashes } from './utils';
 import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
 import { getProjectSourceRoot } from '../../utils/project-config';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.

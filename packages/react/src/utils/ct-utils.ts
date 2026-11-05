@@ -5,13 +5,16 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { findPluginForConfigFile } from '@nx/devkit/internal';
+import {
+  findPluginForConfigFile,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/internal';
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 const allowedFileExt = new RegExp(/\.[jt]sx?/);
 const isSpecFile = new RegExp(/(spec|test)\./);

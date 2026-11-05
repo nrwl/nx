@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript } from '@nx/js/internal';
 import { tsquery } from '@nx/devkit/internal';
 import type { CallExpression, PropertyName } from 'typescript';
 import { getPropertyName, parseSourceFile } from '../../../utils/migrations';
@@ -16,7 +16,7 @@ export function addBuildTargetToComponentTestingPreset(
   configFilePath: string,
   buildTarget: string
 ): boolean {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript('The Cypress "convert-to-inferred" generator');
 
   const contents = tree.read(configFilePath, 'utf-8');
   if (contents === null) {

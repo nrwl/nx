@@ -15,8 +15,9 @@ import {
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 type DecoratorName = 'Component' | 'Directive' | 'NgModule' | 'Pipe';
 

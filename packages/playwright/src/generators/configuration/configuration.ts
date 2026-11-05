@@ -2,6 +2,7 @@ import {
   resolveImportPath,
   isInteractive,
   textPrompt,
+  ModuleKind,
   PackageJson,
 } from '@nx/devkit/internal';
 import {
@@ -27,7 +28,6 @@ import {
   normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
-  ensureTypescript,
   isUsingTsSolutionSetup,
   typesNodeVersion,
 } from '@nx/js/internal';
@@ -220,7 +220,6 @@ export async function configurationGeneratorInternal(
   );
 
   if (options.js) {
-    const { ModuleKind } = ensureTypescript();
     toJS(tree, { extension: '.mjs', module: ModuleKind.ESNext });
   }
 
