@@ -1548,7 +1548,6 @@ const ESM_CONFIG_VARIABLE = 'eslintConfig';
 function generateESMExport(
   elements: ts.Expression[]
 ): [ts.VariableStatement, ts.ExportAssignment] {
-  // creates: const eslintConfig = [...]; export default eslintConfig;
   // eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
   return [
     ts.factory.createVariableStatement(
