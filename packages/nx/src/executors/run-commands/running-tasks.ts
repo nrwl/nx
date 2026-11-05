@@ -226,11 +226,14 @@ export class ParallelRunningTasks implements RunningTask {
       this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
-      let hasFailure = false;
-      let failureDetails: {
-        childProcess: RunningNodeProcess;
-      } | null = null;
+      let failedProcess: RunningNodeProcess | null = null;
       const terminalOutputs = new Map<RunningNodeProcess, string>();
+      const failFast = (childProcess: RunningNodeProcess) => {
+        if (failedProcess) return;
+        failedProcess = childProcess;
+        // Immediately terminate all other running processes
+        this.terminateRemainingProcesses(runningProcesses, childProcess);
+      };
 
       await Promise.allSettled(
         this.childProcesses.map(async (childProcess) => {
@@ -241,16 +244,15 @@ export class ParallelRunningTasks implements RunningTask {
               cb(terminalOutput);
             }
           });
+          // Results wait for the output to drain, which a descendant holding
+          // the pipes can stretch to a second.
+          childProcess.onFailedExit(() => failFast(childProcess));
 
           const { code, terminalOutput } = await childProcess.getResults();
           terminalOutputs.set(childProcess, terminalOutput);
 
-          if (code !== 0 && !hasFailure) {
-            hasFailure = true;
-            failureDetails = { childProcess };
-
-            // Immediately terminate all other running processes
-            this.terminateRemainingProcesses(runningProcesses, childProcess);
+          if (code !== 0) {
+            failFast(childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -259,11 +261,9 @@ export class ParallelRunningTasks implements RunningTask {
 
       let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
 
-      if (hasFailure && failureDetails) {
+      if (failedProcess) {
         // Add failure message
-        const warning = commandExitedNonZeroWarning(
-          failureDetails.childProcess.command
-        );
+        const warning = commandExitedNonZeroWarning(failedProcess.command);
         terminalOutput += warning;
         streamChunk(warning, this.streamOutput, process.stderr);
 
@@ -533,6 +533,7 @@ class RunningNodeProcess implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private failedExitCallbacks: Array<() => void> = [];
   private killPromise: Promise<void> | null = null;
   private closedPromise: Promise<void>;
   private stdioClosed: Promise<void>;
@@ -610,6 +611,11 @@ class RunningNodeProcess implements RunningTask {
       return;
     }
     this.exitCallbacks.push(cb);
+  }
+
+  /** Runs at a non-zero 'exit', before the rest of the output is read. */
+  onFailedExit(cb: () => void): void {
+    this.failedExitCallbacks.push(cb);
   }
 
   send(message: Serializable): void {
@@ -718,6 +724,11 @@ class RunningNodeProcess implements RunningTask {
       }
       untrackRunningNodeProcess(this);
       this.exitedWithFailure = code !== 0;
+      if (this.exitedWithFailure) {
+        for (const cb of this.failedExitCallbacks) {
+          cb();
+        }
+      }
       // The last stdout and stderr chunks can still be unread at 'exit'.
       await this.stdioClosed;
       if (

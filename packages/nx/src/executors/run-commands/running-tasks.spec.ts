@@ -256,6 +256,32 @@ describe('run-commands completion', () => {
     expect(terminalOutput).toContain('CHECK-FAILED');
   });
 
+  it('stops parallel siblings when a command exits non-zero, before its output is read', async () => {
+    const failing = mockChild();
+    const sibling = mockChild();
+    sibling.pid = 5151;
+    mockSpawnQueue = [failing, sibling];
+    const task = await runCommands(
+      {
+        commands: ['check', 'watch'],
+        parallel: true,
+        streamOutput: false,
+        __unparsed__: [],
+      },
+      { root: '.' } as any,
+      { id: 'lib:check' }
+    );
+    failing.exit(1);
+    await nextTurn();
+
+    expect(mockKillProcessTreeGraceful).toHaveBeenCalledWith(5151, 'SIGTERM');
+
+    failing.emit('close', 1, null);
+    sibling.exit(143);
+    sibling.emit('close', 143, null);
+    expect((await task.getResults()).code).toBe(1);
+  });
+
   it('sends no signal to a command that has already exited', async () => {
     const task = await start({ parallel: false });
     mockSpawned.exit(1);
