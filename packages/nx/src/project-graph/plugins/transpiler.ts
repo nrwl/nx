@@ -20,7 +20,7 @@ export let unregisterPluginTSTranspiler: (() => void) | null = null;
 const NOOP = () => {};
 
 /**
- * Register swc-node or ts-node if they are not currently registered
+ * Register a transpiler if one is not currently registered
  * with some default settings which work well for Nx plugins.
  *
  * When the runtime supports native TypeScript stripping and the user hasn't
@@ -60,14 +60,14 @@ export function registerPluginTSTranspiler() {
 }
 
 /**
- * Always register swc-node or ts-node + tsconfig-paths, ignoring the native
+ * Always register a transpiler + tsconfig-paths, ignoring the native
  * strip preference. Called from the fallback path in `handleImport` when a
  * plugin `.ts` file throws `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX` under native
  * stripping.
  */
 export function forceRegisterPluginTSTranspiler() {
   // If the previous registration was the native-strip sentinel, throw it
-  // out so we actually wire up swc/ts-node.
+  // out so we actually wire up the transpiler.
   if (unregisterPluginTSTranspiler === NOOP) {
     unregisterPluginTSTranspiler = null;
   }

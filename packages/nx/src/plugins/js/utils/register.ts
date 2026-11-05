@@ -3,13 +3,20 @@ import { existsSync } from 'fs';
 import type { TsConfigOptions } from 'ts-node';
 import type { CompilerOptions } from 'typescript';
 import { readJsonFile } from '../../../utils/fileutils';
-import {
-  resolveFromWorkspace,
-  resolveInstalledPackage,
-} from '../../../utils/installation-directory';
+import { resolveInstalledPackage } from '../../../utils/installation-directory';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getRootTsConfigPath, readTsConfigWithoutFiles } from './typescript';
+import {
+  registerTypescriptApiImportHook,
+  registerTypescriptApiRequireHook,
+} from './typescript-api-hooks';
+import {
+  getTypescriptBackend,
+  requireClassicTypescript,
+  type ApiTypescriptBackend,
+  type TypescriptBackend,
+} from './typescript-backend';
 import { createRequire } from 'node:module';
 
 // Node passes a stand-in require, without a cache, require.extensions or
@@ -19,14 +26,20 @@ if (!require.cache) require = createRequire(__filename);
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
-let ts: typeof import('typescript');
+
+// Compiler-option enum values, the same in every TypeScript version Nx supports.
+const MODULE_KIND_COMMONJS = 1;
+const MODULE_RESOLUTION_KIND_NODE10 = 2;
+const SCRIPT_TARGET_ES2021 = 8;
 
 let isTsEsmLoaderRegistered = false;
 
 /**
  * Force-register an ESM loader (`@swc-node/register/esm` if available, else
  * `ts-node/esm`) via `Module.register` so dynamic `import()` of TS files
- * goes through a transpiler.
+ * goes through a transpiler. When the workspace's `typescript` is >= 7.1, an
+ * in-thread `module.registerHooks` hook transpiles through the TypeScript API
+ * instead.
  *
  * **IMPORTANT — global side effect:** `Module.register` is one-shot per
  * process and applies to *every* subsequent ESM resolution in the process.
@@ -43,7 +56,8 @@ let isTsEsmLoaderRegistered = false;
  *
  * Idempotent: subsequent calls are no-ops.
  *
- * Throws if neither `@swc-node/register` nor `ts-node` is installed.
+ * Throws if neither `@swc-node/register` nor `ts-node` is installed, or, with
+ * TypeScript >= 7.1, on Node.js < 22.15.
  */
 export function forceRegisterEsmLoader(): void {
   ensureEsmLoaderRegistered({ required: true });
@@ -52,6 +66,40 @@ export function forceRegisterEsmLoader(): void {
 function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   if (isTsEsmLoaderRegistered) return;
 
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      registerClassicEsmLoader(opts);
+      return;
+    case 'api':
+      registerTypescriptApiEsmLoader(backend, opts);
+      return;
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+function registerTypescriptApiEsmLoader(
+  backend: ApiTypescriptBackend,
+  opts: { required: boolean }
+): void {
+  const tsConfigPath = getRootTsConfigPath();
+  const compilerOptions: CompilerOptions = {
+    ...(tsConfigPath ? readTsConfigWithoutFiles(tsConfigPath).options : {}),
+    inlineSourceMap: true,
+  };
+  if (registerTypescriptApiImportHook(backend, compilerOptions)) {
+    isTsEsmLoaderRegistered = true;
+  } else if (opts.required) {
+    throw new Error(
+      `${NX_PREFIX} Transpiling TypeScript loaded through import() with TypeScript ${backend.version} needs module.registerHooks, available from Node.js 22.15. Upgrade Node.js, or install TypeScript 6 as "typescript" and TypeScript ${backend.version} under an alias.`
+    );
+  }
+}
+
+function registerClassicEsmLoader(opts: { required: boolean }): void {
   const module = require('node:module') as typeof import('node:module');
   if (typeof module.register !== 'function') {
     if (opts.required) {
@@ -577,13 +625,13 @@ const nodeSupportsNativeTypescript: boolean = !!(process as any).features
 
 /**
  * When process.features.typescript is truthy, default to letting Node.js
- * handle TypeScript natively via type stripping and skip registering swc-node
- * or ts-node. Users can opt out by setting NX_PREFER_NODE_STRIP_TYPES=false.
+ * handle TypeScript natively via type stripping and skip registering a
+ * transpiler. Users can opt out by setting NX_PREFER_NODE_STRIP_TYPES=false.
  *
  * Some constructs (enum, runtime namespace, legacy decorators,
  * import = require, parameter properties, etc.) aren't supported by native
  * type stripping. `loadTsFile` catches these failures and falls back to
- * registering swc/ts-node + tsconfig-paths automatically.
+ * registering a transpiler + tsconfig-paths automatically.
  *
  * Setting NX_PREFER_TS_NODE=true also opts out, since that flag explicitly
  * requests ts-node for transpilation.
@@ -601,7 +649,7 @@ const preferNodeStripTypes: boolean = (() => {
 })();
 
 /**
- * Skip tsconfig-paths registration on the swc/ts-node fallback path. Useful
+ * Skip tsconfig-paths registration on the transpiler fallback path. Useful
  * for workspaces relying on package manager workspaces (pnpm, yarn, npm) for
  * project linking, where tsconfig path aliases aren't needed.
  */
@@ -618,7 +666,8 @@ export function isNativeStripPreferred(): boolean {
 }
 
 /**
- * This function registers either ts-node or swc-node to transpile TypeScript files on the fly.
+ * This function registers swc-node or ts-node, or with TypeScript >= 7.1 a require hook on the
+ * TypeScript API, to transpile TypeScript files on the fly.
  * It also registers tsconfig-paths to handle path mapping based on the provided tsconfig.
  *
  * The TypeScript transpiler registration is done regardless of NX_PREFER_NODE_STRIP_TYPES.
@@ -792,25 +841,14 @@ export function getTranspiler(
   tsConfigRaw?: unknown
 ) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
-
-  if (!ts) {
-    ts = require(resolveFromWorkspace('typescript'));
-  }
+  const backend = getTypescriptBackend();
 
   compilerOptions.lib = ['es2021'];
-  compilerOptions.module = ts.ModuleKind.CommonJS;
-  // use NodeJs module resolution until support for TS 4.x is dropped and then
-  // we can switch to Node10
-  compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
+  compilerOptions.module = MODULE_KIND_COMMONJS;
   compilerOptions.customConditions = null;
-  compilerOptions.target = ts.ScriptTarget.ES2021;
+  compilerOptions.target = SCRIPT_TARGET_ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
-  // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
-  // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
-  if (parseInt(ts.versionMajorMinor, 10) >= 6) {
-    compilerOptions.ignoreDeprecations = '6.0';
-  }
   // These options are different per project, and since they are not needed for transpilation, we can remove them so we have more cache hits.
   compilerOptions.outDir = undefined;
   compilerOptions.outFile = undefined;
@@ -826,20 +864,44 @@ export function getTranspiler(
     preferTsNode?: boolean
   ) => (...args: unknown[]) => unknown;
 
-  let registrationKey = JSON.stringify(compilerOptions);
   let tsNodeOptions: TsConfigOptions | undefined;
-  if (swcNodeInstalled && !preferTsNode) {
-    _getTranspiler = getSwcTranspiler;
-  } else if (tsNodeInstalled) {
-    // We can fall back on ts-node if it's available
-    _getTranspiler = getTsNodeTranspiler;
-    tsNodeOptions = filterRecognizedTsConfigTsNodeOptions(
-      tsConfigRaw?.['ts-node']
-    ).recognized;
+  switch (backend.kind) {
+    case 'classic':
+      compilerOptions.moduleResolution = MODULE_RESOLUTION_KIND_NODE10;
+      // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
+      // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
+      if (parseInt(backend.version, 10) >= 6) {
+        compilerOptions.ignoreDeprecations = '6.0';
+      }
+      if (swcNodeInstalled && !preferTsNode) {
+        _getTranspiler = getSwcTranspiler;
+      } else if (tsNodeInstalled) {
+        // We can fall back on ts-node if it's available
+        _getTranspiler = getTsNodeTranspiler;
+        tsNodeOptions = filterRecognizedTsConfigTsNodeOptions(
+          tsConfigRaw?.['ts-node']
+        ).recognized;
+      } else {
+        _getTranspiler = undefined;
+      }
+      break;
+    case 'api':
+      // TypeScript 7 removed node10 resolution, and transpiling ignores
+      // resolution. swc-node and ts-node load only with the classic API.
+      compilerOptions.moduleResolution = undefined;
+      _getTranspiler = (options) =>
+        registerTypescriptApiRequireHook(backend, options);
+      break;
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+
+  let registrationKey = JSON.stringify(compilerOptions);
+  if (tsNodeOptions) {
     // include ts-node options in the registration key
     registrationKey += JSON.stringify(tsNodeOptions);
-  } else {
-    _getTranspiler = undefined;
   }
 
   // Just return if transpiler was already registered before.
@@ -973,7 +1035,7 @@ export function isTsEsmNamedExportLinkageError(
  */
 const NX_PREFER_NODE_STRIP_TYPES_DOCS_URL =
   'https://nx.dev/docs/reference/environment-variables#nx-prefer-node-strip-types';
-const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt out of Node's native TypeScript stripping and use swc/ts-node instead. See ${NX_PREFER_NODE_STRIP_TYPES_DOCS_URL}`;
+const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt out of Node's native TypeScript stripping and transpile TypeScript files instead. See ${NX_PREFER_NODE_STRIP_TYPES_DOCS_URL}`;
 
 /**
  * Load a TypeScript file via `require()`.
@@ -981,9 +1043,9 @@ const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt ou
  * When the runtime exposes native TypeScript stripping
  * (`process.features.typescript`) and the user hasn't opted out via
  * `NX_PREFER_NODE_STRIP_TYPES=false`, the file loads directly with no
- * swc/ts-node and no tsconfig-paths registration. If Node throws on an
+ * transpiler and no tsconfig-paths registration. If Node throws on an
  * unsupported construct (enum, runtime namespace, legacy decorators, etc.),
- * this registers swc/ts-node + tsconfig-paths and retries - matching the
+ * this registers a transpiler + tsconfig-paths and retries - matching the
  * pre-v23 registration. Set `NX_DISABLE_TSCONFIG_PATHS=true` to skip
  * tsconfig-paths even on fallback (useful when relying on package manager
  * workspaces). Set `NX_VERBOSE_LOGGING=true` to log when fallback triggers.
@@ -991,7 +1053,7 @@ const STRIP_TYPES_OPT_OUT_HINT = `Set NX_PREFER_NODE_STRIP_TYPES=false to opt ou
  * When native strip is opted out (`NX_PREFER_NODE_STRIP_TYPES=false` or
  * unsupported Node), uses the legacy `registerTsProject` path.
  *
- * `tsConfigPath` is only consulted on the swc/ts-node fallback path (for
+ * `tsConfigPath` is only consulted on the transpiler fallback path (for
  * compilerOptions) and for tsconfig-paths registration. Native strip ignores
  * it. When omitted, defaults to the workspace root tsconfig.
  *
@@ -1025,7 +1087,7 @@ export function loadTsFile<T = any>(
   if (!preferNodeStripTypes) {
     if (!resolvedTsConfigPath) {
       throw new Error(
-        `${NX_PREFIX} loadTsFile could not find a workspace tsconfig while loading ${filePath} on the swc/ts-node path. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
+        `${NX_PREFIX} loadTsFile could not find a workspace tsconfig to transpile ${filePath}. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root.`
       );
     }
     const cleanup = registerTsProject(resolvedTsConfigPath);
@@ -1043,8 +1105,8 @@ export function loadTsFile<T = any>(
   //   - MODULE_NOT_FOUND -> first try tsconfig-paths (alias resolution).
   //     If that still fails (e.g. extensionless `import './foo'` when
   //     `foo.ts` is adjacent - Node's resolver doesn't add `.ts`), escalate
-  //     to swc/ts-node which handles `.ts` extension resolution.
-  //   - ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX -> register swc/ts-node + tsconfig-paths
+  //     to a transpiler, whose `.ts` require hook makes the resolver try `.ts`.
+  //   - ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX -> register a transpiler + tsconfig-paths
   // Each registration kind runs at most once, so a file recovers in at
   // most three attempts.
   let pathsRegistered = false;
@@ -1052,7 +1114,7 @@ export function loadTsFile<T = any>(
   const cleanups: Array<() => void> = [];
 
   const registerTranspilerFallback = (err: unknown) => {
-    if (!swcNodeInstalled && !tsNodeInstalled) {
+    if (!isTranspilerAvailable()) {
       const original = err instanceof Error ? err.message : String(err);
       throw new Error(
         `${NX_PREFIX} ${filePath} could not be loaded under Node's native TypeScript stripping (${original}). Install @swc-node/register and @swc/core (or ts-node) to enable the swc/ts-node fallback, or ${STRIP_TYPES_OPT_OUT_HINT}`
@@ -1060,7 +1122,7 @@ export function loadTsFile<T = any>(
     }
     if (!resolvedTsConfigPath) {
       throw new Error(
-        `${NX_PREFIX} ${filePath} requires the swc/ts-node fallback but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root. ${STRIP_TYPES_OPT_OUT_HINT}`
+        `${NX_PREFIX} ${filePath} needs a transpiler, but no workspace tsconfig was found. Pass an explicit tsConfigPath or add a tsconfig.base.json/tsconfig.json at the workspace root. ${STRIP_TYPES_OPT_OUT_HINT}`
       );
     }
     if (!pathsRegistered && !disableTsConfigPaths) {
@@ -1102,7 +1164,7 @@ export function loadTsFile<T = any>(
           continue;
         }
 
-        // Heavy fallback: register swc/ts-node (+ paths) and retry. Triggered
+        // Heavy fallback: register a transpiler (+ paths) and retry. Triggered
         // by:
         //   - strip-types failure (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`)
         //   - module resolution failure that tsconfig-paths alone can't fix
@@ -1128,16 +1190,16 @@ export function loadTsFile<T = any>(
             filePath,
             err,
             isNativeTypeStripError(err)
-              ? 'Native Node.js TypeScript stripping failed; falling back to swc/ts-node + tsconfig-paths.'
+              ? 'Native Node.js TypeScript stripping failed; falling back to a transpiler + tsconfig-paths.'
               : isCjsSyntaxError(err, filePath)
-                ? 'ESM syntax in forced-CJS file; falling back to swc/ts-node + tsconfig-paths.'
+                ? 'ESM syntax in forced-CJS file; falling back to a transpiler + tsconfig-paths.'
                 : isTsEsmSyntaxError(err, filePath)
-                  ? 'ESM syntax in TypeScript file parsed as CommonJS; falling back to swc/ts-node + tsconfig-paths.'
+                  ? 'ESM syntax in TypeScript file parsed as CommonJS; falling back to a transpiler + tsconfig-paths.'
                   : isRequireInEsmScopeError(err, filePath)
-                    ? 'CommonJS require in native ESM TypeScript file; falling back to swc/ts-node + tsconfig-paths.'
+                    ? 'CommonJS require in native ESM TypeScript file; falling back to a transpiler + tsconfig-paths.'
                     : isTsEsmNamedExportLinkageError(err, filePath)
-                      ? 'Native ESM named export linkage failed; falling back to swc/ts-node + tsconfig-paths.'
-                      : 'Module not found after tsconfig-paths; falling back to swc/ts-node + tsconfig-paths.'
+                      ? 'Native ESM named export linkage failed; falling back to a transpiler + tsconfig-paths.'
+                      : 'Module not found after tsconfig-paths; falling back to a transpiler + tsconfig-paths.'
           );
           registerTranspilerFallback(err);
           continue;
@@ -1233,7 +1295,8 @@ function logFallback(filePath: string, err: unknown, summary: string): void {
 }
 
 /**
- * Register ts-node or swc-node given a set of compiler options.
+ * Register swc-node or ts-node, or with TypeScript >= 7.1 a require hook on the
+ * TypeScript API, given a set of compiler options.
  *
  * Note: Several options require enums from typescript. To avoid importing typescript,
  * use import type + raw values
@@ -1306,7 +1369,11 @@ function readCompilerOptions(tsConfigPath): {
 } {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
-  if (swcNodeInstalled && !preferTsNode) {
+  if (
+    swcNodeInstalled &&
+    !preferTsNode &&
+    getTypescriptBackend().kind === 'classic'
+  ) {
     return {
       compilerOptions: readCompilerOptionsWithSwc(tsConfigPath),
     };
@@ -1369,6 +1436,31 @@ function warnNoTranspiler() {
   );
 }
 
+function isTranspilerAvailable(): boolean {
+  if (swcNodeInstalled || tsNodeInstalled) {
+    return true;
+  }
+  let backend: TypescriptBackend;
+  try {
+    backend = getTypescriptBackend();
+  } catch (e) {
+    if (e?.code === 'MODULE_NOT_FOUND') {
+      return false;
+    }
+    throw e;
+  }
+  switch (backend.kind) {
+    case 'classic':
+      return false;
+    case 'api':
+      return true;
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
 function packageIsInstalled(m: string) {
   try {
     resolveInstalledPackage(m, [__dirname]);
@@ -1384,9 +1476,7 @@ function packageIsInstalled(m: string) {
  * unfortunately do not get any kind of type safety on this.
  */
 export function getTsNodeCompilerOptions(compilerOptions: CompilerOptions) {
-  if (!ts) {
-    ts = require(resolveFromWorkspace('typescript'));
-  }
+  const ts = requireClassicTypescript('ts-node');
 
   const flagMap: Partial<{
     [key in keyof RemoveIndex<CompilerOptions>]: keyof typeof ts;

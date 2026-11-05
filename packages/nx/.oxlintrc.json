@@ -65,11 +65,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
@@ -117,11 +122,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
@@ -162,11 +172,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
@@ -225,11 +240,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
@@ -279,11 +299,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"
@@ -342,11 +367,16 @@
               },
               {
                 "name": "typescript",
-                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
                 "allowTypeImports": true
               }
             ],
             "patterns": [
+              {
+                "group": ["typescript/*"],
+                "message": "Load TypeScript through getTypescriptBackend() (src/plugins/js/utils/typescript-backend.ts). The workspace's `typescript` can be 7.1, whose root export has no compiler API.",
+                "allowTypeImports": true
+              },
               {
                 "group": ["**/devkit-exports"],
                 "message": "Do not import from devkit-exports from the nx package"

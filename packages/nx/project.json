@@ -69,6 +69,7 @@
       "dependsOn": ["echo"]
     },
     "build-base": {
+      "inputs": ["...", { "externalDependencies": ["@typescript/native"] }],
       "outputs": [
         "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,json,d.ts,d.cts,d.mts}{,.map}",
         "{projectRoot}/dist/tsconfig.tsbuildinfo"

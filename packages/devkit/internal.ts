@@ -290,6 +290,7 @@ export {
   getTargetConfigurationForTask,
   getTargetInputs,
   getPath,
+  getTypescriptBackend,
   getUnparsedOverrideArgs,
   getVcsRemoteInfo,
   getWorkspacePackagesFromGraph,
@@ -337,6 +338,8 @@ export {
   readNxMigrateConfig,
   readPackageJson,
   readProjectAndTargetFromTargetString,
+  readTsConfig,
+  readTsConfigWithoutFiles,
   registerTsConfigPaths,
   registerTsProject,
   relocatePrunedLocalPathSpec,
@@ -365,6 +368,7 @@ export {
   workspaceDataDirectory,
   workspaceRootInner,
 } from 'nx/src/devkit-internals';
+export type { TsConfigHost } from 'nx/src/devkit-internals';
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are
 // intentionally NOT re-exported here: this barrel is imported by plugin graph

@@ -93,6 +93,12 @@ export {
   isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
+export { getTypescriptBackend } from './plugins/js/utils/typescript-backend';
+export {
+  readTsConfig,
+  readTsConfigWithoutFiles,
+} from './plugins/js/utils/typescript';
+export type { TsConfigHost } from './plugins/js/utils/typescript';
 export { interpolate } from './tasks-runner/utils';
 export {
   getEnvFilesForTask,

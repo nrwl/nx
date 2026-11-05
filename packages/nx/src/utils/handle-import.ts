@@ -16,7 +16,7 @@ const STRIP_TYPES_DOCS_URL =
  *
  * Falls back to real import() for ESM-only packages that
  * throw ERR_REQUIRE_ESM. When loading a workspace plugin's `.ts` entry
- * under native TypeScript stripping, also falls back to swc/ts-node if
+ * under native TypeScript stripping, also falls back to a transpiler if
  * the file uses constructs Node can't strip (enum, runtime namespace,
  * legacy decorators, etc.).
  *
@@ -93,7 +93,7 @@ export async function handleImport<T = any>(
           // module-eval-time graphs.
           const { NX_PREFIX } =
             require('./logger') as typeof import('./logger');
-          retryErr.message = `${retryErr.message}\n\n${NX_PREFIX} Failed to load ${normalizedPath} under Node's native TypeScript stripping. Set NX_PREFER_NODE_STRIP_TYPES=false to opt out and use swc/ts-node instead. See ${STRIP_TYPES_DOCS_URL}`;
+          retryErr.message = `${retryErr.message}\n\n${NX_PREFIX} Failed to load ${normalizedPath} under Node's native TypeScript stripping. Set NX_PREFER_NODE_STRIP_TYPES=false to opt out and transpile TypeScript files instead. See ${STRIP_TYPES_DOCS_URL}`;
         }
         throw retryErr;
       }
