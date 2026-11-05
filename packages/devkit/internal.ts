@@ -293,6 +293,7 @@ export {
   getTargetConfigurationForTask,
   getTargetInputs,
   getPath,
+  getTypescriptAst,
   getTypescriptBackend,
   getUnparsedOverrideArgs,
   getVcsRemoteInfo,
@@ -375,6 +376,7 @@ export {
 export type {
   ApiTypescriptBackend,
   TsConfigHost,
+  TypescriptAst,
 } from 'nx/src/devkit-internals';
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are
