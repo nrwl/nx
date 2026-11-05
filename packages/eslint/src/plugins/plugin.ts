@@ -193,7 +193,9 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const targetsCache = new PluginCache<EslintProjects>(cachePath);
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
-      splitConfigFiles(configFiles);
+      splitConfigFiles(
+        withAncestorEslintConfigs(configFiles, context.workspaceRoot)
+      );
     const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
       projectRoots,
       options,
@@ -277,6 +279,41 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+/**
+ * An `include` that scopes the plugin to some projects leaves out the configs
+ * in their parent directories, which those projects lint with.
+ */
+function withAncestorEslintConfigs(
+  configFiles: readonly string[],
+  workspaceRoot: string
+): readonly string[] {
+  const included = new Set(configFiles);
+  const visited = new Set<string>();
+  const ancestorConfigs: string[] = [];
+  for (const configFile of configFiles) {
+    let dir = dirname(configFile);
+    while (dir !== '.') {
+      dir = dirname(dir);
+      if (visited.has(dir)) {
+        break;
+      }
+      visited.add(dir);
+      for (const file of ESLINT_CONFIG_FILENAMES) {
+        const ancestorConfig = join(dir, file);
+        if (
+          !included.has(ancestorConfig) &&
+          existsSync(join(workspaceRoot, ancestorConfig))
+        ) {
+          ancestorConfigs.push(ancestorConfig);
+        }
+      }
+    }
+  }
+  return ancestorConfigs.length === 0
+    ? configFiles
+    : [...ancestorConfigs.reverse(), ...configFiles];
+}
 
 async function createSharedEslint(
   ESLint: typeof ESLintType,

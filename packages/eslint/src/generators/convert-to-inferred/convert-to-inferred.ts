@@ -31,7 +31,7 @@ import {
   type EslintPluginOptions,
 } from '../../plugins/plugin';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
-import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
+import { ESLINT_CONFIG_FILENAMES, isFlatConfig } from '../../utils/config-file';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 
 interface Schema {
@@ -81,7 +81,10 @@ export async function convertToInferred(tree: Tree, options: Schema) {
                 ?.outputs
             );
           },
-          targetPluginOptionMapper: (targetName) => ({ targetName }),
+          targetPluginOptionMapper: (targetName, project) =>
+            project.root === '.'
+              ? { targetName }
+              : { targetName, cwd: 'workspaceRoot' as const },
           skipTargetFilter,
         },
       ],
@@ -98,6 +101,22 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 }
 
 /**
+ * The nested flat config the plugin passes with `--config`: the nearest ESLint
+ * config at or above the project root, below the workspace root.
+ */
+function getNestedFlatConfigFile(tree: Tree, root: string): string | undefined {
+  for (let dir = root; dir !== '.'; dir = dirname(dir)) {
+    const configFiles = ESLINT_CONFIG_FILENAMES.map((file) =>
+      joinPathFragments(dir, file)
+    ).filter((file) => tree.exists(file));
+    if (configFiles.length !== 0) {
+      return configFiles.find(isFlatConfig);
+    }
+  }
+  return undefined;
+}
+
+/**
  * The target Nx runs after the conversion: the plugin's command and cwd, then
  * the matching target defaults, then the converted project target.
  */
@@ -111,8 +130,13 @@ function getConvertedTarget(
 ): TargetConfiguration {
   const { root, projectName } = projectDetails;
   const pluginTarget: TargetConfiguration = {
-    command: getLintCommand(root, getStandaloneSrcPath(root, tree.root)),
-    options: { cwd: root },
+    command: getLintCommand(
+      root,
+      getStandaloneSrcPath(root, tree.root),
+      '.',
+      getNestedFlatConfigFile(tree, root)
+    ),
+    options: { cwd: '.' },
   };
   let convertedTarget = resolveCommandSyntacticSugar(pluginTarget, root);
   for (const [, , { projects }] of createTargetDefaultsResults(
@@ -411,6 +435,10 @@ function handlePropertiesInOptions(
           projectName: projectDetails.projectName,
         });
 
+        if (cwd !== projectDetails.root) {
+          return interpolatedPattern.replace(/^\.\//, '');
+        }
+
         if (interpolatedPattern === projectDetails.root) {
           return '.';
         }
@@ -427,7 +455,7 @@ function handlePropertiesInOptions(
       .filter((p) =>
         projectDetails.root === '.'
           ? !['.', 'src', './src', 'lib', './lib'].includes(p)
-          : p !== '.'
+          : p !== (cwd === projectDetails.root ? '.' : projectDetails.root)
       );
     if (options.args.length === 0) {
       delete options.args;
