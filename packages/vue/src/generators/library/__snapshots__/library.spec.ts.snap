@@ -149,7 +149,7 @@ exports[`library > should support eslint flat config ESM 1`] = `
 "import vue from 'eslint-plugin-vue';
 import baseConfig from '../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...baseConfig,
   ...vue.configs['flat/recommended'],
   {
@@ -167,5 +167,7 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;
 "
 `;

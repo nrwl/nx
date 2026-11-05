@@ -168,7 +168,7 @@ describe('migrate-to-eslint-v10 migration', () => {
       .toMatchInlineSnapshot(`
       "import baseConfig from '../../eslint.config.mjs';
 
-      export default [
+      const eslintConfig = [
         ...baseConfig,
         {
           files: ['**/*.ts'],
@@ -177,6 +177,8 @@ describe('migrate-to-eslint-v10 migration', () => {
           },
         },
       ];
+
+      export default eslintConfig;
       "
     `);
   });

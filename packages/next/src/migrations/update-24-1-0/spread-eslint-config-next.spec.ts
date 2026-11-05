@@ -51,7 +51,7 @@ export default [...nx.configs['flat/react'], ...baseConfig];
       import nx from '@nx/eslint-plugin';
       import baseConfig from '../../eslint.config.mjs';
 
-      export default [
+      const eslintConfig = [
         ...nextVitals,
         ...nx.configs['flat/react-typescript'],
         ...baseConfig,
@@ -59,6 +59,8 @@ export default [...nx.configs['flat/react'], ...baseConfig];
           ignores: ['.next/**/*'],
         },
       ];
+
+      export default eslintConfig;
       "
     `);
     expect(tree.read('apps/react-app/eslint.config.mjs', 'utf-8')).toBe(
@@ -68,6 +70,60 @@ export default [...nx.configs['flat/react'], ...baseConfig];
 
     expect(await migration(tree)).toEqual({ skipAgentic: true });
     expect(tree.read('apps/web/eslint.config.mjs', 'utf-8')).toBe(migrated);
+  });
+
+  it('spreads eslint-config-next in a config exported through a const', async () => {
+    tree.write(
+      'apps/web/eslint.config.mjs',
+      `import nextEslintPluginNext from '@next/eslint-plugin-next';
+import baseConfig from '../../eslint.config.mjs';
+
+const eslintConfig = [
+  { plugins: { '@next/next': nextEslintPluginNext } },
+  ...baseConfig,
+];
+
+export default eslintConfig;
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web/eslint.config.mjs', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import nextVitals from 'eslint-config-next/core-web-vitals';
+      import baseConfig from '../../eslint.config.mjs';
+
+      const eslintConfig = [...nextVitals, ...baseConfig];
+
+      export default eslintConfig;
+      "
+    `);
+  });
+
+  it('keeps the export unnamed when the config already uses the name eslintConfig', async () => {
+    tree.write(
+      'apps/web/eslint.config.mjs',
+      `import nextEslintPluginNext from '@next/eslint-plugin-next';
+import eslintConfig from '../../eslint.config.mjs';
+
+export default [
+  { plugins: { '@next/next': nextEslintPluginNext } },
+  ...eslintConfig,
+];
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web/eslint.config.mjs', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import nextVitals from 'eslint-config-next/core-web-vitals';
+      import eslintConfig from '../../eslint.config.mjs';
+
+      export default [...nextVitals, ...eslintConfig];
+      "
+    `);
   });
 
   it('spreads eslint-config-next in place of the generated FlatCompat entries and removes their setup', async () => {
@@ -151,12 +207,14 @@ export default [
       import nx from '@nx/eslint-plugin';
       import baseConfig from '../../eslint.config.mjs';
 
-      export default [
+      const eslintConfig = [
         ...nextVitals,
         ...nx.configs['flat/react-typescript'],
         ...baseConfig,
         js.configs.recommended,
       ];
+
+      export default eslintConfig;
       "
     `);
   });

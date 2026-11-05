@@ -445,6 +445,33 @@ module.exports = [
         ];"
       `);
     });
+
+    it.each([
+      [
+        'a let',
+        'let eslintConfig = [...baseConfig];\nexport default eslintConfig;',
+      ],
+      [
+        'an import',
+        'import eslintConfig from "./shared.mjs";\nexport default eslintConfig;',
+      ],
+      [
+        'a const bound to a call',
+        'const eslintConfig = defineConfig([...baseConfig]);\nexport default eslintConfig;',
+      ],
+    ])(
+      'should leave the config unchanged when the exported name is %s',
+      (_, body) => {
+        const content = `import baseConfig from "../../eslint.config.mjs";\n${body}\n`;
+
+        const result = addBlockToFlatConfigExport(
+          content,
+          generateFlatPredefinedConfig('flat/react', 'nx', true)
+        );
+
+        expect(result).toBe(content);
+      }
+    );
   });
 
   describe('addImportToFlatConfig', () => {
@@ -1251,6 +1278,29 @@ export default [
                 { ignores: ["something/else"] }
               ];"
       `);
+    });
+
+    it('should remove plugins from an array exported through a const', () => {
+      const content = `import nxEslintPlugin from "@nx/eslint-plugin";
+
+const eslintConfig = [
+  { plugins: { "@nx": nxEslintPlugin } },
+  { ignores: ["dist"] },
+];
+
+export default eslintConfig;
+`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+
+      expect(result).toBe(`
+
+const eslintConfig = [
+  { ignores: ["dist"] },
+];
+
+export default eslintConfig;
+`);
     });
 
     it('should remove single plugin from config', () => {

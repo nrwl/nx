@@ -108,13 +108,15 @@ module.exports = {
 // AFTER (eslint.config.mjs)
 import baseConfig from '../../eslint.config.mjs';
 
-export default [
+const eslintConfig = [
   ...baseConfig,
   {
     files: ['**/*.ts'],
     rules: { '@typescript-eslint/no-explicit-any': 'error' },
   },
 ];
+
+export default eslintConfig;
 ```
 
 **Action items**:
