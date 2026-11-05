@@ -521,6 +521,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -568,6 +572,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -710,6 +718,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -759,6 +771,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -983,6 +999,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -1032,6 +1052,10 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -4001,6 +4025,10 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -4058,6 +4086,10 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",

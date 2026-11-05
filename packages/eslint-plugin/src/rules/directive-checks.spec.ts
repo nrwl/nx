@@ -64,6 +64,18 @@ function runRule(
   );
 }
 
+// The records that `applyTestFileDirectives` writes for each runner.
+const jestTarget = {
+  metadata: {
+    testFileDirectives: { 'depends-on': true, 'ignore-server-inputs': false },
+  },
+};
+const playwrightTarget = {
+  metadata: {
+    testFileDirectives: { 'depends-on': true, 'ignore-server-inputs': true },
+  },
+};
+
 function summarize(messages: TSESLint.Linter.LintMessage[]) {
   return messages.map(({ messageId, line, column, endColumn }) => ({
     messageId,
@@ -204,82 +216,50 @@ describe('directive-checks', () => {
     const file = 'apps/shop-e2e/src/checkout.spec.ts';
     const splitTarget = 'e2e-ci--src/checkout.spec.ts';
 
-    function runWithPlugin(content: string, plugin: string | undefined) {
+    function runWithTargets(
+      content: string,
+      targets: ProjectGraphProjectNode['data']['targets']
+    ) {
       return runRule(content, {
         file,
         nodes: [
-          project('shop-e2e', 'apps/shop-e2e', { [splitTarget]: {} }),
+          project('shop-e2e', 'apps/shop-e2e', targets),
           project('shop', 'apps/shop'),
         ],
-        sourceMaps: plugin
-          ? {
-              'apps/shop-e2e': {
-                [`targets.${splitTarget}`]: ['jest.config.ts', plugin],
-              },
-            }
-          : null,
       });
     }
 
     it.each([
-      ['@nx/jest/plugin', 'ignore-server-inputs'],
-      ['@nx/vitest', 'ignore-server-inputs'],
-      ['@nx/vitest', 'depends-on'],
-    ])('reports %s ignoring @nx-%s', (plugin, name) => {
+      ['a Jest split task', 'ignore-server-inputs', jestTarget],
+      ['a split task without a record', 'ignore-server-inputs', {}],
+      ['a split task without a record', 'depends-on', {}],
+    ])('reports %s ignoring @nx-%s', (_, name, target) => {
       const content =
         name === 'depends-on'
           ? '// @nx-depends-on: shop'
           : '// @nx-ignore-server-inputs';
 
-      expect(runWithPlugin(content, plugin)).toEqual([
+      expect(runWithTargets(content, { [splitTarget]: target })).toEqual([
         expect.objectContaining({
           messageId: 'unsupportedDirective',
-          message: `${plugin} doesn't apply "@nx-${name}", so Nx ignores it in this file.`,
+          message: `No split task that runs this file applies "@nx-${name}", so Nx ignores it.`,
         }),
       ]);
     });
 
-    it.each([
-      ['a plugin that applies it', '@nx/playwright/plugin'],
-      ['a plugin the rule does not know', '@acme/e2e-plugin'],
-      ['no cached source map', undefined],
-    ])('does not report a split task from %s', (_, plugin) => {
+    it('does not report a directive that a split task for the file applies', () => {
       expect(
-        runWithPlugin('// @nx-ignore-server-inputs', plugin).filter(
-          ({ messageId }) => messageId === 'unsupportedDirective'
-        )
-      ).toEqual([]);
-    });
-
-    it('does not report a directive that another split task for the file applies', () => {
-      const jestTarget = 'test-ci--src/checkout.spec.ts';
-
-      expect(
-        runRule('// @nx-ignore-server-inputs', {
-          file,
-          nodes: [
-            project('shop-e2e', 'apps/shop-e2e', {
-              [jestTarget]: {},
-              [splitTarget]: {},
-            }),
-          ],
-          sourceMaps: {
-            'apps/shop-e2e': {
-              [`targets.${jestTarget}`]: ['jest.config.ts', '@nx/jest/plugin'],
-              [`targets.${splitTarget}`]: [
-                'playwright.config.ts',
-                '@nx/playwright/plugin',
-              ],
-            },
-          },
+        runWithTargets('// @nx-ignore-server-inputs', {
+          'test-ci--src/checkout.spec.ts': jestTarget,
+          [splitTarget]: playwrightTarget,
         })
       ).toEqual([]);
     });
 
     it('reports only that the runner ignores a directive, not its value', () => {
-      const messages = runWithPlugin(
+      const messages = runWithTargets(
         '// @nx-depends-on:\n// @nx-ignore-server-inputs: true',
-        '@nx/jest/plugin'
+        { [splitTarget]: jestTarget }
       );
 
       expect(
@@ -295,11 +275,6 @@ describe('directive-checks', () => {
         runRule('// @nx-ignore-server-inputs', {
           file: 'apps/shop-e2e/src/other.spec.ts',
           nodes: [project('shop-e2e', 'apps/shop-e2e', { [splitTarget]: {} })],
-          sourceMaps: {
-            'apps/shop-e2e': {
-              [`targets.${splitTarget}`]: ['jest.config.ts', '@nx/jest/plugin'],
-            },
-          },
         })
       ).toEqual([]);
     });
@@ -323,7 +298,9 @@ describe('directive-checks', () => {
         '// @nx-depends-on: shop-e2e, shop-uii, !legacy, tag:none',
         {
           nodes: [
-            project('shop-e2e', 'apps/shop-e2e', { [splitTarget]: { inputs } }),
+            project('shop-e2e', 'apps/shop-e2e', {
+              [splitTarget]: { ...playwrightTarget, inputs },
+            }),
             project('shop-ui', 'libs/shop-ui'),
           ],
           sourceMaps: {

@@ -11,7 +11,7 @@ import { findUnmatchedProjectPatterns } from '../utils/directive-checks/project-
 import {
   findSplitTargets,
   splitTargetsApply,
-  type SplitTarget,
+  splitTargetsKeepDependsOnInputs,
 } from '../utils/directive-checks/split-targets';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
@@ -61,7 +61,7 @@ export default ESLintUtils.RuleCreator(
       extraTargetName:
         'Nx reads only the first "@nx-target-name", so it ignores this one.',
       unsupportedDirective:
-        '{{plugins}} doesn\'t apply "@nx-{{name}}", so Nx ignores it in this file.',
+        'No split task that runs this file applies "@nx-{{name}}", so Nx ignores it.',
       unmatchedProject:
         '"{{pattern}}" matches no project. Any Nx command that runs this test fails.',
       unmatchedProjectSuggestion:
@@ -90,17 +90,9 @@ export default ESLintUtils.RuleCreator(
       });
     }
 
-    function reportUnsupported(
-      lines: Span[],
-      name: TestFileDirective,
-      targets: SplitTarget[]
-    ) {
-      const plugins = [...new Set(targets.map((target) => target.plugin))];
+    function reportUnsupported(lines: Span[], name: TestFileDirective) {
       for (const line of lines) {
-        report(line, 'unsupportedDirective', {
-          name,
-          plugins: plugins.join(' and '),
-        });
+        report(line, 'unsupportedDirective', { name });
       }
     }
 
@@ -139,18 +131,22 @@ export default ESLintUtils.RuleCreator(
       if (!sourceProject) {
         return ignoredByRunner;
       }
-      const targets = findSplitTargets(
-        graph.projectGraph,
-        sourceProject,
-        sourceFilePath
-      );
+      const targets = findSplitTargets(sourceProject, sourceFilePath);
+      if (targets.length === 0) {
+        return ignoredByRunner;
+      }
 
       if (dependsOn.lines.length > 0) {
-        const applies = splitTargetsApply(targets, 'depends-on');
-        if (applies === false) {
-          reportUnsupported(dependsOn.lines, 'depends-on', targets);
+        if (!splitTargetsApply(targets, 'depends-on')) {
+          reportUnsupported(dependsOn.lines, 'depends-on');
           ignoredByRunner.add('depends-on');
-        } else if (targets.some((target) => target.keepsDependsOnInputs)) {
+        } else if (
+          splitTargetsKeepDependsOnInputs(
+            graph.projectGraph,
+            sourceProject,
+            targets
+          )
+        ) {
           // The cached graph can predate the latest edit, so check the patterns
           // in the file, not the ones the cached inputs list.
           const unmatched = findUnmatchedProjectPatterns(
@@ -178,13 +174,9 @@ export default ESLintUtils.RuleCreator(
 
       if (
         ignoreServerInputs.lines.length > 0 &&
-        splitTargetsApply(targets, 'ignore-server-inputs') === false
+        !splitTargetsApply(targets, 'ignore-server-inputs')
       ) {
-        reportUnsupported(
-          ignoreServerInputs.lines,
-          'ignore-server-inputs',
-          targets
-        );
+        reportUnsupported(ignoreServerInputs.lines, 'ignore-server-inputs');
         ignoredByRunner.add('ignore-server-inputs');
       }
       return ignoredByRunner;

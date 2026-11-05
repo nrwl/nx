@@ -153,16 +153,18 @@ none of the lines in the file lists a project.
 
 These checks run on a test file that a split task runs.
 A split task is named `<target>--<file path>`, such as `e2e-ci--src/checkout.spec.ts`.
-The checks read the cached project graph and the plugin that created each split task, which Nx
-records with the graph.
+The checks read the cached project graph.
 
 ### Directives the test runner ignores
 
 The plugin that creates a split task decides which directives Nx applies to it.
+The Playwright, Cypress e2e, and Jest plugins record them on the task, and a task without a
+record applies neither.
 The rule reports these directives:
 
-- `@nx-ignore-server-inputs` in a split task that `@nx/jest/plugin` created.
-- `@nx-depends-on` or `@nx-ignore-server-inputs` in a split task that `@nx/vitest` created.
+- `@nx-ignore-server-inputs` in a split task that the Jest plugin created.
+- `@nx-depends-on` or `@nx-ignore-server-inputs` in a split task that the Vitest plugin created
+  or that runs Cypress component tests.
 
 For a Jest test file, list the projects the test exercises instead:
 
@@ -172,8 +174,8 @@ For a Jest test file, list the projects the test exercises instead:
 ```
 
 The rule reports
-`@nx/jest/plugin doesn't apply "@nx-ignore-server-inputs", so Nx ignores it in this file.`
-For a Vitest test file, remove the directive.
+`No split task that runs this file applies "@nx-ignore-server-inputs", so Nx ignores it.`
+For a Vitest or Cypress component test file, remove the directive.
 
 When several split tasks run the same file, the rule reports a directive only if none of them
 applies it.
@@ -207,8 +209,8 @@ It skips exclusion patterns such as `!shop-legacy`.
 
 - Without a cached project graph, the rule prints a warning and runs only the
   [checks in every file](#checks-in-every-file).
-- The rule knows which directives the Playwright, Cypress, Jest, and Vitest plugins apply.
-  It runs none of the checks in split test files for a split task that another plugin creates.
+- A split task from a plugin other than Playwright, Cypress, Jest, or Vitest records no
+  directives, so the rule reports both directives in its test files as ignored.
 - A lint task's hash covers the e2e project and the projects it depends on.
   The rule also reads other projects, such as an API that `@nx-depends-on` names but the e2e
   project doesn't depend on.
@@ -216,8 +218,3 @@ It skips exclusion patterns such as `!shop-legacy`.
   `nx affected -t lint` doesn't run the e2e project's lint task at all.
   To check again, run the lint task with `--skip-nx-cache`.
   The e2e task still fails before it runs, with an error that names the pattern.
-- Cypress component tests share the Cypress plugin, its config file, and its technologies with
-  Cypress e2e tests, so the rule can't tell them apart.
-  It doesn't report a directive in a Cypress component test file as ignored.
-  The Cypress plugin doesn't add `@nx-depends-on` inputs to their split tasks, so the rule doesn't
-  check the patterns there.

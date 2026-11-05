@@ -459,7 +459,7 @@ async function buildJestTargets(
           },
           context.workspaceRoot,
           joinPathFragments(projectRoot, relativePath),
-          '@nx/jest/plugin'
+          { ignoreServerInputs: false }
         );
         targetGroup.push(targetName);
       }
@@ -609,7 +609,7 @@ async function buildJestTargets(
             },
             context.workspaceRoot,
             joinPathFragments(projectRoot, relativePath),
-            '@nx/jest/plugin'
+            { ignoreServerInputs: false }
           );
           targetGroup.push(targetName);
         }
