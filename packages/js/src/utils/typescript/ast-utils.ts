@@ -3,18 +3,17 @@ import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
 import { Node, SyntaxKind } from 'typescript';
 import { workspaceRoot } from '@nx/devkit';
-import { dirname } from 'path';
+import {
+  createTsModuleResolver,
+  readTsConfigWithoutFiles,
+} from '@nx/devkit/internal';
 import { getSourceNodes } from './get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
-let compilerHost: {
-  host: ts.CompilerHost;
-  options: ts.CompilerOptions;
-  moduleResolutionCache: ts.ModuleResolutionCache;
-};
+let moduleResolver: ReturnType<typeof createTsModuleResolver> | undefined;
 
 /**
  * Find a module based on its import
@@ -28,56 +27,16 @@ export function resolveModuleByImport(
   filePath: string,
   tsConfigPath: string
 ) {
-  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
-  const { options, host, moduleResolutionCache } = compilerHost;
-
-  const { resolvedModule } = tsModule.resolveModuleName(
-    importExpr,
-    filePath,
-    options,
-    host,
-    moduleResolutionCache
+  moduleResolver ??= createTsModuleResolver(
+    readTsConfigWithoutFiles(tsConfigPath).options
   );
 
-  if (!resolvedModule) {
+  const resolvedFileName = moduleResolver(importExpr, filePath);
+  if (!resolvedFileName) {
     return;
   } else {
-    return resolvedModule.resolvedFileName.replace(`${normalizedAppRoot}/`, '');
+    return resolvedFileName.replace(`${normalizedAppRoot}/`, '');
   }
-}
-
-function getCompilerHost(tsConfigPath: string) {
-  const options = readTsConfigOptions(tsConfigPath);
-  const host = tsModule.createCompilerHost(options, true);
-  const moduleResolutionCache = tsModule.createModuleResolutionCache(
-    workspaceRoot,
-    host.getCanonicalFileName
-  );
-  return { options, host, moduleResolutionCache };
-}
-
-function readTsConfigOptions(tsConfigPath: string) {
-  if (!tsModule) {
-    tsModule = require('typescript');
-  }
-
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
-
-  // we don't need to scan the files, we only care about options
-  const host: Partial<ts.ParseConfigHost> = {
-    readDirectory: () => [],
-    readFile: () => '',
-    fileExists: tsModule.sys.fileExists,
-  };
-
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    host as ts.ParseConfigHost,
-    dirname(tsConfigPath)
-  ).options;
 }
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {

@@ -1,3 +1,4 @@
+import { ModuleKind } from '@nx/devkit/internal';
 import type * as ts from 'typescript';
 
 export type ModuleFormat = 'cjs' | 'esm';
@@ -27,18 +28,12 @@ export function getTsConfigModuleFormat(
 ): ModuleFormat | null {
   const m = compilerOptions?.module;
   if (m === undefined) return null;
-  // Lazy-require typescript so importing this module (e.g. via
-  // @nx/js/internal -> is-esm-project) doesn't fail in workspaces that
-  // haven't installed typescript yet (fresh CNW projects before a
-  // generator adds it).
-  const tsMod = require('typescript') as typeof ts;
-  if (m === tsMod.ModuleKind.NodeNext || m === tsMod.ModuleKind.Node16)
-    return null;
+  if (m === ModuleKind.NodeNext || m === ModuleKind.Node16) return null;
   if (
-    m === tsMod.ModuleKind.ES2015 ||
-    m === tsMod.ModuleKind.ES2020 ||
-    m === tsMod.ModuleKind.ES2022 ||
-    m === tsMod.ModuleKind.ESNext
+    m === ModuleKind.ES2015 ||
+    m === ModuleKind.ES2020 ||
+    m === ModuleKind.ES2022 ||
+    m === ModuleKind.ESNext
   ) {
     return 'esm';
   }

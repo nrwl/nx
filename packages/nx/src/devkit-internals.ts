@@ -95,9 +95,15 @@ export {
 } from './plugins/js/utils/register';
 export { getTypescriptBackend } from './plugins/js/utils/typescript-backend';
 export {
+  createTsModuleResolver,
   readTsConfig,
   readTsConfigWithoutFiles,
 } from './plugins/js/utils/typescript';
+export {
+  ModuleKind,
+  ModuleResolutionKind,
+  ScriptTarget,
+} from './plugins/js/utils/typescript-enums';
 export type { TsConfigHost } from './plugins/js/utils/typescript';
 export { interpolate } from './tasks-runner/utils';
 export {
