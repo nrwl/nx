@@ -259,9 +259,7 @@ Run `bun install --save-text-lockfile` at the workspace root to switch to `bun.l
 For Bun, the complete `prune-lockfile` target declares `patches` and `local_path_modules` in
 `outputs` so a cached run restores the patch files and the vendored packages, and the root
 `package.json` in `inputs` so removing a package from `trustedDependencies` doesn't replay a cached
-output that still trusts it.
-An edit to the `.patch` file of a dependency or to a vendored package changes the task hash through
-the project graph, so neither needs an input:
+output that still trusts it:
 
 ```json
 // apps/my-app/project.json
@@ -285,6 +283,12 @@ the project graph, so neither needs an input:
   }
 }
 ```
+
+An edit to the `.patch` file of a dependency or to a vendored package changes the task hash through
+the project graph, so neither needs an input.
+A running Nx daemon doesn't detect a change to a gitignored file in a vendored package, such as its
+build output.
+After you change such a file, run `nx daemon --stop` so the next run ships the new contents.
 
 Then run:
 
