@@ -14,6 +14,7 @@ import { existsSync, readFileSync, realpathSync, statSync } from 'fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
+import { isFileSystemCaseSensitive } from './file-system-case';
 
 /**
  * Reads a tsconfig with its `extends` chain applied. When the workspace's
@@ -228,24 +229,13 @@ function getClassicSys(): ts.System | undefined {
   }
 }
 
-// `ts.sys.realpath` and `ts.sys.useCaseSensitiveFileNames` of TypeScript 6.
+// `ts.sys.realpath` of TypeScript 6.
 function realpathOnDisk(path: string): string {
   try {
     return realpathSync.native(path);
   } catch {
     return path;
   }
-}
-
-function isFileSystemCaseSensitive(): boolean {
-  if (process.platform === 'win32') {
-    return false;
-  }
-  const swappedCase = __filename.replace(/\w/g, (ch) => {
-    const upper = ch.toUpperCase();
-    return ch === upper ? ch.toLowerCase() : upper;
-  });
-  return !existsSync(swappedCase);
 }
 
 /**
