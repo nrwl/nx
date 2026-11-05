@@ -551,10 +551,7 @@ mod tests {
                     transitive: Some(false),
                 })]
             }),
-            outputs: None,
-            options: None,
-            configurations: None,
-            parallelism: None,
+            ..Default::default()
         };
         let project = |root: &str, reads_outputs: bool| Project {
             root: root.into(),

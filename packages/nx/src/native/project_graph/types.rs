@@ -23,6 +23,8 @@ pub struct Target {
     pub options: Option<String>,
     pub configurations: Option<String>,
     pub parallelism: Option<bool>,
+    /// The workspace project a local `@nx/*` executor loads from.
+    pub executor_project: Option<String>,
 }
 
 #[napi(object)]
