@@ -82,9 +82,18 @@ type SkipProjectFilter = (
   projectConfiguration: ProjectConfiguration
 ) => false | string;
 
+/**
+ * The plugin options that infer `targetName` on the project. Object-valued
+ * options of a project's targets merge key by key.
+ */
+type TargetPluginOptionMapper<T> = (
+  targetName: string,
+  projectConfiguration: ProjectConfiguration
+) => Partial<T>;
+
 type MigrationDefinition<T> = {
   executors: string[];
-  targetPluginOptionMapper: (targetName: string) => Partial<T>;
+  targetPluginOptionMapper: TargetPluginOptionMapper<T>;
   postTargetTransformer: PostTargetTransformer;
   skipProjectFilter?: SkipProjectFilter;
   skipTargetFilter?: SkipTargetFilter;
@@ -130,7 +139,8 @@ interface ExecutorScope<T> {
   executor: string;
   migration: MigrationDefinition<T>;
   targetAndProjects: Map<string, Set<string>>;
-  inferenceOptionSetIdsByTarget: Map<string, number>;
+  /** target name -> project name -> inference option set id */
+  inferenceOptionSetIds: Map<string, Map<string, number>>;
 }
 
 /**
@@ -199,8 +209,11 @@ export function collectMigrationScope<T>(
 
     for (const executor of migration.executors) {
       const targetAndProjects = new Map<string, Set<string>>();
-      const inferenceOptionSetIdsByTarget = new Map<string, number>();
-      const inferenceOptionsByTarget = new Map<string, Partial<T>>();
+      const inferenceOptionSetIds = new Map<string, Map<string, number>>();
+      const inferenceOptionsByTarget = new Map<
+        string,
+        Map<string, Partial<T>>
+      >();
       // Fresh per executor to preserve the previous per-migrator semantics
       // (each executor got its own migrator + skipped set).
       const skippedForExecutor = new Set<string>();
@@ -251,24 +264,20 @@ export function collectMigrationScope<T>(
             return;
           }
 
-          if (!inferenceOptionsByTarget.has(targetName)) {
-            inferenceOptionsByTarget.set(
-              targetName,
-              migration.targetPluginOptionMapper(targetName)
-            );
-          }
-          const inferenceOptions = inferenceOptionsByTarget.get(targetName);
+          const inferenceOptions = migration.targetPluginOptionMapper(
+            targetName,
+            projectGraph.nodes[projectName].data
+          );
 
           // One registration cannot map different target names through the
           // same option
           const existing = claimedOptionsByProject.get(projectName);
-          const takenOption = Object.keys(inferenceOptions).find(
-            (option) =>
-              existing?.[option] !== undefined &&
-              !isDeepEqual(existing[option], inferenceOptions[option])
+          const takenOption = findConflictingPluginOption(
+            existing,
+            inferenceOptions
           );
           if (takenOption && !migration.allowSharedOptionOverwrite) {
-            const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option.`;
+            const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to ${JSON.stringify(existing[takenOption])} by another target of the project, and the plugin can only infer one target per option.`;
             if (specificProjectToMigrate) {
               throw new Error(errorMsg);
             }
@@ -277,41 +286,51 @@ export function collectMigrationScope<T>(
             );
             return;
           }
-          claimedOptionsByProject.set(projectName, {
-            ...(existing ?? ({} as T)),
-            ...inferenceOptions,
-          } as T);
+          claimedOptionsByProject.set(
+            projectName,
+            mergePluginOptions(existing, inferenceOptions)
+          );
 
           if (!targetAndProjects.has(targetName)) {
             targetAndProjects.set(targetName, new Set());
+            inferenceOptionsByTarget.set(targetName, new Map());
           }
           targetAndProjects.get(targetName).add(projectName);
+          inferenceOptionsByTarget
+            .get(targetName)
+            .set(projectName, inferenceOptions);
         }
       );
 
       for (const [targetName, projs] of targetAndProjects) {
-        const inferenceOptions = inferenceOptionsByTarget.get(targetName);
-        const key = stableStringify(inferenceOptions);
-        if (!optionSetGroupsByKey.has(key)) {
-          optionSetGroupsByKey.set(key, {
-            id: optionSetGroupsByKey.size,
-            options: inferenceOptions,
-            targetNames: new Set(),
-            migratedRoots: new Set(),
-          });
-        }
-        const optionSetGroup = optionSetGroupsByKey.get(key);
-        optionSetGroup.targetNames.add(targetName);
-        inferenceOptionSetIdsByTarget.set(targetName, optionSetGroup.id);
-
+        const optionSetIdsByProject = new Map<string, number>();
+        inferenceOptionSetIds.set(targetName, optionSetIdsByProject);
         for (const project of projs) {
+          const inferenceOptions = inferenceOptionsByTarget
+            .get(targetName)
+            .get(project);
+          const key = stableStringify(inferenceOptions);
+          if (!optionSetGroupsByKey.has(key)) {
+            optionSetGroupsByKey.set(key, {
+              id: optionSetGroupsByKey.size,
+              options: inferenceOptions,
+              targetNames: new Set(),
+              migratedRoots: new Set(),
+            });
+          }
+          const optionSetGroup = optionSetGroupsByKey.get(key);
+          optionSetGroup.targetNames.add(targetName);
+          optionSetIdsByProject.set(project, optionSetGroup.id);
           optionSetGroup.migratedRoots.add(
             projectGraph.nodes[project].data.root
           );
-          pluginOptionsByProject.set(project, {
-            ...(pluginOptionsByProject.get(project) ?? ({} as T)),
-            ...inferenceOptions,
-          } as T);
+          pluginOptionsByProject.set(
+            project,
+            mergePluginOptions(
+              pluginOptionsByProject.get(project),
+              inferenceOptions
+            )
+          );
         }
       }
 
@@ -323,7 +342,7 @@ export function collectMigrationScope<T>(
         executor,
         migration,
         targetAndProjects,
-        inferenceOptionSetIdsByTarget,
+        inferenceOptionSetIds,
       });
     }
   }
@@ -436,14 +455,15 @@ export async function computeResidualByProject<T>(
       ) ?? {};
 
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
-      if (optionSetId === undefined) {
-        throw new Error(
-          `Could not find an inference option set for target "${targetName}".`
-        );
-      }
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          ?.get(projectName);
+        if (optionSetId === undefined) {
+          throw new Error(
+            `Could not find an inference option set for target "${targetName}".`
+          );
+        }
         const root = projectGraph.nodes[projectName].data.root;
         const fullInferredTarget = getFullInferredTarget(
           inferredTargetsByOptionSet,
@@ -629,6 +649,46 @@ function readCachedProjectConfiguration(
   const readProjectConfig = readProjectConfiguration(tree, projectName);
   projectConfigsByName.set(projectName, readProjectConfig);
   return readProjectConfig;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * The first option `next` sets to a different value than `existing`. Plain
+ * object values conflict only on a key both set differently.
+ */
+function findConflictingPluginOption<T>(
+  existing: T | undefined,
+  next: Partial<T>
+): string | undefined {
+  return Object.keys(next).find((option) => {
+    const current = existing?.[option];
+    const value = next[option];
+    if (current === undefined) {
+      return false;
+    }
+    if (isPlainObject(current) && isPlainObject(value)) {
+      return Object.keys(value).some(
+        (key) =>
+          current[key] !== undefined && !isDeepEqual(current[key], value[key])
+      );
+    }
+    return !isDeepEqual(current, value);
+  });
+}
+
+function mergePluginOptions<T>(existing: T | undefined, next: Partial<T>): T {
+  const merged = { ...(existing ?? {}) } as Record<string, unknown>;
+  for (const [option, value] of Object.entries(next)) {
+    const current = merged[option];
+    merged[option] =
+      isPlainObject(current) && isPlainObject(value)
+        ? { ...current, ...value }
+        : value;
+  }
+  return merged as T;
 }
 
 function isDeepEqual(a: unknown, b: unknown): boolean {
@@ -937,9 +997,10 @@ function computeInferredExecutorByPair<T>(
   const inferredExecutorByPair = new Map<string, string | undefined>();
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          .get(projectName);
         const root = projectGraph.nodes[projectName]?.data.root;
         const inferredTarget = getFullInferredTarget(
           inferredTargetsByOptionSet,
@@ -1495,14 +1556,7 @@ export async function migrateProjectExecutorsToPlugin<T>(
   pluginPath: string,
   createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
@@ -1527,14 +1581,7 @@ export async function migrateProjectExecutorsToPluginV1<T>(
   pluginPath: string,
   createNodes: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string
 ): Promise<Map<string, Record<string, string>>> {
   const projects = await migrateProjects(
@@ -2346,14 +2393,7 @@ async function migrateProjects<T>(
   createNodes: CreateNodes<T>,
   createNodesV2: CreateNodes<T>,
   defaultPluginOptions: T,
-  migrations: Array<{
-    executors: string[];
-    targetPluginOptionMapper: (targetName: string) => Partial<T>;
-    postTargetTransformer: PostTargetTransformer;
-    skipProjectFilter?: SkipProjectFilter;
-    skipTargetFilter?: SkipTargetFilter;
-    allowSharedOptionOverwrite?: boolean;
-  }>,
+  migrations: MigrationDefinition<T>[],
   specificProjectToMigrate?: string,
   logger?: typeof devkitLogger
 ): Promise<Map<string, Record<string, string>>> {
@@ -2536,6 +2576,27 @@ async function migrateProjects<T>(
   return projects;
 }
 
+/**
+ * Compares both ways, so a registration that sets an option the migrated
+ * projects leave unset does not absorb them, and the reverse.
+ */
+function hasSameEffectiveOptions(
+  registrationOptions: Record<string, unknown>,
+  options: Record<string, unknown>,
+  defaultPluginOptions: Record<string, unknown>
+): boolean {
+  const keys = new Set([
+    ...Object.keys(registrationOptions),
+    ...Object.keys(options),
+  ]);
+  return [...keys].every((key) =>
+    isDeepEqual(
+      registrationOptions[key] ?? defaultPluginOptions?.[key],
+      options[key] ?? defaultPluginOptions?.[key]
+    )
+  );
+}
+
 function addPluginRegistrations<T>(
   tree: Tree,
   projects: Map<string, Record<string, string>>,
@@ -2627,11 +2688,10 @@ function addPluginRegistrations<T>(
       (plugin): plugin is ExpandedPluginConfiguration =>
         typeof plugin !== 'string' &&
         plugin.plugin === pluginPath &&
-        Object.keys(options).every(
-          (key) =>
-            plugin.options[key] === options[key] ||
-            (plugin.options[key] === undefined &&
-              options[key] === defaultPluginOptions[key])
+        hasSameEffectiveOptions(
+          (plugin.options ?? {}) as Record<string, unknown>,
+          options,
+          defaultPluginOptions as Record<string, unknown>
         )
     );
 
@@ -2707,9 +2767,10 @@ function dropUninferredTargets<T>(
   const keptProjects = new Set<string>();
   for (const executorScope of scope.executorScopes) {
     for (const [targetName, projectNames] of executorScope.targetAndProjects) {
-      const optionSetId =
-        executorScope.inferenceOptionSetIdsByTarget.get(targetName);
       for (const projectName of projectNames) {
+        const optionSetId = executorScope.inferenceOptionSetIds
+          .get(targetName)
+          .get(projectName);
         const root = projectGraph.nodes[projectName].data.root;
         if (
           inferredTargetsByOptionSet
