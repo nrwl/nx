@@ -167,10 +167,10 @@ export function stableStringify(value: unknown): string {
 
 /**
  * Phase 0: Collect (once). Fold `forEachExecutorOptions` over every
- * migration/executor into a single scope object, applying the skip filters with
- * the exact same warn-vs-throw semantics the migrator used before (a
- * `specificProjectToMigrate` skip throws instead of warning). This is the single
- * authority for filtering; downstream phases only read the returned maps.
+ * migration/executor into a single scope object, applying the skip filters (a
+ * skip filter hit on `specificProjectToMigrate` throws instead of warning). This
+ * is the single authority for filtering; downstream phases only read the
+ * returned maps.
  */
 export function collectMigrationScope<T>(
   tree: Tree,
@@ -268,12 +268,8 @@ export function collectMigrationScope<T>(
               !isDeepEqual(existing[option], inferenceOptions[option])
           );
           if (takenOption && !migration.allowSharedOptionOverwrite) {
-            const errorMsg = `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option.`;
-            if (specificProjectToMigrate) {
-              throw new Error(errorMsg);
-            }
             log.warn(
-              `${errorMsg} The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.`
+              `The ${targetName} target on project "${projectName}" cannot be migrated. The "${takenOption}" plugin option is already set to "${existing[takenOption]}" by another target of the project, and the plugin can only infer one target per option. The target keeps its current configuration; rerun the migration once the other target is inferred to convert it.`
             );
             return;
           }
@@ -2393,17 +2389,14 @@ async function migrateProjects<T>(
     scope
   );
 
-  // Single-project mode keeps throwing, like its skip filters do.
-  if (!specificProjectToMigrate) {
-    dropUninferredTargets(
-      scope,
-      projectGraph,
-      inferredTargetsByOptionSet,
-      inferredRoots,
-      createNodesErrors,
-      logger ?? devkitLogger
-    );
-  }
+  dropUninferredTargets(
+    scope,
+    projectGraph,
+    inferredTargetsByOptionSet,
+    inferredRoots,
+    createNodesErrors,
+    logger ?? devkitLogger
+  );
 
   // Phase 2: Per-project residual (in-memory, no re-inference). Also captures
   // `baselineFinal` (the equivalence oracle consumed in Phase 4).
