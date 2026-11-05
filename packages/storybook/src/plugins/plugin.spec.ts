@@ -189,6 +189,7 @@ describe('@nx/storybook/plugin', () => {
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -214,6 +215,7 @@ describe('@nx/storybook/plugin', () => {
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -240,6 +242,7 @@ describe('@nx/storybook/plugin', () => {
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -320,6 +323,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -349,6 +353,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -379,6 +384,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -609,6 +615,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -634,6 +641,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -660,6 +668,7 @@ export default config;
                       "{workspaceRoot}/{projectRoot}/.storybook/**/*",
                       "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",

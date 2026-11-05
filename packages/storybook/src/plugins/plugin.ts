@@ -49,6 +49,9 @@ const storybookConfigGlob = '**/.storybook/main.{js,ts,mjs,mts,cjs,cts}';
 const storybookFileInputs = Object.values(storybookFilePatterns).map(
   (pattern) => `{workspaceRoot}/{projectRoot}/${pattern}`
 );
+// `^production` drops dependencies' stories too, which a host Storybook loads
+// from the projects it depends on.
+const dependencyStoriesInput = `^{projectRoot}/${storybookFilePatterns.stories}`;
 
 // Vite-builder frameworks we infer the addon target for. The addon itself only
 // checks that the resolved builder is Vite, so this list is conservative rather
@@ -300,7 +303,12 @@ function storybookInputs(
 ): TargetConfiguration['inputs'] {
   return [
     ...('production' in namedInputs
-      ? ['production', ...storybookFileInputs, '^production']
+      ? [
+          'production',
+          ...storybookFileInputs,
+          '^production',
+          dependencyStoriesInput,
+        ]
       : ['default', '^default']),
     {
       externalDependencies: [
