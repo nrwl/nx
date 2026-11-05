@@ -1192,6 +1192,9 @@ export function removePlugin(
         const plugins = parseTextToJson(
           pluginsElem.initializer.getText().replace(SPREAD_ELEMENTS_REGEXP, '')
         );
+        if (!plugins.includes(pluginName)) {
+          return;
+        }
 
         if (plugins.length > 1) {
           changes.push({
@@ -1228,10 +1231,13 @@ export function removePlugin(
         }
       } else if (ts.isObjectLiteralExpression(pluginsElem.initializer)) {
         const pluginsObj = pluginsElem.initializer;
-        if (pluginsElem.initializer.properties.length > 1) {
-          const plugin = pluginsObj.properties.find(
-            (prop) => prop.name?.['text'] === pluginName
-          ) as ts.PropertyAssignment;
+        const plugin = pluginsObj.properties.find(
+          (prop) => prop.name?.['text'] === pluginName
+        );
+        if (!plugin) {
+          return;
+        }
+        if (pluginsObj.properties.length > 1) {
           const removeComma =
             pluginsObj.properties.indexOf(plugin) <
               pluginsObj.properties.length - 1 ||
