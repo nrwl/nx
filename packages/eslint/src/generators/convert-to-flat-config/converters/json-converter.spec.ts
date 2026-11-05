@@ -192,6 +192,7 @@ describe('convertEslintJsonToFlatConfig', () => {
           },
           env: {
             jest: true,
+            browser: false,
           },
         })
       );

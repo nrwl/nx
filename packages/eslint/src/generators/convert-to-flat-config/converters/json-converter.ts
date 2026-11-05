@@ -1,4 +1,4 @@
-import { joinPathFragments, Tree, names } from '@nx/devkit';
+import { joinPathFragments, logger, Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
@@ -170,8 +170,20 @@ export function convertEslintJsonToFlatConfig(
     );
   }
 
-  if (config.globals || config.env) {
-    if (config.env) {
+  // Like FlatCompat, add only enabled environments. Setting a disabled one's globals
+  // to "off" would also turn off the ones that other enabled environments define.
+  const envs = Object.keys(config.env ?? {});
+  const enabledEnvs = envs.filter((env) => config.env[env]);
+  for (const env of envs.filter((env) => !config.env[env])) {
+    logger.warn(
+      `The ESLint config in "${root || '.'}" disables the "${env}" environment. ` +
+        `The flat config does not add its globals, but keeps the ones that extended configs define. ` +
+        `Set those globals to "off" in "languageOptions.globals" if the project must not use them.`
+    );
+  }
+
+  if (config.globals || enabledEnvs.length) {
+    if (enabledEnvs.length) {
       importsMap.set('globals', 'globals');
     }
 
@@ -179,7 +191,7 @@ export function convertEslintJsonToFlatConfig(
       ts.factory.createPropertyAssignment(
         'globals',
         ts.factory.createObjectLiteralExpression([
-          ...Object.keys(config.env || {}).map((env) =>
+          ...enabledEnvs.map((env) =>
             ts.factory.createSpreadAssignment(
               ts.factory.createPropertyAccessExpression(
                 ts.factory.createIdentifier('globals'),
