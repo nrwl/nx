@@ -24,6 +24,8 @@ export function resolveSetupFileCandidates(
   viteConfig: ResolvedConfig,
   projectRoot: string,
   workspaceRoot: string,
+  /** The task's cwd. */
+  runCwd: string,
   /** `root` as the config authored it, before vite defaults it to `cwd`. */
   authoredViteRoot?: string
 ): string[] {
@@ -38,18 +40,17 @@ export function resolveSetupFileCandidates(
   );
   if (entries.length === 0) return [];
 
-  // Vitest resolves both options against its root, and the inferred target
-  // runs with `cwd` set to the project root - so a config that authors no
-  // root resolves them against the project, not `viteConfig.root` (which vite
-  // has already defaulted to the graph process's cwd). Mirrors
-  // `effectiveVitestRoot` in plugin.ts.
+  // Vitest resolves both options against its root. With no authored root
+  // that is the project root, not `viteConfig.root`, which vite has defaulted
+  // to the graph process's cwd. A relative root resolves from the task's cwd.
+  // Mirrors `effectiveVitestRoot` in plugin.ts.
   const fullProjectRoot = resolve(workspaceRoot, projectRoot);
   const authoredRoot = viteConfig.test?.root ?? authoredViteRoot;
   const configRoot = !authoredRoot
     ? fullProjectRoot
     : isAbsolute(authoredRoot)
       ? authoredRoot
-      : resolve(fullProjectRoot, authoredRoot);
+      : resolve(workspaceRoot, runCwd, authoredRoot);
 
   const candidates = new Set<string>();
   for (const entry of entries) {
