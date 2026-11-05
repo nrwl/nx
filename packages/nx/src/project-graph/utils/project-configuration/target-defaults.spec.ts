@@ -3,6 +3,7 @@ import {
   createTargetDefaultsResults,
   normalizeTargetDefaults,
   readTargetDefaultsForTarget,
+  resolveApplicableTargetDefaults,
 } from './target-defaults';
 
 function node(
@@ -231,6 +232,53 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
         readTargetDefaultsForTarget('test', targetDefaults, '@nx/jest:jest')
       ).toEqual({});
     });
+  });
+});
+
+describe('resolveApplicableTargetDefaults', () => {
+  it('drops the entries that run another executor and keeps the rest', () => {
+    expect(
+      resolveApplicableTargetDefaults(
+        'test',
+        {
+          test: [
+            { executor: 'nx:run-commands', inputs: ['default'] },
+            { cache: true },
+            { executor: '@nx/jest:jest', dependsOn: ['^build'] },
+          ],
+        },
+        'nx:run-commands',
+        {}
+      )
+    ).toEqual({
+      key: 'test',
+      config: { executor: 'nx:run-commands', inputs: ['default'], cache: true },
+    });
+  });
+
+  it('keeps the key when every matching entry is dropped', () => {
+    expect(
+      resolveApplicableTargetDefaults(
+        'test',
+        {
+          test: { executor: '@nx/jest:jest', dependsOn: ['^build'] },
+          't*': { cache: true },
+        },
+        'nx:run-commands',
+        {}
+      )
+    ).toEqual({ key: 'test', config: {} });
+  });
+
+  it('returns null when no key matches', () => {
+    expect(
+      resolveApplicableTargetDefaults(
+        'lint',
+        { build: { cache: true } },
+        'nx:run-commands',
+        {}
+      )
+    ).toBeNull();
   });
 });
 

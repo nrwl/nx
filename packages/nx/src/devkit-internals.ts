@@ -42,6 +42,7 @@ export { findMatchingProjects } from './utils/find-matching-projects';
 export {
   createTargetDefaultsResults,
   readTargetDefaultsForTarget,
+  resolveApplicableTargetDefaults,
 } from './project-graph/utils/project-configuration/target-defaults';
 // Only the tree-bound checkers and their type cross the boundary. The
 // primitives they are built from carry preconditions a caller can violate - a
