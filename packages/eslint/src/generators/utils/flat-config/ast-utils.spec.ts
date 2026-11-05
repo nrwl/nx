@@ -1280,11 +1280,13 @@ export default [
       `);
     });
 
-    it('should remove plugins from an array exported through a const', () => {
+    it('should remove only the requested plugin from an array exported through a const', () => {
       const content = `import nxEslintPlugin from "@nx/eslint-plugin";
 
 const eslintConfig = [
   { plugins: { "@nx": nxEslintPlugin } },
+  { files: ["**/*.tsx"], plugins: { react: reactPlugin } },
+  { plugins: { a: aPlugin, b: bPlugin } },
   { ignores: ["dist"] },
 ];
 
@@ -1296,6 +1298,8 @@ export default eslintConfig;
       expect(result).toBe(`
 
 const eslintConfig = [
+  { files: ["**/*.tsx"], plugins: { react: reactPlugin } },
+  { plugins: { a: aPlugin, b: bPlugin } },
   { ignores: ["dist"] },
 ];
 
