@@ -546,9 +546,20 @@ describe('copyWorkspaceModules', () => {
     expect(readCopiedManifest('@scope/libb').name).toBe('@scope/libb');
   });
 
-  it.each(['bun.lock', 'pnpm-lock.yaml'])(
-    'does not copy the workspace package a vendored package is named like (%s)',
-    async (lockFile) => {
+  it.each([
+    {
+      lockFile: 'bun.lock',
+      utilSpec: 'file:../../../local_path_modules/vendor/util',
+    },
+    {
+      lockFile: 'pnpm-lock.yaml',
+      utilSpec: 'file:../../../local_path_modules/vendor/util',
+    },
+    // the binary bun.lockb output ships no local_path_modules
+    { lockFile: 'bun.lockb', utilSpec: 'file:../../vendor/util' },
+  ])(
+    'does not copy the workspace package a vendored package is named like ($lockFile)',
+    async ({ lockFile, utilSpec }) => {
       tempFs.createFilesSync({
         [lockFile]: '{}',
         [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
@@ -581,7 +592,7 @@ describe('copyWorkspaceModules', () => {
       await runExecutor();
 
       expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
-        util: 'file:../../../local_path_modules/vendor/util',
+        util: utilSpec,
       });
       expect(
         existsSync(join(tempFs.tempDir, 'dist/app/workspace_modules/util'))

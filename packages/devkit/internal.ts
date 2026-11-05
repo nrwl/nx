@@ -327,6 +327,7 @@ export {
   transformLegacyOutputs,
   textPrompt,
   unparse,
+  usesBinaryBunLockfile,
   validateOutputs,
   warnUnshippableLocalPathSpec,
   workspaceDataDirectory,

@@ -334,7 +334,7 @@ const BUN_TEXT_LOCKFILE_HINT =
   'Run `bun install --save-text-lockfile` at the workspace root to switch to bun.lock.';
 
 // Same precedence as getLockFilePath, against the root the caller prunes from.
-function usesBinaryBunLockfile(workspaceRootPath: string): boolean {
+export function usesBinaryBunLockfile(workspaceRootPath: string): boolean {
   return (
     !existsSync(join(workspaceRootPath, BUN_TEXT_LOCK_FILE)) &&
     existsSync(join(workspaceRootPath, BUN_LOCK_FILE))
