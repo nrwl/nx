@@ -843,8 +843,12 @@ function processPackageEntry(
       return { shouldContinue: true };
     }
 
-    // O(1) lookups using index
-    if (index.workspaceNames.has(name)) {
+    // O(1) lookups using index. A local package can share a workspace
+    // package's name, and only its path tells whether it installs that one.
+    if (
+      index.workspaceNames.has(name) &&
+      !isNonWorkspaceLocalPackage(packageKey, index)
+    ) {
       return { shouldContinue: true };
     }
 
@@ -945,6 +949,14 @@ function processPackageEntry(
     );
     return { shouldContinue: true };
   }
+}
+
+function isNonWorkspaceLocalPackage(
+  packageKey: string,
+  index: PackageIndex
+): boolean {
+  const source = index.localPathSources.get(packageKey);
+  return source !== undefined && !index.workspacePaths.has(source.path);
 }
 
 function isWorkspacePackage(
@@ -1264,6 +1276,10 @@ function createHoistedNodes(
   nodes: Record<string, ProjectGraphExternalNode>
 ): void {
   for (const [packageName, versions] of packageVersions.entries()) {
+    // The workspace package of that name is the one installed at the root
+    if (index.workspaceNames.has(packageName)) {
+      continue;
+    }
     const hoistedNodeKey = `npm:${packageName}`;
 
     if (shouldCreateHoistedNode(packageName, lockFile, index)) {
