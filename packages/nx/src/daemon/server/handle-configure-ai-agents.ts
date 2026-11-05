@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import type { ConfigureAiAgentsStatusResponse } from '../message-types/configure-ai-agents';
 import type { HandlerResult } from './server';
 import { serverLogger } from '../logger';
@@ -101,7 +102,7 @@ async function computeAgentStatuses(): Promise<ConfigureAiAgentsStatusResponse> 
     }
 
     const { getAgentConfigurations, supportedAgents } = await import(
-      modulePath
+      pathToFileURL(modulePath).href
     );
 
     const {
