@@ -106,3 +106,36 @@ export const workspaceFileDependencyBunLock = `{
   }
 }
 `;
+
+// A Bun 1.3.13 install where the vendored `holder` declares a sibling vendored
+// package named like the `util` workspace.
+export const transitiveWorkspaceNameBunLock = `{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root",
+    },
+    "apps/api": {
+      "name": "@demo/api",
+      "version": "1.0.0",
+      "dependencies": {
+        "holder": "file:../../vendor/holder",
+      },
+    },
+    "libs/util": {
+      "name": "util",
+      "version": "1.0.0",
+    },
+  },
+  "packages": {
+    "@demo/api": ["@demo/api@workspace:apps/api"],
+
+    "util": ["util@workspace:libs/util"],
+
+    "@demo/api/holder": ["holder@file:vendor/holder", { "dependencies": { "util": "file:../util" } }],
+
+    "@demo/api/holder/util": ["util@file:vendor/util", {}],
+  }
+}
+`;
