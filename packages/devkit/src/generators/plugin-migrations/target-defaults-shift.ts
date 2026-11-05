@@ -29,7 +29,10 @@ export interface TargetDefaultsShiftInputs {
   /** The target exactly as the plugin inferred it, before any targetDefaults. */
   rawInferred: TargetConfiguration;
   inferredExecutor: string | undefined;
-  /** Every other target the plugin infers for the project -> its executor. */
+  /**
+   * Every other target a plugin may infer for the project -> its executor,
+   * from the plugin's output and the project graph.
+   */
   siblingExecutors: Record<string, string | undefined>;
 }
 
@@ -96,6 +99,18 @@ export function correctTargetDefaultsShift(
     }
   >();
 
+  const migratedExecutorsByProject = new Map<
+    string,
+    Record<string, string | undefined>
+  >();
+  for (const { projectName, targetName, inputs } of pairs) {
+    if (!migratedExecutorsByProject.has(projectName)) {
+      migratedExecutorsByProject.set(projectName, {});
+    }
+    migratedExecutorsByProject.get(projectName)[targetName] =
+      inputs.inferredExecutor;
+  }
+
   for (const pair of pairs) {
     const { projectName, targetName, inputs, written } = pair;
     const identityInProjectConfig =
@@ -126,7 +141,12 @@ export function correctTargetDefaultsShift(
     }
 
     const key = after?.key ?? targetName;
-    const entryReachesSibling = Object.entries(inputs.siblingExecutors).some(
+    const siblingExecutors = {
+      ...inputs.siblingExecutors,
+      ...migratedExecutorsByProject.get(projectName),
+    };
+    delete siblingExecutors[targetName];
+    const entryReachesSibling = Object.entries(siblingExecutors).some(
       ([siblingName, siblingExecutor]) =>
         siblingExecutor === key ||
         (isGlobPattern(key) && minimatch(siblingName, key))

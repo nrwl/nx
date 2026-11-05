@@ -506,6 +506,21 @@ export async function computeResidualByProject<T>(
             siblingExecutors[siblingName] = effectiveExecutor(sibling);
           }
         }
+        // Targets an earlier run converted are inferred under another
+        // registration, so only the graph shows them.
+        for (const [siblingName, sibling] of Object.entries(
+          projectGraph.nodes[projectName].data.targets ?? {}
+        )) {
+          const configured = projectConfig.targets?.[siblingName];
+          if (
+            siblingName !== targetName &&
+            !Object.hasOwn(siblingExecutors, siblingName) &&
+            configured?.executor === undefined &&
+            configured?.command === undefined
+          ) {
+            siblingExecutors[siblingName] = sibling.executor;
+          }
+        }
         const targetDefaultsShift: TargetDefaultsShiftInputs = {
           defaultsBefore:
             resolveApplicableTargetDefaults(

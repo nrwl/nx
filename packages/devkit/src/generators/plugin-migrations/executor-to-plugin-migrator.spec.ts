@@ -5163,4 +5163,97 @@ describe('targetDefaults resolution across the conversion', () => {
       }
     }
   );
+
+  it('keeps the defaults of a target an earlier run converted', async () => {
+    setup('td-shift-rerun', {
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    for (const name of ['app1', 'app2']) {
+      const project = readJson(ctx.tree, `${name}/project.json`);
+      project.targets.integration = {
+        executor: TEST_EXECUTOR,
+        options: { config: SYNTHETIC_CONFIG_FILE },
+      };
+      writeJson(ctx.tree, `${name}/project.json`, project);
+      ctx.projectGraph.nodes[name].data.targets = project.targets;
+    }
+    const plugin = createSyntheticPlugin();
+    const before = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+
+    await migrate(plugin);
+    const afterFirstRun = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(afterFirstRun[name].integration.executor).toBe(TEST_EXECUTOR);
+      ctx.projectGraph.nodes[name].data.targets = afterFirstRun[name];
+    }
+    await migrate(plugin);
+
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(after[name].integration.executor).toBe('nx:run-commands');
+      expect(after[name].integration.dependsOn ?? []).toEqual([]);
+      expect(defaultsDecidedFields(after[name].test)).toEqual(
+        defaultsDecidedFields(before[name].test)
+      );
+    }
+  });
+
+  it('keeps the defaults of a target converted in the same run under another registration', async () => {
+    setup('td-shift-same-run', {
+      test: { cache: true, dependsOn: ['^build'] },
+      'nx:run-commands': { cache: false },
+    });
+    for (const name of ['app1', 'app2']) {
+      const project = readJson(ctx.tree, `${name}/project.json`);
+      project.targets.integration = {
+        executor: TEST_EXECUTOR,
+        options: { config: SYNTHETIC_CONFIG_FILE },
+      };
+      writeJson(ctx.tree, `${name}/project.json`, project);
+      ctx.projectGraph.nodes[name].data.targets = project.targets;
+    }
+    const plugin = createSyntheticPlugin();
+    const before = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { targetName: 'test' },
+      [{ ...testMigrations()[0], allowSharedOptionOverwrite: true }],
+      undefined,
+      { warn: vi.fn() } as any
+    );
+
+    const after = await resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes
+    );
+    for (const name of ['app1', 'app2']) {
+      expect(after[name].integration.executor).toBe('nx:run-commands');
+      expect(after[name].integration.dependsOn ?? []).toEqual([]);
+      expect(defaultsDecidedFields(after[name].test)).toEqual(
+        defaultsDecidedFields(before[name].test)
+      );
+    }
+  });
 });
