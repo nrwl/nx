@@ -25,7 +25,6 @@ const mockChild = () => {
   return cp;
 };
 let mockSpawned: any;
-// Children for a run that spawns several, handed out in spawn order.
 let mockSpawnQueue: any[] = [];
 vi.mock('child_process', async () => ({
   ...require('child_process'),
