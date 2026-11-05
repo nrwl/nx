@@ -1387,6 +1387,37 @@ module.exports = [];`
     });
   });
 
+  const flatConfig = `module.exports = [{ files: ['**/*.ts'] }];`;
+  it.each`
+    configs                                                                      | cwd                | expectedCommand                                    | expectedConfigInput
+    ${{ 'eslint.config.cjs': flatConfig }}                                       | ${undefined}       | ${'eslint .'}                                      | ${'eslint.config.cjs'}
+    ${{ 'eslint.config.cjs': flatConfig }}                                       | ${'workspaceRoot'} | ${'eslint libs/a'}                                 | ${'eslint.config.cjs'}
+    ${{ 'eslint.config.cjs': flatConfig, 'libs/eslint.config.cjs': flatConfig }} | ${undefined}       | ${'eslint .'}                                      | ${'libs/eslint.config.cjs'}
+    ${{ 'eslint.config.cjs': flatConfig, 'libs/eslint.config.cjs': flatConfig }} | ${'workspaceRoot'} | ${'eslint libs/a --config libs/eslint.config.cjs'} | ${'libs/eslint.config.cjs'}
+    ${{ '.eslintrc.json': '{}', 'libs/.eslintrc.json': '{}' }}                   | ${undefined}       | ${'eslint .'}                                      | ${'libs/.eslintrc.json'}
+    ${{ '.eslintrc.json': '{}', 'libs/.eslintrc.json': '{}' }}                   | ${'workspaceRoot'} | ${'eslint libs/a'}                                 | ${'libs/.eslintrc.json'}
+  `(
+    'should lint a project with the parent configs an include leaves out ($expectedConfigInput, cwd: $cwd)',
+    async ({ configs, cwd, expectedCommand, expectedConfigInput }) => {
+      createFiles({
+        ...configs,
+        'libs/a/project.json': `{}`,
+        'libs/a/index.ts': `console.log('hello world')`,
+      });
+      configFiles = configFiles.filter((file) => file.startsWith('libs/a/'));
+
+      const { projects } = await invokeCreateNodesOnMatchingFiles(context, {
+        targetName: 'lint',
+        cwd,
+      });
+
+      expect(projects['libs/a'].targets.lint.command).toBe(expectedCommand);
+      expect(projects['libs/a'].targets.lint.inputs).toContain(
+        `{workspaceRoot}/${expectedConfigInput}`
+      );
+    }
+  );
+
   describe('tsconfig extends chain inputs', () => {
     it('should not add tsconfig inputs when the project has no tsconfig.json', async () => {
       createFiles({
