@@ -224,12 +224,18 @@ export function findNodeMatchingVersion(
   packageName: string,
   versionExpr: string
 ) {
-  if (versionExpr === '*') {
+  if (versionExpr === '*' && graph.externalNodes[`npm:${packageName}`]) {
     return graph.externalNodes[`npm:${packageName}`];
   }
   const nodes = Object.values(graph.externalNodes)
     .filter((n) => n.data.packageName === packageName)
     .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
+
+  // A package with several versions can have no bare node, for example
+  // when the pnpm root importer does not declare it.
+  if (versionExpr === '*') {
+    return nodes[0];
+  }
 
   if (versionExpr === 'latest') {
     return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];

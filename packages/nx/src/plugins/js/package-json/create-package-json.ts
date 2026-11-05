@@ -4,6 +4,7 @@ import {
   fileDataDepTarget,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import {
@@ -20,6 +21,7 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
+import { findNodeMatchingVersion } from '../lock-file/project-graph-pruning';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -335,10 +337,13 @@ export function findProjectsNpmDependencies(
   const seen = new Set<string>();
 
   options.helperDependencies?.forEach((dep) => {
-    seen.add(dep);
-    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
-      graph.externalNodes[dep].data.version;
-    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
+    const node = findHelperDependencyNode(graph, projectNode.name, dep);
+    if (!node) {
+      return;
+    }
+    seen.add(node.name);
+    npmDeps.dependencies[node.data.packageName] = node.data.version;
+    recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
   });
 
   // if it's production, we want to ignore all found devDependencies
@@ -434,6 +439,26 @@ function findAllNpmDeps(
       }
     }
   }
+}
+
+function findHelperDependencyNode(
+  graph: ProjectGraph,
+  projectName: string,
+  dep: string
+): ProjectGraphExternalNode | undefined {
+  if (graph.externalNodes[dep]) {
+    return graph.externalNodes[dep];
+  }
+  // A helper with several versions can have only versioned nodes, for
+  // example when the pnpm root importer does not declare it. Prefer the
+  // version that the project depends on, else the highest.
+  const packageName = dep.replace(/^npm:/, '');
+  const projectDependency = graph.dependencies[projectName]?.find(
+    (d) => graph.externalNodes[d.target]?.data.packageName === packageName
+  );
+  return projectDependency
+    ? graph.externalNodes[projectDependency.target]
+    : findNodeMatchingVersion(graph, packageName, '*');
 }
 
 function recursivelyCollectPeerDependencies(

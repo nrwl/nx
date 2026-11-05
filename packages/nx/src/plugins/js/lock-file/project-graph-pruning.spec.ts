@@ -87,6 +87,12 @@ describe('project-graph-pruning', () => {
       expect(node?.name).toBe('npm:lodash');
     });
 
+    it('should match the highest version for a wildcard when no bare node exists', () => {
+      delete graph.externalNodes['npm:lodash'];
+      const node = findNodeMatchingVersion(graph, 'lodash', '*');
+      expect(node?.name).toBe('npm:lodash@4.17.20');
+    });
+
     it('should handle latest version', () => {
       const node = findNodeMatchingVersion(graph, 'lodash', 'latest');
       expect(node).toBeDefined();

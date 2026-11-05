@@ -75,6 +75,74 @@ describe('createPackageJson', () => {
     });
   });
 
+  describe('when the helper dependency has no bare node', () => {
+    const tslibNodes = {
+      'npm:tslib@1.14.1': {
+        type: 'npm' as const,
+        name: 'npm:tslib@1.14.1' as const,
+        data: { version: '1.14.1', hash: '', packageName: 'tslib' },
+      },
+      'npm:tslib@2.4.0': {
+        type: 'npm' as const,
+        name: 'npm:tslib@2.4.0' as const,
+        data: { version: '2.4.0', hash: '', packageName: 'tslib' },
+      },
+    };
+
+    beforeEach(() => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({});
+    });
+
+    it('should add the version that the project depends on', () => {
+      expect(
+        createPackageJson(
+          'lib1',
+          {
+            nodes: {
+              lib1: {
+                type: 'lib',
+                name: 'lib1',
+                data: { targets: {}, root: '' },
+              },
+            },
+            externalNodes: tslibNodes,
+            dependencies: {
+              lib1: [
+                {
+                  source: 'lib1',
+                  target: 'npm:tslib@1.14.1',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          { helperDependencies: ['npm:tslib'], root: '' }
+        ).dependencies
+      ).toEqual({ tslib: '1.14.1' });
+    });
+
+    it('should add the highest version when the project does not depend on it', () => {
+      expect(
+        createPackageJson(
+          'lib1',
+          {
+            nodes: {
+              lib1: {
+                type: 'lib',
+                name: 'lib1',
+                data: { targets: {}, root: '' },
+              },
+            },
+            externalNodes: tslibNodes,
+            dependencies: {},
+          },
+          { helperDependencies: ['npm:tslib'], root: '' }
+        ).dependencies
+      ).toEqual({ tslib: '2.4.0' });
+    });
+  });
+
   it('should only add file dependencies if target is specified', () => {
     vi.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
       namedInputs: {
