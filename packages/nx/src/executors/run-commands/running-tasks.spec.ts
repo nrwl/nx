@@ -168,7 +168,7 @@ describe('run-commands completion', () => {
     mockSpawned = mockChild();
     return runCommands(
       {
-        command: 'build',
+        commands: ['build'],
         streamOutput: false,
         __unparsed__: [],
         ...options,
