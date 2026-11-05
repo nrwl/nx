@@ -71,6 +71,8 @@ Source files are reported too, because a rule that is no longer defined cannot b
 
 The same holds for the two shapes Nx generated for Next.js apps: registering the `@next/next` plugin and extending `next` through `FlatCompat`. The `@nx/next` migrations for this release replace those entries with a spread of `eslint-config-next/core-web-vitals`, or list the configs they could not update. They also move `eslint-config-next` and `@next/eslint-plugin-next` from 16.0-16.3 to `^16.4.0`.
 
+When another config registers one of those plugins, the `@nx/next` migration uses the `core-web-vitals` config of `@next/eslint-plugin-next` instead, because ESLint rejects a second copy of a plugin. That config registers only `@next/next`, so this exemption does not cover it. Its `react/`, `jsx-a11y/` and `import/` rules, and the ones named in directive comments of the files it lints, fail unless another config registers the plugin.
+
 A Next.js config is still reported when it imports one of the removed plugins directly or extends a `plugin:react/`, `plugin:jsx-a11y/` or `plugin:import/` config.
 
 ##### Checking the remaining plugins
