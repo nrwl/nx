@@ -115,6 +115,26 @@ describe('testPostTargetTransformer', () => {
     ]);
   });
 
+  it('turns coverage into coverage.enabled so a configuration keeps reportsDirectory', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const target = {
+      options: { reportsDirectory: '../../coverage/libs/lib1' },
+      configurations: { ci: { coverage: true } },
+    };
+
+    const result = testPostTargetTransformer(
+      target,
+      tree,
+      { projectName: 'lib1', root: 'libs/lib1' },
+      {}
+    );
+
+    expect(result.options).toEqual({
+      'coverage.reportsDirectory': '../../coverage/libs/lib1',
+    });
+    expect(result.configurations.ci).toEqual({ 'coverage.enabled': true });
+  });
+
   it('accepts a single testFile string', () => {
     const tree = createTreeWithEmptyWorkspace();
     const target = { options: { testFile: 'libs/lib1/src/a.spec.ts' } };
