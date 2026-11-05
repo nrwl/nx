@@ -8,6 +8,7 @@ export {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   addOverrideToLintConfig,
+  addPluginConfigToFlatLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   addSpreadConfigToFlatLintConfig,

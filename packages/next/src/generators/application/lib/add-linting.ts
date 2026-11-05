@@ -3,6 +3,7 @@ import {
   detectPackageManager,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -12,12 +13,17 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addPluginConfigToFlatLintConfig,
   addPredefinedConfigToFlatLintConfig,
   addSpreadConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import {
+  findRootConfigWithConflictingPlugin,
+  getEslintMajorVersion,
+} from '../../../utils/eslint-config-next-conflicts';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
@@ -52,13 +58,36 @@ export async function addLinting(
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
       if (isNext16App) {
-        addSpreadConfigToFlatLintConfig(
-          host,
-          options.appProjectRoot,
-          'nextVitals',
-          'eslint-config-next/core-web-vitals',
-          { insertAtTheEnd: false }
-        );
+        const rootConfigWithConflictingPlugin =
+          findRootConfigWithConflictingPlugin(
+            host,
+            getEslintMajorVersion(host)
+          );
+        if (rootConfigWithConflictingPlugin) {
+          // ESLint rejects eslint-config-next's own copies of React plugins the root
+          // config already registers, so add only the Next.js plugin and its rules.
+          addPluginConfigToFlatLintConfig(
+            host,
+            options.appProjectRoot,
+            'nextEslintPluginNext',
+            '@next/eslint-plugin-next',
+            'core-web-vitals',
+            { insertAtTheEnd: false }
+          );
+          logger.warn(
+            `The ESLint config of the "${options.projectName}" project uses the "core-web-vitals" config of @next/eslint-plugin-next instead of eslint-config-next. ` +
+              `The root config ${rootConfigWithConflictingPlugin} registers react, react-hooks, import or jsx-a11y, and ESLint rejects a second copy of a plugin. ` +
+              `Files that ${rootConfigWithConflictingPlugin} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`
+          );
+        } else {
+          addSpreadConfigToFlatLintConfig(
+            host,
+            options.appProjectRoot,
+            'nextVitals',
+            'eslint-config-next/core-web-vitals',
+            { insertAtTheEnd: false }
+          );
+        }
       }
       addPredefinedConfigToFlatLintConfig(
         host,
