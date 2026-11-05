@@ -22,6 +22,10 @@ When Nx can't read a directive, it ignores it silently or with a warning that's 
 An ignored `@nx-depends-on` or `@nx-ignore-server-inputs` leaves the test's task unscoped, so
 the test reruns on every change to the app.
 
+{% aside type="caution" title="Nx 24.1+ Required" %}
+The `@nx/directive-checks` rule requires Nx 24.1 or later.
+{% /aside %}
+
 ## Enable the rule
 
 The rule isn't in the shared configs that `@nx/eslint-plugin` exports, and generators don't
