@@ -193,6 +193,8 @@ function defaultImports(source: ts.SourceFile): Map<string, string> {
 
 // Atomized e2e targets are named `<ciTargetName>--<file path in the project>`,
 // so the graph narrows the search to the files that can carry the directives.
+// Both parts can contain `--`, and the plugins also add a `<ciTargetName>`
+// target, which marks where the file path starts.
 async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
   let graph: ProjectGraph;
   try {
@@ -205,21 +207,27 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
   }
 
   for (const node of Object.values(graph.nodes)) {
-    for (const targetName of Object.keys(node.data.targets ?? {})) {
-      const separator = targetName.indexOf('--');
-      if (separator === -1) {
-        continue;
-      }
-      const file = joinPathFragments(
-        node.data.root,
-        targetName.slice(separator + 2)
-      );
-      if (!tree.exists(file) || !tree.isFile(file)) {
-        continue;
-      }
-      const directives = parseNxDirectives(tree.read(file, 'utf-8'));
-      if (TRIGGER_DIRECTIVES.some((name) => directives.has(name))) {
-        return true;
+    const targets = node.data.targets ?? {};
+    for (const targetName of Object.keys(targets)) {
+      for (
+        let separator = targetName.indexOf('--');
+        separator !== -1;
+        separator = targetName.indexOf('--', separator + 1)
+      ) {
+        if (!Object.hasOwn(targets, targetName.slice(0, separator))) {
+          continue;
+        }
+        const file = joinPathFragments(
+          node.data.root,
+          targetName.slice(separator + 2)
+        );
+        if (!tree.exists(file) || !tree.isFile(file)) {
+          continue;
+        }
+        const directives = parseNxDirectives(tree.read(file, 'utf-8'));
+        if (TRIGGER_DIRECTIVES.some((name) => directives.has(name))) {
+          return true;
+        }
       }
     }
   }
