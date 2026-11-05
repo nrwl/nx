@@ -73,6 +73,15 @@ function addSecondExecutorTarget(
   ctx.projectGraph.nodes[projectName].data.targets = projectJson.targets;
 }
 
+function warningsOtherThanKeptInclude(warn: ReturnType<typeof vi.fn>) {
+  return warn.mock.calls
+    .map(([message]) => String(message))
+    .filter(
+      (message) =>
+        !message.startsWith('convert-to-inferred kept an explicit "include"')
+    );
+}
+
 function syntheticMigrations() {
   return [
     {
@@ -1469,7 +1478,7 @@ describe('Phase 3: strict-common hoist', () => {
     expect(
       readJson(ctx.tree, 'libs/pkg3/package.json').nx.targets
     ).toBeUndefined();
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warningsOtherThanKeptInclude(warn)).toHaveLength(1);
   });
 
   it('keeps the nx.targets entry of a package-based project with a same-name included script when its residual is empty (--project)', async () => {
@@ -2733,8 +2742,9 @@ describe('Phase 3: strict-common hoist', () => {
       readJson(ctx.tree, 'app3/project.json').targets.build
     ).toBeUndefined();
     // the revert is surfaced once
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('build');
+    const warnings = warningsOtherThanKeptInclude(warn);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('build');
   });
 
   it('M: reverts the hoist when a non-migrated root errors during verification (fail-closed)', async () => {
@@ -4687,6 +4697,8 @@ describe('projects the plugin does not infer', () => {
     expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
       [
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+        "convert-to-inferred kept an explicit "include" list on the @acme/tool/plugin registration in nx.json. Without it, the plugin would also apply to:
+        - config files the plugin fails to load: app3/build.config.json. Fix them to drop the "include".",
       ]
     `);
   });
@@ -4742,7 +4754,180 @@ describe('projects the plugin does not infer', () => {
     expect(warn.mock.calls.map(([message]) => message)).toMatchInlineSnapshot(`
       [
         "convert-to-inferred left target "build" in project "app3" on its executor because the plugin failed to infer it: app3/nested/build.config.json: REMIX_SECRET is required. Fix the error, then rerun the migration to convert it.",
+        "convert-to-inferred kept an explicit "include" list on the @acme/tool/plugin registration in nx.json. Without it, the plugin would also apply to:
+        - config files the plugin fails to load: app3/nested/build.config.json. Fix them to drop the "include".",
       ]
     `);
+  });
+});
+
+describe('kept include warning', () => {
+  let ctx: FixtureContext;
+
+  afterEach(() => {
+    if (ctx) {
+      teardownFixture(ctx.fs);
+      ctx = undefined;
+    }
+  });
+
+  const header = `convert-to-inferred kept an explicit "include" list on the ${SYNTHETIC_PLUGIN_PATH} registration in nx.json. Without it, the plugin would also apply to:`;
+
+  async function migrate(createNodes: CreateNodes<SyntheticPluginOptions>) {
+    const warn = vi.fn();
+    await migrateProjectExecutorsToPlugin(
+      ctx.tree,
+      ctx.projectGraph,
+      SYNTHETIC_PLUGIN_PATH,
+      createNodes,
+      { targetName: 'build' },
+      syntheticMigrations(),
+      undefined,
+      { warn } as any
+    );
+    return warn.mock.calls
+      .map(([message]) => String(message))
+      .filter((message) => message.startsWith(header));
+  }
+
+  it('names the projects that were not migrated, capped at five', async () => {
+    ctx = setupFixture('kept-include-not-migrated');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    for (let i = 1; i <= 7; i++) {
+      addExecutorProject(ctx, {
+        name: `other${i}`,
+        root: `libs/other${i}`,
+        executor: '@other/tool:build',
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects that were not migrated: libs/other1, libs/other2, libs/other3, libs/other4, libs/other5 and 2 more. Migrate them too to drop the "include".`,
+    ]);
+  });
+
+  it('names the config files the plugin fails to load', async () => {
+    ctx = setupFixture('kept-include-errored');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    ctx.fs.createFileSync(`tools/rules/${SYNTHETIC_CONFIG_FILE}`, '{}');
+    const createNodes: CreateNodes<SyntheticPluginOptions> = [
+      SYNTHETIC_CONFIG_GLOB,
+      (configFiles, options) => {
+        const results: Array<readonly [string, any]> = [];
+        const errors: Array<[string, Error]> = [];
+        for (const file of configFiles) {
+          const root = dirname(file);
+          if (root === 'tools/rules') {
+            errors.push([file, new Error('cannot load')]);
+            continue;
+          }
+          results.push([
+            file,
+            {
+              projects: {
+                [root]: {
+                  targets: {
+                    [options.targetName]: defaultInferredTarget(root),
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (errors.length > 0) {
+          throw new AggregateCreateNodesError(errors, results as any);
+        }
+        return results;
+      },
+    ];
+
+    const messages = await migrate(createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - config files the plugin fails to load: tools/rules/${SYNTHETIC_CONFIG_FILE}. Fix them to drop the "include".`,
+    ]);
+  });
+
+  it('names the projects registered with different plugin options', async () => {
+    ctx = setupFixture('kept-include-other-options');
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      targetName: 'build',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app2',
+      root: 'apps/app2',
+      targetName: 'compile',
+      target: uniformExecutorTarget(),
+    });
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects migrated with different plugin options, which have their own registration: apps/app2. Give them the same plugin options to share one registration.`,
+      `${header}\n  - projects migrated with different plugin options, which have their own registration: apps/app1. Give them the same plugin options to share one registration.`,
+    ]);
+  });
+
+  it('warns when an existing scoped registration keeps its include', async () => {
+    ctx = setupFixture('kept-include-existing');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['apps/app0/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'libs/other',
+      executor: '@other/tool:build',
+    });
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - projects that were not migrated: libs/other. Migrate them too to drop the "include".`,
+    ]);
+  });
+
+  it('does not warn when the include is dropped', async () => {
+    ctx = setupFixture('kept-include-collapsed');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    const registration = readNxJson(ctx.tree).plugins?.find(
+      (p): p is ExpandedPluginConfiguration =>
+        typeof p !== 'string' && p.plugin === SYNTHETIC_PLUGIN_PATH
+    );
+    expect(registration).toBeTruthy();
+    expect(registration.include).toBeUndefined();
+    expect(messages).toEqual([]);
   });
 });
