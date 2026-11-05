@@ -34,12 +34,17 @@ export async function convertToInferred(tree: Tree, options: Schema) {
             {
               executors: ['@nx/vitest:test'],
               postTargetTransformer: testPostTargetTransformer,
-              // The executor ran once unless asked to watch. Set per target,
-              // not as a default, so a watch-mode registration is not reused.
-              targetPluginOptionMapper: (target) => ({
-                testTargetName: target,
-                testMode: 'run',
-              }),
+              // The executor ran once unless asked to watch, from the
+              // workspace root. Set per target, not as a default, so a
+              // watch-mode registration is not reused.
+              targetPluginOptionMapper: (target, project) =>
+                project.root === '.'
+                  ? { testTargetName: target, testMode: 'run' }
+                  : {
+                      testTargetName: target,
+                      testMode: 'run',
+                      cwd: 'workspaceRoot' as const,
+                    },
             },
           ],
           options.project
