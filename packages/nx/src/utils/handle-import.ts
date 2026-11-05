@@ -1,4 +1,5 @@
-import { extname, resolve } from 'path';
+import { extname, isAbsolute, resolve } from 'path';
+import { pathToFileURL } from 'url';
 
 const STRIP_TYPES_DOCS_URL =
   'https://nx.dev/docs/reference/environment-variables#nx-prefer-node-strip-types';
@@ -39,7 +40,7 @@ export async function handleImport<T = any>(
     // the import() path, so this recovers TLA plugin entry points without
     // requiring swc-node or ts-node to be installed.
     if (e.code === 'ERR_REQUIRE_ESM' || e.code === 'ERR_REQUIRE_ASYNC_MODULE') {
-      return import(resolvedPath) as Promise<T>;
+      return dynamicImport<T>(resolvedPath);
     }
     // Mirror `loadTsFile`'s fallback set (register.ts). Plugin loads hit a
     // wider failure surface than .ts config loads because plugin sources are
@@ -79,7 +80,7 @@ export async function handleImport<T = any>(
           retryErr?.code === 'ERR_REQUIRE_ESM' ||
           retryErr?.code === 'ERR_REQUIRE_ASYNC_MODULE'
         ) {
-          return import(resolvedPath) as Promise<T>;
+          return dynamicImport<T>(resolvedPath);
         }
         if (retryErr instanceof Error) {
           // Lazy-require NX_PREFIX so we don't pull logger -> daemon into
@@ -93,4 +94,12 @@ export async function handleImport<T = any>(
     }
     throw e;
   }
+}
+
+// import() parses a path as a URL (a drive letter reads as a scheme, `#` as a
+// fragment), so absolute paths go through a file URL. Package names stay bare.
+function dynamicImport<T>(resolvedPath: string): Promise<T> {
+  return import(
+    isAbsolute(resolvedPath) ? pathToFileURL(resolvedPath).href : resolvedPath
+  ) as Promise<T>;
 }
