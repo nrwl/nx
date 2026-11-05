@@ -14,7 +14,6 @@ import {
   CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
-  logger,
   TargetConfiguration,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
@@ -30,7 +29,6 @@ import {
   BASE_ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
-  ESLINT_FLAT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
 import { resolveESLintClass } from '../utils/resolve-eslint-class';
@@ -61,8 +59,6 @@ const ESLINT_CONFIG_GLOB_V2 = combineGlobPatterns([
 
 type EslintProjects = CreateNodesResult['projects'];
 
-const projectsWarnedAboutWorkspaceRootCwd = new Set<string>();
-
 const internalCreateNodesV2 = async (
   ESLint: typeof ESLintType,
   configFilePath: string,
@@ -79,40 +75,30 @@ const internalCreateNodesV2 = async (
 
   const runsFromWorkspaceRoot = options.cwd === 'workspaceRoot';
   const eslintConfigs = getEslintConfigs(configFilePath, context.workspaceRoot);
-  const usesFlatConfig = eslintConfigs.some((config) => isFlatConfig(config));
-  const getLintCwd = (projectRoot: string) => {
-    if (!runsFromWorkspaceRoot) {
-      return projectRoot;
-    }
-    // ESLint 9 looks up a flat config from its cwd only.
-    if (
-      projectRoot !== '.' &&
-      usesFlatConfig &&
-      ESLINT_FLAT_CONFIG_FILENAMES.some((file) =>
-        existsSync(join(context.workspaceRoot, projectRoot, file))
-      )
-    ) {
-      if (!projectsWarnedAboutWorkspaceRootCwd.has(projectRoot)) {
-        projectsWarnedAboutWorkspaceRootCwd.add(projectRoot);
-        logger.warn(
-          `@nx/eslint/plugin: ignoring cwd "workspaceRoot" for ${projectRoot} because running ESLint from the workspace root would skip ${projectRoot}'s own eslint.config.*.`
-        );
-      }
-      return projectRoot;
-    }
-    return '.';
-  };
-  let sharedEslint: ESLintType;
-  const getEslint = (projectRoot: string) => {
+  const lintCwd = (projectRoot: string) =>
+    runsFromWorkspaceRoot ? '.' : projectRoot;
+  // ESLint 9 looks up a flat config from its cwd only, so a nested one is
+  // passed explicitly.
+  const lintConfigFile =
+    runsFromWorkspaceRoot && configDir !== '.' && isFlatConfig(configFilePath)
+      ? configFilePath
+      : undefined;
+  let sharedEslint: Promise<ESLintType>;
+  const getEslint = (projectRoot: string): Promise<ESLintType> => {
     if (
       !runsFromWorkspaceRoot &&
       existsSync(join(context.workspaceRoot, projectRoot, '.eslintignore'))
     ) {
-      return new ESLint({ cwd: join(context.workspaceRoot, projectRoot) });
+      return Promise.resolve(
+        new ESLint({ cwd: join(context.workspaceRoot, projectRoot) })
+      );
     }
-    sharedEslint ??= new ESLint({
-      cwd: join(context.workspaceRoot, runsFromWorkspaceRoot ? '.' : configDir),
-    });
+    sharedEslint ??= createSharedEslint(
+      ESLint,
+      context.workspaceRoot,
+      runsFromWorkspaceRoot ? '.' : configDir,
+      lintConfigFile
+    );
     return sharedEslint;
   };
 
@@ -125,7 +111,6 @@ const internalCreateNodesV2 = async (
   const contributions = await Promise.all(
     orderedProjectRoots.map(async (projectRoot) => {
       const hash = hashByRoot.get(projectRoot);
-      const lintCwd = getLintCwd(projectRoot);
 
       const cached = projectsCache.get(hash);
       if (cached) {
@@ -133,8 +118,12 @@ const internalCreateNodesV2 = async (
       }
 
       let hasNonIgnoredLintableFiles = false;
-      if (configDir !== projectRoot || projectRoot === '.') {
-        const eslint = getEslint(projectRoot);
+      if (
+        configDir !== projectRoot ||
+        projectRoot === '.' ||
+        runsFromWorkspaceRoot
+      ) {
+        const eslint = await getEslint(projectRoot);
         for (const file of lintableFilesPerProjectRoot.get(projectRoot) ?? []) {
           if (
             !(await eslint.isPathIgnored(join(context.workspaceRoot, file)))
@@ -156,7 +145,8 @@ const internalCreateNodesV2 = async (
       const project = getProjectUsingESLintConfig(
         eslintConfigs,
         projectRoot,
-        lintCwd,
+        lintCwd(projectRoot),
+        lintConfigFile,
         options,
         context,
         pmc,
@@ -287,6 +277,25 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+async function createSharedEslint(
+  ESLint: typeof ESLintType,
+  workspaceRoot: string,
+  cwd: string,
+  overrideConfigFile: string | undefined
+): Promise<ESLintType> {
+  if (!overrideConfigFile) {
+    return new ESLint({ cwd: join(workspaceRoot, cwd) });
+  }
+  // The flat class: a legacy root config selects the eslintrc one.
+  const FlatESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: true,
+  });
+  return new FlatESLint({
+    cwd: join(workspaceRoot, cwd),
+    overrideConfigFile: join(workspaceRoot, overrideConfigFile),
+  });
+}
 
 function splitConfigFiles(configFiles: readonly string[]): {
   eslintConfigFiles: string[];
@@ -470,6 +479,7 @@ function getProjectUsingESLintConfig(
   eslintConfigs: string[],
   projectRoot: string,
   lintCwd: string,
+  lintConfigFile: string | undefined,
   options: EslintPluginOptions,
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -489,6 +499,7 @@ function getProjectUsingESLintConfig(
       eslintConfigs,
       projectRoot,
       lintCwd,
+      lintConfigFile,
       context.workspaceRoot,
       options,
       pmc,
@@ -526,18 +537,25 @@ export const lintReportOutput =
 export function getLintCommand(
   projectRoot: string,
   standaloneSrcPath: string | undefined,
-  lintCwd = projectRoot
+  lintCwd = projectRoot,
+  configFile?: string
 ): string {
   if (projectRoot === '.') {
     return `eslint ${standaloneSrcPath ? `./${standaloneSrcPath}` : '.'}`;
   }
-  return `eslint ${lintCwd === projectRoot ? '.' : quoteShellArg(projectRoot)}`;
+  if (lintCwd === projectRoot) {
+    return 'eslint .';
+  }
+  return `eslint ${quoteShellArg(projectRoot)}${
+    configFile ? ` --config ${quoteShellArg(configFile)}` : ''
+  }`;
 }
 
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
   lintCwd: string,
+  lintConfigFile: string | undefined,
   workspaceRoot: string,
   options: EslintPluginOptions,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -547,7 +565,12 @@ function buildEslintTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   const targetConfig: TargetConfiguration = {
-    command: getLintCommand(projectRoot, standaloneSrcPath, lintCwd),
+    command: getLintCommand(
+      projectRoot,
+      standaloneSrcPath,
+      lintCwd,
+      lintConfigFile
+    ),
     cache: true,
     options: {
       cwd: lintCwd,
