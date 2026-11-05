@@ -7,6 +7,7 @@ import {
   TargetDefaultArrayEntry,
   Tree,
   addProjectConfiguration,
+  joinPathFragments,
   logger,
   readJson,
   readProjectConfiguration,
@@ -1772,6 +1773,66 @@ describe('convert-to-flat-config generator', () => {
         `compat.extends('../shared-config/.eslintrc.js')`
       );
     });
+
+    it.each([
+      [
+        'a JavaScript config outside any project',
+        {
+          'tools/.eslintrc.cjs': `module.exports = { rules: { 'no-console': 'error' } };`,
+        },
+        '../../tools/.eslintrc.cjs',
+      ],
+      [
+        'a YAML config outside any project',
+        { 'tools/.eslintrc.yaml': 'rules:\n  no-console: error\n' },
+        '../../tools/.eslintrc.yaml',
+      ],
+      [
+        'a JSON config outside any project',
+        { 'tools/.eslintrc.json': '{ "rules": { "no-console": "error" } }' },
+        '../../tools/.eslintrc.json',
+      ],
+      [
+        "a project's config that loses to a higher-precedence one",
+        {
+          'libs/shared-config/.eslintrc.yaml': 'rules:\n  no-console: error\n',
+          'libs/shared-config/.eslintrc.json':
+            '{ "rules": { "no-debugger": "error" } }',
+        },
+        '../shared-config/.eslintrc.json',
+      ],
+    ])(
+      'should keep FlatCompat for an extends of %s, which the conversion leaves in place',
+      async (_, files: Record<string, string>, extendsPath) => {
+        await lintProjectGenerator(tree, {
+          skipFormat: false,
+          linter: 'eslint',
+          project: 'test-lib',
+          enableTypedLinting: false,
+          eslintConfigFormat: 'cjs',
+        });
+        addProjectConfiguration(tree, 'shared-config', {
+          root: 'libs/shared-config',
+          targets: { lint: { command: 'eslint .' } },
+        });
+        for (const [file, content] of Object.entries(files)) {
+          tree.write(file, content);
+        }
+        updateJson(tree, 'libs/test-lib/.eslintrc.json', (json) => {
+          json.extends = [extendsPath];
+          return json;
+        });
+
+        await convertToFlatConfigGenerator(tree, options);
+
+        expect(
+          tree.exists(joinPathFragments('libs/test-lib', extendsPath))
+        ).toBe(true);
+        expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
+          `compat.extends('${extendsPath}')`
+        );
+      }
+    );
 
     it('should throw with the reason when the root JavaScript-based config cannot be read statically', async () => {
       tree.write(

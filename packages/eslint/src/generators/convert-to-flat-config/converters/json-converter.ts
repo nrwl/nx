@@ -13,7 +13,6 @@ import {
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
-import { readStaticJsEslintrcFromTree } from './static-js-config';
 
 // Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
 // filenames to their flat-config counterparts. Used for `extends` local paths, rule option
@@ -92,13 +91,17 @@ function preprocessRules(
 /**
  * Converts an ESLint JSON config to a flat config.
  * Deletes the original file along with .eslintignore if it exists.
+ *
+ * `convertedEslintrcFiles` holds the workspace-relative eslintrc files the same
+ * run converts. A local extends becomes an import only when it names one of them.
  */
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   config: ESLint.ConfigData,
   ignorePaths: string[],
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  convertedEslintrcFiles: ReadonlySet<string>
 ): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
@@ -129,12 +132,12 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.extends) {
     const extendsResult = addExtends(
-      tree,
       root,
       importsMap,
       exportElements,
       config,
-      format
+      format,
+      convertedEslintrcFiles
     );
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
     isESLintJSNeeded = extendsResult.isESLintJSNeeded;
@@ -356,34 +359,14 @@ export function convertEslintJsonToFlatConfig(
   };
 }
 
-// The generator converts every eslintrc file this matches, except a JavaScript one it
-// cannot read statically. Those stay in place, so an extends of one keeps FlatCompat.
-function isConvertedEslintrc(tree: Tree, root: string, path: string): boolean {
-  if (
-    /\.eslintrc(\.base)?(\.json)?$/.test(path) ||
-    /\.eslintrc\.ya?ml$/.test(path)
-  ) {
-    return true;
-  }
-  if (!/\.eslintrc\.c?js$/.test(path)) {
-    return false;
-  }
-  const file = joinPathFragments(root, path);
-  // Already deleted means already converted, as the root config always is.
-  return (
-    !tree.exists(file) ||
-    readStaticJsEslintrcFromTree(tree, '', file).kind === 'config'
-  );
-}
-
 // add parsed extends to export blocks and add import statements
 function addExtends(
-  tree: Tree,
   root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
   config: ESLint.ConfigData,
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  convertedEslintrcFiles: ReadonlySet<string>
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
@@ -397,7 +380,8 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (isConvertedEslintrc(tree, root, imp)) {
+      // Any other local file stays in place, so it keeps loading through FlatCompat.
+      if (convertedEslintrcFiles.has(joinPathFragments(root, imp))) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
         importsMap.set(renameLegacyEslintrcFile(imp, format), localName);

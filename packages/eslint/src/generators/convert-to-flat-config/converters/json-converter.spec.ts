@@ -1,4 +1,4 @@
-import { Tree, readJson } from '@nx/devkit';
+import { Tree, joinPathFragments, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 import { EOL } from 'node:os';
@@ -71,7 +71,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         ['.eslintignore'],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -202,7 +203,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         ['mylib/.eslintignore'],
-        'mjs'
+        'mjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc.json')])
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -313,7 +315,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -365,7 +368,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -424,7 +428,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(content).toContain('"dist/**"');
@@ -446,7 +451,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc')])
       );
 
       expect(content).toContain(
@@ -483,7 +489,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'mjs'
+        'mjs',
+        new Set()
       );
 
       expect(addESLintRC).toBe(true);
@@ -587,7 +594,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         ['.eslintignore'],
-        'cjs'
+        'cjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -713,7 +721,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         'mylib',
         readJson(tree, 'mylib/.eslintrc.json'),
         ['mylib/.eslintignore'],
-        'cjs'
+        'cjs',
+        new Set([joinPathFragments('mylib', '../../.eslintrc.json')])
       );
 
       expect(content).toMatchInlineSnapshot(`
@@ -819,7 +828,8 @@ describe('convertEslintJsonToFlatConfig', () => {
         '',
         readJson(tree, '.eslintrc.json'),
         [],
-        'cjs'
+        'cjs',
+        new Set()
       );
 
       expect(content).toMatchInlineSnapshot(`
