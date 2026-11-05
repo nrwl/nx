@@ -16,6 +16,7 @@ import {
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
   resolveWorkspaceModuleDependency,
+  usesBinaryBunLockfile,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
@@ -121,14 +122,18 @@ function handleWorkspaceModules(
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const catalogManager = getCatalogManager(workspaceRoot);
-  // Only the pnpm and Bun prune paths ship non-workspace local-path targets,
-  // so only their manifests get their file:/link: specs relocated, and only
-  // they tell a vendored package from a workspace package of the same name.
+  // Only the pnpm and Bun prune paths tell a vendored package from a workspace
+  // package of the same name. They also ship non-workspace local-path targets,
+  // so their manifests get their file:/link: specs relocated, except on the
+  // binary bun.lockb, whose output ships the manifest alone.
   const packageManager = detectPackageManager(workspaceRoot);
   const isPnpmWorkspace = packageManager === 'pnpm';
-  const relocatesLocalPaths = isPnpmWorkspace || packageManager === 'bun';
+  const resolvesLocalPaths = isPnpmWorkspace || packageManager === 'bun';
+  const relocatesLocalPaths =
+    isPnpmWorkspace ||
+    (packageManager === 'bun' && !usesBinaryBunLockfile(workspaceRoot));
   const resolveModule = (name: string, spec: string, dependentRoot: string) =>
-    relocatesLocalPaths
+    resolvesLocalPaths
       ? resolveWorkspaceModuleDependency(
           workspaceModules,
           name,

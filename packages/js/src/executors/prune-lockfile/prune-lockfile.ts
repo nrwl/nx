@@ -21,6 +21,7 @@ import {
   type PackageJson,
   type PackageJsonDependencySection,
   resolveWorkspaceModuleDependency,
+  usesBinaryBunLockfile,
 } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -139,10 +140,12 @@ function mergeAllowScripts(packageJson: PackageJson) {
 /**
  * Bun never installs the dependencies of a `file:` dependency declared by
  * another `file:` dependency, so a Bun output declares every workspace module
- * the app reaches through other modules, and every vendored `file:` package
- * those modules declare. A package a production section reaches goes to
- * dependencies, one only devDependencies reach to devDependencies. A vendored
- * package is declared relative to `projectRoot`, like the app's own.
+ * the app reaches through other modules. With the text bun.lock it also
+ * declares every vendored `file:` package those modules declare. The binary
+ * bun.lockb output ships no vendored copy for that declaration to point at.
+ * A package a production section reaches goes to dependencies, one only
+ * devDependencies reach to devDependencies. A vendored package is declared
+ * relative to `projectRoot`, like the app's own.
  */
 function declareTransitiveFolderDependencies(
   packageJson: PackageJson,
@@ -150,6 +153,7 @@ function declareTransitiveFolderDependencies(
   projectRoot: string
 ) {
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
+  const shipsVendoredPackages = !usesBinaryBunLockfile(workspaceRoot);
   const productionSections = WORKSPACE_MODULE_INSTALL_SECTIONS.filter(
     (section) => section !== 'devDependencies'
   );
@@ -196,7 +200,7 @@ function declareTransitiveFolderDependencies(
         const workspaceModule = resolveModule(dep, spec, project.data.root);
         if (workspaceModule) {
           visit(dep, workspaceModule, section);
-        } else if (spec.startsWith('file:')) {
+        } else if (shipsVendoredPackages && spec.startsWith('file:')) {
           declareVendored(dep, spec, project.data.root, section);
         }
       }

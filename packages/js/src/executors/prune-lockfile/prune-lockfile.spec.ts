@@ -487,6 +487,19 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
       },
     },
     {
+      lockFile: 'bun.lockb',
+      dependencies: {
+        '@myorg/a': 'file:./workspace_modules/@myorg/a',
+        '@myorg/b': 'file:./workspace_modules/@myorg/b',
+        '@myorg/c': 'file:./workspace_modules/@myorg/c',
+        lodash: '^4.17.21',
+      },
+      devDependencies: {
+        '@myorg/t': 'file:./workspace_modules/@myorg/t',
+        '@myorg/u': 'file:./workspace_modules/@myorg/u',
+      },
+    },
+    {
       lockFile: 'package-lock.json',
       dependencies: {
         '@myorg/a': 'file:./workspace_modules/@myorg/a',
@@ -498,7 +511,7 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
       },
     },
   ])(
-    'declares the workspace modules and vendored packages other modules depend on only for Bun ($lockFile)',
+    'declares the workspace modules other modules depend on only for Bun, and their vendored packages only with bun.lock ($lockFile)',
     async ({ lockFile, dependencies, devDependencies }) => {
       const module = (name: string, deps: Record<string, string> = {}) =>
         JSON.stringify({ name, version: '1.0.0', dependencies: deps });

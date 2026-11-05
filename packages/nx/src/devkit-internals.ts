@@ -201,6 +201,7 @@ export {
   createLockFile,
   generatePrunedDeployOutput,
   getLockFileName,
+  usesBinaryBunLockfile,
 } from './plugins/js/lock-file/lock-file';
 export {
   createPackageJson,
