@@ -93,7 +93,7 @@ function preprocessRules(
  * Deletes the original file along with .eslintignore if it exists.
  *
  * `convertedEslintrcFiles` holds the workspace-relative eslintrc files the same
- * run converts. A local extends becomes an import only when it names one of them.
+ * run converts. A local extends becomes an import only when it resolves to one of them.
  */
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
@@ -132,6 +132,7 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.extends) {
     const extendsResult = addExtends(
+      tree,
       root,
       importsMap,
       exportElements,
@@ -359,8 +360,29 @@ export function convertEslintJsonToFlatConfig(
   };
 }
 
+// Returns the extends path with the suffix Node resolves it to (`.eslintrc` -> `.eslintrc.json`)
+// when the run converts that file. Converted root configs are already deleted from the tree.
+function resolveConvertedExtends(
+  tree: Tree,
+  root: string,
+  extendsPath: string,
+  convertedEslintrcFiles: ReadonlySet<string>
+): string | undefined {
+  for (const suffix of ['', '.js', '.json']) {
+    const candidate = joinPathFragments(root, extendsPath + suffix);
+    if (convertedEslintrcFiles.has(candidate)) {
+      return extendsPath + suffix;
+    }
+    if (tree.isFile(candidate)) {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 // add parsed extends to export blocks and add import statements
 function addExtends(
+  tree: Tree,
   root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
@@ -381,10 +403,19 @@ function addExtends(
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
       // Any other local file stays in place, so it keeps loading through FlatCompat.
-      if (convertedEslintrcFiles.has(joinPathFragments(root, imp))) {
+      const convertedFile = resolveConvertedExtends(
+        tree,
+        root,
+        imp,
+        convertedEslintrcFiles
+      );
+      if (convertedFile) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
-        importsMap.set(renameLegacyEslintrcFile(imp, format), localName);
+        importsMap.set(
+          renameLegacyEslintrcFile(convertedFile, format),
+          localName
+        );
       } else {
         eslintrcConfigs.push(imp);
       }
