@@ -111,6 +111,7 @@
     "@swc/core": "catalog:swc",
     "@swc/helpers": "catalog:swc",
     "@swc/jest": "catalog:jest",
+    "@types/esquery": "^1.5.4",
     "@types/express": "^4.17.21",
     "@types/fs-extra": "^11.0.0",
     "@types/is-ci": "^3.0.0",
