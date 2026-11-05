@@ -689,6 +689,49 @@ describe('enforce-project-boundaries', () => {
     expect(result.details.violations).toEqual([]);
   });
 
+  it('should attribute an implicit dependency only to the project root configuration file', async () => {
+    applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, [
+      {
+        projectNode: {
+          name: 'mylibName',
+          type: 'lib',
+          data: { root: 'libs/mylib' },
+        },
+        projectFiles: [
+          {
+            projectRootRelativeFile: 'package.json',
+            depsItCreates: [['myE2eName', DependencyType.implicit]],
+          },
+          {
+            projectRootRelativeFile: 'fixtures/app/package.json',
+            depsItCreates: [],
+          },
+          {
+            projectRootRelativeFile: 'src/my-package.json',
+            depsItCreates: [],
+          },
+        ],
+      },
+      {
+        projectNode: {
+          name: 'myE2eName',
+          type: 'e2e',
+          data: { root: 'apps/my-e2e' },
+        },
+      },
+    ]);
+
+    const result = await rule.implementation({
+      tree,
+      projectGraph,
+      fileMapCache,
+      ruleOptions: {},
+    });
+    expect(result.details.violations.map((v) => v.file)).toEqual([
+      'libs/mylib/package.json',
+    ]);
+  });
+
   it('should attribute an implicit dependency to package.json when the project has no project.json', async () => {
     applyProjectNodesAndFiles(tree, projectGraph, fileMapCache, [
       {
