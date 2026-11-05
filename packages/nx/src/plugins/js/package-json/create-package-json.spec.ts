@@ -4,17 +4,23 @@ vi.mock('fs', async () => ({
 }));
 vi.mock('../../../utils/fileutils');
 
-// Fixtures reference `@nx/devkit` as an external node. Reading its real
-// package.json is a sandbox-violating cross-project read, so stub it with the
-// `nx` peer the assertions expect. Other packages read as missing.
+// Reading the real `@nx/devkit` package.json is a sandbox-violating
+// cross-project read. The other stubbed packages are not installed, so
+// `require` cannot read them. Packages without a stub read as missing.
+const manifests = vi.hoisted(
+  (): Record<
+    string,
+    Pick<PackageJson, 'peerDependencies' | 'peerDependenciesMeta'>
+  > => ({ '@nx/devkit': { peerDependencies: { nx: '*' } } })
+);
 vi.mock('../../../utils/package-json', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../utils/package-json')>()),
-  readModulePackageJson: (moduleSpecifier: string) => {
-    if (moduleSpecifier !== '@nx/devkit') {
+  readModulePackageJson: vi.fn((moduleSpecifier: string) => {
+    if (!manifests[moduleSpecifier]) {
       throw new Error(`No package.json stub for ${moduleSpecifier}`);
     }
-    return { packageJson: { peerDependencies: { nx: '*' } }, path: '' };
-  },
+    return { packageJson: manifests[moduleSpecifier], path: '' };
+  }),
 }));
 
 import * as fs from 'fs';
@@ -29,6 +35,10 @@ import {
 import * as hashModule from '../../../hasher/task-hasher';
 import { createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
+import {
+  type PackageJson,
+  readModulePackageJson,
+} from '../../../utils/package-json';
 
 describe('createPackageJson', () => {
   afterEach(() => {
@@ -1513,6 +1523,96 @@ describe('createPackageJson', () => {
       mockFilterUsingGlobPatterns.mockRestore();
       mockGetTargetInputs.mockRestore();
       mockReadNxJson.mockRestore();
+    });
+  });
+
+  describe('peer dependencies', () => {
+    beforeEach(() => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({});
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    function createAppPackageJson(dependencies: string[], peers: string[]) {
+      const externalNodes: ProjectGraph['externalNodes'] = {};
+      for (const packageName of [...dependencies, ...peers]) {
+        externalNodes[`npm:${packageName}`] = {
+          type: 'npm',
+          name: `npm:${packageName}`,
+          data: { version: '1.0.0', hash: '', packageName },
+        };
+      }
+      return createPackageJson(
+        'app',
+        {
+          nodes: {
+            app: { type: 'app', name: 'app', data: { root: 'apps/app' } },
+          },
+          externalNodes,
+          dependencies: {},
+        },
+        {
+          helperDependencies: dependencies.map((name) => `npm:${name}`),
+          root: '',
+        }
+      );
+    }
+
+    it('collects the peers of a package whose package.json require cannot read', () => {
+      manifests['fixture-host'] = { peerDependencies: { 'fixture-peer': '*' } };
+
+      expect(
+        createAppPackageJson(['fixture-host'], ['fixture-peer'])
+          .peerDependencies
+      ).toEqual({ 'fixture-peer': '1.0.0' });
+    });
+
+    it.each([
+      ['after', ['fixture-optional-host', 'fixture-required-host']],
+      ['before', ['fixture-required-host', 'fixture-optional-host']],
+    ])(
+      'keeps a peer required when the host requiring it is visited %s the host marking it optional',
+      (_, hosts) => {
+        manifests['fixture-optional-host'] = {
+          peerDependencies: { 'fixture-shared-peer': '*' },
+          peerDependenciesMeta: { 'fixture-shared-peer': { optional: true } },
+        };
+        manifests['fixture-required-host'] = {
+          peerDependencies: { 'fixture-shared-peer': '*' },
+        };
+
+        const { peerDependencies, peerDependenciesMeta } = createAppPackageJson(
+          hosts,
+          ['fixture-shared-peer']
+        );
+
+        expect({ peerDependencies, peerDependenciesMeta }).toEqual({
+          peerDependencies: { 'fixture-shared-peer': '1.0.0' },
+        });
+      }
+    );
+
+    it('reads each package.json once across calls', () => {
+      manifests['fixture-repeated-host'] = {};
+
+      createAppPackageJson(['fixture-repeated-host'], []);
+      createAppPackageJson(['fixture-repeated-host'], []);
+
+      expect(readModulePackageJson).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports a package.json it cannot read in verbose mode', () => {
+      vi.stubEnv('NX_VERBOSE_LOGGING', 'true');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      createAppPackageJson(['fixture-unreadable'], []);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('fixture-unreadable')
+      );
     });
   });
 });

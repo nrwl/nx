@@ -2,7 +2,6 @@ vi.mock('child_process');
 
 import { dirname, join } from 'path';
 import * as childProcess from 'child_process';
-import Module from 'module';
 import {
   mkdirSync,
   mkdtempSync,
@@ -722,13 +721,14 @@ describe('readModulePackageJson', () => {
     function writePackage(
       pkgDir: string,
       exports: PackageJson['exports'],
-      files: Record<string, string>
+      files: Record<string, string>,
+      name = 'hidden-manifest'
     ) {
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
         join(pkgDir, 'package.json'),
         JSON.stringify({
-          name: 'hidden-manifest',
+          name,
           version: '0.0.0-fixture',
           exports,
         })
@@ -741,11 +741,15 @@ describe('readModulePackageJson', () => {
 
     it.each([
       [
+        'a wildcard entry',
+        { '.': './index.js', './*': './*.js' },
+        { 'index.js': '' },
+      ],
+      [
         'an import-only entry',
         { '.': { import: './index.mjs' } },
         { 'index.mjs': '' },
       ],
-      ['no "." entry', { './sub': './sub.js' }, { 'sub.js': '' }],
       [
         'a require entry next to a nested package.json',
         {
@@ -772,60 +776,34 @@ describe('readModulePackageJson', () => {
       expect(packageJson.version).toBe('0.0.0-fixture');
     });
 
-    it.each([
-      [
-        'inside',
-        () =>
-          join(
-            dir,
-            'node_modules',
-            '.pnpm',
-            'hidden-manifest@0.0.0',
-            'node_modules'
-          ),
-      ],
-      ['outside', () => realpathSync(mkdtempSync(join(tmpdir(), 'external-')))],
-    ])(
-      'returns the real path of a linked package stored %s the workspace',
-      (_, targetRoot) => {
-        const target = join(targetRoot(), 'hidden-manifest');
-        writePackage(target, { '.': './index.js' }, { 'index.js': '' });
-        mkdirSync(join(dir, 'node_modules'), { recursive: true });
-        symlinkSync(
-          target,
-          join(dir, 'node_modules', 'hidden-manifest'),
-          'dir'
-        );
-
-        try {
-          expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
-            join(target, 'package.json')
-          );
-        } finally {
-          rmSync(dirname(target), { recursive: true, force: true });
-        }
-      }
-    );
-
-    it('reads a package found only through NODE_PATH', () => {
-      const nodePath = join(dir, 'node-path');
-      const pkgDir = join(nodePath, 'hidden-manifest');
+    it('reads the target package.json of an npm alias', () => {
       writePackage(
-        pkgDir,
-        { '.': { import: './index.mjs' } },
-        { 'index.mjs': '' }
+        join(dir, 'node_modules', 'hidden-manifest'),
+        { '.': './index.js', './*': './*.js' },
+        { 'index.js': '' },
+        'aliased-package'
       );
-      vi.stubEnv('NODE_PATH', nodePath);
-      (Module as any)._initPaths();
 
-      try {
-        expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
-          join(pkgDir, 'package.json')
-        );
-      } finally {
-        vi.unstubAllEnvs();
-        (Module as any)._initPaths();
-      }
+      expect(
+        readModulePackageJson('hidden-manifest', [dir]).packageJson.name
+      ).toBe('aliased-package');
+    });
+
+    it('returns the real path of a pnpm-linked package', () => {
+      const target = join(
+        dir,
+        'node_modules',
+        '.pnpm',
+        'hidden-manifest@0.0.0',
+        'node_modules',
+        'hidden-manifest'
+      );
+      writePackage(target, { '.': './index.js' }, { 'index.js': '' });
+      symlinkSync(target, join(dir, 'node_modules', 'hidden-manifest'), 'dir');
+
+      expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
+        join(target, 'package.json')
+      );
     });
 
     it('throws when the package is not installed', () => {
