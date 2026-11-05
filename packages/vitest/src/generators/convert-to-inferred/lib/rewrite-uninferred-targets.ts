@@ -83,6 +83,7 @@ function toVitestOptions(
     testFiles,
     testFile,
     reportsDirectory,
+    coverage,
     ...flags
   }: TargetOptions,
   projectRoot: string
@@ -90,6 +91,8 @@ function toVitestOptions(
   const filters = testFiles ?? testFile;
   return {
     ...flags,
+    // A later --coverage replaces the whole coverage object on the Vitest CLI
+    ...(coverage !== undefined ? { 'coverage.enabled': coverage } : {}),
     ...(reportsDirectory
       ? {
           'coverage.reportsDirectory': posix.relative(
