@@ -80,18 +80,16 @@ function nodeProcess(
       }
     });
 
+    const hasExited = () => cp.exitCode !== null || cp.signalCode !== null;
+
     const exitHandler = (signal: NodeJS.Signals) => {
       // An exited child's pid is free for reuse, and its exit code decides
-      // the result.
-      if (
-        cp &&
-        cp.pid &&
-        !cp.killed &&
-        cp.exitCode === null &&
-        cp.signalCode === null
-      ) {
+      // the result, also when the kill is what made it exit.
+      if (cp && cp.pid && !cp.killed && !hasExited()) {
         killProcessTreeGraceful(cp.pid, signal).finally(() => {
-          res();
+          if (!hasExited()) {
+            res();
+          }
         });
       }
     };

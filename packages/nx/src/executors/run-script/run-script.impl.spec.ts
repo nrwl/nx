@@ -30,9 +30,10 @@ function mockChild() {
   cp.killed = false;
   cp.exitCode = null;
   cp.signalCode = null;
-  cp.exit = (code: number) => {
+  cp.exit = (code: number | null, signal: NodeJS.Signals | null = null) => {
     cp.exitCode = code;
-    cp.emit('exit', code, null);
+    cp.signalCode = signal;
+    cp.emit('exit', code, signal);
   };
   cp.close = () => {
     cp.stdout.end();
@@ -119,5 +120,25 @@ describe('run-script without a pseudo terminal', () => {
 
     expect(await result).toEqual({ success: false });
     expect(mockKillProcessTreeGraceful).not.toHaveBeenCalled();
+  });
+
+  it('stays failed when SIGTERM kills the script before its output closes', async () => {
+    mockSpawned = mockChild();
+    let killFinished: () => void;
+    mockKillProcessTreeGraceful.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (killFinished = resolve))
+    );
+    const result = runScript({ script: 'build', __unparsed__: [] }, context);
+    const [onSigterm] = process
+      .listeners('SIGTERM')
+      .filter((listener) => !initialListeners[1].includes(listener));
+
+    onSigterm('SIGTERM');
+    mockSpawned.exit(null, 'SIGTERM');
+    killFinished();
+    await nextTurn();
+    mockSpawned.close();
+
+    expect(await result).toEqual({ success: false });
   });
 });
