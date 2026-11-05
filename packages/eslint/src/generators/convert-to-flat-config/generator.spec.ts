@@ -1715,12 +1715,22 @@ describe('convert-to-flat-config generator', () => {
     it.each([
       [
         '.eslintrc.js',
+        '../../.eslintrc.js',
         `module.exports = { root: true, rules: { 'no-console': 'error' } };`,
       ],
-      ['.eslintrc.yaml', 'root: true\nrules:\n  no-console: error\n'],
+      [
+        '.eslintrc.yaml',
+        '../../.eslintrc.yaml',
+        'root: true\nrules:\n  no-console: error\n',
+      ],
+      [
+        '.eslintrc.json',
+        '../../.eslintrc',
+        '{ "root": true, "rules": { "no-console": "error" } }',
+      ],
     ])(
-      'should import the converted root config in projects that extend %s',
-      async (rootConfig, content) => {
+      'should import the converted root config %s in projects that extend %s',
+      async (rootConfig, extendsPath, content) => {
         tree.write(rootConfig, content);
         await lintProjectGenerator(tree, {
           skipFormat: false,
@@ -1729,9 +1739,10 @@ describe('convert-to-flat-config generator', () => {
           enableTypedLinting: false,
           eslintConfigFormat: 'cjs',
         });
-        expect(readJson(tree, 'libs/test-lib/.eslintrc.json').extends).toEqual([
-          `../../${rootConfig}`,
-        ]);
+        updateJson(tree, 'libs/test-lib/.eslintrc.json', (json) => {
+          json.extends = [extendsPath];
+          return json;
+        });
 
         await convertToFlatConfigGenerator(tree, options);
 
@@ -1742,7 +1753,7 @@ describe('convert-to-flat-config generator', () => {
         expect(projectConfig).toContain(
           `const baseConfig = require('../../eslint.config.cjs');`
         );
-        expect(projectConfig).not.toContain(rootConfig);
+        expect(projectConfig).not.toContain('.eslintrc');
       }
     );
 
