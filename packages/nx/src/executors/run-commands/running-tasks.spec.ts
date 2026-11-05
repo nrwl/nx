@@ -245,6 +245,8 @@ describe('run-commands completion', () => {
     failing.exit(1);
     await nextTurn();
     serving.stdout.emit('data', 'READY\n');
+    // Readiness is shared, so this chunk must not count as the failed command's ready text.
+    failing.stdout.emit('data', 'TAIL\n');
     failing.emit('close', 1, null);
 
     expect((await task.getResults()).code).toBe(1);
