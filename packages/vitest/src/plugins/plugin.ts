@@ -304,7 +304,9 @@ async function buildVitestTargets(
       viteBuildConfig,
       projectRoot,
       context.workspaceRoot,
-      authoredViteRoot
+      cwd,
+      // `--root` replaces an authored root.
+      rootArg ? undefined : authoredViteRoot
     );
     targets[options.testTargetName] = await testTarget(
       namedInputs,
@@ -408,11 +410,13 @@ async function buildVitestTargets(
         effectiveVitestRoot,
         coverageReportsDirectory
       );
-      // Vitest refuses a reports directory equal to its root or cwd, and redirecting
-      // under it would point each atom at its own spec path for coverage to delete.
+      // Vitest refuses a reports directory equal to its root or cwd. Redirecting
+      // under one of those or the project root would point each atom at its own
+      // spec path for coverage to delete.
       const vitestRejectsReportsDirectory =
         relative(effectiveVitestRoot, resolvedReportsDirectory) === '' ||
-        relative(fullRunCwd, resolvedReportsDirectory) === '';
+        relative(fullRunCwd, resolvedReportsDirectory) === '' ||
+        relative(fullProjectRoot, resolvedReportsDirectory) === '';
       const atomSubfolderPrefix =
         isPathOutside(relative(fullProjectRoot, resolvedReportsDirectory)) &&
         !endsWithProjectRoot(resolvedReportsDirectory, projectRoot)
@@ -452,10 +456,14 @@ async function buildVitestTargets(
           ? join(coverageReportsDirectory, outputSubfolder)
           : joinPathFragments(coverageReportsDirectory, outputSubfolder);
         const targetName = `${options.ciTargetName}--${relativePath}`;
+        // A path from the cwd still matches under `test.dir` or `test.root`.
+        const testFileFilter = rootArg
+          ? joinPathFragments(projectRoot, relativePath)
+          : relativePath;
         dependsOn.push(targetName);
         targets[targetName] = {
           // It does not make sense to run atomized tests in watch mode as they are intended to be run in CI
-          command: `vitest run${rootArg} ${quoteShellArg(relativePath)}${
+          command: `vitest run${rootArg} ${quoteShellArg(testFileFilter)}${
             vitestRejectsReportsDirectory
               ? ''
               : ` --coverage.reportsDirectory=${quoteShellArg(
