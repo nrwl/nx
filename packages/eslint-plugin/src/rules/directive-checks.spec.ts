@@ -32,21 +32,21 @@ function runRule(
     sourceMaps = null,
   }: {
     file?: string;
-    nodes?: ProjectGraphProjectNode[];
+    /** `null` leaves no project graph, as before Nx first computes one. */
+    nodes?: ProjectGraphProjectNode[] | null;
     sourceMaps?: Record<string, Record<string, [string, string]>> | null;
   } = {}
 ): TSESLint.Linter.LintMessage[] {
-  const projectGraph: ProjectGraph = {
+  const projectGraph: ProjectGraph | undefined = nodes && {
     nodes: Object.fromEntries(nodes.map((node) => [node.name, node])),
     dependencies: Object.fromEntries(nodes.map((node) => [node.name, []])),
   };
   readSourceMapsCache.mockReturnValue(sourceMaps);
   (global as any).projectPath = projectPath;
   (global as any).projectGraph = projectGraph;
-  (global as any).projectFileMap = {};
-  (global as any).projectRootMappings = createProjectRootMappings(
-    projectGraph.nodes
-  );
+  (global as any).projectFileMap = projectGraph && {};
+  (global as any).projectRootMappings =
+    projectGraph && createProjectRootMappings(projectGraph.nodes);
   return linter.verify(
     content,
     [
@@ -168,6 +168,14 @@ describe('directive-checks', () => {
       expect(
         messages.map(({ messageId, line }) => ({ messageId, line }))
       ).toEqual([{ messageId: 'directiveAfterCode', line: 3 }]);
+    });
+
+    it('reports a value Nx ignores when there is no project graph', () => {
+      expect(
+        runRule('// @nx-depends-on:', { nodes: null }).map(
+          ({ messageId }) => messageId
+        )
+      ).toEqual(['emptyDependsOn']);
     });
 
     it.each([
