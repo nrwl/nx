@@ -99,8 +99,12 @@ the `plugins` array of `nx.json`.
 
 ESLint can't use the same entry, because the inferred command lints `.`, which from the workspace
 root is the whole workspace.
-Move the ignore patterns into an `.eslintignore` in each project root, or into `ignorePatterns` in
-the project's ESLint configuration.
+Instead, move each ignore pattern into an `.eslintignore` in its project root, and rewrite it
+relative to that root with a leading slash.
+For example, `libs/a/src/gen/**` becomes `/src/gen/**`.
+ESLint doesn't report a pattern that matches nothing, so a pattern moved as is, or without the
+leading slash, can silently stop applying.
+A project with its own ESLint configuration can use `ignorePatterns` there instead.
 The inferred lint task already tracks a project-root `.eslintignore` as an input.
 
 ## Next.js: unable to migrate `outputPath`, `generateLockfile` and `includeDevDependenciesInPackageJson` options
