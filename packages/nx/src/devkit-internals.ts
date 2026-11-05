@@ -95,6 +95,7 @@ export {
 } from './plugins/js/utils/register';
 export {
   getTypescriptBackend,
+  requireClassicTypescript,
   withTypescriptApi,
 } from './plugins/js/utils/typescript-backend';
 export type { ApiTypescriptBackend } from './plugins/js/utils/typescript-backend';
