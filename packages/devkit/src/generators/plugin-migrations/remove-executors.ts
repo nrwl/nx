@@ -1,4 +1,5 @@
 import {
+  createProjectGraphAsync,
   getProjects,
   logger,
   readCachedProjectGraph,
@@ -40,13 +41,22 @@ export async function migrateRemovedExecutors(
       removed.has(target.executor)
     )
   );
-  const pluginTargets = findPluginTargets(removed, projects);
+  const pluginTargets = await findPluginTargets(removed, projects);
+  if (pluginTargets === null) {
+    const message =
+      'The project graph could not be created, so targets created by plugins were not checked for removed executors. Inspect the project graph for targets that still use them, and change the plugin that creates each one.';
+    logger.warn(message);
+    nextSteps.push(message);
+    agentContext.push(message);
+  }
   if (
     !affected.length &&
     !Object.keys(relevantDefaults).length &&
     !pluginTargets?.length
   ) {
-    return { skipAgentic: true };
+    return nextSteps.length
+      ? { skipAgentic: true, nextSteps }
+      : { skipAgentic: true };
   }
 
   // Capture options before converters remove them, including executor defaults.
@@ -104,18 +114,14 @@ export async function migrateRemovedExecutors(
     );
   }
 
-  if (pluginTargets === null) {
-    agentContext.push(
-      'No cached project graph was available, so targets created by plugins were not checked for removed executors. Inspect the project graph for targets that still use them, and change the plugin that creates each one.'
-    );
-  } else if (pluginTargets.length) {
+  if (pluginTargets?.length) {
     const names = pluginTargets
       .map(
         ({ project, target, executor, plugin }) =>
           `${project}:${target} (${executor}${plugin ? `, from ${plugin}` : ''})`
       )
       .join(', ');
-    const message = `These targets are created by plugins and use removed executors: ${names}. This migration cannot convert them; change the plugin that creates each one before running them.`;
+    const message = `According to the project graph, these targets are created by plugins and use removed executors: ${names}. This migration cannot convert them; change the plugin that creates each one before running them.`;
     logger.warn(message);
     nextSteps.push(message);
     agentContext.push(message);
@@ -159,18 +165,22 @@ const configurationPlugins = new Set([
 ]);
 
 /**
- * Targets in the cached graph that use a removed executor which project
- * configuration does not declare. Returns `null` when no graph is cached.
+ * Graph targets that use a removed executor which project configuration does
+ * not declare. Returns `null` when the graph cannot be created.
  */
-function findPluginTargets(
+async function findPluginTargets(
   removed: Set<string>,
   projects: ReturnType<typeof getProjects>
-): PluginTarget[] | null {
+): Promise<PluginTarget[] | null> {
   let graph: ReturnType<typeof readCachedProjectGraph>;
   try {
     graph = readCachedProjectGraph();
   } catch {
-    return null;
+    try {
+      graph = await createProjectGraphAsync();
+    } catch {
+      return null;
+    }
   }
   // Older nx versions do not export the source map reader.
   const sourceMaps =

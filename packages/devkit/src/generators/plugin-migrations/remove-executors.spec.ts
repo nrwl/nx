@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  createProjectGraphAsync,
   logger,
   readNxJson,
   readProjectConfiguration,
@@ -25,6 +26,31 @@ describe('migrateRemovedExecutors', () => {
     delete config.targets[target];
     updateProjectConfiguration(tree, project, config);
   }
+
+  function writeCachedGraph(
+    targets: Record<string, { executor: string }> = {},
+    sourceMap: Record<string, [string, string]> = {}
+  ) {
+    mkdirSync(dirname(nxProjectGraph), { recursive: true });
+    writeFileSync(
+      nxProjectGraph,
+      JSON.stringify({
+        nodes: {
+          app: { name: 'app', type: 'app', data: { root: 'app', targets } },
+        },
+        dependencies: {},
+      })
+    );
+    writeFileSync(nxSourceMaps, JSON.stringify({ app: sourceMap }));
+  }
+
+  function removeCachedGraph() {
+    rmSync(nxProjectGraph, { force: true });
+    rmSync(nxSourceMaps, { force: true });
+  }
+
+  beforeEach(() => writeCachedGraph());
+  afterEach(() => removeCachedGraph());
 
   it('skips the prompt only when there is nothing to convert', async () => {
     const tree = createTreeWithEmptyWorkspace();
@@ -212,28 +238,6 @@ describe('migrateRemovedExecutors', () => {
   });
 
   describe('targets created by plugins', () => {
-    function writeCachedGraph(
-      targets: Record<string, { executor: string }>,
-      sourceMap: Record<string, [string, string]>
-    ) {
-      mkdirSync(dirname(nxProjectGraph), { recursive: true });
-      writeFileSync(
-        nxProjectGraph,
-        JSON.stringify({
-          nodes: {
-            app: { name: 'app', type: 'app', data: { root: 'app', targets } },
-          },
-          dependencies: {},
-        })
-      );
-      writeFileSync(nxSourceMaps, JSON.stringify({ app: sourceMap }));
-    }
-
-    afterEach(() => {
-      rmSync(nxProjectGraph, { force: true });
-      rmSync(nxSourceMaps, { force: true });
-    });
-
     it('names them with the plugin that creates them', async () => {
       const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', { root: 'app' });
@@ -322,18 +326,65 @@ describe('migrateRemovedExecutors', () => {
       warn.mockRestore();
     });
 
-    it('notes that they were not checked when no graph is cached', async () => {
+    it('creates the graph when none is cached', async () => {
+      removeCachedGraph();
+      vi.mocked(createProjectGraphAsync).mockResolvedValueOnce({
+        nodes: {
+          app: {
+            name: 'app',
+            type: 'app',
+            data: { root: 'app', targets: { e2e: { executor: executors[0] } } },
+          },
+        },
+        dependencies: {},
+      });
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'app', { root: 'app' });
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const result = await migrateRemovedExecutors(tree, executors, vi.fn());
+      expect(result.nextSteps.join('\n')).toContain(
+        `app:e2e (${executors[0]})`
+      );
+      warn.mockRestore();
+    });
+
+    it('notes that they were not checked when the graph cannot be created', async () => {
+      removeCachedGraph();
+      vi.mocked(createProjectGraphAsync).mockRejectedValueOnce(
+        new Error('plugin failed')
+      );
       const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app', {
         root: 'app',
         targets: { build: { executor: executors[0] } },
       });
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
       const result = await migrateRemovedExecutors(tree, executors, async () =>
         removeTarget(tree, 'app', 'build')
       );
-      expect(result.agentContext.join('\n')).toContain(
-        'targets created by plugins were not checked'
+      const note = 'targets created by plugins were not checked';
+      expect(result.nextSteps.join('\n')).toContain(note);
+      expect(result.agentContext.join('\n')).toContain(note);
+      warn.mockRestore();
+    });
+
+    it('notes that they were not checked when the graph cannot be created and nothing else uses a removed executor', async () => {
+      removeCachedGraph();
+      vi.mocked(createProjectGraphAsync).mockRejectedValueOnce(
+        new Error('plugin failed')
       );
+      const tree = createTreeWithEmptyWorkspace();
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const result = await migrateRemovedExecutors(tree, executors, vi.fn());
+      expect(result).toEqual({
+        skipAgentic: true,
+        nextSteps: [
+          expect.stringContaining(
+            'targets created by plugins were not checked'
+          ),
+        ],
+      });
+      warn.mockRestore();
     });
   });
 });
