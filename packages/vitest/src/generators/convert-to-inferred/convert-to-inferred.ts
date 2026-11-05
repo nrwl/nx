@@ -28,7 +28,11 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         {
           executors: ['@nx/vitest:test'],
           postTargetTransformer: testPostTargetTransformer,
-          targetPluginOptionMapper: (target) => ({ testTargetName: target }),
+          // keeps Vitest running from the workspace root, like the executor
+          targetPluginOptionMapper: (target, project) =>
+            project.root === '.'
+              ? { testTargetName: target }
+              : { testTargetName: target, cwd: 'workspaceRoot' as const },
         },
       ],
       options.project
