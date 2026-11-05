@@ -12,7 +12,8 @@
         },
         "build-native",
         "copy-assets"
-      ]
+      ],
+      "inputs": ["...", { "externalDependencies": ["@typescript/native"] }]
     },
     "build": {
       "dependsOn": ["build-base"],

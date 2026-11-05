@@ -92,7 +92,11 @@ export {
   isTsEsmNamedExportLinkageError,
   requireWithTsconfigFallback,
 } from './plugins/js/utils/register';
-export { getTypescriptBackend } from './plugins/js/utils/typescript-backend';
+export {
+  getTypescriptBackend,
+  withTypescriptApi,
+} from './plugins/js/utils/typescript-backend';
+export type { ApiTypescriptBackend } from './plugins/js/utils/typescript-backend';
 export {
   createTsModuleResolver,
   readTsConfig,

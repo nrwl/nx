@@ -367,10 +367,14 @@ export {
   hasTextBunLockfile,
   validateOutputs,
   warnUnshippableLocalPathSpec,
+  withTypescriptApi,
   workspaceDataDirectory,
   workspaceRootInner,
 } from 'nx/src/devkit-internals';
-export type { TsConfigHost } from 'nx/src/devkit-internals';
+export type {
+  ApiTypescriptBackend,
+  TsConfigHost,
+} from 'nx/src/devkit-internals';
 
 // Release runtime values (releasePublish, releaseVersion, VersionActions) are
 // intentionally NOT re-exported here: this barrel is imported by plugin graph

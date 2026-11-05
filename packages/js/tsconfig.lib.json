@@ -9,7 +9,12 @@
     "types": ["node"],
     "composite": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "typescript/sync": [
+        "../../node_modules/@typescript/native/dist/api/sync/api.d.ts"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
