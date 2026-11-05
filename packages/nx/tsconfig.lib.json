@@ -10,7 +10,15 @@
     "composite": true,
     "customConditions": ["@nx/nx-source"],
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "typescript/sync": [
+        "../../node_modules/@typescript/native/dist/api/sync/api.d.ts"
+      ],
+      "typescript/fs": [
+        "../../node_modules/@typescript/native/dist/api/fs.d.ts"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
