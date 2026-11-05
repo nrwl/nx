@@ -26,11 +26,15 @@ describe('testPostTargetTransformer', () => {
     expect(result.inputs).toBeUndefined();
   });
 
-  it('preserves a reportsDirectory anchored at the project root', () => {
+  it.each([
+    '{projectRoot}/../../coverage/libs/a',
+    '{workspaceRoot}/coverage/libs/a',
+    '{workspaceRoot}/coverage/{projectRoot}',
+  ])('resolves root tokens in reportsDirectory: %s', (reportsDirectory) => {
     const tree = createTreeWithEmptyWorkspace();
     const target = {
       options: {
-        reportsDirectory: '{projectRoot}/../../coverage/libs/a',
+        reportsDirectory,
       },
     };
 
