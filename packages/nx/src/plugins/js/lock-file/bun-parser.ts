@@ -1590,8 +1590,8 @@ interface PrunedPackage {
   resolution: string;
   tuple: unknown[];
   // The root lockfile key the package's own dependencies resolve from. Unset
-  // for a folder dependency of a folder dependency: Bun never installs its
-  // dependencies.
+  // for a nested lockfile entry of a copied workspace module, whose
+  // dependencies Bun never installs.
   rootScope?: string[];
   dependencies?: PackageDependencies;
   isWorkspaceModule: boolean;
