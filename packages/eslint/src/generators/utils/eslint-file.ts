@@ -1493,10 +1493,57 @@ export function addSpreadConfigToFlatLintConfig(
   importPath: string,
   options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
 ): void {
+  addImportedConfigToFlatLintConfig(
+    tree,
+    root,
+    variableName,
+    importPath,
+    generateSpreadElement(variableName),
+    options
+  );
+}
+
+/**
+ * Imports a plugin and adds one of its flat config objects to the project's
+ * flat config, e.g. `nextEslintPluginNext.configs['core-web-vitals']` from
+ * `@next/eslint-plugin-next`.
+ */
+export function addPluginConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  configName: string,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {}
+): void {
+  addImportedConfigToFlatLintConfig(
+    tree,
+    root,
+    variableName,
+    importPath,
+    ts.factory.createElementAccessExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier(variableName),
+        'configs'
+      ),
+      ts.factory.createStringLiteral(configName)
+    ),
+    options
+  );
+}
+
+function addImportedConfigToFlatLintConfig(
+  tree: Tree,
+  root: string,
+  variableName: string,
+  importPath: string,
+  element: ts.Expression,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean }
+): void {
   const { insertAtTheEnd = true, checkBaseConfig = false } = options;
 
   if (!useFlatConfig(tree))
-    throw new Error('Spread configs can only be used with flat configs');
+    throw new Error('Imported configs can only be used with flat configs');
 
   let fileName: string | undefined;
   for (const f of eslintFlatConfigFilenames) {
@@ -1508,11 +1555,10 @@ export function addSpreadConfigToFlatLintConfig(
 
   let content = tree.read(fileName, 'utf8');
   content = addImportToFlatConfig(content, variableName, importPath);
-  content = addBlockToFlatConfigExport(
-    content,
-    generateSpreadElement(variableName),
-    { insertAtTheEnd, checkBaseConfig }
-  );
+  content = addBlockToFlatConfigExport(content, element, {
+    insertAtTheEnd,
+    checkBaseConfig,
+  });
 
   tree.write(fileName, content);
 }
