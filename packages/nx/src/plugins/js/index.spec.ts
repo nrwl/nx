@@ -7,7 +7,10 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ProjectGraphExternalNode } from '../../config/project-graph';
-import { localPathPackagesBunLock } from './lock-file/__fixtures__/bun/local-path-packages.bun.lock';
+import {
+  localPathPackagesBunLock,
+  workspaceNameLocalPathBunLock,
+} from './lock-file/__fixtures__/bun/local-path-packages.bun.lock';
 import {
   patchedPackagesBunLock,
   unpatchedPackagesBunLock,
@@ -389,6 +392,27 @@ describe('nx/js/dependencies-and-lockfile', () => {
       }
     }
   );
+
+  // apps/api vendors its own `util`, and apps/web links the workspace `util`.
+  it('should hash a vendored package named like a workspace package in bun.lock', async () => {
+    write('package.json', JSON.stringify({ name: 'root' }));
+    write('bun.lock', workspaceNameLocalPathBunLock);
+    write('vendor/util/index.js', 'V1');
+    const before = await createExternalNodes(
+      await loadPluginInNewProcess(),
+      'bun.lock'
+    );
+    write('vendor/util/index.js', 'V2');
+    const after = await createExternalNodes(
+      await loadPluginInNewProcess(),
+      'bun.lock'
+    );
+
+    expect(Object.keys(before)).toEqual(['npm:util@file:vendor/util']);
+    expect(after['npm:util@file:vendor/util'].data.hash).not.toBe(
+      before['npm:util@file:vendor/util'].data.hash
+    );
+  });
 
   it('should not create dependencies from a lockfile that createNodes skipped', async () => {
     write('package.json', JSON.stringify({ devDependencies: { a: '1.0.0' } }));

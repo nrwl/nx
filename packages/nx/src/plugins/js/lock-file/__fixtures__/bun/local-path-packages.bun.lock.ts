@@ -25,3 +25,43 @@ export const localPathPackagesBunLock = `{
   }
 }
 `;
+
+export const workspaceNameLocalPathBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root",
+    },
+    "apps/api": {
+      "name": "@demo/api",
+      "version": "1.0.0",
+      "dependencies": {
+        "util": "file:../../vendor/util",
+      },
+    },
+    "apps/web": {
+      "name": "@demo/web",
+      "version": "1.0.0",
+      "dependencies": {
+        "util": "link:../../libs/util",
+      },
+    },
+    "libs/util": {
+      "name": "util",
+      "version": "1.0.0",
+    },
+  },
+  "packages": {
+    "@demo/api": ["@demo/api@workspace:apps/api"],
+
+    "@demo/web": ["@demo/web@workspace:apps/web"],
+
+    "util": ["util@workspace:libs/util"],
+
+    "@demo/api/util": ["util@file:vendor/util", {}],
+
+    "@demo/web/util": ["util@link:./libs/util", {}],
+  }
+}
+`;
