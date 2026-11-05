@@ -533,6 +533,24 @@ describe('Eslint - Convert Executors To Plugin', () => {
       expect(eslintPluginRegistrations[0].include).toBeUndefined();
     });
 
+    it('should not exclude a nested project when converting it after its parent', async () => {
+      createTestProject(tree, { appRoot: 'libs', appName: 'libs' });
+      createTestProject(tree, { appRoot: 'libs/proto', appName: 'proto' });
+
+      await convertToInferred(tree, { project: 'libs', skipFormat: true });
+      await convertToInferred(tree, { project: 'proto', skipFormat: true });
+
+      const registrations = readNxJson(tree).plugins.filter(
+        (plugin): plugin is ExpandedPluginConfiguration =>
+          typeof plugin !== 'string' && plugin.plugin === '@nx/eslint/plugin'
+      );
+      expect(registrations).toHaveLength(1);
+      expect(registrations[0].exclude).toBeUndefined();
+      expect(
+        readProjectConfiguration(tree, 'proto').targets?.lint
+      ).toBeUndefined();
+    });
+
     it('should remove inputs when they are inferred', async () => {
       const project = createTestProject(tree);
       project.targets.lint.options.cacheLocation = 'cache-dir';

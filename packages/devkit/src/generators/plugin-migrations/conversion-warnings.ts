@@ -81,7 +81,8 @@ export function takenOverTargetWarning(
   root: string,
   targetName: string,
   existingTarget: TargetConfiguration,
-  excludeGlob: string
+  excludeGlob: string,
+  laterPluginRegistered: boolean
 ): string {
   const command =
     existingTarget.command ??
@@ -92,7 +93,7 @@ export function takenOverTargetWarning(
     : existingTarget.executor
       ? `uses the "${existingTarget.executor}" executor`
       : 'is configured outside the plugin';
-  return `convert-to-inferred did not apply ${pluginPath} to project "${projectName}" (${root}): it was not migrated and its "${targetName}" target ${source}, which the plugin's inferred "${targetName}" target would replace. The registration excludes "${excludeGlob}"; remove that entry to let the plugin infer the project.`;
+  return `convert-to-inferred did not apply ${pluginPath} to project "${projectName}" (${root}): it was not migrated and its "${targetName}" target ${source}, which the plugin's inferred "${targetName}" target ${laterPluginRegistered ? 'may replace, unless a plugin registered after it provides that target' : 'would replace'}. The registration excludes "${excludeGlob}"; remove that entry to let the plugin infer the project.`;
 }
 
 /** A hoisted target was reverted because it reached a non-migrated root. */

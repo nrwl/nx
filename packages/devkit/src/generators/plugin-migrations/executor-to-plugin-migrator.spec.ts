@@ -4808,7 +4808,7 @@ describe('targets another source already provides', () => {
     );
   }
 
-  async function migrate(warn = vi.fn()) {
+  async function migrate(warn = vi.fn(), project?: string) {
     const plugin = createSyntheticPlugin();
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -4817,10 +4817,23 @@ describe('targets another source already provides', () => {
       plugin.createNodes,
       { targetName: 'build' },
       syntheticMigrations(),
-      undefined,
+      project,
       { warn } as any
     );
     return { plugin, warn };
+  }
+
+  function resolve(plugin: ReturnType<typeof createSyntheticPlugin>) {
+    return resolveThroughRealPipeline(
+      ctx,
+      plugin.pluginPath,
+      plugin.createNodes,
+      { [GRADLE_PLUGIN_PATH]: gradleCreateNodes }
+    );
+  }
+
+  function warnings(warn: ReturnType<typeof vi.fn>): string[] {
+    return warn.mock.calls.map(([message]) => message);
   }
 
   it('keeps a sibling project out of the registration (include stays scoped)', async () => {
@@ -4977,6 +4990,340 @@ describe('targets another source already provides', () => {
     expect(registration.exclude).toBeUndefined();
     expect(warn.mock.calls.map(([message]) => message)).not.toContainEqual(
       expect.stringContaining('did not apply')
+    );
+  });
+
+  it('does not exclude a non-migrated parent of a migrated project', async () => {
+    ctx = setupFixture('collision-parent');
+    addGradleProject('parent', 'a');
+    addExecutorProject(ctx, {
+      name: 'child',
+      root: 'a/b',
+      target: uniformExecutorTarget(),
+    });
+    // keeps the include scoped
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.include).toEqual(['a/b/**/*']);
+    expect(registration.exclude).toBeUndefined();
+    expect(warnings(warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['a/b'].build.options.command).toBe('acme-build');
+    expect(resolved['a'].build.options.command).toBe('./gradlew build');
+  });
+
+  it('re-admits a migrated project nested under an excluded one', async () => {
+    ctx = setupFixture('collision-migrated-below-excluded');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('fences a colliding project nested under a re-admitted one', async () => {
+    ctx = setupFixture('collision-fence-under-readmit');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('deep', 'libs/proto/sub/deep');
+    registerGradlePlugin();
+
+    const { plugin } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+      'libs/proto/sub/deep/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub/deep'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+  });
+
+  it('keeps the fence when it also covers a nested project without a collision', async () => {
+    ctx = setupFixture('collision-fence-covers-nested');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'x',
+      root: 'libs/proto/x',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    registerGradlePlugin();
+
+    await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+  });
+
+  it('leaves the excludes alone when a re-admit would reopen an existing one', async () => {
+    ctx = setupFixture('collision-readmit-reopens');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'legacy',
+      root: 'libs/proto/sub/legacy',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      GRADLE_PLUGIN_PATH,
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+        exclude: ['libs/proto/sub/legacy/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/sub/legacy/**/*',
+    ]);
+    expect(warnings(warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+  });
+
+  it('only fences a project from the registration that infers the colliding target', async () => {
+    ctx = setupFixture('collision-other-option-set');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'app1',
+      root: 'apps/app1',
+      targetName: 'test',
+    });
+    addGradleProject('proto', 'libs/proto');
+    ctx.projectGraph.nodes.proto.data.targets = {
+      test: {
+        executor: 'nx:run-commands',
+        options: { command: 'gradle test' },
+      },
+    };
+
+    await migrate();
+
+    const registrations = syntheticRegistrations();
+    expect(registrations).toHaveLength(2);
+    for (const registration of registrations) {
+      expect(registration.exclude).toBeUndefined();
+    }
+  });
+
+  it('keeps both projects inferred when converting a parent and then its nested project', async () => {
+    ctx = setupFixture('collision-one-at-a-time');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'proto',
+      root: 'libs/proto',
+      target: uniformExecutorTarget(),
+    });
+
+    const first = await migrate(vi.fn(), 'libs');
+    expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+    expect(warnings(first.warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const { plugin } = await migrate(vi.fn(), 'proto');
+
+    expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+    const resolved = await resolve(plugin);
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto'].build.options.command).toBe('acme-build');
+  });
+
+  it.each([
+    ['unscoped', undefined],
+    ['scoped', ['libs/**/*']],
+  ])(
+    'drops an exclude entry for a project being migrated (%s registration)',
+    async (_, include) => {
+      ctx = setupFixture('collision-stale-exclude');
+      addExecutorProject(ctx, {
+        name: 'proto',
+        root: 'libs/proto',
+        target: uniformExecutorTarget(),
+      });
+      const nxJson = readNxJson(ctx.tree);
+      nxJson.plugins = [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          options: { targetName: 'build' },
+          ...(include ? { include } : {}),
+          exclude: ['libs/proto/**/*'],
+        },
+      ];
+      updateNxJson(ctx.tree, nxJson);
+
+      const { plugin } = await migrate(vi.fn(), 'proto');
+
+      expect(syntheticRegistrations()[0].exclude).toBeUndefined();
+      const resolved = await resolve(plugin);
+      expect(resolved['libs/proto'].build.options.command).toBe('acme-build');
+    }
+  );
+
+  it('re-admits a project being migrated that an ancestor exclude fences off', async () => {
+    ctx = setupFixture('collision-ancestor-exclude');
+    addExecutorProject(ctx, {
+      name: 'sub',
+      root: 'libs/proto/sub',
+      target: uniformExecutorTarget(),
+    });
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        exclude: ['libs/proto/**/*'],
+      },
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { plugin } = await migrate(vi.fn(), 'sub');
+
+    expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
+    ]);
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+  });
+
+  it('does not exclude a nested project whose target project.json authors', async () => {
+    ctx = setupFixture('collision-authored-in-project-json');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'proto',
+      root: 'libs/proto',
+      executor: 'nx:noop',
+    });
+    registerGradlePlugin();
+
+    const { plugin, warn } = await migrate();
+
+    const [registration] = syntheticRegistrations();
+    expect(registration.exclude).toBeUndefined();
+    expect(warnings(warn)).not.toContainEqual(
+      expect.stringContaining('did not apply')
+    );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto'].build.executor).toBe('nx:noop');
+    expect(resolved['libs'].build.options.command).toBe('acme-build');
+  });
+
+  it('says the target may be replaced when another plugin is registered after the extended registration', async () => {
+    ctx = setupFixture('collision-later-plugin');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addExecutorProject(ctx, {
+      name: 'other',
+      root: 'other',
+      targetName: 'unrelated',
+      executor: '@other/tool:noop',
+    });
+    addGradleProject('proto', 'libs/proto');
+    const nxJson = readNxJson(ctx.tree);
+    nxJson.plugins = [
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build' },
+        include: ['other/**/*'],
+      },
+      GRADLE_PLUGIN_PATH,
+    ];
+    updateNxJson(ctx.tree, nxJson);
+
+    const { warn } = await migrate();
+
+    expect(syntheticRegistrations()[0].exclude).toEqual(['libs/proto/**/*']);
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'which the plugin\'s inferred "build" target may replace'
+      )
     );
   });
 });
