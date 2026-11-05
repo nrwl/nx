@@ -345,6 +345,7 @@ function handlePropertiesInOptions(
     'ignorePath',
     'resolvePluginsRelativeTo',
     'printConfig',
+    'cacheLocation',
   ]) {
     if (!(option in options)) {
       continue;
@@ -360,7 +361,10 @@ function handlePropertiesInOptions(
       continue;
     }
     options[option] = toCwdRelativePath(
-      options[option],
+      // The executor kept one cache per project under cacheLocation.
+      option === 'cacheLocation'
+        ? joinPathFragments(options[option], projectDetails.projectName)
+        : options[option],
       option,
       projectDetails,
       cwd
@@ -395,11 +399,20 @@ function handlePropertiesInOptions(
   }
 
   for (const key in targetOptionsToCliMap) {
-    if (options[key] || options[key] === null) {
-      const prevValue = options[key];
-      delete options[key];
-      options[targetOptionsToCliMap[key]] = prevValue;
+    if (!(key in options)) {
+      continue;
     }
+    const value = options[key];
+    delete options[key];
+    // The executor treated `false` and `''` as unset, which matches ESLint's
+    // defaults, so pass no flag.
+    if (value === false || value === '') {
+      if (isConfiguration) {
+        options[targetOptionsToCliMap[key]] = null;
+      }
+      continue;
+    }
+    options[targetOptionsToCliMap[key]] = value;
   }
 
   if ('lintFilePatterns' in options) {
