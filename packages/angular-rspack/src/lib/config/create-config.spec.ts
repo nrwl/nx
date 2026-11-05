@@ -5,8 +5,15 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import * as postcssConfiguration from '../utils/postcss-configuration';
+import { isRspackV2 } from '../utils/rspack-version';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
 import { _createConfig, createConfig } from './create-config';
+
+vi.mock('../utils/rspack-version', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../utils/rspack-version')>();
+  return { isRspackV2: vi.fn(actual.isRspackV2) };
+});
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
@@ -807,6 +814,24 @@ describe('createConfig', () => {
       (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
     );
     expect(browserPlugin['sharedAngularPlugin']).toBeUndefined();
+  }, 10000);
+
+  it('should turn lazy compilation off on rspack 2 unless overridden, and leave it unset on rspack 1', async () => {
+    const [browserConfig] = await _createConfig(configBase);
+    expect(browserConfig.lazyCompilation).toBe(false);
+
+    const [overriddenConfig] = await _createConfig(configBase, {
+      lazyCompilation: true,
+    });
+    expect(overriddenConfig.lazyCompilation).toBe(true);
+
+    vi.mocked(isRspackV2).mockReturnValue(false);
+    try {
+      const [rspackV1Config] = await _createConfig(configBase);
+      expect(rspackV1Config).not.toHaveProperty('lazyCompilation');
+    } finally {
+      vi.mocked(isRspackV2).mockReset();
+    }
   }, 10000);
 
   describe('createConfig', () => {
