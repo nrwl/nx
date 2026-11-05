@@ -274,7 +274,13 @@ export default [{ plugins: { 'react-hooks': reactHooks } }];
             )
           ),
         ],
-        agentContext: [expect.stringContaining(reason)],
+        agentContext: [
+          expect.stringMatching(
+            new RegExp(
+              `${reason}.* eslint-disable comments that name a react/, jsx-a11y/ or import/ rule, in apps/web/eslint\\.config\\.mjs or in the files it lints, make lint fail .* Delete or rewrite them\\.$`
+            )
+          ),
+        ],
       });
 
       expect(await migration(tree)).toEqual({ skipAgentic: true });
