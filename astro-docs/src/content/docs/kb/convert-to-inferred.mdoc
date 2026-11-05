@@ -47,6 +47,8 @@ Most of the official plugins come with a `convert-to-inferred` generator. This g
   centralized
 - remove `targetDefaults` entries keyed by a migrated executor once no target resolves through that
   executor (whole-workspace migrations only)
+- add `targetDefaults` entries so each migrated target keeps the defaults it resolved before, in
+  whole-workspace and `--project` migrations alike (see below)
 
 To get started, run `nx g convert-to-inferred`, and you'll be prompted to choose a plugin to migrate.
 
@@ -305,6 +307,47 @@ configuration for the affected targets and prints a warning.
 
 This step is skipped for single-project (`--project`) migrations, since centralizing one
 project's configuration would leak it onto its siblings.
+
+### Keep existing `targetDefaults` applying
+
+Converting a target changes which `targetDefaults` entries resolve for it.
+Its executor becomes the one the plugin infers, often `nx:run-commands`, so an entry keyed by that
+executor can start applying, and entries filtered to the plugin start matching.
+After the generator writes `nx.json`, it compares what each migrated target resolved before and
+after the conversion, and corrects any difference.
+This also runs for single-project (`--project`) migrations.
+
+The correction is an entry appended under the key that now wins, filtered to the plugin and to the
+migrated projects by name:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "test": { "cache": true, "dependsOn": ["^build"] },
+    "nx:run-commands": [
+      { "cache": false },
+      {
+        "filter": { "plugin": "@nx/vite/plugin", "projects": ["app1", "app2"] },
+        "cache": true,
+        "dependsOn": ["^build"]
+      }
+    ]
+  }
+}
+```
+
+Keep these entries, even the ones that look empty.
+Values such as `"dependsOn": []` or `"inputs": ["default", "^default"]` restore what the target had
+when no default set the field, so removing them changes the task.
+
+When an entry can't single out the target, for example because the winning key also reaches another
+target the plugin infers for that project, the generator writes the correction into the target in
+`project.json` instead.
+
+A later entry can override a field but can't unset it.
+When a default newly sets an option, a configuration, or a field with no neutral value, the
+generator prints a warning that names each target and field, so you can review them.
 
 ## Verify the migration
 
