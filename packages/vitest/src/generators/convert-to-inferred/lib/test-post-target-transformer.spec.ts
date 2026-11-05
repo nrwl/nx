@@ -87,9 +87,53 @@ describe('testPostTargetTransformer', () => {
     });
   });
 
-  it('keeps testFiles unchanged for a root project', () => {
+  it('resolves tokens and normalizes testFiles before making them project-relative', () => {
     const tree = createTreeWithEmptyWorkspace();
-    const target = { options: { testFiles: ['src/foo.spec.ts'] } };
+    const target = {
+      options: {
+        testFiles: [
+          '{projectRoot}/src/a.spec.ts',
+          '{workspaceRoot}/libs/lib1/src/b.spec.ts',
+          './libs/lib1/src/c.spec.ts',
+          'src/d e.spec.ts',
+        ],
+      },
+    };
+
+    const result = testPostTargetTransformer(
+      target,
+      tree,
+      { projectName: 'lib1', root: 'libs/lib1' },
+      {}
+    );
+
+    expect(result.options.args).toEqual([
+      'src/a.spec.ts',
+      'src/b.spec.ts',
+      'src/c.spec.ts',
+      '"src/d e.spec.ts"',
+    ]);
+  });
+
+  it('accepts a single testFile string', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const target = { options: { testFile: 'libs/lib1/src/a.spec.ts' } };
+
+    const result = testPostTargetTransformer(
+      target,
+      tree,
+      { projectName: 'lib1', root: 'libs/lib1' },
+      {}
+    );
+
+    expect(result.options.args).toEqual(['src/a.spec.ts']);
+  });
+
+  it('keeps testFiles relative to the root of a root project', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const target = {
+      options: { testFiles: ['./src/foo.spec.ts', '{projectRoot}/src/bar.ts'] },
+    };
 
     const result = testPostTargetTransformer(
       target,
@@ -98,7 +142,7 @@ describe('testPostTargetTransformer', () => {
       {}
     );
 
-    expect(result.options.args).toEqual(['src/foo.spec.ts']);
+    expect(result.options.args).toEqual(['src/foo.spec.ts', 'src/bar.ts']);
   });
 
   it('drops empty configurations and stale defaultConfiguration', () => {
