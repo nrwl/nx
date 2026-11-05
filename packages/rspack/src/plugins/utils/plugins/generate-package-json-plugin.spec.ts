@@ -1,7 +1,6 @@
 import type { Mock } from 'vitest';
 import type { ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createPackageJson, generatePrunedDeployOutput } from '@nx/js';
 import { GeneratePackageJsonPlugin } from './generate-package-json-plugin';
 
@@ -50,10 +49,7 @@ describe('GeneratePackageJsonPlugin', () => {
     (detectPackageManager as Mock).mockReturnValue('pnpm');
   });
 
-  async function runPlugin(
-    runtimeDependencies?: string[],
-    root = '/root'
-  ): Promise<Mock> {
+  async function runPlugin(): Promise<Mock> {
     const emitAsset = vi.fn();
     let processAssetsResult: Promise<void> | undefined;
     const compilation = {
@@ -82,11 +78,10 @@ describe('GeneratePackageJsonPlugin', () => {
     new GeneratePackageJsonPlugin({
       tsConfig: '/root/apps/my-app/tsconfig.json',
       outputFileName: 'main.js',
-      root,
+      root: '/root',
       projectName: 'my-app',
       targetName: 'build',
       projectGraph,
-      runtimeDependencies,
     }).apply(compiler as any);
     await processAssetsResult;
     return emitAsset;
@@ -138,38 +133,5 @@ describe('GeneratePackageJsonPlugin', () => {
     expect(emitAsset.mock.calls.map(([name]) => name)).toEqual([
       'package.json',
     ]);
-  });
-
-  it('adds runtime dependencies installed under the workspace root, including hidden manifests and npm aliases', async () => {
-    const tempFs = new TempFs('runtime-deps-', false);
-    try {
-      tempFs.createFilesSync({
-        'node_modules/fixture-runtime-dependency/package.json': JSON.stringify({
-          name: 'fixture-runtime-dependency',
-          version: '2.0.0',
-          exports: { '.': './index.js', './*': './*.js' },
-        }),
-        'node_modules/fixture-runtime-dependency/index.js': '',
-        'node_modules/runtime-alias/package.json': JSON.stringify({
-          name: 'fixture-runtime-target',
-          version: '1.0.0',
-        }),
-      });
-
-      const emitAsset = await runPlugin(
-        ['fixture-runtime-dependency', 'runtime-alias'],
-        tempFs.tempDir
-      );
-
-      const [, manifest] = emitAsset.mock.calls.find(
-        ([name]) => name === 'package.json'
-      );
-      expect(JSON.parse(manifest.source()).dependencies).toEqual({
-        'fixture-runtime-dependency': '2.0.0',
-        'runtime-alias': 'npm:fixture-runtime-target@1.0.0',
-      });
-    } finally {
-      tempFs.cleanup();
-    }
   });
 });

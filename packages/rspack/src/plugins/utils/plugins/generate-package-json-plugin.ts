@@ -11,7 +11,7 @@ import {
   type ProjectGraph,
   serializeJson,
 } from '@nx/devkit';
-import { readModulePackageJson } from '@nx/devkit/internal';
+import { readRuntimeDependencies } from '@nx/js/internal';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -28,22 +28,6 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
       runtimeDependencies?: string[];
     }
   ) {}
-
-  private resolveRuntimeDependencies(): Record<string, string> {
-    const runtimeDependencies: Record<string, string> = {};
-    if (this.options.runtimeDependencies) {
-      for (const dep of this.options.runtimeDependencies) {
-        const { name, version } = readModulePackageJson(dep, [
-          __dirname,
-          this.options.root,
-        ]).packageJson;
-        // An npm alias installs `name` under the folder `dep`, so keep the alias for `require(dep)` to resolve.
-        runtimeDependencies[dep] =
-          name === dep ? version : `npm:${name}@${version}`;
-      }
-    }
-    return runtimeDependencies;
-  }
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
@@ -76,7 +60,10 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
             });
           }
 
-          const runtimeDependencies = this.resolveRuntimeDependencies();
+          const runtimeDependencies = readRuntimeDependencies(
+            this.options.runtimeDependencies ?? [],
+            [__dirname, this.options.root]
+          );
 
           const packageJson = createPackageJson(
             this.options.projectName,
