@@ -5326,4 +5326,27 @@ describe('targets another source already provides', () => {
       )
     );
   });
+
+  it('prints object-form commands in the warning', async () => {
+    ctx = setupFixture('collision-object-commands');
+    addExecutorProject(ctx, {
+      name: 'libs',
+      root: 'libs',
+      target: uniformExecutorTarget(),
+    });
+    addGradleProject('proto', 'libs/proto');
+    ctx.projectGraph.nodes.proto.data.targets.build = {
+      executor: 'nx:run-commands',
+      options: {
+        commands: ['a', { command: 'b', prefix: 'p' }],
+      },
+    };
+    registerGradlePlugin();
+
+    const { warn } = await migrate();
+
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining('its "build" target runs "a && b"')
+    );
+  });
 });

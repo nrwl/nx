@@ -87,7 +87,11 @@ export function takenOverTargetWarning(
   const command =
     existingTarget.command ??
     existingTarget.options?.command ??
-    existingTarget.options?.commands?.join(' && ');
+    existingTarget.options?.commands
+      ?.map((entry: string | { command: string }) =>
+        typeof entry === 'string' ? entry : entry.command
+      )
+      .join(' && ');
   const source = command
     ? `runs "${command}"`
     : existingTarget.executor
