@@ -102,6 +102,7 @@ export { getTypescriptAst } from './plugins/js/utils/typescript-ast';
 export type { TypescriptAst } from './plugins/js/utils/typescript-ast';
 export {
   createTsModuleResolver,
+  parseTsConfigContent,
   readTsConfig,
   readTsConfigWithoutFiles,
 } from './plugins/js/utils/typescript';

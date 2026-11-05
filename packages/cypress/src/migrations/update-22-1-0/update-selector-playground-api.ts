@@ -1,5 +1,5 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript } from '@nx/js/internal';
 import { tsquery } from '@nx/devkit/internal';
 import type { CallExpression, Printer, PropertyName } from 'typescript';
 import { cypressProjectConfigs } from '../../utils/migrations';
@@ -43,7 +43,9 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
     return updated;
   }
 
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript(
+    'The "update-selector-playground-api" migration'
+  );
   printer ??= ts.createPrinter();
 
   const sourceFile = tsquery.ast(updated);
@@ -135,7 +137,9 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
 }
 
 function isOnElementProperty(name: PropertyName): boolean {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript(
+    'The "update-selector-playground-api" migration'
+  );
 
   if (ts.isIdentifier(name)) {
     return name.text === 'onElement';

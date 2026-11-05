@@ -330,6 +330,7 @@ export {
   nxVersion,
   orange,
   parseExecutor,
+  parseTsConfigContent,
   parseVersionFromPackageManagerField,
   pathExists,
   preventRecursionInGraphConstruction,

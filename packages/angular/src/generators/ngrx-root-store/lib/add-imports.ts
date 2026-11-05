@@ -8,8 +8,9 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import { insertImport } from '@nx/js';
 import { NormalizedNgRxRootStoreGeneratorOptions } from './normalize-options';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 function addRootStoreImport(
   tree: Tree,

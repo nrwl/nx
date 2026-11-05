@@ -2,8 +2,9 @@ import { insertStatement } from './insert-statement';
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import type { NamedImports } from 'typescript';
 import { ensureTypescript } from '../../utilities/typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function insertImport(
   tree: Tree,

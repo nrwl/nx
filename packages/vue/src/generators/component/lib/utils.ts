@@ -1,4 +1,7 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import {
   applyChangesToString,
   getProjects,
@@ -11,7 +14,7 @@ import { parse, relative, dirname } from 'path';
 import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { NormalizedSchema, ComponentGeneratorSchema } from '../schema';
 import { addImport } from '../../../utils/ast-utils';
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export async function normalizeOptions(
   host: Tree,

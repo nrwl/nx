@@ -5,7 +5,7 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript } from '@nx/js/internal';
 import type {
   Expression,
   Node,
@@ -67,7 +67,9 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
       continue;
     }
 
-    ts ??= ensureTypescript();
+    ts ??= ensureClassicTypescript(
+      'The "update-cypress-16-config-options" migration'
+    );
     const { blocks, unresolvedSpreads } = getOptionBlocks(config);
     for (const spread of unresolvedSpreads) {
       unhandled.push(

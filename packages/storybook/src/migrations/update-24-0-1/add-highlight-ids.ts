@@ -6,7 +6,7 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript } from '@nx/js/internal';
 import type {
   CallExpression,
   Identifier,
@@ -82,7 +82,7 @@ export default async function addHighlightIds(tree: Tree) {
 // `useChannel`, which Storybook types as `(eventName: string, ...args: any)`.
 // Any other payload can have a type that rejects the new property.
 function addIds(filePath: string, content: string): string {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript('The "add-highlight-ids" migration');
   const sourceFile = ts.createSourceFile(
     filePath,
     content,

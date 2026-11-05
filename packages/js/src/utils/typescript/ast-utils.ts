@@ -6,12 +6,13 @@ import { workspaceRoot } from '@nx/devkit';
 import {
   createTsModuleResolver,
   readTsConfigWithoutFiles,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
 import { getSourceNodes } from './get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 let moduleResolver: ReturnType<typeof createTsModuleResolver> | undefined;
 

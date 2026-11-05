@@ -2,8 +2,9 @@ import { Tree } from '@nx/devkit';
 import { insertImport } from '@nx/js';
 import { addRouteToNgModule } from './ast-utils';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 /**
  * Add a new route to a routes definition

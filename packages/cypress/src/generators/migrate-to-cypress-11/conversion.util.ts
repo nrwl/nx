@@ -11,8 +11,9 @@ import {
 import { ensureTypescript, getProjectSourceRoot } from '@nx/js/internal';
 import { basename, dirname, extname, relative } from 'path';
 import type { StringLiteral } from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 let tsquery: typeof import('@nx/devkit/internal').tsquery;
 
 const validFilesEndingsToUpdate = [

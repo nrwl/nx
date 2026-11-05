@@ -145,6 +145,40 @@ describe.each(typescriptInstalls)(
       );
     });
 
+    describe('parseTsConfigContent with a host', () => {
+      it('should apply the extends chain from the host and keep relative paths relative', () => {
+        const root = join(fs.tempDir, 'not-on-disk');
+        const files: Record<string, string> = {
+          'tsconfig.base.json': JSON.stringify({
+            compilerOptions: { strict: true },
+          }),
+        };
+        const toKey = (path: string) =>
+          relative(root, resolve(root, path)).replace(/\\/g, '/');
+        const host = {
+          getCurrentDirectory: () => root,
+          readFile: (path: string) => files[toKey(path)],
+          fileExists: (path: string) => toKey(path) in files,
+        };
+
+        const parsed = typescript.parseTsConfigContent(
+          {
+            extends: '../../tsconfig.base.json',
+            compilerOptions: { outDir: 'dist', target: 'ES2022' },
+            files: [],
+          },
+          'libs/a',
+          host
+        );
+
+        expect(parsed.options).toMatchObject({
+          strict: true,
+          outDir: 'libs/a/dist',
+          target: 9,
+        });
+      });
+    });
+
     describe('resolveModuleByImport', () => {
       beforeEach(async () => {
         await fs.createFiles({

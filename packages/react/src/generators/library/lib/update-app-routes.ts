@@ -17,8 +17,9 @@ import {
 import { maybeJs } from '../../../utils/maybe-js';
 import { reactRouterDomVersion } from '../../../utils/versions';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   if (!options.appMain || !options.appSourceRoot) {

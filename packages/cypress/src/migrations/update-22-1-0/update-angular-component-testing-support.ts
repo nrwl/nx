@@ -7,7 +7,7 @@ import {
   type ProjectGraph,
   type Tree,
 } from '@nx/devkit';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript } from '@nx/js/internal';
 import { tsquery } from '@nx/devkit/internal';
 import { lt, valid } from 'semver';
 import type { ImportDeclaration, Printer } from 'typescript';
@@ -70,7 +70,9 @@ async function getMigrationInfo(
   projectName: string,
   projectGraph: ProjectGraph
 ): Promise<boolean> {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript(
+    'The "update-angular-component-testing-support" migration'
+  );
 
   const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
   const config = resolveCypressConfigObject(cypressConfig);
@@ -105,7 +107,9 @@ async function getMigrationInfo(
 }
 
 function migrateProject(tree: Tree, projectConfig: ProjectConfiguration) {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript(
+    'The "update-angular-component-testing-support" migration'
+  );
   printer ??= ts.createPrinter();
 
   visitNotIgnoredFiles(tree, projectConfig.root, (filePath) => {
@@ -154,7 +158,9 @@ function resolveFramework(
   projectName: string,
   projectGraph: ProjectGraph
 ): 'angular' | 'react' | null {
-  ts ??= ensureTypescript();
+  ts ??= ensureClassicTypescript(
+    'The "update-angular-component-testing-support" migration'
+  );
 
   const frameworkProperty = tsquery.query<
     import('typescript').PropertyAssignment

@@ -11,8 +11,9 @@ import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
 import { getModuleDeclarations } from './module-info';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 let tsqueryAst: typeof import('@nx/devkit/internal').tsquery.ast;
 let tsqueryQuery: typeof import('@nx/devkit/internal').tsquery.query;
 

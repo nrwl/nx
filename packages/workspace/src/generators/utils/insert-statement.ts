@@ -1,7 +1,8 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import { ensureTypescript } from '../../utilities/typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 /**
  * Insert a statement after the last import statement in a file

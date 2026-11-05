@@ -1,4 +1,7 @@
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
@@ -26,7 +29,7 @@ import {
 import { reactReduxVersion, reduxjsToolkitVersion } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
   assertSupportedReactVersion(host);

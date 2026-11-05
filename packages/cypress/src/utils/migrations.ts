@@ -11,11 +11,11 @@ import {
   interpolate,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  type TypescriptAst,
 } from '@nx/devkit/internal';
-import { ensureTypescript } from '@nx/js/internal';
+import { ensureClassicTypescript, ensureTypescript } from '@nx/js/internal';
 import { isAbsolute, posix, relative } from 'path';
 import type {
-  Expression,
   ModuleDeclaration,
   Node,
   ObjectLiteralExpression,
@@ -27,7 +27,8 @@ import type {
 import type { CypressExecutorOptions } from '../executors/cypress/schema';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
+let classicTs: typeof import('typescript');
 
 export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   projectName: string;
@@ -117,46 +118,6 @@ export function getObjectProperty(
   );
 }
 
-export function removeObjectProperty(
-  config: ObjectLiteralExpression,
-  property: PropertyAssignment
-): ObjectLiteralExpression {
-  ts ??= ensureTypescript();
-
-  return ts.factory.updateObjectLiteralExpression(
-    config,
-    config.properties.filter((p) => p !== property)
-  );
-}
-
-export function updateObjectProperty(
-  config: ObjectLiteralExpression,
-  property: PropertyAssignment,
-  { newName, newValue }: { newName?: string; newValue?: Expression }
-): ObjectLiteralExpression {
-  ts ??= ensureTypescript();
-
-  if (!newName && !newValue) {
-    throw new Error('newName or newValue must be provided');
-  }
-
-  return ts.factory.updateObjectLiteralExpression(
-    config,
-    config.properties.map((p) =>
-      p === property
-        ? ts.factory.updatePropertyAssignment(
-            p,
-            newName ? ts.factory.createIdentifier(newName) : p.name,
-            newValue ? newValue : p.initializer
-          )
-        : p
-    )
-  );
-}
-
-// Resolves the module specifier that binds the `nxComponentTestingPreset`
-// identifier in a cypress config, covering both ESM `import` and CJS
-// `require` forms. Returns null when no such binding is found.
 export function getComponentTestingPresetImport(
   sourceFile: SourceFile
 ): string | null {
@@ -271,6 +232,7 @@ export function hasLocalValueBinding(
   name: string
 ): boolean {
   ts ??= ensureTypescript();
+  classicTs ??= ensureClassicTypescript('Finding a local binding');
   if (sourceFile.isDeclarationFile) {
     return false;
   }
@@ -318,8 +280,8 @@ export function hasLocalValueBinding(
 
   const visit = (node: Node): boolean => {
     if (
-      ts.canHaveModifiers(node) &&
-      ts
+      classicTs.canHaveModifiers(node) &&
+      classicTs
         .getModifiers(node)
         ?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword)
     ) {
@@ -357,7 +319,7 @@ function isInstantiatedNamespace(node: ModuleDeclaration): boolean {
       ts.isImportDeclaration(statement) ||
       ts.isImportEqualsDeclaration(statement)
     ) {
-      return !!ts
+      return !!classicTs
         .getModifiers(statement)
         ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
     }

@@ -9,8 +9,9 @@ import {
   ExpressionStatement,
   ExportAssignment,
 } from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export default async function update(tree: Tree) {
   if (!tsModule) {

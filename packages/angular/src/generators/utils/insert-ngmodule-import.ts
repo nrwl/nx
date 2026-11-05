@@ -9,8 +9,9 @@ import type {
   SourceFile,
 } from 'typescript';
 import { ensureTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
 
-let tsModule: typeof import('typescript');
+let tsModule: TypescriptAst;
 
 export type ngModuleDecoratorProperty =
   | 'imports'

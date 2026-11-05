@@ -6,6 +6,7 @@ import {
   selectPrompt,
   addBuildTargetDefaults,
   logShowProjectCommand,
+  ModuleResolutionKind,
   type PackageJson,
 } from '@nx/devkit/internal';
 import {
@@ -46,7 +47,6 @@ import {
 } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
 import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
   addTsConfigPath,
@@ -550,10 +550,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       tree,
       join(options.projectRoot, 'tsconfig.lib.json')
     );
-    const ts = ensureTypescript();
     if (
-      tsConfig.options.moduleResolution === ts.ModuleResolutionKind.Node16 ||
-      tsConfig.options.moduleResolution === ts.ModuleResolutionKind.NodeNext
+      tsConfig.options.moduleResolution === ModuleResolutionKind.Node16 ||
+      tsConfig.options.moduleResolution === ModuleResolutionKind.NodeNext
     ) {
       // Node16 and NodeNext require explicit file extensions for relative
       // import paths. Since we generate the file with the `.ts` extension,
