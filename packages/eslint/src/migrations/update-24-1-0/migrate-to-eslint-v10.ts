@@ -284,10 +284,9 @@ function detectRootConfigState(tree: Tree): RootConfigState {
     return { kind: 'flat' };
   }
 
-  // Past the flat check this can only be an eslintrc file, and which one decides
-  // the state has to be the one the generator picks: it reads that file and no
-  // other, so asking about a different one reports a config the generator would
-  // never have opened and skips a conversion that would have gone through.
+  // Past the flat check this can only be an eslintrc file. Check the one the
+  // generator picks by filename precedence. A file the generator does not plan
+  // cannot block the conversion, so reporting it would skip one that goes through.
   const file = findEslintFile(tree);
   if (file === null) {
     return { kind: 'none' };
