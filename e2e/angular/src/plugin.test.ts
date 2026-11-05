@@ -7,6 +7,7 @@ import {
   isVerboseE2ERun,
   logInfo,
   newProject,
+  removeFile,
   runCLI,
   runCommand,
   tmpProjPath,
@@ -144,7 +145,7 @@ function runNgNew(projectName: string, cwd: string): void {
   const packageManager = getSelectedPackageManager();
   const pmc = getPackageManagerCommand({ packageManager });
 
-  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularDevkitVersion} new ${projectName} --package-manager=${packageManager}`;
+  const command = `${pmc.runUninstalledPackage} @angular/cli@${angularDevkitVersion} new ${projectName} --package-manager=${packageManager} --skip-install`;
   const fullCwd = join(tmpProjPath(), cwd);
   ensureDirSync(fullCwd);
   execSync(command, {
@@ -168,6 +169,11 @@ function runNgNew(projectName: string, cwd: string): void {
     updateAngularDependencies(json.devDependencies ?? {});
     return json;
   });
+
+  if (packageManager === 'pnpm') {
+    // Share the root lockfile so the root graph can hash these dependencies.
+    removeFile(join(cwd, projectName, 'pnpm-workspace.yaml'));
+  }
 
   execSync(pmc.install, {
     cwd: join(fullCwd, projectName),
