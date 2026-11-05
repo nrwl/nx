@@ -237,7 +237,6 @@ export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
 
     // Collect the dependencies of the source project
     const dependencies = collectProjectDependencies(
-      tree,
       projectName,
       projectGraph,
       collectedDependencies
@@ -579,7 +578,6 @@ function updateTsConfigReferences(
 // to reference transitive dependencies.
 // Collect the dependencies of a project recursively sorted from root to leaf
 function collectProjectDependencies(
-  tree: Tree,
   projectName: string,
   projectGraph: ProjectGraph,
   collectedDependencies: Map<string, ProjectGraphProjectNode[]>
@@ -613,7 +611,6 @@ function collectProjectDependencies(
 
     // Recursively get the dependencies of the target project
     const transitiveDependencies = collectProjectDependencies(
-      tree,
       dep.target,
       projectGraph,
       collectedDependencies

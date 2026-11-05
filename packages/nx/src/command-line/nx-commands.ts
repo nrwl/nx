@@ -136,9 +136,11 @@ export const commandsObject = yargs
       return;
     }
     const context = (commandsObject as any).getInternalMethods().getContext();
+    // The infix command (`nx <target> [project]`) has no name of its own, and
+    // its target and `_` hold user input, so report it as `run`.
     const command =
       (context.commands ?? []).join(' ') ||
-      (args._ ?? []).slice(0, 1).join(' ');
+      (args.target && args.target !== 'undefined' ? 'run' : '');
     // Internal commands (e.g. `_migrate`) are spawned by their public
     // wrapper, which already reported the run - skip to avoid double counts.
     if (command && !command.startsWith('_')) {

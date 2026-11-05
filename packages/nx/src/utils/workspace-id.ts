@@ -8,9 +8,10 @@ import {
 } from './git-utils';
 
 /**
- * The workspace's analytics identity: the Nx Cloud id when the workspace has
- * one (most stable — it survives repo moves and renames), else the repo key.
- * Null when neither is available, in which case nothing is reported.
+ * The workspace's identity: the Nx Cloud id when the workspace has one (most
+ * stable — it survives repo moves and renames), else the repo key. Null when
+ * neither is available. The Nx Cloud id or access token is returned raw, so
+ * hash it before it leaves the process.
  */
 export function generateWorkspaceId(
   root: string,

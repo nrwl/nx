@@ -153,4 +153,5 @@ export {
   swcNodeVersion,
   tsLibVersion,
   typesNodeVersion,
+  typescriptVersion,
 } from './src/utils/versions';

@@ -17,9 +17,12 @@ export function getCloudOptions(
   return getRunnerOptions('default', nxJson, {}, true);
 }
 
-export function getCloudUrl() {
+export function getCloudUrl(directory = workspaceRoot) {
   return removeTrailingSlash(
-    process.env.NX_CLOUD_API || process.env.NRWL_API || `https://cloud.nx.app`
+    process.env.NX_CLOUD_API ||
+      process.env.NRWL_API ||
+      getCloudOptions(directory).url ||
+      `https://cloud.nx.app`
   );
 }
 

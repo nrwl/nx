@@ -233,20 +233,20 @@ describe('Cypress - Convert Executors To Plugin', () => {
   describe('--project', () => {
     it('should setup a new Cypress plugin and only migrate one specific project', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',
@@ -439,7 +439,7 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
     it('should setup Cypress plugin to match projects', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         e2eTargetName: 'test',
       });
 
@@ -470,7 +470,7 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
     it('should setup handle legacy executor', async () => {
       // ARRANGE
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         e2eTargetName: 'test',
         legacyExecutor: true,
       });
@@ -502,20 +502,20 @@ describe('Cypress - Convert Executors To Plugin', () => {
 
     it('should setup a new Cypress plugin to match only projects migrated', async () => {
       // ARRANGE
-      const existingProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'existing',
         appName: 'existing',
         e2eTargetName: 'e2e',
       });
-      const project = createTestProject(tree, {
+      createTestProject(tree, {
         e2eTargetName: 'test',
       });
-      const secondProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'second',
         appName: 'second',
         e2eTargetName: 'test',
       });
-      const thirdProject = createTestProject(tree, {
+      createTestProject(tree, {
         appRoot: 'third',
         appName: 'third',
         e2eTargetName: 'integration',

@@ -6,7 +6,6 @@ import {
   Tree,
   joinPathFragments,
   updateProjectConfiguration,
-  ProjectConfiguration,
 } from '@nx/devkit';
 import { RspackExecutorSchema } from '../../executors/rspack/schema';
 import { extractRspackOptions } from './lib/extract-rspack-options';

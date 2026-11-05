@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import * as pc from 'picocolors';
 import { selectPrompt } from '../../../../utils/prompt-helpers';
 import { execFileSync, execSync } from 'node:child_process';
@@ -5,6 +6,7 @@ import { openUrl } from '../../../../native';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
 import { orange, output } from '../../../../utils/output';
+import { redactUrlCredentials } from '../../../../utils/redact-url-credentials';
 import { joinPathFragments } from '../../../../utils/path';
 import type { PostGitTask } from '../../changelog';
 import { type ResolvedCreateRemoteReleaseProvider } from '../../config/config';
@@ -44,6 +46,15 @@ interface GithubUserSearchResponse {
   items?: Array<{
     login?: string;
   }>;
+}
+
+// Logins, plus the "_shortcode" suffix of Enterprise Managed Users and "[bot]".
+const GithubUsernameRegex = /^[a-z\d_-]+(?:\[bot\])?$/i;
+
+function toGithubUsername(value: unknown): string | null {
+  return typeof value === 'string' && GithubUsernameRegex.test(value)
+    ? value
+    : null;
 }
 
 export const defaultCreateReleaseProvider: ResolvedCreateRemoteReleaseProvider =
@@ -91,7 +102,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       }
     } catch (error) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.error(error);
+        console.error(redactUrlCredentials(inspect(error)));
       }
       return null;
     }
@@ -129,11 +140,15 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
           (ghCLIConfig[hostname].git_protocol === 'ssh' ||
             ghCLIConfig[hostname].git_protocol === 'https')
         ) {
-          const token = execSync(`gh auth token`, {
-            encoding: 'utf8',
-            stdio: 'pipe',
-            windowsHide: true,
-          }).trim();
+          const token = execFileSync(
+            'gh',
+            ['auth', 'token', '--hostname', hostname],
+            {
+              encoding: 'utf8',
+              stdio: 'pipe',
+              windowsHide: true,
+            }
+          ).trim();
           return { token, headerName: 'Authorization' };
         }
       }
@@ -179,16 +194,18 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
             const match = email.match(
               /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
             );
-            if (match && match[2]) {
-              meta.username = match[2];
+            const usernameFromEmail = toGithubUsername(match?.[2]);
+            if (usernameFromEmail) {
+              meta.username = usernameFromEmail;
               break;
             }
           }
           const { data } = await httpRequest<UnghUserLookupResponse>(
             `https://ungh.cc/users/find/${email}`
           ).catch(() => ({ data: { user: null } }));
-          if (data?.user?.username) {
-            meta.username = data.user.username;
+          const usernameFromUngh = toGithubUsername(data?.user?.username);
+          if (usernameFromUngh) {
+            meta.username = usernameFromUngh;
             break;
           }
           const usernameFromGhCli = this.resolveUsernameFromGhCli(email);
@@ -231,7 +248,7 @@ export class GithubRemoteReleaseClient extends RemoteReleaseClient<GithubRemoteR
       }
 
       const data = JSON.parse(stdout) as GithubUserSearchResponse;
-      return data.items?.[0]?.login ?? null;
+      return toGithubUsername(data.items?.[0]?.login);
     } catch (error) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
         console.error(error);

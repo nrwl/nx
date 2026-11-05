@@ -28,7 +28,7 @@ const runCommand = vi.hoisted(() => vi.fn());
 vi.mock('../../tasks-runner/run-command', () => ({
   runCommand,
   runnerInputsForSelection: async () => ({}),
-  selectTasksForProjects: vi.fn(),
+  selectTasksForProjects: vi.fn(() => ({})),
 }));
 const tasks = vi.hoisted(() => ({
   enabled: false,
@@ -121,5 +121,14 @@ describe('nx affected --explain', () => {
       '--explain needs affected.legacy unset or false in nx.json.'
     );
     expect(runCommand).not.toHaveBeenCalled();
+  });
+
+  // Project selection skips nothing on Ultracache's account, which Nx Cloud
+  // must be able to tell from an Nx too old to report.
+  it('reports nothing skipped by Ultracache when projects are selected', async () => {
+    await expect(run({ targets: ['build'], all: true })).rejects.toThrow(
+      'exit'
+    );
+    expect(runCommand.mock.calls[0][0].ultracacheSkippedTaskIds).toEqual([]);
   });
 });

@@ -65,7 +65,7 @@
     "@clack/prompts": "catalog:",
     "figures": "3.2.0",
     "ignore": "^7.0.5",
-    "@jest/diff-sequences": "30.0.1",
+    "@jest/diff-sequences": "30.3.0",
     "jsonc-parser": "catalog:",
     "lines-and-columns": "2.0.3",
     "minimatch": "catalog:",

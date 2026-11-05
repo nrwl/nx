@@ -1,11 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import {
-  GeneratorsJson,
-  readJson,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
