@@ -13,6 +13,9 @@ import {
   workspaceDataDirectory,
   applyTestFileDirectives,
   quoteShellArg,
+  readConfigToTargetName,
+  assertUniqueConfigTargetNames,
+  type ConfigFileTargets,
 } from '@nx/devkit/internal';
 import {
   CreateNodesContext,
@@ -47,6 +50,7 @@ import {
   type RawTsconfigJsonCache,
 } from '@nx/js/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
+import { jestConfigFileNamePatterns } from '../utils/config/config-file';
 import { createRequire } from 'node:module';
 
 // Node passes a stand-in require, without a cache, require.extensions or
@@ -80,6 +84,12 @@ export interface JestPluginOptions {
    * @default true when disableJestRuntime is false, false otherwise
    */
   useJestResolver?: boolean;
+  /**
+   * Maps a config file name in a project root to the name of the target that
+   * runs it, e.g. `{ "jest.config.e2e.ts": "e2e" }`. Names must match
+   * `jest.config*.{cjs,mjs,js,cts,mts,ts}`.
+   */
+  configToTargetName?: Record<string, string>;
 }
 
 type IsolatedModulesResult = {
@@ -89,7 +99,7 @@ type IsolatedModulesResult = {
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
+const jestConfigGlob = '**/jest.config*.{cjs,mjs,js,cts,mts,ts}';
 
 export const createNodes: CreateNodes<JestPluginOptions> = [
   jestConfigGlob,
@@ -110,35 +120,45 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
     );
 
     options = normalizeOptions(options);
+    const configTargetNames = readConfigToTargetName(
+      '@nx/jest/plugin',
+      options.configToTargetName,
+      jestConfigFileNamePatterns
+    );
 
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
 
-    const { roots: projectRoots, configFiles: validConfigFiles } =
-      configFiles.reduce(
-        (acc, configFile) => {
-          const potentialRoot = dirname(configFile);
-          if (
-            checkIfConfigFileShouldBeProject(
-              configFile,
-              potentialRoot,
-              isInPackageManagerWorkspaces,
-              context
-            )
-          ) {
-            acc.roots.push(potentialRoot);
-            acc.configFiles.push(configFile);
-          }
-          return acc;
-        },
-        {
-          roots: [],
-          configFiles: [],
-        } as {
-          roots: string[];
-          configFiles: string[];
-        }
+    const projectRoots: string[] = [];
+    const validConfigFiles: string[] = [];
+    const configFileTargets: JestConfigFileTargets[] = [];
+    const configFileTargetsByRoot = new Map<string, JestConfigFileTargets[]>();
+    for (const configFile of configFiles) {
+      const fileTargets = getConfigFileTargets(
+        configFile,
+        options,
+        configTargetNames
       );
+      const potentialRoot = dirname(configFile);
+      if (
+        !fileTargets ||
+        !checkIfConfigFileShouldBeProject(
+          configFile,
+          potentialRoot,
+          isInPackageManagerWorkspaces,
+          context
+        )
+      ) {
+        continue;
+      }
+      projectRoots.push(potentialRoot);
+      validConfigFiles.push(configFile);
+      configFileTargets.push(fileTargets);
+      if (!configFileTargetsByRoot.has(potentialRoot)) {
+        configFileTargetsByRoot.set(potentialRoot, []);
+      }
+      configFileTargetsByRoot.get(potentialRoot).push(fileTargets);
+    }
 
     const lockFilePattern = getLockFileName(packageManager);
 
@@ -203,9 +223,17 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     try {
       return await createNodesFromFiles(
-        async (configFilePath, options, context, idx) => {
+        async (configFilePath, _, context, idx) => {
           const projectRoot = projectRoots[idx];
-          const hash = hashes[idx];
+          const fileTargets = configFileTargets[idx];
+          assertUniqueConfigTargetNames(
+            '@nx/jest/plugin',
+            projectRoot,
+            fileTargets,
+            configFileTargetsByRoot.get(projectRoot)
+          );
+          // Config files in one root share the root's hash
+          const hash = hashes[idx] + configFilePath;
           const loadedConfig = loadedConfigs[idx];
           if ('error' in loadedConfig) {
             throw loadedConfig.error;
@@ -220,7 +248,8 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
                 needsDtsInputs,
                 configFilePath,
                 projectRoot,
-                options,
+                fileTargets.options,
+                fileTargets.jestCommand,
                 context,
                 presetCache,
                 pmc
@@ -251,6 +280,46 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 ];
 
 export const createNodesV2 = createNodes;
+
+interface JestConfigFileTargets extends ConfigFileTargets {
+  options: JestPluginOptions;
+  jestCommand: string;
+}
+
+/** The targets a config file infers, or undefined when it infers none. */
+function getConfigFileTargets(
+  configFile: string,
+  options: JestPluginOptions,
+  configTargetNames: Map<string, string>
+): JestConfigFileTargets | undefined {
+  const fileName = posix.basename(configFile);
+  if (jestConfigFileNamePatterns.defaultName.test(fileName)) {
+    return {
+      configFile,
+      isDefault: true,
+      targetNames: [options.targetName, options.ciTargetName].filter(Boolean),
+      options,
+      jestCommand: 'jest',
+    };
+  }
+  const targetName = configTargetNames.get(fileName);
+  if (!targetName) {
+    return undefined;
+  }
+  const ciTargetName = options.ciTargetName ? `${targetName}-ci` : undefined;
+  return {
+    configFile,
+    isDefault: false,
+    targetNames: [targetName, ciTargetName].filter(Boolean),
+    options: {
+      ...options,
+      targetName,
+      ciTargetName,
+      ciGroupName: undefined,
+    },
+    jestCommand: `jest --config ${quoteShellArg(fileName)}`,
+  };
+}
 
 function buildPackageJsonWorkspacesMatcher(
   workspaceRoot: string
@@ -311,6 +380,7 @@ async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
+  jestCommand: string,
   context: CreateNodesContext,
   presetCache: Record<string, unknown>,
   pmc: ReturnType<typeof getPackageManagerCommand>
@@ -331,7 +401,7 @@ async function buildJestTargets(
   };
 
   const target: TargetConfiguration = (targets[options.targetName] = {
-    command: 'jest',
+    command: jestCommand,
     options: {
       cwd: projectRoot,
       // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
@@ -442,7 +512,7 @@ async function buildJestTargets(
 
         targets[targetName] = applyTestFileDirectives(
           {
-            command: `jest --runTestsByPath ${quoteShellArg(relativePath)}`,
+            command: `${jestCommand} --runTestsByPath ${quoteShellArg(relativePath)}`,
             cache,
             inputs,
             outputs,
@@ -592,7 +662,7 @@ async function buildJestTargets(
           });
           targets[targetName] = applyTestFileDirectives(
             {
-              command: `jest --runTestsByPath ${quoteShellArg(relativePath)}`,
+              command: `${jestCommand} --runTestsByPath ${quoteShellArg(relativePath)}`,
               cache,
               inputs,
               outputs,

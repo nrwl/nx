@@ -28,7 +28,8 @@ export interface UninferredTargetRewrite {
   isInferred(
     tree: Tree,
     target: TargetConfiguration,
-    project: ProjectConfiguration
+    project: ProjectConfiguration,
+    targetName: string
   ): boolean;
   /** Throws when the target has no equivalent command. */
   toRunCommandsTarget(
@@ -98,7 +99,7 @@ function rewriteUninferredTargets(
           project,
           `${projectName}:${targetName}`
         );
-        if (rewrite.isInferred(tree, resolved, project)) {
+        if (rewrite.isInferred(tree, resolved, project, targetName)) {
           continue;
         }
         uninferred = true;
@@ -132,6 +133,34 @@ function rewriteUninferredTargets(
     }
   }
   return { heldBack: heldBackByProject, rewritten };
+}
+
+/**
+ * The project's target merged with the target defaults its executor receives,
+ * with Nx tokens resolved.
+ */
+export function readResolvedTarget(
+  tree: Tree,
+  projectName: string,
+  targetName: string
+): TargetConfiguration {
+  const project = readProjectConfiguration(tree, projectName);
+  const target = project.targets[targetName];
+  const defaults = readTargetDefaultsForTarget(
+    targetName,
+    readNxJson(tree)?.targetDefaults,
+    target.executor,
+    {
+      projectName,
+      projectNode: { name: projectName, type: 'lib', data: project },
+    }
+  );
+  return resolveTarget(
+    target,
+    defaults,
+    project,
+    `${projectName}:${targetName}`
+  );
 }
 
 function restoreTargets(tree: Tree, targetsByProject: TargetsByProject) {

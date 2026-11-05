@@ -4,6 +4,7 @@ import {
   resolveNxTokensInOptions,
 } from '@nx/devkit/internal';
 import { posix } from 'node:path';
+import { vitestConfigFileNamePatterns } from '../../../utils/config-file-names';
 import { toProjectRelativePath } from './utils';
 
 export function testPostTargetTransformer(
@@ -12,14 +13,24 @@ export function testPostTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ) {
+  const mappedConfigFile = toMappedConfigFile(target.options?.configFile);
+
   if (target.options) {
-    removePropertiesFromTargetOptions(target.options, projectDetails);
+    removePropertiesFromTargetOptions(
+      target.options,
+      projectDetails,
+      mappedConfigFile
+    );
   }
 
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      removePropertiesFromTargetOptions(configuration, projectDetails);
+      removePropertiesFromTargetOptions(
+        configuration,
+        projectDetails,
+        mappedConfigFile
+      );
     }
 
     if (Object.keys(target.configurations).length === 0) {
@@ -61,10 +72,17 @@ export function testPostTargetTransformer(
 
 function removePropertiesFromTargetOptions(
   targetOptions: any,
-  projectDetails: { projectName: string; root: string }
+  projectDetails: { projectName: string; root: string },
+  mappedConfigFile: string | undefined
 ) {
   const projectRoot = projectDetails.root;
-  if ('configFile' in targetOptions) {
+  if (
+    mappedConfigFile &&
+    'configFile' in targetOptions &&
+    posix.normalize(targetOptions.configFile) === mappedConfigFile
+  ) {
+    delete targetOptions.configFile;
+  } else if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(
       targetOptions.configFile,
       projectRoot
@@ -110,6 +128,18 @@ function removePropertiesFromTargetOptions(
       delete targetOptions[name];
     }
   }
+}
+
+// A configFile with another name reaches the converter only when
+// configToTargetName infers it, and the inferred command already passes it
+function toMappedConfigFile(configFile: unknown): string | undefined {
+  if (typeof configFile !== 'string') {
+    return undefined;
+  }
+  const path = posix.normalize(configFile);
+  return vitestConfigFileNamePatterns.defaultName.test(posix.basename(path))
+    ? undefined
+    : path;
 }
 
 // Vitest resolves a relative filter against the cwd, which is now the project

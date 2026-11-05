@@ -1,4 +1,5 @@
 import { readJson, type Tree } from '@nx/devkit';
+import type { ConfigFileNamePatterns } from '@nx/devkit/internal';
 
 export const jestConfigExtensions = [
   'js',
@@ -9,6 +10,12 @@ export const jestConfigExtensions = [
   'cts',
 ] as const;
 export type JestConfigExtension = (typeof jestConfigExtensions)[number];
+
+export const jestConfigFileNamePatterns: ConfigFileNamePatterns = {
+  defaultName: /^jest\.config\.(cjs|mjs|js|cts|mts|ts)$/,
+  mappableName: /^jest\.config.*\.(cjs|mjs|js|cts|mts|ts)$/,
+  mappableGlob: 'jest.config*.{cjs,mjs,js,cts,mts,ts}',
+};
 
 export const jestPresetExtensions = ['js', 'cjs', 'mjs'] as const;
 export type JestPresetExtension = (typeof jestPresetExtensions)[number];

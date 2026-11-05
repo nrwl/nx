@@ -6,7 +6,9 @@ The executor ran Vitest once unless you passed `--watch`, so the migration regis
 
 The executor's `testFiles` option becomes `args`, a list of file filters relative to the project root, and `coverage` becomes `coverage.enabled`. On the command line, pass file filters as positional arguments instead of `--testFiles`, and pass `--coverage.reportsDirectory` instead of `--reportsDirectory`. Pass `--coverage.enabled` instead of `--coverage`, because `--coverage` replaces the whole `coverage` object, including `reportsDirectory`.
 
-The plugin only infers a target from `vite.config.<ext>` or `vitest.config.<ext>` in the project root. A target that runs any other config file, such as `vitest.config.e2e.mts`, becomes an `nx:run-commands` target that runs `vitest run --root <project root> --config <file>` from the workspace root, as the executor did. It keeps the options, configurations and target defaults it used. Running `nx g @nx/vitest:convert-to-inferred` by hand applies the same rewrite.
+The plugin infers a target from `vite.config.<ext>` or `vitest.config.<ext>` in the project root. A target that runs another config file in its project root named `vite.config*.<ext>` or `vitest.config*.<ext>`, such as `vitest.config.e2e.mts`, keeps its name and becomes inferred, because the migration maps the file to the target in the plugin's `configToTargetName` option. That needs the file to exist and no configuration to switch it to another config file. A target named `test` qualifies only when the project has no default config file. Only the first target on a file gets the mapping.
+
+Any other target on a config file other than the defaults, such as one outside the project root, becomes an `nx:run-commands` target that runs `vitest run --root <project root> --config <file>` from the workspace root, as the executor did. It keeps the options, configurations and target defaults it used. Running `nx g @nx/vitest:convert-to-inferred` by hand applies the same rewrite.
 
 The rewrite accepts only these options, in the target and in each configuration:
 
