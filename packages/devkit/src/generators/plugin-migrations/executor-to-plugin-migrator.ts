@@ -1729,24 +1729,29 @@ export async function inferOncePerOptionSet<T>(
  * the file.
  */
 function isFileOwnedByAnyRoot(file: string, roots: Set<string>): boolean {
+  return findOwningRoot(file, roots) !== undefined;
+}
+
+/** The innermost root in `roots` that owns `file`, per `isFileOwnedByAnyRoot`. */
+function findOwningRoot(file: string, roots: Set<string>): string | undefined {
   if (roots.has(file)) {
-    return true;
+    return file;
   }
   const firstSlash = file.indexOf('/');
   if (firstSlash === -1) {
     // A workspace-root-level file is owned only by the root project.
-    return roots.has('.');
+    return roots.has('.') ? '.' : undefined;
   }
   let dir = file;
   let slash = dir.lastIndexOf('/');
   while (slash !== -1) {
     dir = dir.slice(0, slash);
     if (roots.has(dir)) {
-      return true;
+      return dir;
     }
     slash = dir.lastIndexOf('/');
   }
-  return false;
+  return undefined;
 }
 
 // Minimatch metacharacters plus extglob prefix operators (`!+@()`). A path
@@ -1790,15 +1795,15 @@ export function generatedIncludeRoots(
 }
 
 /**
- * Whether a registration's `include` globs already cover every config file the
- * plugin globs that is owned by an inferred project root (so the registration
- * can be left unscoped). Plugin inference is a pure function of the matched
- * config-file set, so this answers what the old per-project
- * `arePluginIncludesRequired` re-inference computed without running any
- * additional inference, differing only on matched files that contribute no
- * project: those are invisible here, so an `include` the old diff-based check
- * kept for their sake is now deleted, letting future config files in such
- * locations infer eagerly. The Phase 4 verification pass guards the current
+ * The config files a registration's `include` globs leave out. When none are
+ * left out, every config file the plugin globs that is owned by an inferred
+ * project root is covered, so the registration can be left unscoped. Plugin
+ * inference is a pure function of the matched config-file set, so this answers
+ * what the old per-project `arePluginIncludesRequired` re-inference computed
+ * without running any additional inference, differing only on matched files
+ * that contribute no project: those are invisible here, so an `include` the old
+ * diff-based check kept for their sake is now deleted, letting future config
+ * files in such locations infer eagerly. The Phase 4 verification pass guards the current
  * behavioral outcome either way.
  *
  * Every glob this generator emits scopes to a single root (`*` for the root
@@ -1807,19 +1812,19 @@ export function generatedIncludeRoots(
  * running minimatch (whose `#matchGlobstar`/`slashSplit` dominate at scale) per
  * (file, glob). Only user-authored includes or any `exclude` fall through.
  */
-function includeCoversAllConfigFiles(
+function configFilesOutsideInclude(
   include: string[] | undefined,
   exclude: string[] | undefined,
   configFiles: string[]
-): boolean {
+): string[] {
   if (!include || include.length === 0) {
-    return true;
+    return [];
   }
   if (!exclude || exclude.length === 0) {
     const includeRoots = generatedIncludeRoots(include);
     if (includeRoots) {
-      return configFiles.every((file) =>
-        isFileOwnedByAnyRoot(file, includeRoots)
+      return configFiles.filter(
+        (file) => !isFileOwnedByAnyRoot(file, includeRoots)
       );
     }
   }
@@ -1831,10 +1836,10 @@ function includeCoversAllConfigFiles(
   // so the fenced-off configs get inferred (and executed). `findMatchingConfigFiles`
   // applies include/exclude with Nx's exact ordered semantics, so coverage holds
   // only when every config file survives the same filter Nx would run.
-  return (
-    findMatchingConfigFiles(configFiles, include, exclude ?? []).length ===
-    configFiles.length
+  const covered = new Set(
+    findMatchingConfigFiles(configFiles, include, exclude ?? [])
   );
+  return configFiles.filter((file) => !covered.has(file));
 }
 
 /** One harvested verification error, attributable to a plugin registration. */
@@ -2624,18 +2629,44 @@ function addPluginRegistrations<T>(
     }
   }
   const nonMigratedProjectRoots = new Set(nonMigratedNodesByRoot.keys());
-  const nonMigratedProjectConfigFiles = rawMatchedConfigFiles.filter((file) =>
-    isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)
-  );
 
   // Fold errored files (broken configs the plugin would fail to infer) and
   // non-migrated project configs (roots the plugin would infer workspace-wide)
   // into the coverage set: an unscoped `include` is chosen only when neither lies
-  // outside the migrated roots.
+  // outside the migrated roots. Each file records why it keeps an `include`, as
+  // the project root or config file the warning names.
+  const keptIncludeReasons: KeptIncludeReasons = {
+    notMigrated: new Map(),
+    otherOptions: new Map(),
+    errored: new Map(),
+  };
+  const projectRoots = new Set([...migratedRoots, ...nonMigratedProjectRoots]);
+  const recordProjectConfigFile = (file: string) => {
+    const root = findOwningRoot(file, projectRoots);
+    if (root !== undefined && migratedRoots.has(root)) {
+      keptIncludeReasons.otherOptions.set(file, root);
+    } else {
+      keptIncludeReasons.notMigrated.set(file, root ?? file);
+    }
+  };
+  for (const file of matchedConfigFiles) {
+    recordProjectConfigFile(file);
+  }
+  for (const file of rawMatchedConfigFiles) {
+    if (isFileOwnedByAnyRoot(file, nonMigratedProjectRoots)) {
+      recordProjectConfigFile(file);
+    }
+  }
+  for (const file of erroredConfigFiles) {
+    keptIncludeReasons.notMigrated.delete(file);
+    keptIncludeReasons.errored.set(file, file);
+  }
   const coverageConfigFiles = [
-    ...matchedConfigFiles,
-    ...erroredConfigFiles,
-    ...nonMigratedProjectConfigFiles,
+    ...new Set([
+      ...keptIncludeReasons.notMigrated.keys(),
+      ...keptIncludeReasons.otherOptions.keys(),
+      ...keptIncludeReasons.errored.keys(),
+    ]),
   ];
 
   const ownerRootByPath = buildOwnerRootByPath(
@@ -2862,14 +2893,17 @@ function addPluginRegistrations<T>(
       };
       const fencedRoots = fenceRegistration(plugin, null, group, false);
 
-      if (
-        includeCoversAllConfigFiles(
-          plugin.include,
-          plugin.exclude,
-          coverageOutside(fencedRoots)
-        )
-      ) {
+      const uncovered = configFilesOutsideInclude(
+        plugin.include,
+        plugin.exclude,
+        coverageOutside(fencedRoots)
+      );
+      if (uncovered.length === 0) {
         delete plugin.include;
+      } else {
+        logger.warn(
+          keptIncludeWarning(pluginPath, uncovered, keptIncludeReasons)
+        );
       }
 
       nxJson.plugins.push(plugin);
@@ -2897,15 +2931,17 @@ function addPluginRegistrations<T>(
           .some((plugin) => !isRegistrationOfPlugin(plugin, pluginPath))
       );
 
-      if (
-        existingPlugin.include &&
-        includeCoversAllConfigFiles(
-          existingPlugin.include,
-          existingPlugin.exclude,
-          coverageOutside(fencedRoots)
-        )
-      ) {
+      const uncovered = configFilesOutsideInclude(
+        existingPlugin.include,
+        existingPlugin.exclude,
+        coverageOutside(fencedRoots)
+      );
+      if (uncovered.length === 0) {
         delete existingPlugin.include;
+      } else {
+        logger.warn(
+          keptIncludeWarning(pluginPath, uncovered, keptIncludeReasons)
+        );
       }
     }
   }
@@ -2991,6 +3027,57 @@ function treeAuthorsTargetIdentity(
   }
   const source = packageJsonAuthorsTargetIdentity(tree, root, targetName);
   return source === 'script' || source === 'nxTargets';
+}
+
+/** Config file -> the project root or config file a kept-include warning names. */
+interface KeptIncludeReasons {
+  notMigrated: Map<string, string>;
+  otherOptions: Map<string, string>;
+  errored: Map<string, string>;
+}
+
+const KEPT_INCLUDE_LIST_LIMIT = 5;
+
+function keptIncludeWarning(
+  pluginPath: string,
+  uncoveredConfigFiles: string[],
+  reasons: KeptIncludeReasons
+): string {
+  const list = (labelsByFile: Map<string, string>) => {
+    const labels = [
+      ...new Set(
+        uncoveredConfigFiles
+          .filter((file) => labelsByFile.has(file))
+          .map((file) => labelsByFile.get(file))
+      ),
+    ];
+    const shown = labels.slice(0, KEPT_INCLUDE_LIST_LIMIT).join(', ');
+    return labels.length > KEPT_INCLUDE_LIST_LIMIT
+      ? `${shown} and ${labels.length - KEPT_INCLUDE_LIST_LIMIT} more`
+      : shown;
+  };
+  const lines: string[] = [];
+  const notMigrated = list(reasons.notMigrated);
+  if (notMigrated) {
+    lines.push(
+      `projects that were not migrated: ${notMigrated}. Migrate them too to drop the "include".`
+    );
+  }
+  const errored = list(reasons.errored);
+  if (errored) {
+    lines.push(
+      `config files the plugin fails to load: ${errored}. Fix them to drop the "include".`
+    );
+  }
+  const otherOptions = list(reasons.otherOptions);
+  if (otherOptions) {
+    lines.push(
+      `projects migrated with different plugin options, which have their own registration: ${otherOptions}. Give them the same plugin options to share one registration.`
+    );
+  }
+  return `convert-to-inferred kept an explicit "include" list on the ${pluginPath} registration in nx.json. Without it, the plugin would also apply to:\n${lines
+    .map((line) => `  - ${line}`)
+    .join('\n')}`;
 }
 
 interface CreateNodesFileError {

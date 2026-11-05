@@ -362,7 +362,14 @@ describe('executor-to-plugin-migrator benchmark (synthetic ~600 projects)', () =
       options: { mode: 'production' },
     });
     expect(warnLint).not.toHaveBeenCalled();
-    expect(warnTest).not.toHaveBeenCalled();
+    // the `test` and `unit` registrations each keep an include for the other
+    expect(warnTest).toHaveBeenCalledTimes(2);
+    for (const [message] of warnTest.mock.calls) {
+      expect(message).toContain(
+        `kept an explicit "include" list on the ${TEST_PLUGIN_PATH} registration`
+      );
+      expect(message).toContain('different plugin options');
+    }
     expect(warnE2e).not.toHaveBeenCalled();
     expect(warnFinalize).not.toHaveBeenCalled();
 
