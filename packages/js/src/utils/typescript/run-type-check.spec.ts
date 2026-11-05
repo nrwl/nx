@@ -1,9 +1,9 @@
 import { getTypescriptBackend } from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
-import { dirname, join } from 'path';
-import { runTypeCheck } from './run-type-check';
+import { dirname, join, relative } from 'path';
+import { runTypeCheck, runTypeCheckWatch } from './run-type-check';
 
 // Real installs: the repo's `typescript` is TS 6, and 7.1 is aliased.
 const typescriptInstalls = [
@@ -227,6 +227,115 @@ describe.each(typescriptInstalls)(
 
       expect(existsSync(join(projectRoot, 'dist/valid-source.d.ts'))).toBe(
         true
+      );
+    });
+
+    it('should report watch statuses and rebuild declarations when a file changes', async () => {
+      const outDir = join(workspaceRoot, 'dist');
+      await fs.createFiles({
+        'proj/source.ts': `export const value: number = 'one';`,
+      });
+      const statuses: [number, string, number | undefined][] = [];
+      let stdout = '';
+      const write = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation((chunk) => {
+          stdout += chunk;
+          return true;
+        });
+      let watch: Awaited<ReturnType<typeof runTypeCheckWatch>>;
+      try {
+        watch = await runTypeCheckWatch(
+          {
+            workspaceRoot,
+            tsConfigPath,
+            mode: 'emitDeclarationOnly',
+            outDir,
+            rootDir: projectRoot,
+          },
+          (diagnostic, formattedDiagnostic, errorCount) => {
+            statuses.push([
+              diagnostic.code,
+              stripVTControlCharacters(formattedDiagnostic),
+              errorCount,
+            ]);
+          }
+        );
+        expect(watch.preEmitErrors.map((e) => stripVTControlCharacters(e)))
+          .toMatchInlineSnapshot(`
+          [
+            "proj/source.ts:1:14 - error TS2322: Type 'string' is not assignable to type 'number'.
+
+          > 1 | export const value: number = 'one';
+              |              ^",
+          ]
+        `);
+
+        // On macOS, fs.watch misses a change made right after it starts.
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        writeFileSync(
+          join(projectRoot, 'source.ts'),
+          `export const value = 1;`
+        );
+        await vi.waitFor(() => expect(statuses).toHaveLength(4), {
+          timeout: 10_000,
+          interval: 50,
+        });
+      } finally {
+        watch?.close();
+        write.mockRestore();
+      }
+
+      expect(statuses).toMatchInlineSnapshot(`
+        [
+          [
+            6031,
+            "info: Starting compilation in watch mode...
+        ",
+            undefined,
+          ],
+          [
+            6193,
+            "info: Found 1 error. Watching for file changes.
+        ",
+            1,
+          ],
+          [
+            6032,
+            "info: File change detected. Starting incremental compilation...
+        ",
+            undefined,
+          ],
+          [
+            6194,
+            "info: Found 0 errors. Watching for file changes.
+        ",
+            0,
+          ],
+        ]
+      `);
+      expect(
+        stdout
+          .replaceAll('\x1B[2J\x1B[3J\x1B[H', '<clear screen>')
+          .replaceAll(
+            relative(process.cwd(), join(projectRoot, 'source.ts')),
+            '<source.ts>'
+          )
+          .replace(/\d{1,2}:\d{2}:\d{2}(?:\s[AP]M)?/g, '<time>')
+      ).toMatchInlineSnapshot(`
+        "<clear screen><time> - Starting compilation in watch mode...
+
+        <source.ts>(1,14): error TS2322: Type 'string' is not assignable to type 'number'.
+
+        <time> - Found 1 error. Watching for file changes.
+        <clear screen><time> - File change detected. Starting incremental compilation...
+
+
+        <time> - Found 0 errors. Watching for file changes.
+        "
+      `);
+      expect(readFileSync(join(outDir, 'source.d.ts'), 'utf-8')).toMatch(
+        'export declare const value = 1;'
       );
     });
   }

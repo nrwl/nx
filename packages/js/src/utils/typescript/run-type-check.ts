@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
+import { readFileSync, watch, type FSWatcher } from 'fs';
+import { EOL } from 'os';
 import * as path from 'path';
 import type {
   BuilderProgram,
@@ -14,6 +15,7 @@ import type {
 } from 'typescript/sync';
 import { highlight } from '../code-frames/highlight';
 import { readTsConfig } from '../../utils/typescript/ts-config';
+import { isFileSystemCaseSensitive } from './file-system-case';
 import {
   codeFrameColumns,
   getTypescriptBackend,
@@ -52,15 +54,40 @@ interface EmitDeclarationOnlyMode {
   outDir: string;
 }
 
+type TypeCheckWatchCallback = (
+  diagnostic: Diagnostic,
+  formattedDiagnostic: string,
+  errorCount?: number
+) => void | Promise<void>;
+
+interface TypeCheckWatch {
+  close: () => void;
+  preEmitErrors: string[];
+  preEmitWarnings: string[];
+}
+
 export async function runTypeCheckWatch(
   options: TypeCheckOptions,
-  callback: (
-    diagnostic: Diagnostic,
-    formattedDiagnostic: string,
-    errorCount?: number
-  ) => void | Promise<void>
-) {
-  const ts = await import('typescript');
+  callback: TypeCheckWatchCallback
+): Promise<TypeCheckWatch> {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return runClassicTypeCheckWatch(backend.ts, options, callback);
+    case 'api':
+      return runApiTypeCheckWatch(backend, options, callback);
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+function runClassicTypeCheckWatch(
+  ts: typeof import('typescript'),
+  options: TypeCheckOptions,
+  callback: TypeCheckWatchCallback
+): TypeCheckWatch {
   const { workspaceRoot } = options;
   const { config, compilerOptions } = readTypeCheckConfig(options);
 
@@ -96,6 +123,234 @@ export async function runTypeCheckWatch(
       .filter((d) => d.category === ts.DiagnosticCategory.Warning)
       .map((d) => getFormattedDiagnostic(ts, workspaceRoot, d)),
   };
+}
+
+// TypeScript 6's watch status messages. TypeScript 7.1's API has no watch mode.
+const watchStatusMessages = {
+  starting: { code: 6031, text: 'Starting compilation in watch mode...' },
+  fileChange: {
+    code: 6032,
+    text: 'File change detected. Starting incremental compilation...',
+  },
+} as const;
+
+// TypeScript 6 waits this long after the last file change to rebuild.
+const watchUpdateDelay = 250;
+
+// Reproduces TypeScript 6's watch program with its default reporters: a fresh
+// program per file change, built from the same root files and options.
+function runApiTypeCheckWatch(
+  backend: ApiTypescriptBackend,
+  options: TypeCheckOptions,
+  callback: TypeCheckWatchCallback
+): TypeCheckWatch {
+  const { workspaceRoot } = options;
+  const { config, compilerOptions } = readTypeCheckConfig(options);
+  const apiCompilerOptions = getApiCompilerOptions(compilerOptions);
+  const { DiagnosticCategory, formatDiagnostics } = backend.sync;
+  const useCaseSensitiveFileNames = isFileSystemCaseSensitive();
+  const formatHost = {
+    getCurrentDirectory: () => process.cwd(),
+    getNewLine: () => EOL,
+    getCanonicalFileName: (fileName: string) =>
+      useCaseSensitiveFileNames ? fileName : fileName.toLowerCase(),
+  };
+
+  const watchers = new Map<string, FSWatcher>();
+  let updateTimer: NodeJS.Timeout | undefined;
+  let closed = false;
+
+  const reportStatus = (code: number, text: string, errorCount?: number) => {
+    writeWatchStatus(code, text, compilerOptions);
+    const diagnostic: ApiDiagnostic = {
+      code,
+      category: DiagnosticCategory.Message,
+      text,
+      pos: 0,
+      end: 0,
+    };
+    // The callback gets TypeScript 7.1's diagnostic shape under TypeScript 6's
+    // public type.
+    callback(
+      diagnostic as unknown as Diagnostic,
+      getFormattedApiDiagnostic(backend, workspaceRoot, diagnostic),
+      errorCount
+    );
+  };
+
+  const scheduleUpdate = () => {
+    clearTimeout(updateTimer);
+    updateTimer = setTimeout(() => {
+      updateTimer = undefined;
+      if (!closed) {
+        update(watchStatusMessages.fileChange);
+      }
+    }, watchUpdateDelay);
+  };
+
+  const watchProgramFiles = (fileNames: readonly string[]) => {
+    const current = new Set(fileNames);
+    for (const [fileName, watcher] of watchers) {
+      if (!current.has(fileName)) {
+        watcher.close();
+        watchers.delete(fileName);
+      }
+    }
+    for (const fileName of fileNames) {
+      if (watchers.has(fileName)) {
+        continue;
+      }
+      let watcher: FSWatcher;
+      try {
+        watcher = watch(fileName, (event) => {
+          // A file replaced by a rename (editors' atomic saves) ends its
+          // watcher; the update watches the new file.
+          if (event === 'rename') {
+            watcher.close();
+            watchers.delete(fileName);
+          }
+          scheduleUpdate();
+        });
+      } catch (e) {
+        // Deleted since the program read it; the next update drops it.
+        if (e?.code === 'ENOENT') {
+          scheduleUpdate();
+          continue;
+        }
+        throw e;
+      }
+      watcher.on('error', () => {
+        watcher.close();
+        watchers.delete(fileName);
+        scheduleUpdate();
+      });
+      watchers.set(fileName, watcher);
+    }
+  };
+
+  const update = (
+    status: (typeof watchStatusMessages)[keyof typeof watchStatusMessages]
+  ) =>
+    withTypescriptApi(backend, (api) => {
+      reportStatus(status.code, status.text);
+      const snapshot = api.createSnapshot({
+        createPrograms: [
+          { rootFiles: config.fileNames, compilerOptions: apiCompilerOptions },
+        ],
+      });
+      try {
+        const [program] = snapshot.operation.createdPrograms;
+        const diagnostics = emitAndGetWatchDiagnostics(
+          program,
+          compilerOptions
+        );
+        for (const diagnostic of diagnostics) {
+          process.stdout.write(formatDiagnostics([diagnostic], formatHost));
+        }
+        const errorCount = diagnostics.filter(
+          (d) => d.category === DiagnosticCategory.Error
+        ).length;
+        reportStatus(
+          errorCount === 1 ? 6193 : 6194,
+          errorCount === 1
+            ? 'Found 1 error. Watching for file changes.'
+            : `Found ${errorCount} errors. Watching for file changes.`,
+          errorCount
+        );
+        watchProgramFiles(program.getSourceFileNames());
+
+        return status === watchStatusMessages.starting &&
+          !options.ignoreDiagnostics
+          ? getApiPreEmitDiagnostics(program, compilerOptions)
+          : [];
+      } finally {
+        snapshot.dispose();
+      }
+    });
+
+  const close = () => {
+    closed = true;
+    clearTimeout(updateTimer);
+    for (const watcher of watchers.values()) {
+      watcher.close();
+    }
+    watchers.clear();
+  };
+
+  let diagnostics: ApiDiagnostic[];
+  try {
+    diagnostics = update(watchStatusMessages.starting);
+  } catch (e) {
+    close();
+    throw e;
+  }
+  const format = (diagnostic: ApiDiagnostic) =>
+    getFormattedApiDiagnostic(backend, workspaceRoot, diagnostic);
+
+  return {
+    close,
+    preEmitErrors: diagnostics
+      .filter((d) => d.category === DiagnosticCategory.Error)
+      .map(format),
+    preEmitWarnings: diagnostics
+      .filter((d) => d.category === DiagnosticCategory.Warning)
+      .map(format),
+  };
+}
+
+// TypeScript 6's default, non-pretty watch status reporter.
+function writeWatchStatus(
+  code: number,
+  text: string,
+  compilerOptions: CompilerOptions
+) {
+  const newLine = compilerOptions.newLine === 0 ? '\r\n' : '\n';
+  const startsScreen =
+    code === watchStatusMessages.starting.code ||
+    code === watchStatusMessages.fileChange.code;
+  let output = '';
+  if (
+    startsScreen &&
+    !compilerOptions.preserveWatchOutput &&
+    !compilerOptions.extendedDiagnostics &&
+    !compilerOptions.diagnostics
+  ) {
+    process.stdout.write('\x1B[2J\x1B[3J\x1B[H');
+  } else {
+    output += newLine;
+  }
+  output += `${new Date().toLocaleTimeString()} - ${text}`;
+  output += startsScreen ? newLine + newLine : newLine;
+  process.stdout.write(output);
+}
+
+// Mirrors TypeScript 6's `emitFilesAndReportErrors`: semantic diagnostics only
+// when there are no syntactic, option or global ones.
+function emitAndGetWatchDiagnostics(
+  program: ApiProgram,
+  compilerOptions: CompilerOptions
+): ApiDiagnostic[] {
+  const diagnostics = [...program.getConfigFileParsingDiagnostics()];
+  const configDiagnosticsCount = diagnostics.length;
+  diagnostics.push(...program.getSyntacticDiagnostics());
+  if (diagnostics.length === configDiagnosticsCount) {
+    diagnostics.push(
+      ...program.getProgramDiagnostics(),
+      ...program.getGlobalDiagnostics()
+    );
+    if (diagnostics.length === configDiagnosticsCount) {
+      diagnostics.push(...program.getSemanticDiagnostics());
+    }
+    if (
+      compilerOptions.noEmit &&
+      (compilerOptions.declaration || compilerOptions.composite) &&
+      diagnostics.length === configDiagnosticsCount
+    ) {
+      diagnostics.push(...program.getDeclarationDiagnostics());
+    }
+  }
+  diagnostics.push(...program.emit().diagnostics);
+  return sortAndDeduplicateApiDiagnostics(diagnostics);
 }
 
 export async function runTypeCheck(
@@ -162,25 +417,12 @@ function runApiTypeCheck(
   options: TypeCheckOptions
 ): TypeCheckResult {
   const { config, compilerOptions } = readTypeCheckConfig(options);
-  const apiCompilerOptions: CompilerOptions = {
-    ...compilerOptions,
-    // TypeScript 7.1 resolves relative paths against the workspace root,
-    // TypeScript 6 against the cwd.
-    outDir: resolveIfDefined(compilerOptions.outDir),
-    declarationDir: resolveIfDefined(compilerOptions.declarationDir),
-    rootDir: resolveIfDefined(compilerOptions.rootDir),
-    // TypeScript 7.1 programs write no build info.
-    incremental: undefined,
-  };
+  const apiCompilerOptions = getApiCompilerOptions(compilerOptions);
 
   return withTypescriptApi(backend, (api) => {
     const snapshot = api.createSnapshot({
       createPrograms: [
-        {
-          rootFiles: config.fileNames,
-          // TypeScript 7.1 parsed the config, and every path option is absolute.
-          compilerOptions: apiCompilerOptions as unknown as ApiCompilerOptions,
-        },
+        { rootFiles: config.fileNames, compilerOptions: apiCompilerOptions },
       ],
     });
     try {
@@ -188,7 +430,7 @@ function runApiTypeCheck(
       const result = program.emit();
       const allDiagnostics = options.ignoreDiagnostics
         ? []
-        : getApiPreEmitDiagnostics(program, apiCompilerOptions).concat(
+        : getApiPreEmitDiagnostics(program, compilerOptions).concat(
             result.diagnostics
           );
 
@@ -205,6 +447,23 @@ function runApiTypeCheck(
       snapshot.dispose();
     }
   });
+}
+
+function getApiCompilerOptions(
+  compilerOptions: CompilerOptions
+): ApiCompilerOptions {
+  const apiCompilerOptions: CompilerOptions = {
+    ...compilerOptions,
+    // TypeScript 7.1 resolves relative paths against the workspace root,
+    // TypeScript 6 against the cwd.
+    outDir: resolveIfDefined(compilerOptions.outDir),
+    declarationDir: resolveIfDefined(compilerOptions.declarationDir),
+    rootDir: resolveIfDefined(compilerOptions.rootDir),
+    // TypeScript 7.1 programs write no build info.
+    incremental: undefined,
+  };
+  // TypeScript 7.1 parsed the config, and every path option is now absolute.
+  return apiCompilerOptions as unknown as ApiCompilerOptions;
 }
 
 function resolveIfDefined(filePath: string | undefined) {
