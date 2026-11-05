@@ -1847,15 +1847,6 @@ export function stringifyBunLockfile(
   };
 
   const rootWorkspace: Workspace = {};
-  // A createPackageJson manifest is named after the project, which need not be
-  // a workspace, and the name could match a package nested in the root lockfile.
-  const appScope =
-    packageJson.name &&
-    Object.entries(rootLockFile.workspaces).some(
-      ([path, entry]) => path !== '' && entry.name === packageJson.name
-    )
-      ? [packageJson.name]
-      : [];
   // The project's own entry records what the root install resolved for the
   // specs it declares.
   const projectWorkspace =
@@ -1864,6 +1855,17 @@ export function stringifyBunLockfile(
       : undefined;
   const appWorkspace =
     projectWorkspace?.name === packageJson.name ? projectWorkspace : undefined;
+  // The manifest name can belong to another workspace or a nested package, so
+  // it scopes the app's resolutions only when it names the app's own workspace
+  // entry, or any workspace when no `projectRoot` locates that entry.
+  const isAppWorkspaceName =
+    projectRoot !== undefined
+      ? appWorkspace !== undefined
+      : Object.entries(rootLockFile.workspaces).some(
+          ([path, entry]) => path !== '' && entry.name === packageJson.name
+        );
+  const appScope =
+    packageJson.name && isAppWorkspaceName ? [packageJson.name] : [];
   const unresolvedRootDependencies: string[] = [];
   const placedRootDependencies = new Set<string>();
   for (const depType of DEPENDENCY_TYPES) {

@@ -24,6 +24,8 @@ import {
   libraryOptionalPeerPrunedBunLock,
 } from './__fixtures__/bun/pruned-library-dependencies.bun.lock';
 import {
+  namesakeInRangePrunedBunLock,
+  namesakeInRangeRootBunLock,
   namesakeOverridePrunedBunLock,
   namesakeOverrideRootBunLock,
   overriddenDependencyPrunedBunLock,
@@ -429,20 +431,35 @@ describe('generatePrunedDeployOutput for bun', () => {
     expect(manifest.overrides).toBeUndefined();
   });
 
-  // apps/api is no workspace, and the workspace that shares its manifest name
-  // gets ms 2.1.2 from a scoped override.
-  it("keeps the declared range for a namesake workspace's override", () => {
-    const manifest: PackageJson = {
-      name: 'api',
-      version: '0.0.1',
-      dependencies: { ms: '2.0.0' },
-    };
+  // apps/api is no workspace, so it installs the root's ms. The workspace that
+  // shares its manifest name gets another ms, from a scoped override outside
+  // the declared range or from its own spec inside it.
+  it.each([
+    {
+      scenario: "a namesake workspace's override",
+      rootLockFile: namesakeOverrideRootBunLock,
+      spec: '2.0.0',
+      expected: namesakeOverridePrunedBunLock,
+    },
+    {
+      scenario: "a namesake workspace's resolution in range",
+      rootLockFile: namesakeInRangeRootBunLock,
+      spec: '^2.1.0',
+      expected: namesakeInRangePrunedBunLock,
+    },
+  ])(
+    "keeps the root's resolution and the declared spec over $scenario",
+    ({ rootLockFile, spec, expected }) => {
+      const manifest: PackageJson = {
+        name: 'api',
+        version: '0.0.1',
+        dependencies: { ms: spec },
+      };
 
-    expect(prune(namesakeOverrideRootBunLock, manifest)).toBe(
-      namesakeOverridePrunedBunLock
-    );
-    expect(manifest.dependencies.ms).toBe('2.0.0');
-  });
+      expect(prune(rootLockFile, manifest)).toBe(expected);
+      expect(manifest.dependencies.ms).toBe(spec);
+    }
+  );
 
   // A frozen install rejects any lockfile for a manifest Bun writes none for.
   it('leaves no bun.lock for a manifest without dependencies', () => {
