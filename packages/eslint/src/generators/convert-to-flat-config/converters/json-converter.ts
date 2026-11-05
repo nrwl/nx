@@ -90,7 +90,6 @@ function preprocessRules(
 
 /**
  * Converts an ESLint JSON config to a flat config.
- * Deletes the original file along with .eslintignore if it exists.
  *
  * `convertedEslintrcFiles` holds the workspace-relative eslintrc files the same
  * run converts. A local extends becomes an import only when it resolves to one of them.
