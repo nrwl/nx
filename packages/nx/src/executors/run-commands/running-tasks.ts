@@ -894,6 +894,9 @@ function readyWhenMatcher(
     tail: '',
   }));
   return (chunk) => {
+    // All commands share the status, so only the chunk that completes it
+    // reports ready. A later chunk would credit whichever command printed it.
+    if (isReady(readyWhenStatus)) return false;
     for (const entry of matchers) {
       const { status, matcher } = entry;
       if (status.found) continue;

@@ -249,11 +249,13 @@ describe('run-commands completion', () => {
     failing.exit(1);
     await nextTurn();
     serving.stdout.emit('data', 'READY\n');
+    failing.stdout.emit('data', 'TAIL\n');
     failing.emit('close', 1, null);
 
     const { code, terminalOutput } = await task.getResults();
     expect(code).toBe(1);
     expect(terminalOutput).toContain('CHECK-FAILED');
+    expect(terminalOutput).toContain('TAIL');
   });
 
   it('stops parallel siblings when a command exits non-zero, before its output is read', async () => {
