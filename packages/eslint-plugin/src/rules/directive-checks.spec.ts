@@ -243,6 +243,31 @@ describe('directive-checks', () => {
       ).toEqual([]);
     });
 
+    it('does not report a directive that another split task for the file applies', () => {
+      const jestTarget = 'test-ci--src/checkout.spec.ts';
+
+      expect(
+        runRule('// @nx-ignore-server-inputs', {
+          file,
+          nodes: [
+            project('shop-e2e', 'apps/shop-e2e', {
+              [jestTarget]: {},
+              [splitTarget]: {},
+            }),
+          ],
+          sourceMaps: {
+            'apps/shop-e2e': {
+              [`targets.${jestTarget}`]: ['jest.config.ts', '@nx/jest/plugin'],
+              [`targets.${splitTarget}`]: [
+                'playwright.config.ts',
+                '@nx/playwright/plugin',
+              ],
+            },
+          },
+        })
+      ).toEqual([]);
+    });
+
     it('reports only that the runner ignores a directive, not its value', () => {
       const messages = runWithPlugin(
         '// @nx-depends-on:\n// @nx-ignore-server-inputs: true',
