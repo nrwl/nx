@@ -189,6 +189,10 @@ Oxlint doesn't lint JSON files, so the `@nx/dependency-checks` rule cannot run o
 
 ## Directive checks
 
+{% aside type="caution" title="Nx 24.1+ Required" %}
+The `@nx/directive-checks` rule requires Nx 24.1 or later.
+{% /aside %}
+
 The same plugin ships the `@nx/directive-checks` rule.
 It reports mistakes in the `@nx-` directives at the top of split end-to-end test files and
 scripts, such as a misspelled directive or a project pattern that matches no project.
