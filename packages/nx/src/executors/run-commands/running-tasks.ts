@@ -298,6 +298,9 @@ export class SeriallyRunningTasks implements RunningTask {
   private outputCallbacks: Array<
     (terminalOutput: string, isCommandHeader?: boolean) => void
   > = [];
+  // A command can be killed after it exits, while its output drains. The
+  // signal then reaches no process, so this is what stops the next command.
+  private killSignal: NodeJS.Signals | null = null;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -375,6 +378,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
+    this.killSignal = signal ?? 'SIGTERM';
     return this.currentProcess?.kill(signal);
   }
 
@@ -383,6 +387,10 @@ export class SeriallyRunningTasks implements RunningTask {
     context: ExecutorContext
   ) {
     for (const c of options.commands) {
+      if (this.killSignal) {
+        this.code = signalToCode(this.killSignal);
+        break;
+      }
       const childProcess = await this.createProcess(
         c,
         options.color,

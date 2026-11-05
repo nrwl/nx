@@ -292,4 +292,33 @@ describe('run-commands completion', () => {
 
     expect(mockKillProcessTreeGraceful).not.toHaveBeenCalled();
   });
+
+  it('starts no further command once killed while a command is draining', async () => {
+    const first = mockChild();
+    const second = mockChild();
+    mockSpawnQueue = [first, second];
+    const task = await runCommands(
+      {
+        commands: ['first', 'second'],
+        parallel: false,
+        streamOutput: false,
+        __unparsed__: [],
+      },
+      { root: '.' } as any,
+      { id: 'lib:build' }
+    );
+    first.exit(0);
+    await nextTurn();
+    const killed = task.kill('SIGTERM');
+    first.emit('close', 0, null);
+    await killed;
+    await nextTurn();
+    // Ends the second command if it was started.
+    second.exit(0);
+    second.emit('close', 0, null);
+
+    const { code, terminalOutput } = await task.getResults();
+    expect(code).toBe(143);
+    expect(stripVTControlCharacters(terminalOutput)).not.toContain('> second');
+  });
 });
