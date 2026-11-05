@@ -482,6 +482,8 @@ Nx writes these entries at the end of CODEOWNERS so they override earlier patter
 
 Bitbucket doesn't support unowned entries, and `nx sync` fails if the `bitbucket` format uses `owners: false`.
 
+In GitLab, an entry without owners inherits its section's `defaultOwners`, so `nx sync` also fails if `owners: false` is used in a section that has `defaultOwners`. Put unowned patterns in the top-level `patterns` or in a section without `defaultOwners`.
+
 ## Ensure owners rule
 
 The `@nx/owners/ensure-owners` [conformance rule](/docs/reference/conformance/overview) requires every project to have an owner. It needs the [`@nx/conformance`](/docs/reference/conformance/overview) plugin to run.

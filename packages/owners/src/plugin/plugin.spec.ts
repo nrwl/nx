@@ -772,6 +772,45 @@ describe('createMetadata()', () => {
         '@frontend',
       ]);
     });
+    it('should give a section pattern with empty owners the section defaultOwners', async () => {
+      ({ projectGraph, workspaceFileMap } =
+        createProjectGraphAndWorkspaceFileMap([
+          { projectName: 'ui', projectFiles: ['index.ts'] },
+          { projectName: 'ui-core', projectFiles: ['index.ts'] },
+        ]));
+      mockCreateFileMapUsingProjectGraph.mockResolvedValue(workspaceFileMap);
+      nxJson = {
+        owners: {
+          format: 'gitlab',
+          sections: [
+            {
+              name: 'Frontend',
+              defaultOwners: ['@frontend'],
+              patterns: [
+                { projects: ['ui*'], owners: [] },
+                { projects: ['ui-core'], owners: ['@core-team'] },
+              ],
+            },
+          ],
+        },
+      };
+
+      const result = await createMetadata(
+        projectGraph,
+        {},
+        {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: '',
+        }
+      );
+
+      expect(Object.keys(result['ui']!.metadata!.owners)).toEqual([
+        '@frontend',
+      ]);
+      expect(Object.keys(result['ui-core']!.metadata!.owners)).toEqual([
+        '@core-team',
+      ]);
+    });
   });
 
   describe('project.json owners config', () => {

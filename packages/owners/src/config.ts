@@ -139,6 +139,17 @@ function ensureValidPatterns(
       Array.isArray(parentSection?.defaultOwners) &&
       parentSection?.defaultOwners.length > 0;
 
+    // A bare entry in a section inherits its defaultOwners, so it cannot mean "no owners"
+    if (config.owners === false && parentSectionHasValidDefaultOwners) {
+      return exitWithError({
+        title: 'Invalid "owners" config in nx.json',
+        bodyLines: [
+          `"owners": false cannot be used in a section with "defaultOwners", because GitLab applies the section's default owners to entries without owners. Move the following config entry to a section without "defaultOwners":`,
+          JSON.stringify(config, null, 2),
+        ],
+      });
+    }
+
     if (config.owners !== false) {
       if (!Array.isArray(config.owners)) {
         // Not having owners is allowed only if there is a parent section with defaultOwners specified

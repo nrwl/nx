@@ -151,6 +151,15 @@ export async function syncCodeownersFileGenerator(
     patternContent +
     rootContent.projectEntries;
 
+  // Unowned patterns go last so they override earlier entries. In GitLab they must also
+  // precede the first section header, or they would join that section and inherit its defaultOwners
+  codeowners += generateContentForPatterns(
+    patternsWithoutOwners,
+    projectGraph,
+    projectOwnersConfig,
+    rootOwners.prefix
+  );
+
   if (rootOwners.format === 'gitlab' && rootOwners.sections) {
     for (const section of rootOwners.sections) {
       let sectionHeader = `[${section.name}]`;
@@ -193,13 +202,6 @@ export async function syncCodeownersFileGenerator(
       }
     }
   }
-
-  codeowners += generateContentForPatterns(
-    patternsWithoutOwners, // apply the patterns which explicitly have no owners last
-    projectGraph,
-    projectOwnersConfig,
-    rootOwners.prefix
-  );
 
   codeowners = codeowners.trimEnd() + '\n';
 

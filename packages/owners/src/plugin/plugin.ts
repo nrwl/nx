@@ -150,21 +150,24 @@ function applyRootConfigToProjectMetadata(
 
     for (let i = 0; i < group.patterns.length; i++) {
       const { owners } = group.patterns[i];
-      // Section patterns without owners inherit the section's defaultOwners, as in the generated CODEOWNERS file
-      const ownerJsonPath = owners
-        ? [...group.jsonPath, i, 'owners']
-        : [...group.jsonPath.slice(0, -1), 'defaultOwners'];
+      // Section patterns with no or empty owners inherit the section's defaultOwners, as in the generated CODEOWNERS file
+      const inheritsDefaults = owners !== false && !owners?.length;
+      const ownerJsonPath = inheritsDefaults
+        ? [...group.jsonPath.slice(0, -1), 'defaultOwners']
+        : [...group.jsonPath, i, 'owners'];
       const resolvedOwners =
         owners !== false &&
-        (owners ?? group.defaultOwners ?? []).map((ownerId, j) => ({
-          ownerId,
-          fromConfig: resolveFromConfigDataForJsonAtFilePath(
-            'nx.json',
-            nxJsonNode,
-            nxJsonContents,
-            [...ownerJsonPath, j]
-          ),
-        }));
+        (inheritsDefaults ? (group.defaultOwners ?? []) : owners).map(
+          (ownerId, j) => ({
+            ownerId,
+            fromConfig: resolveFromConfigDataForJsonAtFilePath(
+              'nx.json',
+              nxJsonNode,
+              nxJsonContents,
+              [...ownerJsonPath, j]
+            ),
+          })
+        );
       applyPatternToProjectMetadata(
         group.patterns[i],
         resolvedOwners,
@@ -173,7 +176,7 @@ function applyRootConfigToProjectMetadata(
         allWorkspaceFiles,
         fileToProjectMap,
         fileMap,
-        owners ? undefined : explicitlyOwnedProjects
+        inheritsDefaults ? explicitlyOwnedProjects : undefined
       );
     }
   }
