@@ -535,7 +535,7 @@ async function buildCypressTargets(
           targets[targetName],
           context.workspaceRoot,
           file,
-          '@nx/cypress/plugin'
+          { ignoreServerInputs: true }
         );
       }
 

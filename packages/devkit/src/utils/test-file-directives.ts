@@ -7,39 +7,41 @@ import {
   dependsOnProjects,
   scopeTestTargetToProjects,
 } from './test-file-depends-on';
-import {
-  testFileDirectiveSupport,
-  type TestFileDirectivePlugin,
-} from './test-file-directive-support';
 import { withoutServerInputs } from './without-server-inputs';
+
+export type TestFileDirective = 'depends-on' | 'ignore-server-inputs';
 
 /**
  * `target` with the `@nx-depends-on` and `@nx-ignore-server-inputs`
  * directives of a workspace-relative test file applied. A directive that lists
- * no projects, has a value it does not take, or that `plugin` does not support
- * is skipped with a warning.
+ * no projects, has a value it does not take, or is not supported
+ * (`ignoreServerInputs: false`) is skipped with a warning. The target's
+ * metadata records the supported directives for `appliesTestFileDirective`.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
   workspaceRoot: string,
   file: string,
-  plugin: TestFileDirectivePlugin
+  options: { ignoreServerInputs: boolean }
 ): TargetConfiguration {
   const directives = parseNxDirectives(
     readFileSync(join(workspaceRoot, file), 'utf-8')
   );
-  const supported = testFileDirectiveSupport[plugin];
-  let result = target;
+  let result: TargetConfiguration = {
+    ...target,
+    metadata: {
+      ...target.metadata,
+      testFileDirectives: {
+        'depends-on': true,
+        'ignore-server-inputs': options.ignoreServerInputs,
+      } satisfies Record<TestFileDirective, boolean>,
+    },
+  };
 
   const dependsOn = directives.get('depends-on');
   if (dependsOn !== undefined) {
     const projects = dependsOnProjects(dependsOn);
-    if (!supported['depends-on']) {
-      emitPluginWorkerLog(
-        'warn',
-        `${file}: "@nx-depends-on" is not supported in this test file, so Nx ignores it.`
-      );
-    } else if (projects.length === 0) {
+    if (projects.length === 0) {
       emitPluginWorkerLog(
         'warn',
         `${file}: "@nx-depends-on:" lists no projects, so Nx ignores it. List the projects the test depends on, separated by commas.`
@@ -51,7 +53,7 @@ export function applyTestFileDirectives(
 
   const ignoreServerInputs = directives.get('ignore-server-inputs');
   if (ignoreServerInputs !== undefined) {
-    if (!supported['ignore-server-inputs']) {
+    if (!options.ignoreServerInputs) {
       emitPluginWorkerLog(
         'warn',
         `${file}: "@nx-ignore-server-inputs" is not supported in this test file, so Nx ignores it.`
@@ -67,4 +69,15 @@ export function applyTestFileDirectives(
   }
 
   return result;
+}
+
+/**
+ * Whether `target` applies `directive` to its test file. A target that
+ * `applyTestFileDirectives` didn't return applies neither.
+ */
+export function appliesTestFileDirective(
+  target: TargetConfiguration,
+  directive: TestFileDirective
+): boolean {
+  return target.metadata?.testFileDirectives?.[directive] === true;
 }

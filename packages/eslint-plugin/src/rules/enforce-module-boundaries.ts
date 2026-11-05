@@ -265,8 +265,7 @@ export default ESLintUtils.RuleCreator(
     let ignoreServerInputsSpec: boolean | undefined;
     // Atomized e2e specs (`<target>--<spec path>`) with
     // `// @nx-ignore-server-inputs` import app code with bare imports
-    // (`import 'app/feature'`) to hash from it. Kept when the plugin that
-    // created the split task is unknown.
+    // (`import 'app/feature'`) to hash from it.
     function isIgnoreServerInputsImport(
       node: Parameters<typeof run>[1],
       sourceProject: ProjectGraphProjectNode,
@@ -279,12 +278,12 @@ export default ESLintUtils.RuleCreator(
         return false;
       }
       if (ignoreServerInputsSpec === undefined) {
-        const targets = hasIgnoreServerInputsDirective(context.sourceCode.text)
-          ? findSplitTargets(projectGraph, sourceProject, sourceFilePath)
-          : [];
         ignoreServerInputsSpec =
-          targets.length > 0 &&
-          splitTargetsApply(targets, 'ignore-server-inputs') !== false;
+          hasIgnoreServerInputsDirective(context.sourceCode.text) &&
+          splitTargetsApply(
+            findSplitTargets(sourceProject, sourceFilePath),
+            'ignore-server-inputs'
+          );
       }
       return ignoreServerInputsSpec;
     }
