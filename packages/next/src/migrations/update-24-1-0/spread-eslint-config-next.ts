@@ -71,22 +71,39 @@ export default async function update(
 
     const source = parseFlatConfig(content);
     let reason: string;
+    let suggestNextPluginConfig = false;
     if (usage.importsEslintConfigNext) {
       reason = 'it already imports eslint-config-next';
-    } else if (registersConflictingPlugin(source, eslintMajor)) {
-      reason = getConflictingPluginsReason('it');
-    } else if (rootConfigWithConflictingPlugin) {
-      reason = getConflictingPluginsReason(rootConfigWithConflictingPlugin);
     } else {
-      const updated = spreadNextVitals(source);
-      if (updated) {
-        tree.write(path, updated);
-        return;
+      const conflictingConfig = registersConflictingPlugin(source, eslintMajor)
+        ? 'it'
+        : rootConfigWithConflictingPlugin;
+      if (conflictingConfig) {
+        const updated = addNextPluginConfig(source);
+        if (updated) {
+          tree.write(path, updated);
+          nextSteps.push(getNextPluginConfigNote(path, conflictingConfig));
+          return;
+        }
+        reason = getConflictingPluginsReason(conflictingConfig);
+        suggestNextPluginConfig = true;
+      } else {
+        const updated = spreadNextVitals(source);
+        if (updated) {
+          tree.write(path, updated);
+          return;
+        }
+        reason = 'its Next.js entries differ from the ones Nx generates';
       }
-      reason = 'its Next.js entries differ from the ones Nx generates';
     }
     nextSteps.push(
-      getNextStep(path, source, usage.extendsNextThroughCompat, reason)
+      getNextStep(
+        path,
+        source,
+        usage.extendsNextThroughCompat,
+        reason,
+        suggestNextPluginConfig
+      )
     );
   });
 
@@ -97,35 +114,59 @@ export default async function update(
     : { skipAgentic: true };
 }
 
-// Returns undefined when the file has Next.js entries Nx did not generate or already uses `nextVitals`.
-function spreadNextVitals(source: ts.SourceFile): string | undefined {
+interface GeneratedNextEntries {
+  elements: ts.NodeArray<ts.Expression>;
+  generated: Set<ts.Expression>;
+  // The local name of the `@next/eslint-plugin-next` import when the generated entry registers `@next/next`.
+  pluginBinding: string | undefined;
+}
+
+function findGeneratedNextEntries(
+  source: ts.SourceFile
+): GeneratedNextEntries | undefined {
   const elements = getExportedArrayElements(source);
-  if (!elements || hasIdentifier(source, NEXT_VITALS)) {
+  if (!elements) {
     return undefined;
   }
   const bindings = getModuleBindings(source);
-  const pluginElements = elements.filter((element) =>
-    isGeneratedNextPluginElement(element, bindings)
+  const pluginElements = elements.filter(
+    (element) => getGeneratedNextPluginBinding(element, bindings) !== undefined
   );
   const compatElements = elements.filter(isGeneratedCompatElement);
+  if (pluginElements.length === 1 && !compatElements.length) {
+    return {
+      elements,
+      generated: new Set(pluginElements),
+      pluginBinding: getGeneratedNextPluginBinding(pluginElements[0], bindings),
+    };
+  }
   const compatConfigs = new Set(
     compatElements
       .flatMap((element) => getCompatExtendsCall(element).arguments)
       .map((argument) => (argument as ts.StringLiteralLike).text)
   );
-  const matchesGeneratedShape =
-    (pluginElements.length === 1 && !compatElements.length) ||
-    (!pluginElements.length &&
-      compatConfigs.size === GENERATED_COMPAT_CONFIGS.length);
-  if (!matchesGeneratedShape) {
-    return undefined;
+  if (
+    !pluginElements.length &&
+    compatConfigs.size === GENERATED_COMPAT_CONFIGS.length
+  ) {
+    return {
+      elements,
+      generated: new Set(compatElements),
+      pluginBinding: undefined,
+    };
   }
+  return undefined;
+}
 
-  const content = source.getFullText();
-  const matched = new Set<ts.Node>([...pluginElements, ...compatElements]);
+// Puts `text` in place of the first generated entry and removes the others.
+function replaceGeneratedNextEntries(
+  source: ts.SourceFile,
+  { elements, generated }: GeneratedNextEntries,
+  text: string
+): string {
   const changes: StringChange[] = [];
   elements.forEach((element, index) => {
-    if (!matched.has(element)) {
+    if (!generated.has(element)) {
       return;
     }
     if (!changes.length) {
@@ -135,11 +176,7 @@ function spreadNextVitals(source: ts.SourceFile): string | undefined {
           start: element.getStart(),
           length: element.end - element.getStart(),
         },
-        {
-          type: ChangeType.Insert,
-          index: element.getStart(),
-          text: `...${NEXT_VITALS}`,
-        }
+        { type: ChangeType.Insert, index: element.getStart(), text }
       );
     } else {
       const previous = elements[index - 1];
@@ -150,28 +187,56 @@ function spreadNextVitals(source: ts.SourceFile): string | undefined {
       });
     }
   });
+  return applyChangesToString(source.getFullText(), changes);
+}
 
-  let updated = applyChangesToString(content, changes);
+// Returns undefined when the file has Next.js entries Nx did not generate or already uses `nextVitals`.
+function spreadNextVitals(source: ts.SourceFile): string | undefined {
+  const entries = findGeneratedNextEntries(source);
+  if (!entries || hasIdentifier(source, NEXT_VITALS)) {
+    return undefined;
+  }
+  let updated = replaceGeneratedNextEntries(
+    source,
+    entries,
+    `...${NEXT_VITALS}`
+  );
   updated = addImportToFlatConfig(updated, NEXT_VITALS, NEXT_VITALS_IMPORT);
   updated = removeUnusedSetup(updated);
   updated = nameExportedArray(updated);
+  return hasNextEntries(updated) ? undefined : updated;
+}
 
-  const usage = getEslintConfigNextUsage(updated);
-  return usage.registersNextPlugin || usage.extendsNextThroughCompat
-    ? undefined
-    : updated;
+// Replaces only the `@next/next` registration. The FlatCompat `next` configs also
+// registered react, import and jsx-a11y, whose rules the file may set.
+function addNextPluginConfig(source: ts.SourceFile): string | undefined {
+  const entries = findGeneratedNextEntries(source);
+  if (!entries?.pluginBinding) {
+    return undefined;
+  }
+  const updated = replaceGeneratedNextEntries(
+    source,
+    entries,
+    `${entries.pluginBinding}.configs['core-web-vitals']`
+  );
+  return hasNextEntries(updated) ? undefined : updated;
+}
+
+function hasNextEntries(content: string): boolean {
+  const usage = getEslintConfigNextUsage(content);
+  return usage.registersNextPlugin || usage.extendsNextThroughCompat;
 }
 
 // `{ plugins: { '@next/next': nextEslintPluginNext } }`
-function isGeneratedNextPluginElement(
+function getGeneratedNextPluginBinding(
   element: ts.Expression,
   bindings: Map<string, string>
-): boolean {
+): string | undefined {
   if (
     !tsModule.isObjectLiteralExpression(element) ||
     element.properties.length !== 1
   ) {
-    return false;
+    return undefined;
   }
   const [plugins] = element.properties;
   if (
@@ -180,15 +245,15 @@ function isGeneratedNextPluginElement(
     !tsModule.isObjectLiteralExpression(plugins.initializer) ||
     plugins.initializer.properties.length !== 1
   ) {
-    return false;
+    return undefined;
   }
   const [plugin] = plugins.initializer.properties;
-  return (
-    tsModule.isPropertyAssignment(plugin) &&
+  return tsModule.isPropertyAssignment(plugin) &&
     getPropertyName(plugin.name) === '@next/next' &&
     tsModule.isIdentifier(plugin.initializer) &&
     bindings.get(plugin.initializer.text) === NEXT_PLUGIN_IMPORT
-  );
+    ? plugin.initializer.text
+    : undefined;
 }
 
 // `...compat.extends('next', ...)` or `...fixupConfigRules(compat.extends('next'))`
@@ -302,25 +367,48 @@ function getConflictingPluginsReason(config: string): string {
   return `${config} registers react, react-hooks, import or jsx-a11y, which eslint-config-next also registers. ESLint fails when two configs register different copies of one plugin`;
 }
 
+function getNextPluginConfigNote(
+  path: string,
+  conflictingConfig: string
+): string {
+  return [
+    `${path} now uses the "core-web-vitals" config of "${NEXT_PLUGIN_IMPORT}" instead of eslint-config-next, because ${getConflictingPluginsReason(conflictingConfig)}.`,
+    `Files that ${conflictingConfig} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`,
+  ].join(' ');
+}
+
 function getNextStep(
   path: string,
   source: ts.SourceFile,
   extendsNextThroughCompat: boolean,
-  reason: string
+  reason: string,
+  suggestNextPluginConfig: boolean
 ): string {
   const problem = extendsNextThroughCompat
     ? 'extends the "next" configs through FlatCompat, which fails because eslint-config-next 16 only ships flat configs'
     : 'registers the "@next/next" plugin directly instead of through eslint-config-next';
   const rules = findRulesFromNextRegisteredPlugins(source);
+  const fix = suggestNextPluginConfig
+    ? [
+        `Replace the Next.js entries with the "core-web-vitals" config of "${NEXT_PLUGIN_IMPORT}", which registers only the Next.js plugin.`,
+        ...(rules.length
+          ? [
+              `Its references to ${rules.join(', ')} then need another config to register those plugins.`,
+            ]
+          : []),
+      ]
+    : [
+        `Replace the Next.js entries with a spread of the default export of "${NEXT_VITALS_IMPORT}".`,
+        ...(rules.length
+          ? [
+              `Its references to ${rules.join(', ')} keep working after that, because eslint-config-next registers those plugins.`,
+            ]
+          : []),
+      ];
   return [
     `${path} ${problem}.`,
     `The migration did not update it because ${reason}.`,
-    `Replace the Next.js entries with a spread of the default export of "${NEXT_VITALS_IMPORT}".`,
-    ...(rules.length
-      ? [
-          `Its references to ${rules.join(', ')} keep working after that, because eslint-config-next registers those plugins.`,
-        ]
-      : []),
+    ...fix,
   ].join(' ');
 }
 
