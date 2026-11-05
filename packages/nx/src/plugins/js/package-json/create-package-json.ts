@@ -59,7 +59,7 @@ export function createPackageJson(
 
   const rootPackageJson: PackageJson = readJsonFile(join(root, 'package.json'));
 
-  const npmDeps = findNpmDependencies(
+  const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
     options.target,
@@ -324,27 +324,8 @@ export function findProjectsNpmDependencies(
     ignoredDependencies?: string[];
     isProduction?: boolean;
   },
-  fileMap?: ProjectFileMap
-): NpmDeps {
-  return findNpmDependencies(
-    projectNode,
-    graph,
-    target,
-    rootPackageJson,
-    options,
-    fileMap,
-    workspaceRoot
-  );
-}
-
-function findNpmDependencies(
-  projectNode: ProjectGraphProjectNode,
-  graph: ProjectGraph,
-  target: string,
-  rootPackageJson: PackageJson,
-  options: Parameters<typeof findProjectsNpmDependencies>[4],
-  fileMap: ProjectFileMap | undefined,
-  root: string
+  fileMap?: ProjectFileMap,
+  root = workspaceRoot
 ): NpmDeps {
   if (fileMap == null) {
     fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
