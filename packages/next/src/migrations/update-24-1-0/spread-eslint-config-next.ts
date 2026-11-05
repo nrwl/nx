@@ -10,11 +10,21 @@ import {
 import {
   addImportToFlatConfig,
   getEslintConfigNextUsage,
-  isEslintConfigFile,
   isFlatConfig,
 } from '@nx/eslint/internal';
 import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
+import {
+  findRootConfigWithConflictingPlugin,
+  getEslintMajorVersion,
+  registersConflictingPlugin,
+} from '../../utils/eslint-config-next-conflicts';
+import {
+  getImports,
+  getModuleBindings,
+  getPropertyName,
+  parseFlatConfig,
+} from '../../utils/flat-config-source';
 
 const NEXT_VITALS = 'nextVitals';
 const NEXT_VITALS_IMPORT = 'eslint-config-next/core-web-vitals';
@@ -33,20 +43,6 @@ const SETUP_MODULES = new Set([
   'node:path',
   'node:url',
 ]);
-const CONFLICTING_PLUGIN_MODULES = new Set([
-  'eslint-plugin-react',
-  'eslint-plugin-react-hooks',
-  'eslint-plugin-import',
-  'eslint-plugin-jsx-a11y',
-]);
-const CONFLICTING_PLUGIN_NAMES = new Set([
-  'react',
-  'react-hooks',
-  'import',
-  'jsx-a11y',
-]);
-const CONFLICTING_CONFIG_REFERENCE =
-  /^(?:flat\/react(?:-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
 const RULE_FROM_NEXT_REGISTERED_PLUGIN = /^(?:react|jsx-a11y|import)\/[\w-]+$/;
 
 let tsModule: typeof import('typescript');
@@ -56,12 +52,11 @@ export default async function update(
 ): Promise<MigrationReturnObject> {
   tsModule ??= ensureTypescript();
 
-  const rootConfigWithConflictingPlugin = tree
-    .children('')
-    .filter((file) => isEslintConfigFile(file) && tree.isFile(file))
-    .find((file) =>
-      registersConflictingPlugin(parse(tree.read(file, 'utf-8')))
-    );
+  const eslintMajor = getEslintMajorVersion(tree);
+  const rootConfigWithConflictingPlugin = findRootConfigWithConflictingPlugin(
+    tree,
+    eslintMajor
+  );
 
   const nextSteps: string[] = [];
   visitNotIgnoredFiles(tree, '', (path) => {
@@ -74,11 +69,11 @@ export default async function update(
       return;
     }
 
-    const source = parse(content);
+    const source = parseFlatConfig(content);
     let reason: string;
     if (usage.importsEslintConfigNext) {
       reason = 'it already imports eslint-config-next';
-    } else if (registersConflictingPlugin(source)) {
+    } else if (registersConflictingPlugin(source, eslintMajor)) {
       reason = getConflictingPluginsReason('it');
     } else if (rootConfigWithConflictingPlugin) {
       reason = getConflictingPluginsReason(rootConfigWithConflictingPlugin);
@@ -239,7 +234,7 @@ function getCompatExtendsCall(
 
 function removeUnusedSetup(content: string): string {
   while (true) {
-    const source = parse(content);
+    const source = parseFlatConfig(content);
     const unused = source.statements.filter(
       (statement) =>
         (isCompatDeclaration(statement) &&
@@ -283,64 +278,6 @@ function isCompatDeclaration(statement: ts.Statement): boolean {
   );
 }
 
-function getModuleBindings(source: ts.SourceFile): Map<string, string> {
-  const bindings = new Map<string, string>();
-  for (const statement of source.statements) {
-    for (const { module, names } of getImports(statement)) {
-      names.forEach((name) => bindings.set(name, module));
-    }
-  }
-  return bindings;
-}
-
-function getImports(
-  statement: ts.Statement
-): { module: string; names: string[] }[] {
-  if (tsModule.isImportDeclaration(statement)) {
-    const clause = statement.importClause;
-    if (!clause || !tsModule.isStringLiteral(statement.moduleSpecifier)) {
-      return [];
-    }
-    const names = clause.name ? [clause.name.text] : [];
-    if (clause.namedBindings) {
-      if (tsModule.isNamespaceImport(clause.namedBindings)) {
-        names.push(clause.namedBindings.name.text);
-      } else {
-        names.push(
-          ...clause.namedBindings.elements.map((element) => element.name.text)
-        );
-      }
-    }
-    return [{ module: statement.moduleSpecifier.text, names }];
-  }
-  if (
-    tsModule.isVariableStatement(statement) &&
-    statement.declarationList.declarations.length === 1
-  ) {
-    const [declaration] = statement.declarationList.declarations;
-    const initializer = declaration.initializer;
-    if (
-      !initializer ||
-      !tsModule.isCallExpression(initializer) ||
-      !tsModule.isIdentifier(initializer.expression) ||
-      initializer.expression.text !== 'require' ||
-      initializer.arguments.length !== 1 ||
-      !tsModule.isStringLiteral(initializer.arguments[0])
-    ) {
-      return [];
-    }
-    const names = tsModule.isIdentifier(declaration.name)
-      ? [declaration.name.text]
-      : tsModule.isObjectBindingPattern(declaration.name)
-        ? declaration.name.elements.flatMap((element) =>
-            tsModule.isIdentifier(element.name) ? [element.name.text] : []
-          )
-        : [];
-    return [{ module: initializer.arguments[0].text, names }];
-  }
-  return [];
-}
-
 function isReferencedOutside(
   source: ts.SourceFile,
   names: string[],
@@ -359,41 +296,6 @@ function isReferencedOutside(
   };
   visit(source);
   return referenced;
-}
-
-function registersConflictingPlugin(source: ts.SourceFile): boolean {
-  const bindings = getModuleBindings(source);
-  if (
-    [...bindings.values()].some((module) =>
-      CONFLICTING_PLUGIN_MODULES.has(module)
-    )
-  ) {
-    return true;
-  }
-  let found = false;
-  const visit = (node: ts.Node) => {
-    if (found) {
-      return;
-    }
-    if (
-      (tsModule.isStringLiteralLike(node) &&
-        CONFLICTING_CONFIG_REFERENCE.test(node.text)) ||
-      (tsModule.isPropertyAssignment(node) &&
-        getPropertyName(node.name) === 'plugins' &&
-        tsModule.isObjectLiteralExpression(node.initializer) &&
-        node.initializer.properties.some(
-          (property) =>
-            property.name &&
-            CONFLICTING_PLUGIN_NAMES.has(getPropertyName(property.name))
-        ))
-    ) {
-      found = true;
-      return;
-    }
-    tsModule.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
 }
 
 function getConflictingPluginsReason(config: string): string {
@@ -490,7 +392,7 @@ function findConstInitializer(
 
 // eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
 function nameExportedArray(content: string): string {
-  const source = parse(content);
+  const source = parseFlatConfig(content);
   const exportDefault = source.statements.find(
     (statement): statement is ts.ExportAssignment =>
       tsModule.isExportAssignment(statement) && !statement.isExportEquals
@@ -524,22 +426,4 @@ function nameExportedArray(content: string): string {
 
 function hasIdentifier(source: ts.SourceFile, name: string): boolean {
   return isReferencedOutside(source, [name], undefined);
-}
-
-function getPropertyName(name: ts.PropertyName): string | undefined {
-  return tsModule.isIdentifier(name) ||
-    tsModule.isStringLiteral(name) ||
-    tsModule.isNoSubstitutionTemplateLiteral(name)
-    ? name.text
-    : undefined;
-}
-
-function parse(content: string): ts.SourceFile {
-  return tsModule.createSourceFile(
-    '',
-    content,
-    tsModule.ScriptTarget.Latest,
-    true,
-    tsModule.ScriptKind.TS
-  );
 }

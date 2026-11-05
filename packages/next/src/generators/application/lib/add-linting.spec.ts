@@ -3,6 +3,7 @@ import {
   ProjectGraph,
   Tree,
   addProjectConfiguration,
+  logger,
   readJson,
   updateJson,
 } from '@nx/devkit';
@@ -129,6 +130,65 @@ describe('updateEslint', () => {
       "
     `);
   });
+
+  it.each([
+    [
+      '~9.39.0',
+      'flat/react',
+      'nextEslintPluginNext.configs["core-web-vitals"]',
+      'eslint-config-next',
+      true,
+    ],
+    [
+      '~9.39.0',
+      'flat/react-base',
+      'nextEslintPluginNext.configs["core-web-vitals"]',
+      'eslint-config-next',
+      true,
+    ],
+    [
+      '^10.0.0',
+      'flat/react-base',
+      '...nextVitals',
+      '@next/eslint-plugin-next',
+      false,
+    ],
+  ])(
+    'with ESLint %s and a root config that spreads %s, should add %s',
+    async (eslintVersion, rootPreset, expectedElement, absentModule, warns) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, eslint: eslintVersion },
+      }));
+      tree.write(
+        'eslint.config.mjs',
+        `import nx from '@nx/eslint-plugin';\n\nexport default [...nx.configs['${rootPreset}']];\n`
+      );
+
+      const warnSpy = vi.spyOn(logger, 'warn');
+      await addLinting(tree, schema);
+
+      const appConfig = tree.read(
+        `${schema.appProjectRoot}/eslint.config.mjs`,
+        'utf-8'
+      );
+      expect(appConfig).toContain(expectedElement);
+      expect(appConfig).not.toContain(absentModule);
+      const fallbackWarnings = warnSpy.mock.calls
+        .map(([message]) => message)
+        .filter((message) => message.includes('@next/eslint-plugin-next'));
+      expect(fallbackWarnings).toEqual(
+        warns
+          ? [
+              expect.stringContaining(
+                'eslint.config.mjs registers react, react-hooks, import or jsx-a11y'
+              ),
+            ]
+          : []
+      );
+      warnSpy.mockRestore();
+    }
+  );
 
   it('should pin ESLint v9 when the workspace uses Next.js 15', async () => {
     updateJson(tree, 'package.json', (json) => ({
