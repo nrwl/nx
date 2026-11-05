@@ -1571,15 +1571,30 @@ describe('createPackageJson', () => {
     });
 
     it.each([
-      ['after', ['fixture-optional-host', 'fixture-required-host']],
-      ['before', ['fixture-required-host', 'fixture-optional-host']],
+      [
+        'the required host is visited last',
+        ['fixture-optional-host', 'fixture-required-host'],
+        undefined,
+      ],
+      [
+        'the required host is visited first',
+        ['fixture-required-host', 'fixture-optional-host'],
+        undefined,
+      ],
+      [
+        'every host marks it optional',
+        ['fixture-optional-host', 'fixture-other-optional-host'],
+        { 'fixture-shared-peer': { optional: true } },
+      ],
     ])(
-      'keeps a peer required when the host requiring it is visited %s the host marking it optional',
-      (_, hosts) => {
-        manifests['fixture-optional-host'] = {
+      'marks a shared peer optional only when every host does: %s',
+      (_, hosts, expectedPeerDependenciesMeta) => {
+        const optionalPeer = {
           peerDependencies: { 'fixture-shared-peer': '*' },
           peerDependenciesMeta: { 'fixture-shared-peer': { optional: true } },
         };
+        manifests['fixture-optional-host'] = optionalPeer;
+        manifests['fixture-other-optional-host'] = optionalPeer;
         manifests['fixture-required-host'] = {
           peerDependencies: { 'fixture-shared-peer': '*' },
         };
@@ -1591,6 +1606,7 @@ describe('createPackageJson', () => {
 
         expect({ peerDependencies, peerDependenciesMeta }).toEqual({
           peerDependencies: { 'fixture-shared-peer': '1.0.0' },
+          peerDependenciesMeta: expectedPeerDependenciesMeta,
         });
       }
     );
