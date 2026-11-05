@@ -340,7 +340,7 @@ To keep what a directive inferred, add `"..."` to each array the target default 
 
 The [`@nx/enforce-module-boundaries` rule](/docs/kb/enforce-module-boundaries#e2e-tests-that-hash-from-their-imports) skips most of its checks on bare imports of other projects in a test file with `@nx-ignore-server-inputs`.
 It still checks imports that name values or types, and it runs every check on test files without that directive.
-In a Jest or Vitest test file, which ignores the directive, it runs every check.
+In a test file that only Jest or Vitest split tasks run, it runs every check, because those runners ignore the directive.
 
 The `import/no-unassigned-import` rule of `eslint-plugin-import` and of the Oxlint import plugin reports bare imports.
 Disable it for the e2e project's test files instead of removing the imports.
