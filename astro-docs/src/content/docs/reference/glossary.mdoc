@@ -20,7 +20,7 @@ A [project](#project) that can run on its own. Generally uses [libraries](#libra
 
 The Atomizer is an Nx Cloud feature that automatically splits tasks so that they can be executed in parallel.
 
-Atomizer automatically splits tasks on [Workers](#workers), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
+Atomizer automatically splits tasks on [workers](#workers), providing you detailed task information in the UI, including interpreted logs and artifacts, automatically grouped by project and workflow.
 
 > See: [Automatically Split E2E Tasks](/docs/kb/split-e2e-tasks)
 
@@ -95,7 +95,7 @@ A system for running [tasks](#task) in CI across multiple agent processes across
 
 ### Dynamic task packing
 
-The way [Workers](#workers) decide which [tasks](#task) run on which agent and when. Nx Cloud uses the task graph and each task's past duration, CPU, and memory use to keep every agent close to capacity, without a hand-tuned `--parallel` value.
+The way [workers](#workers) decide which [tasks](#task) run on which agent and when. Nx Cloud uses the task graph and each task's past duration, CPU, and memory use to keep every agent close to capacity, without a hand-tuned `--parallel` value.
 
 > See: [How dynamic task packing works](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works)
 
@@ -223,7 +223,7 @@ and exist as children within a single CI Pipeline Execution. Typically, run grou
 are used when there are different _hardware_ requirements (ex: a Linux run group,
 and a MacOS run group) for the different commands.
 
-When using Distributed Task Execution, Workers can only belong to a single
+When using distributed task execution, workers can only belong to a single
 run group. This means each additional run group requires its own pool of agents.
 
 ### Standalone repository
@@ -256,7 +256,7 @@ The part of [remote caching](#remote-cache) that hashes a [task](#task) from the
 
 ### Workers
 
-A paid service that hosts and manages customizable worker machines to run parts of your CI pipeline faster and cheaper than a traditional CI provider. When possible, Workers use [distributed task execution](#distributed-task-execution) to optimize your pipeline.
+A paid service that hosts and manages customizable worker machines to run parts of your CI pipeline faster and cheaper than a traditional CI provider. When possible, workers use [distributed task execution](#distributed-task-execution) to optimize your pipeline.
 
 > See: [Distribute Task Execution](/docs/features/ci-features/distribute-task-execution)
 

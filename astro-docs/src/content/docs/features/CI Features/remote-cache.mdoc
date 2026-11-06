@@ -45,7 +45,7 @@ Remote caching can reduce work in several places:
 
 - Repeated CI runs can reuse tasks that already ran with the same inputs.
 - Developers can reuse results created in CI when their cache permissions grant access.
-- CI jobs and Workers can transfer task artifacts through the shared cache.
+- CI jobs and workers can transfer task artifacts through the shared cache.
 
 [`nx affected`](/docs/features/ci-features/affected) runs only the tasks your change reaches.
 The tasks they depend on run too, and those restore from the cache when nothing in them changed.
@@ -105,11 +105,11 @@ Ultracache is part of every Nx Cloud plan, including Hobby, and traced tasks don
 
 ### How Ultracache works
 
-The first time a task runs on Workers, Nx hashes it from its declared `inputs` and records the files it reads.
+The first time a task runs on workers, Nx hashes it from its declared `inputs` and records the files it reads.
 Later CI runs hash the task from that recording, and the recording grows when the task reads a file it didn't read before.
 It lives in Nx Cloud, so your configuration files don't change, and declared `outputs` still decide what Nx caches.
 
-Only runs on Workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
+Only runs on workers are recorded, but every CI run hashes from the recording, including on CI machines you manage yourself.
 Runs outside CI hash from declared `inputs`.
 Cache hits, continuous tasks, tasks with `cache: false`, and tasks run by a batch executor aren't traced.
 
@@ -142,7 +142,7 @@ Don't combine `ON` with `NX_CLOUD_USE_ULTRACACHE=false`, because Nx 24 and later
 Any other value fails the run with an error.
 
 Set it at the job or workflow level so both `nx-cloud start-workers` and your Nx commands see it.
-Nx Cloud Workers pick it up automatically:
+Nx Cloud workers pick it up automatically:
 
 ```yaml
 # .github/workflows/ultracache-trial.yml

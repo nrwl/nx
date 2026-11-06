@@ -100,7 +100,7 @@ export function lazyProvider(alias, exposeName) {
 }
 ```
 
-Edit `PROVIDERS` to point at different providers. The entry is each provider's `remoteEntry.js` URL - the entry every bundler emits at dev + build time. (The richer [`mf-manifest.json`](https://module-federation.io/configure/manifest-fields) works for production builds and for rspack/rsbuild dev, but `@module-federation/vite` only emits it at build time, so the generator uses `remoteEntry.js` for a consistent dev experience.)
+Edit `PROVIDERS` to point at different providers. The entry is each provider's `remoteEntry.js` URL, the entry every bundler emits at dev + build time. (The richer [`mf-manifest.json`](https://module-federation.io/configure/manifest-fields) works for production builds and for rspack/rsbuild dev, but `@module-federation/vite` only emits it at build time, so the generator uses `remoteEntry.js` for a consistent dev experience.)
 
 The generated `App.tsx` renders each provider inside a `ProviderBoundary` (an inline class that combines `Suspense` with an error boundary, so one unreachable provider can't unmount the whole tree):
 
@@ -134,7 +134,7 @@ Nx v23 deprecated the following surfaces, and Nx v24 removed them:
 - `@nx/angular:module-federation-dev-server`, `@nx/angular:module-federation-dev-ssr`
 - `@nx/rspack:module-federation-dev-server`, `@nx/rspack:module-federation-ssr-dev-server`, `@nx/rspack:module-federation-static-server`
 
-The most user-visible change: **`nx serve <host>` no longer auto-builds and serves all remotes.** With dynamic federation, the relationship is inverted - serve a provider and Nx brings its consumer along (`provider.serve.dependsOn = ['<consumer>:serve']`). Missing providers don't crash the consumer; they reject at `loadRemote` time and the generated `ProviderBoundary` renders an inline fallback.
+The most user-visible change: **`nx serve <host>` no longer auto-builds and serves all remotes.** With dynamic federation, the relationship is inverted: serve a provider and Nx brings its consumer along (`provider.serve.dependsOn = ['<consumer>:serve']`). Missing providers don't crash the consumer; they reject at `loadRemote` time and the generated `ProviderBoundary` renders an inline fallback.
 
 Angular Module Federation in Nx is no longer supported. Use [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation) for the supported Angular path going forward.
 

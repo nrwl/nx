@@ -6,7 +6,7 @@ topics:
   - 'Continuous integration'
 ---
 
-This article explores two ways that Nx improves the average speed of your CI pipeline - `nx affected` and remote caching. Using the `nx affected` command speeds up the first CI run for a PR and remote caching speeds up every CI run after that. Both `nx affected` and remote caching provide more benefits to repositories with more projects and a flatter project structure.
+This article explores two ways that Nx improves the average speed of your CI pipeline: `nx affected` and remote caching. Using the `nx affected` command speeds up the first CI run for a PR and remote caching speeds up every CI run after that. Both `nx affected` and remote caching provide more benefits to repositories with more projects and a flatter project structure.
 
 For this discussion, we'll assume you understand [how Nx works](/docs/getting-started/how-nx-works) and have an understanding of both [what the affected command is](/docs/features/ci-features/affected) and [how caching works](/docs/features/cache-task-results#how-caching-works).
 
@@ -239,7 +239,7 @@ Consider the following example repo structures.
 
 If we assume that each project has an independent 50% chance of being modified on a given PR, we can calculate the expected average number of affected projects. Intuitively, the flat structure should have less affected projects than the stacked structure and the grouped structure should fall somewhere in between. That is, in fact, the case.
 
-If we don't use the `nx affected` command in CI, no matter how our repo is structured, the expected number of projects run in CI will be 3 - all of them.
+If we don't use the `nx affected` command in CI, no matter how our repo is structured, the expected number of projects run in CI will be 3, all of them.
 
 | Repo Structure | Expected Number of Affected Projects |
 | -------------- | ------------------------------------ |

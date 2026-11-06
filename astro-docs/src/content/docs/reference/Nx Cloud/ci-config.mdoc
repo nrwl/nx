@@ -6,7 +6,7 @@ filter: 'type:References'
 
 Nx Cloud reads CI configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
 The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
-Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Workers, run [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
+Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision workers, run [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
 
 ```yaml
 # .nx/ci-config.yaml
@@ -49,8 +49,8 @@ The file has five top-level sections. All are optional, and each falls back to i
 | ----------- | ----------------------------------------------------------------- |
 | `lifecycle` | Stop conditions and stall detection for the run.                  |
 | `ai`        | Self-healing CI configuration.                                    |
-| `dte`       | Distributed task execution: how tasks are distributed to Workers. |
-| `workers`   | Configuration for the Workers themselves.                         |
+| `dte`       | Distributed task execution: how tasks are distributed to workers. |
+| `workers`   | Configuration for the workers themselves.                         |
 | `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.         |
 
 For complete pipelines that pair this file with a provider workflow, see [setting up CI](/docs/getting-started/setup-ci) and [CI workflow examples](/docs/kb/ci-workflow-examples).
@@ -128,7 +128,7 @@ Type: array of strings.
 
 ## `dte`
 
-Distributed task execution: how tasks are distributed to Workers.
+Distributed task execution: how tasks are distributed to workers.
 
 ```yaml
 # .nx/ci-config.yaml
@@ -175,7 +175,7 @@ dte:
   distribute-on: .nx/workflows/distribution-config.yaml
 ```
 
-To bring your own compute instead of using Workers, set `distribute-on: manual`.
+To bring your own compute instead of using workers, set `distribute-on: manual`.
 See [bring your own compute](/docs/kb/bring-your-own-compute).
 
 ### `dte.main-job-worker`
@@ -248,7 +248,7 @@ Each inline rule matches tasks by `projects`, `targets`, and `configurations` gl
 
 ## `workers`
 
-Configuration for the Workers.
+Configuration for the workers.
 The older `nx-agents` key still works, and its entries merge with `workers`.
 
 ```yaml
@@ -261,7 +261,7 @@ workers:
 
 ### `workers.with-env-vars`
 
-Environment variables forwarded from the main job to every Worker.
+Environment variables forwarded from the main job to every worker.
 Variables prefixed with `NX_` are forwarded automatically, so list only the additional ones you need.
 
 Type: array of strings.

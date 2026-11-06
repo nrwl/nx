@@ -1,6 +1,6 @@
 ---
 title: Set Up Bun with Mise on CI
-description: Learn how to use bun as your package manager with Nx Cloud and Workers using mise for toolchain management
+description: Learn how to use bun as your package manager with Nx Cloud and workers using mise for toolchain management
 sidebar:
   label: Set Up CI with Bun
 filter: 'type:Guides'
@@ -10,13 +10,13 @@ topics:
 
 Bun works as a drop-in package manager for Nx workspaces.
 You can use it to install dependencies and run Nx commands via `bunx`.
-To use bun with [Workers](/docs/features/ci-features/distribute-task-execution),
+To use bun with [workers](/docs/features/ci-features/distribute-task-execution),
 you need a custom launch template because the default templates only support npm, yarn, and pnpm.
 
 Using [mise](https://mise.jdx.dev/) to manage your toolchain isn't strictly required,
 but Nx Cloud launch templates have built-in support for it.
 Pinning tool versions in a single `mise.toml` gives you a predictable,
-reproducible setup across local development, CI, and Workers.
+reproducible setup across local development, CI, and workers.
 
 ## Configure your workspace
 
@@ -111,9 +111,9 @@ No separate `setup-node` or `setup-bun` action is needed.
 The `nx-cloud start-workers` command runs before dependencies are installed,
 so it uses `npx` instead of `bunx`.
 All of its configuration comes from `.nx/ci-config.yaml`, which you create in
-[Configure Workers](#configure-workers).
+[Configure workers](#configure-workers).
 
-## Configure Workers
+## Configure workers
 
 {% aside type="note" title="Nx Cloud required" %}
 Workers are part of [Nx Cloud](/docs/features/ci-features).
