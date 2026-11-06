@@ -2,7 +2,7 @@
 
 Use this persona when writing, editing, or reviewing docs for developers who know the Nx CLI and are deciding whether to connect Nx Cloud.
 
-Casey is a developer or tech lead who has used Nx for months. They know `nx.json`, targets, the local cache and `nx affected`, and they have never connected Nx Cloud. Casey is deciding whether to try it and often has to explain the choice to someone else. Casey's home is CI setup and CI features.
+Casey is a developer or tech lead who has used Nx for months. They know `nx.json`, targets, the local cache and `nx affected`, and they have never connected Nx Cloud. Casey is deciding whether to try it and often has to explain the choice to Dana. Casey's home is CI setup and CI features.
 
 ## What makes Casey content different
 
