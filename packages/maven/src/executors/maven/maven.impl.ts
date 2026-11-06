@@ -1,4 +1,10 @@
-import { ExecutorContext, workspaceRoot } from '@nx/devkit';
+import { existsSync } from 'fs';
+import { basename, join } from 'path';
+import {
+  ExecutorContext,
+  getOutputsForTargetAndConfiguration,
+  workspaceRoot,
+} from '@nx/devkit';
 import { runCommandsExecutor as runCommandsImpl } from '@nx/devkit/internal';
 import { MavenExecutorSchema } from './schema';
 import {
@@ -8,6 +14,7 @@ import {
 
 const nxMavenApplyGoal = 'dev.nx.maven:nx-maven-plugin:apply';
 const nxMavenRecordGoal = 'dev.nx.maven:nx-maven-plugin:record';
+const buildStateFile = 'nx-build-state.json';
 
 /**
  * Get the Maven project coordinates (groupId:artifactId) from project metadata.
@@ -70,6 +77,55 @@ function buildMavenArgs(
   return args;
 }
 
+// Without goals, Maven would only re-apply and re-record the module's build state.
+// Skip it when this task hashes that file and it exists, so its cache entry still holds it.
+// Pom modules always run: Maven 4 copies their POM into the project-local repository.
+function canSkipMaven(
+  options: MavenExecutorSchema,
+  context: ExecutorContext
+): boolean {
+  if (
+    !Array.isArray(options.goals) ||
+    options.goals.length > 0 ||
+    options.args?.length ||
+    options.__unparsed__?.length
+  ) {
+    return false;
+  }
+
+  const node = context.projectGraph?.nodes?.[context.projectName];
+  if (!node || node.data.tags?.includes('maven:pom')) {
+    return false;
+  }
+
+  const target = node.data.targets?.[context.targetName];
+  const ownState = target?.outputs?.find(
+    (output) => basename(output) === buildStateFile
+  );
+  const hashesOwnState = target?.inputs?.some(
+    (input) =>
+      typeof input === 'object' &&
+      'fileset' in input &&
+      input.fileset === ownState &&
+      input.includeIgnored === true &&
+      !('dependencies' in input && input.dependencies)
+  );
+  if (!ownState || !hashesOwnState) {
+    return false;
+  }
+
+  const stateFile = getOutputsForTargetAndConfiguration(
+    {
+      project: context.projectName,
+      target: context.targetName,
+      configuration: context.configurationName,
+    },
+    {},
+    node
+  ).find((output) => basename(output) === buildStateFile);
+  return !!stateFile && existsSync(join(context.root, stateFile));
+}
+
 /**
  * Maven single-task executor
  */
@@ -77,6 +133,10 @@ export default async function mavenExecutor(
   options: MavenExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  if (canSkipMaven(options, context)) {
+    return { success: true };
+  }
+
   const mavenExecutable = detectMavenExecutable(workspaceRoot);
   const mavenProject = getMavenProjectName(context);
   const useMaven4 = isMaven4(workspaceRoot);
