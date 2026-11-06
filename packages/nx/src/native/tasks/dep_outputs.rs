@@ -347,24 +347,25 @@ mod tests {
 
     #[test]
     fn test_performance_large_graph() {
-        // This test verifies that deduplication works and the function is fast
-        // on a large diamond graph (depth 30 = 90 tasks with many duplicate paths)
-        let graph = create_diamond_graph(30);
+        // Each diamond doubles the paths below it. At this depth a walk that revisits
+        // shared dependencies still finishes (about 1s in a debug build) and fails.
+        let graph = create_diamond_graph(18);
         let root_task = &graph.tasks["root:build"];
 
-        let start = std::time::Instant::now();
-        let result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
-        let elapsed = start.elapsed();
+        // Keep the fastest run, since a pause or preemption only adds to a run's time
+        let mut fastest = std::time::Duration::MAX;
+        let mut result = vec![];
+        for _ in 0..10 {
+            let start = std::time::Instant::now();
+            result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();
+            fastest = fastest.min(start.elapsed());
+        }
 
-        // Verify we got results
         assert!(!result.is_empty());
-
-        // Without deduplication, this would take exponential time
-        // With deduplication and parallelization, should be very fast
         assert!(
-            elapsed.as_millis() < 10,
+            fastest.as_millis() < 10,
             "Performance regression: expected <10ms, got {:?}",
-            elapsed
+            fastest
         );
     }
 }
