@@ -257,24 +257,17 @@ describe('component', () => {
   });
 
   describe('--path', () => {
-    it('should create component under the path', async () => {
+    it('should name the file after the path and the component after the name option', async () => {
       await componentGenerator(appTree, {
-        name: 'hello',
-        style: 'css',
-        path: `${projectName}/src/components/hello`,
-      });
-
-      expect(appTree.exists('/my-lib/src/components/hello/hello.tsx'));
-    });
-
-    it('should create with nested directories', async () => {
-      await componentGenerator(appTree, {
-        name: 'helloWorld',
+        name: 'greeting',
         style: 'css',
         path: `${projectName}/src/lib/foo/hello-world`,
       });
 
-      expect(appTree.exists('/my-lib/src/lib/foo/hello-world/helloWorld.tsx'));
+      expect(appTree.exists('my-lib/src/lib/foo/hello-world.tsx')).toBeTruthy();
+      expect(
+        appTree.read('my-lib/src/lib/foo/hello-world.tsx', 'utf-8')
+      ).toContain('export function Greeting(');
     });
 
     it('should create directory when the path is provided', async () => {

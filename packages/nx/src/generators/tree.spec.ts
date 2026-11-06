@@ -299,10 +299,9 @@ describe('tree', () => {
 
       flushChanges(dir, tree.listChanges());
 
-      try {
-        lstatSync(path.join(dir, 'parent/parent-file.txt')).isFile();
-        fail('Should not reach');
-      } catch {}
+      expect(() => lstatSync(path.join(dir, 'parent/parent-file.txt'))).toThrow(
+        /ENOENT/
+      );
     });
 
     it('should be able to rename files', () => {
@@ -358,16 +357,10 @@ describe('tree', () => {
 
       flushChanges(dir, tree.listChanges());
 
-      try {
-        const q = lstatSync(path.join(dir, 'parent/child')).isDirectory();
-        console.log(q);
-        fail('Should not reach');
-      } catch (e) {}
-
-      try {
-        lstatSync(path.join(dir, 'parent/new-child')).isDirectory();
-        fail('Should not reach');
-      } catch (e) {}
+      expect(() => lstatSync(path.join(dir, 'parent/child'))).toThrow(/ENOENT/);
+      expect(() => lstatSync(path.join(dir, 'parent/new-child'))).toThrow(
+        /ENOENT/
+      );
     });
 
     it('should mark deleted folders as present if a file is created within it', () => {
