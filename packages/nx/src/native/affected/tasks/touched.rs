@@ -968,6 +968,28 @@ mod tests {
     }
 
     #[test]
+    fn ultracache_literal_bang_exclusions_keep_compound_suffix_changes_affected() {
+        let g = graph(&[("a", "libs/a")]);
+        for (ultracache, file, affected) in [
+            (true, "cat.spec.t!s", true),
+            (true, "cat.t!s", false),
+            (false, "cat.spec.t!s", false),
+        ] {
+            let instruction = HashInstruction::IgnoredFileSet {
+                globs: strings(&["libs/a/**/*", "!libs/a/**/*.t!s"]),
+                project_roots: strings(&["libs/a"]),
+                ultracache,
+            };
+            let changed = format!("libs/a/{file}");
+            assert_eq!(
+                !touched_for(&g, vec![instruction], &[&changed]).is_empty(),
+                affected,
+                "{file}, ultracache={ultracache}"
+            );
+        }
+    }
+
+    #[test]
     fn a_disk_backed_fileset_skips_a_project_nested_below_where_it_reads() {
         let g = graph(&[("a", "libs/a")]);
         let instruction = HashInstruction::IgnoredFileSet {

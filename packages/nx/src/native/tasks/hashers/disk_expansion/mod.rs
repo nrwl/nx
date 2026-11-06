@@ -83,6 +83,8 @@ pub(crate) mod tests {
             "cat.one.two.spec.ts",
             "cat.d.ts",
             "cat.impl.ts",
+            "cat.t!s",
+            "cat.spec.t!s",
             ".env",
             "exact.spec.ts",
             "skip/cat.spec.ts",
@@ -103,6 +105,7 @@ pub(crate) mod tests {
                 ],
             ),
             ("!dist/**/*.impl.ts", vec!["cat.impl.ts"]),
+            ("!dist/**/*.t!s", vec!["cat.t!s"]),
             ("!dist/exact.spec.ts", vec!["exact.spec.ts"]),
             ("!dist/skip/**", vec!["skip/cat.spec.ts"]),
         ] {
@@ -124,12 +127,13 @@ pub(crate) mod tests {
             }
         }
         // Ordinary declared negatives still exclude compound suffixes too.
-        let ordinary = expand_files(
-            temp.path(),
-            &globs(&["dist/**/*.{ts,js}", "!dist/**/*.{ts,js}"]),
-        )
-        .unwrap();
-        assert!(ordinary.files.is_empty());
+        for (positive, negative) in [
+            ("dist/**/*.{ts,js}", "!dist/**/*.{ts,js}"),
+            ("dist/**/*.t!s", "!dist/**/*.t!s"),
+        ] {
+            let ordinary = expand_files(temp.path(), &globs(&[positive, negative])).unwrap();
+            assert!(ordinary.files.is_empty());
+        }
         let positive = expand_globs_with_exclusions(
             temp.path(),
             &globs(&["dist/**/*.ts"]),

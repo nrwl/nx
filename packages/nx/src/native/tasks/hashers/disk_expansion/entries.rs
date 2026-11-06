@@ -131,7 +131,7 @@ fn suffix_category(path: &str) -> &str {
 fn extension_wildcard_category(glob: &str) -> Option<&str> {
     let name = glob.rsplit('/').next()?;
     let suffix = name.strip_prefix("*.")?;
-    if suffix.is_empty() || suffix.bytes().any(|b| b"*?[]{}()!\\".contains(&b)) {
+    if suffix.is_empty() || suffix.bytes().any(|b| b"*?[]{}()\\".contains(&b)) {
         return None;
     }
     Some(suffix_category(name))
@@ -140,6 +140,12 @@ fn extension_wildcard_category(glob: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ultracache_extension_categories_accept_literal_bangs_but_not_extglobs() {
+        assert_eq!(extension_wildcard_category("*.t!s"), Some(".t!s"));
+        assert_eq!(extension_wildcard_category("*.!(ts)"), None);
+    }
 
     #[test]
     fn ultracache_suffix_categories_use_the_last_two_components() {
