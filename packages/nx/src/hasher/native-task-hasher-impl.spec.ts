@@ -1691,6 +1691,66 @@ describe('native task hasher', () => {
     expect(hash.inputs.files).not.toContain('libs/parent/README.md');
   });
 
+  it('hashes new compound suffixes despite a learned simple-extension exclusion', async () => {
+    await tempFs.createFiles({ '.gitignore': 'libs/child/excluded/\n' });
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/excluded/cat.ts': 'unread' });
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-category-db'),
+      'ultracache'
+    );
+    try {
+      const configurations = new UltracacheConfigurationStore(db).import({
+        requestedCommit: 'head',
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit: 'head',
+            inputs: [
+              'libs/child/excluded/**/*.ts',
+              '!libs/child/excluded/**/*.{ts,js}',
+            ],
+          },
+        }),
+      });
+      const hash = () =>
+        impl.hashTask(
+          taskGraph.tasks['child:compile'],
+          taskGraph,
+          {},
+          tempFs.tempDir,
+          true,
+          configurations
+        );
+      const before = await hash();
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'new test',
+        'libs/child/excluded/cat.d.ts': 'declaration',
+        'libs/child/excluded/cat.impl.ts': 'implementation',
+      });
+      const added = await hash();
+      expect(added.value).not.toBe(before.value);
+      expect(added.inputs.files).toEqual(
+        expect.arrayContaining([
+          'libs/child/excluded/cat.one.two.spec.ts',
+          'libs/child/excluded/cat.d.ts',
+          'libs/child/excluded/cat.impl.ts',
+        ])
+      );
+      expect(added.inputs.files).not.toContain('libs/child/excluded/cat.ts');
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'changed test',
+      });
+      const edited = await hash();
+      expect(edited.value).not.toBe(added.value);
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.ts': 'still unread',
+      });
+      expect((await hash()).value).toBe(edited.value);
+    } finally {
+      closeDbConnection(db);
+    }
+  });
+
   it('names Ultracache groups in hash details by their recorded globs', async () => {
     const { taskGraph, impl } = await upfrontFixture();
     await tempFs.createFiles({
