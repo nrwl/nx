@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/nx/schemas/migrations-schema.json",
+  "generators": {
+    "update-24-1-0-move-ensure-owners-rule": {
+      "version": "24.1.0-beta.0",
+      "description": "Point the `ensure-owners` conformance rule at `@nx/owners`, where it now lives.",
+      "implementation": "./dist/src/migrations/update-24-1-0/move-ensure-owners-rule",
+      "documentation": "./dist/src/migrations/update-24-1-0/move-ensure-owners-rule.md"
+    }
+  }
+}

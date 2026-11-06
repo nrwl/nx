@@ -1,8 +1,8 @@
-import type { ProjectGraph } from '@nx/devkit';
+import type { ProjectGraph } from '../../config/project-graph';
 import {
   checkCircularPath,
   expandIgnoredCircularDependencies,
-} from './graph-utils';
+} from './project-graph-paths';
 
 describe('graph utils', () => {
   describe('should find the path between nodes', () => {

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { handleImport } from '../../../utils/handle-import';
+import { computeJsonLineNumbers } from '../../../utils/json';
 import { joinPathFragments } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
 
@@ -36,38 +37,4 @@ async function getJsonConfigLinesForErrorMessage(
   } catch {
     return null;
   }
-}
-
-function computeJsonLineNumbers(
-  inputText: string,
-  startOffset: number,
-  characterCount: number
-) {
-  let lines = inputText.split('\n');
-  let totalChars = 0;
-  let startLine = 0;
-  let endLine = 0;
-
-  for (let i = 0; i < lines.length; i++) {
-    totalChars += lines[i].length + 1; // +1 for '\n' character
-
-    if (!startLine && totalChars >= startOffset) {
-      startLine = i + 1; // +1 because arrays are 0-based
-    }
-    if (totalChars >= startOffset + characterCount) {
-      endLine = i + 1; // +1 because arrays are 0-based
-      break;
-    }
-  }
-
-  if (!startLine) {
-    throw new Error('Start offset exceeds the text length');
-  }
-  if (!endLine) {
-    throw new Error(
-      'Character count exceeds the text length after start offset'
-    );
-  }
-
-  return { startLine, endLine };
 }

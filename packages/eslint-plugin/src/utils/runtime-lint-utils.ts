@@ -13,9 +13,10 @@ import { getRootTsConfigFileName, resolveModuleByImport } from '@nx/js';
 import { TargetProjectLocator } from '@nx/js/internal';
 import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import * as path from 'node:path';
-import { getPath, pathExists } from './graph-utils';
 import {
   findProjectForPath,
+  getPath,
+  pathExists,
   ProjectRootMappings,
   readFileIfExisting,
 } from '@nx/devkit/internal';

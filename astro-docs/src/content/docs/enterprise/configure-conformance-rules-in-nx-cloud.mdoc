@@ -79,7 +79,7 @@ Most commonly this would be used to transition a rule from **Evaluated** to **En
 
 ## Notes on the application of rules at runtime
 
-When `nx-cloud conformance` or `nx-cloud conformance:check` are run, any configured rules for the current workspace will be dynamically downloaded from your Nx Cloud Organization and applied to the resolved conformance configuration. This means that the conformance configuration itself is completely optional when using it with Nx Cloud, but it can still be useful if the workspace wants to combine cloud rules with other locally-defined rules.
+When `nx-cloud conformance` or `nx-cloud conformance:check` runs in a workspace connected to Nx Cloud, any configured rules for the current workspace will be dynamically downloaded from your Nx Cloud Organization and applied to the resolved conformance configuration. This means that the conformance configuration itself is completely optional when using it with Nx Cloud, but it can still be useful if the workspace wants to combine cloud rules with other locally-defined rules.
 
 {% aside type="note" title="Organization Rules Override Local Rules" %}
 By design, the workspace cannot choose to disable the rules configured in Nx Cloud - any conflict between local and cloud rules will result in the local configuration being overridden by the cloud configuration.
