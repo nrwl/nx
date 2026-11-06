@@ -5383,6 +5383,40 @@ snapshots:
       );
     });
 
+    it('should hash every copy the importers link under the same name', () => {
+      // pnpm 12.8.1 install of a root and a library that link their own `x`
+      const linkedCopiesLockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      x:
+        specifier: link:vendor/x
+        version: link:vendor/x
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      x:
+        specifier: link:../vendor/x
+        version: link:../vendor/x
+`;
+
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        linkedCopiesLockFile,
+        '__linked_copies__'
+      );
+
+      expect(nodes['npm:x'].data.version).toBe('link:vendor/x');
+      expect(localPathSources['npm:x']).toEqual(['libs/vendor/x', 'vendor/x']);
+    });
+
     it('should resolve absolute link targets against the workspace root', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
 

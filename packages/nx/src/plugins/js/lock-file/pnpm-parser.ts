@@ -592,7 +592,8 @@ function getNodes(
   // One node per package name, chosen deterministically by visiting importers
   // root-first, then lexicographically. An `externalDependencies` input names
   // a package, not a link target, so it could not distinguish two linked
-  // targets anyway.
+  // targets anyway. Each importer loads its own link, so the node's sources
+  // cover every importer's target.
   const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
     a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
   );
@@ -617,18 +618,19 @@ function getNodes(
           continue;
         }
         const bareName = `npm:${depName}`;
-        if (results[bareName]) {
-          continue; // a hoisted registry version or an earlier link wins
+        if (!results[bareName]) {
+          results[bareName] = {
+            type: 'npm',
+            name: bareName,
+            data: {
+              version: depVersion,
+              packageName: depName,
+              hash: hashArray([depName, depVersion]),
+            },
+          };
+        } else if (!results[bareName].data.version.startsWith('link:')) {
+          continue; // a hoisted registry version wins
         }
-        results[bareName] = {
-          type: 'npm',
-          name: bareName,
-          data: {
-            version: depVersion,
-            packageName: depName,
-            hash: hashArray([depName, depVersion]),
-          },
-        };
         if (target !== undefined) {
           addLocalPathSource(bareName, target);
         }
