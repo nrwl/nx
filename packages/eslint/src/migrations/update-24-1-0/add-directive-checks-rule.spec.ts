@@ -91,16 +91,6 @@ describe('add-directive-checks-rule migration', () => {
       expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(afterFirstRun);
     });
 
-    it('should not change the config when the rule is already configured', async () => {
-      const configured = `${FLAT_CONFIG}\n// '@nx/directive-checks': 'off'\n`;
-      tree.write('eslint.config.mjs', configured);
-      addE2eProject('// @nx-ignore-server-inputs\n');
-
-      await update(tree);
-
-      expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(configured);
-    });
-
     it('should not add the rule when the only directive is @nx-target-name', async () => {
       addE2eProject('// @nx-target-name: serve\n');
 

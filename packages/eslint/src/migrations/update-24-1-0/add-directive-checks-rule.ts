@@ -42,8 +42,11 @@ const LINT_CONFIG_FILES = new Set([
   ...BASE_ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,
 ]);
-// Directives the rule checks; a lone `@nx-target-name` doesn't trigger it.
 const TRIGGER_DIRECTIVES = ['depends-on', 'ignore-server-inputs'];
+const ROOT_FLAT_CONFIG_FILENAMES = [
+  ...BASE_ESLINT_CONFIG_FILENAMES,
+  ...ESLINT_FLAT_CONFIG_FILENAMES,
+];
 
 export default async function update(tree: Tree) {
   const flatConfig = useFlatConfig(tree) && !hasOnlyEslintrcBaseConfig(tree);
@@ -115,7 +118,7 @@ export default async function update(tree: Tree) {
  */
 function findSharedConfig(tree: Tree, flatConfig: boolean): string | undefined {
   const candidates = flatConfig
-    ? [...BASE_ESLINT_CONFIG_FILENAMES, ...ESLINT_FLAT_CONFIG_FILENAMES]
+    ? ROOT_FLAT_CONFIG_FILENAMES
     : [baseEsLintConfigFile, ...ESLINT_OLD_CONFIG_FILENAMES];
   return candidates.find((file) => tree.exists(file));
 }
@@ -126,9 +129,7 @@ function hasOnlyEslintrcBaseConfig(tree: Tree): boolean {
   return (
     process.env.ESLINT_USE_FLAT_CONFIG !== 'true' &&
     tree.exists(baseEsLintConfigFile) &&
-    ![...BASE_ESLINT_CONFIG_FILENAMES, ...ESLINT_FLAT_CONFIG_FILENAMES].some(
-      (file) => tree.exists(file)
-    )
+    !ROOT_FLAT_CONFIG_FILENAMES.some((file) => tree.exists(file))
   );
 }
 
@@ -241,7 +242,7 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
           node.data.root,
           targetName.slice(ciTargetName.length + 2)
         );
-        if (!tree.exists(file) || !tree.isFile(file)) {
+        if (!tree.isFile(file)) {
           continue;
         }
         const directives = parseNxDirectives(tree.read(file, 'utf-8'));
