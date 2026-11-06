@@ -151,8 +151,10 @@ function kickOffRecompute() {
       // Plugin set we just loaded may already be stale vs disk.
       if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-      const result =
-        await processFilesAndCreateAndSerializeProjectGraph(plugins);
+      const result = await processFilesAndCreateAndSerializeProjectGraph(
+        plugins,
+        myPromise
+      );
 
       // Compute may have run against plugins that are now stale.
       if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
@@ -574,7 +576,8 @@ export function getRecomputationGeneration(): number {
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
-  separatedPlugins: SeparatedPlugins
+  separatedPlugins: SeparatedPlugins,
+  myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> {
   const plugins = [
     ...separatedPlugins.specifiedPlugins,
@@ -590,18 +593,18 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   // its stamp then marks this computation stale at the drain.
   clearDotEnvFileHashes();
 
-  // A newer kickOffRecompute has already replaced
-  // cachedSerializedProjectGraphPromise. Returning it lets the async
-  // unwrap chain our caller onto the newer compute's result; pass
+  // The generation moved past ours. Returning the cached promise lets the
+  // async unwrap chain our caller onto a newer compute's result; pass
   // notifyAbort=true when the graph-phase counters still need balancing.
   const chainToLatest = (notifyAbort: boolean) => {
     if (myGeneration === recomputationGeneration) return null;
     if (notifyAbort) notifyPluginsGraphAborted(plugins);
-    // Defensive: if the cache was cleared (e.g. resetInternalState ran)
-    // there is nothing to chain to. Returning undefined lets `if (stale)
-    // return stale` fall through and the compute commits stale data.
-    // Kick off a successor so we always have a real promise to chain to.
-    if (!cachedSerializedProjectGraphPromise) {
+    // Kick a successor when there is nothing newer to chain to. Otherwise a
+    // cleared cache commits stale data and our own promise awaits itself.
+    if (
+      !cachedSerializedProjectGraphPromise ||
+      cachedSerializedProjectGraphPromise === myPromise
+    ) {
       kickOffRecompute();
     }
     return cachedSerializedProjectGraphPromise;
