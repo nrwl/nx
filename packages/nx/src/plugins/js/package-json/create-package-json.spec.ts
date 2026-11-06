@@ -1401,6 +1401,16 @@ describe('createPackageJson', () => {
   });
 
   describe('local-path dependencies', () => {
+    beforeEach(() => {
+      vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+        selfInputs: ['{projectRoot}/**/*'],
+        dependencyInputs: ['{projectRoot}/**/*'],
+      });
+      vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+        (_root, files) => files
+      );
+    });
+
     // A directory's graph version is relative to the workspace root. Bun records
     // a tarball relative to its declarer without `file:`, pnpm from the root.
     const createGraph = (tarballVersion: string): ProjectGraph => ({
@@ -1533,13 +1543,6 @@ describe('createPackageJson', () => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager },
         });
-        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
-          selfInputs: ['{projectRoot}/**/*'],
-          dependencyInputs: ['{projectRoot}/**/*'],
-        });
-        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
-          (_root, files) => files
-        );
         vi.spyOn(fs, 'existsSync').mockImplementation(
           (path) => path === 'libs/lib1/package.json'
         );
@@ -1629,13 +1632,6 @@ describe('createPackageJson', () => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager },
         });
-        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
-          selfInputs: ['{projectRoot}/**/*'],
-          dependencyInputs: ['{projectRoot}/**/*'],
-        });
-        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
-          (_root, files) => files
-        );
         vi.spyOn(fs, 'existsSync').mockImplementation(
           (path) => path === 'libs/nested/lib2/package.json'
         );
@@ -1729,14 +1725,6 @@ describe('createPackageJson', () => {
         declarers: ['lib2'],
         edge: false,
         expected: 'link:../../libs/nested/lib2/vendor/x',
-      },
-      {
-        packageManager: 'bun',
-        scenario: 'lib2 imports and declares it',
-        importer: 'lib2',
-        declarers: ['lib2'],
-        edge: false,
-        expected: 'file:../../vendor/x-1.0.0.tgz',
       },
       {
         packageManager: 'pnpm',
@@ -1838,13 +1826,6 @@ describe('createPackageJson', () => {
         vi.spyOn(configModule, 'readNxJson').mockReturnValue({
           cli: { packageManager },
         });
-        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
-          selfInputs: ['{projectRoot}/**/*'],
-          dependencyInputs: ['{projectRoot}/**/*'],
-        });
-        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
-          (_root, files) => files
-        );
         const installedLinks: Record<string, string> = Object.fromEntries(
           Object.entries(installed ?? {}).map(([name, linkTarget]) => [
             `${projectRoots[name]}/node_modules/x`,

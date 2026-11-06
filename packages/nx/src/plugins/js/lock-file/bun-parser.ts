@@ -36,7 +36,7 @@ import type { NormalizedPackageJson } from './utils/package-json';
 // - 2: identical content, stricter validation in Bun's own reader
 // - 3: values in "overrides" may be objects holding rules scoped to a parent
 //      package (`"parent": { "child": "1.0.0" }`) and keys may carry a version
-//      selector (`"parent@1"`, `"child@<2"`). This parser never reads
+//      selector (`"parent@1"`, `"child@<2"`). The graph never reads
 //      "overrides"; the resolved packages are listed in "packages" as before.
 // Newer versions are parsed on a best-effort basis instead of being rejected
 // outright.
@@ -68,8 +68,9 @@ interface BunLockFile {
   /**
    * Version rules from the root package.json "overrides"/"resolutions".
    * Values are version specs, or (lockfileVersion 3) objects of rules scoped
-   * to the dependencies of the package named by the key. Not used by this
-   * parser: the resolutions they produce are already reflected in `packages`.
+   * to the dependencies of the package named by the key. The graph does not
+   * use them, since `packages` already reflects the resolutions they produce.
+   * A pruned lockfile keeps the ones the pruned manifest declares.
    */
   overrides?: Record<string, string | Record<string, string>>;
 
@@ -610,6 +611,13 @@ function getBunLocalPathSources(
   return sources;
 }
 
+function parseBunLockFile(lockFileContent: string): BunLockFile {
+  return parseJson<BunLockFile>(lockFileContent, {
+    allowTrailingComma: true,
+    expectComments: true,
+  });
+}
+
 function parseLockFile(
   lockFileContent: string,
   lockFileHash: string
@@ -625,10 +633,7 @@ function parseLockFile(
   clearCache();
 
   try {
-    const result = parseJson<BunLockFile>(lockFileContent, {
-      allowTrailingComma: true,
-      expectComments: true,
-    });
+    const result = parseBunLockFile(lockFileContent);
 
     // Validate basic structure
     if (!result || typeof result !== 'object') {
@@ -865,6 +870,10 @@ function processPackageEntry(
       const aliasName = packageKey;
       const actualPackageName = name;
       const actualVersion = version;
+      const hash = withPatchHash(
+        calculatePackageHash(packageData as PackageTuple),
+        patchHashes.get(`${actualPackageName}@${actualVersion}`)
+      );
 
       const aliasNodeKey = `npm:${aliasName}`;
       if (!keyMap.has(aliasNodeKey)) {
@@ -874,10 +883,7 @@ function processPackageEntry(
           data: {
             version: `npm:${actualPackageName}@${actualVersion}`,
             packageName: aliasName,
-            hash: withPatchHash(
-              calculatePackageHash(packageData as PackageTuple),
-              patchHashes.get(`${actualPackageName}@${actualVersion}`)
-            ),
+            hash,
           },
         };
         keyMap.set(aliasNodeKey, aliasNode);
@@ -892,10 +898,7 @@ function processPackageEntry(
           data: {
             version: actualVersion,
             packageName: actualPackageName,
-            hash: withPatchHash(
-              calculatePackageHash(packageData as PackageTuple),
-              patchHashes.get(`${actualPackageName}@${actualVersion}`)
-            ),
+            hash,
           },
         };
         keyMap.set(targetNodeKey, targetNode);
@@ -1606,25 +1609,19 @@ interface PrunedPackage {
 
 /**
  * Writes the bun.lock for a standalone install of `packageJson`, with every
- * package at the version the root lockfile installs for it.
- *
- * A bun.lock key is the package's path in the hoisted tree (`a/b` is `b` nested
- * under `a`). A dependency resolves to the nearest key on its dependent's path,
- * and a workspace's dependency checks `<workspace name>/<name>` first. The
- * project graph cannot stand in for that lookup, since it records no
- * dependencies of a nested package. The kept packages are laid out in a new
+ * package at the version the root lockfile installs for it. Dependencies are
+ * resolved through the root lockfile's keys, since the project graph records
+ * no dependencies of a nested package. The kept packages are laid out in a new
  * tree rooted at the pruned manifest. Bun rebuilds its hoisting on install, so
- * the layout only has to resolve each dependency to the same package, except
- * that a bundled tree stays under its bundler.
+ * each dependency only has to resolve to the same package, except that a
+ * bundled tree stays under its bundler.
  *
- * Workspace modules become the `file:./workspace_modules/<name>` folder
- * dependencies that copy-workspace-modules ships. `projectRoot` is where the
- * manifest's local-path specs resolve from when telling a vendored package from
- * a workspace module of the same name. It also locates the project's own
- * workspace entry, whose resolutions are kept for the specs it declares even
- * outside their range. `onPinnedSpec` receives the locked version the output
- * declares for such a dependency. Returns an empty string for a manifest
- * without dependencies, which gets no lockfile.
+ * Workspace modules become `file:./workspace_modules/<name>` dependencies.
+ * `projectRoot` is where the manifest's local-path specs resolve from, and it
+ * locates the project's own workspace entry, whose resolutions are kept for
+ * the specs it declares even outside their range. `onPinnedSpec` receives the
+ * locked version the output declares for such a dependency. Returns an empty
+ * string for a manifest without dependencies, which gets no lockfile.
  */
 export function stringifyBunLockfile(
   graph: ProjectGraph,
@@ -1634,10 +1631,7 @@ export function stringifyBunLockfile(
   projectRoot?: string,
   onPinnedSpec?: (pin: PinnedManifestSpec) => void
 ): string {
-  const rootLockFile = parseJson<BunLockFile>(rootLockFileContent, {
-    allowTrailingComma: true,
-    expectComments: true,
-  });
+  const rootLockFile = parseBunLockFile(rootLockFileContent);
   if (!rootLockFile?.packages || !rootLockFile.workspaces) {
     throw new Error(
       'Pruned lock file creation failed. The root bun.lock has no "packages" or "workspaces" section.'
@@ -1692,29 +1686,20 @@ export function stringifyBunLockfile(
       );
     }
     const source = localSources.get(key);
-    if (source) {
-      const shippedResolution = getShippedLocalResolution(
-        resolution,
-        source,
-        shippedSpec
-      );
-      return {
-        resolution: shippedResolution,
-        tuple: [shippedResolution, ...tuple.slice(1)],
-        rootScope: splitBunPackageKey(key),
-        dependencies: extractPackageDependencies(tuple),
-        isWorkspaceModule: false,
-      };
-    }
-    const { protocol } = getCachedSpecInfo(resolution);
-    if (LOCAL_RESOLUTION_PROTOCOLS.has(protocol)) {
+    if (
+      !source &&
+      LOCAL_RESOLUTION_PROTOCOLS.has(getCachedSpecInfo(resolution).protocol)
+    ) {
       throw new Error(
         `Pruned lock file creation failed. ${resolution} is a local package that the pruned output does not ship.`
       );
     }
+    const shippedResolution = source
+      ? getShippedLocalResolution(resolution, source, shippedSpec)
+      : resolution;
     return {
-      resolution,
-      tuple,
+      resolution: shippedResolution,
+      tuple: source ? [shippedResolution, ...tuple.slice(1)] : tuple,
       rootScope: splitBunPackageKey(key),
       dependencies: extractPackageDependencies(tuple),
       isWorkspaceModule: false,
@@ -2106,6 +2091,9 @@ function isNestedUnder(key: string[], scope: string[]): boolean {
   );
 }
 
+// A bun.lock key is the package's path in the hoisted tree (`a/b` is `b` nested
+// under `a`), and a dependency resolves to the nearest key on its dependent's
+// path. A workspace's scope is its name, so `<workspace name>/<name>` comes first.
 function findNearestBunPackageKey(
   scope: string[],
   name: string,
@@ -2121,13 +2109,10 @@ function findNearestBunPackageKey(
 
 /**
  * The root lockfile key for a dependency of the pruned manifest: the app's own
- * resolution when its workspace entry declares that spec, or when it matches
- * the spec. An override or resolution can install a version outside the
- * declared range, so a spec the entry declares is not checked. A dependency
- * the manifest took from one of the app's workspace libraries
- * (createPackageJson collects those) can resolve under that library's scope
- * instead, so the shallowest key matching the spec is used otherwise. A local
- * package matches by the source the relocated spec names.
+ * resolution when its workspace entry declares the spec (an override can
+ * install outside the range) or when it matches the spec. Otherwise the
+ * shallowest matching key, since a dependency taken from a workspace library
+ * can resolve under that library's scope. A local package matches by source.
  */
 function findManifestDependencyKey(
   packages: BunLockFile['packages'],
@@ -2355,10 +2340,7 @@ export function getPrunedBunLocalPathTargets(
   if (!lockFileContent) {
     return [];
   }
-  const lockFile = parseJson<BunLockFile>(lockFileContent, {
-    allowTrailingComma: true,
-    expectComments: true,
-  });
+  const lockFile = parseBunLockFile(lockFileContent);
   const targets: LocalPathArtifactTarget[] = [];
   for (const [key, source] of getBunLocalPathSources(lockFile)) {
     if (!isUnderWorkspaceModules(source.path)) {
@@ -2385,10 +2367,7 @@ export function validatePrunedBunLocalPathClosure(
   if (!lockFileContent) {
     return;
   }
-  const lockFile = parseJson<BunLockFile>(lockFileContent, {
-    allowTrailingComma: true,
-    expectComments: true,
-  });
+  const lockFile = parseBunLockFile(lockFileContent);
   const targets = new Map<string, 'link'>();
   for (const source of getBunLocalPathSources(lockFile).values()) {
     if (source.kind === 'link') {
@@ -2435,10 +2414,7 @@ export function getBunLockfilePatchKeys(lockFileContent: string): string[] {
   if (!lockFileContent) {
     return [];
   }
-  const { patchedDependencies } = parseJson<BunLockFile>(lockFileContent, {
-    allowTrailingComma: true,
-    expectComments: true,
-  });
+  const { patchedDependencies } = parseBunLockFile(lockFileContent);
   return Object.keys(patchedDependencies ?? {});
 }
 

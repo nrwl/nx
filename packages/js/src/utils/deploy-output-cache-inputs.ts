@@ -23,6 +23,7 @@ import { dirname } from 'path';
 import {
   DEFAULT_INPUTS,
   compatibleDefaultsEntries,
+  hasRuntimeInput,
   lastMatchingInputsSupplier,
   namedFilesets,
   resolveDefaultsExecutor,
@@ -325,15 +326,7 @@ function missingSettingsInputs(
         missing.push(input);
       }
     } else if ('runtime' in input) {
-      if (
-        !(inputs ?? []).some(
-          (existing) =>
-            typeof existing === 'object' &&
-            existing !== null &&
-            'runtime' in existing &&
-            existing.runtime === input.runtime
-        )
-      ) {
+      if (!hasRuntimeInput(inputs, input)) {
         missing.push(input);
       }
     } else if (

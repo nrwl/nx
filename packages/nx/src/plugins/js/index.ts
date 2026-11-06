@@ -64,11 +64,7 @@ export const createNodes: CreateNodes = [
   },
 ];
 
-async function internalCreateNodes(
-  lockFile: string,
-  _,
-  context: CreateNodesContext
-) {
+function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
   if (!pluginConfig.analyzeLockfile) {
     return {};

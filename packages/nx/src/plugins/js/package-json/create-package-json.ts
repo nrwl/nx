@@ -333,24 +333,15 @@ export function createPackageJson(
 }
 
 /**
- * A local-path spec for a dependency the project inherits, rebased from the
- * manifest that declares it to the project root. The graph version records the
- * path relative to the workspace root or to its declarer, while the pnpm and
- * Bun deploy outputs relocate every local-path spec from the project root. npm
- * and yarn pruning matches the graph version itself, so they keep it.
- *
- * The search follows how the import resolves. pnpm links each importer's own
- * declarations into its node_modules, and Node resolves an import from the
- * nearest enclosing node_modules that has it. So for pnpm the search goes from
- * the project whose files import the dependency through the projects enclosing
- * it to the root manifest. Bun installs the root's copy of a tarball for every
- * workspace that declares the same spec, so for Bun the root manifest comes
- * first. The other workspace projects the project depends on come last. A
- * declarer counts only when its spec resolves to the path the graph version
- * records, so a same-named package another project vendors never replaces the
- * one the graph version selects. pnpm keeps one node per linked package name,
- * with the first importer's link. So a pnpm `link:` counts as is when a project
- * on the chain declares it and its node_modules links that target.
+ * A local-path spec for a dependency the project inherits, rebased from its
+ * declarer to the project root, where the pnpm and Bun deploy outputs relocate
+ * local-path specs from. Declarers are searched in the order the import
+ * resolves: for pnpm from the importing project through the projects enclosing
+ * it to the root, and for Bun from the root, whose copy of a tarball Bun
+ * installs for every workspace declaring the same spec. A declarer counts only
+ * when its spec resolves to the path the graph version records. pnpm keeps only
+ * the first importer's link per name, so a `link:` on the chain also counts when
+ * its node_modules links that target.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,

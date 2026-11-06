@@ -556,13 +556,10 @@ function buildLockFile(
  * the closure validation is skipped, and the remaining install-time pieces must
  * not ship local-path artifacts for it (see `getPrunedPnpmInstallArtifacts`).
  *
- * A pruned Bun manifest ships without `overrides` and `resolutions`, and a
- * dependency an override installed outside its declared range declares the
- * locked version (see `stringifyBunLockfile`).
- *
- * Mutates `packageJson` (the pnpm and Bun specifier relocation, the Bun override
- * strip and pinned versions, and the config strip), so write or emit the
- * manifest after calling this.
+ * Mutates `packageJson` (the pnpm and Bun specifier relocation, the config
+ * strip, and for Bun the `overrides`/`resolutions` strip and the locked version
+ * of each dependency an override installed outside its range), so write or
+ * emit the manifest after calling this.
  */
 function createPrunedLockfile(
   packageJson: PackageJson,

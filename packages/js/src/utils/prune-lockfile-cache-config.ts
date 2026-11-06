@@ -16,6 +16,7 @@ import {
 import {
   DEFAULT_INPUTS,
   compatibleDefaultsEntries,
+  hasRuntimeInput,
   lastMatchingInputsSupplier,
   namedFilesets,
   resolveDefaultsExecutor,
@@ -300,19 +301,6 @@ function addRootSettingsInputs(
   }
   config.inputs = [...(config.inputs ?? DEFAULT_INPUTS), ...missing];
   return true;
-}
-
-function hasRuntimeInput(
-  inputs: TargetConfiguration['inputs'],
-  input: { runtime: string }
-): boolean {
-  return (inputs ?? []).some(
-    (existing) =>
-      typeof existing === 'object' &&
-      existing !== null &&
-      'runtime' in existing &&
-      existing.runtime === input.runtime
-  );
 }
 
 /**

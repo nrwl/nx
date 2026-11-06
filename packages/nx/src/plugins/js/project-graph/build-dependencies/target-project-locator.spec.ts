@@ -1174,6 +1174,10 @@ describe('TargetProjectLocator', () => {
   });
 
   describe('findNpmProjectFromImport', () => {
+    afterEach(() => {
+      mockedWorkspaceRoot.path = '/root';
+    });
+
     it('should resolve external node when the version does not match its own package.json (i.e. git remote) ', () => {
       const projects = {
         proj: {
@@ -1277,66 +1281,62 @@ describe('TargetProjectLocator', () => {
       'should resolve a local package to the copy its nearest node_modules installs when the workspace root is $workspaceRoot and the root installs $rootCopy',
       ({ workspaceRoot, rootSpec, rootVersion, rootNodes }) => {
         mockedWorkspaceRoot.path = workspaceRoot;
-        try {
-          vol.fromJSON(
+        vol.fromJSON(
+          {
+            'package.json': JSON.stringify({
+              dependencies: { x: rootSpec },
+            }),
+            'node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: rootVersion,
+            }),
+            'libs/lib/package.json': JSON.stringify({
+              name: 'lib',
+              dependencies: { x: 'file:../vendor/x' },
+            }),
+            'libs/lib/node_modules/x/package.json': JSON.stringify({
+              name: 'x',
+              version: '2.0.0',
+            }),
+            // Declares lib's copy, which no install put in its node_modules
+            'apps/app/fixtures/package.json': JSON.stringify({
+              dependencies: { x: 'file:../../../libs/vendor/x' },
+            }),
+          },
+          '/root'
+        );
+        const externalNodes = Object.fromEntries(
+          [
+            ...rootNodes,
+            ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
+          ].map(([name, version]) => [
+            name,
             {
-              'package.json': JSON.stringify({
-                dependencies: { x: rootSpec },
-              }),
-              'node_modules/x/package.json': JSON.stringify({
-                name: 'x',
-                version: rootVersion,
-              }),
-              'libs/lib/package.json': JSON.stringify({
-                name: 'lib',
-                dependencies: { x: 'file:../vendor/x' },
-              }),
-              'libs/lib/node_modules/x/package.json': JSON.stringify({
-                name: 'x',
-                version: '2.0.0',
-              }),
-              // Declares lib's copy, which no install put in its node_modules
-              'apps/app/fixtures/package.json': JSON.stringify({
-                dependencies: { x: 'file:../../../libs/vendor/x' },
-              }),
-            },
-            '/root'
-          );
-          const externalNodes = Object.fromEntries(
-            [
-              ...rootNodes,
-              ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
-            ].map(([name, version]) => [
               name,
-              {
-                name,
-                type: 'npm' as const,
-                data: { version, packageName: 'x' },
-              },
-            ])
-          );
-          const targetProjectLocator = new TargetProjectLocator(
-            {},
-            externalNodes,
-            new Map(),
-            new Map()
-          );
+              type: 'npm' as const,
+              data: { version, packageName: 'x' },
+            },
+          ])
+        );
+        const targetProjectLocator = new TargetProjectLocator(
+          {},
+          externalNodes,
+          new Map(),
+          new Map()
+        );
 
-          expect(
-            targetProjectLocator.findNpmProjectFromImport(
-              'x',
-              'libs/lib/src/index.ts'
-            )
-          ).toEqual('npm:x@file:libs/vendor/x');
-          expect(
-            targetProjectLocator.findNpmProjectFromImport(
-              'x',
-              'apps/app/fixtures/index.ts'
-            )
-          ).toEqual('npm:x');
-        } finally {
-          mockedWorkspaceRoot.path = '/root';
-        }
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'libs/lib/src/index.ts'
+          )
+        ).toEqual('npm:x@file:libs/vendor/x');
+        expect(
+          targetProjectLocator.findNpmProjectFromImport(
+            'x',
+            'apps/app/fixtures/index.ts'
+          )
+        ).toEqual('npm:x');
       }
     );
   });
