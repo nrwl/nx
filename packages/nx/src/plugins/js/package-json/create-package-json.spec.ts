@@ -1933,8 +1933,10 @@ describe('createPackageJson', () => {
       }
     );
 
-    // Every declarer writes the same spec for its own `vendor/x`, which only
-    // the resolution of the import tells apart
+    // Unless a row sets `declarerSpec`, every declarer writes the same spec for
+    // its own `vendor/x`, which only the resolution of the import tells apart.
+    // `installed` maps the declarers whose node_modules links the package to
+    // the link's target.
     it.each([
       {
         packageManager: 'pnpm',
@@ -1967,6 +1969,37 @@ describe('createPackageJson', () => {
         declarers: ['lib2'],
         edge: false,
         expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports it and declares a link other than the root',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        declarerSpec: 'link:../vendor/x',
+        installed: { lib2: 'libs/nested/vendor/x' },
+        edge: false,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          "lib2 imports it and an override links lib2's declaration to the root's copy",
+        importer: 'lib2',
+        declarers: ['lib2'],
+        declarerSpec: 'link:../vendor/y',
+        installed: { lib2: 'vendor/x' },
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and its parent declares a link nothing installed',
+        importer: 'lib2',
+        declarers: ['parent'],
+        declarerSpec: 'link:vendor/other',
+        edge: false,
+        expected: 'link:../../vendor/x',
       },
       {
         packageManager: 'pnpm',
@@ -2005,7 +2038,15 @@ describe('createPackageJson', () => {
       },
     ] as const)(
       'should inherit the spec the import resolves to on $packageManager when $scenario',
-      ({ packageManager, importer, declarers, edge, expected }) => {
+      ({
+        packageManager,
+        importer,
+        declarers,
+        declarerSpec,
+        installed,
+        edge,
+        expected,
+      }) => {
         const [graphVersion, spec] =
           packageManager === 'pnpm'
             ? ['link:vendor/x', 'link:vendor/x']
@@ -2021,7 +2062,7 @@ describe('createPackageJson', () => {
             {
               name,
               dependencies: (declarers as readonly string[]).includes(name)
-                ? { x: spec }
+                ? { x: declarerSpec ?? spec }
                 : {},
             },
           ])
@@ -2036,9 +2077,25 @@ describe('createPackageJson', () => {
         vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
           (_root, files) => files
         );
+        const installedLinks: Record<string, string> = Object.fromEntries(
+          Object.entries(installed ?? {}).map(([name, linkTarget]) => [
+            `${projectRoots[name]}/node_modules/x`,
+            linkTarget,
+          ])
+        );
         vi.spyOn(fs, 'existsSync').mockImplementation(
           (path) => typeof path === 'string' && path in manifests
         );
+        vi.spyOn(fs, 'realpathSync').mockImplementation((path) => {
+          const link = String(path);
+          if (!link.includes('/node_modules/')) {
+            return link;
+          }
+          if (!(link in installedLinks)) {
+            throw new Error(`ENOENT: no such file or directory, '${link}'`);
+          }
+          return installedLinks[link];
+        });
         vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation(
           (path) =>
             manifests[path] ?? {

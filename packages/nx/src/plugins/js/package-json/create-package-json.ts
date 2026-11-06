@@ -12,7 +12,7 @@ import {
   PackageJson,
   readModulePackageJson,
 } from '../../../utils/package-json';
-import { existsSync } from 'fs';
+import { existsSync, realpathSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
 import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
@@ -356,7 +356,9 @@ export function createPackageJson(
  * first. The other workspace projects the project depends on come last. A
  * declarer counts only when its spec resolves to the path the graph version
  * records, so a same-named package another project vendors never replaces the
- * one the graph version selects.
+ * one the graph version selects. pnpm keeps one node per linked package name,
+ * with the first importer's link. So a pnpm `link:` counts as is when a project
+ * on the chain declares it and its node_modules links that target.
  */
 function createInheritedLocalPathSpecResolver(
   projectNode: ProjectGraphProjectNode,
@@ -382,7 +384,10 @@ function createInheritedLocalPathSpecResolver(
     }
     return projectDeclarers.get(projectName);
   };
-  const declarersByImporter = new Map<string, LocalPathSpecDeclarer[]>();
+  const declarersByImporter = new Map<
+    string,
+    { ordered: LocalPathSpecDeclarer[]; onChain: Set<LocalPathSpecDeclarer> }
+  >();
   let lookup:
     | { packageManager: 'pnpm' | 'bun'; reachableProjects: string[] }
     | null
@@ -406,17 +411,20 @@ function createInheritedLocalPathSpecResolver(
       const others = lookup.reachableProjects.filter(
         (projectName) => !chain.includes(projectName)
       );
-      const ordered =
-        lookup.packageManager === 'bun'
-          ? [rootDeclarer, ...[...chain, ...others].map(getProjectDeclarer)]
-          : [
-              ...chain.map(getProjectDeclarer),
-              rootDeclarer,
-              ...others.map(getProjectDeclarer),
-            ];
-      declarersByImporter.set(importingProject, ordered.filter(Boolean));
+      const chainDeclarers = chain.map(getProjectDeclarer).filter(Boolean);
+      const otherDeclarers = others.map(getProjectDeclarer).filter(Boolean);
+      declarersByImporter.set(importingProject, {
+        ordered:
+          lookup.packageManager === 'bun'
+            ? [rootDeclarer, ...chainDeclarers, ...otherDeclarers]
+            : [...chainDeclarers, rootDeclarer, ...otherDeclarers],
+        onChain: new Set(chainDeclarers),
+      });
     }
-    for (const declarer of declarersByImporter.get(importingProject)) {
+    const { ordered, onChain } = declarersByImporter.get(importingProject);
+    const isPnpmLink =
+      lookup.packageManager === 'pnpm' && version.startsWith('link:');
+    for (const declarer of ordered) {
       const spec = getDependencyVersionFromPackageJson(
         packageName,
         root,
@@ -436,7 +444,13 @@ function createInheritedLocalPathSpecResolver(
       const target = withoutTrailingSlash(
         isAbsolute(path) ? path : posix.join(declarer.root, path)
       );
+      const isChainLink =
+        isPnpmLink &&
+        protocol === 'link:' &&
+        onChain.has(declarer) &&
+        isInstalledLinkTarget(root, declarer.root, packageName, target);
       if (
+        !isChainLink &&
         getRecordedLocalPath(
           version,
           protocol,
@@ -488,6 +502,23 @@ function getRecordedLocalPath(
   return withoutTrailingSlash(
     posix.join(isDeclarerRelative ? declarerRoot : '', path)
   );
+}
+
+// An override can make pnpm link a target other than the declared one
+function isInstalledLinkTarget(
+  root: string,
+  declarerRoot: string,
+  packageName: string,
+  target: string
+): boolean {
+  try {
+    return (
+      realpathSync(join(root, declarerRoot, 'node_modules', packageName)) ===
+      realpathSync(isAbsolute(target) ? target : join(root, target))
+    );
+  } catch {
+    return false;
+  }
 }
 
 // The search starts past the package name's first character, the `@` of a
