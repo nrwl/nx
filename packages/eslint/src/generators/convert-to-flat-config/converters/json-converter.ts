@@ -192,10 +192,17 @@ export function convertEslintJsonToFlatConfig(
         ts.factory.createObjectLiteralExpression([
           ...enabledEnvs.map((env) =>
             ts.factory.createSpreadAssignment(
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createIdentifier('globals'),
-                ts.factory.createIdentifier(env)
-              )
+              // `globals.shared-node-browser` reads as a subtraction. A `plugin/env` name keeps
+              // the dot, since a string key can turn its load error into missing globals.
+              /^[A-Za-z_$][\w$]*$/.test(env) || env.includes('/')
+                ? ts.factory.createPropertyAccessExpression(
+                    ts.factory.createIdentifier('globals'),
+                    ts.factory.createIdentifier(env)
+                  )
+                : ts.factory.createElementAccessExpression(
+                    ts.factory.createIdentifier('globals'),
+                    ts.factory.createStringLiteral(env)
+                  )
             )
           ),
           ...Object.keys(config.globals || {}).map((key) =>
