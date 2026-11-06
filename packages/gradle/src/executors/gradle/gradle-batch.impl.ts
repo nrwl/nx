@@ -12,6 +12,8 @@ import {
 } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { createInterface } from 'readline';
 import {
   getAllDependsOnFromTaskGraph,
@@ -172,8 +174,7 @@ async function* streamTasksInBatch(
   const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
   const debugOptions = (process.env.NX_GRADLE_BATCH_DEBUG ?? '').trim();
-  const spawnArgs = [
-    ...(debugOptions ? debugOptions.split(/\s+/) : []),
+  const batchRunnerArgs = [
     '-jar',
     batchRunnerPath,
     `--tasks=${JSON.stringify(gradlewTasksToRun)}`,
@@ -184,19 +185,37 @@ async function* streamTasksInBatch(
     ...(process.env.NX_VERBOSE_LOGGING === 'true' ? [] : ['--quiet']),
   ];
 
+  // The task list alone can exceed Linux's 128 KiB limit for a single argument
+  // (spawn E2BIG), so the arguments go to java through an argument file.
+  const argsDirectory = mkdtempSync(join(tmpdir(), 'nx-gradle-batch-'));
+  const argsFile = join(argsDirectory, 'java.args');
+  writeFileSync(argsFile, batchRunnerArgs.map(quoteJavaArgFileArg).join('\n'));
+  const removeArgsDirectory = () =>
+    rmSync(argsDirectory, { recursive: true, force: true });
+
   // stderr is inherited so Gradle output (tee'd to System.err by TeeOutputStream)
   // and logger output flow to the terminal in real-time.
   // stdout is piped so we can read NX_RESULT lines emitted per task.
-  const cp = spawn('java', spawnArgs, {
-    cwd: workspaceRoot,
-    windowsHide: true,
-    env: process.env,
-    stdio: ['pipe', 'pipe', 'inherit'],
-  });
+  const cp = spawn(
+    'java',
+    [...(debugOptions ? debugOptions.split(/\s+/) : []), `@${argsFile}`],
+    {
+      cwd: workspaceRoot,
+      windowsHide: true,
+      env: process.env,
+      stdio: ['pipe', 'pipe', 'inherit'],
+    }
+  );
 
   const exit = new Promise<number>((resolve, reject) => {
-    cp.on('error', reject);
-    cp.on('close', (code) => resolve(code ?? 0));
+    cp.on('error', (error) => {
+      removeArgsDirectory();
+      reject(error);
+    });
+    cp.on('close', (code) => {
+      removeArgsDirectory();
+      resolve(code ?? 0);
+    });
   });
 
   const rl = createInterface({ input: cp.stdout, crlfDelay: Infinity });
@@ -262,4 +281,8 @@ async function* streamTasksInBatch(
   if (code !== 0) {
     throw new Error(`Gradle batch runner exited with code ${code}`);
   }
+}
+
+function quoteJavaArgFileArg(arg: string): string {
+  return `"${arg.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 }
