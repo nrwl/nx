@@ -43,7 +43,6 @@ export function findSplitTargets(
   );
 }
 
-/** Whether one of `targets` applies `directive` to the file they run. */
 export function splitTargetsApply(
   targets: SplitTarget[],
   directive: TestFileDirective
