@@ -56,7 +56,7 @@ Buildkite's monorepo answer is the `monorepo-diff` plugin: watch folder paths, t
 
 ## Distribution
 
-Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand. The control plane schedules jobs, not tasks. [workers](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
+Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand. The control plane schedules jobs, not tasks. [Workers](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
 
 ## Test splitting and flaky tests
 
