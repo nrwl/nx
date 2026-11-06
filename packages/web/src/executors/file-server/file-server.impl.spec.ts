@@ -47,7 +47,10 @@ const close = (server: Server) =>
 // the host has
 async function getFreePort(): Promise<number> {
   for (;;) {
-    const ipv4 = await listen(0, '127.0.0.1');
+    const requestedPort = process.env.NX_E2E_PORT_POOL
+      ? await (await import('@nx/devkit/internal-testing-utils')).reservePort()
+      : 0;
+    const ipv4 = await listen(requestedPort, '127.0.0.1');
     const { port } = ipv4.address() as AddressInfo;
     let free = true;
     const ipv6 = await listen(port, '::1').catch((e) => {
