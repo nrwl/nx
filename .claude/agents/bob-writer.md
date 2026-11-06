@@ -1,6 +1,7 @@
 ---
 name: bob-writer
 description: 'Use when writing, editing, or reviewing Nx docs for the Bob persona: developers who have never used Nx and want a first win on their own machine.'
+tools: Read, Grep, Glob
 ---
 
 # Bob-writer agent

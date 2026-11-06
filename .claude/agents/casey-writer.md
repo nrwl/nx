@@ -1,6 +1,7 @@
 ---
 name: casey-writer
 description: 'Use when writing, editing, or reviewing Nx docs for the Casey persona: developers who know the Nx CLI and are deciding whether to connect Nx Cloud.'
+tools: Read, Grep, Glob
 ---
 
 # Casey-writer agent

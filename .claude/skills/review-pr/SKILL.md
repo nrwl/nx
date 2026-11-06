@@ -91,7 +91,7 @@ Parse out:
 
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 10`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -1082,7 +1082,7 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the section against it exactly as you do `findings=<n>`, and record any shortfall in `## Failures`. The count is the only mechanical check that a pre-existing item survived the trim.
 
-**Persona flags get their own section whenever a docs page changed.** Copy `verification-reviewer`'s `**Persona check:**` block into a `### Persona check` section, every flag intact and outside the Suggestions cap. Keep the section when there are no flags, so the reader can see the check ran. It never influences the verdict, because a page can have a good reason to break a persona rule. If `astro-docs/src/content/` is in the changed files and the block is missing, say so in the section and in `## Failures`. Omit the section when no docs page changed.
+**Persona flags get their own section whenever a docs page changed.** Copy `verification-reviewer`'s `**Persona check:**` block, and `docs-reviewer`'s if you dispatched it, into a `### Persona check` section, deduped by `file:line`, every flag intact and outside the Suggestions cap. Keep the section when there are no flags, so the reader can see the check ran. It never influences the verdict, because a page can have a good reason to break a persona rule. If `astro-docs/src/content/` is in the changed files and the block is missing, say so in the section and in `## Failures`. Omit the section when no docs page changed.
 
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 

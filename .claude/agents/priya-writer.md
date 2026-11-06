@@ -1,6 +1,7 @@
 ---
 name: priya-writer
 description: 'Use when writing, editing, or reviewing Nx docs for the Priya persona: platform and DevEx engineers who run Nx and Nx Cloud at scale and look up exact answers.'
+tools: Read, Grep, Glob
 ---
 
 # Priya-writer agent

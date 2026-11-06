@@ -45,7 +45,7 @@ Output is root-relative and identical whether the checkout is isolated or local.
 
 **Read the docs rules from the checkout, not from memory** — `astro-docs/STYLE_GUIDE.md` and the docs section of `CLAUDE.md` are the committed authority, and they change.
 
-When the diff changes pages under `astro-docs/src/content/`, also follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`, reading the files from the checkout. Report the result under `**Persona check:**`. A flag there is advisory, never a Finding, so it needs no `NET-NEW` or `TRIGGER` line.
+When the diff changes pages under `astro-docs/src/content/`, also follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`. Read that skill and the persona files with `--ref base`, so a PR branch that predates them still gets the check and a PR can't rewrite the rules it's judged by. Report the result under `**Persona check:**`. A flag there is advisory, never a Finding, so it needs no `NET-NEW` or `TRIGGER` line.
 
 If `exec` is refused, the sandbox has no isolation boundary. That is a legitimate configuration, not a fault: review statically and say so in your report. Never work around a refusal by running the command outside the CLI.
 
