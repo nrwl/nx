@@ -135,14 +135,6 @@ export function isRelative(s: string) {
   return s.startsWith('./') || s.startsWith('../');
 }
 
-/** Whether `node` is `import 'x'`, which binds nothing; `import {} from 'x'` is not. */
-export function isBareImport(
-  sourceCode: Readonly<TSESLint.SourceCode>,
-  node: TSESTree.ImportDeclaration
-): boolean {
-  return sourceCode.getFirstToken(node, 1)?.range[0] === node.source.range[0];
-}
-
 export function getTargetProjectBasedOnRelativeImport(
   imp: string,
   projectPath: string,
