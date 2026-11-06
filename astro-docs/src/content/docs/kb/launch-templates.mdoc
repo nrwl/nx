@@ -18,7 +18,8 @@ We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs
 ## Getting started with custom launch templates
 
 To create a custom launch template, copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) under the [`launch-templates`](/docs/reference/nx-cloud/ci-config#launch-templates) key of `.nx/pipelines/ci.yaml` and customize the steps as needed.
-Templates can also live in another file in the `.nx/workflows` folder, such as `agents.yaml`, with the same top-level key.
+Templates can also live in another file in the `.nx/pipelines` folder, such as `launch-templates.yaml`, with the same top-level key.
+`nx-cloud start-ci-run` reads templates only from `.nx/workflows`.
 
 ## Launch template structure
 
@@ -205,7 +206,7 @@ launch-templates:
         uses: 'https://raw.githubusercontent.com/nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
       # workspace-local file, resolved from the workspace root
       - name: 'Custom Step'
-        uses: 'file:///.nx/workflows/custom-step.yaml'
+        uses: 'file:///.nx/pipelines/custom-step.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`

@@ -14,10 +14,10 @@ While Nx Cloud provides several pre-built steps, you can create custom steps to 
 
 To create a custom step, follow these steps:
 
-1\. **Create a New YAML File**: Create a new YAML file in your `.nx/workflows` directory (e.g., `custom-step.yaml`)
+1\. **Create a New YAML File**: Create a new YAML file in your `.nx/pipelines` directory (e.g., `custom-step.yaml`)
 
 {% aside type="note" title="Custom step file location" %}
-Custom steps do not need to be in the `.nx/workflows` directory. However, they must be reachable through one of the [step reference forms](#step-reference-forms). You have a few options for organizing your custom steps:
+Custom steps do not need to be in the `.nx/pipelines` directory. However, they must be reachable through one of the [step reference forms](#step-reference-forms). You have a few options for organizing your custom steps:
 
 - **Same Repository as your Nx Workspace**: Reference the step with a `file://` path, or with the GitHub shorthand if the repository is public on GitHub.
 - **Create a Dedicated Repository**: Create a separate repository to store a collection of custom steps. This is useful for sharing steps across multiple projects or teams, or if your main Nx workspace is not on GitHub or is private.
@@ -27,7 +27,7 @@ Custom steps do not need to be in the `.nx/workflows` directory. However, they m
 2\. **Define the Step Template**: Below is an example of a custom step definition:
 
 ```yaml
-// .nx/workflows/custom-step.yaml
+// .nx/pipelines/custom-step.yaml
 name: 'Custom Step'
 description: 'This is a custom step that does XYZ.'
 definition:
@@ -92,7 +92,7 @@ launch-templates:
     image: 'ubuntu22.04-node24.14-v1'
     init-steps:
       - name: Custom Step
-        uses: 'your-org/your-repo/main/.nx/workflows/custom-steps.yaml'
+        uses: 'your-org/your-repo/main/.nx/pipelines/custom-steps.yaml'
         env:
           CUSTOM_VAR: 'custom_value'
         inputs:
@@ -124,7 +124,7 @@ launch-templates:
     init-steps:
       - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
       - name: Custom Step
-        uses: 'file:///.nx/workflows/custom-step.yaml'
+        uses: 'file:///.nx/pipelines/custom-step.yaml'
 ```
 
 At validation time, Nx Cloud reads the file from your repository at the triggering commit.
@@ -155,7 +155,7 @@ Whichever form you use, scripts referenced by a step file (such as `main` and `p
 Just like launch templates, you should validate your custom steps to ensure they are defined correctly. In your CI pipeline, use the `nx-cloud validate` command with the `--step-file` flag to ensure nobody merges in invalid changes to your step:
 
 ```shell
-nx-cloud validate --workflow-file=./.nx/workflows/custom-steps.yaml --step-file
+nx-cloud validate --workflow-file=./.nx/pipelines/custom-steps.yaml --step-file
 ```
 
 Ensure your custom steps are committed to your source control repository before running the validation.
