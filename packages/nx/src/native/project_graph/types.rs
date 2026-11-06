@@ -23,7 +23,6 @@ pub struct Target {
     pub options: Option<String>,
     pub configurations: Option<String>,
     pub parallelism: Option<bool>,
-    pub script_content: Option<String>,
 }
 
 #[napi(object)]

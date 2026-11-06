@@ -77,14 +77,15 @@ export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
-        options: JSON.stringify(targetConfig.options),
+        options: JSON.stringify(
+          targetConfig.executor === 'nx:run-script' &&
+            typeof targetConfig.metadata?.scriptContent === 'string' &&
+            targetConfig.metadata.scriptContent !== ''
+            ? [targetConfig.options, targetConfig.metadata.scriptContent]
+            : targetConfig.options
+        ),
         configurations: JSON.stringify(targetConfig.configurations),
         parallelism: targetConfig.parallelism,
-        // nx:run-script stores the package.json body here, not in options.
-        scriptContent:
-          typeof targetConfig.metadata?.scriptContent === 'string'
-            ? targetConfig.metadata.scriptContent
-            : undefined,
       };
     }
     nodes[projectName] = {
