@@ -1,6 +1,5 @@
 import {
   fileExists,
-  killPorts,
   readFile,
   reservePort,
   runCLI,
@@ -86,7 +85,6 @@ describe('React Playwright e2e tests', () => {
     } finally {
       updateFile(configPath, originalConfig);
       updateFile(viteConfigPath, originalViteConfig);
-      await killPorts(port);
     }
   });
 
@@ -125,7 +123,7 @@ describe('React Playwright e2e tests', () => {
         ? ((json.nx ??= {}).targets ??= {})
         : (json.targets ??= {});
       targets[serveTarget] = {
-        command: `node -e "setTimeout(() => {}, 5000)" && vite preview --port ${port}`,
+        command: `node -e "setTimeout(() => {}, 5000)" && vite preview --port ${port} --strictPort`,
         options: { cwd: appName },
         continuous: true,
         readyWhen: { port },

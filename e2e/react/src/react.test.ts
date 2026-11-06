@@ -449,7 +449,6 @@ async function testGeneratedApp(
   if (opts.checkE2E && (await shouldRunPlaywrightTests())) {
     const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('Successfully ran target e2e');
-    expect(await killPorts()).toBeTruthy();
   }
 }
 

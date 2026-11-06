@@ -2,9 +2,9 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   checkFilesExist,
   cleanupProject,
+  hasAssignedPort,
   getPackageManagerCommand,
   newProject,
-  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -23,12 +23,16 @@ import { execSync } from 'child_process';
 // listening (up to 30s), then kills it and returns everything it printed.
 // Polling for the "ready" line avoids a fixed `sleep` race that loses on a
 // loaded machine, where node boot + module evaluation can take several seconds.
-function runBuiltApp(appName: string): string {
+function runBuiltApp(appName: string, readyPrefix: string): string {
   return execSync(
     `node dist/apps/${appName}/main.js > ${appName}-run.log 2>&1 & PID=$!; ` +
-      `for i in $(seq 1 30); do grep -q "server ready on port" ${appName}-run.log 2>/dev/null && break; sleep 1; done; ` +
+      `for i in $(seq 1 30); do grep -Eq "${readyPrefix}[1-9][0-9]*" ${appName}-run.log 2>/dev/null && break; sleep 1; done; ` +
       `kill $PID 2>/dev/null || true; wait $PID 2>/dev/null || true; cat ${appName}-run.log`,
-    { cwd: tmpProjPath(), timeout: 60_000 }
+    {
+      cwd: tmpProjPath(),
+      timeout: 60_000,
+      env: { ...process.env, PORT: '0' },
+    }
   ).toString();
 }
 
@@ -70,7 +74,6 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Express Framework with ESM', () => {
     it('should build and run Express app with ESM modules', async () => {
-      const port = await reservePort();
       const expressApp = uniq('express-esm');
       runCLI(
         `generate @nx/node:app apps/${expressApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -103,9 +106,11 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Express ESM app starting');
           console.log('fetch type:', typeof fetch);
           
-          const port = process.env.PORT || ${port};
+          const port = Number(process.env.PORT || 0);
           const server = app.listen(port, () => {
-            console.log('Express ESM server ready on port ' + port);
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Express ESM server ready on port ' + address.port);
           });
           server.on('error', console.error);
         `
@@ -114,14 +119,18 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${expressApp}`);
       checkFilesExist(`dist/apps/${expressApp}/main.js`);
 
-      const result = runBuiltApp(expressApp);
+      const result = runBuiltApp(
+        expressApp,
+        'Express ESM server ready on port '
+      );
       expect(result).toContain('Express ESM app starting');
-      expect(result).toContain('Express ESM server ready on port');
+      expect(hasAssignedPort(result, 'Express ESM server ready on port ')).toBe(
+        true
+      );
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Express app with ESM modules', async () => {
-      const port = await reservePort();
       const expressApp = uniq('express-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${expressApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -150,9 +159,11 @@ describe('Node.js Framework ESM Support', () => {
             res.json({ message: 'Express ESM serve working' });
           });
           
-          const port = process.env.PORT || ${port};
+          const port = Number(process.env.PORT || 0);
           const server = app.listen(port, () => {
-            console.log('Express ESM serve ready on port ' + port);
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Express ESM serve ready on port ' + address.port);
           });
           server.on('error', console.error);
         `
@@ -161,9 +172,9 @@ describe('Node.js Framework ESM Support', () => {
       const serveProcess = await runCommandUntil(
         `serve ${expressApp}`,
         (output) => {
-          return output.includes('Express ESM serve ready on port');
+          return hasAssignedPort(output, 'Express ESM serve ready on port ');
         },
-        { timeout: 120000 }
+        { timeout: 120000, env: { PORT: '0' } }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -172,7 +183,6 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Fastify Framework with ESM', () => {
     it('should build and run Fastify app with ESM modules', async () => {
-      const port = await reservePort();
       const fastifyApp = uniq('fastify-esm');
       runCLI(
         `generate @nx/node:app apps/${fastifyApp} --framework=fastify --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -209,9 +219,11 @@ describe('Node.js Framework ESM Support', () => {
           
           const start = async () => {
             try {
-              const port = +(process.env.PORT || ${port});
+              const port = Number(process.env.PORT || 0);
               await fastify.listen({ port });
-              console.log('Fastify ESM server ready on port ' + port);
+              const address = fastify.server.address();
+              if (!address || typeof address === 'string') throw new Error('Missing server address');
+              console.log('Fastify ESM server ready on port ' + address.port);
             } catch (err) {
               fastify.log.error(err);
               process.exit(1);
@@ -224,14 +236,18 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${fastifyApp}`);
       checkFilesExist(`dist/apps/${fastifyApp}/main.js`);
 
-      const result = runBuiltApp(fastifyApp);
+      const result = runBuiltApp(
+        fastifyApp,
+        'Fastify ESM server ready on port '
+      );
       expect(result).toContain('Fastify ESM app starting');
-      expect(result).toContain('Fastify ESM server ready on port');
+      expect(hasAssignedPort(result, 'Fastify ESM server ready on port ')).toBe(
+        true
+      );
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Fastify app with ESM modules', async () => {
-      const port = await reservePort();
       const fastifyApp = uniq('fastify-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${fastifyApp} --framework=fastify --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -262,9 +278,11 @@ describe('Node.js Framework ESM Support', () => {
           
           const start = async () => {
             try {
-              const port = +(process.env.PORT || ${port});
+              const port = Number(process.env.PORT || 0);
               await fastify.listen({ port });
-              console.log('Fastify ESM serve ready on port ' + port);
+              const address = fastify.server.address();
+              if (!address || typeof address === 'string') throw new Error('Missing server address');
+              console.log('Fastify ESM serve ready on port ' + address.port);
             } catch (err) {
               process.exit(1);
             }
@@ -276,9 +294,9 @@ describe('Node.js Framework ESM Support', () => {
       const serveProcess = await runCommandUntil(
         `serve ${fastifyApp}`,
         (output) => {
-          return output.includes('Fastify ESM serve ready on port');
+          return hasAssignedPort(output, 'Fastify ESM serve ready on port ');
         },
-        { timeout: 120000 }
+        { timeout: 120000, env: { PORT: '0' } }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -287,7 +305,6 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Koa Framework with ESM', () => {
     it('should build and run Koa app with ESM modules', async () => {
-      const port = await reservePort();
       const koaApp = uniq('koa-esm');
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -326,9 +343,11 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Koa ESM app starting');
           console.log('fetch type:', typeof fetch);
           
-          const port = +(process.env.PORT || ${port});
+          const port = Number(process.env.PORT || 0);
           const server = app.listen(port, () => {
-            console.log('Koa ESM server ready on port ' + port);
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Koa ESM server ready on port ' + address.port);
           });
           server.on('error', console.error);
         `
@@ -337,14 +356,15 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${koaApp}`);
       checkFilesExist(`dist/apps/${koaApp}/main.js`);
 
-      const result = runBuiltApp(koaApp);
+      const result = runBuiltApp(koaApp, 'Koa ESM server ready on port ');
       expect(result).toContain('Koa ESM app starting');
-      expect(result).toContain('Koa ESM server ready on port');
+      expect(hasAssignedPort(result, 'Koa ESM server ready on port ')).toBe(
+        true
+      );
       expect(result).toContain('fetch type: function');
     }, 600000);
 
     it('should serve Koa app with ESM modules', async () => {
-      const port = await reservePort();
       const koaApp = uniq('koa-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${koaApp} --framework=koa --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -379,9 +399,11 @@ describe('Node.js Framework ESM Support', () => {
           
           app.use(router.routes()).use(router.allowedMethods());
           
-          const port = +(process.env.PORT || ${port});
+          const port = Number(process.env.PORT || 0);
           const server = app.listen(port, () => {
-            console.log('Koa ESM serve ready on port ' + port);
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Koa ESM serve ready on port ' + address.port);
           });
           server.on('error', console.error);
         `
@@ -390,9 +412,9 @@ describe('Node.js Framework ESM Support', () => {
       const serveProcess = await runCommandUntil(
         `serve ${koaApp}`,
         (output) => {
-          return output.includes('Koa ESM serve ready on port');
+          return hasAssignedPort(output, 'Koa ESM serve ready on port ');
         },
-        { timeout: 120000 }
+        { timeout: 120000, env: { PORT: '0' } }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -401,7 +423,6 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Nest Framework with ESM', () => {
     it('should build and run Nest app with ESM modules', async () => {
-      const port = await reservePort();
       const nestApp = uniq('nest-esm');
       runCLI(
         `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=vitest`
@@ -435,9 +456,11 @@ describe('Node.js Framework ESM Support', () => {
             const app = await NestFactory.create(AppModule);
             const globalPrefix = 'api';
             app.setGlobalPrefix(globalPrefix);
-            const port = process.env.PORT || ${port};
+            const port = Number(process.env.PORT || 0);
             await app.listen(port);
-            console.log('Nest ESM server ready on port ' + port);
+            const address = app.getHttpServer().address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Nest ESM server ready on port ' + address.port);
           }
           
           bootstrap();
@@ -450,15 +473,14 @@ describe('Node.js Framework ESM Support', () => {
       const serveProcess = await runCommandUntil(
         `serve ${nestApp}`,
         (output) => {
-          return output.includes('Nest ESM server ready on port');
+          return hasAssignedPort(output, 'Nest ESM server ready on port ');
         },
-        { timeout: 120000 }
+        { timeout: 120000, env: { PORT: '0' } }
       );
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
     }, 600000);
 
     it('should serve Nest app with ESM modules', async () => {
-      const port = await reservePort();
       const nestApp = uniq('nest-esm-serve');
       runCLI(
         `generate @nx/node:app apps/${nestApp} --framework=nest --bundler=esbuild --linter=eslint --unitTestRunner=vitest`
@@ -492,9 +514,11 @@ describe('Node.js Framework ESM Support', () => {
             const app = await NestFactory.create(AppModule);
             const globalPrefix = 'api';
             app.setGlobalPrefix(globalPrefix);
-            const port = process.env.PORT || ${port};
+            const port = Number(process.env.PORT || 0);
             await app.listen(port);
-            console.log('Nest ESM serve ready on port ' + port);
+            const address = app.getHttpServer().address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Nest ESM serve ready on port ' + address.port);
           }
           
           bootstrap();
@@ -504,9 +528,9 @@ describe('Node.js Framework ESM Support', () => {
       const serveProcess = await runCommandUntil(
         `serve ${nestApp}`,
         (output) => {
-          return output.includes('Nest ESM serve ready on port');
+          return hasAssignedPort(output, 'Nest ESM serve ready on port ');
         },
-        { timeout: 120000 }
+        { timeout: 120000, env: { PORT: '0' } }
       );
 
       await promisifiedTreeKill(serveProcess.pid, 'SIGKILL');
@@ -515,7 +539,6 @@ describe('Node.js Framework ESM Support', () => {
 
   describe('Mixed Imports across Node.js Frameworks', () => {
     it('should handle CommonJS and ESM packages together', async () => {
-      const port = await reservePort();
       const nodeApp = uniq('node-mixed-imports');
       runCLI(
         `generate @nx/node:app apps/${nodeApp} --framework=express --bundler=esbuild --linter=eslint --unitTestRunner=jest`
@@ -558,9 +581,11 @@ describe('Node.js Framework ESM Support', () => {
           console.log('Mixed imports Node.js app starting');
           console.log('lodash.pick type:', typeof lodash.pick);
           
-          const port = process.env.PORT || ${port};
+          const port = Number(process.env.PORT || 0);
           const server = app.listen(port, () => {
-            console.log('Mixed imports server ready on port ' + port);
+            const address = server.address();
+            if (!address || typeof address === 'string') throw new Error('Missing server address');
+            console.log('Mixed imports server ready on port ' + address.port);
           });
           server.on('error', console.error);
         `
@@ -569,9 +594,14 @@ describe('Node.js Framework ESM Support', () => {
       await runCLIAsync(`build ${nodeApp}`);
       checkFilesExist(`dist/apps/${nodeApp}/main.js`);
 
-      const result = runBuiltApp(nodeApp);
+      const result = runBuiltApp(
+        nodeApp,
+        'Mixed imports server ready on port '
+      );
       expect(result).toContain('Mixed imports Node.js app starting');
-      expect(result).toContain('Mixed imports server ready on port');
+      expect(
+        hasAssignedPort(result, 'Mixed imports server ready on port ')
+      ).toBe(true);
       expect(result).toContain('lodash.pick type: function');
     }, 600000);
   });
