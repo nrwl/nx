@@ -69,7 +69,7 @@ function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
 }
 
 // convert-to-flat-config runs only on eslintrc workspaces, which
-// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the installed
+// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the declared
 // major there: keep v9 on v9 (its plugins have no v10 release), never force
 // v10, and never downgrade a v10 workspace. Default to v9 when unresolved.
 export function getConvertToFlatConfigVersions(tree: Tree): EslintVersions {

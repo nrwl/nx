@@ -254,7 +254,7 @@ function reportEslintrcOnlyTargetOptions(
 
 // The flat-config conversion pulls `eslint:recommended` from `@eslint/js`, whose
 // v10 recommended set is wider than the one ESLint v9 applied. The converter
-// keeps the workspace on its installed ESLint major, so check what it landed on
+// keeps the workspace on its declared ESLint major, so check what it landed on
 // rather than assuming v10.
 function reportNewEslintJsRecommendedRules(
   tree: Tree,
