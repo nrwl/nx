@@ -120,6 +120,7 @@ export type ReleaseOptions = NxReleaseArgs &
     yes?: boolean;
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
+    tag?: string;
     otp?: number;
   };
 
@@ -240,6 +241,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             type: 'boolean',
             description:
               'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
+          })
+          .option('tag', {
+            type: 'string',
+            description:
+              'The distribution tag to apply to the published package.',
           })
           .option('otp', {
             type: 'number',
