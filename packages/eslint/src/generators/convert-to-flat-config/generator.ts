@@ -198,7 +198,8 @@ export async function convertToFlatConfigGenerator(
     logger.warn(
       `These lint targets still carry ESLint options that flat config does not support: ${leftover.join('; ')}. ` +
         'ESLint rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options. "rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
-        'Move "ignore-path" patterns into the flat config\'s "ignores", load the "rulesdir" rules through a local plugin, pass a "resolve-plugins-relative-to" directory to FlatCompat as "resolvePluginsRelativeTo", and delete "no-eslintrc".'
+        'Move the patterns of an "ignore-path" file into the flat config\'s "ignores" only when no configuration, project or narrower "targetDefaults" entry replaces that "ignore-path". Otherwise pass them as "--ignore-pattern" flags in the "args" of the runs that used the file, because flat config "ignores" apply to every run. ' +
+        'Load the "rulesdir" rules through a local plugin, pass a "resolve-plugins-relative-to" directory to FlatCompat as "resolvePluginsRelativeTo", and delete "no-eslintrc".'
     );
   }
 
