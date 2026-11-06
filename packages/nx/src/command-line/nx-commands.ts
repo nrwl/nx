@@ -3,6 +3,7 @@ import * as yargs from 'yargs';
 
 import { reportCommandRunEvent } from '../analytics';
 import { output } from '../utils/output';
+import { resolveInstalledPackage } from '../utils/installation-directory';
 import { yargsAddCommand } from './add/command-object';
 import {
   yargsAffectedBuildCommand,
@@ -178,9 +179,11 @@ function resolveConformanceCommandObject() {
   try {
     const { yargsConformanceCommand } = (() => {
       try {
-        return require('@nx/powerpack-conformance');
+        return require(
+          resolveInstalledPackage('@nx/powerpack-conformance', [__dirname])
+        );
       } catch {
-        return require('@nx/conformance');
+        return require(resolveInstalledPackage('@nx/conformance', [__dirname]));
       }
     })();
     return yargsConformanceCommand;
@@ -193,9 +196,11 @@ function resolveConformanceCheckCommandObject() {
   try {
     const { yargsConformanceCheckCommand } = (() => {
       try {
-        return require('@nx/powerpack-conformance');
+        return require(
+          resolveInstalledPackage('@nx/powerpack-conformance', [__dirname])
+        );
       } catch {
-        return require('@nx/conformance');
+        return require(resolveInstalledPackage('@nx/conformance', [__dirname]));
       }
     })();
     return yargsConformanceCheckCommand;

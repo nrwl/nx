@@ -13,7 +13,11 @@ import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from './package-manager';
-import { workspaceRoot, workspaceRootInner } from './workspace-root';
+import {
+  isTrustedNxInstall,
+  workspaceRoot,
+  workspaceRootInner,
+} from './workspace-root';
 import { ChildProcess } from '../native';
 import { messageToCode } from './exit-codes';
 import { readJsonFile } from './fileutils';
@@ -105,7 +109,10 @@ function findInstalledNxBin(root: string): string | null {
   for (let dir = root; ; dir = dirname(dir)) {
     // The nearest install wins, so an unusable manifest there ends the search
     // rather than deferring to an ancestor.
-    if (existsSync(join(dir, 'node_modules', 'nx', 'package.json'))) {
+    if (
+      existsSync(join(dir, 'node_modules', 'nx', 'package.json')) &&
+      isTrustedNxInstall(join(dir, 'node_modules'), root)
+    ) {
       return readInstalledNxBin(dir);
     }
     if (dir === dirname(dir)) {
