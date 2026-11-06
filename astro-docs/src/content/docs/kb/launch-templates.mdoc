@@ -11,6 +11,12 @@ Nx Cloud provides several pre-built launch templates for common use-cases. You c
 
 {% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
 
+{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
+`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`dte.distribute-on` is now a `worker-templates` entry. Launch templates themselves are unchanged.
+The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% /aside %}
+
 ## Getting started with custom launch templates
 
 To create a custom launch template, copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) under the [`launch-templates`](/docs/reference/nx-cloud/ci-config#launch-templates) key of `.nx/workflows/ci.yaml` and customize the steps as needed.

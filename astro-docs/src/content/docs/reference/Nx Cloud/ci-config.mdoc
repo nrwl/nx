@@ -7,6 +7,11 @@ filter: 'type:References'
 Nx Cloud reads CI configuration from a `.nx/workflows/ci.yaml` file in your workspace.
 The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) or on an external provider such as GitHub Actions.
 
+{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
+`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% /aside %}
+
 {% tabs syncKey="ci-location" %}
 {% tabitem label="External CI" %}
 
@@ -55,8 +60,6 @@ jobs:
 
 {% /tabitem %}
 {% /tabs %}
-
-If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/docs/kb/migrate-from-ci-config).
 
 ## Top-level structure
 

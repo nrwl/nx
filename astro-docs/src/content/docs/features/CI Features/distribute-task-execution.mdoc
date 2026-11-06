@@ -263,6 +263,12 @@ If you don't have a CI workflow yet, generate one:
 npx nx g ci-workflow
 ```
 
+{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
+`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`dte.distribute-on` is now a `worker-templates` entry, and a changeset map becomes `small`, `medium`, and `large`.
+The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% /aside %}
+
 Add a `.nx/workflows/ci.yaml` file that sets how many workers to use:
 
 ```yaml
