@@ -49,8 +49,7 @@ export interface DirectiveHeader {
 
 /**
  * The directives in the comment block that opens `content`, and the mistakes
- * that make Nx ignore one: an unknown name, a line Nx can't read, a value Nx
- * ignores, and a known or misspelled directive in a comment after code.
+ * that make Nx ignore one.
  */
 export function checkDirectiveHeader(
   content: string,
