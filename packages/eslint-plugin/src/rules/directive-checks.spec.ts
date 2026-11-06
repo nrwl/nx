@@ -165,18 +165,20 @@ describe('directive-checks', () => {
       ]);
     });
 
-    it('reports a known directive in a comment after code', () => {
+    it('reports a known or misspelled directive in a comment after code', () => {
       const messages = runRule(
-        "'use strict';\nimport './a';\n/**\n * @nx-depends-on: shop\n */\nconst a = 1; // @nx-ignore-server-inputs"
+        "'use strict';\nimport './a';\n/**\n * @nx-depends-on: shop\n */\nconst a = 1; // @nx-ignore-server-inputs\n// @nx-depend-on: shop\n// @nx-cache-forever"
       );
 
       expect(messages.map(({ message }) => message)).toEqual([
         'Nx reads "@nx-depends-on" only in the comments that open the file, on lines before any code, so it ignores this one.',
         'Nx reads "@nx-ignore-server-inputs" only in the comments that open the file, on lines before any code, so it ignores this one.',
+        '"@nx-depend-on" is not a directive Nx reads, so Nx ignores it. Did you mean "@nx-depends-on"?',
       ]);
       expect(summarize(messages)).toEqual([
         expect.objectContaining({ line: 4, column: 4, endColumn: 24 }),
         expect.objectContaining({ line: 6, column: 17, endColumn: 41 }),
+        expect.objectContaining({ line: 7, column: 4, endColumn: 23 }),
       ]);
     });
 

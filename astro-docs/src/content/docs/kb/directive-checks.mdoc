@@ -108,6 +108,8 @@ The rule reports
 
 A line with more text after the name and no colon, such as `// @nx-todo check the flaky step`,
 isn't shaped like a directive, so the rule doesn't report it.
+After the first line of code, the rule reports an unknown name only when it can suggest a directive.
+A misspelled `// @nx-depend-on: checkout` after an import is reported, and `// @nx-flaky` isn't.
 
 ### Directives Nx can't read
 

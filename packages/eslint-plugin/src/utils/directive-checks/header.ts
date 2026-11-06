@@ -52,7 +52,7 @@ export interface DirectiveHeader {
 /**
  * The directives in the comment block that opens `content`, and the mistakes
  * that make Nx ignore one: an unknown name, a line Nx can't read, a value Nx
- * ignores, and a known directive in a comment after code.
+ * ignores, and a known or misspelled directive in a comment after code.
  */
 export function checkDirectiveHeader(
   content: string,
@@ -143,6 +143,19 @@ export function checkDirectiveHeader(
           ...lineSpan(line),
           messageId: 'directiveAfterCode',
           data: { name },
+        });
+        continue;
+      }
+      // After code, only a name close to a known one marks a line meant for Nx.
+      const unknownName = matchNxDirective(line.text)?.name;
+      const [suggestion] = unknownName
+        ? findClosestMatches(unknownName, NX_DIRECTIVE_NAMES, 1)
+        : [];
+      if (suggestion) {
+        problems.push({
+          ...lineSpan(line),
+          messageId: 'unknownDirectiveSuggestion',
+          data: { name: unknownName, suggestion },
         });
       }
     }
