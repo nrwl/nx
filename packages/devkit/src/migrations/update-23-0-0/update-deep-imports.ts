@@ -1,3 +1,4 @@
+import type { TypescriptAst } from 'nx/src/devkit-internals';
 import { logger, type Tree } from 'nx/src/devkit-exports';
 import type {
   CallExpression,
@@ -9,13 +10,12 @@ import type {
 } from 'typescript';
 import { formatFiles } from '../../generators/format-files';
 import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
-import { ensurePackage } from '../../utils/package-json';
+import { ensureTypescript } from '../../utils/ensure-typescript';
 import {
   applyChangesToString,
   ChangeType,
   type StringChange,
 } from '../../utils/string-change';
-import { typescriptVersion } from '../../utils/versions';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const DEEP_IMPORT_PREFIX = '@nx/devkit/src/';
@@ -87,7 +87,7 @@ const MOCK_HELPER_METHODS: ReadonlySet<string> = new Set([
   'importMock',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function updateDevkitDeepImports(
   tree: Tree
@@ -117,10 +117,7 @@ export default async function updateDevkitDeepImports(
 }
 
 export function rewriteDevkitDeepImports(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>(
-    'typescript',
-    typescriptVersion
-  );
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

@@ -4,6 +4,7 @@ import {
   Tree,
   type StringChange,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
 import type {
@@ -265,8 +266,8 @@ function transformConditionalConfig(
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
-  const { tsquery } = require('@nx/devkit/internal');
-  const { SyntaxKind } = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const { SyntaxKind } = ensureTypescript();
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
 
@@ -475,8 +476,8 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
  * when the config's shape hides the object we would have to edit.
  */
 export function addTsconfigPathsResolution(appFileContent: string): string {
-  const { tsquery } = require('@nx/devkit/internal');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
 
   const file = tsquery.ast(appFileContent);
   const config = findConfigObject(tsModule, tsquery, file);
@@ -523,8 +524,8 @@ export function addTsconfigPathsResolution(appFileContent: string): string {
 }
 
 export function hasTsconfigPathsResolution(content: string): boolean {
-  const { tsquery } = require('@nx/devkit/internal');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
   const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
   if (!config || config.properties.some(tsModule.isSpreadAssignment))
     return false;
@@ -554,8 +555,8 @@ export function addTsconfigPathsPlugin(
   commonJs = false
 ): string {
   if (content.includes('vite-tsconfig-paths')) return content;
-  const { tsquery } = require('@nx/devkit/internal');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
   const config = findConfigObject(tsModule, tsquery, tsquery.ast(content));
   if (!config || config.properties.some(tsModule.isSpreadAssignment))
     return content;
@@ -597,7 +598,7 @@ export function addTsconfigPathsPlugin(
  * undefined when the config is assembled somewhere we cannot follow.
  */
 export function findConfigObject(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   tsquery: any,
   file: import('typescript').SourceFile
 ): import('typescript').ObjectLiteralExpression | undefined {
@@ -624,7 +625,7 @@ export function findConfigObject(
 }
 
 function unwrapConfigExpression(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   node: import('typescript').Node | undefined
 ): import('typescript').ObjectLiteralExpression | undefined {
   if (!node) return undefined;

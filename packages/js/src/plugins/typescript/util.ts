@@ -2,7 +2,7 @@ import { readJsonFile, type TargetConfiguration } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { extname, isAbsolute, relative, resolve } from 'node:path';
 import { join } from 'path';
-import { type ParsedCommandLine } from 'typescript';
+import type { ParsedCommandLine } from 'typescript';
 import {
   type PackageManagerCommands,
   type PackageJson,

@@ -1,4 +1,5 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import { Schema } from './schema';
 import {
   applyChangesToString,
@@ -13,6 +14,8 @@ import { addImport } from './lib/add-import';
 import { dirname, join, parse, relative } from 'path';
 import { getProjectType } from '@nx/js/internal';
 import { assertSupportedExpoVersion } from '../../utils/versions';
+
+let tsModule: TypescriptAst;
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
   assertSupportedExpoVersion(host);
@@ -49,6 +52,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  tsModule ??= ensureTypescript();
   const workspace = getProjects(host);
   const proj = workspace.get(options.projectName);
   const isApp =
@@ -67,10 +71,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     }
 
     const indexSource = host.read(indexFilePath, 'utf-8');
-    const indexSourceFile = ts.createSourceFile(
+    const indexSourceFile = tsModule.createSourceFile(
       indexFilePath,
       indexSource,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
     const relativePathFromIndex = getRelativeImportToFile(

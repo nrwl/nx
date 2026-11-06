@@ -1,5 +1,5 @@
 import { tsquery } from '@nx/devkit/internal';
-import { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
+import type { ObjectLiteralExpression, PropertyAssignment } from 'typescript';
 
 /**
  * match testing file based on their name file

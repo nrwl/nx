@@ -6,6 +6,7 @@ import {
   readJson,
   Tree,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { dirname } from 'path';
 
 /**
@@ -116,7 +117,7 @@ function checkForTopLevelAwait(
   parseAst: any,
   query: any
 ): boolean {
-  const ts = require('typescript');
+  const ts: TypescriptAst = require('@nx/devkit/internal').ensureTypescript();
   // Check for await expressions that are not inside a function
   const sourceFile = parseAst(content);
   const awaitExpressions = query(sourceFile, 'AwaitExpression');
@@ -146,7 +147,7 @@ function convertImportsToRequire(
   parseAst: any,
   query: any
 ): string {
-  const ts = require('typescript');
+  const ts: TypescriptAst = require('@nx/devkit/internal').ensureTypescript();
   const sourceFile = parseAst(content);
   const importDeclarations = query(sourceFile, 'ImportDeclaration');
 

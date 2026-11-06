@@ -6,6 +6,7 @@ import {
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import type {
   ArrayLiteralExpression,
   CallExpression,
@@ -66,8 +67,8 @@ export default async function migrateNxViteTsPaths(tree: Tree): Promise<void> {
  * handles what this leaves behind.
  */
 function removePluginUsage(content: string): string {
-  const { tsquery } = require('@nx/devkit/internal');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
   const file = tsquery.ast(content);
 
   const importsPlugin = file.statements.some(
@@ -172,7 +173,7 @@ function removePluginUsage(content: string): string {
  * broken one.
  */
 function findSolePluginImports(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   tsquery: any,
   file: import('typescript').SourceFile
 ): Node[] {

@@ -12,7 +12,7 @@ import {
   type Tree,
   logger as devkitLogger,
 } from '@nx/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
 import {
   webpackCliVersion,

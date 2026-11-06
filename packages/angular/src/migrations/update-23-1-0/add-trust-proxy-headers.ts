@@ -1,7 +1,10 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
+
+let tsModule: TypescriptAst;
 
 const TODO_COMMENT =
   '// TODO: This is a security-sensitive option. Remove if not needed. ' +
@@ -9,6 +12,7 @@ const TODO_COMMENT =
 const TRUST_PROXY_HEADERS = `trustProxyHeaders: ['x-forwarded-host', 'x-forwarded-proto'],`;
 
 export default async function (tree: Tree) {
+  tsModule ??= ensureTypescript();
   const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/ssr',
   ]);
@@ -29,18 +33,18 @@ export default async function (tree: Tree) {
         return;
       }
 
-      const sourceFile = ts.createSourceFile(
+      const sourceFile = tsModule.createSourceFile(
         path,
         content,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
       let recorder: FileChangeRecorder | undefined;
 
       const visit = (node: ts.Node): void => {
         if (
-          ts.isNewExpression(node) &&
-          ts.isIdentifier(node.expression) &&
+          tsModule.isNewExpression(node) &&
+          tsModule.isIdentifier(node.expression) &&
           (node.expression.text === 'AngularNodeAppEngine' ||
             node.expression.text === 'AngularAppEngine')
         ) {
@@ -58,14 +62,15 @@ export default async function (tree: Tree) {
               node.end - 1,
               `{\n  ${TODO_COMMENT}\n  ${TRUST_PROXY_HEADERS}\n}`
             );
-          } else if (ts.isObjectLiteralExpression(node.arguments[0])) {
+          } else if (tsModule.isObjectLiteralExpression(node.arguments[0])) {
             const optionsArg = node.arguments[0];
             // Any member kind counts (shorthand, method, accessor): adding the
             // property next to one would duplicate the key.
             const hasTrustProxyHeaders = optionsArg.properties.some(
               (prop) =>
                 prop.name &&
-                (ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name)) &&
+                (tsModule.isIdentifier(prop.name) ||
+                  tsModule.isStringLiteral(prop.name)) &&
                 prop.name.text === 'trustProxyHeaders'
             );
             if (!hasTrustProxyHeaders) {
@@ -78,7 +83,7 @@ export default async function (tree: Tree) {
             }
           }
         }
-        ts.forEachChild(node, visit);
+        tsModule.forEachChild(node, visit);
       };
 
       visit(sourceFile);

@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
-import { Node, SyntaxKind } from 'typescript';
+import type { Node, SyntaxKind } from 'typescript';
 import { workspaceRoot } from '@nx/devkit';
 import {
   createTsModuleResolver,

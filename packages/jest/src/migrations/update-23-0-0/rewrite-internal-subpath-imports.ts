@@ -1,13 +1,13 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   logger,
   type StringChange,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type {
   CallExpression,
   ExportDeclaration,
@@ -50,7 +50,7 @@ const MOCK_HELPER_METHODS: ReadonlySet<string> = new Set([
   'importMock',
 ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function rewriteInternalSubpathImports(
   tree: Tree
@@ -83,7 +83,7 @@ export default async function rewriteInternalSubpathImports(
 }
 
 export function rewriteSubpathImports(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,
