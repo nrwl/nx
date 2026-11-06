@@ -8,6 +8,15 @@
   },
   "rules": {
     "no-duplicate-imports": ["error", { "allowSeparateTypeImports": true }],
+    // Bug-history phrases in comments lose their referent once merged. The
+    // history belongs in the commit message.
+    "no-warning-comments": [
+      "error",
+      {
+        "location": "anywhere",
+        "terms": ["without the fix", "this pr", "this pull request"]
+      }
+    ],
     // A nested config that redefines this rule REPLACES these options; oxlint
     // does not merge them. A missing entry fails silently (fewer errors, not
     // more), so restate every path and pattern.
