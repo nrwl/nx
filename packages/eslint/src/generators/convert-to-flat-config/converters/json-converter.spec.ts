@@ -193,6 +193,7 @@ describe('convertEslintJsonToFlatConfig', () => {
           env: {
             jest: true,
             browser: false,
+            'shared-node-browser': true,
           },
         })
       );
@@ -235,7 +236,7 @@ describe('convertEslintJsonToFlatConfig', () => {
             ...baseConfig,
             ...nx.configs["flat/react-typescript"],
             ...compat.extends("next", "next/core-web-vitals"),
-            { languageOptions: { globals: { ...globals.jest } } },
+            { languageOptions: { globals: { ...globals.jest, ...globals["shared-node-browser"] } } },
             {
                 rules: {
                     "@next/next/no-html-link-for-pages": "off"
