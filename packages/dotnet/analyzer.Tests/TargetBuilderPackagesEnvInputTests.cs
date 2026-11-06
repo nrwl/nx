@@ -26,7 +26,7 @@ public class TargetBuilderPackagesEnvInputTests
             workspaceRoot: WorkspaceRoot,
             options: new PluginOptions(),
             nxJson: null,
-            directoryBuildInputs: new List<string>());
+            directoryBuildInputs: new List<string>()).Targets;
 
     private static bool HasEnvInput(Target target, string name) =>
         target.Inputs!.Any(input => JsonSerializer.Serialize(input) == $"{{\"env\":\"{name}\"}}");

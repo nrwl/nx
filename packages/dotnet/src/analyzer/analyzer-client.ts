@@ -8,8 +8,10 @@ import {
 } from '@nx/devkit';
 import {
   hashWithWorkspaceContext,
+  globWithWorkspaceContext,
   workspaceDataDirectory,
   hashObject,
+  hashFile,
   isCI,
   killChildOnHostExit,
   killProcessTreeGraceful,
@@ -72,6 +74,8 @@ export type AnalysisResult = AnalysisSuccessResult | AnalysisErrorResult;
  * These are the target names that the analyzer will use to generate targets.
  */
 export interface DotNetAnalyzerOptions {
+  ridVariants?: boolean;
+  tfmVariants?: boolean;
   buildTargetName?: string;
   testTargetName?: string;
   cleanTargetName?: string;
@@ -321,7 +325,15 @@ export async function analyzeProjects(
   files: string[],
   options?: DotNetAnalyzerOptions
 ): Promise<AnalysisResult> {
-  const filesHash = await calculateProjectFilesHash(files);
+  const filesHash = hashObject({
+    files: await calculateProjectFilesHash(files),
+    analyzer: hashFile(getAnalyzerPath()),
+    options,
+    itemPaths:
+      options?.tfmVariants === false
+        ? []
+        : (await globWithWorkspaceContext(workspaceRoot, ['**/*'])).sort(),
+  });
 
   // Return cached results if the glob-matched files and the files the
   // previous evaluation imported are both unchanged.

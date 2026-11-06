@@ -95,7 +95,8 @@ public sealed class EvaluatedProperties
 
     public bool UsesArtifactsOutput => IsTrue(nameof(UseArtifactsOutput));
     public bool IsExecutable =>
-        string.Equals(OutputType, "Exe", StringComparison.OrdinalIgnoreCase);
+        string.Equals(OutputType, "Exe", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(OutputType, "WinExe", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// MSBuild compares booleans case-insensitively, so a project that writes

@@ -9,4 +9,6 @@ public record ProjectMetadata
     /// Technologies used by this project (e.g., "dotnet", "csharp", "test").
     /// </summary>
     public List<string> Technologies { get; init; } = new();
+
+    public Dictionary<string, List<string>>? TargetGroups { get; init; }
 }
