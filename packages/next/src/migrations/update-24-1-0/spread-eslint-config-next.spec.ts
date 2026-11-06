@@ -101,15 +101,17 @@ export default eslintConfig;
     `);
   });
 
-  it('keeps the export unnamed when the config already uses the name eslintConfig', async () => {
+  it('names the export with the first unused eslintConfig<N> when the config already uses eslintConfig', async () => {
     tree.write(
       'apps/web/eslint.config.mjs',
       `import nextEslintPluginNext from '@next/eslint-plugin-next';
 import eslintConfig from '../../eslint.config.mjs';
+import eslintConfig2 from './eslint.shared.mjs';
 
 export default [
   { plugins: { '@next/next': nextEslintPluginNext } },
   ...eslintConfig,
+  ...eslintConfig2,
 ];
 `
     );
@@ -120,8 +122,11 @@ export default [
       .toMatchInlineSnapshot(`
       "import nextVitals from 'eslint-config-next/core-web-vitals';
       import eslintConfig from '../../eslint.config.mjs';
+      import eslintConfig2 from './eslint.shared.mjs';
 
-      export default [...nextVitals, ...eslintConfig];
+      const eslintConfig3 = [...nextVitals, ...eslintConfig, ...eslintConfig2];
+
+      export default eslintConfig3;
       "
     `);
   });

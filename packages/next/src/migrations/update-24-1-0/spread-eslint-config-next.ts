@@ -488,10 +488,13 @@ function nameExportedArray(content: string): string {
   );
   if (
     !exportDefault ||
-    !tsModule.isArrayLiteralExpression(exportDefault.expression) ||
-    hasIdentifier(source, CONFIG_VARIABLE)
+    !tsModule.isArrayLiteralExpression(exportDefault.expression)
   ) {
     return content;
+  }
+  let name = CONFIG_VARIABLE;
+  for (let suffix = 2; hasIdentifier(source, name); suffix++) {
+    name = `${CONFIG_VARIABLE}${suffix}`;
   }
   const start = exportDefault.getStart();
   return applyChangesToString(content, [
@@ -503,12 +506,12 @@ function nameExportedArray(content: string): string {
     {
       type: ChangeType.Insert,
       index: start,
-      text: `const ${CONFIG_VARIABLE} = `,
+      text: `const ${name} = `,
     },
     {
       type: ChangeType.Insert,
       index: exportDefault.end,
-      text: `\n\nexport default ${CONFIG_VARIABLE};`,
+      text: `\n\nexport default ${name};`,
     },
   ]);
 }
