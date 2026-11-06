@@ -54,7 +54,7 @@ export const extraEslintDependencies: EslintDependencies =
  * ESLint v10 has no eslintrc API and no react/jsx-a11y/import release, so v10
  * workspaces swap to eslint-plugin-import-x and react-hooks v7. We read the
  * version from `@nx/eslint`'s resolver, the same one that installs ESLint, so
- * the plugin set stays in lockstep with the declared ESLint major.
+ * the plugin set stays in lockstep with the workspace's ESLint major.
  */
 export function getExtraEslintDependencies(tree: Tree): EslintDependencies {
   const { eslintVersion } = eslintVersions(tree);

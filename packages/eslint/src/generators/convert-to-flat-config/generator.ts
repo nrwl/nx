@@ -902,7 +902,7 @@ function processConvertedConfig(
   tree.write(join(root, target), content);
 
   // Conversion changes the config format, not the ESLint major. Resolve the
-  // stack from the declared version so an existing v9 workspace stays on v9 (a
+  // stack from the workspace's version so an existing v9 workspace stays on v9 (a
   // forced v10 bump strands v9-only plugins) and a v10 workspace is not
   // downgraded.
   const { eslintVersion, typescriptESLintVersion } =

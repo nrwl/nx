@@ -27,29 +27,53 @@ describe('getExtraEslintDependencies', () => {
     });
   }
 
-  it('installs import-x and react-hooks v7 for ESLint v10 workspaces', () => {
-    setEslintVersion('^10.0.0');
+  function setInstalledEslintVersion(version: string | undefined) {
+    if (version) {
+      tree.write(
+        'node_modules/eslint/package.json',
+        JSON.stringify({ name: 'eslint', version })
+      );
+    }
+  }
 
-    const { devDependencies } = getExtraEslintDependencies(tree);
+  it.each([
+    ['^10.0.0', undefined],
+    ['^9.0.0 || ^10.0.0', '10.0.1'],
+  ])(
+    'installs import-x and react-hooks v7 for ESLint v10 workspaces (%s, installed %s)',
+    (declared, installed) => {
+      setEslintVersion(declared);
+      setInstalledEslintVersion(installed);
 
-    expect(devDependencies['eslint-plugin-import-x']).toMatch(/^\^?4\./);
-    expect(devDependencies['eslint-plugin-react-hooks']).toMatch(/^7\./);
-    expect(devDependencies['eslint-plugin-react']).toBeUndefined();
-    expect(devDependencies['eslint-plugin-jsx-a11y']).toBeUndefined();
-    expect(devDependencies['eslint-plugin-import']).toBeUndefined();
-  });
+      const { devDependencies } = getExtraEslintDependencies(tree);
 
-  it('installs the legacy plugin set for ESLint v9 workspaces', () => {
-    setEslintVersion('^9.8.0');
+      expect(devDependencies['eslint-plugin-import-x']).toMatch(/^\^?4\./);
+      expect(devDependencies['eslint-plugin-react-hooks']).toMatch(/^7\./);
+      expect(devDependencies['eslint-plugin-react']).toBeUndefined();
+      expect(devDependencies['eslint-plugin-jsx-a11y']).toBeUndefined();
+      expect(devDependencies['eslint-plugin-import']).toBeUndefined();
+    }
+  );
 
-    const { devDependencies } = getExtraEslintDependencies(tree);
+  it.each([
+    ['^9.8.0', undefined],
+    ['<10 >=9.0.0', undefined],
+    ['<10 >=9.0.0', '9.39.4'],
+  ])(
+    'installs the legacy plugin set for ESLint v9 workspaces (%s, installed %s)',
+    (declared, installed) => {
+      setEslintVersion(declared);
+      setInstalledEslintVersion(installed);
 
-    expect(devDependencies['eslint-plugin-react']).toBeDefined();
-    expect(devDependencies['eslint-plugin-jsx-a11y']).toBeDefined();
-    expect(devDependencies['eslint-plugin-import']).toBeDefined();
-    expect(devDependencies['eslint-plugin-react-hooks']).toMatch(/^5\./);
-    expect(devDependencies['eslint-plugin-import-x']).toBeUndefined();
-  });
+      const { devDependencies } = getExtraEslintDependencies(tree);
+
+      expect(devDependencies['eslint-plugin-react']).toBeDefined();
+      expect(devDependencies['eslint-plugin-jsx-a11y']).toBeDefined();
+      expect(devDependencies['eslint-plugin-import']).toBeDefined();
+      expect(devDependencies['eslint-plugin-react-hooks']).toMatch(/^5\./);
+      expect(devDependencies['eslint-plugin-import-x']).toBeUndefined();
+    }
+  );
 
   it('defaults to the ESLint v10 set when no ESLint version is declared', () => {
     const { devDependencies } = getExtraEslintDependencies(tree);

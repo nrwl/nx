@@ -41,7 +41,9 @@ describe('versions(tree)', () => {
 
   it.each([
     ['Angular 20', { '@angular/core': '~20.3.0' }, /^\^9\./],
+    ['Angular 20 as a range', { '@angular/core': '<21 >=20.0.0' }, /^\^9\./],
     ['Next.js 15', { next: '~15.2.4' }, /^\^9\./],
+    ['Next.js 15 as a range', { next: '<16 >=15.0.0' }, /^\^9\./],
     [
       'Angular 21 and Next.js 16',
       { '@angular/core': '~21.0.0', next: '~16.0.0' },
