@@ -46,9 +46,10 @@ Alternatively, you may choose to skip a problematic migration.
 
 ### Migrations that use an AI prompt
 
-Some migrations ship an AI prompt instead of (or in addition to) a deterministic script - see [what's in a migration](/docs/features/automate-updating-dependencies#whats-in-a-migration). The Migrate UI marks these with an **AI** badge and handles them without running an agent itself:
+Some migrations ship an AI prompt instead of (or in addition to) a deterministic script.
+See [what's in a migration](/docs/features/automate-updating-dependencies#whats-in-a-migration). The Migrate UI marks these with an **AI** badge and handles them without running an agent itself:
 
-- **Prompt-only** migrations can't run automatically. The card shows **"AI prompt pending"** with a hint pointing at the prompt file, and **View Source** opens that prompt. Apply the prompt yourself - for example, with your AI agent - then click **Mark as Run** to record it and move on.
+- **Prompt-only** migrations can't run automatically. The card shows **"AI prompt pending"** with a hint pointing at the prompt file, and **View Source** opens that prompt. Apply the prompt yourself (for example, with your AI agent), then click **Mark as Run** to record it and move on.
 - **Hybrid** migrations run their generator automatically, then the card shows **Generator complete** alongside **AI prompt pending**. Click **Approve Changes** to accept the generator's edits and advance, or **Mark as Run** if the generator made no changes.
 
 Your acknowledgment is remembered across editor reloads, so reopening a session brings you back to any prompt migrations you still need to finish.

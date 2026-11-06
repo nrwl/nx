@@ -24,7 +24,7 @@ Follow the steps from this guide exactly: {pageUrl}
    - (c) Benign access, last resort - exclude the path. For a single target use `ultracache.ignoreReads`/`ultracache.ignoreWrites` in `project.json`; for the whole workspace use `.nx/workflows/ultracache-config.yaml` (`ignore-reads`/`ignore-writes` or `task-exclusions`). Use sparingly, like a `ts-ignore` - excluded paths are not tracked...
 
 5. After editing, run `npx nx reset` then re-validate the same per-task report. Once it reports `ok: true`, go back to step 2 to pick the next task. Loop until every task in `index.json` is clean.
-6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Analytics** > **Cache inputs and outputs** page URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear - cache hits will not regenerate reports, so a clean local validate is not enough on its own.
+6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Analytics** > **Cache inputs and outputs** page URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear. Cache hits will not regenerate reports, so a clean local validate is not enough on its own.
 
 Report which tasks you fixed and which category (a/b/c) you used for each. Ask before continuing to the next task if you are uncertain about any change.
 {% /llm_copy_prompt %}
@@ -108,7 +108,8 @@ On older versions, inline the full inputs/outputs list (use the `nx show target`
 
 ### Task or application bug
 
-The unexpected read or write reflects a problem in the script, build tool, or application code itself - the file should not be touched during this task at all.
+The unexpected read or write reflects a problem in the script, build tool, or application code itself.
+The file should not be touched during this task at all.
 A common example is an app reading or writing a file during build that it should only access at runtime.
 Fix the offending code or script, not the Nx config.
 
@@ -149,7 +150,8 @@ Global `exclude-reads` and `exclude-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 Patterns use glob syntax relative to the workspace root, and they add to a target's own `ultracache` patterns rather than replacing them.
 
-Use sparingly, like a `ts-ignore` - excluded paths are not tracked, so a real regression in one of them will not be caught.
+Use sparingly, like a `ts-ignore`.
+Excluded paths are not tracked, so a real regression in one of them will not be caught.
 
 ## 5. Re-validate the task you fixed
 
@@ -175,7 +177,8 @@ npx nx-cloud get io-reports --branch <branch> --since 1h
 ```
 
 Re-run step 2 against the fresh `index.json`.
-CI may surface tasks that did not run locally or behave differently in the CI environment - if new violations appear, loop back through steps 2-5 until CI is also clean.
+CI may surface tasks that did not run locally or behave differently in the CI environment.
+If new violations appear, loop back through steps 2-5 until CI is also clean.
 
 Open **Analytics** > **Cache inputs and outputs** for the branch in Nx Cloud to confirm.
 The page shows the most recent report per task, so a cleanly fixed task drops off the list rather than reappearing on cache hits.
@@ -183,7 +186,7 @@ The page shows the most recent report per task, so a cleanly fixed task drops of
 {% aside type="note" title="Cache hits don't regenerate reports" %}
 On CI, a cached task doesn't run, so it doesn't produce a fresh report.
 A locally clean validate isn't enough on its own.
-The dashboard view is the canonical source - it shows the most recent report per task, even when the latest CI execution served a cache hit for that task.
+The dashboard view is the canonical source: it shows the most recent report per task, even when the latest CI execution served a cache hit for that task.
 {% /aside %}
 
 ## Related
