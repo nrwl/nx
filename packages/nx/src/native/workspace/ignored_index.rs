@@ -62,7 +62,7 @@ pub struct IgnoredIndex {
     never_settles: std::sync::atomic::AtomicBool,
 }
 
-/// A file's hash and the (mtime, size) it was read at. A `trusted` entry
+/// A file's hash and the (mtime, size, executable) it was read at. A `trusted` entry
 /// answers without a stat: it is set only when a caller that has applied
 /// every delivered event read the file with no event arriving meanwhile, and
 /// cleared by any event for the path. An untrusted entry is stat'ed and
@@ -98,9 +98,10 @@ pub(crate) fn now_secs() -> u64 {
         .unwrap_or(0)
 }
 
-/// The `(mtime, size)` a file showed when the index last read it. What
-/// says whether a hash it holds still stands.
-pub(crate) type FileStamp = (u128, u64);
+/// The `(mtime, size, executable)` a file showed when the index last read it.
+/// `executable` is always false off unix. `chmod` moves neither mtime nor
+/// size, so the bit is what makes a mode-only change miss.
+pub(crate) type FileStamp = (u128, u64, bool);
 
 pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
     let mtime = metadata
@@ -109,7 +110,18 @@ pub(crate) fn stamp_of(metadata: &std::fs::Metadata) -> FileStamp {
         .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    (mtime, metadata.len())
+    (mtime, metadata.len(), metadata_is_executable(metadata))
+}
+
+#[cfg(unix)]
+fn metadata_is_executable(metadata: &std::fs::Metadata) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    metadata.permissions().mode() & 0o111 != 0
+}
+
+#[cfg(not(unix))]
+fn metadata_is_executable(_metadata: &std::fs::Metadata) -> bool {
+    false
 }
 
 /// Where a hashing call sits in a run. Before anything executes, the file map
@@ -938,6 +950,37 @@ mod tests {
         assert_ne!(
             too_fresh,
             index.hash_file(temp.path(), "dist/gen/a.js", None, RunStage::NothingRan)
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_mode_only_change_is_not_served_by_the_stamp() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = workspace();
+        let index = IgnoredIndex::new(None);
+        let path = "src/index.ts";
+        let file = temp.path().join(path);
+        age(&file);
+        let first = index
+            .hash_file(temp.path(), path, None, RunStage::NothingRan)
+            .unwrap();
+        assert_eq!(
+            index.hash_file(temp.path(), path, None, RunStage::NothingRan),
+            Some(first.clone())
+        );
+
+        let aged = std::fs::metadata(&file).unwrap().modified().unwrap();
+        let mut perms = std::fs::metadata(&file).unwrap().permissions();
+        perms.set_mode(perms.mode() | 0o111);
+        std::fs::set_permissions(&file, perms).unwrap();
+        set_modified(&file, aged);
+        assert_ne!(
+            index
+                .hash_file(temp.path(), path, None, RunStage::NothingRan)
+                .as_deref(),
+            Some(first.as_str())
         );
     }
 
