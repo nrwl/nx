@@ -179,6 +179,13 @@ public static class Analyzer
                     // Build targets
                     var projectName = ProjectUtilities.GetProjectName(primaryNode.ProjectInstance);
                     var projectDirectory = Path.GetDirectoryName(projectPath)!;
+                    var innerBuilds = nodes
+                        .Where(node => !string.IsNullOrEmpty(
+                            node.ProjectInstance?.GetPropertyValue("TargetFramework")))
+                        .Select(node => node.ProjectInstance!)
+                        .ToList();
+                    var tags = ProjectUtilities.GetCommonNxTags(
+                        innerBuilds.Count > 0 ? innerBuilds : nodes.Select(node => node.ProjectInstance!).ToList());
 
                     // Everything outside the project directory that feeds the build — the nearest
                     // Directory.* ancestors, every file MSBuild imported, and sources or analyzer
@@ -233,6 +240,7 @@ public static class Analyzer
                     {
                         Name = projectName,
                         Root = projectRoot,
+                        Tags = tags,
                         Targets = targets,
                         Metadata = new Models.ProjectMetadata
                         {
