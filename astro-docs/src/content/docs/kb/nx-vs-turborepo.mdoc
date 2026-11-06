@@ -360,7 +360,7 @@ With static binning, one agent finishes early and sits idle while another carrie
 - With Nx you declare _what_ should run on CI, and Nx Cloud figures out the optimal distribution automatically. Workers adapt automatically and get smarter over time.
 - With Turborepo, you imperatively assign tasks to machines and maintain that mapping as the codebase evolves.
 
-To learn more about distribution on CI, read [Distribute Task Execution (Workers)](/docs/features/ci-features/distribute-task-execution).
+To learn more about distribution on CI, read [Distribute Task Execution (workers)](/docs/features/ci-features/distribute-task-execution).
 
 Nx also provides **Atomizer**, which automatically splits slow e2e and integration test suites into per-file tasks that can run in parallel across machines.
 For more information, see [split e2e tasks](/docs/kb/split-e2e-tasks).
@@ -385,7 +385,7 @@ Both tools offer visibility into your pipelines, but through different models.
 
 **Nx Cloud** provides integrated dashboards out of the box. You get detailed run reports, timing data, cache hit/miss trends, and historical performance analysis without any external setup. These insights are also queryable via the MCP server, letting AI assistants analyze CI performance conversationally.
 
-![Nx DTE across 12 Workers - all agents have minimum 97% utilization](../../../assets/guides/adopting-nx/dte-chart.avif)
+![Nx DTE across 12 workers - all agents have minimum 97% utilization](../../../assets/guides/adopting-nx/dte-chart.avif)
 
 _Worker utilization chart, showing even distribution across CI runners._
 

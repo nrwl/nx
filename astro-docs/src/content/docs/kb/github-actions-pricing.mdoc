@@ -52,7 +52,7 @@ about 917 minutes on a standard 2-core GitHub runner.
 Every CI run connected to Nx Cloud costs 500 credits, or $0.275, plus 10 credits per machine for a
 [resource usage report](/docs/kb/resource-usage).
 
-Moving work onto [Workers](/docs/features/ci-features/distribute-task-execution) instead of GitHub
+Moving work onto [workers](/docs/features/ci-features/distribute-task-execution) instead of GitHub
 runners prices out like this:
 
 | Worker resource class | Credits per minute | USD per minute | Comparable GitHub runner | GitHub USD per minute |
@@ -61,7 +61,7 @@ runners prices out like this:
 | Linux XL, 8 vCPU      | 40                 | $0.022         | Linux x64, 8 core        | $0.022                |
 
 Linux x64 agents cost roughly the same as the equivalent GitHub runners at 2 and 8 cores.
-GitHub arm64 runners are cheaper than the matching Worker class, so price those workloads
+GitHub arm64 runners are cheaper than the matching worker class, so price those workloads
 separately.
 These are compute rates only, and a Team plan bill can also include contributors, concurrent
 connections, and add-ons.

@@ -9,7 +9,7 @@ filter: 'type:Features'
 Nx Cloud makes CI faster and cheaper in two ways:
 
 - [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine. On Nx Cloud, Ultracache records the files each task actually reads, improving both cache correctness and efficiency.
-- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Workers, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across workers, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
 In most workspaces, distribution uses about **50% fewer machine-minutes** than remote caching alone.
 Teams using Nx Cloud report **40% to 90% faster CI**.
@@ -41,7 +41,7 @@ To add distribution and the rest of the pipeline, see [setting up CI](/docs/gett
 
 Fast CI comes from two things:
 
-- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across Workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a Worker, so you get more work out of each machine.
+- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a worker, so you get more work out of each machine.
 - **Only run what you have to.** [`nx affected`](/docs/features/ci-features/affected) selects tasks whose inputs your changes touch. [Remote caching](/docs/features/ci-features/remote-cache) reuses results from tasks that already ran with the same inputs, so they don't run again.
 
 ## Why task-based CI costs less

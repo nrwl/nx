@@ -1,13 +1,13 @@
 ---
-title: Use the Docker layer cache with Workers
-description: Configure Docker Buildx to reuse image layers across Worker runs.
+title: Use the Docker layer cache with workers
+description: Configure Docker Buildx to reuse image layers across worker runs.
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
   - 'Nx Cloud'
 ---
 
-The Docker layer cache stores BuildKit cache layers in a registry near your Workers.
+The Docker layer cache stores BuildKit cache layers in a registry near your workers.
 A later build can pull unchanged layers from this registry instead of building them again.
 
 {% aside type="note" title="Requires a dedicated compute cluster" %}

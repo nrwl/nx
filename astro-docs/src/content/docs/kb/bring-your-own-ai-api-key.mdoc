@@ -82,7 +82,7 @@ Nx stores nothing, and the Claude Agent SDK reads the variables at session start
 
 `fix-ci` runs in two places, so the variables have to be present in both.
 It runs on your main CI job for failures outside agents, meaning non-distributed commands, and on
-Workers for distributed tasks that fail there.
+workers for distributed tasks that fail there.
 On the main job, set the variables the way you manage any other CI secret.
 Workers start clean, so
 [forward the variables to the agents](/docs/kb/launch-template-examples#pass-environment-variables).
@@ -177,7 +177,7 @@ On your own runners, use Application Default Credentials through
 `gcloud auth application-default login`, or point `GOOGLE_APPLICATION_CREDENTIALS` at a key file
 already on the machine.
 
-Forwarding to Workers passes values, not files, so carry the key file as a value and rebuild it
+Forwarding to workers passes values, not files, so carry the key file as a value and rebuild it
 on the agent:
 
 1. Put the service account JSON into an environment variable.

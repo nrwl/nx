@@ -29,7 +29,7 @@ Bazel is strong at hermetic caching, remote execution, and reproducibility, and 
 | --------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------- |
 | [Adoption](#adoption)                         | Incremental on existing tooling via `nx init`           | `BUILD` files per package, weeks to migrate                   |
 | [Caching](#caching)                           | Task-level, with Ultracache for cache integrity         | Action-level, sandbox-enforced by construction                |
-| [Distribution](#distribution)                 | Task-level Workers plus Atomizer, no rewrite required   | Action-level remote execution via third-party REAPI providers |
+| [Distribution](#distribution)                 | Task-level workers plus Atomizer, no rewrite required   | Action-level remote execution via third-party REAPI providers |
 | [JavaScript ecosystem](#javascript-ecosystem) | First-party plugins for Vite, Jest, Next.js, Playwright | `rules_js`/`rules_ts` maintained by a single small vendor     |
 | [Polyglot support](#polyglot-support)         | JS/TS native, plugins for Gradle, Maven, .NET           | First-class C++, Java, Go, Rust, Python                       |
 | [Module boundaries](#module-boundaries)       | Tag-based lint rule plus conformance rules              | Native per-target visibility, enforced at build time          |
