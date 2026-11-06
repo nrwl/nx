@@ -106,6 +106,7 @@ pub(crate) mod tests {
             ),
             ("!dist/**/*.impl.ts", vec!["cat.impl.ts"]),
             ("!dist/**/*.t!s", vec!["cat.t!s"]),
+            ("!dist/**/*.t\\!s", vec!["cat.t!s"]),
             ("!dist/exact.spec.ts", vec!["exact.spec.ts"]),
             ("!dist/skip/**", vec!["skip/cat.spec.ts"]),
         ] {

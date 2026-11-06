@@ -5,7 +5,9 @@ use std::sync::Arc;
 
 use anyhow::{Result, bail};
 
-use crate::native::glob::{NxGlobSet, build_glob_set, normalize_glob, partition_glob};
+use crate::native::glob::{
+    NxGlobSet, build_glob_set, literal_segment, normalize_glob, partition_glob,
+};
 
 /// A positive entry: the directory it is read from and the pattern after it,
 /// if any. Without a pattern it names an exact file, or a directory and
@@ -53,8 +55,7 @@ impl Negation {
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
         let category = ultracache
             .then(|| extension_wildcard_category(body))
-            .flatten()
-            .map(str::to_string);
+            .flatten();
         let (root, remainder) = partition_glob(body);
         if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
@@ -128,13 +129,14 @@ fn suffix_category(path: &str) -> &str {
 }
 
 /// Brace alternatives have already expanded. Other glob shapes keep their semantics.
-fn extension_wildcard_category(glob: &str) -> Option<&str> {
+fn extension_wildcard_category(glob: &str) -> Option<String> {
     let name = glob.rsplit('/').next()?;
-    let suffix = name.strip_prefix("*.")?;
-    if suffix.is_empty() || suffix.bytes().any(|b| b"*?[]{}()\\".contains(&b)) {
+    // Decode literal escapes with the same parser that distinguishes real glob syntax.
+    let suffix = literal_segment(name.strip_prefix("*.")?)?;
+    if suffix.is_empty() {
         return None;
     }
-    Some(suffix_category(name))
+    Some(suffix_category(&format!("*.{suffix}")).to_string())
 }
 
 #[cfg(test)]
@@ -143,7 +145,10 @@ mod tests {
 
     #[test]
     fn ultracache_extension_categories_accept_literal_bangs_but_not_extglobs() {
-        assert_eq!(extension_wildcard_category("*.t!s"), Some(".t!s"));
+        assert_eq!(
+            extension_wildcard_category("*.t!s").as_deref(),
+            Some(".t!s")
+        );
         assert_eq!(extension_wildcard_category("*.!(ts)"), None);
     }
 
