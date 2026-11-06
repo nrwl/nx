@@ -26,6 +26,7 @@ env:
   # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
   NX_CLOUD_USE_ULTRACACHE: 'true'
+  NX_CLOUD_LIVE_RUNS: 'true'
 
 jobs:
   main-linux:
@@ -120,7 +121,13 @@ jobs:
           pnpm nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,validate-links,format,run,validate-example &
+          # Build the Maven chain locally first: DTE skips tasks that are already cache hits
+          # when the run starts, so it never coordinates these hundreds of chained phase tasks.
+          (
+            pnpm nx run dev.nx.maven:maven-batch-runner:mvn:package --no-dte &&
+            pnpm nx run dev.nx.maven:nx-maven-plugin:mvn:install --no-dte &&
+            pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,validate-links,format,run,validate-example
+          ) &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
