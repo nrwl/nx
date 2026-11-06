@@ -153,7 +153,8 @@ async function getTerminalOutputLifeCycle(
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
-  overrides: Record<string, unknown>
+  overrides: Record<string, unknown>,
+  loadDotEnvFiles: boolean
 ): Promise<{
   lifeCycle: LifeCycle;
   printSummary?: () => void;
@@ -385,6 +386,9 @@ async function getTerminalOutputLifeCycle(
         }
       };
 
+      // Before __init: TUI worker threads read the environment, and JS adding
+      // a variable while they do can crash the process.
+      setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
       renderIsDone = new Promise<void>((resolve) => {
         appLifeCycle.__init(() => {
           resolve();
@@ -636,7 +640,8 @@ export async function runTasksForCommand(
       projectGraph,
       nxArgs,
       nxJson,
-      overrides
+      overrides,
+      extraOptions.loadDotEnvFiles
     );
 
   try {
