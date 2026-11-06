@@ -6,10 +6,8 @@ topics:
   - 'Continuous integration'
 ---
 
-{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
-`lifecycle.heartbeat` is removed, and `lifecycle.stop-after` is now `stop-after` on a worker entry.
-The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
 {% /aside %}
 
 ### What is the heartbeat process?

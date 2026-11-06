@@ -8,10 +8,8 @@ topics:
 
 [Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks across multiple machines on every Nx Cloud plan. On the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute) you can also bring your own compute, running the agents on your own CI provider instead of Nx Cloud-hosted machines. The recipes below show how to set that up.
 
-{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`dte.distribute-on: manual` has no key in `.nx/pipelines/ci.yaml`, so these recipes pass `start-ci-run` flags instead.
-`start-ci-run` exits with an error while `.nx/ci-config.yaml` exists, so delete that file when you switch.
-The [migration guide](/docs/kb/migrate-from-ci-config#bring-your-own-compute) covers the other keys and has the old file's reference.
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config#bring-your-own-compute).
 {% /aside %}
 
 The main job in each recipe starts the run with the same command, and no configuration file:
