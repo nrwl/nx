@@ -43,9 +43,7 @@ export interface HeaderProblem extends Span {
 
 export interface DirectiveHeader {
   problems: HeaderProblem[];
-  /** The `@nx-depends-on` lines and each project pattern they list. */
   dependsOn: { lines: Span[]; patterns: (Span & { pattern: string })[] };
-  /** The `@nx-ignore-server-inputs` lines. */
   ignoreServerInputs: { lines: Span[] };
 }
 
@@ -172,7 +170,6 @@ function lineSpan(line: NxDirectiveHeaderLine): Span {
   return { start: line.start, end: line.start + line.text.length };
 }
 
-/** The patterns `dependsOnProjects` reads from the line, where each is. */
 function projectPatterns(
   line: NxDirectiveHeaderLine
 ): (Span & { pattern: string })[] {
@@ -193,7 +190,6 @@ function projectPatterns(
   return patterns;
 }
 
-/** Each line of a comment without its markers, trimmed, and where it starts. */
 function commentLines(comment: TSESTree.Comment): NxDirectiveHeaderLine[] {
   const lines: NxDirectiveHeaderLine[] = [];
   let offset = comment.range[0] + 2;
