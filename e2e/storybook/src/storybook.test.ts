@@ -1,7 +1,6 @@
 import {
   checkFilesExist,
   cleanupProject,
-  killPorts,
   listFiles,
   newProject,
   readFile,
@@ -35,8 +34,6 @@ describe('Storybook generators and executors for monorepos', () => {
 
   // TODO: enable this when Storybook webpack server becomes a bit faster
   xdescribe('serve storybook', () => {
-    afterEach(() => killPorts());
-
     it('should serve a React based Storybook setup that uses webpack', async () => {
       const p = await runCommandUntil(
         `run ${reactStorybookApp}:storybook`,

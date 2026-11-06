@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import {
   checkFilesExist,
+  configureTargetOptions,
+  configureCypressComponentTesting,
   cleanupProject,
   createFile,
   killPort,
@@ -21,6 +23,7 @@ const TEN_MINS_MS = 600_000;
 
 describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
+  let myappPort: number;
 
   beforeAll(() => {
     newProject({
@@ -38,9 +41,10 @@ describe('Cypress E2E Test runner', () => {
 
   it(
     'should generate an app with the Cypress as e2e test runner',
-    () => {
+    async () => {
+      myappPort = await reservePort();
       runCLI(
-        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint`
+        `generate @nx/react:app apps/${myapp} --e2eTestRunner=cypress --linter=eslint --port=${myappPort}`
       );
 
       // Ensure project typechecks (See: https://github.com/nrwl/nx/issues/32930)
@@ -199,7 +203,7 @@ export default defineConfig({
         timeout: 60_000,
       },
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:${myappPort}',
   },
   env: {
     fromCyConfig: 'i am from the cypress config file'
@@ -248,6 +252,8 @@ export default defineConfig({
     `should allow CT and e2e in same project for a next project`,
     async () => {
       const appName = uniq('next-cy-app');
+      const port = await reservePort();
+      configureTargetOptions(['dev'], { port });
       runCLI(
         `generate @nx/next:app apps/${appName} --e2eTestRunner=none --no-interactive `
       );
@@ -259,16 +265,18 @@ export default defineConfig({
         `generate @nx/next:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
       );
       runCLI(
-        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://localhost:3000 --no-interactive`
+        `generate @nx/cypress:configuration --project=${appName} --devServerTarget=${appName}:dev --baseUrl=http://127.0.0.1:${port} --no-interactive`
       );
 
       if (await shouldRunCypressTests()) {
-        expect(runCLI(`run ${appName}:component-test`)).toContain(
-          'All specs passed!'
+        const componentTestArgs = await configureCypressComponentTesting(
+          `apps/${appName}/cypress.config.ts`
         );
+        expect(
+          runCLI(`run ${appName}:component-test ${componentTestArgs}`)
+        ).toContain('All specs passed!');
         expect(runCLI(`run ${appName}:e2e`)).toContain('All specs passed!');
       }
-      expect(await killPort(4200)).toBeTruthy();
     },
     TEN_MINS_MS
   );

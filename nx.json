@@ -571,6 +571,7 @@
             "NX_CNW_FLOW_VARIANT",
             "NX_CYPRESS_COMPONENT_TEST",
             "NX_CYPRESS_TARGET_CONFIGURATION",
+            "NX_E2E_PORT_POOL",
             "NX_E2E_PRESET_VERSION",
             "NX_FILE_TO_RUN",
             "NX_GENERATED_TSCONFIG_PATH",
