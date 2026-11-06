@@ -190,12 +190,20 @@ describe('directive-checks', () => {
       ).toEqual([{ messageId: 'directiveAfterCode', line: 3 }]);
     });
 
-    it('reports a value Nx ignores when there is no project graph', () => {
-      expect(
-        runRule('// @nx-depends-on:', { nodes: null }).map(
-          ({ messageId }) => messageId
-        )
-      ).toEqual(['emptyDependsOn']);
+    it('reports a value Nx ignores and warns which checks it skips when there is no project graph', () => {
+      const write = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+      const messages = runRule('// @nx-depends-on:', { nodes: null });
+      const output = write.mock.calls.join('');
+      write.mockRestore();
+
+      expect(messages.map(({ messageId }) => messageId)).toEqual([
+        'emptyDependsOn',
+      ]);
+      expect(output).toContain(
+        'No cached ProjectGraph is available. The checks that read the project graph will be skipped.'
+      );
     });
 
     it.each([

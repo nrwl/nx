@@ -108,7 +108,10 @@ export default ESLintUtils.RuleCreator(
         return ignoredByRunner;
       }
 
-      const graph = readProjectGraph(RULE_NAME);
+      const graph = readProjectGraph(
+        RULE_NAME,
+        'The checks that read the project graph will be skipped.'
+      );
       if (!graph.projectGraph) {
         return ignoredByRunner;
       }
