@@ -7,8 +7,10 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
 import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
+import { startPressureProbe } from './pressure-probe';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
+  startPressureProbe();
   try {
     // TEMP DIAGNOSTIC (cache-miss hunt): log the exact checkout + any working-tree
     // drift on the agent. Distinguishes "runs are on different SHAs" from

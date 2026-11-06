@@ -32,6 +32,11 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
+import {
+  probeCommandEnd,
+  probeCommandStart,
+  wasProbed,
+} from './pressure-probe';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
@@ -216,6 +221,11 @@ export function newProject({
   keepBackup?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
+  const newProjectProbe = probeCommandStart(
+    'newProject',
+    `newProject ${packageManager} ${preset} ${(packages ?? []).join(' ')}`,
+    e2eCwd
+  );
   try {
     const projScope = 'proj';
     const stagingDirectory = `${e2eCwd}/${projScope}`;
@@ -357,6 +367,11 @@ export function newProject({
     } else if (!builtHere && packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
+      const reinstallProbe = probeCommandStart(
+        'pnpmReinstall',
+        getPackageManagerCommand().install,
+        projectDirectory
+      );
       try {
         execSync(getPackageManagerCommand().install, {
           cwd: projectDirectory,
@@ -364,6 +379,7 @@ export function newProject({
           env: { CI: 'true', ...process.env },
           encoding: 'utf-8',
         });
+        probeCommandEnd(reinstallProbe);
         // pnpm 12 skips an install whose lockfile is unchanged, so the copied bin
         // shims keep NODE_PATHs into the staging directory the backup was built in.
         repointPnpmBinShims(
@@ -374,6 +390,7 @@ export function newProject({
       } catch (e) {
         console.log('newProject() - reinstall pnpm dependencies failed');
         console.error('Full error:', e);
+        probeCommandEnd(reinstallProbe, e, `${e?.stdout}\n\n${e?.stderr}`);
         throw e;
       }
     }
@@ -414,9 +431,17 @@ ${
     );
 
     openInEditor(projectDirectory);
+    probeCommandEnd(newProjectProbe);
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
+    probeCommandEnd(
+      newProjectProbe,
+      e,
+      wasProbed(e)
+        ? undefined
+        : `${e?.message}\n${e?.stdout ?? ''}\n${e?.stderr ?? ''}`
+    );
     throw e;
   }
 }
@@ -585,6 +610,7 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
+  const createProbe = probeCommandStart('createWorkspace', command, cwd);
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
@@ -596,6 +622,7 @@ export function runCreateWorkspace(
       },
       encoding: 'utf-8',
     });
+    probeCommandEnd(createProbe);
 
     if (isVerbose()) {
       output.log({
@@ -608,6 +635,7 @@ export function runCreateWorkspace(
     return create;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    probeCommandEnd(createProbe, e, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
 }
@@ -680,6 +708,7 @@ export function packageInstall(
     mode === 'dev' ? pm.addDev : pm.addProd
   } ${pkgsWithVersions}`;
 
+  const installProbe = probeCommandStart('packageInstall', command, cwd);
   try {
     const install = execSync(command, {
       cwd,
@@ -687,6 +716,7 @@ export function packageInstall(
       env: process.env,
       encoding: 'utf-8',
     });
+    probeCommandEnd(installProbe);
 
     if (isVerbose()) {
       output.log({
@@ -699,6 +729,7 @@ export function packageInstall(
     return install;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    probeCommandEnd(installProbe, e, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
 }

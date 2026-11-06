@@ -14,6 +14,7 @@ import { join } from 'path';
 import { tmpProjPath } from './create-project-utils';
 import { e2eConsoleLogger } from './log-utils';
 import { isVerbose } from './get-env-info';
+import { probeCommandEnd, probeCommandStart } from './pressure-probe';
 
 // Helper files to prevent multiple `npx playwright install` on the same machine.
 // Doing so will cause `apt` to fail on Linux machines.
@@ -181,11 +182,23 @@ export async function ensureCypressInstallation() {
     e2eConsoleLogger(
       `Process ${process.pid} waiting for Cypress installation...`
     );
-    const outcome = await waitForInstallation(
-      CYPRESS_LOCK_FILE,
-      CYPRESS_STATUS_FILE,
-      'Cypress'
+    const waitProbe = probeCommandStart(
+      'cypressWait',
+      'wait for Cypress lock',
+      tmpProjPath()
     );
+    let outcome: Awaited<ReturnType<typeof waitForInstallation>>;
+    try {
+      outcome = await waitForInstallation(
+        CYPRESS_LOCK_FILE,
+        CYPRESS_STATUS_FILE,
+        'Cypress'
+      );
+      probeCommandEnd(waitProbe);
+    } catch (e) {
+      probeCommandEnd(waitProbe, e, String(e?.message ?? e));
+      throw e;
+    }
     if (outcome === 'installed') {
       return;
     }
@@ -197,29 +210,47 @@ export async function ensureCypressInstallation() {
 
   try {
     let cypressVerified = true;
+    const verifyProbe = probeCommandStart(
+      'cypressVerify',
+      'npx cypress verify',
+      tmpProjPath()
+    );
     try {
       const r = execSync('npx cypress verify', {
         stdio: isVerbose() ? 'inherit' : 'pipe',
         encoding: 'utf-8',
         cwd: tmpProjPath(),
       });
+      probeCommandEnd(verifyProbe);
       if (r.indexOf('Verified Cypress!') === -1) {
         cypressVerified = false;
       }
-    } catch {
+    } catch (e) {
+      probeCommandEnd(verifyProbe, e);
       cypressVerified = false;
     }
 
     if (!cypressVerified) {
       e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        encoding: 'utf-8',
-        cwd: tmpProjPath(),
-        // The binary is skipped while workspaces are installed, so this call
-        // has to be allowed to fetch it.
-        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
-      });
+      const installProbe = probeCommandStart(
+        'cypressInstall',
+        'npx cypress install',
+        tmpProjPath()
+      );
+      try {
+        execSync('npx cypress install', {
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          encoding: 'utf-8',
+          cwd: tmpProjPath(),
+          // The binary is skipped while workspaces are installed, so this call
+          // has to be allowed to fetch it.
+          env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
+        });
+        probeCommandEnd(installProbe);
+      } catch (e) {
+        probeCommandEnd(installProbe, e, `${e?.stdout}\n\n${e?.stderr}`);
+        throw e;
+      }
     }
 
     releaseLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, true);
@@ -241,12 +272,18 @@ export async function ensurePlaywrightBrowsersInstallation() {
     const playwrightInstallArgs =
       process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
 
+    const installProbe = probeCommandStart(
+      'playwrightInstall',
+      `npx playwright install ${playwrightInstallArgs}`,
+      tmpProjPath()
+    );
     try {
       execSync(`npx playwright install ${playwrightInstallArgs}`, {
         stdio: isVerbose() ? 'inherit' : 'pipe',
         encoding: 'utf-8',
         cwd: tmpProjPath(),
       });
+      probeCommandEnd(installProbe);
 
       const version = execSync('npx playwright --version').toString().trim();
 
@@ -256,6 +293,11 @@ export async function ensurePlaywrightBrowsersInstallation() {
 
       releaseLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE, true);
     } catch (error) {
+      probeCommandEnd(
+        installProbe,
+        error,
+        `${error?.stdout}\n\n${error?.stderr}`
+      );
       e2eConsoleLogger('Failed to install Playwright browsers:', error);
       releaseLock(
         PLAYWRIGHT_LOCK_FILE,
@@ -269,10 +311,21 @@ export async function ensurePlaywrightBrowsersInstallation() {
     e2eConsoleLogger(
       `Process ${process.pid} waiting for Playwright browser installation...`
     );
-    await waitForInstallation(
-      PLAYWRIGHT_LOCK_FILE,
-      PLAYWRIGHT_STATUS_FILE,
-      'Playwright'
+    const waitProbe = probeCommandStart(
+      'playwrightWait',
+      'wait for Playwright lock',
+      tmpProjPath()
     );
+    try {
+      await waitForInstallation(
+        PLAYWRIGHT_LOCK_FILE,
+        PLAYWRIGHT_STATUS_FILE,
+        'Playwright'
+      );
+      probeCommandEnd(waitProbe);
+    } catch (e) {
+      probeCommandEnd(waitProbe, e, String(e?.message ?? e));
+      throw e;
+    }
   }
 }
