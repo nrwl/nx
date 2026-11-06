@@ -1,7 +1,14 @@
 const invoke = vi.fn();
 const rmSync = vi.fn();
 
-vi.mock('node:fs', () => ({ rmSync: (...args: unknown[]) => rmSync(...args) }));
+vi.mock('node:fs', () => ({
+  rmSync: (...args: unknown[]) => rmSync(...args),
+  lstatSync: () => {
+    const error = new Error('ENOENT') as NodeJS.ErrnoException;
+    error.code = 'ENOENT';
+    throw error;
+  },
+}));
 vi.mock('../../nx-cloud/utilities/client', () => ({
   getCloudClient: vi.fn(async () => ({ invoke })),
 }));
