@@ -104,6 +104,21 @@ describe('project-graph-pruning', () => {
       );
     });
 
+    it('should prefer a stable version over a prerelease for a wildcard when no bare node exists', () => {
+      delete graph.externalNodes['npm:lodash'];
+      graph.externalNodes['npm:lodash@5.0.0-beta.1'] = {
+        type: 'npm',
+        name: 'npm:lodash@5.0.0-beta.1',
+        data: { packageName: 'lodash', version: '5.0.0-beta.1' },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+      expect(findNodeMatchingVersion(graph, 'lodash', 'latest')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
     it('should sort local-path versions after semver versions', () => {
       delete graph.externalNodes['npm:lodash'];
       graph.externalNodes['npm:lodash@file:vendor/lodash.tgz'] = {

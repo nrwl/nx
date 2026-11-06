@@ -1,5 +1,5 @@
 import { isAbsolute, join, relative } from 'path';
-import { rcompare, valid } from 'semver';
+import { prerelease, rcompare, valid } from 'semver';
 import {
   joinPathFragments,
   normalizePath,
@@ -297,13 +297,16 @@ function findHelperVersion(
     highestHelperVersions.set(projectGraph.externalNodes, versions);
   }
   if (!versions.has(helper)) {
+    const candidates = Object.keys(projectGraph.externalNodes)
+      .filter(isHelperNode)
+      .map((name) => projectGraph.externalNodes[name].data.version)
+      .filter((version) => valid(version) !== null)
+      .sort(rcompare);
+    // A stable version wins over a prerelease.
     versions.set(
       helper,
-      Object.keys(projectGraph.externalNodes)
-        .filter(isHelperNode)
-        .map((name) => projectGraph.externalNodes[name].data.version)
-        .filter((version) => valid(version) !== null)
-        .sort(rcompare)[0]
+      candidates.find((version) => prerelease(version) === null) ??
+        candidates[0]
     );
   }
   return versions.get(helper) ?? bareLinkVersion;

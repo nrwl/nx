@@ -501,6 +501,31 @@ describe('findNpmDependencies', () => {
       ).toEqual({ tslib: '2.6.0' });
     });
 
+    it('should prefer the highest stable version over a prerelease', () => {
+      const projectGraph = {
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: {
+          ...helperNodes,
+          'npm:tslib@3.0.0-beta.1': {
+            name: 'npm:tslib@3.0.0-beta.1' as const,
+            type: 'npm' as const,
+            data: { packageName: 'tslib', version: '3.0.0-beta.1' },
+          },
+        },
+        dependencies: {},
+      };
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '2.6.0' });
+    });
+
     it('should skip a bare outside link when registry versions exist', () => {
       const linkNode = {
         name: 'npm:tslib' as const,

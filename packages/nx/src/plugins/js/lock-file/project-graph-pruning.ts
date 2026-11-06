@@ -245,9 +245,10 @@ export function findNodeMatchingVersion(
   // A package with several versions can have no bare registry node, for
   // example when the pnpm root importer does not declare it. An outside
   // `link:` can then hold the bare name; it sorts last, so any registry
-  // version wins over it.
+  // version wins over it. A stable version wins over a prerelease, which
+  // `*` does not match.
   if (versionExpr === '*' || versionExpr === 'latest') {
-    return nodes[0];
+    return nodes.find((n) => satisfies(n.data.version, '*')) ?? nodes[0];
   }
   if (
     graph.externalNodes[`npm:${packageName}`] &&
