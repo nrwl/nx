@@ -1,7 +1,7 @@
 import { type Tree } from '@nx/devkit';
 import {
-  getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getResolvedPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { major } from 'semver';
@@ -60,8 +60,8 @@ export function versions(tree: Tree): EslintVersions {
 }
 
 function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
-  const angularVersion = getDeclaredPackageVersion(tree, '@angular/core');
-  const nextVersion = getDeclaredPackageVersion(tree, 'next');
+  const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  const nextVersion = getResolvedPackageVersion(tree, 'next');
   return (
     (!!angularVersion && major(angularVersion) < 21) ||
     (!!nextVersion && major(nextVersion) < 16)
@@ -69,7 +69,7 @@ function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
 }
 
 // convert-to-flat-config runs only on eslintrc workspaces, which
-// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the declared
+// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the workspace's
 // major there: keep v9 on v9 (its plugins have no v10 release), never force
 // v10, and never downgrade a v10 workspace. Default to v9 when unresolved.
 export function getConvertToFlatConfigVersions(tree: Tree): EslintVersions {
@@ -84,5 +84,5 @@ export function getInstalledEslintVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('eslint');
   }
-  return getDeclaredPackageVersion(tree, 'eslint');
+  return getResolvedPackageVersion(tree, 'eslint');
 }
