@@ -5,28 +5,9 @@ filter: 'type:References'
 ---
 
 Nx Cloud reads CI configuration from a `.nx/workflows/ci.yaml` file in your workspace.
-The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci) or on an external provider such as GitHub Actions.
+The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) or on an external provider such as GitHub Actions.
 
 {% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
-
-```yaml
-# .nx/workflows/ci.yaml
-worker-templates:
-  default:
-    workers: 5 linux-large-js
-    stop-after:
-      - build
-      - test
-```
-
-Start the workers once, early in the main job of your provider's workflow:
-
-```shell
-npx nx-cloud start-workers
-```
-
-{% /tabitem %}
 {% tabitem label="Nx Cloud CI" %}
 
 ```yaml
@@ -51,6 +32,25 @@ jobs:
     workers: default
     steps:
       - run: npx nx affected -t lint test build
+```
+
+{% /tabitem %}
+{% tabitem label="External CI" %}
+
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-large-js
+    stop-after:
+      - build
+      - test
+```
+
+Start the workers once, early in the main job of your provider's workflow:
+
+```shell
+npx nx-cloud start-workers
 ```
 
 {% /tabitem %}
@@ -347,7 +347,7 @@ jobs:
         run: npx nx affected -t lint test build
 ```
 
-For the rest of what jobs and steps support, see [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci).
+For the rest of what jobs and steps support, see [run CI on Nx Cloud](/docs/features/ci-features#run-ci-on-nx-cloud).
 
 ## How `start-workers` picks a file and an entry
 

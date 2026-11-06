@@ -25,7 +25,7 @@ To opt out, start the run with [`nx-cloud start-ci-run --require-explicit-comple
 Turning the heartbeat off makes you responsible for completing the run, so the pipeline must also run `npx nx complete-ci-run` as its last step, with `if: always()` or the equivalent for your provider.
 Without it the CI Pipeline Execution may never complete. See [heartbeat and manual shutdown handling](/docs/kb/heartbeat-and-manual-shutdown-handling) for the full sequence.
 
-On [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci) there is no heartbeat, because the run ends when the main job does.
+On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) there is no heartbeat, because the run ends when the main job does.
 
 ### A command was issued to stop all Workers
 
