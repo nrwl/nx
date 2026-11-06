@@ -8,6 +8,25 @@ Nx Cloud reads CI configuration from a `.nx/workflows/ci.yaml` file in your work
 The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud) or on an external provider such as GitHub Actions.
 
 {% tabs syncKey="ci-location" %}
+{% tabitem label="External CI" %}
+
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-large-js
+    stop-after:
+      - build
+      - test
+```
+
+Start the workers once, early in the main job of your provider's workflow:
+
+```shell
+npx nx-cloud start-workers
+```
+
+{% /tabitem %}
 {% tabitem label="Nx Cloud CI" %}
 
 ```yaml
@@ -35,44 +54,29 @@ jobs:
 ```
 
 {% /tabitem %}
-{% tabitem label="External CI" %}
-
-```yaml
-# .nx/workflows/ci.yaml
-worker-templates:
-  default:
-    workers: 5 linux-large-js
-    stop-after:
-      - build
-      - test
-```
-
-Start the workers once, early in the main job of your provider's workflow:
-
-```shell
-npx nx-cloud start-workers
-```
-
-{% /tabitem %}
 {% /tabs %}
 
 If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/docs/kb/migrate-from-ci-config).
 
 ## Top-level structure
 
-| Section            | Purpose                                             | Applies to  |
-| ------------------ | --------------------------------------------------- | ----------- |
-| `worker-templates` | Named worker setups: counts, sizes, and task rules. | Both        |
-| `launch-templates` | Machine setups that workers and jobs run on.        | Both        |
-| `ultracache`       | Paths that Ultracache ignores.                      | Both        |
-| `self-healing`     | Which tasks self-healing CI can fix.                | Both        |
-| `name`             | Display name of the pipeline.                       | Nx Cloud CI |
-| `on`               | Events that start the jobs.                         | Nx Cloud CI |
-| `env`              | Environment variables for every job and worker.     | Nx Cloud CI |
-| `defaults`         | Defaults for the steps in every job.                | Nx Cloud CI |
-| `jobs`             | The jobs and their steps.                           | Nx Cloud CI |
+| Section            | Purpose                                             |
+| ------------------ | --------------------------------------------------- |
+| `worker-templates` | Named worker setups: counts, sizes, and task rules. |
+| `launch-templates` | Machine setups that workers and jobs run on.        |
+| `ultracache`       | Paths that Ultracache ignores.                      |
+| `self-healing`     | Which tasks self-healing CI can fix.                |
+| `name`             | Display name of the pipeline.                       |
+| `on`               | Events that start the jobs.                         |
+| `env`              | Environment variables for every job and worker.     |
+| `defaults`         | Defaults for the steps in every job.                |
+| `jobs`             | The jobs and their steps.                           |
 
 External CI ignores `name`, `on`, `env`, `defaults`, and `jobs`, so one file can serve both kinds of run in the same repository.
+
+{% aside type="note" title="File name" %}
+Nx Cloud CI runs every `.yaml` or `.yml` file in `.nx/workflows` that has an `on` section, so you can name the file something other than `ci.yaml`.
+{% /aside %}
 
 For editor validation, add the published schema to the first line of the file:
 
@@ -193,7 +197,6 @@ Type: `integer`, minimum `0`.
 ### `main-job-worker`
 
 Runs distributed tasks on a background worker on the machine of the main job, using the CPU and memory you allow it.
-Available on Nx Cloud CI.
 External CI doesn't start this worker from `ci.yaml`.
 
 ```yaml
@@ -279,7 +282,7 @@ A `launch-templates` file can also keep a top-level `launch-templates:` key, so 
 
 ## `on`
 
-Named triggers for Nx Cloud CI.
+Named triggers that start the jobs.
 Each trigger needs an `event` of `PR` or `PUSH`.
 
 ```yaml
@@ -299,7 +302,7 @@ A positive filter can't be combined with its `-ignore` counterpart.
 
 ## `jobs`
 
-The jobs of an Nx Cloud CI pipeline, each on its own machine.
+The jobs of the pipeline, each on its own machine.
 
 | Key               | Description                                                                         |
 | ----------------- | ----------------------------------------------------------------------------------- |
