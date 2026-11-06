@@ -147,6 +147,10 @@ export {
   type TestFileDirective,
 } from './src/utils/test-file-directives';
 export { dependsOnProjects } from './src/utils/test-file-depends-on';
+export {
+  ensureClassicTypescript,
+  ensureTypescript,
+} from './src/utils/ensure-typescript';
 export { tsquery } from './src/utils/tsquery';
 export { hasIgnoreServerInputsDirective } from './src/utils/ignore-server-inputs-directive';
 export { logShowProjectCommand } from './src/utils/log-show-project-command';

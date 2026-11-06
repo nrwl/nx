@@ -1,3 +1,4 @@
+import type { TypescriptAst } from 'nx/src/devkit-internals';
 import { logger, type Tree } from 'nx/src/devkit-exports';
 import type {
   ExportDeclaration,
@@ -12,13 +13,12 @@ import type {
 } from 'typescript';
 import { formatFiles } from '../../generators/format-files';
 import { visitNotIgnoredFiles } from '../../generators/visit-not-ignored-files';
-import { ensurePackage } from '../../utils/package-json';
+import { ensureTypescript } from '../../utils/ensure-typescript';
 import {
   applyChangesToString,
   ChangeType,
   type StringChange,
 } from '../../utils/string-change';
-import { typescriptVersion } from '../../utils/versions';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
 const DEVKIT_SPECIFIER = '@nx/devkit';
@@ -36,7 +36,7 @@ export const CREATE_NODES_V2_TYPE_RENAMES: ReadonlyMap<string, string> =
     ['NxPluginV2', 'NxPlugin'],
   ]);
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function renameCreateNodesV2Types(
   tree: Tree
@@ -74,10 +74,7 @@ export default async function renameCreateNodesV2Types(
  * modifier, and any default import are left untouched.
  */
 export function rewriteCreateNodesV2Types(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>(
-    'typescript',
-    typescriptVersion
-  );
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

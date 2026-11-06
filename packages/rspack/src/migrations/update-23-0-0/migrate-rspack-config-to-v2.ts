@@ -1,6 +1,12 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
-import * as ts from 'typescript';
+import {
+  ensureTypescript,
+  tsquery,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type * as ts from 'typescript';
+
+let tsModule: TypescriptAst;
 
 // Rewrite rspack.config.{js,ts,mjs,cjs} for @rspack/core@2:
 // - output.libraryTarget → output.library.type
@@ -52,9 +58,13 @@ function applyEdits(source: string, edits: SourceEdit[]): string {
 }
 
 function getPropertyName(prop: ts.PropertyAssignment): string | undefined {
+  tsModule ??= ensureTypescript();
   const name = prop.name;
-  if (ts.isIdentifier(name)) return name.text;
-  if (ts.isStringLiteral(name) || ts.isNoSubstitutionTemplateLiteral(name)) {
+  if (tsModule.isIdentifier(name)) return name.text;
+  if (
+    tsModule.isStringLiteral(name) ||
+    tsModule.isNoSubstitutionTemplateLiteral(name)
+  ) {
     return name.text;
   }
   return undefined;
@@ -64,14 +74,18 @@ function isInsideObjectKeyed(
   prop: ts.PropertyAssignment,
   parentKey: string
 ): boolean {
+  tsModule ??= ensureTypescript();
   const objLiteral = prop.parent;
-  if (!objLiteral || !ts.isObjectLiteralExpression(objLiteral)) return false;
+  if (!objLiteral || !tsModule.isObjectLiteralExpression(objLiteral))
+    return false;
   const containingProp = objLiteral.parent;
-  if (!containingProp || !ts.isPropertyAssignment(containingProp)) return false;
+  if (!containingProp || !tsModule.isPropertyAssignment(containingProp))
+    return false;
   return getPropertyName(containingProp) === parentKey;
 }
 
 export function rewriteLibraryTarget(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!source.includes('libraryTarget')) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -79,7 +93,7 @@ export function rewriteLibraryTarget(source: string): string {
 
   const visit = (node: ts.Node) => {
     if (
-      ts.isPropertyAssignment(node) &&
+      tsModule.isPropertyAssignment(node) &&
       getPropertyName(node) === 'libraryTarget' &&
       isInsideObjectKeyed(node, 'output') &&
       isStringLikeInitializer(node.initializer)
@@ -91,7 +105,7 @@ export function rewriteLibraryTarget(source: string): string {
         replacement: `library: { type: ${valueText} }`,
       });
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -101,7 +115,11 @@ export function rewriteLibraryTarget(source: string): string {
 function isStringLikeInitializer(
   node: ts.Expression
 ): node is ts.StringLiteral | ts.NoSubstitutionTemplateLiteral {
-  return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
+  tsModule ??= ensureTypescript();
+  return (
+    tsModule.isStringLiteral(node) ||
+    tsModule.isNoSubstitutionTemplateLiteral(node)
+  );
 }
 
 // rspack-cli@2 dev mode enables lazyCompilation unless the config sets it
@@ -112,6 +130,7 @@ function isStringLikeInitializer(
 export function disableLazyCompilationForModuleFederation(
   source: string
 ): string {
+  tsModule ??= ensureTypescript();
   if (
     !source.includes('NxModuleFederationPlugin') &&
     !source.includes('ModuleFederationPlugin')
@@ -136,23 +155,23 @@ export function disableLazyCompilationForModuleFederation(
   const visit = (node: ts.Node) => {
     // export default { ... }
     if (
-      ts.isExportAssignment(node) &&
-      ts.isObjectLiteralExpression(node.expression)
+      tsModule.isExportAssignment(node) &&
+      tsModule.isObjectLiteralExpression(node.expression)
     ) {
       insertIntoObject(node.expression);
       return;
     }
     // module.exports = { ... }
     if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isObjectLiteralExpression(node.right) &&
+      tsModule.isBinaryExpression(node) &&
+      node.operatorToken.kind === tsModule.SyntaxKind.EqualsToken &&
+      tsModule.isObjectLiteralExpression(node.right) &&
       node.left.getText(sourceFile) === 'module.exports'
     ) {
       insertIntoObject(node.right);
       return;
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -162,6 +181,7 @@ export function disableLazyCompilationForModuleFederation(
 // `experiments.css: true` is left for the companion AI-prompt migration
 // `rewrite-experiments-css-to-module-rules` to handle.
 export function rewriteExperimentsCss(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!/\bcss\s*:/.test(source)) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -169,10 +189,10 @@ export function rewriteExperimentsCss(source: string): string {
 
   const visit = (node: ts.Node) => {
     if (
-      ts.isPropertyAssignment(node) &&
+      tsModule.isPropertyAssignment(node) &&
       getPropertyName(node) === 'css' &&
       isInsideObjectKeyed(node, 'experiments') &&
-      node.initializer.kind === ts.SyntaxKind.FalseKeyword
+      node.initializer.kind === tsModule.SyntaxKind.FalseKeyword
     ) {
       // Delete the property + its trailing comma and newline so the
       // surrounding object literal stays well-formed.
@@ -189,7 +209,7 @@ export function rewriteExperimentsCss(source: string): string {
       }
       edits.push({ start: startOfRemoval, end: endOfRemoval, replacement: '' });
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 

@@ -1,9 +1,13 @@
 import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import { FileChangeRecorder } from '../../utils/file-change-recorder';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
+let tsModule: TypescriptAst;
+
 export default async function (tree: Tree) {
+  tsModule ??= ensureTypescript();
   const projects = await getProjectsFilteredByDependencies([
     'npm:@angular/ssr',
   ]);
@@ -23,14 +27,14 @@ export default async function (tree: Tree) {
       }
 
       let recorder: FileChangeRecorder | undefined;
-      const sourceFile = ts.createSourceFile(
+      const sourceFile = tsModule.createSourceFile(
         path,
         content,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
       const allImportDeclarations = sourceFile.statements.filter(
-        ts.isImportDeclaration
+        tsModule.isImportDeclaration
       );
 
       if (allImportDeclarations.length === 0) {
@@ -39,7 +43,7 @@ export default async function (tree: Tree) {
 
       const ssrImports = allImportDeclarations.filter(
         (n) =>
-          ts.isStringLiteral(n.moduleSpecifier) &&
+          tsModule.isStringLiteral(n.moduleSpecifier) &&
           n.moduleSpecifier.text === '@angular/ssr'
       );
 
@@ -71,8 +75,9 @@ export default async function (tree: Tree) {
 function getNamedImports(
   importDeclaration: ts.ImportDeclaration | undefined
 ): ts.NamedImports | undefined {
+  tsModule ??= ensureTypescript();
   const namedBindings = importDeclaration?.importClause?.namedBindings;
-  if (namedBindings && ts.isNamedImports(namedBindings)) {
+  if (namedBindings && tsModule.isNamedImports(namedBindings)) {
     return namedBindings;
   }
 

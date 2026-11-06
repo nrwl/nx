@@ -1,17 +1,17 @@
 import {
-  ensurePackage,
   formatFiles,
   logger,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type { Node } from 'typescript';
 
 // Only ESM-only extensions. A `.ts`/`.js` config can still be loaded as CJS,
 // where `import.meta` is a syntax error.
 const CONFIG_FILE_PATTERN = /(^|\/)(vite|vitest)\.config\.(mts|mjs)$/;
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function useImportMetaDirname(tree: Tree): Promise<void> {
   let touchedCount = 0;
@@ -41,7 +41,7 @@ export default async function useImportMetaDirname(tree: Tree): Promise<void> {
 }
 
 export function rewriteDirname(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.mts',
     source,

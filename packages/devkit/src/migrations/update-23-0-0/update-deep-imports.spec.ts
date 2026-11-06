@@ -1,5 +1,8 @@
 import { type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { symlinkSync } from 'fs';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { dirname, join } from 'path';
 import migration, {
   DEVKIT_INTERNAL_SYMBOLS,
   rewriteDevkitDeepImports,
@@ -366,5 +369,40 @@ describe('update-deep-imports migration', () => {
         );
       }
     });
+  });
+});
+
+describe('update-deep-imports migration with TypeScript 7.1', () => {
+  let fs: TempFs;
+
+  beforeEach(async () => {
+    fs = new TempFs('update-deep-imports');
+    fs.createDirSync('node_modules');
+    symlinkSync(
+      dirname(require.resolve('@typescript/native/package.json')),
+      join(fs.tempDir, 'node_modules/typescript'),
+      'dir'
+    );
+    // The migration caches the TypeScript module it loads.
+    vi.resetModules();
+    // The vitest setup swaps ensurePackage for a require from this repo.
+    vi.doUnmock('../../utils/package-json');
+    (await import('nx/src/utils/workspace-root')).setWorkspaceRoot(fs.tempDir);
+    const { getTypescriptBackend } = await import('nx/src/devkit-internals');
+    expect(getTypescriptBackend().kind).toBe('api');
+  });
+
+  afterEach(() => {
+    fs.cleanup();
+  });
+
+  it('rewrites a deep import', async () => {
+    const { rewriteDevkitDeepImports } = await import('./update-deep-imports');
+
+    expect(
+      rewriteDevkitDeepImports(
+        `import { names } from '@nx/devkit/src/utils/names';\n`
+      )
+    ).toBe(`import { names } from '@nx/devkit';\n`);
   });
 });

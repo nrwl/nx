@@ -1,4 +1,5 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
 import type {
@@ -260,8 +261,8 @@ function transformConditionalConfig(
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
-  const { tsquery } = require('@nx/devkit/internal');
-  const { SyntaxKind } = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const { SyntaxKind } = ensureTypescript();
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
 
@@ -470,8 +471,8 @@ function filterImport(appFileContent: string, imports: string[]): string[] {
  * when the config's shape hides the object we would have to edit.
  */
 export function addTsconfigPathsResolution(appFileContent: string): string {
-  const { tsquery } = require('@nx/devkit/internal');
-  const tsModule: typeof import('typescript') = require('typescript');
+  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const tsModule: TypescriptAst = ensureTypescript();
 
   const file = tsquery.ast(appFileContent);
   const config = findConfigObject(tsModule, tsquery, file);
@@ -523,7 +524,7 @@ export function addTsconfigPathsResolution(appFileContent: string): string {
  * undefined when the config is assembled somewhere we cannot follow.
  */
 function findConfigObject(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   tsquery: any,
   file: import('typescript').SourceFile
 ): import('typescript').ObjectLiteralExpression | undefined {
@@ -550,7 +551,7 @@ function findConfigObject(
 }
 
 function unwrapConfigExpression(
-  tsModule: typeof import('typescript'),
+  tsModule: TypescriptAst,
   node: import('typescript').Node | undefined
 ): import('typescript').ObjectLiteralExpression | undefined {
   if (!node) return undefined;

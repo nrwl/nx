@@ -1,7 +1,13 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
-import { getDeclaredPackageVersion } from '@nx/devkit/internal';
+import {
+  ensureTypescript,
+  getDeclaredPackageVersion,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { major } from 'semver';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+
+let tsModule: TypescriptAst;
 
 // Inlined rather than imported from the @nx/eslint utils so this migration stays
 // self-contained - a migration should not depend on a shared list that can change
@@ -95,6 +101,7 @@ function hasTypescriptEslintV8(tree: Tree): boolean {
 }
 
 export default async function update(tree: Tree): Promise<void> {
+  tsModule ??= ensureTypescript();
   if (!hasTypescriptEslintV8(tree)) {
     return;
   }
@@ -111,12 +118,12 @@ export default async function update(tree: Tree): Promise<void> {
       return;
     }
 
-    const source = ts.createSourceFile(
+    const source = tsModule.createSourceFile(
       path,
       content,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true,
-      ts.ScriptKind.JS
+      tsModule.ScriptKind.JS
     );
 
     // {start, end, newText} edits, applied high offset -> low so earlier offsets
@@ -124,9 +131,9 @@ export default async function update(tree: Tree): Promise<void> {
     const edits: { start: number; end: number; newText: string }[] = [];
     const visit = (node: ts.Node): void => {
       if (
-        ts.isPropertyAssignment(node) &&
-        (ts.isStringLiteral(node.name) ||
-          ts.isNoSubstitutionTemplateLiteral(node.name))
+        tsModule.isPropertyAssignment(node) &&
+        (tsModule.isStringLiteral(node.name) ||
+          tsModule.isNoSubstitutionTemplateLiteral(node.name))
       ) {
         const ruleName = node.name.text;
         if (REMOVED_TS_ESLINT_RULES.has(ruleName)) {
@@ -149,7 +156,7 @@ export default async function update(tree: Tree): Promise<void> {
           });
         }
       }
-      ts.forEachChild(node, visit);
+      tsModule.forEachChild(node, visit);
     };
     visit(source);
 

@@ -1,13 +1,13 @@
 import {
   applyChangesToString,
   ChangeType,
-  ensurePackage,
   formatFiles,
   logger,
   type StringChange,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
 import type { CallExpression, Node, SourceFile } from 'typescript';
 
 const TS_EXTENSIONS = ['.ts', '.tsx', '.cts', '.mts'] as const;
@@ -30,7 +30,7 @@ const MOCK_HELPER_METHODS: ReadonlySet<string> = new Set([
 
 // Resolved lazily so the migration only pays the typescript load cost when it
 // actually has work to do.
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function moveTypescriptCompilationImport(
   tree: Tree
@@ -62,7 +62,7 @@ export default async function moveTypescriptCompilationImport(
 }
 
 export function rewriteCompilationImport(source: string): string {
-  ts ??= ensurePackage<typeof import('typescript')>('typescript', '*');
+  ts ??= ensureTypescript();
   const sourceFile = ts.createSourceFile(
     'tmp.ts',
     source,

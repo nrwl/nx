@@ -1,6 +1,12 @@
 import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
-import * as ts from 'typescript';
+import {
+  ensureTypescript,
+  tsquery,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type * as ts from 'typescript';
+
+let tsModule: TypescriptAst;
 
 /**
  * Rewrite user-authored `rsbuild.config.{js,ts,mjs,cjs}` files for
@@ -78,9 +84,13 @@ function applyEdits(source: string, edits: SourceEdit[]): string {
 }
 
 function getPropertyName(prop: ts.PropertyAssignment): string | undefined {
+  tsModule ??= ensureTypescript();
   const name = prop.name;
-  if (ts.isIdentifier(name)) return name.text;
-  if (ts.isStringLiteral(name) || ts.isNoSubstitutionTemplateLiteral(name)) {
+  if (tsModule.isIdentifier(name)) return name.text;
+  if (
+    tsModule.isStringLiteral(name) ||
+    tsModule.isNoSubstitutionTemplateLiteral(name)
+  ) {
     return name.text;
   }
   return undefined;
@@ -98,6 +108,7 @@ function getPropertyName(prop: ts.PropertyAssignment): string | undefined {
  * or duplicate a `server:` key the user already has elsewhere.
  */
 export function renameSetupMiddlewares(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!source.includes('setupMiddlewares')) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -105,14 +116,14 @@ export function renameSetupMiddlewares(source: string): string {
 
   const visit = (node: ts.Node) => {
     if (
-      ts.isPropertyAssignment(node) &&
+      tsModule.isPropertyAssignment(node) &&
       getPropertyName(node) === 'preview' &&
-      ts.isObjectLiteralExpression(node.initializer)
+      tsModule.isObjectLiteralExpression(node.initializer)
     ) {
       const props = node.initializer.properties;
       if (
         props.length === 1 &&
-        ts.isPropertyAssignment(props[0]) &&
+        tsModule.isPropertyAssignment(props[0]) &&
         getPropertyName(props[0]) === 'setupMiddlewares'
       ) {
         // Replace only the property name `preview` → `server`. The
@@ -126,7 +137,7 @@ export function renameSetupMiddlewares(source: string): string {
         });
       }
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -139,6 +150,7 @@ export function renameSetupMiddlewares(source: string): string {
  * so the value is irrelevant.
  */
 export function dropRemoveMomentLocale(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!source.includes('removeMomentLocale')) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -146,10 +158,10 @@ export function dropRemoveMomentLocale(source: string): string {
 
   const visit = (node: ts.Node) => {
     if (
-      ts.isPropertyAssignment(node) &&
+      tsModule.isPropertyAssignment(node) &&
       getPropertyName(node) === 'removeMomentLocale' &&
-      (node.initializer.kind === ts.SyntaxKind.TrueKeyword ||
-        node.initializer.kind === ts.SyntaxKind.FalseKeyword)
+      (node.initializer.kind === tsModule.SyntaxKind.TrueKeyword ||
+        node.initializer.kind === tsModule.SyntaxKind.FalseKeyword)
     ) {
       let endOfRemoval = node.getEnd();
       const trailingText = source.slice(endOfRemoval);
@@ -168,7 +180,7 @@ export function dropRemoveMomentLocale(source: string): string {
         replacement: '',
       });
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -192,6 +204,7 @@ export function dropRemoveMomentLocale(source: string): string {
  * to be syntactically valid, not pretty.
  */
 export function moveSourceAliasToResolve(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!/\balias(?:Strategy)?\b/.test(source)) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -199,22 +212,26 @@ export function moveSourceAliasToResolve(source: string): string {
   const ALIAS_KEYS = new Set(['alias', 'aliasStrategy']);
 
   const visit = (node: ts.Node) => {
-    if (ts.isObjectLiteralExpression(node)) {
+    if (tsModule.isObjectLiteralExpression(node)) {
       const sourceProp = node.properties.find(
         (p): p is ts.PropertyAssignment =>
-          ts.isPropertyAssignment(p) && getPropertyName(p) === 'source'
+          tsModule.isPropertyAssignment(p) && getPropertyName(p) === 'source'
       );
-      if (sourceProp && ts.isObjectLiteralExpression(sourceProp.initializer)) {
+      if (
+        sourceProp &&
+        tsModule.isObjectLiteralExpression(sourceProp.initializer)
+      ) {
         const sourceObj = sourceProp.initializer;
         const aliasProps = sourceObj.properties.filter(
           (p): p is ts.PropertyAssignment =>
-            ts.isPropertyAssignment(p) &&
+            tsModule.isPropertyAssignment(p) &&
             ALIAS_KEYS.has(getPropertyName(p) ?? '')
         );
         if (aliasProps.length > 0) {
           const resolveProp = node.properties.find(
             (p): p is ts.PropertyAssignment =>
-              ts.isPropertyAssignment(p) && getPropertyName(p) === 'resolve'
+              tsModule.isPropertyAssignment(p) &&
+              getPropertyName(p) === 'resolve'
           );
           const aliasAreAllProps =
             aliasProps.length === sourceObj.properties.length;
@@ -244,7 +261,7 @@ export function moveSourceAliasToResolve(source: string): string {
             }
             if (
               resolveProp &&
-              ts.isObjectLiteralExpression(resolveProp.initializer)
+              tsModule.isObjectLiteralExpression(resolveProp.initializer)
             ) {
               // Splice into the existing `resolve` block, just before
               // its closing brace. Lead with a comma when the block
@@ -274,7 +291,7 @@ export function moveSourceAliasToResolve(source: string): string {
         }
       }
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -287,24 +304,25 @@ export function moveSourceAliasToResolve(source: string): string {
  * form (`proxy: { '/api': { ... } }`).
  */
 function isProxyEntryObject(obj: ts.ObjectLiteralExpression): boolean {
+  tsModule ??= ensureTypescript();
   const parent = obj.parent;
   // Array form: proxy: [ { ... } ]
-  if (parent && ts.isArrayLiteralExpression(parent)) {
+  if (parent && tsModule.isArrayLiteralExpression(parent)) {
     const arrProp = parent.parent;
     return (
       !!arrProp &&
-      ts.isPropertyAssignment(arrProp) &&
+      tsModule.isPropertyAssignment(arrProp) &&
       getPropertyName(arrProp) === 'proxy'
     );
   }
   // Object-map form: proxy: { '/api': { ... } }
-  if (parent && ts.isPropertyAssignment(parent)) {
+  if (parent && tsModule.isPropertyAssignment(parent)) {
     const mapObj = parent.parent;
-    if (mapObj && ts.isObjectLiteralExpression(mapObj)) {
+    if (mapObj && tsModule.isObjectLiteralExpression(mapObj)) {
       const mapProp = mapObj.parent;
       return (
         !!mapProp &&
-        ts.isPropertyAssignment(mapProp) &&
+        tsModule.isPropertyAssignment(mapProp) &&
         getPropertyName(mapProp) === 'proxy'
       );
     }
@@ -319,6 +337,7 @@ function isProxyEntryObject(obj: ts.ObjectLiteralExpression): boolean {
  * so an unrelated `context` key elsewhere is left alone.
  */
 export function renameProxyContext(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!source.includes('context')) return source;
 
   const sourceFile = tsquery.ast(source);
@@ -326,9 +345,9 @@ export function renameProxyContext(source: string): string {
 
   const visit = (node: ts.Node) => {
     if (
-      ts.isPropertyAssignment(node) &&
+      tsModule.isPropertyAssignment(node) &&
       getPropertyName(node) === 'context' &&
-      ts.isObjectLiteralExpression(node.parent) &&
+      tsModule.isObjectLiteralExpression(node.parent) &&
       isProxyEntryObject(node.parent)
     ) {
       edits.push({
@@ -337,7 +356,7 @@ export function renameProxyContext(source: string): string {
         replacement: 'pathFilter',
       });
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 
@@ -363,6 +382,7 @@ const PROXY_HANDLER_RENAMES: Record<string, string> = {
  * untouched.
  */
 export function groupProxyEventHandlers(source: string): string {
+  tsModule ??= ensureTypescript();
   if (!/\bon(Open|Close|Error|ProxyReq|ProxyRes)\b/.test(source)) {
     return source;
   }
@@ -371,14 +391,14 @@ export function groupProxyEventHandlers(source: string): string {
   const edits: SourceEdit[] = [];
 
   const visit = (node: ts.Node) => {
-    if (ts.isObjectLiteralExpression(node) && isProxyEntryObject(node)) {
+    if (tsModule.isObjectLiteralExpression(node) && isProxyEntryObject(node)) {
       const alreadyHasOn = node.properties.some(
-        (p) => ts.isPropertyAssignment(p) && getPropertyName(p) === 'on'
+        (p) => tsModule.isPropertyAssignment(p) && getPropertyName(p) === 'on'
       );
       if (!alreadyHasOn) {
         const handlers = node.properties.filter(
           (p): p is ts.PropertyAssignment =>
-            ts.isPropertyAssignment(p) &&
+            tsModule.isPropertyAssignment(p) &&
             (getPropertyName(p) ?? '') in PROXY_HANDLER_RENAMES
         );
         if (handlers.length > 0) {
@@ -411,7 +431,7 @@ export function groupProxyEventHandlers(source: string): string {
         }
       }
     }
-    ts.forEachChild(node, visit);
+    tsModule.forEachChild(node, visit);
   };
   visit(sourceFile);
 

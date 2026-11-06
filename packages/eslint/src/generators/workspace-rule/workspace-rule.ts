@@ -1,4 +1,3 @@
-import { camelize } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -12,11 +11,18 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import {
+  camelize,
+  ensureTypescript,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { versions } from '../../utils/versions';
+
+let tsModule: TypescriptAst;
 
 export interface LintWorkspaceRuleGeneratorOptions {
   name: string;
@@ -27,6 +33,7 @@ export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
+  tsModule ??= ensureTypescript();
   assertSupportedEslintVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
@@ -72,19 +79,19 @@ export async function lintWorkspaceRuleGenerator(
    */
   const pluginIndexPath = joinPathFragments(workspaceLintPluginDir, 'index.ts');
   const existingPluginIndexContents = tree.read(pluginIndexPath, 'utf-8');
-  const pluginIndexSourceFile = ts.createSourceFile(
+  const pluginIndexSourceFile = tsModule.createSourceFile(
     pluginIndexPath,
     existingPluginIndexContents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
   function findRulesObject(node: ts.Node): ts.ObjectLiteralExpression {
     if (
-      ts.isPropertyAssignment(node) &&
-      ts.isIdentifier(node.name) &&
+      tsModule.isPropertyAssignment(node) &&
+      tsModule.isIdentifier(node.name) &&
       node.name.text === 'rules' &&
-      ts.isObjectLiteralExpression(node.initializer)
+      tsModule.isObjectLiteralExpression(node.initializer)
     ) {
       return node.initializer;
     }
