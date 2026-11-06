@@ -25,6 +25,10 @@ import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-par
 import { Preset } from './utils/preset/preset';
 import { downloadTemplate } from './utils/template/download-template';
 import {
+  removeTemplateAiAgents,
+  shouldRemoveTemplateAiAgents,
+} from './utils/template/remove-template-ai-agents';
+import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
 } from './utils/template/update-readme';
@@ -124,6 +128,10 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       const npmLockPath = join(directory, 'package-lock.json');
       if (existsSync(npmLockPath)) {
         unlinkSync(npmLockPath);
+      }
+
+      if (shouldRemoveTemplateAiAgents(options, rawArgs)) {
+        removeTemplateAiAgents(directory);
       }
 
       // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
