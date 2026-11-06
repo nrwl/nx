@@ -7,9 +7,13 @@ import {
   updateJson,
   visitNotIgnoredFiles,
   type ProjectGraph,
+  type TargetDependencyConfig,
   type Tree,
 } from '@nx/devkit';
-import { parseNxDirectives } from '@nx/devkit/internal';
+import {
+  normalizeDependencyConfigDefinition,
+  parseNxDirectives,
+} from '@nx/devkit/internal';
 import { basename } from 'node:path';
 import * as ts from 'typescript';
 import { useFlatConfig } from '../../../internal';
@@ -205,8 +209,8 @@ function defaultImports(source: ts.SourceFile): Map<string, string> {
 
 // Atomized e2e targets are named `<ciTargetName>--<file path in the project>`,
 // so the graph narrows the search to the files that can carry the directives.
-// Both parts can contain `--`, and the plugins also add a `<ciTargetName>`
-// target, which marks where the file path starts.
+// Both parts can contain `--`, so the `<ciTargetName>` target's `dependsOn`,
+// which lists its atomized targets, marks where the file path starts.
 async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
   let graph: ProjectGraph;
   try {
@@ -220,18 +224,20 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
 
   for (const node of Object.values(graph.nodes)) {
     const targets = node.data.targets ?? {};
-    for (const targetName of Object.keys(targets)) {
-      for (
-        let separator = targetName.indexOf('--');
-        separator !== -1;
-        separator = targetName.indexOf('--', separator + 1)
-      ) {
-        if (!Object.hasOwn(targets, targetName.slice(0, separator))) {
-          continue;
-        }
+    const targetNames = Object.keys(targets);
+    for (const [ciTargetName, ciTarget] of Object.entries(targets)) {
+      const atomizedTargetNames = (ciTarget.dependsOn ?? [])
+        .flatMap((dependency) =>
+          projectTargetNames(dependency, node.name, graph, targetNames)
+        )
+        .filter(
+          (name) =>
+            name.startsWith(`${ciTargetName}--`) && Object.hasOwn(targets, name)
+        );
+      for (const targetName of atomizedTargetNames) {
         const file = joinPathFragments(
           node.data.root,
-          targetName.slice(separator + 2)
+          targetName.slice(ciTargetName.length + 2)
         );
         if (!tree.exists(file) || !tree.isFile(file)) {
           continue;
@@ -244,4 +250,31 @@ async function hasDirectiveFiles(tree: Tree): Promise<boolean> {
     }
   }
   return false;
+}
+
+// The targets of `project` that a `dependsOn` entry selects, resolved the way
+// the task graph resolves them.
+function projectTargetNames(
+  dependency: string | TargetDependencyConfig,
+  project: string,
+  graph: ProjectGraph,
+  targetNames: string[]
+): string[] {
+  try {
+    return (
+      normalizeDependencyConfigDefinition(
+        // The normalizer writes `projects` onto the object it gets.
+        typeof dependency === 'string' ? dependency : { ...dependency },
+        project,
+        graph,
+        targetNames
+      )
+        // A `^` entry leaves `projects` unset.
+        .filter((config) => config.projects?.includes(project))
+        .map((config) => config.target)
+    );
+  } catch {
+    // The task graph rejects the entry too, e.g. a legacy `projects: 'self'`.
+    return [];
+  }
 }
