@@ -9,7 +9,7 @@ The migration adds the rule as `error` to the root ESLint config that project co
 - no ESLint config mentions `@nx/directive-checks`
 - a file behind an atomized target (`<target>--<file path>`) has `@nx-depends-on` or `@nx-ignore-server-inputs` in its leading comment block
 
-When an ESLint config uses `@nx/eslint-plugin` but the migration can't verify that the config it would change registers it for every file, it leaves that config unchanged and prints a warning. Add the rule to a config that registers `@nx` for the files it checks.
+When an ESLint config uses `@nx/eslint-plugin` but the migration can't verify that the config it would change registers it for every file, it leaves that config unchanged and prints a warning. It does the same for a root config it can't edit, such as `eslint.config.ts`. Add the rule to a config that registers `@nx` for the files it checks.
 
 A file that only has `@nx-target-name` doesn't trigger the migration.
 
