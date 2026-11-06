@@ -1,6 +1,6 @@
 import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { esbuildExecutor } from './esbuild.impl';
 import type { EsBuildExecutorOptions } from './schema';
 
