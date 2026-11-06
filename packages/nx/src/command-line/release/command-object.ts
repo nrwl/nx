@@ -120,6 +120,7 @@ export type ReleaseOptions = NxReleaseArgs &
     yes?: boolean;
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
+    tag?: string;
     otp?: number;
     gitPush?: boolean;
   };
@@ -246,6 +247,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
             describe:
               'Whether or not to automatically push the changes made by this command to the remote git repository.',
             type: 'boolean',
+          })
+          .option('tag', {
+            type: 'string',
+            description:
+              'The distribution tag to apply to the published package.',
           })
           .option('otp', {
             type: 'number',
