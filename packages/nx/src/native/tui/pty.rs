@@ -1370,7 +1370,7 @@ mod tests {
             .expect("failed to open pty");
 
         let writer = Arc::new(Mutex::new(pair.master.take_writer().unwrap()));
-        let master: MasterArc = Arc::new(Mutex::new(pair.master));
+        let master: MasterArc = Arc::new(Mutex::new(Some(pair.master)));
         let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 1000)));
 
         let pty = PtyInstance::interactive(parser, writer, master.clone());
@@ -1378,7 +1378,12 @@ mod tests {
     }
 
     fn master_size(master: &MasterArc) -> (u16, u16) {
-        let size = master.lock().get_size().expect("failed to read pty size");
+        let guard = master.lock();
+        let size = guard
+            .as_ref()
+            .expect("pty master closed")
+            .get_size()
+            .expect("failed to read pty size");
         (size.rows, size.cols)
     }
 
