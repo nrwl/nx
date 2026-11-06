@@ -354,6 +354,20 @@ export default [...baseConfig, ...nx.configs['flat/base']];
       expect(readJson(tree, '.eslintrc.json')).toEqual(rootConfig);
     });
 
+    it('should add the rule to the base config when it is the only root config', async () => {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+      tree.delete('.eslintrc.json');
+      writeJson(tree, '.eslintrc.base.json', legacyConfig);
+      addE2eProject('// @nx-depends-on: api\n');
+
+      await update(tree);
+
+      expect(readJson(tree, '.eslintrc.base.json')).toEqual({
+        ...legacyConfig,
+        rules: { '@nx/directive-checks': 'error' },
+      });
+    });
+
     it('should not change the config when no file has the directives', async () => {
       addE2eProject('test("x", () => {});\n');
 

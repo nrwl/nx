@@ -42,7 +42,7 @@ const LINT_CONFIG_FILES = new Set([
 const TRIGGER_DIRECTIVES = ['depends-on', 'ignore-server-inputs'];
 
 export default async function update(tree: Tree) {
-  const flatConfig = useFlatConfig(tree);
+  const flatConfig = useFlatConfig(tree) && !hasOnlyEslintrcBaseConfig(tree);
   const sharedConfig = findSharedConfig(tree, flatConfig);
   if (!sharedConfig || !isEslintConfigFileSupported(sharedConfig)) {
     return;
@@ -112,6 +112,18 @@ function findSharedConfig(tree: Tree, flatConfig: boolean): string | undefined {
     ? [...BASE_ESLINT_CONFIG_FILENAMES, ...ESLINT_FLAT_CONFIG_FILENAMES]
     : [baseEsLintConfigFile, ...ESLINT_OLD_CONFIG_FILENAMES];
   return candidates.find((file) => tree.exists(file));
+}
+
+// `useFlatConfig` ignores `.eslintrc.base.json`, so it reads a workspace whose
+// only root config is that file as flat config.
+function hasOnlyEslintrcBaseConfig(tree: Tree): boolean {
+  return (
+    process.env.ESLINT_USE_FLAT_CONFIG !== 'true' &&
+    tree.exists(baseEsLintConfigFile) &&
+    ![...BASE_ESLINT_CONFIG_FILENAMES, ...ESLINT_FLAT_CONFIG_FILENAMES].some(
+      (file) => tree.exists(file)
+    )
+  );
 }
 
 // Top-level `plugins` apply to every file; `overrides` don't.
