@@ -257,6 +257,10 @@ In Nx 19.5.0+, tasks can be configured to support parallelism or not. By default
 
 If you are using distributed task execution, tasks will still be run simultaneously on different machines. Because different agents do not share resources with one another, it is perfectly fine for multiple agents to run tasks which do not support parallelism at the same time. Therefore, using Workers is key to running tasks which do not support parallelism quickly and efficiently.
 
+With [dynamic task packing](/docs/features/ci-features/distribute-task-execution#turn-on-dynamic-task-packing), a task with `"parallelism": false` also shares its worker with other tasks.
+Only tasks with `"parallelism": false` that share its project or target are kept off that worker while it runs.
+To keep tasks apart on a worker, use [scheduling constraints](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
+
 {% /aside %}
 
 ### Inputs and named inputs
