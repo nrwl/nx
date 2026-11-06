@@ -17,6 +17,11 @@ import {
   getTargetInputs,
 } from '@nx/devkit/internal';
 
+const highestHelperVersions = new WeakMap<
+  NonNullable<ProjectGraph['externalNodes']>,
+  Map<string, string | undefined>
+>();
+
 /**
  * Finds all npm dependencies and their expected versions for a given project.
  */
@@ -202,8 +207,9 @@ function collectHelperDependencies(
 ): void {
   if (runtimeHelpers?.length > 0) {
     for (const helper of runtimeHelpers) {
+      if (npmDeps[helper]) continue;
       const version = findHelperVersion(projectGraph, sourceProject, helper);
-      if (!npmDeps[helper] && version) {
+      if (version) {
         npmDeps[helper] = version;
       }
     }
@@ -281,11 +287,22 @@ function findHelperVersion(
   if (projectDependency) {
     return projectGraph.externalNodes[projectDependency.target].data.version;
   }
-  return Object.keys(projectGraph.externalNodes)
-    .filter(isHelperNode)
-    .map((name) => projectGraph.externalNodes[name].data.version)
-    .filter((version) => valid(version) !== null)
-    .sort(rcompare)[0];
+  let versions = highestHelperVersions.get(projectGraph.externalNodes);
+  if (!versions) {
+    versions = new Map();
+    highestHelperVersions.set(projectGraph.externalNodes, versions);
+  }
+  if (!versions.has(helper)) {
+    versions.set(
+      helper,
+      Object.keys(projectGraph.externalNodes)
+        .filter(isHelperNode)
+        .map((name) => projectGraph.externalNodes[name].data.version)
+        .filter((version) => valid(version) !== null)
+        .sort(rcompare)[0]
+    );
+  }
+  return versions.get(helper);
 }
 
 function resolveTsConfigForRunCommandsTarget(
