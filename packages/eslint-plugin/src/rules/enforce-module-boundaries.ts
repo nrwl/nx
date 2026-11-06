@@ -48,7 +48,6 @@ import {
   hasNoneOfTheseTags,
   hasStaticImportOfDynamicResource,
   isAbsoluteImportIntoAnotherProject,
-  isBareImport,
   isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
@@ -273,7 +272,8 @@ export default ESLintUtils.RuleCreator(
     ): boolean {
       if (
         node.type !== AST_NODE_TYPES.ImportDeclaration ||
-        !isBareImport(context.sourceCode, node)
+        context.sourceCode.getFirstToken(node, 1).range[0] !==
+          node.source.range[0]
       ) {
         return false;
       }
