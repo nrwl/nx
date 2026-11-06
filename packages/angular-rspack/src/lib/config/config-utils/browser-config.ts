@@ -12,6 +12,7 @@ import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
 import { getOptimization } from './optimization-config';
@@ -91,6 +92,8 @@ export async function getBrowserConfig(
       ...defaultConfig.module,
       rules: [
         ...getSwcTranspilationRules(swcTranspilationTransform),
+        // Web workers get the dev-server entries too.
+        ...(isDevServer ? [getDevClientGuardRule()] : []),
         ...(normalizedOptions.devServer?.hmr
           ? [
               {

@@ -22,6 +22,7 @@ import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/p
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
 import {
@@ -154,6 +155,8 @@ export async function getServerConfig(
       ...defaultConfig.module,
       rules: [
         ...getSwcTranspilationRules(swcTranspilationTransform),
+        // The dev server adds its HMR entry to this bundle too.
+        ...(isDevServer ? [getDevClientGuardRule()] : []),
         {
           loader:
             // oxlint-disable-next-line @nx/enforce-module-boundaries
