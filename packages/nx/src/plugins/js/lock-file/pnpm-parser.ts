@@ -560,20 +560,13 @@ function getNodes(
     }
   }
 
-  // `link:` dependencies never appear in the packages section, so nothing
-  // above minted a node for them, and a task input naming one via
-  // `externalDependencies` fails hashing with "could not be found". Mint a
-  // node under the bare `npm:<name>`, hashed on the link path. A target inside
-  // the workspace is a local path source as well, while one outside it keeps
-  // only the path hash, which is how linked dependencies behave everywhere else
-  // in Nx. Links to workspace packages (importers) are workspace projects, not
-  // externals, and are skipped.
-  //
-  // One node per package name, chosen deterministically by visiting importers
-  // root-first, then lexicographically. An `externalDependencies` input names
-  // a package, not a link target, so it could not distinguish two linked
-  // targets anyway. Each importer loads its own link, so the node's sources
-  // cover every importer's target.
+  // `link:` dependencies have no packages entry, so an `externalDependencies`
+  // input naming one fails hashing with "could not be found". Mint one node per
+  // name under the bare `npm:<name>`, hashed on the link path, visiting
+  // importers root-first, then lexicographically. The input names a package,
+  // not a target, so one node per name loses nothing. Each importer loads its
+  // own link, so the node's sources cover every target inside the workspace.
+  // Links to importers are workspace projects and are skipped.
   const importerPaths = Object.keys(data.importers ?? {}).sort((a, b) =>
     a === '.' ? -1 : b === '.' ? 1 : a.localeCompare(b)
   );

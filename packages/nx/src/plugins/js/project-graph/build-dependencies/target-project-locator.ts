@@ -12,7 +12,10 @@ import {
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
-import type { PackageJson } from '../../../../utils/package-json';
+import {
+  getDependencyVersionFromPackageJson,
+  type PackageJson,
+} from '../../../../utils/package-json';
 import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
@@ -379,11 +382,17 @@ export class TargetProjectLocator {
       } catch {
         return null;
       }
-      const spec =
-        manifest.dependencies?.[packageName] ??
-        manifest.optionalDependencies?.[packageName] ??
-        manifest.devDependencies?.[packageName] ??
-        manifest.peerDependencies?.[packageName];
+      const spec = getDependencyVersionFromPackageJson(
+        packageName,
+        workspaceRoot,
+        manifest,
+        [
+          'dependencies',
+          'optionalDependencies',
+          'devDependencies',
+          'peerDependencies',
+        ]
+      );
       return spec
         ? this.findNpmProjectFromLocalPathSpec(
             packageName,

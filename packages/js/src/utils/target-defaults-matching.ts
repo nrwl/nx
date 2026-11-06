@@ -103,6 +103,19 @@ export function namedFilesets(
   );
 }
 
+export function hasRuntimeInput(
+  inputs: TargetConfiguration['inputs'],
+  input: { runtime: string }
+): boolean {
+  return (inputs ?? []).some(
+    (existing) =>
+      typeof existing === 'object' &&
+      existing !== null &&
+      'runtime' in existing &&
+      existing.runtime === input.runtime
+  );
+}
+
 /**
  * The executor an executor-less target ends up with after its selected
  * defaults key applies. Each matching entry's identity is resolved like the
