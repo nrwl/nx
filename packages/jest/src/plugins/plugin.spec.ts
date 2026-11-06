@@ -64,8 +64,8 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
 
   afterEach(() => {
     jest.resetModules();
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
   });
 
   it('should create nodes based on jest.config.ts', async () => {
@@ -1501,8 +1501,8 @@ describe('@nx/jest/plugin config file inputs', () => {
 
   afterEach(() => {
     jest.resetModules();
-    tempFs.cleanup();
     process.chdir(cwd);
+    tempFs.cleanup();
   });
 
   function mockConfig(config: any) {
