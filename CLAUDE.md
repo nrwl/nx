@@ -21,6 +21,8 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
+**MANDATORY**: Before writing or editing a page in `astro-docs/src/content/`, read the persona it serves: `.claude/agents/bob-writer.md`, `casey-writer.md` or `priya-writer.md`.
+
 **MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `check-docs-style` skill. No exceptions.
 
 **MANDATORY**: All documentation content must follow `astro-docs/STYLE_GUIDE.md`. vale only enforces its mechanical rules, so check the structural and voice rules yourself.

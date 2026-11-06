@@ -7,6 +7,8 @@ These rules apply to all content under `astro-docs/src/content/docs/`.
 
 When creating or reorganizing documentation, follow these seven principles to determine where content belongs.
 
+These principles say where content goes. The personas say who it's for: [Bob](../.claude/agents/bob-writer.md) (new to Nx), [Casey](../.claude/agents/casey-writer.md) (new to Nx Cloud) and [Priya](../.claude/agents/priya-writer.md) (runs Nx at scale). Use them when writing and reviewing docs.
+
 ### 1. Progressive disclosure (the "journey" rule)
 
 Don't overwhelm the user. Reveal complexity only as they advance in their journey.

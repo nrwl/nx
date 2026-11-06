@@ -45,6 +45,8 @@ Output is root-relative and identical whether the checkout is isolated or local.
 
 **Read the docs rules from the checkout, not from memory** — `astro-docs/STYLE_GUIDE.md` and the docs section of `CLAUDE.md` are the committed authority, and they change.
 
+When the diff changes pages under `astro-docs/src/content/`, also follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`, reading the files from the checkout. Report the result under `**Persona check:**`. A flag there is advisory, never a Finding, so it needs no `NET-NEW` or `TRIGGER` line.
+
 If `exec` is refused, the sandbox has no isolation boundary. That is a legitimate configuration, not a fault: review statically and say so in your report. Never work around a refusal by running the command outside the CLI.
 
 ## Mutating source to prove a point
@@ -124,6 +126,8 @@ After the required proof-of-work lines, return:
 **Pre-existing:** <one line per defect that reproduces unchanged at base; or `none`>
 
 - **<file:line>** — <defect>. Present at base <path>:<line>.
+
+**Persona check:** <`n/a` when no docs page changed; otherwise personas matched, then one line per flag: persona, file:line, rule broken, correction; or `Flags: none`>
 
 **Suggestions:** <non-blocking coverage or wording ideas; or `none`>
 ```

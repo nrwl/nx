@@ -212,7 +212,7 @@ verdict: <clean|concerns|failed>
 
 `dirty: true` matters on re-review: unlike a PR head SHA, a dirty tree has no stable identity, so a draft against one can never be deduped. Always re-review a dirty branch rather than reporting `ALREADY_REVIEWED`.
 
-Sections: `## Summary`, `## Critical`, `## Important`, `## Maintainer calls`, `## Suggestions`, `## Pre-existing` (defects that reproduce at base — follow-up material, never blocking; omit when empty), `## Strengths`, `## Not reviewed` (untracked files), `## Failures` (agents whose EVIDENCE never verified).
+Sections: `## Summary`, `## Critical`, `## Important`, `## Maintainer calls`, `## Persona check` (follows the `review-pr` rule; omit when no docs page changed), `## Suggestions`, `## Pre-existing` (defects that reproduce at base — follow-up material, never blocking; omit when empty), `## Strengths`, `## Not reviewed` (untracked files), `## Failures` (agents whose EVIDENCE never verified).
 
 ## Step 7: Clean up, then offer the rest
 

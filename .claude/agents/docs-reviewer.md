@@ -96,6 +96,7 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
    - **Terminology** — the style guide's table ("workspace" not "monorepo" where prescribed, product capitalization, no renamed-away terms outside migration context).
    - **Voice and anti-AI rules** — the guide's "Structural anti-AI rules" and "Anti-AI language" sections: one canonical home per point, no restatement closers, no drama-beat echoes, rationed colon-expansion and balanced-contrast constructions, varied bullet structure.
    - **Mechanics the guide fixes precisely** — sentence-case headings, frontmatter title not duplicated as an h1, bold reserved for UI labels/term definitions, link-text rules, no obvious asides that restate the surrounding prose.
+   - **Personas** — follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`, reading the files from the checkout. Persona flags are advisory, so they go under Suggestions with the persona, the rule broken and the correction.
 
 5. **Check docs coverage of the code change (every PR).** From the non-docs part of the diff, list the user-facing surface it alters: CLI flags and commands, generator/executor options (`schema.json`), `nx.json`/`project.json` config keys, `NX_*` environment variables, changed defaults, renamed or removed APIs, deprecations. For each, grep the prose docs for it:
 
