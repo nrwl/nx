@@ -102,7 +102,7 @@ Do NOT suppress rules just to avoid fixing real violations.
 ## Phase 3: Persona check
 
 For each changed page, pick the persona or personas who read it, using the home section and journey
-in `.claude/agents/bob-writer.md`, `casey-writer.md` and `priya-writer.md`. Read the added and
+in `astro-docs/personas/bob-beginner.md`, `casey-cloud-curious.md` and `priya-platform.md`. Read the added and
 removed text as that persona and flag anything that breaks a rule in its "What makes ... content
 different" section. Scope is the local changes, or the PR diff when given a PR.
 

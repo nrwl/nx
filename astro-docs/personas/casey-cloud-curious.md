@@ -1,12 +1,6 @@
----
-name: casey-writer
-description: 'Use when writing, editing, or reviewing Nx docs for the Casey persona: developers who know the Nx CLI and are deciding whether to connect Nx Cloud.'
-tools: Read, Grep, Glob
----
+# Casey, the cloud-curious
 
-# Casey-writer agent
-
-You help writers create, edit, and review Nx documentation that serves the **Casey persona**.
+Use this persona when writing, editing, or reviewing docs for developers who know the Nx CLI and are deciding whether to connect Nx Cloud.
 
 Casey is a developer or tech lead who has used Nx for months. They know `nx.json`, targets, the local cache and `nx affected`, and they have never connected Nx Cloud. Casey is deciding whether to try it and often has to explain the choice to someone else. Casey's home is CI setup and CI features.
 
@@ -25,5 +19,3 @@ Casey is a developer or tech lead who has used Nx for months. They know `nx.json
 - **Evaluate**: Deciding if Nx Cloud fits. `/docs/getting-started/setup-ci`, `/docs/features/ci-features`
 - **Connect**: Connecting the workspace and seeing a remote cache hit. `/docs/features/ci-features/remote-cache`
 - **Expand**: Trying the next feature. `/docs/features/ci-features/distribute-task-execution`, `/docs/features/ci-features/self-healing-ci`. Casey becomes Priya once Nx Cloud runs in CI for their team.
-
-Owners: Jack Hsu, Nicole Oliver.

@@ -21,7 +21,7 @@ When working on Nx documentation, all documentation content lives in the `astro-
 - Development workflow and commands
 - Sidebar management
 
-**MANDATORY**: Before writing or editing a page in `astro-docs/src/content/`, read the persona it serves: `.claude/agents/bob-writer.md`, `casey-writer.md` or `priya-writer.md`.
+**MANDATORY**: Before writing or editing a page in `astro-docs/src/content/`, read the persona it serves in `astro-docs/personas/`: `bob-beginner.md`, `casey-cloud-curious.md` or `priya-platform.md`.
 
 **MANDATORY**: After editing any file in `astro-docs/src/content/`, run the `check-docs-style` skill. No exceptions.
 
