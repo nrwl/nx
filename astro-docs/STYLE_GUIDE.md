@@ -5,7 +5,7 @@ These rules apply to all content under `astro-docs/src/content/docs/`.
 
 ## Information architecture
 
-When creating or reorganizing documentation, follow these seven principles to determine where content belongs.
+When creating or reorganizing documentation, follow these six principles to determine where content belongs.
 
 ### 1. Progressive disclosure (the "journey" rule)
 
@@ -29,7 +29,7 @@ Separate learning (narrative/guides) from looking up (reference/API).
 
 Distinguish core features from ecosystem tools to prevent "Features" from becoming a junk drawer.
 
-**The test:** Does this feature apply to every user (e.g., caching, Nx Agents)?
+**The test:** Does this feature apply to every user (e.g., caching, distributed task execution)?
 
 - Yes: **Core features**, or **CI features** when it only applies in CI.
 - No (only React users): **Technologies**.
@@ -114,8 +114,8 @@ A short sentence that announces what a paragraph is about, before the paragraph 
 label rather than a claim. This one survives the drama-beat test, because the sentences after it
 do add facts, so sweep for it separately.
 
-- Don't: "CI is the other gap. Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
-- Do: "Turborepo scales past one machine through manual binning, while Nx Agents distributes at the task level."
+- Don't: "CI is the other gap. Turborepo scales past one machine through manual binning, while Nx Cloud distributes at the task level."
+- Do: "Turborepo scales past one machine through manual binning, while Nx Cloud distributes at the task level."
 
 Naming a count is the same move ("Two smaller differences.", "Three things to know."). Either
 fold the label into the sentence that follows or delete it. A real list gets bullets and an
@@ -347,20 +347,23 @@ Don't contract proper nouns: "the Vite plugin is..." not "Vite's a plugin..."
 
 ### Capitalization
 
-Use sentence case for headings. Capitalize proper nouns only.
+Use sentence case for headings, page titles (frontmatter `title`), and sidebar labels.
+Capitalize proper nouns only.
+When you name a UI element, match the casing the UI shows.
 
 - `# Use remote caching to speed up CI`
 - `## Configure the Vite plugin`
 
-Feature names are lowercase unless they are a proper product name:
+Capitalize product names and explicitly branded feature names.
+Lowercase technical concepts, capabilities, and infrastructure components:
 
 | Correct        | Incorrect      |
 | -------------- | -------------- |
 | remote caching | Remote Caching |
 | project graph  | Project Graph  |
+| workers        | Workers        |
 | Nx Cloud       | nx cloud       |
 | Nx Console     | nx console     |
-| Nx Agents      | nx agents      |
 | Nx Replay      | nx replay      |
 
 ### Acronyms
@@ -538,28 +541,29 @@ Use tables for structured data that benefits from a matrix layout. For simple li
 
 Use these terms consistently. When writing about Nx concepts, use the exact term from this list.
 
-| Term                 | Usage notes                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------- |
-| workspace            | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.                |
-| project              | An app or library within the workspace.                                                                   |
-| target               | A task that can be run for a project (e.g., `build`, `test`, `lint`).                                     |
-| executor             | The implementation behind a target. Not "builder."                                                        |
-| generator            | Code scaffolding tool. Not "schematic."                                                                   |
-| plugin               | An Nx plugin that provides executors, generators, or graph inference.                                     |
-| task                 | A specific invocation of a target for a project (e.g., `myapp:build`).                                    |
-| project graph        | The dependency graph between projects.                                                                    |
-| affected             | Projects impacted by a code change.                                                                       |
-| cache / cached       | Not "memoized" or "stored results."                                                                       |
-| remote caching       | Sharing cached results across machines. Specific product: "Nx Replay."                                    |
-| Nx Cloud             | The hosted CI/CD product. Always capitalized.                                                             |
-| Nx Console           | The IDE extension. Always capitalized.                                                                    |
-| Nx Agents            | Distributed task execution product. Always capitalized.                                                   |
-| Nx Replay            | Remote caching product. Always capitalized.                                                               |
-| dynamic task packing | How Nx Agents fill each agent by CPU and memory use. Lowercase. Italicize the first mention on a page.    |
-| Ultracache           | Nx Cloud recording of each task's real inputs. Product name, one word. Not "UltraCache" or "Ultra Cache". |
-| pnpm                 | The package manager. Always lowercase, even at the start of a sentence. Not "PNPM" or "Pnpm".             |
-| `nx.json`            | Always in code style.                                                                                     |
-| `project.json`       | Always in code style.                                                                                     |
+| Term                       | Usage notes                                                                                                                                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| workspace                  | The root directory managed by Nx. Not "repo" or "monorepo" when referring to Nx's context.                                                                                                                   |
+| project                    | An app or library within the workspace.                                                                                                                                                                      |
+| target                     | A task that can be run for a project (e.g., `build`, `test`, `lint`).                                                                                                                                        |
+| executor                   | The implementation behind a target. Not "builder."                                                                                                                                                           |
+| generator                  | Code scaffolding tool. Not "schematic."                                                                                                                                                                      |
+| plugin                     | An Nx plugin that provides executors, generators, or graph inference.                                                                                                                                        |
+| task                       | A specific invocation of a target for a project (e.g., `myapp:build`).                                                                                                                                       |
+| project graph              | The dependency graph between projects.                                                                                                                                                                       |
+| affected                   | Projects impacted by a code change.                                                                                                                                                                          |
+| cache / cached             | Not "memoized" or "stored results."                                                                                                                                                                          |
+| remote caching             | Sharing cached results across machines. Specific product: "Nx Replay."                                                                                                                                       |
+| Nx Cloud                   | The hosted CI/CD product. Always capitalized.                                                                                                                                                                |
+| Nx Console                 | The IDE extension. Always capitalized.                                                                                                                                                                       |
+| Nx Replay                  | Remote caching product. Always capitalized.                                                                                                                                                                  |
+| workers                    | Nx Cloud machines that run distributed tasks. Lowercase, like GitHub Actions runners. Say "Nx Cloud workers" on first mention. Capitalize only at the start of a sentence or in a UI label. Not "Nx Agents." |
+| distributed task execution | The Nx Cloud capability that runs tasks across workers. Lowercase.                                                                                                                                           |
+| dynamic task packing       | How Nx Cloud fills each worker by CPU and memory use. Lowercase. Italicize the first mention on a page.                                                                                                      |
+| Ultracache                 | Nx Cloud recording of each task's real inputs. Product name, one word. Not "UltraCache" or "Ultra Cache".                                                                                                    |
+| pnpm                       | The package manager. Always lowercase, even at the start of a sentence. Not "PNPM" or "Pnpm".                                                                                                                |
+| `nx.json`                  | Always in code style.                                                                                                                                                                                        |
+| `project.json`             | Always in code style.                                                                                                                                                                                        |
 
 ## Vale configuration
 
