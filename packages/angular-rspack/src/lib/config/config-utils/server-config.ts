@@ -22,6 +22,7 @@ import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/p
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
 import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
 import {
@@ -32,6 +33,7 @@ import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
 import { getSwcTranspilationRules } from './swc-transpilation';
 import { isServeMode } from '../../utils/rspack-serve-env';
+import { isRspackV2 } from '../../utils/rspack-version';
 
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -151,13 +153,19 @@ export async function getServerConfig(
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'module', 'main'],
     },
-    devServer: await getDevServerConfig(normalizedOptions, 'server'),
+    // rspack 2 then leaves the dev-server client and HMR entries out of the
+    // server bundle; the rspack 1.x CLI rejects `false` here.
+    devServer: isRspackV2()
+      ? false
+      : await getDevServerConfig(normalizedOptions, 'server'),
     externals: normalizedOptions.externalDependencies,
     optimization: getOptimization(normalizedOptions, 'server'),
     module: {
       ...defaultConfig.module,
       rules: [
         ...getSwcTranspilationRules(swcTranspilationTransform),
+        // The rspack 1.x dev server adds its HMR entry to this bundle too.
+        ...(isDevServer ? [getDevClientGuardRule()] : []),
         {
           loader:
             // oxlint-disable-next-line @nx/enforce-module-boundaries
