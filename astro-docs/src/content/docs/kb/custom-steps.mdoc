@@ -85,7 +85,7 @@ When specifying the location for the custom step, you must include a branch or t
 {% /aside %}
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/workflows/ci.yaml
 launch-templates:
   custom-template:
     resource-class: 'docker_linux_amd64/medium'
@@ -116,7 +116,7 @@ Reference a step file committed to your workspace with a `file://` URL.
 Note the triple slash. The path is resolved from the workspace root.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/workflows/ci.yaml
 launch-templates:
   custom-template:
     resource-class: 'docker_linux_amd64/medium'
@@ -138,7 +138,7 @@ Reference a step file on any HTTPS endpoint that returns the raw YAML body, for 
 The URL is fetched as-is with an HTTP GET.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/workflows/ci.yaml
 launch-templates:
   custom-template:
     resource-class: 'docker_linux_amd64/medium'

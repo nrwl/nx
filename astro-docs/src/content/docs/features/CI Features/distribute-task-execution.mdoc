@@ -105,10 +105,10 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
 5. Identify env vars and secrets:
    - CI-provider-only vars.
    - Main orchestration job vars.
-   - Worker-required vars to pass via `--with-env-vars`.
+   - Worker-required vars to set on the launch template `env` or in the Nx Cloud environment variables settings.
    - Vars that must be configured in Nx Cloud UI.
    - Secrets that must not be forwarded.
-   - Do not recommend `--with-env-vars=auto` unless the workflow already uses it or the user explicitly accepts broad forwarding.
+   - If a worker needs a value only the main job can produce at run time, flag it: `start-workers` forwards only `NX_`-prefixed vars, and `start-ci-run --with-env-vars` is the alternative.
    - Never print full env in worker setup.
 
 6. Map reusable CI steps:
@@ -130,7 +130,7 @@ When migrating to workers, distinguish these three concepts:
 2. Per-machine concurrency:
    - "This machine should only run N tasks at once because of CPU, memory, ports, browsers, Docker, services, etc."
    - Nx Cloud packs tasks onto each worker from their measured CPU and memory use, so CPU and memory limits need no configuration. Drop old `--parallel` values.
-   - When tasks share a machine-local resource such as a port, a browser, or a database, keep them apart with `dte.scheduling-constraints` in `.nx/ci-config.yaml` (`cannot-run-with`).
+   - When tasks share a machine-local resource such as a port, a browser, or a database, keep them apart with `scheduling-constraints` on the `worker-templates` entry in `.nx/workflows/ci.yaml` (`cannot-run-with`).
 
 3. Global serialization:
    - "Only one of these tasks may run anywhere in the whole CI run."
@@ -185,7 +185,7 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 
 - Do not add assignment rules for concurrency. Nx Cloud packs tasks by resource use.
 - Use assignment rules only when a target needs a different worker type, such as a larger machine or one with a GPU, and the existing setup already routes it that way.
-- Verify every referenced launch template exists in every relevant `distribute-on` tier.
+- Verify every referenced launch template exists, for every size of the `worker-templates` entry.
 
 ## Base image policy
 
@@ -196,10 +196,10 @@ If separate commands are preserved, explicitly state which Nx dependency relatio
 ## Shutdown
 
 - Decide whether heartbeat is sufficient.
-- Use `--require-explicit-completion` plus guarded `complete-ci-run` for multi-step, multi-job, staged, or heartbeat-risky workflows.
-- Treat `--stop-workers-after` as waste reduction, not CI completion.
-- Build `--stop-workers-after` from the final distributed target set and validate target/configuration names.
-- Use `--stop-workers-on-failure=false` when later work, artifacts, coverage, or self-healing must continue.
+- For multi-step, multi-job, staged, or heartbeat-risky workflows, use `start-ci-run --require-explicit-completion` plus guarded `complete-ci-run`. `start-workers` has no way to turn the heartbeat off.
+- Treat `stop-after` as waste reduction, not CI completion.
+- Build `stop-after` from the final distributed target set and validate target/configuration names.
+- Use `fail-after: 0` when later work, artifacts, coverage, or self-healing must continue.
 
 ## Output requirements
 
@@ -218,8 +218,8 @@ After making changes, produce:
    - CI-provider-only
    - Worker forwarded
    - Nx Cloud UI / external setup
-7. The generated or updated `.nx/workflows/agents.yaml`.
-8. The generated or updated distribution config if needed.
+7. The generated or updated `launch-templates` section of `.nx/workflows/ci.yaml`.
+8. The generated or updated `worker-templates` section of `.nx/workflows/ci.yaml`.
 9. Scheduling constraints and assignment rules only where the analysis requires them.
 10. Shutdown/heartbeat recommendation.
 11. Validation performed and validation still required.
@@ -229,7 +229,7 @@ After making changes, produce:
 Before finalizing, verify:
 
 - Every generated target exists.
-- `--stop-workers-after` matches real distributed targets.
+- `stop-after` matches real distributed targets.
 - Every env var forwarded to workers is actually needed.
 - No secret is printed in logs.
 - Main job and workers check out the same commit.
@@ -263,12 +263,12 @@ If you don't have a CI workflow yet, generate one:
 npx nx g ci-workflow
 ```
 
-Add a `.nx/ci-config.yaml` file that sets how many workers to use:
+Add a `.nx/workflows/ci.yaml` file that sets how many workers to use:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 3 linux-large-js
+# .nx/workflows/ci.yaml
+worker-templates:
+  default: 3 linux-large-js
 ```
 
 `linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
@@ -300,6 +300,7 @@ jobs:
 ```
 
 Every Nx command in the job then runs its tasks across the three workers.
+On [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci), set `workers` on the job instead of running `start-workers`.
 For the full pipeline, see [setting up CI](/docs/getting-started/setup-ci).
 For workflows on other CI providers, see [CI workflow examples](/docs/kb/ci-workflow-examples).
 
@@ -328,20 +329,20 @@ Update this repository's existing Nx Cloud worker configuration to use dynamic t
 
 Read the distributed task execution guide at https://nx.dev/docs/features/ci-features/distribute-task-execution and the configuration reference at https://nx.dev/docs/reference/nx-cloud/ci-config before editing.
 
-1. Inspect CI workflows, the scripts they invoke, `.nx/ci-config.yaml`, `.nx/workflows`, `nx.json`, and resolved target configurations from `nx show project <project> --json`. Use the repository's package manager for Nx commands.
+1. Inspect CI workflows, the scripts they invoke, `.nx/workflows/ci.yaml`, other files in `.nx/workflows`, `nx.json`, and resolved target configurations from `nx show project <project> --json`. Use the repository's package manager for Nx commands.
 
 2. Find tasks that currently run with effective per-worker parallelism of 1, especially e2e tests. Check `--parallel=1`, assignment-rule `parallelism: 1`, workspace defaults, and target-level `parallelism: false`. Include split e2e targets generated by plugins, and identify the actual projects, targets, and configurations affected by each setting.
 
 3. Before removing a concurrency limit, inspect the task implementation and test setup to establish why it exists:
-   - If tasks share a machine-local resource, such as a fixed port, database, or output directory, add `dte.scheduling-constraints` in `.nx/ci-config.yaml`. Use selectors matching the actual tasks and `cannot-run-with` entries covering every conflicting task group. For e2e tasks that must not overlap with each other, the selector must also match itself, including split e2e targets where applicable. Other compatible tasks can still share the worker.
+   - If tasks share a machine-local resource, such as a fixed port, database, or output directory, add `scheduling-constraints` to the `worker-templates` entry in `.nx/workflows/ci.yaml`. Use selectors matching the actual tasks and `cannot-run-with` entries covering every conflicting task group. For e2e tasks that must not overlap with each other, the selector must also match itself, including split e2e targets where applicable. Other compatible tasks can still share the worker.
    - If a limit only prevents CPU or memory exhaustion, remove the manual limit and let dynamic task packing manage resource use.
    - If a task must have the entire worker to itself, preserve target-level `parallelism: false`.
    - If tasks share a resource across workers, preserve the required global serialization. Scheduling constraints only prevent overlap on the same worker.
    - If the reason is unclear, report the uncertainty and preserve the restriction until it can be verified.
 
-4. If the workflow uses `nx-cloud start-ci-run`, migrate it to `nx-cloud start-workers` and move its supported configuration into `.nx/ci-config.yaml` using the documented equivalents. `start-workers` takes no configuration flags. Preserve worker initialization, toolchain versions, required environment variables, lifecycle behavior, and task dependencies.
+4. If the workspace has `.nx/ci-config.yaml`, or the workflow uses `nx-cloud start-ci-run`, move the configuration into `.nx/workflows/ci.yaml` using https://nx.dev/docs/kb/migrate-from-ci-config and run `nx-cloud start-workers`. Keep `start-ci-run` if the guide lists a flag you rely on as having no counterpart in the file. Preserve worker initialization, toolchain versions, required environment variables, lifecycle behavior, and task dependencies.
 
-5. Keep assignment rules needed for particular worker types, and verify those types exist in every applicable `distribute-on` changeset. Remove assignment-rule parallelism limits after accounting for the constraints above. Preserve the existing worker counts unless a change is required for correctness.
+5. Keep assignment rules needed for particular worker types, and verify those types exist in every size of the `worker-templates` entry. Remove assignment-rule parallelism limits after accounting for the constraints above. Preserve the existing worker counts unless a change is required for correctness.
 
 6. Validate the configuration and selectors against the resolved task names. For every task previously limited to parallelism 1, report the original setting, its reason, and the scheduling constraint or other mechanism that now preserves it. Run available validation and identify anything that still needs a trial CI run.
 {% /llm_copy_prompt %}
@@ -355,39 +356,42 @@ See [concurrent worker limits](/docs/kb/concurrent-workers) for what counts and 
 ### Scale workers with PR size
 
 A small pull request doesn't need as many workers as a change that affects the whole workspace.
-Give `distribute-on` a map of changesets, ordered from smallest to largest, and Nx Cloud picks one based on the share of projects the pull request affects:
+List `small`, `medium`, and `large` on a `worker-templates` entry, and Nx Cloud picks a size from the work remaining at each distributed command, after cache hits:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on:
-    small-changeset: 3 linux-large-js # 1-25% of projects affected
-    medium-changeset: 6 linux-large-js # 26-50%
-    large-changeset: 10 linux-large-js # 51-75%
-    extra-large-changeset: 15 linux-large-js # 76-100%
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    small: 3 linux-large-js # up to 33% of stored task time
+    medium: 6 linux-large-js # up to 66%
+    large: 10 linux-large-js # the rest
 ```
 
-Each changeset covers an equal share of that range, so their order matters.
-Name them however you like, except `default`, which is reserved for a single changeset used on every pull request.
+`small` starts with the run, and a larger size adds the workers it's missing.
+To change where each size stops, see [sizes in the configuration reference](/docs/reference/nx-cloud/ci-config#small-medium-and-large).
 
 ### Control where tasks run
 
 Dynamic task packing places tasks on its own.
-Two optional settings in `.nx/ci-config.yaml` add rules it follows:
+Two optional settings on a `worker-templates` entry add rules it follows:
 
-- [Scheduling constraints](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints) keep tasks that share a resource, such as a port or a database, from running on the same worker at the same time.
+- [Scheduling constraints](/docs/reference/nx-cloud/ci-config#scheduling-constraints) keep tasks that share a resource, such as a port or a database, from running on the same worker at the same time.
 - [Assignment rules](/docs/kb/assignment-rules) send matching tasks to specific worker types, for example `build` and `e2e-ci` to larger machines.
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 3 linux-large-js
-  scheduling-constraints:
-    # e2e tasks share a database, so never run two of them on one worker at once
-    - targets: ['e2e*']
-      cannot-run-with:
-        - targets: ['e2e*']
-  assignment-rules: .nx/assignment-rules.yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 2 linux-large-js; 1 linux-extra-large-js
+    scheduling-constraints:
+      # e2e tasks share a database, so never run two of them on one worker at once
+      - targets: ['e2e*']
+        cannot-run-with:
+          - targets: ['e2e*']
+    assignment-rules:
+      - targets: [e2e-ci*]
+        run-on:
+          - agent: linux-extra-large-js
 ```
 
 To give a task a worker to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).

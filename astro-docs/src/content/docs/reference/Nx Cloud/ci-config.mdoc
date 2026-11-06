@@ -1,303 +1,365 @@
 ---
 title: 'CI Configuration File'
-description: 'Configure Nx Cloud CI Pipeline Executions with the .nx/ci-config.yaml file'
+description: 'Configure Nx Cloud CI and external CI providers with the .nx/workflows/ci.yaml file: workers, launch templates, Ultracache, and self-healing.'
 filter: 'type:References'
 ---
 
-Nx Cloud reads CI configuration from a `.nx/ci-config.yaml` file at the root of your workspace.
-The file controls how a CI Pipeline Execution runs: task distribution, agent lifecycle, self-healing, and the environment forwarded to agents.
-Every Nx Cloud command reads the file, so the configuration applies to the run whichever command starts it. To provision Workers, run [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
+Nx Cloud reads CI configuration from a `.nx/workflows/ci.yaml` file in your workspace.
+The same file format works whether your pipeline runs on [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci) or on an external provider such as GitHub Actions.
+
+{% tabs syncKey="ci-location" %}
+{% tabitem label="External CI" %}
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-large
-lifecycle:
-  stop-after:
-    - build
-    - test
-    - e2e
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-large-js
+    stop-after:
+      - build
+      - test
 ```
 
-Start the run by invoking the command once, early in your main job:
+Start the workers once, early in the main job of your provider's workflow:
 
 ```shell
 npx nx-cloud start-workers
 ```
 
-The command takes no configuration flags. Everything lives in the file, so the same configuration is versioned with your workspace and can be overridden per environment.
+{% /tabitem %}
+{% tabitem label="Nx Cloud CI" %}
 
-{% aside type="caution" title="start-ci-run and .nx/ci-config.yaml cannot be combined" %}
-`nx-cloud start-ci-run` does not read `.nx/ci-config.yaml`. If a config file is present, `start-ci-run` exits with an error and directs you to `start-workers`.
-Choose one path: either the config file with `start-workers`, or CLI flags with `start-ci-run`.
-For a mapping between the two, see the [Nx Cloud CLI reference](/docs/reference/nx-cloud-cli).
-{% /aside %}
+```yaml
+# .nx/workflows/ci.yaml
+on:
+  pull-requests:
+    event: PR
+  main-pushes:
+    event: PUSH
+    branches: [main]
 
-{% aside type="note" title="Runs without distribution use start-ci-run" %}
-If you don't want distribution, use `npx nx-cloud start-ci-run --no-distribution` instead.
-{% /aside %}
+worker-templates:
+  default:
+    workers: 5 linux-large-js
+    stop-after:
+      - build
+      - test
 
-## File location
+jobs:
+  main:
+    runs-on: linux-medium-js
+    workers: default
+    steps:
+      - run: npx nx affected -t lint test build
+```
 
-Nx Cloud reads the file from `.nx/ci-config.yaml`. A `.nx/ci-config.yml` extension also works.
+{% /tabitem %}
+{% /tabs %}
+
+If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/docs/kb/migrate-from-ci-config).
 
 ## Top-level structure
 
-The file has five top-level sections. All are optional, and each falls back to its defaults when omitted.
+| Section            | Purpose                                             | Applies to  |
+| ------------------ | --------------------------------------------------- | ----------- |
+| `worker-templates` | Named worker setups: counts, sizes, and task rules. | Both        |
+| `launch-templates` | Machine setups that workers and jobs run on.        | Both        |
+| `ultracache`       | Paths that Ultracache ignores.                      | Both        |
+| `self-healing`     | Which tasks self-healing CI can fix.                | Both        |
+| `name`             | Display name of the pipeline.                       | Nx Cloud CI |
+| `on`               | Events that start the jobs.                         | Nx Cloud CI |
+| `env`              | Environment variables for every job and worker.     | Nx Cloud CI |
+| `defaults`         | Defaults for the steps in every job.                | Nx Cloud CI |
+| `jobs`             | The jobs and their steps.                           | Nx Cloud CI |
 
-| Section     | Purpose                                                           |
-| ----------- | ----------------------------------------------------------------- |
-| `lifecycle` | Stop conditions and stall detection for the run.                  |
-| `ai`        | Self-healing CI configuration.                                    |
-| `dte`       | Distributed task execution: how tasks are distributed to Workers. |
-| `workers`   | Configuration for the Workers themselves.                         |
-| `overrides` | Per-environment overrides keyed by `NX_CI_EXECUTION_ENV`.         |
+External CI ignores `name`, `on`, `env`, `defaults`, and `jobs`, so one file can serve both kinds of run in the same repository.
 
-For complete pipelines that pair this file with a provider workflow, see [setting up CI](/docs/getting-started/setup-ci) and [CI workflow examples](/docs/kb/ci-workflow-examples).
-
-## `lifecycle`
-
-Stop conditions and stall detection for the run group.
+For editor validation, add the published schema to the first line of the file:
 
 ```yaml
-# .nx/ci-config.yaml
-lifecycle:
-  fail-after: 1
-  heartbeat: true
-  stop-after:
-    - build
-    - test
-    - e2e
+# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
 ```
 
-### `lifecycle.fail-after`
+## `worker-templates`
 
-Number of task failures allowed before the run group is marked failed.
-`0` means never fail, so the run always finishes. `1` stops on the first failure.
+Named worker setups, at most 50 entries.
+On external CI, [`start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) starts one entry.
+On Nx Cloud CI, a job picks one with `workers: <name>`.
 
-Type: `integer`, minimum `0`. Default: `1`.
+An entry is a count string or a map:
 
-### `lifecycle.heartbeat`
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  # A count string
+  nightly: 10 linux-large-js
 
-When `true`, Nx Cloud monitors the run for stalled progress and marks it failed if the main job stops reporting in for too long.
+  # A fixed count with task rules
+  release:
+    workers: 2 linux-medium-js; 1 linux-large-js
+    stop-after: [build]
 
-Type: `boolean`. Default: `true`.
+  # Sized by the work in each run
+  pr:
+    small: 2 linux-medium-js
+    medium: 3 linux-medium-js; 1 linux-large-js
+    large: 8 linux-medium-js; 4 linux-large-js
+    fail-after: 1
+```
 
-### `lifecycle.stop-after`
+A count string lists `<count> <launch-template>` pairs separated by `;`, with at most 20 templates.
+The template names can come from your [`launch-templates`](#launch-templates) or from the [pre-built templates](/docs/kb/launch-templates).
 
-Targets that mark this CI run complete once each one has finished.
-List every target you expect in the pipeline so the run does not end before all work is done.
+External CI has no job to take a setup from, so every count needs a template name.
+A bare count such as `3` only works on Nx Cloud CI, where it reuses the machine setup of the job.
+
+### `workers`
+
+A fixed count of workers, all started with the run.
+Can't be combined with `small`, `medium`, and `large`.
+
+### `small`, `medium`, and `large`
+
+Worker counts sized by the work the run has to do.
+All three are required.
+
+- `small` starts with the run, every time.
+- At each distributed command, Nx Cloud compares the remaining work, after cache hits, with the stored timings of your workspace and picks a size.
+- Counts are totals per template, so picking a larger size adds the difference. A template's count can't go down from one size to the next, and workers are never removed.
+
+By default, `small` covers up to 33% of the stored task time, `medium` up to 66%, and `large` the rest.
+`small` and `medium` can set their own upper limit, a whole percent from 1% to 99%:
+
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  pr:
+    small: { count: 2 linux-medium-js, workload: 10% }
+    medium: 4 linux-medium-js
+    large: 6 linux-medium-js
+```
+
+### `assignment-rules`
+
+Rules that send matching tasks to specific launch templates.
+For the rule format, see [assignment rules](/docs/kb/assignment-rules).
+
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 3 linux-medium-js; 1 linux-large-js
+    assignment-rules:
+      - targets: [e2e-ci*]
+        run-on:
+          - agent: linux-large-js
+            parallelism: 1
+```
+
+### `scheduling-constraints`
+
+Tasks that must never run on the same worker at the same time, for example because they share a port or a database.
+Each entry selects tasks by `projects`, `targets`, or `configurations` globs, and `cannot-run-with` lists the tasks they can't overlap with on one worker.
+
+```yaml
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 3 linux-large-js
+    scheduling-constraints:
+      # e2e tasks share a resource, so never run two of them on one worker at once
+      - targets: ['e2e*']
+        cannot-run-with:
+          - targets: ['e2e*']
+```
+
+Tasks outside the constraint still share the worker with them.
+To give a task a worker to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
+
+### `stop-after`
+
+Targets that mark the CI run complete once each one has finished.
+List every target you expect in the pipeline so the run doesn't end before all work is done.
 
 Type: array of strings.
 
+### `fail-after`
+
+Number of task failures allowed before the run is marked failed.
+`0` means never fail, so the run always finishes. `1` stops on the first failure.
+
+Type: `integer`, minimum `0`.
+
+### `main-job-worker`
+
+Runs distributed tasks on a background worker on the machine of the main job, using the CPU and memory you allow it.
+Available on Nx Cloud CI.
+External CI doesn't start this worker from `ci.yaml`.
+
 ```yaml
-# .nx/ci-config.yaml
-lifecycle:
-  stop-after:
-    - lint
-    - test
-    - build
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 4 linux-large-js
+    main-job-worker:
+      cpu: 3
+      memory: 6GB
 ```
 
-## `ai`
+## `launch-templates`
 
-Self-healing CI configuration.
-See [self-healing CI](/docs/features/ci-features/self-healing-ci) for how the fixes are generated and applied.
+Machine setups, keyed by the name that count strings and `runs-on` refer to.
+For the template format, see [launch templates](/docs/kb/launch-templates).
 
 ```yaml
-# .nx/ci-config.yaml
-ai:
-  fix-tasks-patterns:
-    - '*lint*'
-    - '*test*'
-  auto-apply-patterns:
-    - '*lint*'
+# .nx/workflows/ci.yaml
+launch-templates:
+  linux-custom:
+    resource-class: docker_linux_amd64/medium
+    image: ubuntu22.04-node20.19-v3
+    init-steps:
+      - name: Checkout
+        uses: nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml
+      - name: Install node modules
+        uses: nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml
 ```
 
-### `ai.fix-tasks-patterns`
+Nx Cloud looks up a template name in `ci.yaml` first, then in other files in `.nx/workflows`, then in the public `nrwl/nx-cloud-workflows` templates.
+
+## `ultracache`
+
+Paths that [Ultracache](/docs/features/ci-features/remote-cache#ultracache) ignores when it records what a task reads and writes.
+
+```yaml
+# .nx/workflows/ci.yaml
+ultracache:
+  ignore-reads: ['dist/target/**']
+  ignore-writes: ['dist/target/**']
+  task-exclusions:
+    - project: app-e2e
+      ignore-reads: ['apps/app/build/**']
+```
+
+Entries in `task-exclusions` select tasks by `project`, `target`, and `configuration`.
+For when to use each option, see [Ultracache sandboxing](/docs/kb/sandboxing).
+
+## `self-healing`
+
+Overrides for [self-healing CI](/docs/features/ci-features/self-healing-ci#advanced-configuration-overrides).
+
+```yaml
+# .nx/workflows/ci.yaml
+self-healing:
+  fix-tasks-patterns: ['*lint*', '*test*', '!*e2e*']
+  auto-apply-patterns: ['lint*']
+```
+
+### `fix-tasks-patterns`
 
 Glob patterns of task IDs that self-healing CI is allowed to attempt fixes for.
 
-Type: array of strings.
-
-### `ai.auto-apply-patterns`
+### `auto-apply-patterns`
 
 Glob patterns of task IDs whose fixes are applied automatically without explicit approval.
 
-Type: array of strings.
+## Import a section from another file
 
-## `dte`
-
-Distributed task execution: how tasks are distributed to Workers.
+`launch-templates`, `ultracache`, and `worker-templates` can each be a path to another file.
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  enabled-by-default: true
-  distribute-on: 5 linux-large
-  assignment-rules: .nx/assignment-rules.yaml
+# .nx/workflows/ci.yaml
+launch-templates: .nx/workflows/launch-templates.yaml
+ultracache: .nx/workflows/ultracache.yaml
+worker-templates: .nx/workflows/workers.yaml
 ```
 
-### `dte.enabled-by-default`
+Paths are relative to the workspace root and read at the commit of the run.
+The imported file holds only the content of the section, with no top-level key naming it, and can't import again.
+A `launch-templates` file can also keep a top-level `launch-templates:` key, so an existing `.nx/workflows/agents.yaml` can be imported as it is.
 
-When `true`, tasks in this run group are distributed across agents automatically.
+## `on`
 
-Type: `boolean`. Default: `true`.
-
-### `dte.distribute-on`
-
-How many agents to use and which [launch templates](/docs/kb/launch-templates) to run them on.
-Accepts a single launch-template string, or a map of changeset sizes to launch-template strings for [dynamic agent allocation](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
-
-A launch-template string is one or more `<number> <template-name>` segments separated by commas.
+Named triggers for Nx Cloud CI.
+Each trigger needs an `event` of `PR` or `PUSH`.
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-large
+# .nx/workflows/ci.yaml
+on:
+  pull-requests:
+    event: PR
+    branches: [main]
+    paths-ignore: ['docs/**']
+  main-pushes:
+    event: PUSH
+    branches: [main]
 ```
 
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on:
-    small-changeset: 3 linux-medium
-    medium-changeset: 6 linux-large
-    large-changeset: 10 linux-large
-```
+Triggers can also filter with `branches-ignore`, `tags`, `tags-ignore`, `paths`, and `types`.
+A positive filter can't be combined with its `-ignore` counterpart.
 
-The changeset map can also live in its own file.
-Set `distribute-on` to that file's path and Nx Cloud reads the map from it.
+## `jobs`
 
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: .nx/workflows/distribution-config.yaml
-```
+The jobs of an Nx Cloud CI pipeline, each on its own machine.
 
-To bring your own compute instead of using Workers, set `distribute-on: manual`.
-See [bring your own compute](/docs/kb/bring-your-own-compute).
+| Key               | Description                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| `runs-on`         | Launch template the job runs on.                                                    |
+| `resource-class`  | Machine size. Use with `image` and `init-steps` instead of `runs-on`.               |
+| `image`           | Container image. Use with `resource-class` and `init-steps` instead of `runs-on`.   |
+| `init-steps`      | Steps run once when the machine starts, such as checkout and install.               |
+| `steps`           | Steps the job runs in order.                                                        |
+| `workers`         | Workers that run the tasks of the job. Without it, the job uses its one machine.    |
+| `needs`           | Job or jobs that must finish before this job starts.                                |
+| `if`              | Condition that must hold for the job to run.                                        |
+| `env`             | Environment variables for every step of the job.                                    |
+| `defaults`        | Defaults for the steps of the job, such as `run.working-directory`.                 |
+| `timeout-minutes` | Minutes before the job is stopped, at most 60.                                      |
+| `permissions`     | Permissions of the repository token. Set `repository-contents: write` to push tags. |
+| `name`            | Display name of the job.                                                            |
 
-### `dte.main-job-worker`
+### `jobs.<job>.workers`
 
-Run distributed tasks on a persistent worker in the main CI job, sharing its checkout and resources without changing the remote worker count.
-Omitted or `false` disables it; on Nx Cloud CI, `true` automatically starts it with the usual worker CPU and memory detection.
-External CI requires explicit resources:
+| Written as                                   | Means                                                                  |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| `workers: 3`                                 | Three workers with the machine setup of the job, started with the job. |
+| `workers: 10 linux-large-js`                 | A fixed count of a launch template, started with the job.              |
+| `workers: { small: 3, medium: 6, large: 8 }` | [Sized by the work](#small-medium-and-large).                          |
+| `workers: <name>`                            | An entry from `worker-templates`.                                      |
+| No `workers`                                 | One machine, no workers.                                               |
 
-```yaml
-# .nx/ci-config.yaml
-dte:
-  main-job-worker:
-    cpu: 4
-    memory: 12GiB
-overrides:
-  windows:
-    dte:
-      main-job-worker: false
-```
+Workers get the `env` of the file and the job, and those values are masked in logs when they come from `${{ secrets.<NAME> }}`.
 
-`nx-cloud start-workers` (legacy alias: `start-nx-agents`) initializes both remote workers and the main-job worker; managed distributed jobs already invoke it, so no user command is needed there.
-The override above disables the worker when `NX_CI_EXECUTION_ENV=windows`; assignment rules can select an enabled main-job worker with `agent: main`.
+### `jobs.<job>.steps`
 
-### `dte.scheduling-constraints`
-
-Tasks that must never run on the same agent at the same time, for example because they share a port or a database.
-Each entry selects tasks by `projects`, `targets`, or `configurations` globs, and `cannot-run-with` lists the tasks they can't overlap with on one agent.
-Provide the constraints inline, or a path to a YAML file with a top-level `scheduling-constraints` list.
+A step runs a shell command with `run`, or a step template with `uses` and `with`.
+It can also set `name`, `id`, `if`, `env`, `shell`, `working-directory`, `continue-on-error`, and `timeout-minutes`.
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  scheduling-constraints:
-    # e2e tasks share a resource, so never run two of them on one agent at once
-    - targets: ['e2e*']
-      cannot-run-with:
-        - targets: ['e2e*']
-```
-
-Tasks outside the constraint still share the agent with them.
-To give a task an agent to itself, set `parallelism: false` on its target in [project configuration](/docs/reference/project-configuration).
-
-### `dte.assignment-rules`
-
-Rules that pin matching tasks to specific agent types.
-Provide the rules inline, or a path to a YAML file containing them.
-See [assignment rules](/docs/kb/assignment-rules) for the rule format.
-
-```yaml
-# .nx/ci-config.yaml
-dte:
-  assignment-rules: .nx/assignment-rules.yaml
-```
-
-```yaml
-# .nx/ci-config.yaml
-dte:
-  assignment-rules:
-    - projects:
-        - '*'
-      targets:
-        - build
-      run-on:
-        - agent: linux-large-A
-          parallelism: 2
-```
-
-Each inline rule matches tasks by `projects`, `targets`, and `configurations` globs, and routes them to the agents listed under `run-on`.
-`run-on` is required on every rule. Each `run-on` entry needs an `agent`, with optional `parallelism`.
-
-## `workers`
-
-Configuration for the Workers.
-The older `nx-agents` key still works, and its entries merge with `workers`.
-
-```yaml
-# .nx/ci-config.yaml
-workers:
-  with-env-vars:
-    - CHROMATIC_BRANCH
-    - CHROMATIC_SHA
-```
-
-### `workers.with-env-vars`
-
-Environment variables forwarded from the main job to every Worker.
-Variables prefixed with `NX_` are forwarded automatically, so list only the additional ones you need.
-
-Type: array of strings.
-
-## `overrides`
-
-Per-environment overrides keyed by [`NX_CI_EXECUTION_ENV`](/docs/reference/environment-variables) value.
-Each override is a partial config that takes precedence over the base sections when its key matches the active environment.
-This has no `start-ci-run` flag equivalent. It is specific to the config file.
-
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-large
-  assignment-rules:
-    - targets:
-        - e2e-ci
-      run-on:
-        - agent: linux-large
-          parallelism: 1
-
-overrides:
+# .nx/workflows/ci.yaml
+jobs:
   main:
-    dte:
-      assignment-rules:
-        - targets:
-            - e2e-ci
-          run-on:
-            - agent: linux-extra-large
-              parallelism: 1
+    runs-on: linux-medium-js
+    steps:
+      - name: Validate dependencies
+        if: nxcloud.event_name == 'pull_request'
+        run: node ./tools/validate-deps.mjs
+      - name: Affected tasks
+        run: npx nx affected -t lint test build
 ```
 
-In this example every environment distributes across `linux-large` agents and routes `e2e-ci` tasks to a `linux-large` agent.
-When `NX_CI_EXECUTION_ENV` is `main`, the override replaces `assignment-rules`, routing `e2e-ci` to a `linux-extra-large` agent instead.
+For the rest of what jobs and steps support, see [Nx Cloud CI](/docs/features/ci-features/nx-cloud-ci).
 
-Overrides apply per key. An override replaces the base value for the keys it sets, so an array like `assignment-rules` is replaced as a whole rather than merged with the base rules.
-Keys the override does not set keep their base values, so `distribute-on` remains `5 linux-large` on `main`.
+## How `start-workers` picks a file and an entry
 
-An override only replaces the sections you set. Sections you leave out fall back to the base config, and the base config falls back to defaults.
+On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) reads `.nx/workflows/ci.yaml`, or the file named by `--config`.
+
+| `--workers` | Entries in `worker-templates` | Result                              |
+| ----------- | ----------------------------- | ----------------------------------- |
+| Given       | Includes the name             | Starts that entry.                  |
+| Given       | Doesn't include the name      | An error that lists the entries.    |
+| Not given   | Exactly one                   | Starts that entry.                  |
+| Not given   | Several                       | An error that asks for `--workers`. |
+| Not given   | None                          | An error.                           |
+
+Nx Cloud reads the file from your repository at the commit of the run, so commit changes before they can take effect.
+An invalid file fails the command with an error naming the file, the import, and the key.

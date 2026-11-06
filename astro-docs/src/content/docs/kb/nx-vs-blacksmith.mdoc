@@ -50,12 +50,12 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-With Nx, distribution is a single job. `nx run-many` runs every check, and one `distribute-on` line in [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Workers](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
+With Nx, distribution is a single job. `nx run-many` runs every check, and one worker count in [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) hands tasks to [Workers](/docs/features/ci-features/distribute-task-execution), assigned continuously from historical timing data, with no matrix and no shard count to maintain.
 
 ```yaml
-# .nx/ci-config.yaml (Nx)
-dte:
-  distribute-on: 8 linux-medium-js
+# .nx/workflows/ci.yaml (Nx)
+worker-templates:
+  default: 8 linux-medium-js
 ```
 
 ```yaml
@@ -136,6 +136,6 @@ Nx runs on your existing CI, so you can cut CI time and add distribution without
 ## Resources
 
 {% cards cols=2 %}
-{% card title="Nx Cloud CI features" description="Remote caching, distribution, splitting, and self-healing CI" url="/docs/features/ci-features" /%}
+{% card title="CI features in Nx Cloud" description="Remote caching, distribution, splitting, and self-healing CI" url="/docs/features/ci-features" /%}
 {% card title="Connect your CI" description="Add Nx Cloud to an existing pipeline" url="/docs/getting-started/setup-ci" /%}
 {% /cards %}

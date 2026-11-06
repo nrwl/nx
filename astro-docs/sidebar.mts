@@ -328,6 +328,10 @@ const learnGroups: SidebarItems = [
         label: 'Self-healing CI',
         link: 'features/ci-features/self-healing-ci',
       },
+      {
+        label: 'Nx Cloud CI',
+        link: 'features/ci-features/nx-cloud-ci',
+      },
     ],
   },
 ];

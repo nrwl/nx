@@ -11,28 +11,20 @@ For example, send resource-intensive targets like `e2e-ci` and `build` to larger
 
 On Workers, you don't need assignment rules to size how many tasks run at once.
 [_Dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works) fills each agent by the CPU and memory its tasks use.
-To keep tasks that share a resource, such as a port, off the same agent at the same time, use [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
+To keep tasks that share a resource, such as a port, off the same agent at the same time, use [`scheduling-constraints`](/docs/reference/nx-cloud/ci-config#scheduling-constraints).
 
-Assignment rules are written in `yaml` and reach Nx Cloud through [`dte.assignment-rules`](/docs/reference/nx-cloud/ci-config#dteassignment-rules) in `.nx/ci-config.yaml`.
-
-The rules reach a run in one of three ways, and the wrapper differs between them:
-
-- **Inline.** Set `dte.assignment-rules` to the list of rules itself, with no wrapper.
-- **In their own file.** Set `dte.assignment-rules` to that file's path. The file wraps the list in a top-level `assignment-rules:` key.
-- **Alongside your distribution config.** Put an `assignment-rules:` key next to `distribute-on:` in the file that `dte.distribute-on` points at.
-
-The examples below use the second and third forms, since a rules file is easier to review than a long inline list.
-The inline form looks like this:
+Assignment rules are written in `yaml` and live on a worker entry in `.nx/workflows/ci.yaml`, under [`assignment-rules`](/docs/reference/nx-cloud/ci-config#assignment-rules):
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 5 linux-medium-js
-  assignment-rules:
-    - targets:
-        - e2e-ci
-      run-on:
-        - agent: linux-large-js
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-medium-js; 1 linux-large-js
+    assignment-rules:
+      - targets:
+          - e2e-ci
+        run-on:
+          - agent: linux-large-js
 ```
 
 ## How to define an assignment rule
@@ -43,25 +35,25 @@ Each assignment rule has one of the following properties that it matches against
 {% tabitem label="Assignment rules with Workers" %}
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
-distribute-on:
-  default: 5 linux-medium-js, 5 linux-large-js
+// .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-medium-js; 5 linux-large-js
+    assignment-rules:
+      - projects:
+          - app1
+        targets:
+          - e2e-ci*
+        configurations:
+          - production
+        run-on:
+          - agent: linux-medium-js
 
-assignment-rules:
-  - projects:
-      - app1
-    targets:
-      - e2e-ci*
-    configurations:
-      - production
-    run-on:
-      - agent: linux-medium
-
-  - targets:
-      - lint
-      - build
-    run-on:
-      - agent: linux-large
+      - targets:
+          - lint
+          - build
+        run-on:
+          - agent: linux-large-js
 ```
 
 {% /tabitem %}
@@ -75,13 +67,13 @@ assignment-rules:
     targets:
       - e2e-ci*
     run-on:
-      - agent: linux-medium
+      - agent: linux-medium-js
         parallelism: 5
 
   - targets:
       - lint,build
     run-on:
-      - agent: linux-large
+      - agent: linux-large-js
         parallelism: 10
 ```
 
@@ -90,13 +82,13 @@ assignment-rules:
 
 The above rule will match any task that has a project named `app1`, any targets that begin with `e2e-ci`, and a configuration named `production`. Any tasks that match this rule will only be allowed to run on agents with `linux-medium-js` launch templates. When you bring your own compute, agents assigned these tasks can execute up to `5` tasks in parallel.
 
-The second rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large` agents, and with your own compute, up to 10 of them run in parallel on agents of that type.
+The second rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large-js` agents, and with your own compute, up to 10 of them run in parallel on agents of that type.
 
 You can mix and match any of the criteria in an assignment rule provided that you follow the constraints:
 
 - At least one of the following properties is defined: `projects`, `targets`, `configurations`.
 - There is at least one [agent type](/docs/kb/launch-templates) specified in the `run-on` field. If no parallelism is specified, the parallelism of the executed command will be used instead. If that is not specified, then the parallelism will default to `1`
-- For assignment rules with Workers, every changeset in your `distribute-on` field must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
+- For assignment rules with Workers, every count on the entry (`workers`, or each of `small`, `medium`, and `large`) must include at **least one agent** that matches each agent type specified in the `run-on` field across all assignment rules. For example, if your rules distribute tasks on `linux-small-js`, `linux-medium-js`, and `linux-large-js`, then at least one agent of each type must be available; otherwise, tasks associated with those rules cannot be executed.
 
 {% aside type="note" title="If you bring your own compute, you must define your own agent types" %}
 You must define your own agent types and attach them to your agents using the `NX_AGENT_LAUNCH_TEMPLATE` environment variable. Ensure that for each `run-on` field in your assignment rules, you have corresponding agents in your agent pool that have the same agent type.
@@ -137,7 +129,7 @@ A list of string globs that matches against configurations in your workspace.
 
 Specification of which agent and how to run your tasks:
 
-- **agent**: the type of agent to run on (`linux-medium`, `linux-large`)
+- **agent**: the type of agent to run on (`linux-medium-js`, `linux-large-js`)
 - **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute
 
 ### Glob reference
@@ -165,7 +157,6 @@ You can use globs for better control over how to define your assignment rules.
 If you provide a list of globs to an individual rule property (`projects`, `targets`, `configurations`), it will match any of the patterns for that given property.
 
 ```yaml
-// .nx/workflows/assignment-rules.yaml
 assignment-rules:
   - targets:
       - e2e-ci*
@@ -185,7 +176,6 @@ The following rule will match the following tasks:
 Within each list entry, you can define a comma delimited list of globs. This notation will match a given property only if all globs match.
 
 ```yaml
-// .nx/workflows/assignment-rules.yaml
 assignment-rules:
   - targets:
       - 'e2e-ci*,*server-test'
@@ -300,7 +290,6 @@ In this example, the task defined below can match multiple assignment rules. How
 ```
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
 assignment-rules:
   - projects:
       - app1
@@ -329,6 +318,7 @@ assignment-rules:
 Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute). [Workers](/docs/features/ci-features/distribute-task-execution) distributes your tasks on all plans.
 {% /aside %}
 
+When you bring your own compute, there is no worker entry to put rules on, so they go in a file you pass to `start-ci-run`.
 A typical `assignment-rules.yaml` file might look like this:
 
 ```yaml
@@ -360,18 +350,7 @@ assignment-rules:
 Note that the agent types supplied in the `run-on` property will be used to determine which agents will have rules applied to them.
 You can choose to name your agent types anything you want, but they must be set on your agents via the `NX_AGENT_LAUNCH_TEMPLATE` environment variable.
 
-You can then reference your assignment rules file from `.nx/ci-config.yaml`:
-
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: manual
-  assignment-rules: .nx/workflows/assignment-rules.yaml
-lifecycle:
-  stop-after:
-    - e2e-ci
-```
-
+Your main job passes the file with the `--assignment-rules` flag.
 The following is an example of what this looks like within a Github Actions pipeline:
 
 ```yaml
@@ -384,7 +363,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx-cloud start-workers
+      - run: npx nx-cloud start-ci-run --distribute-on=manual --assignment-rules=.nx/workflows/assignment-rules.yaml --stop-workers-after=e2e-ci
 
       - ... # Nx commands you want to distribute
 
@@ -446,45 +425,36 @@ jobs:
 
 ## Using assignment rules with dynamic Workers
 
-A typical `distribution-config.yaml` file might look like this:
+A typical worker entry might look like this:
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
-distribute-on:
-  default: 5 linux-medium-js, 5 linux-large-js
+// .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 5 linux-medium-js; 5 linux-large-js
+    stop-after:
+      - e2e-ci
+    assignment-rules:
+      - projects:
+          - app1
+        targets:
+          - build
+        configurations:
+          - production
+        run-on:
+          - agent: linux-large-js
 
-assignment-rules:
-  - projects:
-      - app1
-    targets:
-      - build
-    configurations:
-      - production
-    run-on:
-      - agent: linux-large-js
+      - targets:
+          - lint
+        run-on:
+          - agent: linux-medium-js
+            parallelism: 3
 
-  - targets:
-      - lint
-    run-on:
-      - agent: linux-medium-js
-        parallelism: 3
-
-  - configurations:
-      - development
-    run-on:
-      - agent: linux-medium-js
-      - agent: linux-large-js
-```
-
-You can then reference your distribution configuration from `.nx/ci-config.yaml`:
-
-```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: .nx/workflows/distribution-config.yaml
-lifecycle:
-  stop-after:
-    - e2e-ci
+      - configurations:
+          - development
+        run-on:
+          - agent: linux-medium-js
+          - agent: linux-large-js
 ```
 
 Your main job starts the run without repeating any of that configuration:
@@ -507,65 +477,65 @@ jobs:
 #### Invalid assignment rules example
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
-distribute-on:
-  # Invalid changeset that is missing `linux-large-js`. Tasks assigned to large agents won't be able to execute.
-  small-changeset: 1 linux-small-js, 2 linux-medium-js
-  medium-changeset: 2 linux-small-js, 2 linux-medium-js, 3 linux-large-js
-  large-changeset: 3 linux-small-js, 3 linux-medium-js, 4 linux-large-js
+// .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    # Invalid `small` count that is missing `linux-large-js`. Tasks assigned to large agents won't be able to execute.
+    small: 1 linux-small-js; 2 linux-medium-js
+    medium: 2 linux-small-js; 2 linux-medium-js; 3 linux-large-js
+    large: 3 linux-small-js; 3 linux-medium-js; 4 linux-large-js
+    assignment-rules:
+      # Missing one of `projects`, `targets`, `configurations`
+      - run-on:
+          - agent: linux-medium-js
+            parallelism: 1
+          - agent: linux-large-js
+            parallelism: 3
 
-assignment-rules:
-  # Missing one of `projects`, `targets`, `configurations`
-  - run-on:
-      - agent: linux-medium-js
-        parallelism: 1
-      - agent: linux-large-js
-        parallelism: 3
+      # Missing `run-on`
+      - targets:
+          - lint
+        configurations:
+          - production
 
-  # Missing `run-on`
-  - targets:
-      - lint
-    configurations:
-      - production
-
-  # Agent type not found in any of the `distribute-on` changesets
-  - projects:
-      - lib1
-    targets:
-      - test
-    run-on:
-      - agent: linux-extra-large-js
+      # Agent type not found in any of the counts
+      - projects:
+          - lib1
+        targets:
+          - test
+        run-on:
+          - agent: linux-extra-large-js
 ```
 
 #### Valid assignment rules example
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
-distribute-on:
-  default: 3 linux-small-js, 2 linux-medium-js, 1 linux-large-js
+// .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 3 linux-small-js; 2 linux-medium-js; 1 linux-large-js
+    # All rules below are valid assignment rules
+    assignment-rules:
+      - projects:
+          - app1
+        run-on:
+          - agent: linux-medium-js
+          - agent: linux-large-js
 
-# All rules below are valid assignment rules
-assignment-rules:
-  - projects:
-      - app1
-    run-on:
-      - agent: linux-medium-js
-      - agent: linux-large-js
+      - targets:
+          - lint
+        configurations:
+          - production
+        run-on:
+          - agent: linux-large-js
+            parallelism: 10
 
-  - targets:
-      - lint
-    configurations:
-      - production
-    run-on:
-      - agent: linux-large-js
-        parallelism: 10
-
-  - projects:
-      - lib1
-    targets:
-      - test
-    run-on:
-      - agent: linux-medium-js
+      - projects:
+          - lib1
+        targets:
+          - test
+        run-on:
+          - agent: linux-medium-js
 ```
 
 ## Deprecated assignment rules
@@ -573,7 +543,6 @@ assignment-rules:
 Assignment rules used to be defined with the following schema. However, this schema did not support multi-glob matching, nor parallelism. Rules defined in this format will still work, but we recommend updating them to the new schema.
 
 ```yaml
-// .nx/workflows/distribution-config.yaml
 # We recommend updating your assignment rules to the most recent schema
 assignment-rules:
   - project: app1 # replaced by `projects`
