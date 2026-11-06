@@ -168,6 +168,7 @@ export async function convertToFlatConfigGenerator(
     }
   }
 
+  const replacedFiles = new Set(convertedEslintrcFiles);
   // Flat config never reads an ignore file. Keep one another tool may read,
   // such as .gitignore, or one a remaining `ignore-path` still names.
   const referencedIgnoreFiles = findReferencedIgnoreFiles(tree);
@@ -176,13 +177,16 @@ export async function convertToFlatConfigGenerator(
       basename(ignoreFile).includes('eslintignore') &&
       !referencedIgnoreFiles.has(joinPathFragments(ignoreFile))
     ) {
+      if (tree.exists(ignoreFile)) {
+        replacedFiles.add(joinPathFragments(ignoreFile));
+      }
       tree.delete(ignoreFile);
     }
   }
 
   // replace references in nx.json and project.json files
-  updateNxJsonConfig(tree, options.eslintConfigFormat);
-  updateProjectConfigsInputs(tree, options.eslintConfigFormat);
+  updateNxJsonConfig(tree, options.eslintConfigFormat, replacedFiles);
+  updateProjectConfigsInputs(tree, options.eslintConfigFormat, replacedFiles);
 
   // The converter carries angular-eslint's removed eslintrc configs over as
   // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
@@ -603,29 +607,54 @@ function isWorkspaceWidePluginTargetDefault(
   );
 }
 
+interface InputRewriteContext {
+  tree: Tree;
+  format: 'cjs' | 'mjs';
+  // Workspace paths of the eslintrc and ignore files this run converted or deleted.
+  replacedFiles: ReadonlySet<string>;
+  // The roots `{projectRoot}` stands for: one project's, or every project's in nx.json.
+  projectRoots: readonly string[];
+  // Every project's root: without a project graph, a dependency input may reach any of them.
+  dependencyRoots: readonly string[];
+}
+
 // Rewrites input entries that reference legacy eslintrc / `.eslintignore`
 // files to their flat-config counterparts, then dedupes so the rewrite doesn't produce
 // duplicates of entries that already pointed at the flat config. Leaves non-string /
 // non-fileset inputs (runtime/env/dependentTasksOutputFiles/etc.) untouched.
 function rewriteLegacyInputs(
   inputs: Array<string | InputDefinition>,
-  format: 'cjs' | 'mjs'
+  context: InputRewriteContext
 ): Array<string | InputDefinition> {
   const seenStrings = new Set<string>();
   const result: Array<string | InputDefinition> = [];
   for (const entry of inputs) {
     if (typeof entry === 'string') {
-      const rewritten = renameLegacyEslintrcFile(entry, format);
-      if (seenStrings.has(rewritten)) continue;
-      seenStrings.add(rewritten);
-      result.push(rewritten);
+      // Nx reads `^{projectRoot}/...` and `^{workspaceRoot}/...` as dependency filesets.
+      const roots = entry.startsWith('^')
+        ? context.dependencyRoots
+        : context.projectRoots;
+      for (const rewritten of rewriteLegacyPattern(entry, roots, context)) {
+        if (seenStrings.has(rewritten)) continue;
+        seenStrings.add(rewritten);
+        result.push(rewritten);
+      }
     } else if ('fileset' in entry) {
-      const rewritten = renameLegacyEslintrcFile(entry.fileset, format);
-      // Preserve the original reference when nothing changed so downstream identity
-      // checks (e.g. `inputsEqual`) don't see a spurious mutation.
-      result.push(
-        rewritten === entry.fileset ? entry : { ...entry, fileset: rewritten }
-      );
+      const roots =
+        'dependencies' in entry && entry.dependencies
+          ? context.dependencyRoots
+          : context.projectRoots;
+      for (const rewritten of rewriteLegacyPattern(
+        entry.fileset,
+        roots,
+        context
+      )) {
+        // Preserve the original reference when nothing changed so downstream identity
+        // checks (e.g. `inputsEqual`) don't see a spurious mutation.
+        result.push(
+          rewritten === entry.fileset ? entry : { ...entry, fileset: rewritten }
+        );
+      }
     } else {
       result.push(entry);
     }
@@ -633,13 +662,53 @@ function rewriteLegacyInputs(
   return result;
 }
 
+// A pattern keeps its original form while a file it names is still in the tree, so
+// task hashes keep covering that file. It takes the flat-config name when its files
+// were replaced or never existed, and a glob, which can match both kinds, gets both.
+function rewriteLegacyPattern(
+  pattern: string,
+  roots: readonly string[],
+  context: InputRewriteContext
+): string[] {
+  const renamed = renameLegacyEslintrcFile(pattern, context.format);
+  if (renamed === pattern) {
+    return [pattern];
+  }
+  const files = resolveLiteralFileset(pattern.replace(/^[!^]/, ''), roots);
+  if (!files) {
+    return [pattern, renamed];
+  }
+  if (!files.some((file) => context.tree.exists(file))) {
+    return [renamed];
+  }
+  return files.some((file) => context.replacedFiles.has(file))
+    ? [pattern, renamed]
+    : [pattern];
+}
+
+// Resolves a fileset that names one file under a root token to workspace paths.
+// Returns undefined for a glob or a fileset without a leading root token.
+function resolveLiteralFileset(
+  fileset: string,
+  projectRoots: readonly string[]
+): string[] | undefined {
+  const match = /^\{(projectRoot|workspaceRoot)\}\/(.+)$/.exec(fileset);
+  if (!match || /[*?[\]{}()|]/.test(match[2])) {
+    return undefined;
+  }
+  const [, token, path] = match;
+  return token === 'workspaceRoot'
+    ? [joinPathFragments(path)]
+    : projectRoots.map((root) => joinPathFragments(root, path));
+}
+
 // Adds `value` to `inputs` (after rewriting) when the rewritten set doesn't already contain it.
 function ensureInputPresent(
   inputs: Array<string | InputDefinition>,
   value: string,
-  format: 'cjs' | 'mjs'
+  context: InputRewriteContext
 ): Array<string | InputDefinition> {
-  const rewritten = rewriteLegacyInputs(inputs, format);
+  const rewritten = rewriteLegacyInputs(inputs, context);
   if (!rewritten.some((entry) => entry === value)) {
     rewritten.push(value);
   }
@@ -650,10 +719,22 @@ function ensureInputPresent(
 // inputs and namedInputs, and ensures lint targets include the new flat config file as an input
 // (and `production` excludes it). Handles both the legacy record shape and the new array shape
 // of `targetDefaults`.
-function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
+function updateNxJsonConfig(
+  tree: Tree,
+  format: 'cjs' | 'mjs',
+  replacedFiles: ReadonlySet<string>
+) {
   if (!tree.exists('nx.json')) {
     return;
   }
+  const allRoots = [...getProjects(tree).values()].map(({ root }) => root);
+  const context: InputRewriteContext = {
+    tree,
+    format,
+    replacedFiles,
+    projectRoots: allRoots,
+    dependencyRoots: allRoots,
+  };
   updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
     const rewriteTargetInputs = (
       target: Partial<TargetConfiguration>,
@@ -664,9 +745,9 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
         ? ensureInputPresent(
             target.inputs,
             `{workspaceRoot}/eslint.config.${format}`,
-            format
+            context
           )
-        : rewriteLegacyInputs(target.inputs, format);
+        : rewriteLegacyInputs(target.inputs, context);
     };
     if (json.targetDefaults) {
       for (const [name, value] of Object.entries(json.targetDefaults)) {
@@ -689,9 +770,9 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
             ? ensureInputPresent(
                 inputs,
                 `!{projectRoot}/eslint.config.${format}`,
-                format
+                context
               )
-            : rewriteLegacyInputs(inputs, format);
+            : rewriteLegacyInputs(inputs, context);
       }
     }
     return json;
@@ -699,13 +780,26 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
 }
 
 // Walks every project's `targets.*.inputs` and `namedInputs.*`, rewriting stale references.
-function updateProjectConfigsInputs(tree: Tree, format: 'cjs' | 'mjs') {
-  for (const [project, projectConfig] of getProjects(tree)) {
+function updateProjectConfigsInputs(
+  tree: Tree,
+  format: 'cjs' | 'mjs',
+  replacedFiles: ReadonlySet<string>
+) {
+  const projects = getProjects(tree);
+  const dependencyRoots = [...projects.values()].map(({ root }) => root);
+  for (const [project, projectConfig] of projects) {
+    const context: InputRewriteContext = {
+      tree,
+      format,
+      replacedFiles,
+      projectRoots: [projectConfig.root],
+      dependencyRoots,
+    };
     let changed = false;
     if (projectConfig.targets) {
       for (const target of Object.values(projectConfig.targets)) {
         if (!target.inputs) continue;
-        const rewritten = rewriteLegacyInputs(target.inputs, format);
+        const rewritten = rewriteLegacyInputs(target.inputs, context);
         if (!inputsEqual(target.inputs, rewritten)) {
           target.inputs = rewritten;
           changed = true;
@@ -714,7 +808,7 @@ function updateProjectConfigsInputs(tree: Tree, format: 'cjs' | 'mjs') {
     }
     if (projectConfig.namedInputs) {
       for (const [name, inputs] of Object.entries(projectConfig.namedInputs)) {
-        const rewritten = rewriteLegacyInputs(inputs, format);
+        const rewritten = rewriteLegacyInputs(inputs, context);
         if (!inputsEqual(inputs, rewritten)) {
           projectConfig.namedInputs[name] = rewritten;
           changed = true;

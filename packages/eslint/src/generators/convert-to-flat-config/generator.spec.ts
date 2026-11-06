@@ -1441,7 +1441,7 @@ describe('convert-to-flat-config generator', () => {
       `);
     });
 
-    it('should rewrite stale eslintrc/eslintignore references in nx.json and project.json inputs', async () => {
+    it('should rewrite eslintrc/eslintignore references in nx.json and project.json inputs, keeping those that match a retained file', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
         linter: 'eslint',
@@ -1478,10 +1478,30 @@ describe('convert-to-flat-config generator', () => {
           customNamedInput: [
             '{projectRoot}/.eslintrc.base.json',
             '{projectRoot}/src/**/*',
+            { fileset: '{projectRoot}/**/.eslintrc.json' },
           ],
         };
         return json;
       });
+      // Without a lint target or the ESLint plugin, the conversion leaves this
+      // project's config in place.
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        delete json.plugins;
+        return json;
+      });
+      addProjectConfiguration(tree, 'other-lib', {
+        root: 'libs/other-lib',
+        targets: {
+          build: {
+            inputs: [
+              { fileset: '{projectRoot}/.eslintrc.json', dependencies: true },
+              '^{projectRoot}/.eslintrc.json',
+              '^{workspaceRoot}/.eslintrc.json',
+            ],
+          },
+        },
+      });
+      tree.write('libs/other-lib/.eslintrc.json', '{}');
       updateProjectConfiguration(tree, 'test-lib', {
         ...readProjectConfiguration(tree, 'test-lib'),
         root: 'libs/test-lib',
@@ -1509,26 +1529,32 @@ describe('convert-to-flat-config generator', () => {
         eslintConfigFormat: 'mjs',
       });
 
+      expect(tree.exists('libs/other-lib/.eslintrc.json')).toBe(true);
       const nxJson = readJson(tree, 'nx.json');
       // legacy refs rewritten and dedup'd against the newly ensured entry
       expect(nxJson.targetDefaults.lint.inputs).toEqual([
         'default',
         '{workspaceRoot}/eslint.config.mjs',
       ]);
-      // non-lint targets: legacy refs still rewritten, non-string inputs preserved
+      // `{projectRoot}` refs keep the legacy name next to the flat one while
+      // other-lib still has the file; non-string inputs preserved
       expect(nxJson.targetDefaults.build.inputs).toEqual([
         'production',
         '^production',
+        '{projectRoot}/.eslintrc.json',
         '{projectRoot}/eslint.config.mjs',
         { runtime: 'node --version' },
       ]);
       expect(nxJson.namedInputs.production).toEqual([
         'default',
+        '!{projectRoot}/.eslintrc.json',
         '!{projectRoot}/eslint.config.mjs',
       ]);
       expect(nxJson.namedInputs.customNamedInput).toEqual([
         '{projectRoot}/eslint.base.config.mjs',
         '{projectRoot}/src/**/*',
+        { fileset: '{projectRoot}/**/.eslintrc.json' },
+        { fileset: '{projectRoot}/**/eslint.config.mjs' },
       ]);
 
       const projectJson = readProjectConfiguration(tree, 'test-lib');
@@ -1539,6 +1565,17 @@ describe('convert-to-flat-config generator', () => {
       expect(projectJson.namedInputs.projectNamed).toEqual([
         '{projectRoot}/eslint.config.mjs',
         '{projectRoot}/src/**/*',
+      ]);
+      // Dependency inputs resolve against every project, so other-lib's own
+      // retained config keeps the legacy name next to test-lib's flat one
+      expect(
+        readProjectConfiguration(tree, 'other-lib').targets.build.inputs
+      ).toEqual([
+        { fileset: '{projectRoot}/.eslintrc.json', dependencies: true },
+        { fileset: '{projectRoot}/eslint.config.mjs', dependencies: true },
+        '^{projectRoot}/.eslintrc.json',
+        '^{projectRoot}/eslint.config.mjs',
+        '^{workspaceRoot}/eslint.config.mjs',
       ]);
     });
   });
@@ -1813,7 +1850,7 @@ describe('convert-to-flat-config generator', () => {
         '../shared-config/.eslintrc.json',
       ],
     ])(
-      'should keep FlatCompat for an extends of %s, which the conversion leaves in place',
+      'should keep FlatCompat and task inputs for an extends of %s, which the conversion leaves in place',
       async (_, files: Record<string, string>, extendsPath) => {
         await lintProjectGenerator(tree, {
           skipFormat: false,
@@ -1833,6 +1870,11 @@ describe('convert-to-flat-config generator', () => {
           json.extends = [extendsPath];
           return json;
         });
+        const retainedInput = `{workspaceRoot}/${joinPathFragments('libs/test-lib', extendsPath)}`;
+        updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+          json.namedInputs.sharedGlobals = [retainedInput];
+          return json;
+        });
 
         await convertToFlatConfigGenerator(tree, options);
 
@@ -1842,6 +1884,9 @@ describe('convert-to-flat-config generator', () => {
         expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
           `compat.extends('${extendsPath}')`
         );
+        expect(readJson(tree, 'nx.json').namedInputs.sharedGlobals).toEqual([
+          retainedInput,
+        ]);
       }
     );
 
