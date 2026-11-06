@@ -1,6 +1,5 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/internal';
-import { getViteConfigPath } from './utils';
 
 export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
@@ -9,8 +8,6 @@ export function previewPostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
-    const viteConfigPath = getViteConfigPath(tree, projectDetails.root);
-
     if (target.options) {
       removePropertiesFromTargetOptions(
         target.options,

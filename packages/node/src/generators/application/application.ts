@@ -152,6 +152,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
     const nestTasks = await applicationGenerator(tree, {
       ...options,
+      // A derived jest is left to @nx/nest, which defaults to vitest on Nest 12.
+      unitTestRunner:
+        schema.unitTestRunner ??
+        (options.unitTestRunner === 'vitest' ? 'vitest' : undefined),
       skipFormat: true,
     });
     tasks.push(nestTasks);

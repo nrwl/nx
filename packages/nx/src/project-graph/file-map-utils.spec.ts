@@ -1,5 +1,5 @@
 import { ProjectType } from '../config/workspace-json-project-json';
-import { createFileMap, updateFileMap } from './file-map-utils';
+import { createFileMap } from './file-map-utils';
 
 describe('fileMapUtils', () => {
   describe('createFileMap', () => {

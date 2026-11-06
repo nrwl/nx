@@ -9,7 +9,6 @@ import { ensureTypescript } from '@nx/js/internal';
 import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../version-utils';
 import type { EntryPoint } from './entry-point';
 import { getModuleDeclarations } from './module-info';
 

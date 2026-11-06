@@ -1,6 +1,5 @@
 import { type Tree, type TargetConfiguration } from '@nx/devkit';
 import { AggregatedLog, processTargetOutputs } from '@nx/devkit/internal';
-import { getConfigFilePath } from './utils';
 
 export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
   return (
@@ -9,14 +8,10 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
     projectDetails: { projectName: string; root: string },
     inferredTargetConfiguration: TargetConfiguration
   ) => {
-    const remixConfigPath = getConfigFilePath(tree, projectDetails.root);
-
     if (target.options) {
       handlePropertiesFromTargetOptions(
-        tree,
         target.options,
         projectDetails.projectName,
-        projectDetails.root,
         migrationLogs
       );
     }
@@ -25,10 +20,8 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
       for (const configurationName in target.configurations) {
         const configuration = target.configurations[configurationName];
         handlePropertiesFromTargetOptions(
-          tree,
           configuration,
           projectDetails.projectName,
-          projectDetails.root,
           migrationLogs
         );
       }
@@ -63,10 +56,8 @@ export function buildPostTargetTransformer(migrationLogs: AggregatedLog) {
 }
 
 function handlePropertiesFromTargetOptions(
-  tree: Tree,
   options: any,
   projectName: string,
-  projectRoot: string,
   migrationLogs: AggregatedLog
 ) {
   if ('outputPath' in options) {

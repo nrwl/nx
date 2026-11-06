@@ -262,7 +262,7 @@ export {
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,
   getCliPath,
-  // TODO(v25): remove custom hasher support.
+  // TODO(v25): remove custom hasher support (NXC-5052).
   getCustomHasher,
   getDependencyConfigs,
   getExecutorForTask,

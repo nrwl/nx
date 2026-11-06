@@ -295,6 +295,8 @@ mod test {
     use assert_fs::TempDir;
     use flate2::Compression;
     use flate2::write::GzEncoder;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
     use tar::{Builder, EntryType, Header};
 
     /// Forge a tar entry, writing `name` straight into the header to bypass the
@@ -389,43 +391,72 @@ mod test {
     #[cfg(unix)]
     #[test]
     fn extract_rejects_symlink_escape() {
-        let temp = TempDir::new().unwrap();
-        let cache_dir = temp.join("cache");
-        let outside = temp.join("outside");
-        std::fs::create_dir_all(&outside).unwrap();
+        for (name, entry_type, data) in [
+            ("evil/pwned.txt", EntryType::Regular, b"PWNED".as_slice()),
+            ("evil", EntryType::Directory, b"".as_slice()),
+        ] {
+            let temp = TempDir::new().unwrap();
+            let cache_dir = temp.join("cache");
+            let outside = temp.join("outside");
+            std::fs::create_dir_all(&outside).unwrap();
+            std::fs::set_permissions(&outside, fs::Permissions::from_mode(0o700)).unwrap();
 
-        // `evil` -> <temp>/outside, then `evil/pwned.txt` would escape if followed.
-        let tar = build_tar_gz(vec![
-            raw_entry(
-                "evil",
-                EntryType::Symlink,
-                Some(outside.to_str().unwrap()),
-                b"",
-            ),
-            raw_entry("evil/pwned.txt", EntryType::Regular, None, b"PWNED"),
-        ]);
+            let (mut header, data) = raw_entry(name, entry_type, None, data);
+            header.set_mode(0o755);
+            header.set_cksum();
+            let tar = build_tar_gz(vec![
+                raw_entry(
+                    "evil",
+                    EntryType::Symlink,
+                    Some(outside.to_str().unwrap()),
+                    b"",
+                ),
+                (header, data),
+                code_entry(0),
+                terminal_output_entry("done"),
+            ]);
 
-        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+            let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
 
-        assert!(
-            result.is_err(),
-            "writing through a symlink must be rejected"
-        );
-        assert!(
-            !outside.join("pwned.txt").exists(),
-            "extraction must not write through a symlink out of the cache directory"
-        );
+            assert_eq!(
+                outside.metadata().unwrap().permissions().mode() & 0o777,
+                0o700,
+                "extraction must not change permissions outside the cache directory"
+            );
+            assert!(result.is_err(), "a symlink escape must be rejected");
+            assert!(
+                !outside.join("pwned.txt").exists(),
+                "extraction must not write through a symlink out of the cache directory"
+            );
+        }
     }
 
     #[test]
     fn extract_unpacks_legitimate_tarball() {
         let temp = TempDir::new().unwrap();
         let cache_dir = temp.join("cache");
-        let tar = build_tar_gz(vec![
+        let (mut directory_header, directory_data) =
+            raw_entry("dist", EntryType::Directory, None, b"");
+        directory_header.set_mode(0o755);
+        directory_header.set_cksum();
+        let entries = vec![
+            (directory_header, directory_data),
             raw_entry("dist/main.js", EntryType::Regular, None, b"console.log(1)"),
             code_entry(0),
             terminal_output_entry("build complete"),
-        ]);
+        ];
+        #[cfg(unix)]
+        let entries = {
+            let mut entries = entries;
+            entries.push(raw_entry(
+                "dist/main-link.js",
+                EntryType::Symlink,
+                Some("main.js"),
+                b"",
+            ));
+            entries
+        };
+        let tar = build_tar_gz(entries);
 
         let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123")
             .expect("legitimate tarball should extract");
@@ -438,6 +469,23 @@ mod test {
             std::fs::read_to_string(&extracted).unwrap(),
             "console.log(1)"
         );
+        #[cfg(unix)]
+        {
+            assert_eq!(
+                extracted
+                    .parent()
+                    .unwrap()
+                    .metadata()
+                    .unwrap()
+                    .permissions()
+                    .mode()
+                    & 0o777,
+                0o755
+            );
+            let symlink = extracted.with_file_name("main-link.js");
+            assert!(symlink.symlink_metadata().unwrap().is_symlink());
+            assert_eq!(std::fs::read_to_string(symlink).unwrap(), "console.log(1)");
+        }
         assert_eq!(
             result.size,
             Some(("build complete".len() + "console.log(1)".len()) as i64)

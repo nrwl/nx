@@ -626,10 +626,6 @@ build/
   });
 });
 
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 describe('CopyAssetsHandler - node_modules support', () => {
   let rootDir: string;
   let projectDir: string;

@@ -14,7 +14,8 @@ export interface UltracacheSummary {
  */
 export function formatUltracacheSummary(
   result: UltracacheReport,
-  status: 'fetched' | 'cached'
+  status: 'fetched' | 'cached',
+  skipped?: number
 ): UltracacheSummary {
   const used = result.used.length;
   const withheld = result.diagnostics.filter((d) => d.taskId != null);
@@ -33,6 +34,9 @@ export function formatUltracacheSummary(
   bodyLines.push(
     `commit ${result.resolution.requestedCommit}, configurations for ${result.resolution.tasks} tasks`
   );
+  if (skipped !== undefined) {
+    bodyLines.push(`${plural(skipped, 'task')} skipped by Ultracache`);
+  }
   for (const d of result.diagnostics) {
     bodyLines.push(describeDiagnostic(d));
   }

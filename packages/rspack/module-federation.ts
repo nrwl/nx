@@ -1,6 +1,6 @@
 import { logger } from '@nx/devkit';
 
-// TODO(v25): Delete this subpath. It keeps 23.x configs loading during graph creation so `nx migrate` can run.
+// TODO(v25): Delete this subpath (NXC-5165). It keeps 23.x configs loading during graph creation so `nx migrate` can run.
 const REMOVED_MESSAGE =
   'Nx Module Federation was removed in Nx v24. `@nx/rspack/module-federation` is a stub that keeps old configs loadable during project graph creation; it does not configure Module Federation. Follow https://nx.dev/docs/kb/migrate-from-nx-module-federation to move to the official Module Federation plugin.';
 

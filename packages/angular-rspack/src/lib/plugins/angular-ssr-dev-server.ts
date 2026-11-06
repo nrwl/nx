@@ -1,28 +1,18 @@
-import {
-  Compilation,
-  Compiler,
-  RspackPluginInstance,
-  sources,
-} from '@rspack/core';
-import { ChildProcess, fork } from 'child_process';
-import { SsrReloadServer } from './server/ssr-reload-server';
-import { NormalizedAngularRspackPluginOptions } from '../models';
+import type { Compiler, RspackPluginInstance } from '@rspack/core';
+import { ChildProcess, fork } from 'node:child_process';
+import { once } from 'node:events';
 import { join } from 'node:path';
-import { existsSync, readFileSync } from 'node:fs';
-import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
-import { addBodyScript } from '../utils/index-file/add-body-script';
+import type { NormalizedAngularRspackPluginOptions } from '../models';
+import type { SsrReloadServer } from './server/ssr-reload-server';
 
 const PLUGIN_NAME = 'AngularSsrDevServer';
 
 export class AngularSsrDevServer implements RspackPluginInstance {
   #devServerProcess: ChildProcess | undefined;
-  #wsServer: SsrReloadServer;
-  #options: NormalizedAngularRspackPluginOptions;
-
-  constructor(options: NormalizedAngularRspackPluginOptions) {
-    this.#wsServer = new SsrReloadServer();
-    this.#options = options;
-  }
+  constructor(
+    private readonly options: NormalizedAngularRspackPluginOptions,
+    private readonly reloadServer?: SsrReloadServer
+  ) {}
 
   apply(compiler: Compiler) {
     compiler.hooks.entryOption.tap(PLUGIN_NAME, (context, entry) => {
@@ -32,57 +22,39 @@ export class AngularSsrDevServer implements RspackPluginInstance {
         entryValue.import = [...entryValue.import];
       }
     });
-    compiler.hooks.watchRun.tapAsync(
-      PLUGIN_NAME,
-      async (compiler, callback) => {
-        compiler.hooks.afterEmit.tapAsync(
-          PLUGIN_NAME,
-          async (compilation, callback) => {
-            await this.#attachSSRReloadClient(compilation);
+    compiler.hooks.afterEmit.tapPromise(
+      // Prerender must finish writing routes before the server can serve them.
+      { name: PLUGIN_NAME, stage: 1 },
+      async (compilation) => {
+        if (!compiler.watchMode || compilation.errors.length) {
+          return;
+        }
+        await this.#stopServer();
 
-            const serverPath = join(
-              this.#options.outputPath.server,
-              'server.js'
-            );
-            if (this.#devServerProcess) {
-              this.#devServerProcess.kill();
-              this.#devServerProcess = undefined;
-              await new Promise<void>((res) => setTimeout(res, 50));
-            }
-            if (!existsSync(serverPath)) {
-              await new Promise<void>((res) => setTimeout(res, 50));
-            }
-            this.#devServerProcess = fork(serverPath);
-            this.#devServerProcess.on('spawn', () => {
-              this.#wsServer.sendReload();
-            });
-            callback();
-          }
+        this.#devServerProcess = fork(
+          join(this.options.outputPath.server, 'server.js')
         );
-        callback();
+        await once(this.#devServerProcess, 'spawn');
+        this.reloadServer?.sendReload();
       }
     );
+
+    compiler.hooks.shutdown.tapPromise(PLUGIN_NAME, () => this.#stopServer());
   }
 
-  async #attachSSRReloadClient(compilation: Compilation) {
-    const clientPath = require.resolve(
-      `${__dirname}/client/ssr-reload-client.js`
-    );
-    const pathToIndex = join(
-      this.#options.outputPath.browser,
-      getIndexOutputFile(this.#options.index)
-    );
-    const html = readFileSync(pathToIndex, 'utf-8');
-    const updatedHtml = await addBodyScript(
-      html,
-      readFileSync(clientPath, 'utf-8')
-    );
-    const source = new sources.RawSource(updatedHtml);
-
-    const relativePathToIndex = pathToIndex.replace(
-      this.#options.outputPath.browser,
-      ''
-    );
-    compilation.emitAsset(relativePathToIndex, source);
+  async #stopServer() {
+    const server = this.#devServerProcess;
+    this.#devServerProcess = undefined;
+    if (server && server.exitCode === null && server.signalCode === null) {
+      const exited = once(server, 'exit');
+      const forceStop = setTimeout(() => server.kill('SIGKILL'), 5000);
+      forceStop.unref();
+      try {
+        server.kill();
+        await exited;
+      } finally {
+        clearTimeout(forceStop);
+      }
+    }
   }
 }

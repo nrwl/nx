@@ -5,7 +5,7 @@ import { withVerbose } from '../../yargs-utils/shared-options';
 export const yargsStartNxAgentsCommand: CommandModule = {
   command: 'start-nx-agents [options]',
   describe:
-    'Provisions Nx Agents for distributed task execution, reading configuration from `.nx/ci-config.yaml`. This command is an alias for [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-nx-agents).',
+    'Provisions Nx Agents for distributed task execution, reading configuration from `.nx/ci-config.yaml`. This command is an alias for [`nx-cloud start-nx-agents`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).',
   builder: (yargs) =>
     withVerbose(yargs)
       .help(false)

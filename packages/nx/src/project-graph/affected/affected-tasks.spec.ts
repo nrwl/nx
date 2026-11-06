@@ -968,6 +968,131 @@ describe('selection with Ultracache configurations', () => {
       expect([...result.affectedTaskIds].sort()).toEqual(expected);
     }
   );
+
+  describe('reporting the tasks it skipped', () => {
+    const select = (
+      recorded: string[],
+      file: string,
+      {
+        projectGraph = graph(),
+        ...opts
+      }: {
+        projectGraph?: ProjectGraph;
+        exclude?: string[];
+        excludeTaskDependencies?: boolean;
+      } = {}
+    ) => {
+      const commit = 'head'.padEnd(40, '2');
+      const db = connectToNxDb(dir, 'ultracache');
+      new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify(
+          Object.fromEntries(
+            recorded.map((id) => [
+              id,
+              { commit, inputs: ['docs/recorded.md'], outputs: [] },
+            ])
+          )
+        ),
+      });
+      return computeAffectedTasks({
+        projectGraph,
+        nxJson: {
+          namedInputs: { production: ['{projectRoot}/src/**/*'] },
+        } as any,
+        targets: ['test'],
+        touchedFiles: [
+          { file, getChanges: () => [new WholeFileChange()] },
+        ] as any,
+        ultracacheConfigurationOutcome: {
+          status: 'fetched',
+          configurations: new UltracacheConfigurationStore(db).get(commit),
+        } as any,
+        ...opts,
+      });
+    };
+    const skipped = async (...args: Parameters<typeof select>) =>
+      (await select(...args)).taskSelection.ultracacheSkippedTaskIds;
+    const graphWithBuildDependency = () => {
+      const projectGraph = graph();
+      projectGraph.nodes.lib.data.targets.build = {
+        executor: 'nx:run-commands',
+      };
+      projectGraph.nodes.app.data.targets.test.dependsOn = ['^build'];
+      return projectGraph;
+    };
+
+    it('reports a task whose declared inputs changed but whose configuration did not', async () => {
+      const { taskSelection } = await select(
+        ['lib:test', 'app:test'],
+        'packages/nx/src/index.ts'
+      );
+      expect(taskSelection.ultracacheSkippedTaskIds).toEqual([
+        'app:test',
+        'lib:test',
+      ]);
+      expect(taskSelection.taskGraph.tasks).toEqual({});
+    });
+
+    // Ultracache's data made the decision, whatever declared inputs would have done.
+    it('reports a task declared inputs would have dropped too', async () => {
+      expect(await skipped(['lib:test'], 'docs/other.md')).toEqual([
+        'lib:test',
+      ]);
+    });
+
+    it('leaves out a task selection kept', async () => {
+      const { taskSelection, affectedTaskIds } = await select(
+        ['lib:test', 'app:test'],
+        'docs/recorded.md'
+      );
+      expect([...affectedTaskIds].sort()).toEqual(['app:test', 'lib:test']);
+      expect(taskSelection.ultracacheSkippedTaskIds).toEqual([]);
+    });
+
+    it('leaves out the tasks of an excluded project and what only they depend on', async () => {
+      const projectGraph = graphWithBuildDependency();
+      expect(
+        await skipped(['lib:test', 'app:test', 'lib:build'], 'docs/other.md', {
+          projectGraph,
+          exclude: ['app'],
+        })
+      ).toEqual(['lib:test']);
+    });
+
+    it('reports a dependency the skipped task would have run', async () => {
+      const projectGraph = graphWithBuildDependency();
+      expect(
+        await skipped(['app:test', 'lib:build'], 'docs/other.md', {
+          projectGraph,
+        })
+      ).toEqual(['app:test', 'lib:build']);
+    });
+
+    it('leaves out dependencies with --exclude-task-dependencies', async () => {
+      const projectGraph = graphWithBuildDependency();
+      expect(
+        await skipped(['app:test', 'lib:build'], 'docs/other.md', {
+          projectGraph,
+          excludeTaskDependencies: true,
+        })
+      ).toEqual(['app:test']);
+    });
+  });
+
+  it('reports nothing skipped without configurations', async () => {
+    const result = await computeAffectedTasks({
+      projectGraph: graph(),
+      nxJson: {
+        namedInputs: { production: ['{projectRoot}/src/**/*'] },
+      } as any,
+      targets: ['test'],
+      touchedFiles: [
+        { file: 'docs/other.md', getChanges: () => [new WholeFileChange()] },
+      ] as any,
+    });
+    expect(result.taskSelection.ultracacheSkippedTaskIds).toEqual([]);
+  });
 });
 
 describe('tasks with a custom hasher', () => {
@@ -1014,7 +1139,12 @@ describe('computeAffectedTasks with the daemon on', () => {
       projectGraph: graph(),
       affectedTaskIds: [],
       taskGraph: empty,
-      taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+      taskSelection: {
+        taskGraph: empty,
+        initiatingTaskIds: [],
+        taskIds: [],
+        ultracacheSkippedTaskIds: ['lib:test'],
+      },
     });
     const outcome = {
       status: 'cached',
@@ -1035,6 +1165,7 @@ describe('computeAffectedTasks with the daemon on', () => {
     });
     expect(JSON.parse(JSON.stringify(request))).toEqual(request);
     expect(result.taskSelection.ultracacheConfigurationOutcome).toBe(outcome);
+    expect(result.taskSelection.ultracacheSkippedTaskIds).toEqual(['lib:test']);
   });
 
   it('asks the daemon to select, sending the request as plain data', async () => {

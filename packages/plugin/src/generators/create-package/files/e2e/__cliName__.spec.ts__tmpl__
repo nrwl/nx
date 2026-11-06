@@ -15,7 +15,6 @@ describe('<%= cliName %>', () => {
     }
   });
 
-
   // This test shells out synchronously, so its budget has to cover a cold
   // package manager cache. Otherwise work that succeeded still fails on return.
   it('should be installed', () => {
@@ -47,7 +46,7 @@ function createTestProject(extraArgs = '') {
   });
 
   execSync(
-    `<%= packageManagerCommands.dlx %> <%= cliName %>@e2e ${projectName} ${extraArgs}`,
+    `<%= packageManagerCommands.dlx %> <%= cliName %>@e2e ${projectName} --packageManager=<%= packageManager %> ${extraArgs}`,
     {
       cwd: dirname(projectDirectory),
       stdio: 'inherit',

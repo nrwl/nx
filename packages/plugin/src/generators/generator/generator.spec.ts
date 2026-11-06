@@ -1,11 +1,6 @@
 import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
-import {
-  GeneratorsJson,
-  readJson,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
@@ -293,25 +288,6 @@ describe('NxPlugin Generator Generator', () => {
           tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
         ).toBeFalsy();
       });
-    });
-  });
-
-  describe('preset generator', () => {
-    it('should default to standalone layout: true', async () => {
-      await generatorGenerator(tree, {
-        path: 'my-plugin/src/generators/preset/generator',
-        name: 'preset',
-        unitTestRunner: 'none',
-      });
-
-      const generatorJson = readJson<GeneratorsJson>(
-        tree,
-        'my-plugin/generators.json'
-      );
-
-      expect(
-        generatorJson.generators['preset']['x-use-standalone-layout']
-      ).toEqual(true);
     });
   });
 

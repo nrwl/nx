@@ -28,14 +28,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
-    if (Object.keys(project.targets).length) {
-      packageJson.nx ??= {};
-      packageJson.nx.sourceRoot = joinPathFragments(
-        options.appProjectRoot,
-        'src'
-      );
-      packageJson.nx.targets = project.targets;
-    }
     if (options.parsedTags?.length) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
