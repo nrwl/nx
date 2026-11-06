@@ -1530,7 +1530,7 @@ export function createNodeList(
 
   const exports =
     format === 'mjs'
-      ? generateESMExport(exportElements)
+      ? generateESMExport(exportElements, new Set(importsMap.values()))
       : [generateCJSExport(exportElements)];
 
   return ts.factory.createNodeArray([
@@ -1550,8 +1550,13 @@ export function createNodeList(
 const ESM_CONFIG_VARIABLE = 'eslintConfig';
 
 function generateESMExport(
-  elements: ts.Expression[]
+  elements: ts.Expression[],
+  importedNames: ReadonlySet<string>
 ): [ts.VariableStatement, ts.ExportAssignment] {
+  let name = ESM_CONFIG_VARIABLE;
+  for (let suffix = 2; importedNames.has(name); suffix++) {
+    name = `${ESM_CONFIG_VARIABLE}${suffix}`;
+  }
   // eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
   return [
     ts.factory.createVariableStatement(
@@ -1559,7 +1564,7 @@ function generateESMExport(
       ts.factory.createVariableDeclarationList(
         [
           ts.factory.createVariableDeclaration(
-            ESM_CONFIG_VARIABLE,
+            name,
             undefined,
             undefined,
             ts.factory.createArrayLiteralExpression(elements, true)
@@ -1571,7 +1576,7 @@ function generateESMExport(
     ts.factory.createExportAssignment(
       undefined,
       false,
-      ts.factory.createIdentifier(ESM_CONFIG_VARIABLE)
+      ts.factory.createIdentifier(name)
     ),
   ];
 }
@@ -1659,10 +1664,7 @@ export function stringifyNodeList(
 
   if (result.includes('export default')) {
     return result
-      .replace(
-        `const ${ESM_CONFIG_VARIABLE} =`,
-        `\nconst ${ESM_CONFIG_VARIABLE} =`
-      )
+      .replace(new RegExp(`^const ${ESM_CONFIG_VARIABLE}\\d* =`, 'm'), '\n$&')
       .replace(/export default/, '\nexport default');
   } else {
     return result.replace(/module.exports/, '\nmodule.exports');
