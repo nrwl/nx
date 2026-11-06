@@ -1550,12 +1550,44 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.allowJs).toBe(true);
     });
 
-    it('should keep vitest for a nest app on Nest 11 when serve runs on node', async () => {
+    it('should use jest for a nest app on Nest 11 because webpack serves it', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: { ...json.dependencies, '@nestjs/core': '^11.0.0' },
       }));
 
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'nest',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api/jest.config.cts')).toBe(true);
+      expect(tree.exists('apps/api/vitest.config.mts')).toBe(false);
+    });
+
+    it('should use jest for a rolldown nest app on Nest 11', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@nestjs/core': '^11.0.0' },
+      }));
+
+      await applicationGenerator(tree, {
+        directory: 'apps/api',
+        framework: 'nest',
+        bundler: 'rolldown',
+        e2eTestRunner: 'none',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/api/jest.config.cts')).toBe(true);
+      expect(tree.exists('apps/api/vitest.config.mts')).toBe(false);
+    });
+
+    it('should default to vitest for a nest app on Nest 12', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/api',
         framework: 'nest',
@@ -2006,6 +2038,99 @@ describe('app', () => {
       });
 
       expect(tree.exists('my-nest-app/jest.config.cts')).toBeTruthy();
+    });
+  });
+
+  describe('Nest.js bundler', () => {
+    it('should default to webpack outside a TS solution workspace', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+      });
+
+      expect(tree.exists('my-nest-app/webpack.config.js')).toBe(true);
+      expect(tree.exists('my-nest-app/rolldown.config.ts')).toBe(false);
+    });
+
+    it('should build with rolldown when requested', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+        bundler: 'rolldown',
+      });
+
+      expect(tree.exists('my-nest-app/rolldown.config.ts')).toBe(true);
+      expect(tree.exists('my-nest-app/webpack.config.js')).toBe(false);
+    });
+
+    it('should keep webpack when it is requested', async () => {
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+        bundler: 'webpack',
+      });
+
+      expect(tree.exists('my-nest-app/webpack.config.js')).toBe(true);
+    });
+
+    describe('in a TS solution workspace', () => {
+      beforeEach(() => {
+        updateJson(tree, 'package.json', (json) => {
+          json.workspaces = ['packages/*', 'apps/*'];
+          return json;
+        });
+        writeJson(tree, 'tsconfig.base.json', {
+          compilerOptions: { composite: true, declaration: true },
+        });
+        writeJson(tree, 'tsconfig.json', {
+          extends: './tsconfig.base.json',
+          files: [],
+          references: [],
+        });
+      });
+
+      it('should default to webpack instead of tsc', async () => {
+        await applicationGenerator(tree, {
+          directory: 'apps/my-nest-app',
+          framework: 'nest',
+        });
+
+        expect(tree.exists('apps/my-nest-app/webpack.config.js')).toBe(true);
+      });
+
+      it('should warn and use webpack for tsc', async () => {
+        const warn = vi
+          .spyOn(devkit.logger, 'warn')
+          .mockImplementation(() => {});
+
+        await applicationGenerator(tree, {
+          directory: 'apps/my-nest-app',
+          framework: 'nest',
+          bundler: 'tsc',
+        });
+
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining('The "tsc" bundler does not support')
+        );
+        expect(tree.exists('apps/my-nest-app/webpack.config.js')).toBe(true);
+      });
+    });
+
+    it('should warn and use webpack for a bundler Nest cannot use', async () => {
+      const warn = vi.spyOn(devkit.logger, 'warn').mockImplementation(() => {});
+
+      await applicationGenerator(tree, {
+        directory: 'my-nest-app',
+        framework: 'nest',
+        bundler: 'esbuild',
+      });
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'The "esbuild" bundler does not support the "nest" framework. Using "webpack" instead.'
+        )
+      );
+      expect(tree.exists('my-nest-app/webpack.config.js')).toBe(true);
     });
   });
 
