@@ -223,7 +223,7 @@ agents as well. A [launch template](/docs/kb/launch-templates) caches the Cargo 
 the dependency download:
 
 ```yaml
-# .nx/workflows/agents.yaml
+# .nx/workflows/ci.yaml
 launch-templates:
   linux-medium-polyglot:
     resource-class: 'docker_linux_amd64/medium'
@@ -254,18 +254,18 @@ launch-templates:
 Point the pipeline at that template and every agent can take any task, Cargo or JavaScript:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 2 linux-medium-polyglot
-lifecycle:
-  stop-after:
-    - lint
-    - test
-    - build
-    - typecheck
+# .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 2 linux-medium-polyglot
+    stop-after:
+      - lint
+      - test
+      - build
+      - typecheck
 ```
 
-The [ci-config reference](/docs/reference/nx-cloud/ci-config) lists the remaining keys.
+The [CI configuration file reference](/docs/reference/nx-cloud/ci-config) lists the remaining keys.
 
 To release the crates from the same workspace, follow
 [using Nx Release with Rust](/docs/kb/publish-rust-crates).

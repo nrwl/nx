@@ -94,18 +94,16 @@ npx nx connect
 
 Or follow the [Nx Cloud getting started guide](/docs/features/ci-features).
 
-Once connected, a `.nx/ci-config.yaml` file and one extra step
+Once connected, a `.nx/workflows/ci.yaml` file and one extra step
 [distribute tasks across multiple machines](/docs/features/ci-features/distribute-task-execution).
 `npx nx fix-ci` lets self-healing CI propose fixes when tasks fail.
 Run `start-workers` at the beginning of the main job, after checkout,
 so the agents boot while the main job installs dependencies.
-If your pipeline still passes `start-ci-run` flags, see
-[Migrate from start-ci-run to start-workers](/docs/kb/migrate-to-ci-config).
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 3 linux-medium-js
+# .nx/workflows/ci.yaml
+worker-templates:
+  default: 3 linux-medium-js
 ```
 
 ```yaml

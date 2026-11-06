@@ -110,6 +110,11 @@ to = "/docs/guides/nx-cloud/bring-your-own-compute"
 from = "/docs/guides/nx-cloud/source-control-integration/github"
 to = "/docs/kb/github-integration"
 
+# DOC-802: .nx/ci-config.yaml deprecated, migration guide replaced
+[[redirects]]
+from = "/docs/kb/migrate-to-ci-config"
+to = "/docs/kb/migrate-from-ci-config"
+
 # DOC-549: decisions overview renamed to monorepo-vs-polyrepo
 [[redirects]]
 from = "/docs/concepts/decisions/overview"

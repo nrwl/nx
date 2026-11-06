@@ -1,6 +1,6 @@
 ---
 title: CI Workflow Examples by Provider
-description: Nx Cloud CI workflows for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines, with remote caching, affected, and Workers.
+description: CI workflows for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines, with remote caching, affected, and Workers.
 filter: 'type:Guides'
 topics:
   - 'Continuous integration'
@@ -12,15 +12,15 @@ For GitHub Actions and a step-by-step walkthrough, see [setting up CI](/docs/get
 
 {% course_video src="https://www.youtube.com/watch?v=8mqHXYIl_qI" courseTitle="From pnpm Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" /%}
 
-Every example uses the same `.nx/ci-config.yaml`:
+Every example uses the same `.nx/workflows/ci.yaml`:
 
 ```yaml
-// .nx/ci-config.yaml
-dte:
-  distribute-on: 3 linux-large-js
-lifecycle:
-  stop-after:
-    - build
+// .nx/workflows/ci.yaml
+worker-templates:
+  default:
+    workers: 3 linux-large-js
+    stop-after:
+      - build
 ```
 
 Each workflow starts the agents with `nx-cloud start-workers` before installing dependencies, so agents boot while the main job installs.
@@ -225,4 +225,4 @@ pipelines:
 {% /tabitem %}
 {% /tabs %}
 
-For every `.nx/ci-config.yaml` option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
+For every `.nx/workflows/ci.yaml` option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
