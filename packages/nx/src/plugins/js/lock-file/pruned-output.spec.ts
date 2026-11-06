@@ -2886,7 +2886,7 @@ describe('validatePrunedLocalPathClosure', () => {
 
   // A directory package entry with no dependency edges (a backfilled
   // autoInstallPeers peer synthesized by the pnpm parser).
-  const lockfileWithDirEntry = (snapshotBody: string) =>
+  const lockfileWithDirEntry = (snapshotBody: string, qualifier = '') =>
     [
       "lockfileVersion: '9.0'",
       '',
@@ -2905,7 +2905,7 @@ describe('validatePrunedLocalPathClosure', () => {
       '',
       'snapshots:',
       '',
-      `  dir-peer@file:vendor/dir-peer: ${snapshotBody}`,
+      `  dir-peer@file:vendor/dir-peer${qualifier}: ${snapshotBody}`,
       '',
     ].join('\n');
 
@@ -2960,6 +2960,35 @@ describe('validatePrunedLocalPathClosure', () => {
         lockfileWithDirEntry('\n    dependencies:\n      missing-dep: 1.0.0')
       )
     ).not.toThrow();
+  });
+
+  it('recognizes resolved edges in a peer-qualified directory snapshot', () => {
+    writeDirPeerManifest({ dependencies: { 'missing-dep': '^1.0.0' } });
+    const app: PackageJson = { name: 'app', version: '0.0.1' };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileWithDirEntry(
+          '\n    dependencies:\n      missing-dep: 1.0.0',
+          '(supports-color@7.2.0)'
+        )
+      )
+    ).not.toThrow();
+  });
+
+  it('validates a peer-qualified directory snapshot without resolved edges', () => {
+    writeDirPeerManifest({ dependencies: { 'missing-dep': '^1.0.0' } });
+    const app: PackageJson = { name: 'app', version: '0.0.1' };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileWithDirEntry('{}', '(supports-color@7.2.0)')
+      )
+    ).toThrow(/local package dir-peer requires missing-dep/);
   });
 });
 
