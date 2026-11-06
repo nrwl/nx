@@ -2,8 +2,6 @@ use std::collections::HashMap;
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use std::collections::HashSet;
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
@@ -11,9 +9,9 @@ use notify::{Config, EventKindMask, RecommendedWatcher, RecursiveMode, Watcher a
 use tracing::{debug, trace};
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-use crate::native::glob::{NxGlobSet, build_glob_set};
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use crate::native::walker::create_walker;
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+use crate::native::walker::is_hardcoded_ignored;
 use crate::native::walker::{HARDCODED_IGNORE_PATTERNS, TRANSIENT_FILE_GLOBS};
 use crate::native::watch::types::{
     EventType, RawWatchEvent, WatchEvent, WatchEventInternal, transform_event_to_watch_events,
@@ -55,11 +53,6 @@ const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
 /// Overall cap, kept under the 500ms reply timeout in `WatchSession::flush` so
 /// a late reply isn't read as "no changes".
 const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
-
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn build_ignore_glob_set() -> Arc<NxGlobSet> {
-    build_glob_set(HARDCODED_IGNORE_PATTERNS).expect("These static ignores always build")
-}
 
 /// Returns Err on `MaxFilesWatch` — the inotify limit is fatal since
 /// every subsequent registration would fail too. Other errors are
@@ -144,8 +137,6 @@ struct WatchPipeline {
     watcher: notify::RecommendedWatcher,
     /// `origin` with a trailing path separator.
     origin_path: String,
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    ignore_globs: Arc<NxGlobSet>,
 
     accumulator: HashMap<PathBuf, WatchEventInternal>,
     /// The backend reported dropped events (notify's Rescan flag, e.g. an
@@ -210,8 +201,6 @@ impl WatchPipeline {
             notify_rx,
             watcher,
             origin_path,
-            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-            ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
             pending_rescan: false,
             rescan_deadline: None,
@@ -308,7 +297,9 @@ impl WatchPipeline {
 
         event
             .paths()
-            .filter(|(path, metadata)| meta_is_dir(metadata) && !self.ignore_globs.is_match(path))
+            .filter(|(path, metadata)| {
+                meta_is_dir(metadata) && !is_hardcoded_ignored(path, Path::new(&self.origin_path))
+            })
             .map(|(path, _)| path.to_path_buf())
             .collect()
     }
@@ -328,8 +319,9 @@ impl WatchPipeline {
 
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
         let mut backfilled_paths: Vec<PathBuf> = Vec::new();
+        let origin = PathBuf::from(&self.origin_path);
         for dir in dirs {
-            for rel_path in nx_walker_sync(dir, None) {
+            for rel_path in nx_walker_sync(dir, &origin, None) {
                 let full_path = dir.join(&rel_path);
                 if full_path.is_dir() {
                     nested_dirs.insert(full_path);
@@ -457,8 +449,6 @@ impl WatchPipeline {
             notify_rx,
             watcher,
             origin_path,
-            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-            ignore_globs: build_ignore_glob_set(),
             accumulator: HashMap::new(),
             pending_rescan: false,
             rescan_deadline: None,
@@ -1806,6 +1796,52 @@ mod tests {
             "libs/new-lib/src/index.ts",
             "file in a directory created after watch start was never reported",
         );
+    }
+
+    #[test]
+    fn nested_cache_directories_are_not_hardcoded_ignores() {
+        use notify::EventKind;
+        use notify::event::CreateKind;
+
+        // Both gates the watch actually runs: the hardcoded veto alone, and
+        // the same patterns passed again as `default_watch_ignores`.
+        for additional in [Vec::new(), default_watch_ignores()] {
+            let dir = tempdir().expect("tempdir");
+            let origin = dunce::canonicalize(dir.path()).expect("canonicalize");
+            let origin_str = origin.to_str().expect("utf-8 path");
+            let filterer =
+                watch_filterer::create_filter(origin_str, &additional, None).expect("filter");
+            let event = |rel: &str| {
+                RawWatchEvent::new(
+                    notify::Event::new(EventKind::Create(CreateKind::File))
+                        .add_path(origin.join(rel)),
+                )
+            };
+
+            for blocked in [
+                ".nx/cache/x.txt",
+                ".nx/workspace-data/y.txt",
+                ".yarn/cache/z.zip",
+                "proj/node_modules/pkg/index.js",
+                "proj/.git/config",
+            ] {
+                assert!(
+                    !filterer.check_event(&event(blocked)),
+                    "{blocked} should stay ignored"
+                );
+            }
+            for admitted in [
+                "proj/src/.nx/cache/x.txt",
+                "proj/src/.nx/workspace-data/y.txt",
+                "proj/src/.yarn/cache/z.zip",
+                "proj/src/a.txt",
+            ] {
+                assert!(
+                    filterer.check_event(&event(admitted)),
+                    "{admitted} should be admitted"
+                );
+            }
+        }
     }
 
     #[test]
