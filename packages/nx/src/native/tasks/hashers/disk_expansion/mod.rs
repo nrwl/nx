@@ -9,6 +9,7 @@
 
 mod entries;
 mod expansion;
+mod inventory;
 mod scope;
 
 pub(crate) use entries::{Negation, Positive};
@@ -19,6 +20,7 @@ pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
 };
 pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
+pub(crate) use inventory::DirectoryInventory;
 pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
