@@ -521,6 +521,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -568,6 +573,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -710,6 +720,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -759,6 +774,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -983,6 +1003,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -1032,6 +1057,11 @@ describe('@nx/playwright/plugin', () => {
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -4001,6 +4031,11 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",
@@ -4058,6 +4093,11 @@ module.exports = {};`,
           "technologies": [
             "playwright",
           ],
+          "testFileDirectives": {
+            "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
+            "ignore-server-inputs": true,
+          },
         },
         "options": {
           "cwd": "{projectRoot}",

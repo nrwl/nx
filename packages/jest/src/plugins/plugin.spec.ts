@@ -301,6 +301,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       "technologies": [
                         "jest",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "proj/src/unit.spec.ts",
+                        "ignore-server-inputs": false,
+                      },
                     },
                     "options": {
                       "cwd": "proj",
@@ -1141,6 +1146,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
+                          "ignore-server-inputs": false,
+                        },
                       },
                       "options": {
                         "cwd": "proj",
@@ -1295,6 +1305,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
+                          "ignore-server-inputs": false,
+                        },
                       },
                       "options": {
                         "cwd": "proj",
@@ -1449,6 +1464,11 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         "technologies": [
                           "jest",
                         ],
+                        "testFileDirectives": {
+                          "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
+                          "ignore-server-inputs": false,
+                        },
                       },
                       "options": {
                         "cwd": "proj",

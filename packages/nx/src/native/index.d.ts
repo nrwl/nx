@@ -1610,6 +1610,8 @@ export interface UltracacheReport {
   resolution: UltracacheConfigurationResolution
 }
 
+export declare function unmatchedProjectPatterns(projectGraph: ExternalObject<ProjectGraph>, patterns: Array<string>): Array<string>
+
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap
   externalReferences: NxWorkspaceFilesExternals

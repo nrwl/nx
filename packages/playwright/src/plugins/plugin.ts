@@ -578,43 +578,43 @@ async function buildPlaywrightTargets(
 
       const targetName = `${options.ciTargetName}--${relativeSpecFilePath}`;
       ciTargetGroup.push(targetName);
-      targets[targetName] = {
-        ...applyTestFileDirectives(
-          ciBaseTargetConfig,
-          context.workspaceRoot,
-          testFile,
-          { ignoreServerInputs: true }
-        ),
-        options: {
-          ...ciBaseTargetConfig.options,
-          env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
-        },
-        outputs: getAtomizedTaskOutputs(
-          testOutput,
-          reporterOutputs,
-          context.workspaceRoot,
-          projectRoot,
-          outputSubfolder
-        ),
-        command: `${
-          baseTargetConfig.command
-        } ${relativeSpecFilePath} --output=${joinPathFragments(
-          testOutput,
-          outputSubfolder
-        )}`,
-        metadata: {
-          technologies: ['playwright'],
-          description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
-          help: {
-            command: `${pmc.exec} playwright test --help`,
-            example: {
-              options: {
-                workers: 1,
+      targets[targetName] = applyTestFileDirectives(
+        {
+          ...ciBaseTargetConfig,
+          options: {
+            ...ciBaseTargetConfig.options,
+            env: getAtomizedTaskEnvVars(reporterOutputs, outputSubfolder),
+          },
+          outputs: getAtomizedTaskOutputs(
+            testOutput,
+            reporterOutputs,
+            context.workspaceRoot,
+            projectRoot,
+            outputSubfolder
+          ),
+          command: `${
+            baseTargetConfig.command
+          } ${relativeSpecFilePath} --output=${joinPathFragments(
+            testOutput,
+            outputSubfolder
+          )}`,
+          metadata: {
+            technologies: ['playwright'],
+            description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
+            help: {
+              command: `${pmc.exec} playwright test --help`,
+              example: {
+                options: {
+                  workers: 1,
+                },
               },
             },
           },
         },
-      };
+        context.workspaceRoot,
+        testFile,
+        { ignoreServerInputs: true }
+      );
 
       dependsOn.push({
         target: targetName,

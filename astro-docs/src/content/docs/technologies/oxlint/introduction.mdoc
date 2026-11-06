@@ -86,8 +86,8 @@ invalidates the cache. The task does not use the `default` named input, so what
 re-lints does not depend on how the workspace defines it.
 
 Dependencies are hashed only when the config registers the
-[module boundaries](#module-boundaries) plugin, because that is the one rule
-that looks across projects. A `jsPlugins` package or workspace project becomes a
+[module boundaries](#module-boundaries) plugin, because its rules are the ones
+that look across projects. A `jsPlugins` package or workspace project becomes a
 dependency of every project linted under that config, so upgrading or editing
 the plugin invalidates the cache and marks those projects as affected.
 
@@ -186,3 +186,25 @@ circular-dependency error. Set `NX_IGNORE_CYCLES=true` to run it anyway.
 {% aside type="note" title="Dependency checks aren't available" %}
 Oxlint doesn't lint JSON files, so the `@nx/dependency-checks` rule cannot run on Oxlint. Keep ESLint for that check.
 {% /aside %}
+
+## Directive checks
+
+{% aside type="caution" title="Nx 24.1+ Required" %}
+The `@nx/directive-checks` rule requires Nx 24.1 or later.
+{% /aside %}
+
+The same plugin ships the `@nx/directive-checks` rule.
+It reports mistakes in the `@nx-` directives at the top of split end-to-end test files and
+scripts, such as a misspelled directive or a project pattern that matches no project.
+Enable it in `.oxlintrc.json`:
+
+```json
+{
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "rules": {
+    "@nx/directive-checks": "error"
+  }
+}
+```
+
+For what the rule checks, see [the directive-checks rule](/docs/kb/directive-checks).

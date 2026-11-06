@@ -453,6 +453,11 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -669,6 +674,11 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1017,6 +1027,11 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1444,6 +1459,11 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": ".",
@@ -1883,6 +1903,11 @@ describe('@nx/cypress/plugin', () => {
                       "technologies": [
                         "cypress",
                       ],
+                      "testFileDirectives": {
+                        "depends-on": true,
+                        "file": "apps/myapp/src/test.cy.ts",
+                        "ignore-server-inputs": true,
+                      },
                     },
                     "options": {
                       "cwd": "apps/myapp",

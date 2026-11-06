@@ -25,6 +25,10 @@ import {
   findFilesInCircularPath,
   findFilesWithDynamicImports,
 } from '../utils/graph-utils';
+import {
+  findSplitTargets,
+  splitTargetsApply,
+} from '../utils/directive-checks/split-targets';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
@@ -274,13 +278,11 @@ export default ESLintUtils.RuleCreator(
         return false;
       }
       if (ignoreServerInputsSpec === undefined) {
-        const specPath = normalizePath(
-          relative(sourceProject.data.root, sourceFilePath)
-        );
         ignoreServerInputsSpec =
           hasIgnoreServerInputsDirective(context.sourceCode.text) &&
-          Object.keys(sourceProject.data.targets ?? {}).some((targetName) =>
-            targetName.endsWith(`--${specPath}`)
+          splitTargetsApply(
+            findSplitTargets(sourceProject, sourceFilePath),
+            'ignore-server-inputs'
           );
       }
       return ignoreServerInputsSpec;
