@@ -4,6 +4,6 @@ level: warning
 scope: paragraph
 nonword: true
 tokens:
-  # Skips Markdoc tag attributes, which TokenIgnores doesn't hide from this rule.
+  # Skips Markdoc tag attributes, a `%` inside one included, which TokenIgnores doesn't hide from this rule.
   # The newline in the lookahead catches a hyphen that ends a wrapped line.
-  - '(?<!\{%[^%]*)(?<=\S) -(?=[ \n]\S)'
+  - '(?<!\{%(?:[^%]|%(?!\}))*)(?<=\S) -(?=[ \n]\S)'
