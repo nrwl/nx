@@ -19,7 +19,11 @@ import { isServeMode } from '../utils/rspack-serve-env';
 import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../plugins/index-html-plugin';
 import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
-import { SsrReloadServer } from '../plugins/server/ssr-reload-server';
+import {
+  AngularSsrDevServer,
+  servesSsrFromDevServer,
+} from '../plugins/angular-ssr-dev-server';
+import { DevServerReloads } from '../plugins/dev-server-reloads';
 
 export async function createConfig(
   defaultOptions: {
@@ -99,12 +103,10 @@ export async function _createConfig(
   const serverRenderingInputs: SharedServerRenderingInputs | undefined =
     normalizedOptions.hasServer ? {} : undefined;
 
-  const ssrReloadServer =
-    isServeMode() &&
-    normalizedOptions.hasServer &&
-    typeof normalizedOptions.ssr === 'object' &&
-    normalizedOptions.ssr.entry !== undefined
-      ? new SsrReloadServer()
+  const devServerReloads = isServeMode() ? new DevServerReloads() : undefined;
+  const ssrDevServer =
+    isServeMode() && servesSsrFromDevServer(normalizedOptions)
+      ? new AngularSsrDevServer(normalizedOptions, devServerReloads)
       : undefined;
 
   const configs: Configuration[] = [];
@@ -117,7 +119,7 @@ export async function _createConfig(
       sharedLicenseInputs,
       sharedAngularPlugin,
       serverRenderingInputs,
-      ssrReloadServer
+      ssrDevServer
     );
     const mergedConfig = rspackMerge(
       serverConfig,
@@ -135,7 +137,8 @@ export async function _createConfig(
     sharedLicenseInputs,
     sharedAngularPlugin,
     serverRenderingInputs,
-    ssrReloadServer
+    ssrDevServer,
+    devServerReloads
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);

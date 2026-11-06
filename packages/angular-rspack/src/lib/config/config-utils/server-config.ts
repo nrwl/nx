@@ -21,7 +21,7 @@ import {
 import { type PlatformServerExportsLoaderOptions } from '../../plugins/loaders/platform-server-exports.loader';
 import { EngineManifestPlugin } from '../../plugins/engine-manifest-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
-import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
+import type { AngularSsrDevServer } from '../../plugins/angular-ssr-dev-server';
 import { getDevClientGuardRule } from '../../plugins/loaders/dev-client-guard.loader';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { ServerAssetsPlugin } from '../../plugins/server-assets-plugin';
@@ -33,6 +33,7 @@ import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
 import { getSwcTranspilationRules } from './swc-transpilation';
 import { isServeMode } from '../../utils/rspack-serve-env';
+import { isRspackV2 } from '../../utils/rspack-version';
 
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -42,7 +43,7 @@ export async function getServerConfig(
   sharedLicenseInputs?: SharedLicenseInputs,
   sharedAngularPlugin?: AngularRspackPlugin,
   serverRenderingInputs?: SharedServerRenderingInputs,
-  ssrReloadServer?: SsrReloadServer
+  ssrDevServer?: AngularSsrDevServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -148,14 +149,18 @@ export async function getServerConfig(
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'module', 'main'],
     },
-    devServer: await getDevServerConfig(normalizedOptions, 'server'),
+    // rspack 2 then leaves the dev-server client and HMR entries out of the
+    // server bundle; the rspack 1.x CLI rejects `false` here.
+    devServer: isRspackV2()
+      ? false
+      : await getDevServerConfig(normalizedOptions, 'server'),
     externals: normalizedOptions.externalDependencies,
     optimization: getOptimization(normalizedOptions, 'server'),
     module: {
       ...defaultConfig.module,
       rules: [
         ...getSwcTranspilationRules(swcTranspilationTransform),
-        // The dev server adds its HMR entry to this bundle too.
+        // The rspack 1.x dev server adds its HMR entry to this bundle too.
         ...(isDevServer ? [getDevClientGuardRule()] : []),
         {
           loader:
@@ -204,7 +209,7 @@ export async function getServerConfig(
         platform: 'server',
         sharedLicenseInputs,
         sharedAngularPlugin,
-        ssrReloadServer,
+        ssrDevServer,
       }),
       ...(normalizedOptions.prerender ||
       (normalizedOptions.appShell && !isDevServer)
@@ -235,9 +240,8 @@ function installedRspackSupportsVirtualModules(root: string): boolean {
 }
 
 /**
- * The hosts the application engine accepts while serving. The forked server
- * process is browsed directly, so the engine check is the only host check on
- * the SSR dev path.
+ * The hosts the application engine accepts while serving, after the dev
+ * server's own host check.
  */
 function getServeModeAllowedHosts(
   devServer: NormalizedDevServerOptions

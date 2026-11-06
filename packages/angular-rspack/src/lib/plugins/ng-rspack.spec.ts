@@ -1,6 +1,6 @@
 import { emitReadySignal } from '@nx/devkit';
 import { getListeningUrl } from '@nx/devkit/internal';
-import { rspack } from '@rspack/core';
+import { rspack, type Stats } from '@rspack/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -58,142 +58,57 @@ describe('NgRspackPlugin', () => {
     }
   });
 
-  it.each([
-    [
-      'leaves the report to an SSR server that calls emitReadySignal',
-      'emitReadySignal(server);',
-      true,
-      undefined,
-      undefined,
-      0,
-    ],
-    [
-      'reports the dev server address when the SSR server does not',
-      'app.listen(4000);',
-      true,
-      undefined,
-      undefined,
-      1,
-    ],
-    [
-      'reports the dev server address when a missing server file leaves a browser-only build',
-      'emitReadySignal(server);',
-      false,
-      undefined,
-      undefined,
-      1,
-    ],
-    [
-      'reports the dev server address when a file replacement swaps in an SSR server that does not call emitReadySignal',
-      'emitReadySignal(server);',
-      true,
-      'app.listen(4000);',
-      undefined,
-      1,
-    ],
-    [
-      'leaves the report to an SSR server that a file replacement swaps in',
-      'app.listen(4000);',
-      true,
-      'emitReadySignal(server);',
-      undefined,
-      0,
-    ],
-    [
-      'reports the dev server address when the development configuration replaces the SSR server with one that does not call emitReadySignal',
-      'app.listen(4000);',
-      true,
-      'emitReadySignal(server);',
-      'app.listen(4000);',
-      1,
-    ],
-  ])(
-    '%s',
-    async (
-      _,
-      serverSource,
-      hasServerFile,
-      replacementSource,
-      developmentSource,
-      reports
-    ) => {
-      vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
-      vi.stubEnv('RSPACK_SERVE', 'true');
-      vi.spyOn(console, 'log').mockImplementation(() => {});
-      const root = await mkdtemp(join(tmpdir(), 'ng-rspack-ssr-'));
+  it('reports the dev server address of an SSR app once its server bundle loads', async () => {
+    vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+    vi.stubEnv('RSPACK_SERVE', 'true');
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const root = await mkdtemp(join(tmpdir(), 'ng-rspack-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+      const configs = await createConfig({
+        options: {
+          browser: './src/main.ts',
+          index: './src/index.html',
+          tsConfig: './tsconfig.base.json',
+          outputPath: './dist',
+          deleteOutputPath: false,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        },
+      });
+
+      const compiler = rspack(configs);
       try {
-        await mkdir(join(root, 'src'), { recursive: true });
-        if (hasServerFile) {
-          await writeFile(join(root, 'src', 'main.server.ts'), '');
-        }
-        await writeFile(join(root, 'src', 'server.ts'), serverSource);
-        if (replacementSource !== undefined) {
-          await writeFile(
-            join(root, 'src', 'server.replaced.ts'),
-            replacementSource
-          );
-        }
-        if (developmentSource !== undefined) {
-          await writeFile(
-            join(root, 'src', 'server.development.ts'),
-            developmentSource
-          );
-        }
-        const [config] = await createConfig(
-          {
-            options: {
-              browser: './src/main.ts',
-              index: './src/index.html',
-              tsConfig: './tsconfig.base.json',
-              outputPath: './dist',
-              deleteOutputPath: false,
-              root,
-              server: './src/main.server.ts',
-              ssr: { entry: './src/server.ts' },
-              fileReplacements:
-                replacementSource === undefined
-                  ? []
-                  : [
-                      {
-                        replace: './src/server.ts',
-                        with: './src/server.replaced.ts',
-                      },
-                    ],
-            },
+        const [browser, server] = compiler.compilers;
+        (browser.options.devServer || {}).onListening?.({
+          server: {
+            address: () => ({ address: '::', family: 'IPv6', port: 4200 }),
           },
-          developmentSource === undefined
-            ? {}
-            : {
-                development: {
-                  options: {
-                    fileReplacements: [
-                      {
-                        replace: './src/server.ts',
-                        with: './src/server.development.ts',
-                      },
-                    ],
-                  },
-                },
-              }
+          options: { server: { type: 'http', options: {} } },
+        });
+        expect(emitReadySignal).not.toHaveBeenCalled();
+
+        await mkdir(join(root, 'dist', 'server'), { recursive: true });
+        await writeFile(join(root, 'dist', 'server', 'server.js'), '');
+        await server.hooks.watchRun.promise(server);
+        await server.hooks.done.promise({
+          hasErrors: () => false,
+          compilation: { errors: [], getAssets: () => [] },
+        } as unknown as Stats);
+
+        await vi.waitFor(() =>
+          expect(emitReadySignal).toHaveBeenCalledWith(
+            'https://localhost:4200/'
+          )
         );
-
-        const compiler = rspack(config);
-        try {
-          (compiler.options.devServer || {}).onListening?.({
-            server: {
-              address: () => ({ address: '::', family: 'IPv6', port: 4200 }),
-            },
-            options: { server: { type: 'http', options: {} } },
-          });
-
-          expect(emitReadySignal).toHaveBeenCalledTimes(reports);
-        } finally {
-          await new Promise((resolve) => compiler.close(resolve));
-        }
       } finally {
-        await rm(root, { recursive: true, force: true });
+        await new Promise((resolve) => compiler.close(resolve));
       }
-    },
-    10000
-  );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 });

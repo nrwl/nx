@@ -1,6 +1,8 @@
 import {
+  addReadyUrlCheck,
   checkFilesDoNotExist,
   checkFilesExist,
+  expectServedOn,
   killProcessAndPorts,
   readFile,
   readJson,
@@ -12,13 +14,14 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  waitUntil,
 } from '@nx/e2e-utils';
-import { chromium, type Browser, type Page } from '@playwright/test';
+import {
+  chromium,
+  type Browser,
+  type Page,
+  type WebSocket,
+} from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import {
   setupProjectsTest,
   resetProjectsTest,
@@ -88,13 +91,9 @@ describe('Angular Projects - SSR', () => {
   }, 500_000);
 
   it('should support the application engine and independent reloads for concurrent rspack SSR applications', async () => {
-    const controlDirectory = mkdtempSync(join(tmpdir(), 'nx-ssr-reload-'));
     const applications: {
       name: string;
       devServerPort: number;
-      serverPort: number;
-      holdFile: string;
-      startsFile: string;
       process?: ChildProcess;
       page?: Page;
       navigations: number;
@@ -102,8 +101,6 @@ describe('Angular Projects - SSR', () => {
       version: number;
     }[] = [];
     let browser: Browser | undefined;
-    const reloadScriptPattern =
-      /<script\b[^>]*\sid=(["'])nx-angular-ssr-reload\1[^>]*>/g;
 
     try {
       for (let index = 0; index < 2; index++) {
@@ -111,18 +108,15 @@ describe('Angular Projects - SSR', () => {
         const application = {
           name,
           devServerPort: await reservePort(),
-          serverPort: await reservePort(),
-          holdFile: join(controlDirectory, `${name}.hold`),
-          startsFile: join(controlDirectory, `${name}.starts`),
           navigations: 0,
           failedNavigations: [],
           version: 0,
         };
         applications.push(application);
-        writeFileSync(application.startsFile, '');
         runCLI(
           `generate @nx/angular:app ${name} --bundler=rspack --ssr --port=${application.devServerPort} --no-interactive`
         );
+        addReadyUrlCheck(name, 'serve');
         updateFile(`${name}/rspack.config.ts`, (source) => {
           const indexOption = /index:\s*(['"])\.\/src\/index\.html\1/g;
           expect(source.match(indexOption)).toHaveLength(1);
@@ -139,41 +133,20 @@ describe('Angular Projects - SSR', () => {
         });
         updateFile(`${name}/src/server.ts`, (source) => {
           expect(source).toContain('const app = express();');
-          const listenStatement =
-            /  const server = app\.listen\(port, async \(error\?: Error\) => \{[\s\S]*?\n  \}\);/g;
-          expect(source.match(listenStatement)).toHaveLength(1);
-          return (
-            `import { appendFileSync, existsSync } from 'node:fs';\n` +
-            source
-              .replace(
-                'const app = express();',
-                `const app = express();
-const reloadVersion = '0';
+          return source.replace(
+            'const app = express();',
+            `const app = express();
+const serverVersion = '0';
 app.use((_req, res, next) => {
-  res.setHeader('x-ssr-reload-version', reloadVersion);
+  res.setHeader('x-server-version', serverVersion);
   next();
 });`
-              )
-              .replace(
-                listenStatement,
-                (
-                  statement
-                ) => `  appendFileSync(${JSON.stringify(application.startsFile)}, reloadVersion + ':' + process.pid + '\\n');
-  const listen = () => {
-    if (existsSync(${JSON.stringify(application.holdFile)})) {
-      setTimeout(listen, 10);
-      return;
-    }
-${statement.replace(/^/gm, '  ')}
-  };
-  listen();`
-              )
           );
         });
       }
 
       const app = applications[0].name;
-      const serverPort = applications[0].serverPort;
+      const serverPort = await reservePort();
       // only rendering the page reveals this rule as critical CSS
       updateFile(`${app}/src/styles.css`, `.page-only{color:red}`);
       updateFile(
@@ -191,7 +164,6 @@ ${statement.replace(/^/gm, '  ')}
       const prerenderedPage = readFile(`dist/${app}/browser/index.html`);
       expect(prerenderedPage).toContain('ng-server-context');
       expect(prerenderedPage).toContain('id="index-transform-marker"');
-      expect(prerenderedPage.match(reloadScriptPattern) ?? []).toHaveLength(0);
       expect(prerenderedPage).toMatch(/<style[^>]*>[^<]*\.page-only\{/);
       // critical CSS inlined twice defers the stylesheet to a print media query
       // that never switches back
@@ -232,87 +204,55 @@ ${statement.replace(/^/gm, '  ')}
         await killProcessAndPorts(productionServer.pid, serverPort);
       }
 
+      // Both apps report their own dev-server URL once it renders.
+      const readyOutput = runCLI(
+        `run-many -t check -p ${applications.map(({ name }) => name).join(' ')} --output-style=static`
+      );
+      for (const application of applications) {
+        expectServedOn(readyOutput, application.devServerPort);
+      }
+
       for (const application of applications) {
         application.process = await runCommandUntil(
           `serve ${application.name} -- --port=${application.devServerPort}`,
           (output) =>
-            output.includes(
-              `Node Express server listening on http://localhost:${application.serverPort}`
-            ),
-          { timeout: 120_000, env: { PORT: `${application.serverPort}` } }
+            output.includes(`Listening on port: ${application.devServerPort}`),
+          { timeout: 120_000 }
         );
       }
 
-      const response = await fetch(`http://localhost:${serverPort}/`);
-      expect(response.status).toBe(200);
-      expect(await response.text()).toContain('ng-server-context');
-      const assetResponse = await fetch(
-        `http://localhost:${serverPort}/favicon.ico`
-      );
-      expect(assetResponse.status).toBe(200);
-
-      const checkReloadDocuments = async (name: string) => {
-        const outputs = [
-          `dist/${name}/browser/index.html`,
-          `dist/${name}/browser/index.original.html`,
-          `dist/${name}/server/index.server.html`,
-          `dist/${name}/server/index.csr.html`,
-        ];
-        const deadline = Date.now() + 5000;
-        let documents = outputs.map((output) => readFile(output));
-        while (
-          documents.some(
-            (document) =>
-              [...document.matchAll(reloadScriptPattern)].length !== 1
-          ) &&
-          Date.now() < deadline
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          documents = outputs.map((output) => readFile(output));
-        }
-        for (const document of documents) {
-          const reloadScripts = [...document.matchAll(reloadScriptPattern)];
-          expect(reloadScripts).toHaveLength(1);
-          if (name === app) {
-            expect(document).toContain('id="index-transform-marker"');
-            expect(reloadScripts[0].index).toBeLessThan(
-              document.indexOf('id="index-transform-marker"')
-            );
-          }
-        }
-      };
       for (const application of applications) {
-        const browserResponse = await fetch(
-          `http://localhost:${application.devServerPort}/`,
-          { headers: { accept: 'text/html' } }
-        );
-        expect(browserResponse.status).toBe(200);
-        const browserHtml = await browserResponse.text();
-        expect(browserHtml).toContain('id="index-transform-marker"');
-        expect(browserHtml.match(reloadScriptPattern) ?? []).toHaveLength(0);
-        await checkReloadDocuments(application.name);
+        const devServerUrl = `http://localhost:${application.devServerPort}`;
+        const response = await fetch(`${devServerUrl}/`, {
+          headers: { accept: 'text/html' },
+        });
+        expect(response.status).toBe(200);
+        const page = await response.text();
+        expect(page).toContain('ng-server-context');
+        if (application.name === app) {
+          expect(page).toContain('id="index-transform-marker"');
+        }
+        expect((await fetch(`${devServerUrl}/favicon.ico`)).status).toBe(200);
       }
 
       for (const application of applications) {
         application.version = 1;
         updateFile(`${application.name}/src/server.ts`, (source) =>
           source.replace(
-            "const reloadVersion = '0'",
-            "const reloadVersion = '1'"
+            "const serverVersion = '0'",
+            "const serverVersion = '1'"
           )
         );
+        // The dev server holds requests until the server bundle of the edit loads.
         const deadline = Date.now() + 30_000;
-        const signal = AbortSignal.timeout(30_000);
         let servedVersion: string | null = null;
         while (servedVersion !== '1' && Date.now() < deadline) {
-          try {
-            const response = await fetch(
-              `http://localhost:${application.serverPort}/`,
-              { signal }
-            );
-            servedVersion = response.headers.get('x-ssr-reload-version');
-            await response.arrayBuffer();
-          } catch {}
+          const response = await fetch(
+            `http://localhost:${application.devServerPort}/`,
+            { signal: AbortSignal.timeout(30_000) }
+          );
+          servedVersion = response.headers.get('x-server-version');
+          await response.arrayBuffer();
           if (servedVersion !== '1') {
             await new Promise((resolve) => setTimeout(resolve, 50));
           }
@@ -325,11 +265,20 @@ ${statement.replace(/^/gm, '  ')}
       }
 
       browser = await chromium.launch();
-      const waitForReloadConnection = (page: Page) =>
-        page.waitForEvent('console', {
-          predicate: (message) =>
-            message.text() ===
-            '[AngularSSRDevServer] WebSocket connection established.',
+      // The dev server sends `ok` on a new socket once the build has no errors.
+      const waitForDevServerSocket = (page: Page) =>
+        new Promise<void>((resolve) => {
+          const onSocket = (socket: WebSocket) =>
+            socket.on('framereceived', ({ payload }) => {
+              if (
+                typeof payload === 'string' &&
+                payload.includes('"type":"ok"')
+              ) {
+                page.off('websocket', onSocket);
+                resolve();
+              }
+            });
+          page.on('websocket', onSocket);
         });
       for (const application of applications) {
         const page = (application.page = await browser.newPage());
@@ -349,12 +298,12 @@ ${statement.replace(/^/gm, '  ')}
             application.failedNavigations.push(request.url());
           }
         });
-        const connected = waitForReloadConnection(page);
+        const connected = waitForDevServerSocket(page);
         const [initial] = await Promise.all([
-          page.goto(`http://localhost:${application.serverPort}/`),
+          page.goto(`http://localhost:${application.devServerPort}/`),
           connected,
         ]);
-        expect(initial?.headers()['x-ssr-reload-version']).toBe('1');
+        expect(initial?.headers()['x-server-version']).toBe('1');
       }
 
       for (const application of [
@@ -367,80 +316,42 @@ ${statement.replace(/^/gm, '  ')}
           applications.map((current) => [current, current.navigations])
         );
         const previousVersion = application.version++;
-        const reloaded = page.waitForResponse(
-          (response) =>
-            response.request().isNavigationRequest() &&
-            response.headers()['x-ssr-reload-version'] ===
-              `${application.version}`
-        );
         const finished = Promise.all([
-          reloaded,
-          waitForReloadConnection(page),
-          waitUntil(
-            () =>
-              readFileSync(application.startsFile, 'utf8')
-                .trim()
-                .split('\n')
-                .some((start) => start.startsWith(`${application.version}:`)),
-            { timeout: 30_000, ms: 50 }
-          ).then(async () => {
-            await page.evaluate(
-              () =>
-                new Promise<void>((resolve) => {
-                  globalThis.requestAnimationFrame(() =>
-                    globalThis.requestAnimationFrame(() => resolve())
-                  );
-                })
-            );
-            expect(application.navigations).toBe(
-              navigationCounts.get(application)
-            );
-            expect(application.failedNavigations).toEqual([]);
-            rmSync(application.holdFile);
-          }),
+          page.waitForResponse(
+            (response) =>
+              response.request().isNavigationRequest() &&
+              response.headers()['x-server-version'] ===
+                `${application.version}`
+          ),
+          waitForDevServerSocket(page),
         ]);
-        writeFileSync(application.holdFile, '');
         updateFile(`${application.name}/src/server.ts`, (source) =>
           source.replace(
-            `const reloadVersion = '${previousVersion}'`,
-            `const reloadVersion = '${application.version}'`
+            `const serverVersion = '${previousVersion}'`,
+            `const serverVersion = '${application.version}'`
           )
         );
 
         const [response] = await finished;
         expect(response.status()).toBe(200);
         await page.waitForLoadState('load');
-        await checkReloadDocuments(application.name);
         for (const current of applications) {
           expect(current.navigations).toBe(
             navigationCounts.get(current)! + Number(current === application)
           );
           expect(current.failedNavigations).toEqual([]);
-          if (current.version > 1) {
-            expect(
-              readFileSync(current.startsFile, 'utf8')
-                .trim()
-                .split('\n')
-                .filter((start) => start.startsWith(`${current.version}:`))
-            ).toHaveLength(1);
-          }
         }
       }
     } finally {
-      for (const application of applications) {
-        rmSync(application.holdFile, { force: true });
-      }
       await browser?.close();
       await Promise.all(
         applications.map((application) =>
           killProcessAndPorts(
             application.process?.pid,
-            application.devServerPort,
-            application.serverPort
+            application.devServerPort
           )
         )
       );
-      rmSync(controlDirectory, { recursive: true, force: true });
     }
   }, 500_000);
 

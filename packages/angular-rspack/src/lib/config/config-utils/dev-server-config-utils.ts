@@ -4,6 +4,7 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { servesSsrFromDevServer } from '../../plugins/angular-ssr-dev-server';
 import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
@@ -14,6 +15,8 @@ export async function getDevServerConfig(
   const { root } = options;
 
   const servePath = buildServePath(options);
+  // The SSR middleware answers documents, as with `ng serve`.
+  const servesSsr = servesSsrFromDevServer(options);
 
   return {
     host: options.devServer.host,
@@ -22,17 +25,19 @@ export async function getDevServerConfig(
       'Access-Control-Allow-Origin': '*',
       ...options.devServer.headers,
     },
-    historyApiFallback: {
-      index: posix.join(servePath, getIndexOutputFile(options.index)),
-      disableDotRule: true,
-      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-      rewrites: [
-        {
-          from: new RegExp(`^(?!${servePath})/.*`),
-          to: (context) => context.parsedUrl.href,
+    historyApiFallback: servesSsr
+      ? false
+      : {
+          index: posix.join(servePath, getIndexOutputFile(options.index)),
+          disableDotRule: true,
+          htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+          rewrites: [
+            {
+              from: new RegExp(`^(?!${servePath})/.*`),
+              to: (context) => context.parsedUrl.href,
+            },
+          ],
         },
-      ],
-    },
     compress: false,
     static: false,
     server: getServerConfig(options),
@@ -42,11 +47,15 @@ export async function getDevServerConfig(
     ),
     devMiddleware: {
       publicPath: servePath,
+      ...(servesSsr ? { index: false } : {}),
       writeToDisk:
         platform === 'browser' && options.hasServer
           ? (file) => !file.includes('.hot-update.')
           : undefined,
     },
+    open: options.devServer.open
+      ? `${servePath === '/' ? '' : servePath}/`
+      : false,
     liveReload: options.devServer.liveReload,
     hot:
       options.devServer.hmr && !options.devServer.liveReload
@@ -54,7 +63,6 @@ export async function getDevServerConfig(
         : options.devServer.hmr,
     proxy: await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
-    watchFiles: ['./src/**/*.*', './public/**/*.*'],
     onListening:
       platform === 'browser'
         ? (devServer) => {

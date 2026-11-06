@@ -2217,9 +2217,6 @@ importers:
       loader-utils:
         specifier: 3.3.1
         version: 3.3.1
-      open:
-        specifier: 10.1.0
-        version: 10.1.0
       ora:
         specifier: 'catalog:'
         version: 5.4.1
@@ -2259,9 +2256,6 @@ importers:
       webpack-merge:
         specifier: ^6.0.1
         version: 6.0.1
-      ws:
-        specifier: ^8.18.0
-        version: 8.21.1
       zone.js:
         specifier: catalog:angular-supported-versions
         version: 0.16.2

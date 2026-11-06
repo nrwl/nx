@@ -507,6 +507,38 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should leave documents to the SSR middleware and keep dev clients out of the server bundle while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [browserConfig, serverConfig] = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+
+      expect(browserConfig.devServer).toMatchObject({
+        historyApiFallback: false,
+        devMiddleware: { index: false },
+      });
+      expect(serverConfig.devServer).toBe(false);
+
+      const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
+      expect(browserOnlyConfig.devServer).toMatchObject({
+        historyApiFallback: expect.objectContaining({
+          index: '/index.html',
+        }),
+      });
+      expect(
+        (browserOnlyConfig.devServer || {}).devMiddleware
+      ).not.toHaveProperty('index');
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');
