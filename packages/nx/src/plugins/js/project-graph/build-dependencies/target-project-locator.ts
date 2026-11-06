@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
 import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
@@ -12,7 +13,7 @@ import {
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
-import { normalizePath } from '../../../../utils/path';
+import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   getWorkspacePackagesMetadata,
@@ -260,6 +261,16 @@ export class TargetProjectLocator {
       }
 
       if (!matchingExternalNode) {
+        const installedNodeName = this.findNpmProjectFromInstallingManifest(
+          packageName,
+          fullDirPath
+        );
+        matchingExternalNode = installedNodeName
+          ? this.npmProjects[installedNodeName]
+          : null;
+      }
+
+      if (!matchingExternalNode) {
         // Fallback to package name as key. This can happen if the version in project graph is not the same as in the resolved package.json.
         // e.g. Version in project graph is a git remote, but the resolved version is semver.
         matchingExternalNode =
@@ -322,6 +333,47 @@ export class TargetProjectLocator {
       }
     }
     return null;
+  }
+
+  /**
+   * The external node of the `file:`/`link:` dependency behind the copy an
+   * import resolves to, when a manifest below the workspace root installed it
+   * into its own node_modules. A copy in the root's node_modules resolves
+   * through the bare name instead.
+   */
+  private findNpmProjectFromInstallingManifest(
+    packageName: string,
+    fromDirPath: string
+  ): string | null {
+    // The copy whose package.json Node finds first, as `readPackageJson` does
+    for (let dir = fromDirPath; ; dir = dirname(dir)) {
+      const relativeDir = relative(workspaceRoot, dir);
+      if (!relativeDir || !isContainedRelativePath(relativeDir)) {
+        return null;
+      }
+      if (!existsSync(join(dir, 'node_modules', packageName, 'package.json'))) {
+        continue;
+      }
+      const manifestPath = join(dir, 'package.json');
+      let manifest: PackageJson;
+      try {
+        manifest = readJsonFile(manifestPath);
+      } catch {
+        return null;
+      }
+      const spec =
+        manifest.dependencies?.[packageName] ??
+        manifest.optionalDependencies?.[packageName] ??
+        manifest.devDependencies?.[packageName] ??
+        manifest.peerDependencies?.[packageName];
+      return spec
+        ? this.findNpmProjectFromLocalPathSpec(
+            packageName,
+            spec,
+            normalizePath(relative(workspaceRoot, manifestPath))
+          )
+        : null;
+    }
   }
 
   /**

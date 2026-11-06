@@ -13,8 +13,11 @@ import {
 
 import { builtinModules } from 'node:module';
 
+const mockedWorkspaceRoot = vi.hoisted(() => ({ path: '/root' }));
 vi.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
+  get workspaceRoot() {
+    return mockedWorkspaceRoot.path;
+  },
 }));
 
 vi.mock('nx/src/plugins/js/utils/resolve-relative-to-dir', () => ({
@@ -1247,6 +1250,76 @@ describe('TargetProjectLocator', () => {
 
       expect(result).toEqual('npm:foo@0.0.1');
     });
+
+    it.each(['/root', '/root/'])(
+      'should resolve a local package to the copy its nearest node_modules installs when the workspace root is %s',
+      (workspaceRoot) => {
+        mockedWorkspaceRoot.path = workspaceRoot;
+        try {
+          // The layout and nodes of a Bun 1.3.13 install where the root and
+          // lib vendor their own `x`
+          vol.fromJSON(
+            {
+              'package.json': JSON.stringify({
+                dependencies: { x: 'file:./vendor/x' },
+              }),
+              'node_modules/x/package.json': JSON.stringify({
+                name: 'x',
+                version: '1.0.0',
+              }),
+              'libs/lib/package.json': JSON.stringify({
+                name: 'lib',
+                dependencies: { x: 'file:../vendor/x' },
+              }),
+              'libs/lib/node_modules/x/package.json': JSON.stringify({
+                name: 'x',
+                version: '2.0.0',
+              }),
+              // Declares lib's copy, which no install put in its node_modules
+              'apps/app/fixtures/package.json': JSON.stringify({
+                dependencies: { x: 'file:../../../libs/vendor/x' },
+              }),
+            },
+            '/root'
+          );
+          const externalNodes = Object.fromEntries(
+            [
+              ['npm:x', 'file:vendor/x'],
+              ['npm:x@file:vendor/x', 'file:vendor/x'],
+              ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
+            ].map(([name, version]) => [
+              name,
+              {
+                name,
+                type: 'npm' as const,
+                data: { version, packageName: 'x' },
+              },
+            ])
+          );
+          const targetProjectLocator = new TargetProjectLocator(
+            {},
+            externalNodes,
+            new Map(),
+            new Map()
+          );
+
+          expect(
+            targetProjectLocator.findNpmProjectFromImport(
+              'x',
+              'libs/lib/src/index.ts'
+            )
+          ).toEqual('npm:x@file:libs/vendor/x');
+          expect(
+            targetProjectLocator.findNpmProjectFromImport(
+              'x',
+              'apps/app/fixtures/index.ts'
+            )
+          ).toEqual('npm:x');
+        } finally {
+          mockedWorkspaceRoot.path = '/root';
+        }
+      }
+    );
   });
 
   describe('findDependencyInWorkspaceProjects', () => {
