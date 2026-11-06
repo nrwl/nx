@@ -20,6 +20,12 @@ export const Constants = {
 };
 type Constants = typeof Constants;
 
+export const storybookFilePatterns = {
+  stories: '**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  config: '.storybook/**/*',
+  tsconfig: 'tsconfig.storybook.json',
+};
+
 export function getStorybookVersionToInstall(tree: Tree): string {
   return versions(tree).storybookVersion;
 }
