@@ -1,12 +1,13 @@
 vi.mock('child_process');
 
-import { join } from 'path';
+import { dirname, join } from 'path';
 import * as childProcess from 'child_process';
 import {
   mkdirSync,
   mkdtempSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -704,30 +705,135 @@ describe('readModulePackageJson', () => {
     }
   });
 
-  it('walks up from the entry point when the package does not export package.json', () => {
+  it('reads a local package directory whose package.json has no name', () => {
     const dir = realpathSync(
       mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
     );
     try {
-      const pkgDir = join(dir, 'node_modules', 'nx');
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ 'nx-migrations': './migrations.json' })
+      );
+
+      expect(readModulePackageJson(dir, [dir]).path).toBe(
+        join(dir, 'package.json')
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  describe('when the exports map does not expose package.json', () => {
+    let dir: string;
+
+    beforeEach(() => {
+      dir = realpathSync(
+        mkdtempSync(join(tmpdir(), 'nx-read-module-package-json-'))
+      );
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    function writePackage(
+      pkgDir: string,
+      exports: PackageJson['exports'],
+      files: Record<string, string>,
+      name = 'hidden-manifest'
+    ) {
       mkdirSync(pkgDir, { recursive: true });
       writeFileSync(
         join(pkgDir, 'package.json'),
         JSON.stringify({
-          name: 'nx',
+          name,
           version: '0.0.0-fixture',
-          exports: { '.': './index.js' },
+          exports,
         })
       );
-      writeFileSync(join(pkgDir, 'index.js'), 'module.exports = {};');
+      for (const [file, content] of Object.entries(files)) {
+        mkdirSync(join(pkgDir, dirname(file)), { recursive: true });
+        writeFileSync(join(pkgDir, file), content);
+      }
+    }
 
-      const { path, packageJson } = readModulePackageJson('nx', [dir]);
+    it.each([
+      [
+        'a wildcard entry',
+        { '.': './index.js', './*': './*.js' },
+        { 'index.js': '' },
+      ],
+      [
+        'an import-only entry',
+        { '.': { import: './index.mjs' } },
+        { 'index.mjs': '' },
+      ],
+      [
+        'a require entry next to a nested package.json',
+        {
+          '.': {
+            import: './dist/esm/index.js',
+            require: './dist/cjs/index.js',
+          },
+        },
+        {
+          'dist/cjs/index.js': '',
+          'dist/cjs/package.json': '{"type":"commonjs"}',
+          'dist/esm/index.js': '',
+        },
+      ],
+      [
+        'a wildcard entry into a folder with a package.json stub',
+        { '.': './dist/index.js', './*': './dist/*' },
+        { 'dist/index.js': '', 'dist/package.json': '{"type":"commonjs"}' },
+      ],
+    ])('reads the package root package.json for %s', (_, exports, files) => {
+      const pkgDir = join(dir, 'node_modules', 'hidden-manifest');
+      writePackage(pkgDir, exports, files);
+
+      const { path, packageJson } = readModulePackageJson('hidden-manifest', [
+        dir,
+      ]);
 
       expect(path).toBe(join(pkgDir, 'package.json'));
       expect(packageJson.version).toBe('0.0.0-fixture');
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+    });
+
+    it('reads the target package.json of an npm alias', () => {
+      writePackage(
+        join(dir, 'node_modules', 'hidden-manifest'),
+        { '.': './index.js', './*': './*.js' },
+        { 'index.js': '' },
+        'aliased-package'
+      );
+
+      expect(
+        readModulePackageJson('hidden-manifest', [dir]).packageJson.name
+      ).toBe('aliased-package');
+    });
+
+    it('returns the real path of a pnpm-linked package', () => {
+      const target = join(
+        dir,
+        'node_modules',
+        '.pnpm',
+        'hidden-manifest@0.0.0',
+        'node_modules',
+        'hidden-manifest'
+      );
+      writePackage(target, { '.': './index.js' }, { 'index.js': '' });
+      symlinkSync(target, join(dir, 'node_modules', 'hidden-manifest'), 'dir');
+
+      expect(readModulePackageJson('hidden-manifest', [dir]).path).toBe(
+        join(target, 'package.json')
+      );
+    });
+
+    it('throws when the package is not installed', () => {
+      expect(() => readModulePackageJson('hidden-manifest', [dir])).toThrow(
+        "Cannot find module 'hidden-manifest'"
+      );
+    });
   });
 });
 
