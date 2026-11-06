@@ -1,4 +1,5 @@
 import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+import { killProcessTreeGraceful } from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { execSync, spawn } from 'child_process';
 import { lstatSync } from 'fs';
@@ -12,7 +13,6 @@ import { fileURLToPath } from 'url';
 type InlineConfig = Record<string, any>;
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
-const treeKill = require('tree-kill');
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -107,22 +107,9 @@ function startWebServer(webServerCommand: string) {
         }
       }
     } else {
-      return new Promise<void>((res, rej) => {
-        if (process.platform === 'win32' || process.platform === 'darwin') {
-          if (serverProcess.kill()) {
-            res();
-          } else {
-            rej('Unable to kill process');
-          }
-        } else {
-          treeKill(serverProcess.pid, (err) => {
-            if (err) {
-              rej(err);
-            }
-            res();
-          });
-        }
-      });
+      // The server runs below the shell (e.g. sh -> nx -> dev server), so
+      // signaling only serverProcess leaves the server running on macOS.
+      await killProcessTreeGraceful(serverProcess.pid);
     }
   };
 }
