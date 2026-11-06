@@ -609,10 +609,10 @@ function findRemovedPluginUsages(
     }
 
     if (isConfig) {
-      // A config is hand-written and small, so naming the package anywhere in it
-      // is a registration. A quoted rule id is only conclusive here: in source,
-      // `'react/jsx-runtime'` is an import path that reads exactly like one.
-      // ESLint parses a bare `.eslintrc` as YAML too.
+      // A config is hand-written and small, so any mention of a plugin's package
+      // counts as a reference, comments included. A quoted rule id counts only in
+      // a config, because in source `'react/jsx-runtime'` is an import path that
+      // reads exactly like one. ESLint parses a bare `.eslintrc` as YAML too.
       const isYaml = /\.ya?ml$/.test(path) || basename(path) === '.eslintrc';
       const nextConfig = isFlatConfig(path) && isNextConfig(path);
       const matchedPlugins = matchers
