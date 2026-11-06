@@ -339,6 +339,20 @@ export default [...baseConfig, ...nx.configs['flat/base']];
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(config);
     });
+
+    it('should warn and not change a TypeScript config', async () => {
+      tree.delete('eslint.config.mjs');
+      tree.write('eslint.config.ts', FLAT_CONFIG);
+      addE2eProject('// @nx-ignore-server-inputs\n');
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+
+      await update(tree);
+
+      expect(tree.read('eslint.config.ts', 'utf-8')).toBe(FLAT_CONFIG);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not verify that `eslint.config.ts`')
+      );
+    });
   });
 
   describe('.eslintrc.json', () => {

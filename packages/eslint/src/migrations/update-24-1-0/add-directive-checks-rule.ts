@@ -48,7 +48,7 @@ const TRIGGER_DIRECTIVES = ['depends-on', 'ignore-server-inputs'];
 export default async function update(tree: Tree) {
   const flatConfig = useFlatConfig(tree) && !hasOnlyEslintrcBaseConfig(tree);
   const sharedConfig = findSharedConfig(tree, flatConfig);
-  if (!sharedConfig || !isEslintConfigFileSupported(sharedConfig)) {
+  if (!sharedConfig) {
     return;
   }
 
@@ -72,9 +72,11 @@ export default async function update(tree: Tree) {
 
   // ESLint fails on an `@nx/` rule for a file the plugin isn't registered for,
   // so only the shapes Nx generates count as registering it for every file.
-  const registersNxPlugin = flatConfig
-    ? flatConfigRegistersNxPlugin(tree, sharedConfig)
-    : eslintrcRegistersNxPlugin(tree, sharedConfig);
+  const registersNxPlugin =
+    isEslintConfigFileSupported(sharedConfig) &&
+    (flatConfig
+      ? flatConfigRegistersNxPlugin(tree, sharedConfig)
+      : eslintrcRegistersNxPlugin(tree, sharedConfig));
   if (!registersNxPlugin) {
     logger.warn(
       `Could not verify that \`${sharedConfig}\` registers the \`@nx\` ESLint plugin for the files \`${RULE}\` checks, so the rule was not added. Your files use \`@nx-depends-on\` or \`@nx-ignore-server-inputs\`, so add the rule to an ESLint config that registers \`@nx\` for those files.`
