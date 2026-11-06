@@ -298,6 +298,16 @@ function planProjectConversion(
   ) {
     return { kind: 'flat' };
   }
+  // `findEslintFile` returns an eslintrc ahead of a flat config in the same directory.
+  const flatFile = ESLINT_FLAT_CONFIG_FILENAMES.find((file) =>
+    tree.exists(joinPathFragments(projectConfig.root, file))
+  );
+  if (flatFile) {
+    return {
+      kind: 'skip',
+      reason: `Skipping "${project}": it has both ${eslintFile} and ${flatFile}. Keep the configuration the project needs in ${flatFile} and delete ${eslintFile}.`,
+    };
+  }
   if (JS_ESLINTRC_FILENAMES.includes(eslintFile)) {
     const result = readStaticJsEslintrcFromTree(
       tree,
