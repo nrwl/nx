@@ -1,4 +1,4 @@
-import { Tree, joinPathFragments, readJson } from '@nx/devkit';
+import { Tree, joinPathFragments, logger, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 import { EOL } from 'node:os';
@@ -198,6 +198,7 @@ describe('convertEslintJsonToFlatConfig', () => {
       );
 
       tree.write('mylib/.eslintignore', `node_modules${EOL}something/else`);
+      const warnSpy = vi.spyOn(logger, 'warn');
 
       const { content } = convertEslintJsonToFlatConfig(
         tree,
@@ -208,6 +209,12 @@ describe('convertEslintJsonToFlatConfig', () => {
         new Set([joinPathFragments('mylib', '../../.eslintrc.json')])
       );
 
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'The ESLint config in "mylib" disables the "browser" environment.'
+        )
+      );
+      warnSpy.mockRestore();
       expect(content).toMatchInlineSnapshot(`
         "import { FlatCompat } from "@eslint/eslintrc";
         import { dirname } from "path";
