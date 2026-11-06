@@ -2,6 +2,8 @@ import {
   existsSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
+  readlinkSync,
   rmSync,
   writeFileSync,
 } from 'fs';
@@ -13,6 +15,24 @@ import {
   PseudoTerminal,
   PseudoTtyProcess,
 } from './pseudo-terminal';
+
+function linuxPtyFds(): Set<string> | undefined {
+  if (process.platform !== 'linux' || !existsSync('/proc/self/fd')) {
+    return undefined;
+  }
+  const fds = new Set<string>();
+  for (const name of readdirSync('/proc/self/fd')) {
+    try {
+      const target = readlinkSync(`/proc/self/fd/${name}`);
+      if (target.includes('ptmx') || target.includes('/pts/')) {
+        fds.add(name);
+      }
+    } catch {
+      // The fd can close between readdir and readlink.
+    }
+  }
+  return fds;
+}
 
 describe('PseudoTerminal', () => {
   let terminal: PseudoTerminal;
@@ -119,6 +139,24 @@ describe('PseudoTerminal', () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
+  });
+
+  it('releases pty fds while finished tasks are still referenced', async () => {
+    const baseline = linuxPtyFds();
+    if (!baseline) {
+      return;
+    }
+    const kept = [];
+    for (let i = 0; i < 4; i++) {
+      const terminal = createPseudoTerminal(true);
+      const cp = terminal.runCommand('true', { quiet: true, tty: false });
+      const result = await cp.getResults();
+      expect(result.code).toEqual(0);
+      kept.push(terminal, cp);
+    }
+    const after = linuxPtyFds();
+    const leaked = [...after].filter((fd) => !baseline.has(fd));
+    expect(leaked).toEqual([]);
   });
 
   if (process.env.CI !== 'true') {
