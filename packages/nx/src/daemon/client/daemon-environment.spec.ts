@@ -192,6 +192,18 @@ describe('daemon environment', () => {
       expect(env.CLAUDE_CODE_SESSION_ID).toBeUndefined();
     });
 
+    it('should exclude task-scoped vars', () => {
+      process.env.NX_TASK_TARGET_PROJECT = 'app-a';
+      process.env.NX_TASK_HASH = '1234567890';
+      process.env.LERNA_PACKAGE_NAME = 'app-a';
+
+      const env = getDaemonEnv();
+
+      expect(env.NX_TASK_TARGET_PROJECT).toBeUndefined();
+      expect(env.NX_TASK_HASH).toBeUndefined();
+      expect(env.LERNA_PACKAGE_NAME).toBeUndefined();
+    });
+
     it('should exclude Nx CLI mechanics vars', () => {
       process.env.NX_CLI_SET = 'true';
       process.env.NX_WORKSPACE_ROOT_PATH = '/workspace/root';
@@ -330,6 +342,18 @@ describe('daemon environment', () => {
       expect(changed).not.toContain('TERM_PROGRAM');
       expect(process.env.ATUIN_SESSION).toBe('daemon-startup-value');
       expect(process.env.TERM_PROGRAM).toBe('ghostty');
+    });
+
+    it('should not report a change between task processes of different projects', () => {
+      process.env.NX_TASK_TARGET_PROJECT = 'app-a';
+      process.env.LERNA_PACKAGE_NAME = 'app-a';
+      applyDaemonEnvFromClient(getDaemonEnv());
+
+      process.env.NX_TASK_TARGET_PROJECT = 'app-b';
+      process.env.LERNA_PACKAGE_NAME = 'app-b';
+      const changed = applyDaemonEnvFromClient(getDaemonEnv());
+
+      expect(changed).toEqual([]);
     });
 
     it('should keep the spawn-time NX_MAX_MESSAGE_SIZE across clients that do not set it', () => {
