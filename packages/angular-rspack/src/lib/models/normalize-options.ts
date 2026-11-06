@@ -487,7 +487,7 @@ function normalizeSourceMap(
     return {
       scripts: sourceMap,
       styles: sourceMap,
-      hidden: sourceMap,
+      hidden: false,
       vendor: sourceMap,
     };
   }
