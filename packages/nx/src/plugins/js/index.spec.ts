@@ -309,6 +309,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
             ignored: 'file:./vendor/ignored',
             vtar: 'file:./vendor/vtar-1.0.0.tgz',
             lnk: 'link:vendor/lnk',
+            alias: 'file:./vendor/real',
           },
         })
       );
@@ -322,6 +323,7 @@ describe('nx/js/dependencies-and-lockfile', () => {
         ['vtar', 'vendor/vtar-1.0.0.tgz'],
         ['lnk', 'vendor/lnk/index.js'],
         ['ttar', 'vendor/ttar-1.0.0.tgz'],
+        ['alias', 'vendor/real/index.js'],
       ];
       const names = [...new Set(sources.map(([name]) => name))];
       for (const [, source] of sources) {
