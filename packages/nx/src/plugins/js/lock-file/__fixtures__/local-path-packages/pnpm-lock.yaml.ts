@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      alias:
+        specifier: file:./vendor/real
+        version: real@file:vendor/real
       ignored:
         specifier: file:./vendor/ignored
         version: file:vendor/ignored
@@ -26,20 +29,25 @@ packages:
   ignored@file:vendor/ignored:
     resolution: {directory: vendor/ignored, type: directory}
 
+  real@file:vendor/real:
+    resolution: {directory: vendor/real, type: directory}
+
   ttar@file:vendor/ttar-1.0.0.tgz:
-    resolution: {integrity: sha512-vUBRCjoXfRDJSPRNadts6ZFlwSz5G0jNyodbIq3NX45es/e8u7qtf22H9OuAAlsvDfM+XdUjeewGO8XlwKr60w==, tarball: file:vendor/ttar-1.0.0.tgz}
+    resolution: {integrity: sha512-kO3A9JVF6tDNIrS1KO7tDN+Ly8UNMqAxClR/GzXBP2owH0fsPP9QmOzT03NF8t5UqwDsbPu/wnqt9oilIN5dPQ==, tarball: file:vendor/ttar-1.0.0.tgz}
     version: 1.0.0
 
   vend@file:vendor/vend:
     resolution: {directory: vendor/vend, type: directory}
 
   vtar@file:vendor/vtar-1.0.0.tgz:
-    resolution: {integrity: sha512-6MzKQuGxoFB6HuUzK6Pe/EwCIeH8cOST39I8boWeLVo0UaJ7GoX6rWFFyLkKmuWb6qRYS7nhSOLGX+mJaTs0gw==, tarball: file:vendor/vtar-1.0.0.tgz}
+    resolution: {integrity: sha512-ryhoLLJAIwkLA1dIXC5lCi3K73koaKB0oiMiZEBBCxRZ/44892q/75qPxZnVZgGcdZbweilCvpbzGdA0s8QqOg==, tarball: file:vendor/vtar-1.0.0.tgz}
     version: 1.0.0
 
 snapshots:
 
   ignored@file:vendor/ignored: {}
+
+  real@file:vendor/real: {}
 
   ttar@file:vendor/ttar-1.0.0.tgz: {}
 

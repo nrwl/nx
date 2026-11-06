@@ -787,8 +787,11 @@ export function getBunLocalPathNodeSources(
     return nodeSources;
   }
   for (const node of Object.values(nodes)) {
+    const aliasTarget = resolveAliasTarget(node.data.version);
     const sources = sourcesByResolution.get(
-      `${node.data.packageName}@${node.data.version}`
+      aliasTarget
+        ? `${aliasTarget.packageName}@${aliasTarget.version}`
+        : `${node.data.packageName}@${node.data.version}`
     );
     if (sources) {
       nodeSources[node.name] = [...sources].sort();
