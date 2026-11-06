@@ -73,10 +73,16 @@ function processPackageJson(
         return;
       }
 
-      const externalNodeName = targetProjectLocator.findNpmProjectFromImport(
-        packageName,
-        packageJsonPath
-      );
+      const externalNodeName =
+        targetProjectLocator.findNpmProjectFromLocalPathSpec(
+          packageName,
+          packageVersion,
+          packageJsonPath
+        ) ??
+        targetProjectLocator.findNpmProjectFromImport(
+          packageName,
+          packageJsonPath
+        );
       if (!externalNodeName) {
         return;
       }

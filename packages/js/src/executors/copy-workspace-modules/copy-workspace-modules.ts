@@ -4,6 +4,7 @@ import {
   logger,
   parseTargetString,
   type ProjectGraph,
+  type ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
@@ -14,6 +15,8 @@ import {
   interpolate,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
+  usesBinaryBunLockfile,
   warnUnshippableLocalPathSpec,
 } from '@nx/devkit/internal';
 import { type CopyWorkspaceModulesOptions } from './schema';
@@ -27,7 +30,10 @@ import {
 import { dirname, isAbsolute, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
-import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
+import {
+  TRANSITIVE_INSTALL_SECTIONS,
+  WORKSPACE_MODULE_INSTALL_SECTIONS,
+} from '../../utils/workspace-module-sections';
 
 type CopiedManifest = {
   dependencies?: Record<string, string>;
@@ -37,19 +43,6 @@ type CopiedManifest = {
   peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   [key: string]: unknown;
 };
-
-// Sections of a copied module's own manifest whose workspace-module deps are
-// rewritten to file: and recursed into. pnpm installs a transitive dependency's
-// regular, optional, and auto-installed peer deps (a workspace peer is linked
-// and recorded under the depending importer's dependencies in the lockfile), but
-// never its devDependencies. A workspace-module peer is moved into dependencies,
-// since pnpm rejects a file: spec under peerDependencies (mirrors the app-level
-// move in prune-lockfile).
-const TRANSITIVE_INSTALL_SECTIONS = [
-  'dependencies',
-  'optionalDependencies',
-  'peerDependencies',
-] as const;
 
 // Resolve `catalog:` references in a copied module manifest to the version the
 // workspace pinned. Only the sections pnpm installs for a `file:` directory
@@ -98,8 +91,14 @@ export default async function copyWorkspaceModules(
   logger.log('Copying Workspace Modules to Build Directory...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
+  const { project } = parseTargetString(schema.buildTarget, context);
   createWorkspaceModules(outputDirectory);
-  handleWorkspaceModules(outputDirectory, packageJson, context.projectGraph);
+  handleWorkspaceModules(
+    outputDirectory,
+    packageJson,
+    context.projectGraph,
+    context.projectGraph.nodes[project].data.root
+  );
   logger.log('Success!');
   return { success: true };
 }
@@ -112,7 +111,8 @@ function handleWorkspaceModules(
     devDependencies?: Record<string, string>;
     peerDependencies?: Record<string, string>;
   },
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  projectRoot: string
 ) {
   if (
     !WORKSPACE_MODULE_INSTALL_SECTIONS.some((section) => packageJson[section])
@@ -122,9 +122,26 @@ function handleWorkspaceModules(
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const catalogManager = getCatalogManager(workspaceRoot);
-  // Only the pnpm prune path ships non-workspace local-path targets, so only
-  // pnpm manifests get their file:/link: specs relocated.
-  const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
+  // Only the pnpm and Bun prune paths tell a vendored package from a workspace
+  // package of the same name. They also ship non-workspace local-path targets,
+  // so their manifests get their file:/link: specs relocated, except on the
+  // binary bun.lockb, whose output ships the manifest alone.
+  const packageManager = detectPackageManager(workspaceRoot);
+  const isPnpmWorkspace = packageManager === 'pnpm';
+  const resolvesLocalPaths = isPnpmWorkspace || packageManager === 'bun';
+  const relocatesLocalPaths =
+    isPnpmWorkspace ||
+    (packageManager === 'bun' && !usesBinaryBunLockfile(workspaceRoot));
+  const resolveModule = (name: string, spec: string, dependentRoot: string) =>
+    resolvesLocalPaths
+      ? resolveWorkspaceModuleDependency(
+          workspaceModules,
+          name,
+          spec,
+          dependentRoot,
+          workspaceRoot
+        )
+      : workspaceModules.get(name);
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -140,13 +157,12 @@ function handleWorkspaceModules(
     return relativePath.split(sep).join('/');
   }
 
-  function processModule(pkgName: string): void {
+  function processModule(
+    pkgName: string,
+    workspaceModuleProject: ProjectGraphProjectNode
+  ): void {
     if (processedModules.has(pkgName)) {
       logger.verbose(`Skipping ${pkgName} (already processed).`);
-      return;
-    }
-
-    if (!workspaceModules.has(pkgName)) {
       return;
     }
 
@@ -154,7 +170,6 @@ function handleWorkspaceModules(
 
     logger.verbose(`Copying ${pkgName}.`);
 
-    const workspaceModuleProject = workspaceModules.get(pkgName);
     const workspaceModuleRoot = workspaceModuleProject.data.root;
     // data.root is workspace-root-relative in the graph, but may arrive
     // absolute; normalize so the local-path relocation math is in
@@ -202,7 +217,12 @@ function handleWorkspaceModules(
         continue;
       }
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName)) {
+        const depModule = resolveModule(
+          depName,
+          deps[depName],
+          moduleWsRelativeRoot
+        );
+        if (depModule) {
           const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
           if (section === 'peerDependencies') {
             movePeerDependencyToDependencies(
@@ -214,21 +234,24 @@ function handleWorkspaceModules(
             deps[depName] = fileSpec;
           }
           packageJsonModified = true;
-          processModule(depName);
+          processModule(depName, depModule);
           continue;
         }
         // A non-workspace file:/link: dep must keep resolving after the module
         // moves. pnpm reads a non-importer manifest file: spec relative to the
         // package dir but a link: spec relative to the install root, so each
-        // rebases onto a different base (pnpm-only; see isPnpmWorkspace).
-        if (!isPnpmWorkspace) {
+        // rebases onto a different base. Bun reads both relative to the
+        // package dir.
+        if (!relocatesLocalPaths) {
           continue;
         }
         const spec = deps[depName];
         const relocation = relocatePrunedLocalPathSpec(
           spec,
           moduleWsRelativeRoot,
-          spec.startsWith('link:') ? '' : `workspace_modules/${pkgName}`
+          isPnpmWorkspace && spec.startsWith('link:')
+            ? ''
+            : `workspace_modules/${pkgName}`
         );
         if (!relocation) {
           continue;
@@ -239,7 +262,7 @@ function handleWorkspaceModules(
             relocation.reason
           );
         }
-        if (section === 'peerDependencies') {
+        if (section === 'peerDependencies' && isPnpmWorkspace) {
           // Moved even when the target cannot ship: pnpm rejects the spec here
           // either way.
           movePeerDependencyToDependencies(
@@ -255,6 +278,13 @@ function handleWorkspaceModules(
       }
     }
     dropEmptyPeerDependencySections(copiedPackageJson);
+    // Bun resolves the devDependencies of a folder dependency the output
+    // manifest lists, but the pruned lockfile leaves them out and a
+    // `workspace:` one cannot resolve outside the workspace.
+    if (packageManager === 'bun' && copiedPackageJson.devDependencies) {
+      delete copiedPackageJson.devDependencies;
+      packageJsonModified = true;
+    }
 
     if (packageJsonModified) {
       writeFileSync(
@@ -274,8 +304,11 @@ function handleWorkspaceModules(
     if (!deps) {
       continue;
     }
-    for (const pkgName of Object.keys(deps)) {
-      processModule(pkgName);
+    for (const [pkgName, spec] of Object.entries(deps)) {
+      const workspaceModule = resolveModule(pkgName, spec, projectRoot);
+      if (workspaceModule) {
+        processModule(pkgName, workspaceModule);
+      }
     }
   }
 }

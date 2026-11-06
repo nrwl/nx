@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
 import { dirname, join, posix, relative, isAbsolute } from 'node:path';
 import { clean, satisfies } from 'semver';
@@ -12,7 +13,7 @@ import {
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
-import { normalizePath } from '../../../../utils/path';
+import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   getWorkspacePackagesMetadata,
@@ -65,6 +66,7 @@ function startsWithConfigDirTemplate(value: string): boolean {
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
+  private packageNamesWithSeveralNodes = new Set<string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -90,9 +92,14 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
+    const seenPackageNames = new Set<string>();
     this.npmProjects = Object.values(this.externalNodes).reduce(
       (acc, node) => {
         if (node.type === 'npm') {
+          if (seenPackageNames.has(node.data.packageName)) {
+            this.packageNamesWithSeveralNodes.add(node.data.packageName);
+          }
+          seenPackageNames.add(node.data.packageName);
           const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
           if (!acc[node.name]) {
             acc[node.name] = node;
@@ -255,8 +262,21 @@ export class TargetProjectLocator {
       }
 
       if (!matchingExternalNode) {
-        matchingExternalNode =
+        const versionedNode =
           this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
+        // A vendored copy can share its name and version with a registry
+        // package, so the manifest that installed the copy decides
+        const installedNodeName =
+          !versionedNode ||
+          this.packageNamesWithSeveralNodes.has(externalPackageJson.name)
+            ? this.findNpmProjectFromInstallingManifest(
+                packageName,
+                fullDirPath
+              )
+            : null;
+        matchingExternalNode = installedNodeName
+          ? this.npmProjects[installedNodeName]
+          : versionedNode;
       }
 
       if (!matchingExternalNode) {
@@ -280,6 +300,88 @@ export class TargetProjectLocator {
         console.error(e);
       }
       return null;
+    }
+  }
+
+  /**
+   * The external node a `file:`/`link:` dependency of a package.json installs,
+   * when the lockfile names it by path: the target's root-relative `file:` or
+   * `link:./` path (Bun, pnpm), or the path as written for a Bun tarball,
+   * which Bun records relative to its dependent. Unlike
+   * `findNpmProjectFromImport`, it tells apart local packages that share a
+   * name with each other or with a registry package.
+   *
+   * @param packageJsonPath the manifest's workspace-relative path
+   */
+  findNpmProjectFromLocalPathSpec(
+    packageName: string,
+    spec: string,
+    packageJsonPath: string
+  ): string | null {
+    const protocol = spec.startsWith('file:')
+      ? 'file:'
+      : spec.startsWith('link:')
+        ? 'link:'
+        : null;
+    if (!protocol) {
+      return null;
+    }
+    const specPath = posix.normalize(
+      spec.slice(protocol.length).replace(/\\/g, '/')
+    );
+    const target = posix.join(posix.dirname(packageJsonPath), specPath);
+    const candidates = [
+      `npm:${packageName}@file:${target}`,
+      `npm:${packageName}@link:./${target}`,
+      `npm:${packageName}@${specPath}`,
+    ];
+    for (const candidate of candidates) {
+      const node = this.npmProjects[candidate];
+      if (node) {
+        return node.name;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * The external node of the `file:`/`link:` dependency behind the copy an
+   * import resolves to, when a manifest below the workspace root installed it
+   * into its own node_modules. A copy in the root's node_modules resolves
+   * through its version or the bare name instead.
+   */
+  private findNpmProjectFromInstallingManifest(
+    packageName: string,
+    fromDirPath: string
+  ): string | null {
+    // The copy whose package.json Node finds first, as `readPackageJson` does
+    for (let dir = fromDirPath; ; dir = dirname(dir)) {
+      const relativeDir = relative(workspaceRoot, dir);
+      if (!relativeDir || !isContainedRelativePath(relativeDir)) {
+        return null;
+      }
+      if (!existsSync(join(dir, 'node_modules', packageName, 'package.json'))) {
+        continue;
+      }
+      const manifestPath = join(dir, 'package.json');
+      let manifest: PackageJson;
+      try {
+        manifest = readJsonFile(manifestPath);
+      } catch {
+        return null;
+      }
+      const spec =
+        manifest.dependencies?.[packageName] ??
+        manifest.optionalDependencies?.[packageName] ??
+        manifest.devDependencies?.[packageName] ??
+        manifest.peerDependencies?.[packageName];
+      return spec
+        ? this.findNpmProjectFromLocalPathSpec(
+            packageName,
+            spec,
+            normalizePath(relative(workspaceRoot, manifestPath))
+          )
+        : null;
     }
   }
 

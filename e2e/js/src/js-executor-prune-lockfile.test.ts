@@ -18,13 +18,17 @@ const installCmd = {
   pnpm: 'pnpm install --frozen-lockfile',
   yarn: 'yarn install --frozen-lockfile',
   npm: 'npm ci',
+  bun: 'bun install --frozen-lockfile',
 } as const;
 
-const noFrozenInstallCmd = {
+type PackageManagerUnderTest = keyof typeof installCmd;
+
+const noFrozenInstallCmd: Record<PackageManagerUnderTest, string> = {
   pnpm: 'pnpm install',
   yarn: 'yarn install',
   npm: 'npm install',
-} as const;
+  bun: 'bun install',
+};
 
 // Copy the pruned dist to a fresh tmp dir outside the e2e workspace and run
 // install there. This isolates the install from the surrounding workspace
@@ -36,7 +40,7 @@ const noFrozenInstallCmd = {
 // succeeds even when those deps are silently skipped, so the exit code alone
 // isn't enough to prove the deployment works. Regression for #36066.
 function installPrunedDist(
-  packageManager: 'pnpm' | 'yarn' | 'npm',
+  packageManager: PackageManagerUnderTest,
   distPath: string,
   resolveChecks: { chain: string[]; deps: string[] }[] = [],
   options: {
@@ -113,9 +117,10 @@ describe('js:prune-lockfile executor', () => {
     ['pnpm', 'pnpm-lock.yaml'],
     ['yarn', 'yarn.lock'],
     ['npm', 'package-lock.json'],
+    ['bun', 'bun.lock'],
   ])(
     'package manager %s',
-    (packageManager: 'pnpm' | 'yarn' | 'npm', lockfile) => {
+    (packageManager: PackageManagerUnderTest, lockfile) => {
       let scope: string;
 
       beforeAll(() => {
@@ -198,10 +203,12 @@ describe('js:prune-lockfile executor', () => {
           `generate @nx/js:lib ${libb} --bundler=tsc --linter=eslint --unitTestRunner=jest`
         );
 
-        // pnpm uses workspace:* for sibling workspace refs; yarn classic and
-        // npm don't support that protocol, so use file:../ for those.
+        // pnpm and Bun use workspace:* for sibling workspace refs; yarn classic
+        // and npm don't support that protocol, so use file:../ for those.
         const ref = (name: string) =>
-          packageManager === 'pnpm' ? 'workspace:*' : `file:../${name}`;
+          packageManager === 'pnpm' || packageManager === 'bun'
+            ? 'workspace:*'
+            : `file:../${name}`;
 
         updateJson(`${liba}/package.json`, (json) => {
           json.dependencies = {

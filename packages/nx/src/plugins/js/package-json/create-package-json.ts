@@ -10,21 +10,27 @@ import {
   getDependencyVersionFromPackageJson,
   PackageJson,
 } from '../../../utils/package-json';
-import { existsSync } from 'fs';
+import { existsSync, realpathSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { readNxJson } from '../../../config/configuration';
 import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
-import { join } from 'path';
+import { isAbsolute, join, posix } from 'path';
+import { valid } from 'semver';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
+import { detectPackageManager } from '../../../utils/package-manager';
+import { normalizePath } from '../../../utils/path';
+import { isLocalPathSpecifier } from '../lock-file/project-graph-pruning';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
   readonly peerDependencies: Record<string, string>;
   readonly peerDependenciesMeta: Record<string, { optional: boolean }>;
+  // The project whose files import each dependency, by package name
+  readonly importingProjects: Record<string, string>;
 }
 
 /**
@@ -96,6 +102,13 @@ export function createPackageJson(
     } catch (e) {}
   }
 
+  const getInheritedLocalPathSpec = createInheritedLocalPathSpecResolver(
+    projectNode,
+    graph,
+    root,
+    rootPackageJson
+  );
+
   const getVersion = (
     packageName: string,
     version: string,
@@ -110,6 +123,19 @@ export function createPackageJson(
     );
     if (projectVersion) {
       return projectVersion;
+    }
+
+    // A local package's graph version, or the version its `npm:` alias names,
+    // is a path, never a semver version
+    if (!valid(getAliasedVersion(version))) {
+      const localPathSpec = getInheritedLocalPathSpec(
+        packageName,
+        version,
+        npmDeps.importingProjects[packageName] ?? projectName
+      );
+      if (localPathSpec) {
+        return localPathSpec;
+      }
     }
 
     // For libraries, fall back to root package.json (single section)
@@ -306,6 +332,251 @@ export function createPackageJson(
   return packageJson;
 }
 
+/**
+ * A local-path spec for a dependency the project inherits, rebased from the
+ * manifest that declares it to the project root. The graph version records the
+ * path relative to the workspace root or to its declarer, while the pnpm and
+ * Bun deploy outputs relocate every local-path spec from the project root. npm
+ * and yarn pruning matches the graph version itself, so they keep it.
+ *
+ * The search follows how the import resolves. pnpm links each importer's own
+ * declarations into its node_modules, and Node resolves an import from the
+ * nearest enclosing node_modules that has it. So for pnpm the search goes from
+ * the project whose files import the dependency through the projects enclosing
+ * it to the root manifest. Bun installs the root's copy of a tarball for every
+ * workspace that declares the same spec, so for Bun the root manifest comes
+ * first. The other workspace projects the project depends on come last. A
+ * declarer counts only when its spec resolves to the path the graph version
+ * records, so a same-named package another project vendors never replaces the
+ * one the graph version selects. pnpm keeps one node per linked package name,
+ * with the first importer's link. So a pnpm `link:` counts as is when a project
+ * on the chain declares it and its node_modules links that target.
+ */
+function createInheritedLocalPathSpecResolver(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  root: string,
+  rootPackageJson: PackageJson
+): (
+  packageName: string,
+  version: string,
+  importingProject: string
+) => string | undefined {
+  const rootDeclarer: LocalPathSpecDeclarer = {
+    root: '',
+    manifest: rootPackageJson,
+  };
+  const projectDeclarers = new Map<string, LocalPathSpecDeclarer | null>();
+  const getProjectDeclarer = (projectName: string) => {
+    if (!projectDeclarers.has(projectName)) {
+      projectDeclarers.set(
+        projectName,
+        readLocalPathSpecDeclarer(graph.nodes[projectName], root)
+      );
+    }
+    return projectDeclarers.get(projectName);
+  };
+  const declarersByImporter = new Map<
+    string,
+    { ordered: LocalPathSpecDeclarer[]; onChain: Set<LocalPathSpecDeclarer> }
+  >();
+  let lookup:
+    | { packageManager: 'pnpm' | 'bun'; reachableProjects: string[] }
+    | null
+    | undefined;
+  return (packageName, version, importingProject) => {
+    if (lookup === undefined) {
+      const packageManager = detectPackageManager(root);
+      lookup =
+        packageManager === 'pnpm' || packageManager === 'bun'
+          ? {
+              packageManager,
+              reachableProjects: getReachableProjects(projectNode, graph),
+            }
+          : null;
+    }
+    if (lookup === null) {
+      return undefined;
+    }
+    if (!declarersByImporter.has(importingProject)) {
+      const chain = getImportResolutionChain(graph, importingProject);
+      const others = lookup.reachableProjects.filter(
+        (projectName) => !chain.includes(projectName)
+      );
+      const chainDeclarers = chain.map(getProjectDeclarer).filter(Boolean);
+      const otherDeclarers = others.map(getProjectDeclarer).filter(Boolean);
+      declarersByImporter.set(importingProject, {
+        ordered:
+          lookup.packageManager === 'bun'
+            ? [rootDeclarer, ...chainDeclarers, ...otherDeclarers]
+            : [...chainDeclarers, rootDeclarer, ...otherDeclarers],
+        onChain: new Set(chainDeclarers),
+      });
+    }
+    const { ordered, onChain } = declarersByImporter.get(importingProject);
+    const isPnpmLink =
+      lookup.packageManager === 'pnpm' && version.startsWith('link:');
+    for (const declarer of ordered) {
+      const spec = getDependencyVersionFromPackageJson(
+        packageName,
+        root,
+        declarer.manifest,
+        [
+          'dependencies',
+          'optionalDependencies',
+          'devDependencies',
+          'peerDependencies',
+        ]
+      );
+      if (!spec || !isLocalPathSpecifier(spec)) {
+        continue;
+      }
+      const protocol = spec.startsWith('link:') ? 'link:' : 'file:';
+      const path = normalizePath(spec.slice(protocol.length));
+      const target = withoutTrailingSlash(
+        isAbsolute(path) ? path : posix.join(declarer.root, path)
+      );
+      const isChainLink =
+        isPnpmLink &&
+        protocol === 'link:' &&
+        onChain.has(declarer) &&
+        isInstalledLinkTarget(root, declarer.root, packageName, target);
+      if (
+        !isChainLink &&
+        getRecordedLocalPath(
+          version,
+          protocol,
+          declarer.root,
+          lookup.packageManager
+        ) !== target
+      ) {
+        continue;
+      }
+      if (isAbsolute(path)) {
+        return spec;
+      }
+      return `${protocol}${posix.relative(projectNode.data.root, target)}`;
+    }
+    return undefined;
+  };
+}
+
+/**
+ * The path a graph version names, read the way the lockfile records a
+ * `protocol` spec of the manifest at `declarerRoot`. pnpm records a `file:`
+ * path from the workspace root and a `link:` path from the importer. Bun
+ * records directories and `link:` paths from the workspace root, and a tarball
+ * from its declarer without the `file:` protocol. Both record a dependency
+ * named differently from its package as an `npm:<package>@<version>` alias.
+ */
+function getRecordedLocalPath(
+  graphVersion: string,
+  protocol: 'file:' | 'link:',
+  declarerRoot: string,
+  packageManager: 'pnpm' | 'bun'
+): string | undefined {
+  const version = getAliasedVersion(graphVersion);
+  const isBunTarball =
+    packageManager === 'bun' &&
+    protocol === 'file:' &&
+    !isLocalPathSpecifier(version);
+  if (!isBunTarball && !version.startsWith(protocol)) {
+    return undefined;
+  }
+  const path = normalizePath(
+    isBunTarball ? version : version.slice(protocol.length)
+  );
+  if (isAbsolute(path)) {
+    return withoutTrailingSlash(path);
+  }
+  const isDeclarerRelative =
+    isBunTarball || (protocol === 'link:' && packageManager === 'pnpm');
+  return withoutTrailingSlash(
+    posix.join(isDeclarerRelative ? declarerRoot : '', path)
+  );
+}
+
+// An override can make pnpm link a target other than the declared one
+function isInstalledLinkTarget(
+  root: string,
+  declarerRoot: string,
+  packageName: string,
+  target: string
+): boolean {
+  try {
+    return (
+      realpathSync(join(root, declarerRoot, 'node_modules', packageName)) ===
+      realpathSync(isAbsolute(target) ? target : join(root, target))
+    );
+  } catch {
+    return false;
+  }
+}
+
+// The search starts past the package name's first character, the `@` of a
+// scoped name, so an `@` in the version's path stays in the version
+function getAliasedVersion(version: string): string {
+  if (!version.startsWith('npm:')) {
+    return version;
+  }
+  const separator = version.indexOf('@', 'npm:'.length + 1);
+  return separator === -1 ? version : version.slice(separator + 1);
+}
+
+// posix.join keeps a trailing slash, so `dir/` and `dir` would differ
+function withoutTrailingSlash(path: string): string {
+  return path.replace(/(?<=.)\/$/, '');
+}
+
+interface LocalPathSpecDeclarer {
+  root: string;
+  manifest: PackageJson;
+}
+
+function readLocalPathSpecDeclarer(
+  project: ProjectGraphProjectNode,
+  root: string
+): LocalPathSpecDeclarer | null {
+  const manifestPath = join(root, project.data.root, 'package.json');
+  if (!existsSync(manifestPath)) {
+    return null;
+  }
+  try {
+    return { root: project.data.root, manifest: readJsonFile(manifestPath) };
+  } catch {
+    return null;
+  }
+}
+
+function getImportResolutionChain(
+  graph: ProjectGraph,
+  projectName: string
+): string[] {
+  const projectRoot = graph.nodes[projectName].data.root;
+  const enclosing = Object.values(graph.nodes)
+    .filter(({ data }) => projectRoot.startsWith(`${data.root}/`))
+    .sort((a, b) => b.data.root.length - a.data.root.length)
+    .map(({ name }) => name);
+  return [projectName, ...enclosing];
+}
+
+function getReachableProjects(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph
+): string[] {
+  const reachable = [projectNode.name];
+  const seen = new Set(reachable);
+  for (let i = 0; i < reachable.length; i++) {
+    for (const { target } of graph.dependencies[reachable[i]] ?? []) {
+      if (graph.nodes[target] && !seen.has(target)) {
+        seen.add(target);
+        reachable.push(target);
+      }
+    }
+  }
+  return reachable;
+}
+
 export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
@@ -330,6 +601,7 @@ export function findProjectsNpmDependencies(
     dependencies: {},
     peerDependencies: {},
     peerDependenciesMeta: {},
+    importingProjects: {},
   };
 
   const seen = new Set<string>();
@@ -404,6 +676,7 @@ function findAllNpmDeps(
       // since this is a direct dependency of the project
       if (node && npmDeps.peerDependencies[node.data.packageName]) {
         npmDeps.dependencies[node.data.packageName] = node.data.version;
+        npmDeps.importingProjects[node.data.packageName] = projectNode.name;
         delete npmDeps.peerDependencies[node.data.packageName];
       }
     } else {
@@ -418,6 +691,7 @@ function findAllNpmDeps(
         }
 
         npmDeps.dependencies[node.data.packageName] = node.data.version;
+        npmDeps.importingProjects[node.data.packageName] = projectNode.name;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
       } else if (graph.nodes[dep]) {
         findAllNpmDeps(

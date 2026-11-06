@@ -201,6 +201,7 @@ export {
   createLockFile,
   generatePrunedDeployOutput,
   getLockFileName,
+  usesBinaryBunLockfile,
 } from './plugins/js/lock-file/lock-file';
 export {
   createPackageJson,
@@ -316,6 +317,7 @@ export {
   dropEmptyPeerDependencySections,
   movePeerDependencyToDependencies,
   relocatePrunedLocalPathSpec,
+  resolveWorkspaceModuleDependency,
   warnUnshippableLocalPathSpec,
 } from './plugins/js/lock-file/pruned-output';
 export type { PackageManagerCommands } from './utils/package-manager';

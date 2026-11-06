@@ -1399,6 +1399,573 @@ describe('createPackageJson', () => {
       mockReadNxJson.mockRestore();
     });
   });
+
+  describe('local-path dependencies', () => {
+    // A directory's graph version is relative to the workspace root. Bun records
+    // a tarball relative to its declarer without `file:`, pnpm from the root.
+    const createGraph = (tarballVersion: string): ProjectGraph => ({
+      nodes: {
+        myapp: {
+          type: 'app',
+          name: 'myapp',
+          data: { targets: { build: {} }, root: 'apps/myapp' },
+        },
+        lib1: {
+          type: 'lib',
+          name: 'lib1',
+          data: { targets: { build: {} }, root: 'libs/lib1' },
+        },
+      },
+      externalNodes: {
+        'npm:libvend': {
+          type: 'npm',
+          name: 'npm:libvend',
+          data: {
+            version: 'file:vendor/libvend',
+            hash: '',
+            packageName: 'libvend',
+          },
+        },
+        'npm:ltar': {
+          type: 'npm',
+          name: 'npm:ltar',
+          data: {
+            version: tarballVersion,
+            hash: '',
+            packageName: 'ltar',
+          },
+        },
+        'npm:abs': {
+          type: 'npm',
+          name: 'npm:abs',
+          data: { version: 'file:/opt/abs', hash: '', packageName: 'abs' },
+        },
+        'npm:rootvend': {
+          type: 'npm',
+          name: 'npm:rootvend',
+          data: {
+            version: 'file:vendor/rootvend',
+            hash: '',
+            packageName: 'rootvend',
+          },
+        },
+        'npm:ms': {
+          type: 'npm',
+          name: 'npm:ms',
+          data: { version: '2.1.3', hash: '', packageName: 'ms' },
+        },
+      },
+      dependencies: {
+        myapp: [
+          { source: 'myapp', target: 'lib1', type: DependencyType.static },
+          {
+            source: 'myapp',
+            target: 'npm:rootvend',
+            type: DependencyType.static,
+          },
+        ],
+        lib1: [
+          {
+            source: 'lib1',
+            target: 'npm:libvend',
+            type: DependencyType.static,
+          },
+          { source: 'lib1', target: 'npm:ltar', type: DependencyType.static },
+          { source: 'lib1', target: 'npm:abs', type: DependencyType.static },
+          { source: 'lib1', target: 'npm:ms', type: DependencyType.static },
+        ],
+      },
+    });
+    const fileMap: ProjectFileMap = {
+      myapp: [
+        createFile('apps/myapp/src/main.ts', [
+          ['apps/myapp/src/main.ts', 'lib1', DependencyType.static],
+          ['apps/myapp/src/main.ts', 'npm:rootvend', DependencyType.static],
+        ]),
+      ],
+      lib1: [
+        createFile('libs/lib1/src/index.ts', [
+          ['libs/lib1/src/index.ts', 'npm:libvend', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:ltar', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:abs', DependencyType.static],
+          ['libs/lib1/src/index.ts', 'npm:ms', DependencyType.static],
+        ]),
+      ],
+    };
+
+    it.each([
+      [
+        'bun',
+        '../../vendor/ltar-1.0.0.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
+        'pnpm',
+        'file:vendor/ltar-1.0.0.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:../../vendor/libvend',
+          ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:../../vendor/rootvend',
+        },
+      ],
+      [
+        'npm',
+        '../../vendor/ltar-1.0.0.tgz',
+        {
+          abs: 'file:/opt/abs',
+          libvend: 'file:vendor/libvend',
+          ltar: '../../vendor/ltar-1.0.0.tgz',
+          ms: '2.1.3',
+          rootvend: 'file:vendor/rootvend',
+        },
+      ],
+    ] as const)(
+      'should declare an inherited local-path dependency relative to the project on %s',
+      (packageManager, tarballVersion, expected) => {
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager },
+        });
+        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: ['{projectRoot}/**/*'],
+        });
+        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+          (_root, files) => files
+        );
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (path) => path === 'libs/lib1/package.json'
+        );
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) =>
+          path === 'libs/lib1/package.json'
+            ? {
+                name: 'lib1',
+                dependencies: {
+                  abs: 'file:/opt/abs',
+                  libvend: 'file:../../vendor/libvend/',
+                  ltar: 'file:../../vendor/ltar-1.0.0.tgz',
+                  ms: '^2.1.0',
+                },
+              }
+            : {
+                name: 'root-package',
+                dependencies: { rootvend: 'file:./vendor/rootvend' },
+              }
+        );
+
+        const result = createPackageJson(
+          'myapp',
+          createGraph(tarballVersion),
+          { target: 'build', root: '', isProduction: true },
+          fileMap
+        );
+
+        expect(result.dependencies).toEqual(expected);
+      }
+    );
+
+    // The app reaches lib2 only through a graph edge none of its files use,
+    // like an excluded test importing a tool.
+    it.each([
+      [
+        'pnpm',
+        'npm:left-pad@1.3.0',
+        'link:../../../vendor/x',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'link:../../../vendor/x',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'bun',
+        'npm:left-pad@1.3.0',
+        'file:1.3.0',
+        'npm:left-pad@1.3.0',
+        'npm:left-pad@1.3.0',
+      ],
+      [
+        'pnpm',
+        'link:../../../vendor/x',
+        'link:../../../vendor/x',
+        undefined,
+        'link:../../vendor/x',
+      ],
+      [
+        'bun',
+        'link:./vendor/x',
+        'link:../../../vendor/x',
+        undefined,
+        'link:../../vendor/x',
+      ],
+      [
+        'pnpm',
+        'npm:@s/x-real@file:vendor/@s/x',
+        'link:../../../vendor/x',
+        'file:./vendor/@s/x',
+        'file:../../vendor/@s/x',
+      ],
+      [
+        'bun',
+        'npm:@s/x-real@file:vendor/@s/x',
+        'link:../../../vendor/x',
+        'file:./vendor/@s/x',
+        'file:../../vendor/@s/x',
+      ],
+    ] as const)(
+      'should rebase a declared local-path spec only for the graph version it records on %s (%s, lib2 declares %s)',
+      (packageManager, graphVersion, lib2Spec, rootSpec, expected) => {
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager },
+        });
+        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: ['{projectRoot}/**/*'],
+        });
+        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+          (_root, files) => files
+        );
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (path) => path === 'libs/nested/lib2/package.json'
+        );
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation((path) =>
+          path === 'libs/nested/lib2/package.json'
+            ? { name: 'lib2', dependencies: { x: lib2Spec } }
+            : {
+                name: 'root-package',
+                dependencies: rootSpec ? { x: rootSpec } : {},
+              }
+        );
+
+        const result = createPackageJson(
+          'myapp',
+          {
+            nodes: {
+              myapp: {
+                type: 'app',
+                name: 'myapp',
+                data: { targets: { build: {} }, root: 'apps/myapp' },
+              },
+              lib2: {
+                type: 'lib',
+                name: 'lib2',
+                data: { targets: {}, root: 'libs/nested/lib2' },
+              },
+            },
+            externalNodes: {
+              'npm:x': {
+                type: 'npm',
+                name: 'npm:x',
+                data: { version: graphVersion, hash: '', packageName: 'x' },
+              },
+            },
+            dependencies: {
+              myapp: [
+                {
+                  source: 'myapp',
+                  target: 'npm:x',
+                  type: DependencyType.static,
+                },
+                {
+                  source: 'myapp',
+                  target: 'lib2',
+                  type: DependencyType.static,
+                },
+              ],
+              lib2: [],
+            },
+          },
+          { target: 'build', root: '', isProduction: true },
+          {
+            myapp: [
+              createFile('apps/myapp/src/main.ts', [
+                ['apps/myapp/src/main.ts', 'npm:x', DependencyType.static],
+              ]),
+            ],
+            lib2: [],
+          }
+        );
+
+        expect(result.dependencies).toEqual({ x: expected });
+      }
+    );
+
+    // Unless a row sets `declarerSpec`, every declarer writes the same spec for
+    // its own `vendor/x`, which only the resolution of the import tells apart.
+    // `installed` maps the declarers whose node_modules links the package to
+    // the link's target.
+    it.each([
+      {
+        packageManager: 'pnpm',
+        scenario: 'myapp imports it and lib2 declares it',
+        importer: 'myapp',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario: 'myapp imports it and lib2 declares it',
+        importer: 'myapp',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports and declares it',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'link:../../libs/nested/lib2/vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario: 'lib2 imports and declares it',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        edge: false,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports it and declares a link other than the root',
+        importer: 'lib2',
+        declarers: ['lib2'],
+        declarerSpec: 'link:../vendor/x',
+        installed: { lib2: 'libs/nested/vendor/x' },
+        edge: false,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          "lib2 imports it and an override links lib2's declaration to the root's copy",
+        importer: 'lib2',
+        declarers: ['lib2'],
+        declarerSpec: 'link:../vendor/y',
+        installed: { lib2: 'vendor/x' },
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and its parent declares a link nothing installed',
+        importer: 'lib2',
+        declarers: ['parent'],
+        declarerSpec: 'link:vendor/other',
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario: 'lib2 imports it and its parent declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: false,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and its parent, which it depends on, declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: true,
+        expected: 'link:../../libs/nested/vendor/x',
+      },
+      {
+        packageManager: 'bun',
+        scenario:
+          'lib2 imports it and its parent, which it depends on, declares it',
+        importer: 'lib2',
+        declarers: ['parent'],
+        edge: true,
+        expected: 'file:../../vendor/x-1.0.0.tgz',
+      },
+      {
+        packageManager: 'pnpm',
+        scenario:
+          'lib2 imports it and a project whose root only shares a prefix declares it',
+        importer: 'lib2',
+        declarers: ['prefixed'],
+        edge: false,
+        expected: 'link:../../vendor/x',
+      },
+    ] as const)(
+      'should inherit the spec the import resolves to on $packageManager when $scenario',
+      ({
+        packageManager,
+        importer,
+        declarers,
+        declarerSpec,
+        installed,
+        edge,
+        expected,
+      }) => {
+        const [graphVersion, spec] =
+          packageManager === 'pnpm'
+            ? ['link:vendor/x', 'link:vendor/x']
+            : ['vendor/x-1.0.0.tgz', 'file:vendor/x-1.0.0.tgz'];
+        const projectRoots = {
+          lib2: 'libs/nested/lib2',
+          parent: 'libs/nested',
+          prefixed: 'libs/nest',
+        };
+        const manifests = Object.fromEntries(
+          Object.entries(projectRoots).map(([name, projectRoot]) => [
+            `${projectRoot}/package.json`,
+            {
+              name,
+              dependencies: (declarers as readonly string[]).includes(name)
+                ? { x: declarerSpec ?? spec }
+                : {},
+            },
+          ])
+        );
+        vi.spyOn(configModule, 'readNxJson').mockReturnValue({
+          cli: { packageManager },
+        });
+        vi.spyOn(hashModule, 'getTargetInputs').mockReturnValue({
+          selfInputs: ['{projectRoot}/**/*'],
+          dependencyInputs: ['{projectRoot}/**/*'],
+        });
+        vi.spyOn(hashModule, 'filterUsingGlobPatterns').mockImplementation(
+          (_root, files) => files
+        );
+        const installedLinks: Record<string, string> = Object.fromEntries(
+          Object.entries(installed ?? {}).map(([name, linkTarget]) => [
+            `${projectRoots[name]}/node_modules/x`,
+            linkTarget,
+          ])
+        );
+        vi.spyOn(fs, 'existsSync').mockImplementation(
+          (path) => typeof path === 'string' && path in manifests
+        );
+        vi.spyOn(fs, 'realpathSync').mockImplementation((path) => {
+          const link = String(path);
+          if (!link.includes('/node_modules/')) {
+            return link;
+          }
+          if (!(link in installedLinks)) {
+            throw new Error(`ENOENT: no such file or directory, '${link}'`);
+          }
+          return installedLinks[link];
+        });
+        vi.spyOn(fileutilsModule, 'readJsonFile').mockImplementation(
+          (path) =>
+            manifests[path] ?? {
+              name: 'root-package',
+              dependencies: { x: spec },
+            }
+        );
+        const importsX = (project: string) =>
+          project === importer
+            ? [
+                {
+                  source: project,
+                  target: 'npm:x',
+                  type: DependencyType.static,
+                },
+              ]
+            : [];
+
+        const result = createPackageJson(
+          'myapp',
+          {
+            nodes: {
+              myapp: {
+                type: 'app',
+                name: 'myapp',
+                data: { targets: { build: {} }, root: 'apps/myapp' },
+              },
+              ...Object.fromEntries(
+                Object.entries(projectRoots).map(([name, projectRoot]) => [
+                  name,
+                  {
+                    type: 'lib' as const,
+                    name,
+                    data: { targets: {}, root: projectRoot },
+                  },
+                ])
+              ),
+            },
+            externalNodes: {
+              'npm:x': {
+                type: 'npm',
+                name: 'npm:x',
+                data: { version: graphVersion, hash: '', packageName: 'x' },
+              },
+            },
+            dependencies: {
+              myapp: [
+                {
+                  source: 'myapp',
+                  target: 'lib2',
+                  type: DependencyType.static,
+                },
+                ...importsX('myapp'),
+              ],
+              lib2: [
+                ...(edge
+                  ? [
+                      {
+                        source: 'lib2',
+                        target: 'parent',
+                        type: DependencyType.static,
+                      },
+                    ]
+                  : []),
+                ...importsX('lib2'),
+              ],
+              parent: [],
+              prefixed: [],
+            },
+          },
+          { target: 'build', root: '', isProduction: true },
+          {
+            myapp: [
+              createFile('apps/myapp/src/main.ts', [
+                [
+                  'apps/myapp/src/main.ts',
+                  importer === 'myapp' ? 'npm:x' : 'lib2',
+                  DependencyType.static,
+                ],
+              ]),
+            ],
+            lib2:
+              importer === 'lib2'
+                ? [
+                    createFile('libs/nested/lib2/src/index.ts', [
+                      [
+                        'libs/nested/lib2/src/index.ts',
+                        'npm:x',
+                        DependencyType.static,
+                      ],
+                    ]),
+                  ]
+                : [],
+            parent: [],
+            prefixed: [],
+          }
+        );
+
+        expect(result.dependencies).toEqual({ x: expected });
+      }
+    );
+  });
 });
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {

@@ -3299,6 +3299,111 @@ snapshots:
       );
     });
 
+    // The app vendors `util`, `@demo/lib` takes the same `util` as a peer, and
+    // `@demo/web` uses the workspace package `util`.
+    it('should ship a vendored package named like a workspace package', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/api:
+    dependencies:
+      '@demo/lib':
+        specifier: workspace:*
+        version: link:../../libs/lib
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  apps/web:
+    dependencies:
+      util:
+        specifier: workspace:*
+        version: link:../../libs/util
+
+  libs/lib:
+    dependencies:
+      util:
+        specifier: file:../../vendor/util
+        version: file:vendor/util
+
+  libs/util:
+    dependencies:
+      odd:
+        specifier: file:../../vendor/odd
+        version: file:vendor/odd
+
+packages:
+
+  odd@file:vendor/odd:
+    resolution: {directory: vendor/odd, type: directory}
+
+  util@file:vendor/util:
+    resolution: {directory: vendor/util, type: directory}
+
+snapshots:
+
+  odd@file:vendor/odd: {}
+
+  util@file:vendor/util: {}`;
+      // as relocated by rewritePrunedLocalPathSpecifiers
+      const packageJson = {
+        name: '@demo/api',
+        version: '1.0.0',
+        dependencies: {
+          '@demo/lib': 'workspace:*',
+          util: 'file:local_path_modules/vendor/util',
+        },
+      };
+      const localNode = (name: string): ProjectGraphExternalNode => ({
+        type: 'npm',
+        name: `npm:${name}`,
+        data: { version: `file:vendor/${name}`, packageName: name },
+      });
+      const graph = makeGraph(
+        [
+          { projectName: 'lib', packageName: '@demo/lib', root: 'libs/lib' },
+          { projectName: 'util', packageName: 'util', root: 'libs/util' },
+        ],
+        {},
+        { 'npm:util': localNode('util'), 'npm:odd': localNode('odd') },
+        { lib: ['npm:util'], util: ['npm:odd'] }
+      );
+
+      vol.fromJSON(
+        {
+          'libs/lib/package.json': JSON.stringify({
+            name: '@demo/lib',
+            version: '1.0.0',
+            peerDependencies: { util: 'file:../../vendor/util' },
+          }),
+        },
+        '/virtual'
+      );
+
+      const result = stringifyPnpmLockfile(
+        pruneProjectGraph(graph, packageJson, '/virtual', 'pnpm'),
+        lockFile,
+        packageJson,
+        '/virtual',
+        'apps/api'
+      );
+
+      expect(result).toMatch(
+        /util:\s+specifier: file:local_path_modules\/vendor\/util\s+version: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).toMatch(
+        /'@demo\/lib@file:workspace_modules\/@demo\/lib':\s+dependencies:\s+util: file:local_path_modules\/vendor\/util/
+      );
+      expect(result).not.toContain('workspace_modules/util');
+    });
+
     it('should not infinite-loop on circular workspace dependencies', () => {
       const lockFile = `lockfileVersion: '9.0'
 
@@ -4562,6 +4667,49 @@ snapshots:
       expect(result).not.toMatch(/vendored-lib@/);
     });
 
+    // A deploy output passes the relocated spec, createLockFile the declared one
+    it.each(['link:local_path_modules/vendor/x', 'link:../../vendor/x'])(
+      'emits a link: dependency the graph has a node for as a direct importer entry (%s)',
+      (spec) => {
+        // pnpm 12.8.1 lockfile of an app declaring `x: link:../../vendor/x`
+        const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/app:
+    dependencies:
+      x:
+        specifier: link:../../vendor/x
+        version: link:../../vendor/x
+`;
+        const { nodes } = getPnpmLockfileNodes(lockFile, 'link-node');
+        expect(nodes['npm:x']).toBeDefined();
+
+        const result = stringifyPnpmLockfile(
+          makeGraph([], {}, nodes),
+          lockFile,
+          { name: 'app', version: '0.0.0', dependencies: { x: spec } },
+          '/root'
+        );
+
+        expect(result).toContain(
+          [
+            '    dependencies:',
+            '      x:',
+            `        specifier: ${spec}`,
+            `        version: ${spec}`,
+          ].join('\n')
+        );
+        expect(result).not.toMatch(/x@/);
+      }
+    );
+
     it('rewrites a copied module link: snapshot ref relative to the lockfile dir', () => {
       // A copied workspace module (@myorg/lib-a) links a vendored package. The
       // source ref is importer-relative, but pnpm reads a snapshot link: ref
@@ -5035,6 +5183,71 @@ snapshots:
         'vendor-real-name@file:local_path_modules/libs/vendor:'
       );
     });
+
+    it('prunes a vendored copy named and versioned like a registry package', () => {
+      // pnpm 12.8.1 install where the root depends on the registry `ms` 2.1.3
+      // and a library vendors its own `ms` 2.1.3
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      ms:
+        specifier: 2.1.3
+        version: 2.1.3
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      ms:
+        specifier: file:../vendor/ms
+        version: file:libs/vendor/ms
+
+packages:
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  ms@file:libs/vendor/ms:
+    resolution: {directory: libs/vendor/ms, type: directory}
+
+snapshots:
+
+  ms@2.1.3: {}
+
+  ms@file:libs/vendor/ms: {}
+`;
+      const packageJson = {
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { ms: 'file:local_path_modules/libs/vendor/ms' },
+      };
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__vendored_namesake__');
+
+      const prunedGraph = pruneProjectGraph(
+        makeGraph([], {}, nodes),
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toMatch(
+        /ms:\s+specifier: file:local_path_modules\/libs\/vendor\/ms\s+version: file:local_path_modules\/libs\/vendor\/ms/
+      );
+      expect(result).not.toContain('ms@2.1.3');
+    });
   });
 
   describe('missing .modules.yaml', () => {
@@ -5133,8 +5346,9 @@ importers:
   });
 
   describe('linked dependencies', () => {
-    // Out-of-workspace `link:` targets mint external nodes; links inside the
-    // workspace are workspace projects and must not.
+    // `link:` targets mint external nodes, except links to workspace packages
+    // (importers), which are workspace projects. A target inside the workspace
+    // is also a local path source.
     const lockFile = `lockfileVersion: '9.0'
 
 settings:
@@ -5234,6 +5448,40 @@ snapshots:
       );
     });
 
+    it('should hash every copy the importers link under the same name', () => {
+      // pnpm 12.8.1 install of a root and a library that link their own `x`
+      const linkedCopiesLockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      x:
+        specifier: link:vendor/x
+        version: link:vendor/x
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      x:
+        specifier: link:../vendor/x
+        version: link:../vendor/x
+`;
+
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        linkedCopiesLockFile,
+        '__linked_copies__'
+      );
+
+      expect(nodes['npm:x'].data.version).toBe('link:vendor/x');
+      expect(localPathSources['npm:x']).toEqual(['libs/vendor/x', 'vendor/x']);
+    });
+
     it('should resolve absolute link targets against the workspace root', () => {
       const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_abs__');
 
@@ -5250,9 +5498,14 @@ snapshots:
     });
 
     it('should not treat a dot-prefixed directory name as an escape', () => {
-      const { nodes } = getPnpmLockfileNodes(lockFile, '__linked_dotname__');
+      const { nodes, localPathSources } = getPnpmLockfileNodes(
+        lockFile,
+        '__linked_dotname__'
+      );
 
-      expect(nodes['npm:dot-named']).toBeUndefined();
+      expect(nodes['npm:dot-named']).toBeDefined();
+      expect(localPathSources['npm:dot-named']).toEqual(['..cache/plugin']);
+      expect(localPathSources['npm:@scoped/linked-out']).toBeUndefined();
     });
 
     it('should not shadow a hoisted registry package with a link from a nested importer', () => {
