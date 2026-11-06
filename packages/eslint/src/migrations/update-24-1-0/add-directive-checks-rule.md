@@ -11,8 +11,6 @@ The migration adds the rule as `error` to the root ESLint config that project co
 
 When an ESLint config uses `@nx/eslint-plugin` but the migration can't verify that the config it would change registers it for every file, it leaves that config unchanged and prints a warning. It does the same for a root config it can't edit, such as `eslint.config.ts`. Add the rule to a config that registers `@nx` for the files it checks.
 
-A file that only has `@nx-target-name` doesn't trigger the migration.
-
 The migration adds the rule without a `files` pattern. In a flat config it adds its own entry, and in `.eslintrc.json` it adds a top-level rule. The rule then runs on every file the config already lints, and ESLint doesn't start linting files that no parser is set up for.
 
 #### Sample code changes
