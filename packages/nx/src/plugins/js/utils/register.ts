@@ -499,7 +499,7 @@ export function ensureResolveConditionsInjected(conditions: string[]): void {
       registerHooks?: (opts: {
         resolve?: (
           specifier: string,
-          context: { conditions?: string[] },
+          context: { conditions?: Iterable<string> },
           nextResolve: (specifier: string, context?: unknown) => unknown
         ) => unknown;
       }) => unknown;
@@ -510,15 +510,31 @@ export function ensureResolveConditionsInjected(conditions: string[]): void {
   try {
     registerHooks.call(module, {
       resolve(specifier, context, nextResolve) {
-        const merged = context.conditions
-          ? [...context.conditions, ...conditions]
-          : conditions;
-        return nextResolve(specifier, { ...context, conditions: merged });
+        return nextResolve(specifier, {
+          ...context,
+          conditions: mergeResolveConditions(context.conditions, conditions),
+        });
       },
     });
   } catch {
     // Best-effort: leave Node's native resolution in place rather than failing.
   }
+}
+
+/**
+ * Append `conditions` to the conditions Node passed to a `registerHooks()`
+ * resolve hook, keeping the container type Node handed us. Node 22.18's CJS
+ * resolver passes (and later calls `.has()` on) a `Set`, while newer releases
+ * pass and validate an array, so returning the wrong one breaks `require()`.
+ */
+export function mergeResolveConditions(
+  existing: Iterable<string> | undefined,
+  conditions: string[]
+): string[] | Set<string> {
+  if (!existing) return conditions;
+  const merged = [...existing, ...conditions];
+  // Node's own `SafeSet` is not `instanceof Set`, so check for an array instead.
+  return Array.isArray(existing) ? merged : new Set(merged);
 }
 
 /**
