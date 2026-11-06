@@ -8,6 +8,12 @@ topics:
 
 This page contains common configuration examples for [launch templates](/docs/kb/launch-templates). For the full reference of available fields, see the [launch templates reference page](/docs/kb/launch-templates).
 
+{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
+`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`dte.distribute-on` is now a `worker-templates` entry, and `workers.with-env-vars` has no key in the new file.
+The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% /aside %}
+
 ## Full example
 
 This is an example of a launch template using all pre-built features:

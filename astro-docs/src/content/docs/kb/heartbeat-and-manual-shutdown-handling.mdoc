@@ -6,6 +6,12 @@ topics:
   - 'Continuous integration'
 ---
 
+{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
+`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`lifecycle.heartbeat` is removed, and `lifecycle.stop-after` is now `stop-after` on a worker entry.
+The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% /aside %}
+
 ### What is the heartbeat process?
 
 A big challenge in building a task distribution engine is tracking when the main orchestrator job has finished (either successfully or due to an error).
