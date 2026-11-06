@@ -7,7 +7,7 @@
 
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { writeFileSync } from 'fs';
+import { mkdtempSync, writeFileSync } from 'fs';
 import { isAiAgent } from '../../native';
 
 // Base progress stages shared by all commands
@@ -105,7 +105,6 @@ export function writeErrorLog(
   commandName: string = 'nx'
 ): string {
   const timestamp = Date.now();
-  const errorLogPath = join(tmpdir(), `${commandName}-error-${timestamp}.log`);
 
   let errorDetails = `Nx ${commandName} Error Log\n`;
   errorDetails += `==================\n`;
@@ -121,10 +120,13 @@ export function writeErrorLog(
   }
 
   try {
-    writeFileSync(errorLogPath, errorDetails);
+    const errorLogPath = join(
+      mkdtempSync(join(tmpdir(), `${commandName}-error-`)),
+      `${commandName}-error-${timestamp}.log`
+    );
+    writeFileSync(errorLogPath, errorDetails, { mode: 0o600, flag: 'wx' });
+    return errorLogPath;
   } catch {
     return '';
   }
-
-  return errorLogPath;
 }

@@ -2,9 +2,20 @@ import {
   ExecutorContext,
   ProjectGraphProjectNode,
   ProjectConfiguration,
+  workspaceRoot,
 } from '@nx/devkit';
+import { runCommandsExecutor } from '@nx/devkit/internal';
 import mavenExecutor from './maven.impl';
 import { MavenExecutorSchema } from './schema';
+
+vi.mock('@nx/devkit/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit/internal')),
+  runCommandsExecutor: vi.fn(async () => ({ success: true })),
+}));
+vi.mock('../../utils/detect-maven-executable', () => ({
+  detectMavenExecutable: () => 'mvn',
+  isMaven4: () => false,
+}));
 
 describe('Maven Executor', () => {
   let context: ExecutorContext;
@@ -83,5 +94,19 @@ describe('Maven Executor', () => {
     };
 
     expect(mavenExecutor).toBeDefined();
+  });
+
+  it('passes the Nx workspace root to Maven when args select another POM', async () => {
+    await mavenExecutor(
+      { goals: ['compiler:compile'], args: ['-f', 'app/pom.xml'] },
+      context
+    );
+
+    expect(runCommandsExecutor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: { NX_WORKSPACE_ROOT: workspaceRoot },
+      }),
+      context
+    );
   });
 });

@@ -321,6 +321,52 @@ describe('native file cache location', () => {
       }
     );
 
+    posixOnly(
+      'should not reach an override through a link planted in a level above it',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const ours = join(base, 'home', 'checkout');
+          mkdirSync(ours, { recursive: true });
+          chmodSync(ours, 0o755);
+          const planted = join(base, 'planted');
+          mkdirSync(planted);
+          chmodSync(planted, 0o777);
+          symlinkSync(join(base, 'home'), join(planted, 'me'));
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = join(
+            planted,
+            'me',
+            'checkout'
+          );
+
+          expect(getNativeFileCacheLocationToDelete()).toBeNull();
+          expect(ensureSecureNativeFileCacheLocation()).toBeNull();
+          expect(lstatSync(ours).mode & 0o777).toEqual(0o755);
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
+    posixOnly(
+      'should use an override under a group-writable directory of ours',
+      () => {
+        const base = mkdtempSync(join(tmpdir(), 'nx-native-cache-'));
+        try {
+          const project = join(base, 'proj');
+          mkdirSync(project);
+          chmodSync(project, 0o775);
+          const target = join(project, 'cache');
+          process.env.NX_NATIVE_FILE_CACHE_DIRECTORY = target;
+
+          expect(ensureSecureNativeFileCacheLocation()).toEqual(target);
+          expect(getNativeFileCacheLocationToDelete()).toEqual(target);
+        } finally {
+          rmSync(base, { recursive: true, force: true });
+        }
+      }
+    );
+
     // The tests below pin the *wiring*, which the `ensureOwnedPrivateDir`
     // suite above cannot: those cover the guard's own branches, but reverting
     // either call site here to a bare `mkdirSync` leaves them all green. They

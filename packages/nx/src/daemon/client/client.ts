@@ -1,5 +1,4 @@
 import { ChildProcess, spawn } from 'child_process';
-import { connect } from 'net';
 import {
   closeSync,
   existsSync,
@@ -145,6 +144,7 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
+import { connectToDaemonSocket } from '../socket-utils';
 import { sandboxSocketHint } from '../sandbox-socket-hint';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../utils/socket-refused-exit-code';
 import {
@@ -500,7 +500,7 @@ export class DaemonClient {
         const socketPath = this.getSocketPath();
 
         this.fileWatcherMessenger = new DaemonSocketMessenger(
-          connect(socketPath)
+          connectToDaemonSocket(socketPath)
         ).listen(
           (message) => {
             try {
@@ -698,7 +698,7 @@ export class DaemonClient {
       // Try to reconnect
       const socketPath = this.getSocketPath();
       this.fileWatcherMessenger = new DaemonSocketMessenger(
-        connect(socketPath)
+        connectToDaemonSocket(socketPath)
       ).listen(
         (message) => {
           try {
@@ -800,7 +800,7 @@ export class DaemonClient {
       const socketPath = this.getSocketPath();
 
       this.projectGraphListenerMessenger = new DaemonSocketMessenger(
-        connect(socketPath)
+        connectToDaemonSocket(socketPath)
       ).listen(
         (message) => {
           try {
@@ -927,7 +927,7 @@ export class DaemonClient {
 
       // Try to reconnect
       this.projectGraphListenerMessenger = new DaemonSocketMessenger(
-        connect(socketPath)
+        connectToDaemonSocket(socketPath)
       ).listen(
         (message) => {
           try {
@@ -1233,7 +1233,7 @@ export class DaemonClient {
           resolve({ available: false });
           return;
         }
-        const socket = connect(socketPath, () => {
+        const socket = connectToDaemonSocket(socketPath, () => {
           socket.destroy();
           resolve({ available: true });
         });
@@ -1343,7 +1343,7 @@ export class DaemonClient {
   private setUpConnection() {
     const socketPath = this.getSocketPath();
 
-    const socket = connect(socketPath);
+    const socket = connectToDaemonSocket(socketPath);
     // Unref the socket so it doesn't keep the process alive. The
     // sendMessageToDaemon method uses a keep-alive setTimeout to
     // explicitly hold the event loop open while awaiting a response.
@@ -1516,6 +1516,7 @@ export class DaemonClient {
       {
         maxAttempts: WAIT_FOR_SERVER_CONFIG.maxAttempts,
         delayMs: WAIT_FOR_SERVER_CONFIG.delayMs,
+        connect: connectToDaemonSocket,
         onConnectError: (error, socketPath) => {
           refusal = { error, socketPath };
           // A refusal is not expected to become an acceptance, so polling the

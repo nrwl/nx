@@ -144,6 +144,11 @@ describe('AngularRspackPlugin', () => {
     skipTypeChecking: false,
     sourceMap: { scripts: true, styles: true, hidden: false, vendor: false },
     advancedOptimizations: false,
+    optimization: {
+      fonts: { inline: false },
+      scripts: true,
+      styles: { minify: true, inlineCritical: false },
+    },
     budgets: [],
     verbose: false,
     outputPath: { browser: '/root/dist/browser' },
@@ -175,6 +180,28 @@ describe('AngularRspackPlugin', () => {
     plugin.apply(compiler as never);
     return compiler;
   }
+
+  it.each([true, false])(
+    'passes component style minification to the compiler (%s)',
+    async (minify) => {
+      const compiler = createFakeCompiler();
+      const plugin = new AngularRspackPlugin({
+        ...options,
+        optimization: {
+          ...options.optimization,
+          styles: { ...options.optimization.styles, minify },
+        },
+      });
+      plugin.apply(compiler as never);
+
+      await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
+      await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+      expect(setupCompilationMock.mock.calls[0][1]).toEqual(
+        expect.objectContaining({ minifyStyles: minify })
+      );
+    }
+  );
 
   async function runBuildStart(
     compiler: ReturnType<typeof createFakeCompiler>

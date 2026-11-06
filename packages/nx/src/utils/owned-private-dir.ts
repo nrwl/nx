@@ -16,11 +16,12 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
+  readlinkSync,
   type Stats,
   realpathSync,
 } from 'node:fs';
 import { userInfo } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 
 // Phantom brands: each guard's success arm carries its own, so one guard's
 // verdict cannot be passed where another's is expected.
@@ -64,10 +65,13 @@ export type DirRefusal =
   // Separate kinds, not one with a flag: which advice is correct turns on which
   // directory was refused, so it has to be the discriminant `remedy_for` (now in
   // native/utils/owned_dir.rs) branches on. Root can take over the shared
-  // container; it cannot help with a per-user directory.
+  // container; it cannot help with a per-user directory, and should not be asked
+  // to open up an arbitrary level above a configured one.
   | { kind: 'foreign-owner'; dir: string; uid: number }
   | { kind: 'foreign-shared-container'; dir: string; uid: number }
+  | { kind: 'foreign-ancestor'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
+  | { kind: 'not-private'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
 /** A guard's verdict. */
@@ -109,10 +113,14 @@ export function describeRefusal(r: DirRefusal): string {
       return `${r.dir} is owned by uid ${r.uid}, not by you`;
     case 'foreign-shared-container':
       return `${r.dir} belongs to another user (uid ${r.uid}) rather than to you or to root`;
+    case 'foreign-ancestor':
+      return `${r.dir} sits above the configured directory and belongs to another user (uid ${r.uid}) rather than to you or to root`;
     case 'not-tightenable':
       return `${r.dir} is reachable by other users (mode ${asMode(
         r.mode
       )}) and could not be tightened to 0700`;
+    case 'not-private':
+      return `${r.dir} is reachable by other users (mode ${asMode(r.mode)})`;
     case 'peer-writable-not-sticky':
       return `${r.dir} is writable by other users but not sticky (mode ${asMode(
         r.mode
@@ -309,6 +317,154 @@ export function isOwnedRealDirectory(dir: string): OwnedRealDir | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The verdict of `ensureOwnedPrivateDir` with nothing created and nothing
+ * re-locked, for callers about to trust what is already inside. Tightening a
+ * directory that was open a moment ago says nothing about who filled it.
+ */
+export function isOwnedPrivateDir(dir: string): GuardResult<OwnedPrivateDir> {
+  try {
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return deny(notADirectory(dir, stats));
+    }
+    if (typeof process.getuid !== 'function') {
+      return allow(dir as OwnedPrivateDir);
+    }
+    if (stats.uid !== process.getuid()) {
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
+    }
+    return stats.mode & 0o077
+      ? deny({ kind: 'not-private', dir, mode: stats.mode })
+      : allow(dir as OwnedPrivateDir);
+  } catch (e: any) {
+    return deny({ kind: 'not-inspectable', dir, code: e?.code });
+  }
+}
+
+/** The kernel's own limit on links followed in one lookup. */
+const MAX_LINKS = 40;
+
+/**
+ * Whether a level above a configured directory is safe to look the next name up
+ * in. Owned by us or root, and not writable by other users unless sticky. Group
+ * write on a level of ours is the user's own grant and is accepted.
+ */
+function isSafeAncestor(dir: string, stats: Stats): DirRefusal | null {
+  const ours = stats.uid === process.getuid!();
+  if (!ours && stats.uid !== 0) {
+    return { kind: 'foreign-ancestor', dir, uid: stats.uid };
+  }
+  const peerWrite = ours ? 0o002 : 0o022;
+  return !(stats.mode & peerWrite) || stats.mode & S_ISVTX
+    ? null
+    : { kind: 'peer-writable-not-sticky', dir, mode: stats.mode };
+}
+
+/**
+ * Walked one name at a time from the filesystem root rather than canonicalized:
+ * each name is looked up only in a level already judged, and a link is followed
+ * only when it is ours or root's.
+ */
+function walkAncestry(dir: string, create: boolean): DirRefusal | null {
+  if (typeof process.getuid !== 'function') {
+    if (create) {
+      try {
+        mkdirSync(dir, { recursive: true });
+      } catch (e: any) {
+        return { kind: 'not-created', dir, code: e?.code };
+      }
+    }
+    return null;
+  }
+
+  let judged: string = sep;
+  try {
+    const refusal = isSafeAncestor(judged, lstatSync(judged));
+    if (refusal) {
+      return refusal;
+    }
+  } catch (e: any) {
+    return { kind: 'not-inspectable', dir: judged, code: e?.code };
+  }
+
+  const pending = resolve(dir).split(sep).filter(Boolean);
+  let links = 0;
+  while (pending.length) {
+    const name = pending.shift()!;
+    if (name === '.') {
+      continue;
+    }
+    if (name === '..') {
+      judged = dirname(judged);
+      continue;
+    }
+
+    const next = join(judged, name);
+    if (create) {
+      try {
+        // An explicit mode, so a level made under umask `000` is not
+        // world-writable and refused by the check below.
+        mkdirSync(next, { mode: 0o755 });
+      } catch (e: any) {
+        if (e?.code !== 'EEXIST') {
+          return { kind: 'not-created', dir: next, code: e?.code };
+        }
+      }
+    }
+
+    let stats: Stats;
+    try {
+      stats = lstatSync(next);
+    } catch (e: any) {
+      return { kind: 'not-inspectable', dir: next, code: e?.code };
+    }
+    if (stats.isDirectory()) {
+      const refusal = isSafeAncestor(next, stats);
+      if (refusal) {
+        return refusal;
+      }
+      judged = next;
+      continue;
+    }
+    if (
+      !stats.isSymbolicLink() ||
+      (stats.uid !== process.getuid() && stats.uid !== 0) ||
+      ++links > MAX_LINKS
+    ) {
+      return notADirectory(next, stats);
+    }
+
+    let target: string;
+    try {
+      target = readlinkSync(next);
+    } catch (e: any) {
+      return { kind: 'not-inspectable', dir: next, code: e?.code };
+    }
+    if (isAbsolute(target)) {
+      judged = sep;
+    }
+    pending.unshift(...target.split(sep).filter(Boolean));
+  }
+  return null;
+}
+
+/**
+ * Create `dir` and any missing level above it, judging every level from the
+ * filesystem root down. For a location the user configured, where any level
+ * may have been created first by someone else.
+ */
+export function ensureSafeAncestry(dir: string): GuardResult<string> {
+  const refusal = walkAncestry(dir, true);
+  return refusal ? deny(refusal) : allow(dir);
+}
+
+/** `ensureSafeAncestry` without creating anything, for the delete path. */
+export function isSafeAncestry(dir: string): GuardResult<string> {
+  const refusal = walkAncestry(dir, false);
+  return refusal ? deny(refusal) : allow(dir);
 }
 
 /** The path segment separating one user's Nx runtime state from another's. */

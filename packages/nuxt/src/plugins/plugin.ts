@@ -8,7 +8,6 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -129,11 +128,7 @@ async function buildNuxtTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
-  const nuxtConfig = await getInfoFromNuxtConfig(
-    configFilePath,
-    context,
-    projectRoot
-  );
+  const nuxtConfig = await getInfoFromNuxtConfig(configFilePath, context);
 
   const { buildOutputs } = getOutputs(nuxtConfig, projectRoot);
 
@@ -279,8 +274,7 @@ function buildStaticTarget(
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  context: CreateNodesContext,
-  projectRoot: string
+  context: CreateNodesContext
 ): Promise<{
   buildDir: string;
   signalsReady: boolean;
