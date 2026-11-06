@@ -64,7 +64,7 @@ worker-templates:
 {% tabitem label="Assignment rules when you bring your own compute" %}
 
 ```yaml
-// .nx/workflows/assignment-rules.yaml
+// .nx/pipelines/assignment-rules.yaml
 assignment-rules:
   - projects:
       - app1
@@ -223,7 +223,7 @@ nx affected -t lint test build --parallel=3
 ```
 
 ```yaml
-// .nx/workflows/assignment-rules.yaml
+// .nx/pipelines/assignment-rules.yaml
 assignment-rules:
   - targets:
       - lint
@@ -326,7 +326,7 @@ When you bring your own compute, there is no worker entry to put rules on, so th
 A typical `assignment-rules.yaml` file might look like this:
 
 ```yaml
-// .nx/workflows/assignment-rules.yaml
+// .nx/pipelines/assignment-rules.yaml
 assignment-rules:
   - projects:
       - app1
@@ -367,7 +367,7 @@ jobs:
     steps:
       - ... # setup steps for your main job
 
-      - run: npx nx-cloud start-ci-run --distribute-on=manual --assignment-rules=.nx/workflows/assignment-rules.yaml --stop-workers-after=e2e-ci
+      - run: npx nx-cloud start-ci-run --distribute-on=manual --assignment-rules=.nx/pipelines/assignment-rules.yaml --stop-workers-after=e2e-ci
 
       - ... # Nx commands you want to distribute
 
