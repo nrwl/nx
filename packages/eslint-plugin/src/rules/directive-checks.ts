@@ -96,10 +96,6 @@ export default ESLintUtils.RuleCreator(
       }
     }
 
-    /**
-     * Runs the checks of atomized test files and returns the directives their
-     * runner ignores.
-     */
     function checkSplitTargets({
       dependsOn,
       ignoreServerInputs,
