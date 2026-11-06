@@ -20,6 +20,7 @@ import { join, relative } from 'path';
 import {
   dedupe,
   findStorybookAndBuildTargetsAndCompiler,
+  storybookFilePatterns,
   storybookMajorVersion as getStorybookMajorVersion,
   TsConfig,
 } from '../../../utils/utilities';
@@ -439,32 +440,21 @@ export function addStorybookToNamedInputs(
   if (nxJson.namedInputs) {
     const hasProductionFileset = !!nxJson.namedInputs?.production;
     if (hasProductionFileset) {
-      if (
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-        )
-      ) {
-        nxJson.namedInputs.production.push(
-          '!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)'
-        );
+      const storiesExclusion = `!{projectRoot}/${storybookFilePatterns.stories}`;
+      if (!nxJson.namedInputs.production.includes(storiesExclusion)) {
+        nxJson.namedInputs.production.push(storiesExclusion);
       }
-      if (
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/.storybook/**/*'
-        )
-      ) {
-        nxJson.namedInputs.production.push('!{projectRoot}/.storybook/**/*');
+      const configExclusion = `!{projectRoot}/${storybookFilePatterns.config}`;
+      if (!nxJson.namedInputs.production.includes(configExclusion)) {
+        nxJson.namedInputs.production.push(configExclusion);
       }
 
+      const tsconfigExclusion = `!{projectRoot}/${storybookFilePatterns.tsconfig}`;
       if (
         schema.uiFramework !== '@storybook/angular' &&
-        !nxJson.namedInputs.production.includes(
-          '!{projectRoot}/tsconfig.storybook.json'
-        )
+        !nxJson.namedInputs.production.includes(tsconfigExclusion)
       ) {
-        nxJson.namedInputs.production.push(
-          '!{projectRoot}/tsconfig.storybook.json'
-        );
+        nxJson.namedInputs.production.push(tsconfigExclusion);
       }
     }
 
