@@ -23,15 +23,20 @@ pub fn selective_files_hash(files: Vec<NxFile>, archived_files: &FilesArchive) -
     // ~15.6ms system tick on Windows, so a rewrite inside that window leaves the
     // timestamp identical and the archived hash silently stale. Re-hash those;
     // they are a handful of files touched during the gather window, not the
-    // workspace.
+    // workspace. A symlink's own mtime and its target's are compared apart:
+    // both have to match, and both have to predate the gather.
     let gathered_at = archived_files.gathered_at();
 
     for file in files {
-        if let Some((hash, mod_time)) = archived_files.get(&file.normalized_path) {
-            if mod_time == file.mod_time && file.mod_time < gathered_at {
+        if let Some((hash, mod_time, target_mod_time)) = archived_files.get(&file.normalized_path) {
+            if mod_time == file.mod_time
+                && target_mod_time == file.target_mod_time
+                && mod_time < gathered_at
+                && target_mod_time < gathered_at
+            {
                 archived.push((
                     file.normalized_path,
-                    NxFileHashed(hash.to_owned(), mod_time),
+                    NxFileHashed(hash.to_owned(), mod_time, target_mod_time),
                 ));
                 continue;
             }
@@ -61,8 +66,12 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
         files
             .into_par_iter()
             .filter_map(|file| {
-                hash_file_path(&file.full_path)
-                    .map(|hash| (file.normalized_path, NxFileHashed(hash, file.mod_time)))
+                hash_file_path(&file.full_path).map(|hash| {
+                    (
+                        file.normalized_path,
+                        NxFileHashed(hash, file.mod_time, file.target_mod_time),
+                    )
+                })
             })
             .collect::<Vec<_>>()
     } else {
@@ -77,7 +86,7 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
                     hash_file_path(&file.full_path).map(|hash| {
                         (
                             file.normalized_path.clone(),
-                            NxFileHashed(hash, file.mod_time),
+                            NxFileHashed(hash, file.mod_time, file.target_mod_time),
                         )
                     })
                 })
@@ -121,6 +130,7 @@ mod tests {
                 NxFileHashed(
                     String::from("hash1"),
                     get_mod_time(&temp.child("test.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             (
@@ -128,6 +138,7 @@ mod tests {
                 NxFileHashed(
                     String::from("hash2"),
                     get_mod_time(&temp.child("foo.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             (
@@ -135,6 +146,7 @@ mod tests {
                 NxFileHashed(
                     String::from("hash3"),
                     get_mod_time(&temp.child("bar.txt").metadata().unwrap()),
+                    0,
                 ),
             ),
             // this file was modified, so the mod time in the archive should be less than whats on the fs to simulate a write
@@ -143,12 +155,13 @@ mod tests {
                 NxFileHashed(
                     String::from("hash4"),
                     get_mod_time(&temp.child("modified.txt").metadata().unwrap()) - 10,
+                    0,
                 ),
             ),
             // this file is does not exist on the fs, aka it was deleted
             (
                 String::from("baz/qux.txt"),
-                NxFileHashed(String::from("hash5"), 0),
+                NxFileHashed(String::from("hash5"), 0, 0),
             ),
         ]
         .into_iter()
@@ -204,7 +217,7 @@ mod tests {
 
         let archived = vec![(
             String::from("same-tick.txt"),
-            NxFileHashed(String::from("stale-hash"), mod_time),
+            NxFileHashed(String::from("stale-hash"), mod_time, 0),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
@@ -231,7 +244,7 @@ mod tests {
 
         let archived = vec![(
             String::from("settled.txt"),
-            NxFileHashed(String::from("archived-hash"), mod_time),
+            NxFileHashed(String::from("archived-hash"), mod_time, 0),
         )]
         .into_iter()
         .collect::<NxFileHashes>()
@@ -261,7 +274,10 @@ mod tests {
         std::os::unix::fs::symlink("target.txt", temp.path().join("link.txt")).unwrap();
 
         let hashed = super::full_files_hash(nx_walker(temp.path(), true).collect());
-        let stamp = hashed.get("link.txt").expect("link.txt").1;
+        let entry = hashed.get("link.txt").expect("link.txt");
+        // Past both stamps. The target can be newer than the link, and either
+        // one at or after the gather refuses reuse.
+        let stamp = entry.1.max(entry.2);
         let archived = FilesArchive::from_hashes(&hashed.with_gathered_at(stamp + 1)).unwrap();
 
         let unchanged =
@@ -287,6 +303,97 @@ mod tests {
             edited.get("link.txt").unwrap().0,
             hash(b"two"),
             "editing a symlink target must re-hash the link"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn should_rehash_a_staged_symlink_replacement_that_shares_its_target_mtime() {
+        // link mtime 10, staged replacement 11, both targets 12, gather at 13.
+        // The later of each pair is 12 before and after the rename, so one
+        // stamp would reuse the archived hash.
+        use std::os::unix::fs::symlink;
+
+        use crate::native::hasher::hash;
+
+        fn stamp(path: &std::path::Path, secs: i64) {
+            use nix::fcntl::AT_FDCWD;
+            use nix::sys::stat::{UtimensatFlags, utimensat};
+            use nix::sys::time::TimeSpec;
+
+            let spec = TimeSpec::new(secs, 0);
+            utimensat(
+                AT_FDCWD,
+                path,
+                &spec,
+                &spec,
+                UtimensatFlags::NoFollowSymlink,
+            )
+            .unwrap();
+        }
+
+        fn link_times(root: &std::path::Path) -> (i64, i64) {
+            let link = nx_walker(root, true)
+                .find(|file| file.normalized_path == "link.txt")
+                .expect("link.txt");
+            (link.mod_time, link.target_mod_time)
+        }
+
+        fn archived(link_time: i64, target_time: i64, gathered_at: i64) -> FilesArchive {
+            let hashes = vec![(
+                String::from("link.txt"),
+                NxFileHashed(String::from("sentinel"), link_time, target_time),
+            )]
+            .into_iter()
+            .collect::<NxFileHashes>()
+            .with_gathered_at(gathered_at);
+            FilesArchive::from_hashes(&hashes).unwrap()
+        }
+
+        let temp = TempDir::new().unwrap();
+        let previous = temp.child("previous.txt");
+        previous.write_str("one").unwrap();
+        stamp(previous.path(), 12);
+        let link = temp.path().join("link.txt");
+        symlink("previous.txt", &link).unwrap();
+        stamp(&link, 10);
+
+        assert_eq!(link_times(temp.path()), (10, 12));
+        let reusable = archived(10, 12, 13);
+        let unchanged =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &reusable);
+        assert_eq!(
+            unchanged.get("link.txt").unwrap().0,
+            "sentinel",
+            "an unchanged symlink should still be reused"
+        );
+
+        // Target mtime equals the gather stamp, so it does not predate it.
+        // The link mtime alone would still be eligible.
+        let during_gather = archived(10, 12, 12);
+        let guarded =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &during_gather);
+        assert_eq!(
+            guarded.get("link.txt").unwrap().0,
+            hash(b"one"),
+            "a target mtime that does not predate the gather must be re-hashed"
+        );
+
+        let replacement = temp.child("replacement.txt");
+        replacement.write_str("two").unwrap();
+        stamp(replacement.path(), 12);
+        let staged = temp.path().join("link.txt.next");
+        symlink("replacement.txt", &staged).unwrap();
+        stamp(&staged, 11);
+        std::fs::rename(&staged, &link).unwrap();
+
+        assert_eq!(link_times(temp.path()), (11, 12));
+        let replaced =
+            super::selective_files_hash(nx_walker(temp.path(), true).collect(), &reusable);
+        assert_eq!(
+            replaced.get("link.txt").unwrap().0,
+            hash(b"two"),
+            "a staged symlink replacement must be re-hashed"
         );
     }
 }

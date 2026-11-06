@@ -202,7 +202,7 @@ impl From<Files> for GatheredFiles {
 fn archive_to_files(archive: FilesArchive) -> Files {
     let mut files: Vec<(PathBuf, String)> = archive
         .iter()
-        .map(|(path, hash, _)| (PathBuf::from(path), hash.to_owned()))
+        .map(|(path, hash, _, _)| (PathBuf::from(path), hash.to_owned()))
         .collect();
     files.par_sort();
     files.into_iter().collect()
@@ -453,8 +453,9 @@ fn gather_and_hash_files(
     trace!("Gathering files in {}", workspace_root.display());
     let now = std::time::Instant::now();
     // Taken before the walk, not after: an entry read at any point from here on
-    // may be rewritten within its own mtime tick, so the next gather has to
-    // re-hash it rather than trust the timestamp. See `selective_files_hash`.
+    // may be rewritten within its own mtime tick, or its symlink target's, so
+    // the next gather has to re-hash it rather than trust the timestamps. See
+    // `selective_files_hash`.
     let gathered_at = gather_stamp();
     #[cfg(not(target_arch = "wasm32"))]
     let (found, ignore_files) = if find_ignore_files {
@@ -2100,7 +2101,7 @@ mod tests {
             .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
             .collect();
         entries.sort();
-        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v2.nxt"]);
+        assert_eq!(entries, vec!["nx_files.lock", "nx_files_v3.nxt"]);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -2227,7 +2228,7 @@ mod tests {
         let cache = TempDir::new().unwrap();
         write_files_archive(
             as_string(&cache),
-            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1, 0))]
                 .into_iter()
                 .collect::<NxFileHashes>(),
         );
@@ -2258,7 +2259,7 @@ mod tests {
             as_string(&cache),
             &[(
                 "from-the-other-process.ts".to_string(),
-                NxFileHashed("h".to_string(), 1),
+                NxFileHashed("h".to_string(), 1, 0),
             )]
             .into_iter()
             .collect::<NxFileHashes>(),
@@ -2288,7 +2289,7 @@ mod tests {
         // An archive from an earlier run, older than any wait that starts now.
         write_files_archive(
             as_string(&cache),
-            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1))]
+            &[("stale.ts".to_string(), NxFileHashed("h".to_string(), 1, 0))]
                 .into_iter()
                 .collect::<NxFileHashes>(),
         );
