@@ -430,10 +430,10 @@ The `-ci` variant task truly shines when configured and run on CI.
 
 ## Configure automated task splitting on CI
 
-Update your CI pipeline to run the `-ci` variant task (e.g., `e2e-ci`, `test-ci`), which will automatically run all the inferred tasks for the individual test files. Distribution and stop conditions come from your [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) file:
+Update your CI pipeline to run the `-ci` variant task (e.g., `e2e-ci`, `test-ci`), which will automatically run all the inferred tasks for the individual test files. Distribution and stop conditions come from your [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file:
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 3 linux-medium-js

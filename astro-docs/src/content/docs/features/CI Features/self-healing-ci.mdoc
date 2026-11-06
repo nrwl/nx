@@ -48,16 +48,16 @@ By default, your CI provider will only run the step if the previous steps succee
 On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), Nx Cloud adds this step for you, so you can skip this section.
 
 {% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
 The `ai` section is now `self-healing`, with the same two keys.
 The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
 {% /aside %}
 
-These examples distribute tasks across Workers, so they also need a `.nx/workflows/ci.yaml` file.
+These examples distribute tasks across Workers, so they also need a `.nx/pipelines/ci.yaml` file.
 See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config) for every key you can set.
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 3 linux-large-js
@@ -199,7 +199,7 @@ Self-Healing CI configuration is primarily managed through your [Nx Cloud worksp
 Control which failing tasks Nx Cloud will actively try and fix for pull request CI pipeline executions.
 
 {% aside type="note" title="Configuration override available" %}
-This is analogous to [`self-healing.fix-tasks-patterns`](/docs/reference/nx-cloud/ci-config#fix-tasks-patterns) in `.nx/workflows/ci.yaml`. Anything set there takes precedence over the settings here.
+This is analogous to [`self-healing.fix-tasks-patterns`](/docs/reference/nx-cloud/ci-config#fix-tasks-patterns) in `.nx/pipelines/ci.yaml`. Anything set there takes precedence over the settings here.
 {% /aside %}
 
 You can choose between two modes:
@@ -225,7 +225,7 @@ Automatically commit code change suggestions to the PR branch **when ALL of thes
 3. The suggestion has been **explicitly verified** to fix the failing task
 
 {% aside type="note" title="Configuration override available" %}
-This is analogous to [`self-healing.auto-apply-patterns`](/docs/reference/nx-cloud/ci-config#auto-apply-patterns) in `.nx/workflows/ci.yaml`. Anything set there takes precedence over the settings here.
+This is analogous to [`self-healing.auto-apply-patterns`](/docs/reference/nx-cloud/ci-config#auto-apply-patterns) in `.nx/pipelines/ci.yaml`. Anything set there takes precedence over the settings here.
 {% /aside %}
 
 #### Deterministic Nx checks
@@ -366,7 +366,7 @@ We recommend configuring Self-Healing CI through **[workspace settings](https://
 
 ### Available settings
 
-Set these under `self-healing` in your [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) file:
+Set these under `self-healing` in your [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file:
 
 | Key                   | Description                                 | Example                |
 | --------------------- | ------------------------------------------- | ---------------------- |
@@ -378,7 +378,7 @@ Set these under `self-healing` in your [`.nx/workflows/ci.yaml`](/docs/reference
 Patterns use glob syntax to match task names, and a `!` prefix negates a pattern:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 self-healing:
   # Fix lint and test tasks, but never e2e
   fix-tasks-patterns:
@@ -392,9 +392,9 @@ self-healing:
 
 ### Precedence rules
 
-When both workspace settings and `.nx/workflows/ci.yaml` are present:
+When both workspace settings and `.nx/pipelines/ci.yaml` are present:
 
-1. **`.nx/workflows/ci.yaml`** takes precedence for the keys it sets
+1. **`.nx/pipelines/ci.yaml`** takes precedence for the keys it sets
 2. Falls back to **workspace settings** for the keys it does not set
 
 ### Viewing applied configuration

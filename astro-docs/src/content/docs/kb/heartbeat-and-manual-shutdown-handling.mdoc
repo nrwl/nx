@@ -7,7 +7,7 @@ topics:
 ---
 
 {% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
 `lifecycle.heartbeat` is removed, and `lifecycle.stop-after` is now `stop-after` on a worker entry.
 The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
 {% /aside %}
@@ -24,7 +24,7 @@ we stop receiving these pings, we assume the main job has died, and we will fail
 This is useful not just for worst-case scenarios, but it also keeps your CI config simple:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default: 5 linux-medium-js
 ```
@@ -45,7 +45,7 @@ On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), the run ends wh
 ### Caveats
 
 In some specific cases, though, the heartbeat process will not work properly.
-`.nx/workflows/ci.yaml` has no key to turn it off, so start the run with [`nx-cloud start-ci-run --require-explicit-completion`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) and manage completion yourself.
+`.nx/pipelines/ci.yaml` has no key to turn it off, so start the run with [`nx-cloud start-ci-run --require-explicit-completion`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) and manage completion yourself.
 This command takes its configuration from CLI flags:
 
 ```yaml

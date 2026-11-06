@@ -40,7 +40,7 @@ Remote caching works as soon as the workspace is connected.
 
 ## Run CI on Nx Cloud
 
-Nx Cloud CI runs your whole pipeline on Nx Cloud from one `.nx/workflows/ci.yaml` file, so you don't need a separate CI provider.
+Nx Cloud CI runs your whole pipeline on Nx Cloud from one `.nx/pipelines/ci.yaml` file, so you don't need a separate CI provider.
 A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as GitHub checks.
 Remote caching, Workers, and self-healing CI work without extra steps.
 
@@ -55,10 +55,10 @@ Personal access tokens, GitHub Enterprise, and other providers aren't supported 
 ### Set up a pipeline
 
 Commit this file on a branch and open a pull request into `main`.
-The name is up to you, because Nx Cloud CI runs every file in `.nx/workflows` that has an `on` section:
+The name is up to you, because Nx Cloud CI runs every file in `.nx/pipelines` that has an `on` section:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 # yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
 name: CI
 
@@ -89,7 +89,7 @@ A newer push to a pull request cancels the older run of the same file.
 Add `workers` to a job to run its tasks across several machines:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 jobs:
   main:
     runs-on: linux-medium-js
@@ -103,7 +103,7 @@ To match the machines to the work in each run, list three sizes.
 A count without a template name reuses the setup of the job:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 jobs:
   main:
     runs-on: linux-large-js
@@ -122,7 +122,7 @@ For setups shared across jobs and for task rules such as `stop-after`, see [`wor
 Add secrets on the **Environment variables** page of your [workspace settings](https://cloud.nx.app/go/workspace/settings), and read them with `${{ secrets.<NAME> }}`:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 env:
   NODE_OPTIONS: --max-old-space-size=8192
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -176,7 +176,7 @@ jobs:
 Becomes this file:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 name: CI
 
 on:
@@ -232,7 +232,7 @@ To keep your pipeline on GitHub Actions, CircleCI, GitLab, or another provider, 
 The same [CI configuration file](/docs/reference/nx-cloud/ci-config) sets your workers, and `nx-cloud start-workers` starts them from your main job:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default: 3 linux-large-js
 ```

@@ -223,7 +223,7 @@ agents as well. A [launch template](/docs/kb/launch-templates) caches the Cargo 
 the dependency download:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 launch-templates:
   linux-medium-polyglot:
     resource-class: 'docker_linux_amd64/medium'
@@ -254,7 +254,7 @@ launch-templates:
 Point the pipeline at that template and every agent can take any task, Cargo or JavaScript:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 2 linux-medium-polyglot
