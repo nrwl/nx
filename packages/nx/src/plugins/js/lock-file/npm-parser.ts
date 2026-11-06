@@ -466,11 +466,15 @@ export function stringifyNpmLockfile(
   const { lockfileVersion } = JSON.parse(rootLockFileContent) as NpmLockFile;
   const workspaceModulesFromGraph = getWorkspacePackagesFromGraph(graph);
 
-  const mappedPackages = mapSnapshots(rootLockFile, graph);
   const workspaceModules = mapWorkspaceModules(
     packageJson,
     rootLockFile,
     workspaceModulesFromGraph
+  );
+  const mappedPackages = mapSnapshots(
+    rootLockFile,
+    graph,
+    getWorkspaceModuleNames(workspaceModules)
   );
 
   const output: NpmLockFile = {
@@ -547,6 +551,17 @@ function mapWorkspaceModules(
   return output;
 }
 
+function getWorkspaceModuleNames(
+  workspaceModules: Record<string, NpmDependencyV3 & NpmDependencyV1>
+): Set<string> {
+  const prefix = 'workspace_modules/';
+  return new Set(
+    Object.keys(workspaceModules)
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => key.slice(prefix.length))
+  );
+}
+
 function mapV3Snapshots(
   mappedPackages: MappedPackage[],
   packageJson: NormalizedPackageJson
@@ -581,6 +596,10 @@ function mapV1Snapshots(
   const output: Record<string, NpmDependencyV1> = {};
 
   mappedPackages.forEach((p) => {
+    // the v1 tree has no place for packages nested under a workspace module
+    if (!p.path.startsWith('node_modules/')) {
+      return;
+    }
     getPackageParent(p.path, output)[p.name] = p.valueV1;
   });
 
@@ -619,7 +638,8 @@ type MappedPackage = {
 
 function mapSnapshots(
   rootLockFile: NpmLockFile,
-  graph: ProjectGraph
+  graph: ProjectGraph,
+  workspaceModuleNames: Set<string>
 ): MappedPackage[] {
   const nestedNodes = new Set<ProjectGraphExternalNode>();
   const visitedNodes = new Map<
@@ -654,6 +674,15 @@ function mapSnapshots(
   let remappedPackagesArray: MappedPackage[];
   if (nestedNodes.size) {
     const invertedGraph = reverse(graph);
+    nestWorkspaceDependencies(
+      invertedGraph,
+      remappedPackages,
+      nestedNodes,
+      visitedNodes,
+      rootLockFile,
+      packageIndex,
+      workspaceModuleNames
+    );
     nestMappedPackages(
       invertedGraph,
       remappedPackages,
@@ -698,6 +727,67 @@ function mapPackage(
     valueV1,
     valueV3,
   };
+}
+
+// A nested version that no pruned package depends on is a workspace module's own
+// dependency: npm installed it under the workspace (`libs/a/node_modules/x`), so
+// it goes under that workspace module in the output. It has no parent to nest
+// under otherwise, and its own dependencies could not be mapped.
+function nestWorkspaceDependencies(
+  invertedGraph: ProjectGraph,
+  result: Map<string, MappedPackage>,
+  nestedNodes: Set<ProjectGraphExternalNode>,
+  visitedNodes: Map<
+    ProjectGraphExternalNode,
+    {
+      packagePaths: Set<string>;
+      unresolvedParents: Set<string>;
+    }
+  >,
+  rootLockFile: NpmLockFile,
+  packageIndex: V3Index,
+  workspaceModuleNames: Set<string>
+) {
+  const workspacePaths = new Map<string, string>();
+  for (const [path, snapshot] of Object.entries(rootLockFile.packages ?? {})) {
+    if (
+      path &&
+      !path.includes('node_modules/') &&
+      workspaceModuleNames.has(snapshot.name)
+    ) {
+      workspacePaths.set(snapshot.name, path);
+    }
+  }
+  if (!workspacePaths.size) {
+    return;
+  }
+
+  nestedNodes.forEach((node) => {
+    if (invertedGraph.dependencies[node.name]?.length) {
+      return;
+    }
+    const { packageName, version } = node.data;
+    const packagePaths = new Set<string>();
+    workspacePaths.forEach((workspacePath, workspaceName) => {
+      const snapshot =
+        rootLockFile.packages[`${workspacePath}/node_modules/${packageName}`];
+      if (snapshot && findV3Version(snapshot, packageName) === version) {
+        const mappedPackage = mapPackage(
+          rootLockFile,
+          packageIndex,
+          packageName,
+          version,
+          `workspace_modules/${workspaceName}/`
+        );
+        result.set(mappedPackage.path, mappedPackage);
+        packagePaths.add(mappedPackage.path);
+      }
+    });
+    if (packagePaths.size) {
+      visitedNodes.set(node, { packagePaths, unresolvedParents: new Set() });
+      nestedNodes.delete(node);
+    }
+  });
 }
 
 function nestMappedPackages(
