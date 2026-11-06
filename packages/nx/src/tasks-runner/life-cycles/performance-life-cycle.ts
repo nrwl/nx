@@ -206,6 +206,10 @@ export function flushPerformanceReport(): void {
  * the outermost run writes to the summary. Nx sets `NX_TASK_TARGET_PROJECT` on every task's
  * environment, which a nested nx inherits; its absence marks the top-level invocation (the
  * same "NX is already running" signal `nx exec` uses).
+ *
+ * Also skipped when `NX_SKIP_JOB_SUMMARY=true`, for workflows that keep their job summary
+ * for their own content (`$GITHUB_STEP_SUMMARY` is set per step by Actions, so it can't be
+ * cleared workflow-wide).
  */
 function writePerformanceReportToGitHubActions(
   summary: PerformanceSummary
@@ -214,7 +218,8 @@ function writePerformanceReportToGitHubActions(
   if (
     process.env.GITHUB_ACTIONS !== 'true' ||
     !summaryPath ||
-    process.env.NX_TASK_TARGET_PROJECT
+    process.env.NX_TASK_TARGET_PROJECT ||
+    process.env.NX_SKIP_JOB_SUMMARY === 'true'
   ) {
     return;
   }
