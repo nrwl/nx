@@ -139,6 +139,20 @@ x@1.0.0:
   integrity sha512-x
 `;
 
+const yarnLockFileWithTwoVersionsOfX = `${yarnLockFile}
+b@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/b/-/b-1.0.0.tgz"
+  integrity sha512-b
+  dependencies:
+    x "2.0.0"
+
+x@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/x/-/x-2.0.0.tgz"
+  integrity sha512-x2
+`;
+
 describe('nx/js/dependencies-and-lockfile', () => {
   beforeEach(() => {
     write('nx.json', '{}');
@@ -150,11 +164,15 @@ describe('nx/js/dependencies-and-lockfile', () => {
   });
 
   it('should not reuse lockfile dependencies computed against differently named external nodes', async () => {
-    writeWorkspace({ a: '1.0.0', b: '1.0.0', x: '1.0.0' });
-    // The install has not linked x@1.0.0 at the root yet.
-    rmSync(join(root, 'node_modules', 'x'), { recursive: true });
+    // Yarn names a package's node from node_modules, so an install can rename
+    // it without changing the lockfile.
+    write(
+      'package.json',
+      JSON.stringify({ devDependencies: { a: '1.0.0', b: '1.0.0' } })
+    );
+    write('yarn.lock', yarnLockFileWithTwoVersionsOfX);
     const first = await loadPluginInNewProcess();
-    const firstNodes = await createExternalNodes(first);
+    const firstNodes = await createExternalNodes(first, 'yarn.lock');
     expect(Object.keys(firstNodes)).toContain('npm:x@1.0.0');
 
     // A second process misses the first's nodes cache and sees x@1.0.0 linked
@@ -162,13 +180,26 @@ describe('nx/js/dependencies-and-lockfile', () => {
     rmSync(workspaceDataDirectory, { recursive: true });
     write('node_modules/x/package.json', JSON.stringify({ version: '1.0.0' }));
     const second = await loadPluginInNewProcess();
-    const secondNodes = await createExternalNodes(second);
+    const secondNodes = await createExternalNodes(second, 'yarn.lock');
     await createDependencies(first, firstNodes);
 
     expect(await createDependencies(second, secondNodes)).toEqual([
       { source: 'npm:a', target: 'npm:x', type: 'static' },
       { source: 'npm:b', target: 'npm:x@2.0.0', type: 'static' },
     ]);
+  });
+
+  it('should name pnpm external nodes the same however node_modules is linked', async () => {
+    writeWorkspace({ a: '1.0.0', b: '1.0.0', x: '1.0.0' });
+    rmSync(join(root, 'node_modules', 'x'), { recursive: true });
+    const before = await createExternalNodes(await loadPluginInNewProcess());
+
+    rmSync(workspaceDataDirectory, { recursive: true });
+    write('node_modules/x/package.json', JSON.stringify({ version: '2.0.0' }));
+    const after = await createExternalNodes(await loadPluginInNewProcess());
+
+    expect(after).toEqual(before);
+    expect(before['npm:x'].data.version).toEqual('1.0.0');
   });
 
   it('should recompute a cache that another process left partially written', async () => {
