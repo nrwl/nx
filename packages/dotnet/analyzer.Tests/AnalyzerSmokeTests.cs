@@ -62,7 +62,7 @@ public class AnalyzerSmokeTests : IDisposable
     /// process - registering in the test host would fight the runner over which
     /// MSBuild assemblies get loaded.
     /// </summary>
-    private JsonElement AnalyzeWorkspace(string projectFile)
+    private JsonElement AnalyzeWorkspace(string projectFile, string? options = null)
     {
         // Both MsbuildAnalyzer.dll and its runtimeconfig.json land next to the
         // test assembly via the project reference.
@@ -79,7 +79,7 @@ public class AnalyzerSmokeTests : IDisposable
 
         using var process = Process.Start(startInfo)!;
         // First stdin line is the plugin-options slot; empty means defaults.
-        process.StandardInput.WriteLine(string.Empty);
+        process.StandardInput.WriteLine(options ?? string.Empty);
         process.StandardInput.WriteLine(projectFile);
         process.StandardInput.Close();
 
@@ -103,6 +103,125 @@ public class AnalyzerSmokeTests : IDisposable
             .ToDictionary(p => p.Name, p => p.Value);
     }
 
+    [Fact]
+    public void MultiTfm_UsesEvaluatedItemsAndConfigurationPaths()
+    {
+        var projectFile = WriteProject("Debug", "<TargetFramework /><TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>");
+        var directory = Path.GetDirectoryName(projectFile)!;
+        File.WriteAllText(Path.Combine(directory, "Shared.cs"), "class Shared {}");
+        File.WriteAllText(Path.Combine(directory, "Modern.cs"), "class Modern {}");
+        File.WriteAllText(Path.Combine(directory, "Portable.cs"), "class Portable {}");
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>
+                <OutputPath>$(MSBuildProjectDirectory)/products/$(Configuration)/</OutputPath>
+              </PropertyGroup>
+              <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+                <Compile Remove="Portable.cs" />
+              </ItemGroup>
+              <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+                <Compile Remove="Modern.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        var targets = Analyze(projectFile);
+        Assert.Equal("nx:noop", targets["build"].GetProperty("executor").GetString());
+        Assert.Equal("release", targets["build:release"].GetProperty("defaultConfiguration").GetString());
+        var modern = targets["build:net10.0"];
+        var portable = targets["build:netstandard2.1"];
+        Assert.Contains("!{projectRoot}/Portable.cs", StringInputs(targets, "build:net10.0"));
+        Assert.Contains("!{projectRoot}/Modern.cs", StringInputs(targets, "build:netstandard2.1"));
+        Assert.DoesNotContain("!{projectRoot}/Shared.cs", StringInputs(targets, "build:net10.0"));
+        var releaseOutputs = modern.GetProperty("configurations").GetProperty("release").GetProperty("nxOutputs")
+            .EnumerateObject().Select(property => property.Value.GetString()).ToArray();
+        Assert.Contains("apps/Debug/products/Release/net10.0/**/*", releaseOutputs);
+        Assert.DoesNotContain(releaseOutputs, path => path!.Contains("products/Debug"));
+        Assert.Equal("build", portable.GetProperty("metadata").GetProperty("variantOf").GetString());
+        var disabled = AnalyzeWorkspace(projectFile, """{"tfmVariants":false}""")
+            .GetProperty("nodesByFile").GetProperty("apps/Debug/Debug.csproj").GetProperty("targets");
+        Assert.False(disabled.TryGetProperty("build:net10.0", out _));
+        Assert.Equal("dotnet build", disabled.GetProperty("build").GetProperty("command").GetString());
+    }
+
+    [Fact]
+    public void MultiTfm_TracksReleaseOnlyCompatibleReferencesAndLinkedInputs()
+    {
+        var projectFile = WriteProject("App", "");
+        var common = Path.Combine(_workspaceRoot, "apps", "Common");
+        Directory.CreateDirectory(common);
+        Directory.CreateDirectory(Path.Combine(_workspaceRoot, "shared"));
+        File.WriteAllText(Path.Combine(_workspaceRoot, "shared", "Linked.cs"), "public class Linked {}");
+        File.WriteAllText(Path.Combine(_workspaceRoot, "shared", "Linked.txt"), "linked copy");
+        File.WriteAllText(Path.Combine(common, "Common.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework></PropertyGroup>
+              <ItemGroup>
+                <Compile Include="../../shared/Linked.cs" Link="Linked.cs" />
+                <None Include="../../shared/Linked.txt" Link="Linked.txt" CopyToOutputDirectory="PreserveNewest" />
+              </ItemGroup>
+            </Project>
+            """);
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks></PropertyGroup>
+              <ItemGroup Condition="'$(Configuration)' == 'Release'">
+                <ProjectReference Include="../Common/Common.csproj" />
+              </ItemGroup>
+            </Project>
+            """);
+        var result = AnalyzeWorkspace(projectFile);
+        var project = result.GetProperty("nodesByFile").GetProperty("apps/App/App.csproj");
+        var leaf = project.GetProperty("targets").GetProperty("build:net10.0");
+        var release = leaf.GetProperty("configurations").GetProperty("release");
+        Assert.Contains(release.GetProperty("nxOutputs").EnumerateObject(),
+            output => output.Value.GetString() == "apps/Common/bin/Release/netstandard2.1/**/*");
+        Assert.DoesNotContain(leaf.GetProperty("configurations").GetProperty("debug").GetProperty("nxOutputs").EnumerateObject(),
+            output => output.Value.GetString()!.Contains("apps/Common"));
+        Assert.Contains(leaf.GetProperty("inputs").EnumerateArray(),
+            input => input.ValueKind == JsonValueKind.String && input.GetString() == "{workspaceRoot}/shared/Linked.cs");
+        Assert.Contains(leaf.GetProperty("inputs").EnumerateArray(),
+            input => input.ValueKind == JsonValueKind.String && input.GetString() == "{workspaceRoot}/shared/Linked.txt");
+        Assert.Contains(result.GetProperty("referencesByRoot").GetProperty("apps/App").GetProperty("refs").EnumerateArray(),
+            reference => reference.GetString() == "apps/Common");
+    }
+
+    [Fact]
+    public void UserGlobalProperty_CanReintroduceAnExcludedConditionalSource()
+    {
+        var projectFile = WriteProject("Conditional", "");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(projectFile)!, "Conditional.cs"), "public class Conditional {}");
+        File.WriteAllText(projectFile, """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
+                <EnableExtra>false</EnableExtra>
+              </PropertyGroup>
+              <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' And '$(EnableExtra)' != 'true'">
+                <Compile Remove="Conditional.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        Assert.Contains("!{projectRoot}/Conditional.cs", StringInputs(Analyze(projectFile), "build:net8.0"));
+
+        var info = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        foreach (var argument in new[] { "msbuild", projectFile, "-nologo", "-p:TargetFramework=net8.0", "-p:EnableExtra=true", "-getItem:Compile" })
+        {
+            info.ArgumentList.Add(argument);
+        }
+        using var process = Process.Start(info)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        Assert.True(process.WaitForExit(180_000));
+        Assert.True(process.ExitCode == 0, stderr);
+        var compiled = JsonDocument.Parse(stdout).RootElement.GetProperty("Items").GetProperty("Compile");
+        Assert.Contains(compiled.EnumerateArray(), item => item.GetProperty("Identity").GetString() == "Conditional.cs");
+    }
+
     private static string[] StringInputs(Dictionary<string, JsonElement> targets, string targetName) =>
         [.. targets[targetName].GetProperty("inputs").EnumerateArray()
             .Where(i => i.ValueKind == JsonValueKind.String)
@@ -122,9 +241,12 @@ public class AnalyzerSmokeTests : IDisposable
     [Fact]
     public void DefaultProject_DeclaresBinAndObj()
     {
-        var targets = Analyze(WriteProject("MyLib", ""));
+        var result = AnalyzeWorkspace(WriteProject("MyLib", ""));
+        var project = result.GetProperty("nodesByFile").GetProperty("apps/MyLib/MyLib.csproj");
+        var targets = project.GetProperty("targets").EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
 
         Assert.Equal(new[] { "{projectRoot}/bin", "{projectRoot}/obj" }, Outputs(targets, "build"));
+        Assert.Equal("""{"technologies":["dotnet","C#"]}""", project.GetProperty("metadata").GetRawText());
     }
 
     [Fact]

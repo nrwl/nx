@@ -11,7 +11,7 @@ namespace MsbuildAnalyzer;
 /// <summary>
 /// Analyzes .NET projects using MSBuild to generate Nx project configurations.
 /// </summary>
-public static class Analyzer
+public static partial class Analyzer
 {
     /// <summary>
     /// Analyzes a workspace containing .NET projects.
@@ -73,16 +73,9 @@ public static class Analyzer
         ProjectGraph projectGraph;
         using (var graphPerf = PerfLogger.Start("analyze workspace > create project graph"))
         {
-            // Evaluation only. The SDK's default EmbeddedResource, None and Content globs
-            // are switched off: they walk every file under each project directory to
-            // produce items that all sit inside it, and the only items read here are the
-            // explicit ones linked in from outside, which survive. Compile stays on
-            // because its evaluated items are the only faithful answer to "what does this
-            // project compile" (excludes, Remove/Update entries, hand-listed sources),
-            // which per-class test splitting needs; it costs a few milliseconds per
-            // project. The shared context caches SDK resolution and directory listings
-            // across the projects.
-            var globalProperties = new Dictionary<string, string>
+            // Variants need evaluated default resources as well as Compile items.
+            // Opting out retains the lighter evaluation used by unqualified targets.
+            var globalProperties = pluginOptions.TfmVariants ? new Dictionary<string, string>() : new Dictionary<string, string>
             {
                 ["EnableDefaultEmbeddedResourceItems"] = "false",
                 ["EnableDefaultNoneItems"] = "false",
@@ -164,10 +157,10 @@ public static class Analyzer
                     // Collect package references from primary node
                     var packageRefs = CollectPackageReferences(primaryNode.ProjectInstance!);
 
-                    // Collect direct project references from the primary node's ProjectInstance.
-                    // Uses GetItems("ProjectReference") which returns only DIRECT references,
-                    // with glob patterns already evaluated by MSBuild during project loading.
-                    var projectRefs = CollectProjectReferences(primaryNode.ProjectInstance!, projectPath, workspaceRoot);
+                    // Combine direct references across evaluated inner builds.
+                    var projectRefs = nodes.SelectMany(node =>
+                        CollectProjectReferences(node.ProjectInstance, projectPath, workspaceRoot))
+                        .Distinct().ToList();
 
                     // Collect MSBuild properties from primary node
                     var properties = CollectProperties(primaryNode.ProjectInstance!);
@@ -215,7 +208,18 @@ public static class Analyzer
                     evaluationInputs.Add(relativeProjectFile);
                     evaluationInputs.UnionWith(ProjectUtilities.GetWorkspaceRelativePaths(workspaceRoot, importPaths));
 
-                    var targets = TargetBuilder.BuildTargets(
+                    var frameworkVariants = pluginOptions.TfmVariants
+                        ? CollectFrameworkVariants(nodes, projectPath, workspaceRoot, nxJson, directoryFilesByDir, evaluationInputs)
+                        : null;
+                    if (frameworkVariants is not null)
+                    {
+                        projectRefs = projectRefs.Concat(frameworkVariants.SelectMany(variant => variant.References.Values)
+                            .SelectMany(references => references)
+                            .Select(reference => ProjectUtilities.GetRelativeProjectRoot(reference.ProjectFile, workspaceRoot)))
+                            .Distinct().ToList();
+                    }
+
+                    var buildResult = TargetBuilder.BuildTargets(
                         projectName,
                         Path.GetFileName(projectPath),
                         isTest,
@@ -226,17 +230,19 @@ public static class Analyzer
                         workspaceRoot,
                         pluginOptions,
                         nxJson,
-                        directoryBuildInputs
+                        directoryBuildInputs,
+                        frameworkVariants
                     );
 
                     nodesByFile[relativeProjectFile] = new NxProjectGraphNode
                     {
                         Name = projectName,
                         Root = projectRoot,
-                        Targets = targets,
+                        Targets = buildResult.Targets,
                         Metadata = new Models.ProjectMetadata
                         {
-                            Technologies = ProjectUtilities.GetTechnologies(projectPath)
+                            Technologies = ProjectUtilities.GetTechnologies(projectPath),
+                            TargetGroups = buildResult.TargetGroups
                         }
                     };
 
@@ -265,8 +271,7 @@ public static class Analyzer
     }
 
     /// <summary>
-    /// Item types whose includes are build inputs. Only entries resolving outside the
-    /// project directory are declared; the rest are covered by the {projectRoot} input.
+    /// Evaluated item types whose includes feed the build.
     /// </summary>
     private static readonly string[] LinkedItemTypes = { "Compile", "AdditionalFiles", "EmbeddedResource", "Content" };
 
