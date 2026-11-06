@@ -408,6 +408,50 @@ export function readTargetDefaultsForTarget(
   );
 }
 
+/**
+ * The `targetDefaults` graph construction applies to a target running
+ * `executor`, with the key they resolve from. Entries incompatible with the
+ * target are dropped, so `config` is `{}` when none of the key's entries apply.
+ */
+export function resolveApplicableTargetDefaults(
+  targetName: string,
+  targetDefaults: TargetDefaults | undefined,
+  executor: string | undefined,
+  opts: {
+    projectName?: string;
+    projectNode?: ProjectGraphProjectNode;
+    sourcePlugin?: string;
+  }
+): { key: string; config: Partial<TargetConfiguration> } | null {
+  if (!targetDefaults) return null;
+  const resolved = resolveTargetDefaultMatches(
+    normalizeTargetDefaults(targetDefaults),
+    targetName,
+    {
+      executor,
+      projectName: opts.projectName,
+      projectNode: opts.projectNode,
+      sourcePlugin: opts.sourcePlugin,
+      command: undefined,
+    }
+  );
+  if (!resolved) return null;
+
+  let config: Partial<TargetConfiguration> | null = null;
+  for (const match of resolved.matches) {
+    const synthetic = resolveCommandSyntacticSugar(
+      deepClone(match.config),
+      opts.projectNode?.data.root ?? targetName
+    );
+    if (!isCompatibleTarget({ executor }, synthetic)) continue;
+    config =
+      config === null
+        ? match.config
+        : mergeTargetConfigurations(match.config, config);
+  }
+  return { key: resolved.key, config: config ?? {} };
+}
+
 interface MatchContext {
   executor: string | undefined;
   projectName: string | undefined;
