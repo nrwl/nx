@@ -227,30 +227,35 @@ describe('run-commands completion', () => {
     expect((await task.getResults()).code).toBe(0);
   });
 
-  it("keeps a failed command's exit code when a sibling's readyWhen text follows it", async () => {
-    const failing = mockChild();
-    const serving = mockChild();
-    mockSpawnQueue = [failing, serving];
-    const task = await runCommands(
-      {
-        commands: ['check', 'serve'],
-        parallel: true,
-        readyWhen: 'READY',
-        streamOutput: false,
-        __unparsed__: [],
-      },
-      { root: '.' } as any,
-      { id: 'lib:serve' }
-    );
-    failing.exit(1);
-    await nextTurn();
-    serving.stdout.emit('data', 'READY\n');
-    // Readiness is shared, so this chunk must not count as the failed command's ready text.
-    failing.stdout.emit('data', 'TAIL\n');
-    failing.emit('close', 1, null);
+  it.each([
+    [1, 'TAIL\n'],
+    [0, 'READY\n'],
+  ])(
+    "ends with %i when a failed command's %j is read after a sibling's readyWhen text",
+    async (code, chunk) => {
+      const failing = mockChild();
+      const serving = mockChild();
+      mockSpawnQueue = [failing, serving];
+      const task = await runCommands(
+        {
+          commands: ['check', 'serve'],
+          parallel: true,
+          readyWhen: 'READY',
+          streamOutput: false,
+          __unparsed__: [],
+        },
+        { root: '.' } as any,
+        { id: 'lib:serve' }
+      );
+      failing.exit(1);
+      await nextTurn();
+      serving.stdout.emit('data', 'READY\n');
+      failing.stdout.emit('data', chunk);
+      failing.emit('close', 1, null);
 
-    expect((await task.getResults()).code).toBe(1);
-  });
+      expect((await task.getResults()).code).toBe(code);
+    }
+  );
 
   it('stops parallel siblings when a command exits non-zero, before its output is read', async () => {
     const failing = mockChild();

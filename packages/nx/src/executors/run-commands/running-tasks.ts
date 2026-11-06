@@ -683,9 +683,16 @@ class RunningNodeProcess implements RunningTask {
   private addListeners(commandConfig: RunCommandsCommandOptions) {
     this.childProcess.stdout.setEncoding('utf8');
     this.childProcess.stderr.setEncoding('utf8');
+    const exitedWithFailure = () => this.exitedWithFailure;
     // Separate matchers, so a ready string never spans stdout and stderr
-    const stdoutReady = readyWhenMatcher(this.readyWhenStatus);
-    const stderrReady = readyWhenMatcher(this.readyWhenStatus);
+    const stdoutReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
+    const stderrReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
@@ -883,28 +890,35 @@ function isReady(
 // sequences. LogMatcher, absent from the WASM binding, matches text with
 // escapes inside it.
 function readyWhenMatcher(
-  readyWhenStatus: { stringToMatch: string; found: boolean }[]
+  readyWhenStatus: { stringToMatch: string; found: boolean }[],
+  exitedWithFailure: () => boolean
 ): (chunk: string) => boolean {
   const matchers = readyWhenStatus.map((status) => ({
     status,
     matcher: IS_WASM ? null : new LogMatcher([status.stringToMatch]),
     tail: '',
+    matched: false,
   }));
   return (chunk) => {
-    // All commands share the status, so only the chunk that completes it
-    // reports ready. A later chunk would credit whichever command printed it.
-    if (isReady(readyWhenStatus)) return false;
+    // The status is shared, so only a chunk with this command's own match
+    // reports ready. Once ready, only a failed command can change the result.
+    if (isReady(readyWhenStatus) && !exitedWithFailure()) return false;
+    let matchedNow = false;
     for (const entry of matchers) {
       const { status, matcher } = entry;
-      if (status.found) continue;
+      if (entry.matched) continue;
       const printed = entry.tail + chunk;
-      status.found =
+      entry.matched =
         printed.includes(status.stringToMatch) || !!matcher?.feed(chunk);
       entry.tail = printed.slice(
         Math.max(0, printed.length - status.stringToMatch.length + 1)
       );
+      if (entry.matched) {
+        status.found = true;
+        matchedNow = true;
+      }
     }
-    return isReady(readyWhenStatus);
+    return matchedNow && isReady(readyWhenStatus);
   };
 }
 
