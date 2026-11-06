@@ -32,6 +32,12 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { performance, PerformanceMeasure } from 'node:perf_hooks';
+import {
+  probeCommandEnd,
+  probeCommandStart,
+  probeStep,
+  wasProbed,
+} from './pressure-probe';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
@@ -218,6 +224,11 @@ export function newProject({
   keepBackup?: boolean;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
+  const newProjectProbe = probeCommandStart(
+    'newProject',
+    `newProject ${packageManager} ${preset} ${(packages ?? []).join(' ')}`,
+    e2eCwd
+  );
   try {
     const projScope = 'proj';
     const stagingDirectory = `${e2eCwd}/${projScope}`;
@@ -240,21 +251,23 @@ export function newProject({
         removeSync(stagingDirectory);
         ensureDirSync(stagingDirectory);
         // Its own process because newProject() is synchronous and tar-stream is not.
-        execFileSync(
-          process.execPath,
-          [
-            join(
-              __dirname,
-              '..',
-              '..',
-              'scripts',
-              'local-registry',
-              'extract-e2e-base-workspace.mjs'
-            ),
-            sharedBase,
-            stagingDirectory,
-          ],
-          { stdio: 'pipe' }
+        probeStep('templateExtract', sharedBase, stagingDirectory, () =>
+          execFileSync(
+            process.execPath,
+            [
+              join(
+                __dirname,
+                '..',
+                '..',
+                'scripts',
+                'local-registry',
+                'extract-e2e-base-workspace.mjs'
+              ),
+              sharedBase,
+              stagingDirectory,
+            ],
+            { stdio: 'pipe' }
+          )
         );
         if (packageManager === 'pnpm') {
           alignPnpmStoreDir(stagingDirectory);
@@ -323,14 +336,21 @@ export function newProject({
         console.info('No packages to install');
       }
       // stop the daemon
-      execSync(`${getPackageManagerCommand({ packageManager }).runNx} reset`, {
-        cwd: stagingDirectory,
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        env: getStrippedEnvironmentVariables(stagingDirectory),
-      });
+      probeStep('nxReset', 'nx reset', stagingDirectory, () =>
+        execSync(
+          `${getPackageManagerCommand({ packageManager }).runNx} reset`,
+          {
+            cwd: stagingDirectory,
+            stdio: isVerbose() ? 'inherit' : 'pipe',
+            env: getStrippedEnvironmentVariables(stagingDirectory),
+          }
+        )
+      );
 
       if (keepBackup || builtOnce.has(packageManager)) {
-        copySync(stagingDirectory, backupPath);
+        probeStep('backupCopy', backupPath, stagingDirectory, () =>
+          copySync(stagingDirectory, backupPath)
+        );
       } else {
         builtOnce.add(packageManager);
       }
@@ -343,10 +363,14 @@ export function newProject({
       // Nothing has copied this workspace yet, so pnpm's links still resolve;
       // renaming it into place avoids the reinstall below.
       if (resolve(stagingDirectory) !== resolve(projectDirectory)) {
-        moveSync(stagingDirectory, projectDirectory);
+        probeStep('moveIntoPlace', projectDirectory, stagingDirectory, () =>
+          moveSync(stagingDirectory, projectDirectory)
+        );
       }
     } else {
-      copySync(backupPath, projectDirectory);
+      probeStep('restoreCopy', projectDirectory, backupPath, () =>
+        copySync(backupPath, projectDirectory)
+      );
     }
 
     const dependencies = readJsonFile(
@@ -359,13 +383,21 @@ export function newProject({
     } else if (!builtHere && packageManager === 'pnpm') {
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
+      let reinstallProbe: ReturnType<typeof probeCommandStart> = null;
       try {
-        execSync(getPackageManagerCommand().install, {
+        const installCommand = getPackageManagerCommand().install;
+        reinstallProbe = probeCommandStart(
+          'pnpmReinstall',
+          installCommand,
+          projectDirectory
+        );
+        const reinstallOutput = execSync(installCommand, {
           cwd: projectDirectory,
           stdio: 'pipe',
           env: { CI: 'true', ...process.env },
           encoding: 'utf-8',
         });
+        probeCommandEnd(reinstallProbe, undefined, undefined, reinstallOutput);
         // pnpm 12 skips an install whose lockfile is unchanged, so the copied bin
         // shims keep NODE_PATHs into the staging directory the backup was built in.
         repointPnpmBinShims(
@@ -376,6 +408,7 @@ export function newProject({
       } catch (e) {
         console.log('newProject() - reinstall pnpm dependencies failed');
         console.error('Full error:', e);
+        probeCommandEnd(reinstallProbe, e, `${e?.stdout}\n\n${e?.stderr}`);
         throw e;
       }
     }
@@ -416,9 +449,17 @@ ${
     );
 
     openInEditor(projectDirectory);
+    probeCommandEnd(newProjectProbe);
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
+    probeCommandEnd(
+      newProjectProbe,
+      e,
+      wasProbed(e)
+        ? undefined
+        : `${e?.message}\n${e?.stdout ?? ''}\n${e?.stderr ?? ''}`
+    );
     throw e;
   }
 }
@@ -587,6 +628,7 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
+  const createProbe = probeCommandStart('createWorkspace', command, cwd);
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
@@ -598,6 +640,7 @@ export function runCreateWorkspace(
       },
       encoding: 'utf-8',
     });
+    probeCommandEnd(createProbe);
 
     if (isVerbose()) {
       output.log({
@@ -610,6 +653,7 @@ export function runCreateWorkspace(
     return create;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    probeCommandEnd(createProbe, e, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
 }
@@ -682,6 +726,7 @@ export function packageInstall(
     mode === 'dev' ? pm.addDev : pm.addProd
   } ${pkgsWithVersions}`;
 
+  const installProbe = probeCommandStart('packageInstall', command, cwd);
   try {
     const install = execSync(command, {
       cwd,
@@ -689,6 +734,7 @@ export function packageInstall(
       env: process.env,
       encoding: 'utf-8',
     });
+    probeCommandEnd(installProbe, undefined, undefined, install);
 
     if (isVerbose()) {
       output.log({
@@ -701,6 +747,7 @@ export function packageInstall(
     return install;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
+    probeCommandEnd(installProbe, e, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
 }

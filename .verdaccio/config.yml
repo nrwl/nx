@@ -41,10 +41,13 @@ packages:
     proxy: npmjs
 
 # log settings
+# Temporary CI diagnostics: JSON request logs for scripts/ci-pressure-probe.
+# `http` is verdaccio's request level and sits below `info`. Never merge.
 logs:
-  type: stdout
-  format: pretty
-  level: warn
+  type: file
+  path: /tmp/nx-pressure-probe-verdaccio.log
+  format: json
+  level: http
 
 publish:
   allow_offline: true # set offline to true to allow publish offline
