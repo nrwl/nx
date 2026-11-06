@@ -383,7 +383,7 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 
 Invoke `npx nx-cloud start-workers` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
 
-Nx Cloud reads your CI configuration from a [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) file, and this command starts one of its `worker-templates` entries. Nx Cloud reads the file from your repository at the commit of the run.
+Nx Cloud reads your CI configuration from a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file, and this command starts one of its `worker-templates` entries. Nx Cloud reads the file from your repository at the commit of the run.
 
 **Usage:**
 
@@ -392,7 +392,7 @@ npx nx-cloud start-workers [--workers <name>] [--config <path>]
 ```
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 5 linux-large
@@ -407,10 +407,10 @@ worker-templates:
 | Option      | Type   | Description                                                                       | Default                 |
 | ----------- | ------ | --------------------------------------------------------------------------------- | ----------------------- |
 | `--workers` | string | Entry in `worker-templates` to start. Required when the file has several entries. | The only entry          |
-| `--config`  | string | CI configuration file to read.                                                    | `.nx/workflows/ci.yaml` |
+| `--config`  | string | CI configuration file to read.                                                    | `.nx/pipelines/ci.yaml` |
 
 {% aside type="caution" title="start-workers and start-ci-run are separate paths" %}
-`start-ci-run` takes its configuration from CLI flags and doesn't read `.nx/workflows/ci.yaml`.
+`start-ci-run` takes its configuration from CLI flags and doesn't read `.nx/pipelines/ci.yaml`.
 Pick one path for each pipeline: the file with `start-workers`, or CLI flags with `start-ci-run`.
 {% /aside %}
 
@@ -424,7 +424,7 @@ To move from `.nx/ci-config.yaml` or from `start-ci-run` flags, see [migrate to 
 
 ### `nx-cloud start-ci-run`
 
-`start-ci-run` configures a CI run through CLI flags. To keep your configuration in a versioned file, use [`start-workers`](#nx-cloud-start-workers) with a [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
+`start-ci-run` configures a CI run through CLI flags. To keep your configuration in a versioned file, use [`start-workers`](#nx-cloud-start-workers) with a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file instead.
 
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
 

@@ -14,15 +14,15 @@ On Workers, you don't need assignment rules to size how many tasks run at once.
 To keep tasks that share a resource, such as a port, off the same agent at the same time, use [`scheduling-constraints`](/docs/reference/nx-cloud/ci-config#scheduling-constraints).
 
 {% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
 `dte.assignment-rules` is now `assignment-rules` on a worker entry.
 The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
 {% /aside %}
 
-Assignment rules are written in `yaml` and live on a worker entry in `.nx/workflows/ci.yaml`, under [`assignment-rules`](/docs/reference/nx-cloud/ci-config#assignment-rules):
+Assignment rules are written in `yaml` and live on a worker entry in `.nx/pipelines/ci.yaml`, under [`assignment-rules`](/docs/reference/nx-cloud/ci-config#assignment-rules):
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 5 linux-medium-js; 1 linux-large-js
@@ -41,7 +41,7 @@ Each assignment rule has one of the following properties that it matches against
 {% tabitem label="Assignment rules with Workers" %}
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 5 linux-medium-js; 5 linux-large-js
@@ -434,7 +434,7 @@ jobs:
 A typical worker entry might look like this:
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 5 linux-medium-js; 5 linux-large-js
@@ -483,7 +483,7 @@ jobs:
 #### Invalid assignment rules example
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     # Invalid `small` count that is missing `linux-large-js`. Tasks assigned to large agents won't be able to execute.
@@ -516,7 +516,7 @@ worker-templates:
 #### Valid assignment rules example
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     workers: 3 linux-small-js; 2 linux-medium-js; 1 linux-large-js

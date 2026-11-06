@@ -24,7 +24,7 @@ Before touching anything, verify the workspace state:
 - **Yes, but it calls raw tooling directly** (`jest`, `tsc`, `eslint`, etc.): work with me to update it. Propose minimal edits swapping the raw calls for `nx run-many -t <task>` or `nx run <project>:<task>`. Show me the diff and wait for approval before writing.
 - **No**: run `nx g @nx/workspace:ci-workflow --ci=<provider>`. Detect the provider from `git remote -v` (github.com -> `github`, gitlab.com -> `gitlab`, etc.). Ask me if it's ambiguous.
 
-If `.nx/workflows/ci.yaml` has `on` and `jobs`, the pipeline runs on Nx Cloud CI, so leave provider workflows alone. If `.nx/ci-config.yaml` exists, tell me it's deprecated and point me to /docs/kb/migrate-from-ci-config.
+If `.nx/pipelines/ci.yaml` has `on` and `jobs`, the pipeline runs on Nx Cloud CI, so leave provider workflows alone. If `.nx/ci-config.yaml` exists, tell me it's deprecated and point me to /docs/kb/migrate-from-ci-config.
 
 Then connect to Nx Cloud:
 
@@ -38,11 +38,11 @@ Page: {pageUrl}
 {% /llm_copy_prompt %}
 
 Connect your workspace to Nx Cloud for remote caching, run your pipeline on your CI provider or on Nx Cloud, then add workers to split tasks across machines.
-Both use the same [`.nx/workflows/ci.yaml`](/docs/reference/nx-cloud/ci-config) file.
+Both use the same [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file.
 For a finished pipeline, jump to the [complete example](#complete-example).
 
 {% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/workflows/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
+`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
 The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
 {% /aside %}
 
@@ -122,7 +122,7 @@ The generated workflow also includes the Nx Cloud steps described below.
 {% tabitem label="Nx Cloud CI" %}
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 # ... name and triggers
 jobs:
   main:
@@ -146,10 +146,10 @@ With Workers, your tasks run across several machines instead of one.
 With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep agents close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
-Set the number of workers in `.nx/workflows/ci.yaml`:
+Set the number of workers in `.nx/pipelines/ci.yaml`:
 
 ```yaml
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 worker-templates:
   default: 3 linux-large-js
 ```
@@ -175,7 +175,7 @@ jobs:
 {% tabitem label="Nx Cloud CI" %}
 
 ```yaml {% meta="{5}" %}
-# .nx/workflows/ci.yaml
+# .nx/pipelines/ci.yaml
 jobs:
   main:
     runs-on: linux-medium-js
@@ -200,7 +200,7 @@ These pipelines combine affected, remote caching, and distribution.
 {% tabitem label="External CI" %}
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 worker-templates:
   default:
     # Distribute across 3 agents using the linux-large-js launch template
@@ -234,7 +234,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      # Provisions the agents declared in .nx/workflows/ci.yaml.
+      # Provisions the agents declared in .nx/pipelines/ci.yaml.
       # Run it before installing dependencies so agents boot while this job installs.
       - run: npx nx-cloud start-workers
 
@@ -259,7 +259,7 @@ For CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket Pipelines, see [CI
 {% tabitem label="Nx Cloud CI" %}
 
 ```yaml
-// .nx/workflows/ci.yaml
+// .nx/pipelines/ci.yaml
 name: CI
 
 on:
