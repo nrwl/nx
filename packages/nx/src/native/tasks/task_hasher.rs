@@ -149,6 +149,14 @@ pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
 }
 
+#[napi(object)]
+pub struct RehashPlanInputs {
+    pub files: Vec<String>,
+    pub globs: Vec<String>,
+    pub source_only: bool,
+    pub directories: Vec<String>,
+}
+
 /// Return type of `hash_plans`. Shares JS strings for pooled detail keys and
 /// values across tasks during a single conversion. The cache owns its Arcs
 /// and is cleared before the native call's handle scope ends.
@@ -311,6 +319,92 @@ pub struct TaskHasher {
 }
 #[napi]
 impl TaskHasher {
+    #[napi]
+    pub fn get_rehash_files(&self) -> Vec<FileData> {
+        self.all_workspace_files.as_ref().clone()
+    }
+
+    /// Replay requirements, without reading the filesystem or executing inputs.
+    #[napi]
+    pub fn get_rehash_plan_inputs(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        plans: &External<HashPlans>,
+    ) -> anyhow::Result<HashMap<String, RehashPlanInputs>> {
+        let mut result = HashMap::new();
+        for (id, instructions) in &plans.plans {
+            let mut inputs = RehashPlanInputs {
+                files: vec![],
+                globs: vec![],
+                source_only: true,
+                directories: vec![],
+            };
+            for instruction in instructions {
+                match &*plans.pool.get(*instruction) {
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                    } => {
+                        inputs.globs.extend(globs.clone());
+                        inputs.directories.extend(
+                            globs
+                                .iter()
+                                .filter(|g| {
+                                    !g.starts_with('!')
+                                        && partition_glob(&normalize_glob(g)).1.is_some()
+                                })
+                                .map(|g| crate::native::tasks::hash_planner::walk_root(g)),
+                        );
+                        inputs.files.extend(
+                            crate::native::tasks::hashers::expand_source_globs(
+                                globs,
+                                project_roots,
+                                self.all_workspace_files.iter().map(|f| f.file.clone()),
+                            )?
+                            .files,
+                        );
+                    }
+                    HashInstruction::WorkspaceFileSet(globs) => {
+                        inputs.files.extend(collect_workspace_file_paths_cached(
+                            globs,
+                            &self.all_workspace_files,
+                            &self.workspace_file_indices_cache,
+                        )?)
+                    }
+                    HashInstruction::ProjectFileSet(project, globs) => {
+                        inputs.files.extend(collect_project_file_paths_cached(
+                            project,
+                            globs,
+                            &self.project_file_map,
+                            &self.project_file_indices_cache,
+                        )?)
+                    }
+                    HashInstruction::TsConfiguration(_) => {
+                        if let Some(path) = &self.root_tsconfig_path {
+                            inputs.files.push(
+                                Path::new(path)
+                                    .strip_prefix(&self.workspace_root)
+                                    .unwrap_or(Path::new(path))
+                                    .to_string_lossy()
+                                    .replace('\\', "/"),
+                            );
+                        }
+                    }
+                    HashInstruction::Environment(name) if name == "NX_CLOUD_ENCRYPTION_KEY" => {}
+                    HashInstruction::Environment(_)
+                    | HashInstruction::Runtime(_)
+                    | HashInstruction::TaskOutput(..)
+                    | HashInstruction::JsonFileSet(_)
+                    | HashInstruction::Cwd(_) => inputs.source_only = false,
+                    _ => {}
+                }
+            }
+            inputs.files.sort();
+            inputs.files.dedup();
+            result.insert(id.clone(), inputs);
+        }
+        Ok(result)
+    }
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
@@ -393,6 +487,197 @@ impl TaskHasher {
 
     fn workspace_file_hash(&self, path: &str) -> Option<String> {
         self.workspace_file_index.hash_of(path)
+    }
+
+    /// Fail closed for rehash inputs whose execution-time state this hasher
+    /// does not hold. Called before AND after hashing. The immutable FileData
+    /// references are the evidence for source contents, not the live disk index.
+    #[napi]
+    pub fn validate_rehash_plans(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        plans: &External<HashPlans>,
+        outputs: Vec<String>,
+        written_files: Vec<String>,
+    ) -> anyhow::Result<HashMap<String, String>> {
+        use crate::native::cache::expand_outputs::match_output_paths;
+        use crate::native::hasher::hash_file_path;
+        let mut skipped = HashMap::new();
+        // Sharing these checks across plans avoids reading common source files
+        // once per dependent. Never persist them across calls/tasks executing.
+        let mut checked: HashMap<String, Option<&str>> = HashMap::new();
+        let mut pending = Vec::new();
+        for (task_id, ids) in &plans.plans {
+            let mut files = Vec::new();
+            let mut reason = None;
+            for id in ids {
+                match &*plans.pool.get(*id) {
+                    HashInstruction::Runtime(_) => reason = Some("runtime-input"),
+                    HashInstruction::TaskOutput(..) => reason = Some("dependency-output"),
+                    HashInstruction::JsonFileSet(_) => reason = Some("json-input"),
+                    HashInstruction::IgnoredFileSet {
+                        globs,
+                        project_roots,
+                    } => {
+                        for glob in globs.iter().filter(|g| !g.starts_with('!')) {
+                            if partition_glob(&normalize_glob(glob)).1.is_none()
+                                && !self.workspace_tracks_file(glob)
+                            {
+                                reason = Some("non-source-input");
+                                break;
+                            }
+                        }
+                        files.extend(
+                            crate::native::tasks::hashers::expand_source_globs(
+                                globs,
+                                project_roots,
+                                self.all_workspace_files.iter().map(|f| f.file.clone()),
+                            )?
+                            .files,
+                        );
+                    }
+                    HashInstruction::ProjectFileSet(project, globs) => {
+                        files.extend(collect_project_file_paths_cached(
+                            project,
+                            globs,
+                            &self.project_file_map,
+                            &self.project_file_indices_cache,
+                        )?);
+                    }
+                    HashInstruction::WorkspaceFileSet(globs) => {
+                        files.extend(collect_workspace_file_paths_cached(
+                            globs,
+                            &self.all_workspace_files,
+                            &self.workspace_file_indices_cache,
+                        )?);
+                    }
+                    HashInstruction::TsConfiguration(_) => {
+                        if let Some(path) = &self.root_tsconfig_path {
+                            let path = Path::new(path);
+                            let relative = path.strip_prefix(&self.workspace_root).unwrap_or(path);
+                            files.push(relative.to_string_lossy().replace('\\', "/"));
+                        }
+                    }
+                    HashInstruction::Environment(_)
+                    | HashInstruction::Cwd(_)
+                    | HashInstruction::External(_)
+                    | HashInstruction::AllExternalDependencies
+                    | HashInstruction::ProjectConfiguration(_)
+                    | HashInstruction::UltracacheConfiguration(_) => {}
+                }
+                if reason.is_some() {
+                    break;
+                }
+            }
+            if let Some(reason) = reason {
+                skipped.insert(task_id.clone(), reason.to_string());
+            } else {
+                pending.push((task_id, files));
+            }
+        }
+        let files: Vec<String> = pending
+            .iter()
+            .flat_map(|(_, files)| files.iter().cloned())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+        let generated: HashSet<String> = files
+            .iter()
+            .cloned()
+            .zip(match_output_paths(outputs, files.clone())?)
+            .filter_map(|(file, matched)| matched.then_some(file))
+            .collect();
+        let written_files: HashSet<String> = written_files.into_iter().collect();
+        for (task_id, files) in pending {
+            let mut reason = None;
+            for file in &files {
+                if Path::new(file).ancestors().any(|path| {
+                    path.to_str()
+                        .is_some_and(|path| written_files.contains(path))
+                }) {
+                    reason = Some("input-written");
+                    break;
+                }
+                if generated.contains(file) {
+                    reason = Some("generated-input");
+                    break;
+                }
+                let result = checked.entry(file.clone()).or_insert_with(|| {
+                    let Some(expected) = self.workspace_file_hash(file) else {
+                        return Some("non-source-input");
+                    };
+                    // A source path may not escape through a symlink, even
+                    // when its target currently has the expected contents.
+                    let mut path = Path::new(&self.workspace_root).to_path_buf();
+                    for component in Path::new(file).components() {
+                        if !matches!(component, std::path::Component::Normal(_)) {
+                            return Some("non-source-input");
+                        }
+                        path.push(component);
+                        if std::fs::symlink_metadata(&path)
+                            .map_or(true, |m| m.file_type().is_symlink())
+                        {
+                            return Some("non-source-input");
+                        }
+                    }
+                    if hash_file_path(path).as_ref() != Some(&expected) {
+                        Some("source-changed")
+                    } else {
+                        None
+                    }
+                });
+                if result.is_some() {
+                    reason = *result;
+                    break;
+                }
+            }
+            if let Some(reason) = reason {
+                skipped.insert(task_id.clone(), reason.to_string());
+            }
+        }
+        Ok(skipped)
+    }
+
+    /// Only validated source plans reach this path. Every disk-backed positive
+    /// is an exact file in FileData, so NothingRan resolves it AND its hash
+    /// from that immutable map, without touching the mutable ignored index.
+    #[napi(ts_return_type = "Record<string, HashDetails>")]
+    pub fn hash_plans_for_rehash(
+        &self,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        plans: &External<HashPlans>,
+        per_task_envs: HashMap<String, HashMap<String, String>>,
+        cwd: String,
+        outputs: Vec<String>,
+        written_files: Vec<String>,
+    ) -> anyhow::Result<TaskHashes> {
+        let skipped = self.validate_rehash_plans(plans, outputs, written_files)?;
+        let eligible = HashPlans {
+            pool: plans.pool.clone(),
+            plans: plans
+                .plans
+                .iter()
+                .filter(|(id, _)| !skipped.contains_key(*id))
+                .map(|(id, instructions)| (id.clone(), instructions.clone()))
+                .collect(),
+            deferred: std::collections::HashSet::new(),
+        };
+        for id in eligible.plans.keys() {
+            if !per_task_envs.contains_key(id) {
+                anyhow::bail!("missing env entry for task {}", id);
+            }
+        }
+        self.hash_plans_impl(
+            &eligible,
+            cwd,
+            Some(false),
+            RunStage::SourceSnapshot,
+            |id| {
+                per_task_envs
+                    .get(id)
+                    .expect("per-task env presence verified")
+            },
+        )
     }
 
     /// Hash each task's instructions using the env map keyed by `task.id`.
@@ -831,6 +1116,13 @@ impl TaskHasher {
                 };
                 let key = format!("files#{id}");
                 let expansion = expand_cached(&key, files_expansion_cache, || {
+                    if run_stage == RunStage::SourceSnapshot {
+                        return crate::native::tasks::hashers::expand_source_globs(
+                            globs,
+                            project_roots,
+                            self.all_workspace_files.iter().map(|f| f.file.clone()),
+                        );
+                    }
                     expand_globs(
                         workspace_root,
                         globs,
@@ -845,7 +1137,7 @@ impl TaskHasher {
                     workspace_root,
                     &expansion,
                     |path| {
-                        if run_stage.nothing_ran() {
+                        if run_stage.nothing_ran() || run_stage == RunStage::SourceSnapshot {
                             self.workspace_file_hash(path)
                         } else {
                             None
@@ -1071,6 +1363,94 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
+
+    #[test]
+    fn rehash_uses_source_snapshot_even_if_disk_changes_after_validation() {
+        use crate::native::test_utils::{graph_of_roots, hash_plans};
+        let temp = tempfile::tempdir().unwrap();
+        let file = temp.path().join("learned.txt");
+        std::fs::write(&file, "execution input").unwrap();
+        let files = Arc::new(vec![FileData {
+            file: "learned.txt".into(),
+            hash: hash(b"execution input"),
+        }]);
+        let hasher = TaskHasher {
+            workspace_root: temp.path().to_string_lossy().into(),
+            project_graph: Arc::new(graph_of_roots(&[])),
+            project_file_map: Arc::new(HashMap::new()),
+            all_workspace_files: Arc::clone(&files),
+            ts_config: b"{}".to_vec(),
+            ts_config_paths: HashMap::new(),
+            root_tsconfig_path: None,
+            options: None,
+            external_cache: Arc::new(DashMap::new()),
+            workspace_file_set_cache: WorkspaceFileSetCache::new(),
+            project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
+            all_externals_hash: OnceCell::new(),
+            workspace_file_index: WorkspaceFileIndex::new(files),
+            ignored_index: Arc::new(IgnoredIndexReader::unwatched()),
+        };
+        let plans = External::new(hash_plans(&[(
+            "app:build",
+            vec![HashInstruction::IgnoredFileSet {
+                globs: vec!["learned.txt".into()],
+                project_roots: vec![],
+            }],
+        )]));
+        assert!(
+            hasher
+                .validate_rehash_plans(&plans, vec![], vec![])
+                .unwrap()
+                .is_empty()
+        );
+        let env = HashMap::new();
+        let before = hasher
+            .hash_plans_impl(
+                &plans,
+                temp.path().to_string_lossy().into(),
+                Some(false),
+                RunStage::NothingRan,
+                |_| &env,
+            )
+            .unwrap();
+        // Model the adversarial rewrite between validation and hashing. Rehash
+        // must never publish the current disk's hash for the earlier artifact.
+        std::fs::write(&file, "next run input").unwrap();
+        let frozen = hasher
+            .hash_plans_impl(
+                &plans,
+                temp.path().to_string_lossy().into(),
+                Some(false),
+                RunStage::NothingRan,
+                |_| &env,
+            )
+            .unwrap();
+        let live = hasher
+            .hash_plans_impl(
+                &plans,
+                temp.path().to_string_lossy().into(),
+                Some(false),
+                RunStage::ATaskMayHaveWritten,
+                |_| &env,
+            )
+            .unwrap();
+        assert_eq!(
+            before.0.get("app:build").unwrap().value,
+            frozen.0.get("app:build").unwrap().value
+        );
+        assert_ne!(
+            before.0.get("app:build").unwrap().value,
+            live.0.get("app:build").unwrap().value
+        );
+        assert_eq!(
+            hasher
+                .validate_rehash_plans(&plans, vec![], vec![])
+                .unwrap()["app:build"],
+            "source-changed"
+        );
+    }
 
     #[test]
     fn ranked_assembly_hashes_values_in_key_order_and_folds_shared_keys() {
