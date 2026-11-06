@@ -1,6 +1,7 @@
 use super::mouse_protocol::encode_mouse_event;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::strings::display_width;
+use super::terminal_parser::TerminalParser;
 use super::utils::normalize_newlines;
 use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, resize_master};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
@@ -13,7 +14,6 @@ use std::{
     },
 };
 use tracing::debug;
-use vt100_ctt::Parser;
 use wrap_ansi::wrap_ansi;
 
 /// A wrapper that provides access to the terminal screen without cloning
@@ -25,7 +25,7 @@ use wrap_ansi::wrap_ansi;
 ///
 /// Using Deref allows callers to treat this as if it were a direct reference to Screen.
 pub struct PtyScreenRef<'a> {
-    _guard: RwLockReadGuard<'a, Parser>,
+    _guard: RwLockReadGuard<'a, TerminalParser>,
 }
 
 impl std::ops::Deref for PtyScreenRef<'_> {
@@ -64,7 +64,7 @@ struct ScrollbackState {
 
 #[derive(Clone)]
 pub struct PtyInstance {
-    parser: Arc<RwLock<Parser>>,
+    parser: Arc<RwLock<TerminalParser>>,
     writer: Option<Arc<Mutex<Box<dyn Write + Send>>>>,
     /// Control end of the underlying pty, when the task actually runs in one.
     /// Resizing the parser only changes how we render captured bytes; resizing
@@ -388,7 +388,7 @@ impl PtyInstance {
     }
 
     pub fn interactive(
-        parser: Arc<RwLock<Parser>>,
+        parser: Arc<RwLock<TerminalParser>>,
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
         master: MasterArc,
     ) -> Self {
@@ -421,7 +421,11 @@ impl PtyInstance {
         // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
         let rows = 24;
         let cols = 80;
-        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, Self::SCROLLBACK_SIZE)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(
+            rows,
+            cols,
+            Self::SCROLLBACK_SIZE,
+        )));
         Self {
             parser,
             writer: None,
@@ -448,7 +452,11 @@ impl PtyInstance {
     pub fn non_interactive_with_dimensions(rows: u16, cols: u16) -> Self {
         let rows = rows.max(Self::MIN_ROWS);
         let cols = cols.max(Self::MIN_COLS);
-        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, Self::SCROLLBACK_SIZE)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(
+            rows,
+            cols,
+            Self::SCROLLBACK_SIZE,
+        )));
         Self {
             parser,
             writer: None,
@@ -537,7 +545,7 @@ impl PtyInstance {
             let raw_output = parser_guard.get_raw_output().to_vec();
 
             // Create new parser with new dimensions
-            let mut new_parser = Parser::new(rows, cols, Self::SCROLLBACK_SIZE);
+            let mut new_parser = TerminalParser::new(rows, cols, Self::SCROLLBACK_SIZE);
             new_parser.process(&raw_output);
 
             // Preserve scroll position when possible
@@ -623,7 +631,7 @@ impl PtyInstance {
             }
 
             // Expensive work: create new parser and reparse all output (no locks held!)
-            let mut new_parser = Parser::new(rows, cols, Self::SCROLLBACK_SIZE);
+            let mut new_parser = TerminalParser::new(rows, cols, Self::SCROLLBACK_SIZE);
             new_parser.process(&snapshot);
 
             // Preserve scroll position
@@ -911,7 +919,7 @@ impl PtyInstance {
         if cols == 0 || total == 0 {
             return Vec::new();
         }
-        let mut grid = Parser::new(total.min(u16::MAX as usize) as u16, cols, 0);
+        let mut grid = vt100_ctt::Parser::new(total.min(u16::MAX as usize) as u16, cols, 0);
         grid.process(&formatted);
 
         let needle = query.to_lowercase();
@@ -1097,7 +1105,7 @@ impl PtyInstance {
             let (rows, cols) = screen.size();
             let formatted = screen.all_contents_formatted();
             let scrollback = screen.scrollback();
-            let mut compacted = Parser::new(rows, cols, Self::SCROLLBACK_SIZE);
+            let mut compacted = TerminalParser::new(rows, cols, Self::SCROLLBACK_SIZE);
             compacted.process(&formatted);
             compacted.screen_mut().set_scrollback(scrollback);
             *parser = compacted;
@@ -1112,7 +1120,7 @@ mod tests {
     use std::sync::Arc;
 
     fn create_test_pty_instance(alternate_screen: bool) -> PtyInstance {
-        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 1000)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(24, 80, 1000)));
 
         // Set alternate screen mode if requested
         if alternate_screen {
@@ -1173,6 +1181,39 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect cursor hide as interactive"
         );
+    }
+
+    #[test]
+    fn process_output_keeps_oversized_counts_in_raw_output() {
+        let pty = create_test_pty_instance(false);
+        let input = b"abc\r\x1b[65535@\x1b[65535L\x1b[65535;1T\x1b[65535:2@";
+        pty.process_output(input);
+
+        let parser = pty.parser.read();
+        assert_eq!(parser.get_raw_output(), input);
+        assert_eq!(parser.screen().contents(), "");
+    }
+
+    #[test]
+    fn resize_replays_insert_and_scroll_counts_at_the_new_size() {
+        let cases: [(&[u8], u16, u16); 2] = [
+            (b"abc\r\x1b[100@X", 24, 120),
+            (b"1\r\n2\r\n3\r\n4\x1b[100T", 50, 80),
+        ];
+        for (input, rows, cols) in cases {
+            let mut pty = create_test_pty_instance(false);
+            pty.process_output(input);
+            pty.resize(rows, cols).unwrap();
+
+            let mut expected = vt100_ctt::Parser::new(rows, cols, 0);
+            expected.process(input);
+            assert_eq!(
+                pty.parser.read().screen().contents(),
+                expected.screen().contents(),
+                "{}",
+                input.escape_ascii()
+            );
+        }
     }
 
     #[test]
@@ -1371,7 +1412,7 @@ mod tests {
 
         let writer = Arc::new(Mutex::new(pair.master.take_writer().unwrap()));
         let master: MasterArc = Arc::new(Mutex::new(pair.master));
-        let parser = Arc::new(RwLock::new(Parser::new(rows, cols, 1000)));
+        let parser = Arc::new(RwLock::new(TerminalParser::new(rows, cols, 1000)));
 
         let pty = PtyInstance::interactive(parser, writer, master.clone());
         (pty, master)
