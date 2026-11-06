@@ -231,7 +231,7 @@ async function convertRemainingEslintrcConfigs(
 }
 
 // The conversion moves `ignore-path` into flat config and drops `no-eslintrc`;
-// what it cannot translate stays on the target, where ESLint v10 rejects it.
+// what it cannot translate stays on the target.
 function reportEslintrcOnlyTargetOptions(
   tree: Tree,
   agentContext: string[],
