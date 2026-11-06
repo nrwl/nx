@@ -248,7 +248,8 @@ function reportEslintrcOnlyTargetOptions(
       'Follow the section on eslintrc-only lint target options.'
   );
   nextSteps.push(
-    `Move the eslintrc-only ESLint options these lint targets still carry into flat config, since ESLint v10 does not support them: ${list}.`
+    `Replace the eslintrc-only ESLint options these lint targets still carry, since ESLint v10 does not support them: ${list}. ` +
+      'Move the patterns of an "ignore-path" file into the flat config\'s "ignores" only when no configuration, project or narrower "targetDefaults" entry replaces that "ignore-path". Otherwise pass them as "--ignore-pattern" flags in the "args" of the runs that used the file, because flat config "ignores" apply to every run.'
   );
 }
 
