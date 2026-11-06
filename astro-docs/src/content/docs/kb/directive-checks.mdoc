@@ -152,8 +152,12 @@ none of the lines in the file lists a project.
 ## Checks in split test files
 
 These checks run on a test file that a split task runs.
-A split task is named `<target>--<file path>`, such as `e2e-ci--src/checkout.spec.ts`.
 The checks read the cached project graph.
+The Playwright, Cypress e2e, and Jest plugins record on each split task the file it runs.
+For other split tasks, the rule reads the file from the task name, `<target>--<file path>`,
+such as `test-ci--src/checkout.spec.ts`.
+A name can also end with another file's path, so the rule can
+[check a file that no split task runs](#limits).
 
 ### Directives the test runner ignores
 
@@ -211,6 +215,12 @@ It skips exclusion patterns such as `!shop-legacy`.
   [checks in every file](#checks-in-every-file).
 - A split task from a plugin other than Playwright, Cypress, Jest, or Vitest records no
   directives, so the rule reports both directives in its test files as ignored.
+- The rule matches a split task without a record by its name, which can end with another file's
+  path.
+  For example, the Vitest task `test-ci--checkout--unit.spec.ts` runs `checkout--unit.spec.ts`,
+  but its name also ends with `unit.spec.ts`.
+  The rule then reports a test directive in `unit.spec.ts` as ignored.
+  Nx does ignore it there, since no split task runs that file.
 - A lint task's hash covers the e2e project and the projects it depends on.
   The rule also reads other projects, such as an API that `@nx-depends-on` names but the e2e
   project doesn't depend on.

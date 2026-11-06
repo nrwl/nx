@@ -523,6 +523,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -574,6 +575,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -720,6 +722,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -773,6 +776,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -1019,6 +1023,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -1072,6 +1077,7 @@ describe('@nx/playwright/plugin', () => {
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -4045,6 +4051,7 @@ module.exports = {};`,
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
         },
@@ -4106,6 +4113,7 @@ module.exports = {};`,
           ],
           "testFileDirectives": {
             "depends-on": true,
+            "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
         },

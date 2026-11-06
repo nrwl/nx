@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { TargetConfiguration } from 'nx/src/devkit-exports';
+import { normalizePath, type TargetConfiguration } from 'nx/src/devkit-exports';
 import { emitPluginWorkerLog } from 'nx/src/devkit-internals';
 import { parseNxDirectives } from './nx-directives';
 import {
@@ -16,7 +16,8 @@ export type TestFileDirective = 'depends-on' | 'ignore-server-inputs';
  * directives of a workspace-relative test file applied. A directive that lists
  * no projects, has a value it does not take, or is not supported
  * (`ignoreServerInputs: false`) is skipped with a warning. The target's
- * metadata records the supported directives for `appliesTestFileDirective`.
+ * metadata records the file and the supported directives for
+ * `recordedTestFile` and `appliesTestFileDirective`.
  */
 export function applyTestFileDirectives(
   target: TargetConfiguration,
@@ -32,9 +33,10 @@ export function applyTestFileDirectives(
     metadata: {
       ...target.metadata,
       testFileDirectives: {
+        file: normalizePath(file),
         'depends-on': true,
         'ignore-server-inputs': options.ignoreServerInputs,
-      } satisfies Record<TestFileDirective, boolean>,
+      } satisfies Record<TestFileDirective, boolean> & { file: string },
     },
   };
 
@@ -69,6 +71,16 @@ export function applyTestFileDirectives(
   }
 
   return result;
+}
+
+/**
+ * The workspace-relative test file that `target` runs, when
+ * `applyTestFileDirectives` returned it.
+ */
+export function recordedTestFile(
+  target: TargetConfiguration
+): string | undefined {
+  return target.metadata?.testFileDirectives?.file;
 }
 
 /**

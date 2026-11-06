@@ -67,12 +67,20 @@ function runRule(
 // The records that `applyTestFileDirectives` writes for each runner.
 const jestTarget = {
   metadata: {
-    testFileDirectives: { 'depends-on': true, 'ignore-server-inputs': false },
+    testFileDirectives: {
+      file: 'apps/shop-e2e/src/checkout.spec.ts',
+      'depends-on': true,
+      'ignore-server-inputs': false,
+    },
   },
 };
 const playwrightTarget = {
   metadata: {
-    testFileDirectives: { 'depends-on': true, 'ignore-server-inputs': true },
+    testFileDirectives: {
+      file: 'apps/shop-e2e/src/checkout.spec.ts',
+      'depends-on': true,
+      'ignore-server-inputs': true,
+    },
   },
 };
 
@@ -270,11 +278,39 @@ describe('directive-checks', () => {
       ]);
     });
 
+    // The split task runs `checkout--unit.spec.ts`, whose path ends with the
+    // linted file's path.
     it('does not report a file that no split task runs', () => {
+      const otherSplitTarget = 'e2e-ci--checkout--unit.spec.ts';
+      const playwright: [string, string] = [
+        'apps/shop-e2e/playwright.config.ts',
+        '@nx/playwright/plugin',
+      ];
       expect(
-        runRule('// @nx-ignore-server-inputs', {
-          file: 'apps/shop-e2e/src/other.spec.ts',
-          nodes: [project('shop-e2e', 'apps/shop-e2e', { [splitTarget]: {} })],
+        runRule('// @nx-depends-on: missing', {
+          file: 'apps/shop-e2e/unit.spec.ts',
+          nodes: [
+            project('shop-e2e', 'apps/shop-e2e', {
+              [otherSplitTarget]: {
+                inputs: [
+                  { input: 'default', projects: ['shop'], always: true },
+                ],
+                metadata: {
+                  testFileDirectives: {
+                    ...playwrightTarget.metadata.testFileDirectives,
+                    file: 'apps/shop-e2e/checkout--unit.spec.ts',
+                  },
+                },
+              },
+            }),
+            project('shop', 'apps/shop'),
+          ],
+          sourceMaps: {
+            'apps/shop-e2e': {
+              [`targets.${otherSplitTarget}`]: playwright,
+              [`targets.${otherSplitTarget}.inputs`]: playwright,
+            },
+          },
         })
       ).toEqual([]);
     });
