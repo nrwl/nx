@@ -39,12 +39,22 @@ pub(crate) struct Negation {
     remainder: Option<Arc<NxGlobSet>>,
     /// Excludes `root` and everything under it.
     whole: bool,
+    /// Only learned `*.extension` exclusions compare the complete suffix category.
+    category: Option<String>,
 }
 
 impl Negation {
     pub(crate) fn parse(glob: &str) -> Result<Self> {
+        Self::parse_with_categories(glob, false)
+    }
+
+    pub(crate) fn parse_with_categories(glob: &str, ultracache: bool) -> Result<Self> {
         let normalized = normalize_glob(glob);
         let body = normalized.strip_prefix('!').unwrap_or(&normalized);
+        let category = ultracache
+            .then(|| extension_wildcard_category(body))
+            .flatten()
+            .map(str::to_string);
         let (root, remainder) = partition_glob(body);
         if root.is_empty() && remainder.is_none() {
             bail!("The includeIgnored fileset \"{glob}\" names nothing to exclude.");
@@ -56,6 +66,7 @@ impl Negation {
             root,
             remainder,
             whole,
+            category,
         })
     }
 
@@ -65,6 +76,7 @@ impl Negation {
             root: path.to_string(),
             remainder: None,
             whole: true,
+            category: None,
         }
     }
 
@@ -73,7 +85,18 @@ impl Negation {
         (self.whole && !self.root.is_empty()).then_some(self.root.as_str())
     }
 
-    pub(super) fn excludes(&self, path: &str) -> bool {
+    pub(crate) fn has_suffix_category(&self) -> bool {
+        self.category.is_some()
+    }
+
+    pub(crate) fn excludes(&self, path: &str) -> bool {
+        if self
+            .category
+            .as_deref()
+            .is_some_and(|category| suffix_category(path) != category)
+        {
+            return false;
+        }
         let rest = if self.root.is_empty() {
             Some(path)
         } else {
@@ -89,6 +112,48 @@ impl Negation {
             (_, None) => false,
             (None, Some(_)) => true,
             (Some(set), Some(rest)) => set.is_match(rest),
+        }
+    }
+}
+
+/// The last two suffix components, ignoring a leading dot in the basename.
+fn suffix_category(path: &str) -> &str {
+    let name = path.rsplit('/').next().unwrap_or(path);
+    let name = name.strip_prefix('.').unwrap_or(name);
+    let mut dots = name.rmatch_indices('.');
+    match dots.next() {
+        Some((last, _)) => &name[dots.next().map_or(last, |(previous, _)| previous)..],
+        None => "",
+    }
+}
+
+/// Brace alternatives have already expanded. Other glob shapes keep their semantics.
+fn extension_wildcard_category(glob: &str) -> Option<&str> {
+    let name = glob.rsplit('/').next()?;
+    let suffix = name.strip_prefix("*.")?;
+    if suffix.is_empty() || suffix.bytes().any(|b| b"*?[]{}()!\\".contains(&b)) {
+        return None;
+    }
+    Some(suffix_category(name))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ultracache_suffix_categories_use_the_last_two_components() {
+        for (name, category) in [
+            ("cat.ts", ".ts"),
+            ("cat.spec.ts", ".spec.ts"),
+            ("cat.one.two.spec.ts", ".spec.ts"),
+            ("cat.d.ts", ".d.ts"),
+            ("cat.impl.ts", ".impl.ts"),
+            (".env", ""),
+            (".hidden.ts", ".ts"),
+            ("some.dir/cat.ts", ".ts"),
+        ] {
+            assert_eq!(suffix_category(name), category, "{name}");
         }
     }
 }

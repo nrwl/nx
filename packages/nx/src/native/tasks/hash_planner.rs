@@ -20,7 +20,8 @@ use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
-    OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
+    OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
+    validate_files_globs,
 };
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -318,13 +319,24 @@ impl HashPlanner {
     /// A disk-backed group whose globs stay out of nested projects. A group
     /// that does not parse is left unscoped: expanding it reports the error.
     fn ignored_file_set(&self, globs: Vec<String>) -> HashInstruction {
-        let project_roots = match parse_group(&globs) {
-            Ok((positives, _)) => scope_roots(&positives, self.project_roots()),
-            Err(_) => Vec::new(),
+        self.disk_file_set(globs, false)
+    }
+
+    fn disk_file_set(&self, globs: Vec<String>, ultracache: bool) -> HashInstruction {
+        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, ultracache) {
+            Ok((positives, negatives)) => (
+                scope_roots(&positives, self.project_roots()),
+                // Keep equivalent declared and learned groups interned together.
+                negatives
+                    .iter()
+                    .any(|negative| negative.has_suffix_category()),
+            ),
+            Err(_) => (Vec::new(), ultracache),
         };
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
+            ultracache,
         }
     }
 
@@ -709,7 +721,7 @@ impl HashPlanner {
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
-            instructions.push(self.ignored_file_set(group));
+            instructions.push(self.disk_file_set(group, true));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
             entry.digest.clone(),
@@ -1595,6 +1607,7 @@ fn deferred_tasks(
                     HashInstruction::IgnoredFileSet {
                         globs,
                         project_roots,
+                        ..
                     } => {
                         let scope = ProjectScope::new(project_roots);
                         disk_roots.extend(globs.iter().filter(|glob| !glob.starts_with('!')).map(
@@ -2640,6 +2653,7 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()],
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
+            ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
@@ -3419,6 +3433,7 @@ mod always_tests {
                     "!libs/app/fixtures/large/**".into()
                 ],
                 project_roots: vec!["libs/app".into()],
+                ultracache: false,
             }]
         );
         assert_eq!(retained(false, true), vec![]);
@@ -3841,7 +3856,7 @@ mod nested_project_tests {
 
     #[test]
     fn a_recording_hashes_a_nested_project_only_through_its_own_globs() {
-        use crate::native::tasks::hashers::{Source, expand_globs};
+        use crate::native::tasks::hashers::{Source, expand_globs_with_exclusions};
         use crate::native::test_utils::ultracache_configurations;
         use assert_fs::TempDir;
         use assert_fs::prelude::*;
@@ -3877,12 +3892,14 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
+                    ultracache,
                 } => Some(
-                    expand_globs(
+                    expand_globs_with_exclusions(
                         temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
+                        *ultracache,
                     )
                     .unwrap()
                     .files,
