@@ -1,7 +1,6 @@
 import { LifeCycle, TaskMetadata, TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 
-import { performance } from 'perf_hooks';
 import { join } from 'path';
 import { Task } from '../../config/task-graph';
 import { writeJsonFile } from '../../utils/fileutils';

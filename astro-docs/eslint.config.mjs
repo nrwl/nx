@@ -21,6 +21,7 @@ export default [
       '.netlify/',
       'test-output/',
       'playwright-report/',
+      'public/.well-known/agent-skills/',
       'src/content/banner.json',
     ],
   },

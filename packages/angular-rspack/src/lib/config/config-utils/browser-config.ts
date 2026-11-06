@@ -11,6 +11,7 @@ import { NgRspackPlugin } from '../../plugins/ng-rspack';
 import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../../plugins/index-html-plugin';
+import type { SsrReloadServer } from '../../plugins/server/ssr-reload-server';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
 import { getOptimization } from './optimization-config';
@@ -26,7 +27,8 @@ export async function getBrowserConfig(
   swcTranspilationTransform: SwcTranspilationTransform,
   sharedLicenseInputs?: SharedLicenseInputs,
   sharedAngularPlugin?: AngularRspackPlugin,
-  serverRenderingInputs?: SharedServerRenderingInputs
+  serverRenderingInputs?: SharedServerRenderingInputs,
+  ssrReloadServer?: SsrReloadServer
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const isProduction = process.env['NODE_ENV'] === 'production';
@@ -104,6 +106,7 @@ export async function getBrowserConfig(
         platform: 'browser',
         sharedLicenseInputs,
         sharedAngularPlugin,
+        ssrReloadServer,
         serverRenderingInputs,
       }),
     ],

@@ -28,7 +28,7 @@ export default createConfig(
     options: {
       browser: './src/main.ts',
       server: './src/main.server.ts',
-      ssrEntry: './src/server.ts',
+      ssr: { entry: './src/server.ts' },
     },
     rspackConfigOverrides: {
       mode: 'development',

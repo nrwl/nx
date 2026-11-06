@@ -13,7 +13,11 @@ Below is a reference for the commands you run directly and their options.
 
 ### `nx-cloud login`
 
-Provision a local personal access token to access Nx Cloud features. This will open your browser to the Nx Cloud application and after signing in will generate a personal access token and save it in a configuration file locally called `nxcloud.ini`.
+Log in to Nx Cloud from your machine.
+The command shows a code, opens Nx Cloud in your browser for you to approve it, and saves the login
+in a local configuration file called `nxcloud.ini`.
+On an older self-hosted Nx Cloud release without browser login, it creates a personal access token instead.
+For the steps, see [log in to Nx Cloud from the CLI](/docs/kb/personal-access-tokens).
 
 This command is the same as running `nx login`.
 
@@ -28,10 +32,10 @@ npx nx-cloud login [nxCloudUrl]
 | Option       | Type    | Description                                                        | Default                |
 | ------------ | ------- | ------------------------------------------------------------------ | ---------------------- |
 | `nxCloudUrl` | string  | The URL of the Nx Cloud instance to connect to                     | `https://cloud.nx.app` |
-| `--status`   | boolean | Report the current login status and exit without opening a browser |                        |
+| `--status`   | boolean | Report the current login status and exit without opening a browser | `false`                |
 
-With `--status`, the command reports whether a personal access token is set for the resolved Nx Cloud URL.
-When `nx.json` also contains an `nxCloudId`, the token is checked against Nx Cloud, and an expired or revoked token is reported as invalid.
+With `--status`, the command reports whether you're logged in for the resolved Nx Cloud URL.
+On current Nx Cloud releases, it also reports the account you're logged in as.
 
 #### Configuration file location
 
@@ -58,30 +62,48 @@ If we don't find an existing config file, we create one at `%LOCALAPPDATA%/nxclo
 
 {% /tabitem %}
 {% /tabs %}
-The format of this file is as follows:
 
-```ini
-[https://cloud\.nx\.app]
-personalAccessToken=SOME_ACCESS_TOKEN
-```
-
-If you have access to multiple instances of the Nx Cloud application (e.g. self-hosted Enterprise and our managed instance), each instance will be saved to this file under its URL.
+Each Nx Cloud instance you log in to, such as a self-hosted instance and `https://cloud.nx.app`, is
+saved in this file under its URL.
 
 ### `nx-cloud logout`
 
-Revoke a personal access token from your local environment. This will remove the personal access token from the locally initialized configuration file and also invalidate the token from the Nx Cloud application. You will be prompted to remove a single token or all tokens from your local environment.
+Log out of Nx Cloud on this machine.
+The command removes the stored login from `nxcloud.ini` and revokes it in Nx Cloud.
+If Nx Cloud can't revoke it, the command prints a warning, and the login is still removed.
 
 This command is the same as running `nx logout`.
 
 **Usage:**
 
 ```shell
-npx nx-cloud logout
+npx nx-cloud logout [nxCloudUrl] [--all]
 ```
+
+#### Options
+
+| Option       | Type    | Description                                               | Default |
+| ------------ | ------- | --------------------------------------------------------- | ------- |
+| `nxCloudUrl` | string  | The URL of the stored Nx Cloud instance to log out of     | None    |
+| `--all`      | boolean | Log out of every Nx Cloud instance stored on this machine | `false` |
+
+With one stored login, the command logs out of it.
+With logins for several instances, pass the URL of one or `--all`.
+In a terminal, the command asks which instance when you pass neither.
+In CI or without a terminal, it exits with code 1 and lists the stored instances.
+
+It also exits with code 1, without logging anything out, when you pass a URL that isn't stored, more
+than one URL, or a URL together with `--all`, and when you cancel the prompt.
+It exits with code 1 if it can't remove a login from this machine, and with code 0 otherwise.
 
 ### `nx-cloud configure`
 
-To provision more than one personal access token for multiple contexts (e.g. home and work machines) you can use the personal access tokens page under your Nx Cloud profile. To save a personal access token to your local `nxcloud.ini` file without needing to edit the file yourself call `nx-cloud configure`.
+Save a personal access token to `nxcloud.ini` on a machine where nobody can approve a browser login.
+In CI, use it only for `nx-cloud publish-conformance-rule` and
+`nx-cloud publish-conformance-rules`.
+They act as you, so they don't accept a CI access token.
+Other CI steps use a [CI access token](/docs/kb/access-tokens).
+Create the token in Nx Cloud under **Personal settings** > **Access tokens** first.
 
 **Usage:**
 
@@ -91,10 +113,10 @@ npx nx-cloud configure
 
 #### Options
 
-| Option                    | Type   | Description                            | Default                |
-| ------------------------- | ------ | -------------------------------------- | ---------------------- |
-| `--personal-access-token` | string | The personal access token to configure |                        |
-| `--nx-cloud-url`          | string | The URL of the Nx Cloud instance       | `https://cloud.nx.app` |
+| Option                    | Type   | Description                            | Default                                                                     |
+| ------------------------- | ------ | -------------------------------------- | --------------------------------------------------------------------------- |
+| `--personal-access-token` | string | The personal access token to configure | None                                                                        |
+| `--nx-cloud-url`          | string | The URL of the Nx Cloud instance       | `NX_CLOUD_API`, then `nxCloudUrl` in `nx.json`, then `https://cloud.nx.app` |
 
 #### Examples
 
@@ -110,7 +132,9 @@ npx nx-cloud configure --personal-access-token=SOME_ACCESS_TOKEN --nx-cloud-url=
 
 ### `nx-cloud convert-to-nx-cloud-id`
 
-When logging into Nx Cloud with a [Personal Access Token](/docs/kb/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
+`nx login` doesn't run while your workspace connects with the older `nxCloudAccessToken`.
+Run `npx nx-cloud convert-to-nx-cloud-id` to update your configuration to use `nxCloudId`, which
+identifies your workspace.
 
 **Usage:**
 
@@ -793,7 +817,9 @@ npx nx-cloud conformance:check
 Package one conformance rule directory into an archive and publish it to your Nx Cloud organization, where it becomes available to every connected workspace.
 The directory must contain the rule implementation and a `schema.json`.
 
-Your workspace needs an `nxCloudId` in `nx.json` plus a personal access token. Run `nx-cloud convert-to-nx-cloud-id` if you are still on an access token, then authenticate with `nx login` locally or `nx-cloud configure --personal-access-token=<pat>` in CI.
+Your workspace needs an `nxCloudId` in `nx.json`, and you need to be logged in.
+Run `nx-cloud convert-to-nx-cloud-id` if you're still on an access token, then authenticate with
+`nx login` locally or `nx-cloud configure --personal-access-token=<pat>` in CI.
 
 **Usage:**
 

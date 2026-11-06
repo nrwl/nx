@@ -143,7 +143,9 @@ related `The nx plugin did not find a project inside ...` error.
 
 ### Configuration file changes
 
-There may also be changes to the configuration files used by the underlying tool. The changes come with comments to explain them, and may also provide next steps for you to take. One common change is to add support for different configuration options. For example, if we have an existing Vite app with the following build target:
+Some plugins update the underlying tool's configuration files during conversion. Review those changes and follow any instructions in the generated comments.
+
+Vite keeps CLI options and named configurations in the Nx target configuration. For example, consider an app named `demo` with this build target:
 
 ```json
 // project.json
@@ -154,40 +156,53 @@ There may also be changes to the configuration files used by the underlying tool
   },
   "defaultConfiguration": "production",
   "configurations": {
-    "development": {},
-    "production": {},
-    "ci": {}
+    "development": {
+      "mode": "development"
+    },
+    "production": {
+      "mode": "production"
+    },
+    "ci": {
+      "mode": "production",
+      "sourcemap": true
+    }
   }
 }
 ```
 
-Where we have `development`, `production`, and `ci` configurations. Then running `nx g @nx/vite:convert-to-inferred` will result in these lines added to `vite.config.ts`.
+Run the conversion for that project:
 
-```ts {% meta="{6-15}" %}
-// vite.config.ts
-/// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-// These options were migrated by @nx/vite:convert-to-inferred from the project.json file.
-const configValues = { default: {}, development: {}, production: {}, ci: {} };
-
-// Determine the correct configValue to use based on the configuration
-const nxConfiguration = process.env.NX_TASK_TARGET_CONFIGURATION ?? 'default';
-
-const options = {
-  ...configValues.default,
-  ...(configValues[nxConfiguration] ?? {}),
-};
-
-export default defineConfig({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/demo',
-  // ...
-});
+```shell
+nx g @nx/vite:convert-to-inferred --project demo
 ```
 
-The configuration changes ensure that passing `--configuration` still work for the target. Differences in options can be added to the `configValues` object, and the right value is determined using the `NX_TASK_TARGET_CONFIGURATION` [environment variable](/docs/reference/environment-variables). Again, there may be other types of changes so read the comments to understand them.
+The target keeps these options and named configurations in `project.json`. The plugin supplies the `vite build` command:
+
+```json
+// project.json
+"build": {
+  "options": {
+    "mode": "development"
+  },
+  "defaultConfiguration": "production",
+  "configurations": {
+    "development": {
+      "mode": "development"
+    },
+    "production": {
+      "mode": "production"
+    },
+    "ci": {
+      "mode": "production",
+      "sourcemap": true
+    }
+  }
+}
+```
+
+Use the target's `options` and `configurations` to set Vite CLI options such as `mode`. In this example, `nx build demo --configuration=ci` selects production mode and enables sourcemaps. Vite continues to read its tool configuration from `vite.config.ts`.
+
+For whole-workspace migrations, shared target options and configurations may move into `targetDefaults` in `nx.json`, as described below.
 
 ### Register the Plugin with Nx
 
@@ -201,7 +216,6 @@ Lastly, you can inspect the `nx.json` file to see a new `plugins` entry. For `@n
     "buildTargetName": "build",
     "serveTargetName": "serve",
     "previewTargetName": "preview",
-    "testTargetName": "test",
     "serveStaticTargetName": "serve-static"
   }
 }

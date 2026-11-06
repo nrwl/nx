@@ -19,6 +19,7 @@ import { isServeMode } from '../utils/rspack-serve-env';
 import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
 import type { SharedServerRenderingInputs } from '../plugins/index-html-plugin';
 import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
+import { SsrReloadServer } from '../plugins/server/ssr-reload-server';
 
 export async function createConfig(
   defaultOptions: {
@@ -98,6 +99,14 @@ export async function _createConfig(
   const serverRenderingInputs: SharedServerRenderingInputs | undefined =
     normalizedOptions.hasServer ? {} : undefined;
 
+  const ssrReloadServer =
+    isServeMode() &&
+    normalizedOptions.hasServer &&
+    typeof normalizedOptions.ssr === 'object' &&
+    normalizedOptions.ssr.entry !== undefined
+      ? new SsrReloadServer()
+      : undefined;
+
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
@@ -107,7 +116,8 @@ export async function _createConfig(
       swcTranspilationTransform,
       sharedLicenseInputs,
       sharedAngularPlugin,
-      serverRenderingInputs
+      serverRenderingInputs,
+      ssrReloadServer
     );
     const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
     configs.push(mergedConfig);
@@ -121,7 +131,8 @@ export async function _createConfig(
     swcTranspilationTransform,
     sharedLicenseInputs,
     sharedAngularPlugin,
-    serverRenderingInputs
+    serverRenderingInputs,
+    ssrReloadServer
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);

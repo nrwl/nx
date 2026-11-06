@@ -1,6 +1,6 @@
 import { logger } from '@nx/devkit';
 
-// TODO(v25): Delete @nx/module-federation. It only ships so `nx migrate` can run its v24 migrations.
+// TODO(v25): Delete @nx/module-federation (NXC-5165). It only ships so `nx migrate` can run its v24 migrations.
 const REMOVED_MESSAGE =
   'Nx Module Federation was removed in Nx v24. `@nx/module-federation` only exports stubs that keep old configs loadable during project graph creation; they do not configure Module Federation. Follow https://nx.dev/docs/kb/migrate-from-nx-module-federation (React) or https://nx.dev/docs/kb/migrate-angular-module-federation (Angular) to move to the official Module Federation plugin.';
 

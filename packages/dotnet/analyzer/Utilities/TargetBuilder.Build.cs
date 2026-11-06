@@ -13,11 +13,9 @@ public static partial class TargetBuilder
     private static Target CreateBuildTarget(
         string targetName,
         string fileName,
-        string projectName,
         EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
-        PluginOptions options,
         string productionInput,
         string defaultConfiguration,
         string description,
@@ -79,9 +77,7 @@ public static partial class TargetBuilder
 
     private static void AddBuildTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        bool isTest,
         EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
@@ -93,11 +89,9 @@ public static partial class TargetBuilder
         targets[targetName] = CreateBuildTarget(
             targetName,
             fileName,
-            projectName,
             properties,
             projectDirectory,
             workspaceRoot,
-            options,
             productionInput,
             "Debug",
             "Build the .NET project",
@@ -106,9 +100,7 @@ public static partial class TargetBuilder
 
     private static void AddBuildReleaseTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        bool isTest,
         EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
@@ -120,11 +112,9 @@ public static partial class TargetBuilder
         targets[releaseTargetName] = CreateBuildTarget(
             releaseTargetName,
             fileName,
-            projectName,
             properties,
             projectDirectory,
             workspaceRoot,
-            options,
             productionInput,
             "Release",
             "Build the .NET project in Release configuration",

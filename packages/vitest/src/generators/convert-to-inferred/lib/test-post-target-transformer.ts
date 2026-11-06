@@ -1,5 +1,8 @@
 import { type TargetConfiguration, type Tree } from '@nx/devkit';
-import { processTargetOutputs } from '@nx/devkit/internal';
+import {
+  processTargetOutputs,
+  resolveNxTokensInOptions,
+} from '@nx/devkit/internal';
 import { toProjectRelativePath } from './utils';
 
 export function testPostTargetTransformer(
@@ -9,13 +12,13 @@ export function testPostTargetTransformer(
   inferredTargetConfiguration: TargetConfiguration
 ) {
   if (target.options) {
-    removePropertiesFromTargetOptions(target.options, projectDetails.root);
+    removePropertiesFromTargetOptions(target.options, projectDetails);
   }
 
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      removePropertiesFromTargetOptions(configuration, projectDetails.root);
+      removePropertiesFromTargetOptions(configuration, projectDetails);
     }
 
     if (Object.keys(target.configurations).length === 0) {
@@ -57,8 +60,9 @@ export function testPostTargetTransformer(
 
 function removePropertiesFromTargetOptions(
   targetOptions: any,
-  projectRoot: string
+  projectDetails: { projectName: string; root: string }
 ) {
+  const projectRoot = projectDetails.root;
   if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(
       targetOptions.configFile,
@@ -74,8 +78,13 @@ function removePropertiesFromTargetOptions(
         ''
       );
     }
+    const { reportsDirectory } = resolveNxTokensInOptions(
+      { reportsDirectory: targetOptions.reportsDirectory },
+      { root: projectRoot, name: projectDetails.projectName },
+      'reportsDirectory'
+    );
     targetOptions['coverage.reportsDirectory'] = toProjectRelativePath(
-      targetOptions.reportsDirectory,
+      reportsDirectory,
       projectRoot
     );
     delete targetOptions.reportsDirectory;

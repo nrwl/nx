@@ -3492,6 +3492,45 @@ module.exports = {};`,
     ]);
   });
 
+  it.each([
+    'bunx nx run app1:serve',
+    'bunx nx serve app1',
+    'bun x nx run app1:serve',
+    'bun x nx serve app1',
+  ])(
+    'should infer the serve dependency from a bun-prefixed webServer command (%s)',
+    async (command) => {
+      const warn = vi
+        .spyOn(devkitInternal, 'emitPluginWorkerLog')
+        .mockImplementation(() => {});
+      try {
+        await mockPlaywrightConfig(tempFs, {
+          testDir: 'tests',
+          webServer: {
+            command,
+            reuseExistingServer: true,
+          },
+        });
+        await tempFs.createFiles({ 'tests/run-me.spec.ts': '' });
+
+        const results = await createNodesFunction(
+          ['playwright.config.js'],
+          { targetName: 'e2e', ciTargetName: 'e2e-ci' },
+          context
+        );
+        const { targets } = results[0][1].projects['.'];
+
+        expect(warn).not.toHaveBeenCalled();
+        expect(targets['e2e'].dependsOn).toEqual([
+          { projects: ['app1'], target: 'serve', waitFor: 'ready' },
+        ]);
+        expect(targets['e2e'].parallelism).toBeUndefined();
+      } finally {
+        warn.mockRestore();
+      }
+    }
+  );
+
   it('warns when a reuseExistingServer webServer command cannot be inferred', async () => {
     const warn = vi
       .spyOn(devkitInternal, 'emitPluginWorkerLog')

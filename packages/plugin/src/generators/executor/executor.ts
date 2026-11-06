@@ -202,7 +202,7 @@ async function normalizeOptions(
 }
 
 export async function executorGenerator(host: Tree, schema: Schema) {
-  // TODO(v25): remove the includeHasher option.
+  // TODO(v25): remove the includeHasher option (NXC-5052).
   if (schema.includeHasher) {
     throw new Error(
       'Custom hashers are deprecated and will be removed in Nx 25, so the executor generator no longer creates them. Declare what the executor depends on as target inputs instead: https://nx.dev/docs/kb/local-executors#replace-a-custom-hasher-with-inputs'

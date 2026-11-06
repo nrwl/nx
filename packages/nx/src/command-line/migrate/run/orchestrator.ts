@@ -1530,7 +1530,6 @@ export async function runOrchestratorReconcile(
       ) {
         warnInstallLeftToUser(root, target);
       }
-      state = written;
     } finally {
       scope.lease?.release();
     }
@@ -2319,7 +2318,7 @@ function advanceAndDispense(root: string, dir: string, runId: string): void {
   }
   switch (step.status) {
     case 'pending':
-      dispenseNextStep(root, dir, runId, state, step, noProgress);
+      dispenseNextStep(root, dir, runId, step, noProgress);
       break;
     case 'dispensed':
       // Re-entry before the worker advanced the step; re-emit its command.
@@ -2420,7 +2419,6 @@ function dispenseNextStep(
   root: string,
   dir: string,
   runId: string,
-  state: MigrateRunState,
   step: MigrateStep,
   noProgress: MigrateRunNoProgress | null
 ): void {

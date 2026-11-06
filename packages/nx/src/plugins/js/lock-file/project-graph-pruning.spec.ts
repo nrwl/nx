@@ -616,10 +616,8 @@ describe('project-graph-pruning', () => {
 
   describe('pruneProjectGraph', () => {
     let graph: ProjectGraph;
-    let workspacePackages: Map<string, ProjectGraphProjectNode>;
 
     beforeEach(() => {
-      workspacePackages = new Map();
       graph = {
         nodes: {
           'workspace-lib': {
@@ -695,8 +693,6 @@ describe('project-graph-pruning', () => {
           },
         },
       };
-      // Note: workspacePackages is populated by getWorkspacePackagesFromGraph
-      // which looks for project.data.metadata.js.packageName
     });
 
     it('should prune unused external nodes', () => {
