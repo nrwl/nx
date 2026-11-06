@@ -155,6 +155,18 @@ describe('normalizeOptions', () => {
     ).rejects.toThrow('The "security.autoCsp" option is not supported');
   });
 
+  it.each([
+    [true, false],
+    [{ hidden: true }, true],
+  ])(
+    'should normalize the source map option %j to hidden=%s',
+    async (sourceMap, hidden) => {
+      const normalized = await normalizeOptions({ ...baseOptions, sourceMap });
+
+      expect(normalized.sourceMap).toMatchObject({ scripts: true, hidden });
+    }
+  );
+
   it('should carry the "security.allowedHosts" option through', async () => {
     const normalized = await normalizeOptions({
       ...baseOptions,
