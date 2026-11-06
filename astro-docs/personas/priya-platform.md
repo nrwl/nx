@@ -16,6 +16,8 @@ Priya owns the monorepo and its CI. They upgrade Nx, tune inputs and outputs, an
 
 ## Priya user journey
 
+The pages are examples, not a full list. Match other pages by Priya's home sections.
+
 - **Configure**: Looking up settings. `/docs/reference/nx-json`, `/docs/reference/inputs`, `/docs/reference/nx-cloud/ci-config`
 - **Troubleshoot**: Fixing slow, flaky or red CI. `/docs/kb/troubleshoot-cache-misses`, `/docs/kb/flaky-tasks`
 - **Upgrade**: Finding what changed and what to migrate. `/docs/features/automate-updating-dependencies`

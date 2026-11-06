@@ -16,6 +16,8 @@ Casey is a developer or tech lead who has used Nx for months. They know `nx.json
 
 ## Casey user journey
 
+The pages are examples, not a full list. Match other pages by Casey's home sections.
+
 - **Evaluate**: Deciding if Nx Cloud fits. `/docs/getting-started/setup-ci`, `/docs/features/ci-features`
 - **Connect**: Connecting the workspace and seeing a remote cache hit. `/docs/features/ci-features/remote-cache`
 - **Expand**: Trying the next feature. `/docs/features/ci-features/distribute-task-execution`, `/docs/features/ci-features/self-healing-ci`. Casey becomes Priya once Nx Cloud runs in CI for their team.

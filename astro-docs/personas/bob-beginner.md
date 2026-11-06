@@ -16,6 +16,8 @@ Bob is a JavaScript or TypeScript developer who knows their package manager and 
 
 ## Bob user journey
 
+The pages are examples, not a full list. Match other pages by Bob's home sections.
+
 - **Evaluate**: Learning what Nx is. `/docs/getting-started/intro`, `/docs/getting-started/how-nx-works`
 - **Set up**: Creating a workspace or adding Nx to a repo. `/docs/getting-started/start-new-project`, `/docs/getting-started/start-with-existing-project`
 - **First win**: Running a task and seeing a cache hit. `/docs/getting-started/tutorials/running-tasks`, `/docs/getting-started/tutorials/caching`
