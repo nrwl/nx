@@ -29,7 +29,12 @@ describe('add-directive-checks-rule migration', () => {
     specContent: string,
     { ciTargetName = 'e2e-ci', file = 'src/checkout.spec.ts' } = {}
   ) {
-    const targets = { [ciTargetName]: {}, [`${ciTargetName}--${file}`]: {} };
+    const splitTargetName = `${ciTargetName}--${file}`;
+    const targets = {
+      e2e: {},
+      [ciTargetName]: { dependsOn: [{ target: splitTargetName }] },
+      [splitTargetName]: {},
+    };
     addProjectConfiguration(tree, 'e2e', { root: 'apps/e2e', targets });
     projectGraph = {
       dependencies: {},
@@ -125,16 +130,62 @@ describe('add-directive-checks-rule migration', () => {
       );
     });
 
-    it('should not read a file that only the end of a split file path names', async () => {
-      addE2eProject("test('checks out', () => {});\n", {
-        file: 'src/checkout--mobile.spec.ts',
-      });
-      tree.write('apps/e2e/mobile.spec.ts', '// @nx-ignore-server-inputs\n');
+    it.each([
+      [
+        'only the end of a split file path names',
+        { file: 'src/checkout--mobile.spec.ts' },
+        'mobile.spec.ts',
+      ],
+      [
+        'follows another target name in a split task name',
+        { ciTargetName: 'e2e--ci' },
+        'ci--src/checkout.spec.ts',
+      ],
+    ])('should not read a file that %s', async (_, names, otherFile) => {
+      addE2eProject("test('checks out', () => {});\n", names);
+      tree.write(`apps/e2e/${otherFile}`, '// @nx-ignore-server-inputs\n');
 
       await update(tree);
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toBe(FLAT_CONFIG);
     });
+
+    it.each([
+      [
+        'its own project',
+        { target: 'e2e-ci--src/checkout.spec.ts', projects: ['e2e'] },
+        true,
+      ],
+      ['a project-qualified target', 'e2e:e2e-ci--src/checkout.spec.ts', true],
+      ['a target glob', 'e2e-ci--**/*', true],
+      [
+        'another project',
+        { target: 'e2e-ci--src/checkout.spec.ts', projects: ['other'] },
+        false,
+      ],
+    ])(
+      'should resolve a CI target dependency on %s as the task graph does',
+      async (_, dependency, added) => {
+        addE2eProject('// @nx-ignore-server-inputs\n');
+        projectGraph.nodes.e2e.data.targets['e2e-ci'].dependsOn = [dependency];
+        projectGraph.nodes.other = {
+          name: 'other',
+          type: 'lib',
+          data: {
+            root: 'libs/other',
+            targets: { 'e2e-ci--src/checkout.spec.ts': {} },
+          },
+        };
+
+        await update(tree);
+
+        expect(
+          tree
+            .read('eslint.config.mjs', 'utf-8')
+            .includes("'@nx/directive-checks': 'error'")
+        ).toBe(added);
+      }
+    );
 
     it.each([
       [
