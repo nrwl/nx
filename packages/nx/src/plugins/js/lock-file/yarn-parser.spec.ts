@@ -34,6 +34,47 @@ vi.mock('../../../hasher/file-hasher', () => ({
 }));
 
 describe('yarn LockFile utility', () => {
+  it('links a dependency replaced by a bare-name Yarn Berry resolution', () => {
+    const lockFile = `
+__metadata:
+  version: 8
+
+"jsdom@npm:20.0.3":
+  version: 20.0.3
+  resolution: "jsdom@npm:20.0.3"
+  dependencies:
+    nwsapi: "npm:^2.2.2"
+  checksum: abc
+  languageName: node
+  linkType: hard
+
+"nwsapi@npm:2.2.23":
+  version: 2.2.23
+  resolution: "nwsapi@npm:2.2.23"
+  checksum: def
+  languageName: node
+  linkType: hard
+`;
+    const hash = uniq('yarn-resolution');
+    const { nodes, keyMap } = getYarnLockfileNodes(lockFile, hash, {});
+    const ctx: CreateDependenciesContext = {
+      projects: {},
+      externalNodes: nodes,
+      fileMap: { nonProjectFiles: [], projectFileMap: {} },
+      filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+      nxJsonConfiguration: null,
+      workspaceRoot: '/virtual',
+    };
+
+    expect(
+      getYarnLockfileDependencies(lockFile, hash, ctx, keyMap)
+    ).toContainEqual({
+      source: 'npm:jsdom',
+      target: 'npm:nwsapi',
+      type: 'static',
+    });
+  });
+
   afterEach(() => {
     vol.reset();
   });
