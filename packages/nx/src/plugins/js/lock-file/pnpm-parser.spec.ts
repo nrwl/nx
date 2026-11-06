@@ -5193,6 +5193,71 @@ snapshots:
         'vendor-real-name@file:local_path_modules/libs/vendor:'
       );
     });
+
+    it('prunes a vendored copy named and versioned like a registry package', () => {
+      // pnpm 12.8.1 install where the root depends on the registry `ms` 2.1.3
+      // and a library vendors its own `ms` 2.1.3
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      ms:
+        specifier: 2.1.3
+        version: 2.1.3
+
+  apps/app: {}
+
+  libs/lib:
+    dependencies:
+      ms:
+        specifier: file:../vendor/ms
+        version: file:libs/vendor/ms
+
+packages:
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  ms@file:libs/vendor/ms:
+    resolution: {directory: libs/vendor/ms, type: directory}
+
+snapshots:
+
+  ms@2.1.3: {}
+
+  ms@file:libs/vendor/ms: {}
+`;
+      const packageJson = {
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { ms: 'file:local_path_modules/libs/vendor/ms' },
+      };
+      const { nodes } = getPnpmLockfileNodes(lockFile, '__vendored_namesake__');
+
+      const prunedGraph = pruneProjectGraph(
+        makeGraph([], {}, nodes),
+        packageJson,
+        '/root',
+        'pnpm'
+      );
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toMatch(
+        /ms:\s+specifier: file:local_path_modules\/libs\/vendor\/ms\s+version: file:local_path_modules\/libs\/vendor\/ms/
+      );
+      expect(result).not.toContain('ms@2.1.3');
+    });
   });
 
   describe('missing .modules.yaml', () => {

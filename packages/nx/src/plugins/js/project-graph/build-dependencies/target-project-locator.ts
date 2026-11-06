@@ -75,6 +75,7 @@ function startsWithConfigDirTemplate(value: string): boolean {
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
+  private packageNamesWithSeveralNodes = new Set<string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -100,9 +101,14 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
+    const seenPackageNames = new Set<string>();
     this.npmProjects = Object.values(this.externalNodes).reduce(
       (acc, node) => {
         if (node.type === 'npm') {
+          if (seenPackageNames.has(node.data.packageName)) {
+            this.packageNamesWithSeveralNodes.add(node.data.packageName);
+          }
+          seenPackageNames.add(node.data.packageName);
           const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
           if (!acc[node.name]) {
             acc[node.name] = node;
@@ -265,18 +271,21 @@ export class TargetProjectLocator {
       }
 
       if (!matchingExternalNode) {
-        matchingExternalNode =
+        const versionedNode =
           this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
-      }
-
-      if (!matchingExternalNode) {
-        const installedNodeName = this.findNpmProjectFromInstallingManifest(
-          packageName,
-          fullDirPath
-        );
+        // A vendored copy can share its name and version with a registry
+        // package, so the manifest that installed the copy decides
+        const installedNodeName =
+          !versionedNode ||
+          this.packageNamesWithSeveralNodes.has(externalPackageJson.name)
+            ? this.findNpmProjectFromInstallingManifest(
+                packageName,
+                fullDirPath
+              )
+            : null;
         matchingExternalNode = installedNodeName
           ? this.npmProjects[installedNodeName]
-          : null;
+          : versionedNode;
       }
 
       if (!matchingExternalNode) {
@@ -348,7 +357,7 @@ export class TargetProjectLocator {
    * The external node of the `file:`/`link:` dependency behind the copy an
    * import resolves to, when a manifest below the workspace root installed it
    * into its own node_modules. A copy in the root's node_modules resolves
-   * through the bare name instead.
+   * through its version or the bare name instead.
    */
   private findNpmProjectFromInstallingManifest(
     packageName: string,

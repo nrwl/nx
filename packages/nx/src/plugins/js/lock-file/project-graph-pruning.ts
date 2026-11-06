@@ -120,12 +120,11 @@ function normalizeDependencies(
         combinedDependencies[packageName] = resolvedVersionRange;
         return;
       }
-      // otherwise we need to find the correct version
-      const node = findNodeMatchingVersion(
-        graph,
-        packageName,
-        resolvedVersionRange
-      );
+      // otherwise we need to find the correct version. A local-path spec skips
+      // this, because the version sort throws on a same-named local-path node.
+      const node = isLocalPathSpecifier(resolvedVersionRange)
+        ? undefined
+        : findNodeMatchingVersion(graph, packageName, resolvedVersionRange);
       // A file:/link: local-path dependency (e.g. a vendored tarball) records a
       // path where a version would go, so the version-based lookups above never
       // match it; findLocalPathNode matches it on that path instead (pnpm-only,
