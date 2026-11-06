@@ -15,7 +15,6 @@ import {
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
   BASE_ESLINT_CONFIG_FILENAMES,
-  ESLINT_FLAT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import {
   eslintFlatConfigFilenames,

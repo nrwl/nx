@@ -178,7 +178,7 @@
     "picocolors": "catalog:",
     "picomatch": "catalog:",
     "semver": "catalog:",
-    "source-map-support": "0.5.19",
+    "source-map-support": "0.5.21",
     "tinyglobby": "catalog:",
     "tslib": "catalog:typescript"
   },

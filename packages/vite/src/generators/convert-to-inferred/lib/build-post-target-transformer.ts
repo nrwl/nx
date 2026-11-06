@@ -1,14 +1,6 @@
 import { processTargetOutputs } from '@nx/devkit/internal';
-import {
-  joinPathFragments,
-  type TargetConfiguration,
-  type Tree,
-} from '@nx/devkit';
-import {
-  addConfigValuesToViteConfig,
-  getViteConfigPath,
-  toProjectRelativePath,
-} from './utils';
+import { type TargetConfiguration, type Tree } from '@nx/devkit';
+import { toProjectRelativePath } from './utils';
 
 export function buildPostTargetTransformer(
   target: TargetConfiguration,
@@ -16,36 +8,10 @@ export function buildPostTargetTransformer(
   projectDetails: { projectName: string; root: string },
   inferredTargetConfiguration: TargetConfiguration
 ) {
-  let viteConfigPath = getViteConfigPath(tree, projectDetails.root);
-
-  const configValues: Record<string, Record<string, unknown>> = {
-    default: {},
-  };
-
   if (target.configurations) {
     for (const configurationName in target.configurations) {
       const configuration = target.configurations[configurationName];
-      configValues[configurationName] = {};
-      removePropertiesFromTargetOptions(
-        configuration,
-        projectDetails.root,
-        configValues[configurationName]
-      );
-    }
-
-    for (const configurationName in target.configurations) {
-      const configuration = target.configurations[configurationName];
-      if (
-        configuration.config &&
-        configuration.config !==
-          toProjectRelativePath(viteConfigPath, projectDetails.root)
-      ) {
-        const configFilePath = joinPathFragments(
-          projectDetails.root,
-          configuration.config
-        );
-        addConfigValuesToViteConfig(tree, configFilePath, configValues);
-      }
+      removePropertiesFromTargetOptions(configuration, projectDetails.root);
     }
 
     if (Object.keys(target.configurations).length === 0) {
@@ -64,15 +30,7 @@ export function buildPostTargetTransformer(
   }
 
   if (target.options) {
-    if (target.options.configFile) {
-      viteConfigPath = target.options.configFile;
-    }
-
-    removePropertiesFromTargetOptions(
-      target.options,
-      projectDetails.root,
-      configValues['default']
-    );
+    removePropertiesFromTargetOptions(target.options, projectDetails.root);
   }
 
   if (target.outputs) {
@@ -94,15 +52,12 @@ export function buildPostTargetTransformer(
     delete target.inputs;
   }
 
-  addConfigValuesToViteConfig(tree, viteConfigPath, configValues);
-
   return target;
 }
 
 function removePropertiesFromTargetOptions(
   targetOptions: any,
-  projectRoot: string,
-  configValues: Record<string, unknown>
+  projectRoot: string
 ) {
   if ('configFile' in targetOptions) {
     targetOptions.config = toProjectRelativePath(

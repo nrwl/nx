@@ -32,7 +32,7 @@ export type MergedOptions = Omit<
 > &
   WithWebOptions;
 
-// TODO(v25): remove the inert config-helper stubs in this file.
+// TODO(v25): remove the inert config-helper stubs in this file (NXC-5164).
 /**
  * @deprecated Use `NxAppWebpackPlugin` from `@nx/webpack/app-plugin`.
  * This inert stub will be removed in Nx v25.

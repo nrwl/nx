@@ -2729,7 +2729,7 @@ describe('task planner', () => {
     });
 
     it("defers a task whose reads sit under a producer's declared outputs", () => {
-      const { planner, taskGraph } = fixture();
+      const { taskGraph } = fixture();
       const configurations = configurationsFor({
         'parent:build': { inputs: ['dist/libs/child/index.js'] },
       });

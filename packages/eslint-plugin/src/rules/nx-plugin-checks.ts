@@ -127,7 +127,8 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       missingRequiredSchema: '{{ key }}: Missing required property - `schema`',
       missingImplementation:
         '{{ key }}: Missing required property - `implementation`',
-      invalidPromptPath: '{{ key }}: Prompt path should point to a valid file',
+      invalidPromptPath:
+        '{{ key }}: Prompt path should point to a valid markdown (.md) file',
       missingVersion: '{{ key }}: Missing required property - `version`',
       duplicateKey:
         '{{ key }}: Duplicate key. JSON parsers keep only the last occurrence, silently dropping the earlier one',

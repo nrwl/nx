@@ -1,5 +1,5 @@
 import { chmodSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
-import { createServer, type Socket } from 'node:net';
+import { createServer, Socket as NetSocket, type Socket } from 'node:net';
 import { platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { waitForSocketConnection } from './wait-for-socket-connection';
@@ -167,4 +167,31 @@ describe('waitForSocketConnection', () => {
       }
     }
   );
+
+  it('should dial through the connect it was given, and report its refusal', async () => {
+    const path = join(base, 'd.sock');
+    const dialed: string[] = [];
+    const seen: Array<[string, string]> = [];
+
+    const socket = await waitForSocketConnection(path, {
+      maxAttempts: 2,
+      delayMs: 1,
+      connect: (socketPath) => {
+        dialed.push(socketPath);
+        return new NetSocket().destroy(
+          Object.assign(new Error('refused'), { code: 'EACCES' })
+        );
+      },
+      onConnectError: (error, socketPath) => {
+        seen.push([error.code, socketPath]);
+      },
+    });
+
+    expect(socket).toBeNull();
+    expect(dialed).toEqual([path, path]);
+    expect(seen).toEqual([
+      ['EACCES', path],
+      ['EACCES', path],
+    ]);
+  });
 });

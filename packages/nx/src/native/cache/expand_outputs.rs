@@ -45,7 +45,7 @@ where
             .filter_map(|(entry, named)| {
                 let existing = [entry.as_str(), named.as_str()]
                     .into_iter()
-                    .find(|path| directory.join(path).exists())
+                    .find(|path| exists_below_no_link(&directory, path))
                     .map(str::to_string);
                 match &existing {
                     Some(path) => {
@@ -136,6 +136,18 @@ where
     Ok(found_paths)
 }
 
+/// Whether `path` exists under `directory` with no linked directory between
+/// them, which is where the glob walk would reach it.
+fn exists_below_no_link(directory: &Path, path: &str) -> bool {
+    let path = directory.join(path);
+    path.exists()
+        && !path
+            .ancestors()
+            .skip(1)
+            .take_while(|parent| *parent != directory && parent.starts_with(directory))
+            .any(|parent| parent.is_symlink())
+}
+
 #[napi]
 /// Statically checks which `paths` would be captured by the given output
 /// `entries`, without touching the file system. Mirrors `expand_outputs`
@@ -215,6 +227,66 @@ pub(crate) fn all_literal(entries: &[String]) -> bool {
         .all(|entry| !entry.starts_with('!') && partition_glob(entry).1.is_none())
 }
 
+/// The literal `entries` that exist under `directory` only through a linked
+/// directory, which `_expand_outputs` leaves out.
+pub(crate) fn outputs_below_a_link(directory: &Path, entries: &[String]) -> Vec<String> {
+    entries
+        .iter()
+        .filter(|entry| !entry.starts_with('!'))
+        .filter_map(|entry| match partition_glob(entry) {
+            (named, None) => Some((entry, named)),
+            _ => None,
+        })
+        .filter(|(entry, named)| {
+            let paths = [entry.as_str(), named.as_str()];
+            paths.iter().any(|path| directory.join(path).exists())
+                && !paths
+                    .iter()
+                    .any(|path| exists_below_no_link(directory, path))
+        })
+        .map(|(entry, _)| entry.clone())
+        .collect()
+}
+
+/// Fails when copying `expanded` over `directory` would remove a directory
+/// holding a path that a negated entry excludes. With negations no listed
+/// output is a directory, so a copy onto one replaces it whole.
+pub(crate) fn ensure_negated_outputs_kept(
+    directory: &Path,
+    entries: &[String],
+    expanded: &[String],
+) -> anyhow::Result<()> {
+    let negated: Vec<&str> = entries.iter().filter_map(|e| e.strip_prefix('!')).collect();
+    if negated.is_empty() {
+        return Ok(());
+    }
+    let negated = build_glob_set(&negated)?;
+    for output in expanded {
+        let path = directory.join(output);
+        if !std::fs::symlink_metadata(&path).is_ok_and(|m| m.is_dir()) {
+            continue;
+        }
+        let holds_negated = walkdir::WalkDir::new(&path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter_map(|entry| {
+                entry
+                    .path()
+                    .strip_prefix(directory)
+                    .ok()
+                    .map(|p| p.to_normalized_string())
+            })
+            .any(|p| negated.is_match(&p));
+        if holds_negated {
+            anyhow::bail!(
+                "Cache output {} would replace a directory that holds excluded outputs",
+                output
+            );
+        }
+    }
+    Ok(())
+}
+
 /// Every file the cache copies for `entries`, which defines a task's output
 /// files: what `_expand_outputs` finds, each directory read through `read`
 /// (workspace-relative, as `copied_files` reads it from disk).
@@ -240,7 +312,8 @@ pub(crate) fn output_files_via(
         .collect();
     for entry in _expand_outputs(directory, entries)? {
         let entry = Path::new(&entry).to_normalized_string();
-        let path = directory.join(&entry);
+        // A trailing `/` would resolve a linked entry.
+        let path: PathBuf = directory.join(&entry).components().collect();
         let Ok(link) = std::fs::symlink_metadata(&path) else {
             continue;
         };
@@ -620,6 +693,36 @@ mod test {
         assert_eq!(expanded, [r"dist\app"]);
         let files = get_files_for_outputs(temp.path(), vec![r"dist\app".into()]).unwrap();
         assert_eq!(files, [r"dist\app/main.js"]);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn should_not_expand_a_literal_output_below_a_linked_directory() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        temp.child("packages/api/.env").write_str("SECRET").unwrap();
+        temp.child("dist/index.html").write_str("site").unwrap();
+        symlink(temp.join("packages"), temp.join("dist/packages")).unwrap();
+
+        for entry in ["dist/packages/api", "dist/packages/api/.env"] {
+            let entries = vec![entry.to_string()];
+            let expanded = _expand_outputs(temp.path(), entries.clone()).unwrap();
+            assert!(expanded.is_empty(), "{entry}: {expanded:?}");
+            let files = get_files_for_outputs(temp.path(), entries).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
+        let globbed = _expand_outputs(temp.path(), vec!["dist/packages/api/**".into()]).unwrap();
+        assert!(globbed.is_empty(), "{globbed:?}");
+
+        // The link itself is still an output, and is not entered.
+        for entry in ["dist/packages", "dist/packages/"] {
+            let entries = vec![entry.to_string()];
+            let expanded = _expand_outputs(temp.path(), entries.clone()).unwrap();
+            assert_eq!(expanded, entries);
+            let files = get_files_for_outputs(temp.path(), entries).unwrap();
+            assert!(files.is_empty(), "{entry}: {files:?}");
+        }
     }
 
     #[test]

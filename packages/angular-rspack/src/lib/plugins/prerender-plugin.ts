@@ -151,9 +151,11 @@ export class PrerenderPlugin implements RspackPluginInstance {
           const options: RenderOptions = {
             ...this.#getDocumentRenderOptions(inputs, locale),
             indexFile,
-            emitsOriginalIndex: emitsServerIndexAsOriginal(
-              this.#_options.index as IndexExpandedDefinition
-            ),
+            emitsOriginalIndex:
+              inputs.emitsOriginalIndex ??
+              emitsServerIndexAsOriginal(
+                this.#_options.index as IndexExpandedDefinition
+              ),
             deployUrl: this.#_options.deployUrl || '',
             inlineCriticalCss:
               !!this.#_options.optimization.styles.inlineCritical,
@@ -245,9 +247,11 @@ export class PrerenderPlugin implements RspackPluginInstance {
             inputs,
             locale
           );
-          const emitsOriginalIndex = emitsServerIndexAsOriginal(
-            this.#_options.index as IndexExpandedDefinition
-          );
+          const emitsOriginalIndex =
+            inputs.emitsOriginalIndex ??
+            emitsServerIndexAsOriginal(
+              this.#_options.index as IndexExpandedDefinition
+            );
           const results = (await Promise.all(
             routes.map((route) => {
               const options: RenderOptions = {

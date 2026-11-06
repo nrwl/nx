@@ -11,8 +11,13 @@ use rayon::prelude::*;
 use regex::Regex;
 use rusqlite::{params, types::Value};
 
-use crate::native::cache::expand_outputs::{_expand_outputs, all_literal, normalize_outputs};
-use crate::native::cache::file_ops::{copy_and_list, copy_outputs_into_workspace};
+use crate::native::cache::expand_outputs::{
+    _expand_outputs, all_literal, ensure_negated_outputs_kept, normalize_outputs,
+    outputs_below_a_link,
+};
+use crate::native::cache::file_ops::{
+    copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
+};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
@@ -26,6 +31,9 @@ pub struct CachedOutputs {
     pub expanded_outputs: Vec<String>,
     /// Each file copied, stamped as it is in the workspace.
     pub files: Vec<OutputFile>,
+    /// Outputs that exist only through a linked directory. When there are
+    /// any, nothing is stored and the task is not cached.
+    pub outputs_below_a_link: Vec<String>,
 }
 
 /// Each workspace file in `paths` as it is now. Only a regular file, or a
@@ -429,6 +437,20 @@ impl NxCache {
 
         // Expand the outputs
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
+        let linked = outputs_below_a_link(&self.workspace_root, &outputs);
+        if !linked.is_empty() {
+            debug!("PUT {} skipped, outputs below a link: {:?}", &hash, linked);
+            remove_items(&[&task_dir])?;
+            self.record_terminal_outputs(vec![TerminalOutputRecord {
+                hash: hash.clone(),
+                size: total_size,
+            }])?;
+            return Ok(CachedOutputs {
+                expanded_outputs: vec![],
+                files: vec![],
+                outputs_below_a_link: linked,
+            });
+        }
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
@@ -460,32 +482,43 @@ impl NxCache {
         Ok(CachedOutputs {
             expanded_outputs,
             files: stamp_all(&self.workspace_root, written.par_iter().map(|(src, _)| src)),
+            outputs_below_a_link: vec![],
         })
     }
 
+    /// Restores and records a result fetched from a remote cache. Returns
+    /// false, discarding the artifact, when it holds a link that leaves the
+    /// output it sits in.
     #[napi]
     pub fn apply_remote_cache_results(
         &self,
         hash: String,
         result: CachedResult,
         outputs: Option<Vec<String>>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<bool> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash, &result.outputs_path
         );
         let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
-        if let Some(outputs) = outputs {
-            if outputs.len() > 0 && result.code == 0 {
+        if let Some(outputs) = outputs.filter(|outputs| !outputs.is_empty()) {
+            let outputs_path = Path::new(&result.outputs_path);
+            let normalized = normalize_outputs(&self.workspace_root, outputs.clone())?;
+            if let Some(link) = find_link_leaving_output(outputs_path, &normalized)? {
+                debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
+                remove_items(&[self.cache_path.join(&hash)])?;
+                return Ok(false);
+            }
+            if result.code == 0 {
                 size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
-            };
+            }
         }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
-        Ok(())
+        Ok(true)
     }
 
     /// Register terminal outputs that were written without a cache entry —
@@ -660,6 +693,7 @@ impl NxCache {
         let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let literal = all_literal(&outputs);
         let expanded_outputs = _expand_outputs(outputs_path, outputs.clone())?;
+        ensure_negated_outputs_kept(&self.workspace_root, &outputs, &expanded_outputs)?;
 
         trace!(
             "Restoring {} outputs from cache {:?} -> {:?}",
@@ -667,8 +701,12 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        let (size, written) =
-            copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)?;
+        let (size, written) = copy_outputs_into_workspace(
+            &self.workspace_root,
+            outputs_path,
+            &outputs,
+            &expanded_outputs,
+        )?;
         // Stamped once the copy is done: a link can be written before the
         // file it points to.
         let files = stamp_all(
@@ -1087,6 +1125,63 @@ mod test {
     const LOG_SIZE: i64 = "log".len() as i64;
 
     #[test]
+    fn restore_keeps_a_file_where_a_glob_match_needs_a_directory() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let source = cache.workspace_root.join("src/checkout.ts");
+        create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::write(&source, "source").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("src/checkout.ts")).unwrap();
+        std::fs::write(artifact.join("src/checkout.ts/x.generated.ts"), "gen").unwrap();
+
+        let result = cache.copy_files_from_cache(
+            CachedResult {
+                outputs_path: artifact.to_str().unwrap().to_string(),
+                ..Default::default()
+            },
+            vec!["src/**/*.generated.ts".to_string()],
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), "source");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_replaces_a_linked_glob_root_without_reading_through_it() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        std::fs::write(elsewhere.join("a"), "outside").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist")).unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(artifact.join("dist/a")).unwrap();
+        std::fs::write(artifact.join("dist/a/main.js"), "built").unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/**/*.js".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").is_symlink());
+        assert_eq!(
+            std::fs::read_to_string(cache.workspace_root.join("dist/a/main.js")).unwrap(),
+            "built"
+        );
+        assert_eq!(
+            std::fs::read_to_string(elsewhere.join("a")).unwrap(),
+            "outside"
+        );
+    }
+
+    #[test]
     fn get_is_a_miss_once_the_artifact_directory_is_gone() {
         let temp = TempDir::new().unwrap();
         let mut cache = cache_in(&temp);
@@ -1136,6 +1231,102 @@ mod test {
         assert!(cache.get_task_outputs_path_internal("1").is_file());
         assert!(cache.get_task_outputs_path_internal("2").is_file());
         assert_eq!(cache.get_cache_size().unwrap(), stored_size + LOG_SIZE);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn put_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        record_task(&cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        create_dir_all(cache.workspace_root.join("dist")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        let stored = cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(stored.expanded_outputs.is_empty());
+        assert!(stored.files.is_empty());
+        assert_eq!(stored.outputs_below_a_link, ["dist/packages/api"]);
+        assert!(!cache.cache_path.join("1").exists());
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+
+        // A linked output is stored as the link, trailing `/` or not.
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert_eq!(
+            cache
+                .cache_path
+                .join("1/dist/packages")
+                .read_link()
+                .unwrap(),
+            elsewhere
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn put_through_a_link_replaces_an_earlier_entry_with_a_miss() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        put_output(&mut cache, "1");
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, cache.workspace_root.join("dist/packages")).unwrap();
+
+        cache
+            .put(
+                "1".to_string(),
+                "log".to_string(),
+                vec!["dist/packages/api".to_string()],
+                0,
+            )
+            .unwrap();
+
+        assert!(cache.get("1".to_string()).unwrap().is_none());
+        assert_eq!(record_for(&cache, "1"), Some((false, LOG_SIZE)));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_read_an_output_through_a_link() {
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(elsewhere.join("api")).unwrap();
+        std::fs::write(elsewhere.join("api/.env"), b"SECRET").unwrap();
+        let artifact = temp.path().join("artifact");
+        create_dir_all(&artifact).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, artifact.join("dist")).unwrap();
+
+        cache
+            .copy_files_from_cache(
+                CachedResult {
+                    outputs_path: artifact.to_str().unwrap().to_string(),
+                    ..Default::default()
+                },
+                vec!["dist/api".to_string()],
+            )
+            .unwrap();
+
+        assert!(!cache.workspace_root.join("dist").exists());
     }
 
     #[test]
@@ -1215,5 +1406,273 @@ mod test {
         assert_eq!(hit.terminal_output.as_deref(), Some("log"));
         assert_eq!(record_for(&a, "1"), Some((true, stored_size)));
         assert!(a.get("1".to_string()).unwrap().is_some());
+    }
+
+    /// A remote artifact for `hash` holding `dist/app/main.js`, after `plant`
+    /// adds to its `dist/app`.
+    #[cfg(unix)]
+    fn remote_artifact(cache: &NxCache, hash: &str, plant: impl FnOnce(&Path)) -> CachedResult {
+        record_task(cache, hash);
+        let outputs_path = cache.cache_path.join(hash);
+        let app = outputs_path.join("dist/app");
+        create_dir_all(&app).unwrap();
+        std::fs::write(app.join("main.js"), b"built").unwrap();
+        plant(&app);
+        CachedResult {
+            code: 0,
+            terminal_output: Some("log".to_string()),
+            outputs_path: outputs_path.to_str().unwrap().to_string(),
+            size: None,
+        }
+    }
+
+    #[cfg(unix)]
+    fn apply_remote(cache: &NxCache, hash: &str, result: CachedResult) -> bool {
+        apply_remote_with_output(cache, hash, result, "dist/app")
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_output(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        output: &str,
+    ) -> bool {
+        apply_remote_with_outputs(cache, hash, result, &[output])
+    }
+
+    #[cfg(unix)]
+    fn apply_remote_with_outputs(
+        cache: &NxCache,
+        hash: &str,
+        result: CachedResult,
+        outputs: &[&str],
+    ) -> bool {
+        let outputs = outputs.iter().map(|output| output.to_string()).collect();
+        cache
+            .apply_remote_cache_results(hash.to_string(), result, Some(outputs))
+            .unwrap()
+    }
+
+    /// Output sets whose roots are `dist/app` or one of its ancestors.
+    #[cfg(unix)]
+    const REMOTE_OUTPUTS: [&[&str]; 4] = [
+        &["dist/app"],
+        &["dist/app/**"],
+        &["dist/app/**", "!dist/app/cache/**"],
+        &["dist/**/*.js"],
+    ];
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_with_links_inside_its_output_is_applied() {
+        use std::os::unix::fs::symlink;
+
+        for outputs in REMOTE_OUTPUTS {
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("main.js", app.join("link.js")).unwrap();
+                symlink("../main.js", app.join("sub/up.js")).unwrap();
+            });
+
+            assert!(
+                apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{outputs:?}"
+            );
+            let app = cache.workspace_root.join("dist/app");
+            assert_eq!(std::fs::read(app.join("link.js")).unwrap(), b"built");
+            assert_eq!(std::fs::read(app.join("sub/up.js")).unwrap(), b"built");
+            assert!(record_for(&cache, "1").is_some(), "{outputs:?}");
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_a_glob_output_root() {
+        use std::os::unix::fs::symlink;
+
+        let cases: [(&[&str], fn(&Path)); 3] = [
+            (&["dist/app/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/app/**", "!dist/app/cache/**"], |app| {
+                create_dir_all(app.join("sub")).unwrap();
+                symlink("../../other.js", app.join("sub/out.js")).unwrap();
+            }),
+            (&["dist/**/*.js"], |app| {
+                symlink("../../other.js", app.join("out.js")).unwrap();
+            }),
+        ];
+
+        for (outputs, plant) in cases {
+            let name = format!("{outputs:?}");
+            let temp = TempDir::new().unwrap();
+            let cache = cache_in(&temp);
+            let result = remote_artifact(&cache, "1", plant);
+
+            assert!(
+                !apply_remote_with_outputs(&cache, "1", result, outputs),
+                "{name}"
+            );
+            assert_discarded(&cache, &name);
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_a_link_leaves_its_output() {
+        use std::os::unix::fs::symlink;
+
+        let cases: [(&str, fn(&Path)); 5] = [
+            ("output itself", |app| {
+                std::fs::remove_dir_all(app).unwrap();
+                symlink("../..", app).unwrap();
+            }),
+            ("absolute", |app| symlink("/tmp", app.join("abs")).unwrap()),
+            ("to the output root", |app| {
+                symlink(".", app.join("self")).unwrap()
+            }),
+            ("nested parent", |app| {
+                create_dir_all(app.join("a/b")).unwrap();
+                symlink("../../../other", app.join("a/b/up")).unwrap();
+            }),
+            ("through another link", |app| {
+                create_dir_all(app.join("a/b/c")).unwrap();
+                create_dir_all(app.join("a/x")).unwrap();
+                symlink("../../x", app.join("a/b/c/l")).unwrap();
+                symlink("l/../../..", app.join("a/b/c/esc")).unwrap();
+            }),
+        ];
+
+        // A failed result is recorded without a restore, but a later local
+        // hit would restore it.
+        for code in [0, 1] {
+            for (name, plant) in cases {
+                let name = format!("{name} (code {code})");
+                let temp = TempDir::new().unwrap();
+                let cache = cache_in(&temp);
+                let result = CachedResult {
+                    code,
+                    ..remote_artifact(&cache, "1", plant)
+                };
+
+                assert!(!apply_remote(&cache, "1", result), "{name}");
+                assert_discarded(&cache, &name);
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn remote_result_is_discarded_when_an_output_with_a_trailing_slash_is_a_link() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new().unwrap();
+        let cache = cache_in(&temp);
+        let elsewhere = temp.path().join("elsewhere");
+        create_dir_all(&elsewhere).unwrap();
+        let result = remote_artifact(&cache, "1", |app: &Path| {
+            std::fs::remove_dir_all(app).unwrap();
+            symlink(&elsewhere, app).unwrap();
+        });
+
+        assert!(!apply_remote_with_output(&cache, "1", result, "dist/app/"));
+        assert_discarded(&cache, "trailing slash");
+    }
+
+    #[cfg(unix)]
+    fn assert_discarded(cache: &NxCache, name: &str) {
+        assert!(
+            std::fs::symlink_metadata(cache.workspace_root.join("dist")).is_err(),
+            "{name}: nothing is restored"
+        );
+        assert!(
+            !cache.cache_path.join("1").exists(),
+            "{name}: artifact removed"
+        );
+        assert_eq!(record_for(cache, "1"), None, "{name}: not recorded");
+    }
+
+    const NEXT_OUTPUTS: [&str; 2] = ["web/.next/**", "!web/.next/cache/**"];
+
+    fn next_outputs() -> Vec<String> {
+        NEXT_OUTPUTS.iter().map(|s| s.to_string()).collect()
+    }
+
+    /// Stores a build of `web` whose `.next/cache` is excluded, and returns
+    /// the cache with its artifact directory.
+    fn put_next_build(temp: &TempDir) -> (NxCache, PathBuf) {
+        let mut cache = cache_in(temp);
+        let next = cache.workspace_root.join("web/.next");
+        create_dir_all(next.join("cache/webpack")).unwrap();
+        write(next.join("BUILD_ID"), b"1").unwrap();
+        write(next.join("cache/webpack/0.pack"), b"local").unwrap();
+        record_task(&cache, "1");
+        cache
+            .put("1".to_string(), "log".to_string(), next_outputs(), 0)
+            .unwrap();
+        let artifact = cache.cache_path.join("1");
+        (cache, artifact)
+    }
+
+    fn restore_next_build(cache: &mut NxCache) -> anyhow::Result<()> {
+        let hit = cache.get("1".to_string()).unwrap().unwrap();
+        cache.copy_files_from_cache(hit, next_outputs()).map(|_| ())
+    }
+
+    #[test]
+    fn put_and_restore_leave_negated_outputs_alone() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
+        assert!(!artifact.join("web/.next/cache").exists());
+
+        create_dir_all(artifact.join("web/.next/cache/webpack")).unwrap();
+        write(artifact.join("web/.next/cache/webpack/other.pack"), b"x").unwrap();
+        restore_next_build(&mut cache).unwrap();
+
+        let webpack = cache.workspace_root.join("web/.next/cache/webpack");
+        assert!(webpack.join("0.pack").is_file());
+        assert!(!webpack.join("other.pack").exists());
+    }
+
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_file() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        write(artifact.join("web/.next/cache"), b"file").unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_replace_a_directory_holding_negated_outputs_with_a_link() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        std::os::unix::fs::symlink("elsewhere", artifact.join("web/.next/cache")).unwrap();
+
+        assert!(restore_next_build(&mut cache).is_err());
+        let pack = cache.workspace_root.join("web/.next/cache/webpack/0.pack");
+        assert_eq!(std::fs::read(pack).unwrap(), b"local");
+    }
+
+    #[test]
+    fn restore_replaces_a_directory_without_negated_outputs() {
+        let temp = TempDir::new().unwrap();
+        let (mut cache, artifact) = put_next_build(&temp);
+        let id = cache.workspace_root.join("web/.next/BUILD_ID");
+        std::fs::remove_file(&id).unwrap();
+        create_dir_all(id.join("stale")).unwrap();
+        write(id.join("stale/file"), b"x").unwrap();
+
+        restore_next_build(&mut cache).unwrap();
+        assert_eq!(std::fs::read(&id).unwrap(), b"1");
+        assert!(artifact.join("web/.next/BUILD_ID").is_file());
     }
 }

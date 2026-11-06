@@ -74,6 +74,48 @@ describe('GitRepository', () => {
       }
     }
   );
+
+  (process.platform === 'win32' ? it.skip : it)(
+    'does not parse an option-shaped remote branch name as a fetch option',
+    async () => {
+      const tempDirectory = mkdtempSync(join(tmpdir(), 'nx-import-git-utils-'));
+      const marker = join(tempDirectory, 'nx-import-upload-pack');
+      const maliciousRef = `--upload-pack=touch\${IFS}${marker};git-upload-pack`;
+      const sourceRepository = join(tempDirectory, 'source');
+      const clonedRepository = join(tempDirectory, 'cloned');
+
+      try {
+        mkdirSync(sourceRepository);
+        runGit(['init'], sourceRepository);
+        runGit(['config', 'user.email', 'test@example.com'], sourceRepository);
+        runGit(['config', 'user.name', 'Test User'], sourceRepository);
+        writeFileSync(join(sourceRepository, 'source.txt'), 'source');
+        runGit(['add', 'source.txt'], sourceRepository);
+        runGit(['commit', '-m', 'initial commit'], sourceRepository);
+        runGit(
+          ['update-ref', `refs/heads/${maliciousRef}`, 'HEAD'],
+          sourceRepository
+        );
+
+        const git = await cloneFromUpstream(
+          sourceRepository,
+          clonedRepository,
+          { originName: '__tmp_nx_import__' }
+        );
+        const ref = (await git.listBranches()).find(
+          (branch) => branch === maliciousRef
+        );
+        expect(ref).toBe(maliciousRef);
+
+        await git.addFetchRemote('__tmp_nx_import__', ref!);
+        await git.fetch('__tmp_nx_import__', ref!);
+
+        expect(existsSync(marker)).toBe(false);
+      } finally {
+        rmSync(tempDirectory, { recursive: true, force: true });
+      }
+    }
+  );
 });
 
 describe('getPathCommitExposure', () => {

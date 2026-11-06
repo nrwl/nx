@@ -1,23 +1,19 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration as _addProjectConfiguration,
-  type ExpandedPluginConfiguration,
   joinPathFragments,
   type ProjectConfiguration,
   type ProjectGraph,
   readNxJson,
   readProjectConfiguration,
   type Tree,
-  updateNxJson,
   writeJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import {
   mockCjsModule as mockConverterModule,
   TempFs,
 } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
-import type { VitestPluginOptions } from '../../plugins/plugin';
 import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 
 let fs: TempFs;

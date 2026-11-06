@@ -161,6 +161,9 @@ function kickOffRecompute() {
         cachedSerializedProjectGraphPromise === myPromise &&
         result.projectGraph
       ) {
+        if (result.projectFileMapCache) {
+          currentProjectFileMapCache = result.projectFileMapCache;
+        }
         // The graph identity ties the candidate's generation to exactly this
         // result; a chained result never matches (its computation's kickoff
         // replaced the cached pointer, failing the identity check above).
@@ -835,7 +838,6 @@ async function createAndSerializeProjectGraph({
         sourceMaps
       );
 
-    currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;
     currentSourceMaps = sourceMaps;
 
