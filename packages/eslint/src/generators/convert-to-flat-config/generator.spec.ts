@@ -1953,6 +1953,40 @@ describe('convert-to-flat-config generator', () => {
       warnSpy.mockRestore();
     });
 
+    it.each([
+      ['.eslintrc.json', undefined],
+      ['.eslintrc.js', 'module.exports = {};\n'],
+    ])(
+      'should keep the flat config of a project that also has %s',
+      async (eslintrc, eslintrcContent) => {
+        await lintProjectGenerator(tree, {
+          skipFormat: false,
+          linter: 'eslint',
+          project: 'test-lib',
+          enableTypedLinting: false,
+          eslintConfigFormat: 'cjs',
+        });
+        if (eslintrcContent) {
+          tree.delete('libs/test-lib/.eslintrc.json');
+          tree.write(`libs/test-lib/${eslintrc}`, eslintrcContent);
+        }
+        const flatConfig = `module.exports = [{ rules: { 'no-console': 'error' } }];\n`;
+        tree.write('libs/test-lib/eslint.config.cjs', flatConfig);
+
+        const warnSpy = vi.spyOn(logger, 'warn');
+        await convertToFlatConfigGenerator(tree, options);
+
+        expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toBe(
+          flatConfig
+        );
+        expect(tree.exists(`libs/test-lib/${eslintrc}`)).toBe(true);
+        expect(warnSpy).toHaveBeenCalledWith(
+          `Skipping "test-lib": it has both ${eslintrc} and eslint.config.cjs. Keep the configuration the project needs in eslint.config.cjs and delete ${eslintrc}.`
+        );
+        warnSpy.mockRestore();
+      }
+    );
+
     it('should refuse to convert when the root eslintrc parses to nothing', async () => {
       tree.delete('.eslintrc.json');
       tree.write('.eslintrc.yaml', '# nothing here\n');
