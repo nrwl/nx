@@ -303,6 +303,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                       ],
                       "testFileDirectives": {
                         "depends-on": true,
+                        "file": "proj/src/unit.spec.ts",
                         "ignore-server-inputs": false,
                       },
                     },
@@ -1147,6 +1148,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         ],
                         "testFileDirectives": {
                           "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
                           "ignore-server-inputs": false,
                         },
                       },
@@ -1305,6 +1307,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         ],
                         "testFileDirectives": {
                           "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
                           "ignore-server-inputs": false,
                         },
                       },
@@ -1463,6 +1466,7 @@ describe.each([true, false])('@nx/jest/plugin', (disableJestRuntime) => {
                         ],
                         "testFileDirectives": {
                           "depends-on": true,
+                          "file": "proj/src/unit.spec.ts",
                           "ignore-server-inputs": false,
                         },
                       },

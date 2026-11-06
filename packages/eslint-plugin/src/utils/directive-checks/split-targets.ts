@@ -7,6 +7,7 @@ import {
 import {
   appliesTestFileDirective,
   readSourceMapsCache,
+  recordedTestFile,
   type TestFileDirective,
 } from '@nx/devkit/internal';
 import { relative } from 'node:path';
@@ -19,14 +20,26 @@ const sourceMapsByGraph = new WeakMap<
   ReturnType<typeof readSourceMapsCache>
 >();
 
-/** The atomized targets (`<target>--<file path>`) that run `sourceFilePath`. */
+/**
+ * The atomized targets that record `sourceFilePath` as their test file, or else
+ * the unrecorded ones named `<target>--<file path>`. A name can end with
+ * another file's path, but an unrecorded target applies no directive.
+ */
 export function findSplitTargets(
   project: ProjectGraphProjectNode,
   sourceFilePath: string
 ): SplitTarget[] {
+  const targets = Object.entries(project.data.targets ?? {});
+  const recorded = targets.filter(
+    ([, target]) => recordedTestFile(target) === sourceFilePath
+  );
+  if (recorded.length > 0) {
+    return recorded;
+  }
   const filePath = normalizePath(relative(project.data.root, sourceFilePath));
-  return Object.entries(project.data.targets ?? {}).filter(([name]) =>
-    name.endsWith(`--${filePath}`)
+  return targets.filter(
+    ([name, target]) =>
+      recordedTestFile(target) === undefined && name.endsWith(`--${filePath}`)
   );
 }
 

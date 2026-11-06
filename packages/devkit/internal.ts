@@ -141,6 +141,7 @@ export {
 export {
   applyTestFileDirectives,
   appliesTestFileDirective,
+  recordedTestFile,
   type TestFileDirective,
 } from './src/utils/test-file-directives';
 export { dependsOnProjects } from './src/utils/test-file-depends-on';

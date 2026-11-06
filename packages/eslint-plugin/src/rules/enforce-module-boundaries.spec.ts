@@ -2051,6 +2051,7 @@ Violation detected in:
               'e2e-ci--src/checkout.spec.ts': {
                 metadata: {
                   testFileDirectives: {
+                    file: 'apps/shop-e2e/src/checkout.spec.ts',
                     'depends-on': true,
                     'ignore-server-inputs': true,
                   },
