@@ -3,21 +3,27 @@ import {
   detectPackageManager,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 import { acknowledgeBuildScripts } from '@nx/devkit/internal';
-import { extraEslintDependencies } from '@nx/react';
+import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
-  addPluginsToLintConfig,
+  addPluginConfigToFlatLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addSpreadConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
+import {
+  findRootConfigWithConflictingPlugin,
+  getEslintMajorVersion,
+} from '../../../utils/eslint-config-next-conflicts';
 import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
@@ -29,6 +35,7 @@ export async function addLinting(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
+  const isNext16App = options.linter === 'eslint' && (await isNext16(host));
 
   tasks.push(
     await addLintingToProject(host, {
@@ -50,15 +57,45 @@ export async function addLinting(
 
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
+      if (isNext16App) {
+        const rootConfigWithConflictingPlugin =
+          findRootConfigWithConflictingPlugin(
+            host,
+            getEslintMajorVersion(host)
+          );
+        if (rootConfigWithConflictingPlugin) {
+          // ESLint rejects eslint-config-next's own copies of React plugins the root
+          // config already registers, so add only the Next.js plugin and its rules.
+          addPluginConfigToFlatLintConfig(
+            host,
+            options.appProjectRoot,
+            'nextEslintPluginNext',
+            '@next/eslint-plugin-next',
+            'core-web-vitals',
+            { insertAtTheEnd: false }
+          );
+          logger.warn(
+            `The ESLint config of the "${options.projectName}" project uses the "core-web-vitals" config of @next/eslint-plugin-next instead of eslint-config-next. ` +
+              `The root config ${rootConfigWithConflictingPlugin} registers react, react-hooks, import or jsx-a11y, and ESLint rejects a second copy of a plugin. ` +
+              `Files that ${rootConfigWithConflictingPlugin} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`
+          );
+        } else {
+          addSpreadConfigToFlatLintConfig(
+            host,
+            options.appProjectRoot,
+            'nextVitals',
+            'eslint-config-next/core-web-vitals',
+            { insertAtTheEnd: false }
+          );
+        }
+      }
       addPredefinedConfigToFlatLintConfig(
         host,
         options.appProjectRoot,
         'flat/react-typescript',
         { checkBaseConfig: true }
       );
-      if (await isNext16(host)) {
-        addPluginsToLintConfig(host, options.appProjectRoot, ['@next/next']);
-      } else {
+      if (!isNext16App) {
         // Since Next.js < 16 does not support flat configs yet, we need to use compat fixup.
         const addExtendsTask = addExtendsToLintConfig(
           host,
@@ -123,18 +160,21 @@ export async function addLinting(
       'unrs-resolver': false,
     });
 
+    const nextLintDependencies = {
+      'eslint-config-next': eslintConfigNextVersion,
+      '@next/eslint-plugin-next': eslintConfigNextVersion,
+    };
+    // eslint-config-next 16 brings its own React plugins.
     tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        extraEslintDependencies.dependencies,
-        {
-          ...extraEslintDependencies.devDependencies,
-          'eslint-config-next': eslintConfigNextVersion,
-          '@next/eslint-plugin-next': eslintConfigNextVersion,
-        },
-        undefined,
-        true
-      )
+      isNext16App
+        ? addDependenciesToPackageJson(
+            host,
+            {},
+            nextLintDependencies,
+            undefined,
+            true
+          )
+        : addExtraEslintDependencies(host, nextLintDependencies)
     );
   }
 

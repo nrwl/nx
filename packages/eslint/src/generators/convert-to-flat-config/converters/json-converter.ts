@@ -1,4 +1,4 @@
-import { Tree, names } from '@nx/devkit';
+import { joinPathFragments, logger, Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import {
@@ -14,10 +14,11 @@ import {
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
 
-// Rewrites legacy `.eslintrc[.base][.json]` / `.eslintignore` filenames to their flat-config
-// counterparts. Used for `extends` local paths, rule option values that embed these filenames,
-// and nx.json / project.json input globs that referenced the deleted files. Accepts
-// extensionless `.eslintrc` since ESLint treats that as JSON by convention.
+// Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
+// filenames to their flat-config counterparts. Used for `extends` local paths, rule option
+// values that embed these filenames, and nx.json / project.json input globs that referenced
+// the deleted files. Accepts extensionless `.eslintrc` since ESLint treats that as JSON by
+// convention.
 export function renameLegacyEslintrcFile(
   path: string,
   format: 'mjs' | 'cjs'
@@ -27,6 +28,7 @@ export function renameLegacyEslintrcFile(
       /(^|.*?)\.eslintrc(\.base)?(\.json)?$/,
       `$1eslint$2.config.${format}`
     )
+    .replace(/(^|.*?)\.eslintrc\.(ya?ml|c?js)$/, `$1eslint.config.${format}`)
     .replace(/(^|.*?)\.eslintignore$/, `$1eslint.config.${format}`);
 }
 
@@ -46,7 +48,7 @@ function renameLegacyWorkspaceRules(
   return renamed;
 }
 
-// Rewrites references to the legacy `.eslintrc[.base].json` / `.eslintignore` that may appear
+// Rewrites references to the legacy eslintrc / `.eslintignore` files that may appear
 // inside rule option values (e.g. `@nx/dependency-checks`'s `ignoredFiles`) to point at the
 // generated flat-config files instead. Without this, rule options keep pointing at files that
 // no longer exist after the conversion.
@@ -88,14 +90,17 @@ function preprocessRules(
 
 /**
  * Converts an ESLint JSON config to a flat config.
- * Deletes the original file along with .eslintignore if it exists.
+ *
+ * `convertedEslintrcFiles` holds the workspace-relative eslintrc files the same
+ * run converts. A local extends becomes an import only when it resolves to one of them.
  */
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   config: ESLint.ConfigData,
   ignorePaths: string[],
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  convertedEslintrcFiles: ReadonlySet<string>
 ): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
@@ -126,10 +131,13 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.extends) {
     const extendsResult = addExtends(
+      tree,
+      root,
       importsMap,
       exportElements,
       config,
-      format
+      format,
+      convertedEslintrcFiles
     );
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
     isESLintJSNeeded = extendsResult.isESLintJSNeeded;
@@ -161,8 +169,20 @@ export function convertEslintJsonToFlatConfig(
     );
   }
 
-  if (config.globals || config.env) {
-    if (config.env) {
+  // Like FlatCompat, add only enabled environments. Setting a disabled one's globals
+  // to "off" would also turn off the ones that other enabled environments define.
+  const envs = Object.keys(config.env ?? {});
+  const enabledEnvs = envs.filter((env) => config.env[env]);
+  for (const env of envs.filter((env) => !config.env[env])) {
+    logger.warn(
+      `The ESLint config in "${root || '.'}" disables the "${env}" environment. ` +
+        `The flat config does not add its globals, but keeps the ones that extended configs define. ` +
+        `Set those globals to "off" in "languageOptions.globals" if the project must not use them.`
+    );
+  }
+
+  if (config.globals || enabledEnvs.length) {
+    if (enabledEnvs.length) {
       importsMap.set('globals', 'globals');
     }
 
@@ -170,12 +190,19 @@ export function convertEslintJsonToFlatConfig(
       ts.factory.createPropertyAssignment(
         'globals',
         ts.factory.createObjectLiteralExpression([
-          ...Object.keys(config.env || {}).map((env) =>
+          ...enabledEnvs.map((env) =>
             ts.factory.createSpreadAssignment(
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createIdentifier('globals'),
-                ts.factory.createIdentifier(env)
-              )
+              // `globals.shared-node-browser` reads as a subtraction. A `plugin/env` name keeps
+              // the dot, since a string key can turn its load error into missing globals.
+              /^[A-Za-z_$][\w$]*$/.test(env) || env.includes('/')
+                ? ts.factory.createPropertyAccessExpression(
+                    ts.factory.createIdentifier('globals'),
+                    ts.factory.createIdentifier(env)
+                  )
+                : ts.factory.createElementAccessExpression(
+                    ts.factory.createIdentifier('globals'),
+                    ts.factory.createStringLiteral(env)
+                  )
             )
           ),
           ...Object.keys(config.globals || {}).map((key) =>
@@ -351,12 +378,35 @@ export function convertEslintJsonToFlatConfig(
   };
 }
 
+// Returns the extends path with the suffix Node resolves it to (`.eslintrc` -> `.eslintrc.json`)
+// when the run converts that file. Converted root configs are already deleted from the tree.
+function resolveConvertedExtends(
+  tree: Tree,
+  root: string,
+  extendsPath: string,
+  convertedEslintrcFiles: ReadonlySet<string>
+): string | undefined {
+  for (const suffix of ['', '.js', '.json']) {
+    const candidate = joinPathFragments(root, extendsPath + suffix);
+    if (convertedEslintrcFiles.has(candidate)) {
+      return extendsPath + suffix;
+    }
+    if (tree.isFile(candidate)) {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 // add parsed extends to export blocks and add import statements
 function addExtends(
+  tree: Tree,
+  root: string,
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
   config: ESLint.ConfigData,
-  format: 'mjs' | 'cjs'
+  format: 'mjs' | 'cjs',
+  convertedEslintrcFiles: ReadonlySet<string>
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
@@ -370,10 +420,20 @@ function addExtends(
   extendsConfig
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      if (imp.match(/\.eslintrc(\.base)?(\.json)?$/)) {
+      // Any other local file stays in place, so it keeps loading through FlatCompat.
+      const convertedFile = resolveConvertedExtends(
+        tree,
+        root,
+        imp,
+        convertedEslintrcFiles
+      );
+      if (convertedFile) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(generateSpreadElement(localName));
-        importsMap.set(renameLegacyEslintrcFile(imp, format), localName);
+        importsMap.set(
+          renameLegacyEslintrcFile(convertedFile, format),
+          localName
+        );
       } else {
         eslintrcConfigs.push(imp);
       }

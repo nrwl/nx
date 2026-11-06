@@ -1,21 +1,23 @@
 import { type Tree } from '@nx/devkit';
 import {
-  getDeclaredPackageVersion,
   getInstalledPackageVersion,
+  getResolvedPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { major } from 'semver';
+import { useFlatConfig } from './flat-config';
 
 export const nxVersion = require(join('@nx/eslint', 'package.json')).version;
 
 export const minSupportedEslintVersion = '9.0.0';
 
 export const eslintConfigPrettierVersion = '^10.0.0';
-export const eslintrcVersion = '^3.0.0';
+export const eslintrcVersion = '^3.3.0';
 export const jsoncEslintParserVersion = '^2.1.0';
-export const eslintCompat = '^1.1.1';
+export const eslintCompat = '^2.0.5';
 
-export const eslintVersion = '^9.8.0';
+export const eslintVersion = '^10.0.0';
+export const eslintV9Version = '^9.8.0';
 export const typescriptESLintVersion = '^8.58.0';
 
 type EslintVersions = {
@@ -29,26 +31,58 @@ const latestVersions: EslintVersions = {
 };
 
 // Pins dependency versions for supported ESLint majors that aren't the default
-// (latest) stack so existing workspaces aren't force-bumped. Only v9 is mapped
-// for now; the v10 entry will be added alongside full v10 support.
+// (latest) stack so existing workspaces aren't force-bumped to v10.
 type CompatVersions = 9;
 const versionMap: Record<CompatVersions, EslintVersions> = {
-  9: { eslintVersion: '^9.8.0', typescriptESLintVersion: '^8.58.0' },
+  9: { eslintVersion: eslintV9Version, typescriptESLintVersion: '^8.58.0' },
 };
 
 export function versions(tree: Tree): EslintVersions {
   const installedEslintVersion = getInstalledEslintVersion(tree);
+  const legacyRequested = process.env.ESLINT_USE_FLAT_CONFIG === 'false';
   if (installedEslintVersion) {
     const eslintMajorVersion = major(installedEslintVersion);
+    if (legacyRequested && eslintMajorVersion >= 10) {
+      throw new Error(
+        `ESLint v${eslintMajorVersion} does not support the legacy "eslintrc" configuration format, but ESLINT_USE_FLAT_CONFIG=false was set. ` +
+          `Unset the environment variable to scaffold a flat config, or downgrade ESLint to v9.`
+      );
+    }
     return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
   }
-  // No ESLint declared yet, so fresh installs go to the latest supported stack.
-  return latestVersions;
+  // Fresh install: latest stack (v10) by default. A workspace that stays on
+  // eslintrc gets v9, the last major that reads it, so the scaffolded config
+  // stays readable. Angular 20 and Next.js < 16 get v9 too: no release of
+  // angular-eslint 20 or eslint-config-next < 16 supports ESLint v10.
+  return useFlatConfig(tree) && !usesFrameworkWithoutEslintV10Support(tree)
+    ? latestVersions
+    : versionMap[9];
+}
+
+function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
+  const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
+  const nextVersion = getResolvedPackageVersion(tree, 'next');
+  return (
+    (!!angularVersion && major(angularVersion) < 21) ||
+    (!!nextVersion && major(nextVersion) < 16)
+  );
+}
+
+// convert-to-flat-config runs only on eslintrc workspaces, which
+// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the workspace's
+// major there: keep v9 on v9 (its plugins have no v10 release), never force
+// v10, and never downgrade a v10 workspace. Default to v9 when unresolved.
+export function getConvertToFlatConfigVersions(tree: Tree): EslintVersions {
+  const installedEslintVersion = getInstalledEslintVersion(tree);
+  const eslintMajorVersion = installedEslintVersion
+    ? major(installedEslintVersion)
+    : 9;
+  return eslintMajorVersion >= 10 ? latestVersions : versionMap[9];
 }
 
 export function getInstalledEslintVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('eslint');
   }
-  return getDeclaredPackageVersion(tree, 'eslint');
+  return getResolvedPackageVersion(tree, 'eslint');
 }

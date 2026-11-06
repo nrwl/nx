@@ -1,5 +1,6 @@
 import { generateFiles, offsetFromRoot, toJS, Tree } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { getExtraEslintDependencies } from '@nx/react/internal';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 import {
@@ -19,6 +20,10 @@ export async function createApplicationFiles(
   const connectCloudUrl =
     onBoardingStatus === 'unclaimed' &&
     (await getNxCloudAppOnBoardingUrl(options.nxCloudToken));
+  const usesJsxA11y =
+    options.linter === 'eslint' &&
+    'eslint-plugin-jsx-a11y' in
+      getExtraEslintDependencies(host).devDependencies;
 
   generateFiles(host, join(__dirname, '../files/app'), options.appProjectRoot, {
     ...options,
@@ -37,6 +42,7 @@ export async function createApplicationFiles(
     {
       ...options,
       connectCloudUrl,
+      usesJsxA11y,
       entryFileIos: 'src/main',
       offsetFromRoot: offsetFromRoot(options.appProjectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(

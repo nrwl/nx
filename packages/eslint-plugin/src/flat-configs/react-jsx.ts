@@ -1,6 +1,5 @@
-import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
-import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import { major } from 'semver';
 import tseslint, { type ConfigArray } from 'typescript-eslint';
 
 /**
@@ -13,88 +12,105 @@ import tseslint, { type ConfigArray } from 'typescript-eslint';
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-const config: ConfigArray = tseslint.config(
-  {
-    files: [
-      '**/*.ts',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.tsx',
-      '**/*.js',
-      '**/*.cjs',
-      '**/*.mjs',
-      '**/*.jsx',
-    ],
+
+// eslint-plugin-react and -jsx-a11y have no ESLint v10 release, so their rules
+// only apply on ESLint <10. react-hooks ships for every major; require the
+// v9-only plugins lazily so they're never loaded on v10.
+const isEslint10OrLater = major(require('eslint/package.json').version) >= 10;
+
+const files = [
+  '**/*.ts',
+  '**/*.cts',
+  '**/*.mts',
+  '**/*.tsx',
+  '**/*.js',
+  '**/*.cjs',
+  '**/*.mjs',
+  '**/*.jsx',
+];
+
+let config: ConfigArray;
+if (isEslint10OrLater) {
+  config = tseslint.config({
+    files,
     plugins: {
       'react-hooks': reactHooksPlugin,
     },
-    rules: reactHooksPlugin.configs.recommended.rules,
-  },
-  {
-    files: [
-      '**/*.ts',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.tsx',
-      '**/*.js',
-      '**/*.cjs',
-      '**/*.mjs',
-      '**/*.jsx',
-    ],
-    settings: { react: { version: 'detect' } },
-    plugins: {
-      'jsx-a11y': jsxA11yPlugin,
-      react: reactPlugin,
-    },
+    // react-hooks v7's `recommended` enables the React Compiler rule set as
+    // errors; keep only the classic two rules to match ESLint <10 behavior.
     rules: {
-      /**
-       * React-specific rule configurations
-       * https://github.com/yannickcr/eslint-plugin-react
-       */
-      'react/forbid-foreign-prop-types': ['warn', { allowInPropTypes: true }],
-      'react/jsx-no-comment-textnodes': 'warn',
-      'react/jsx-no-duplicate-props': 'warn',
-      'react/jsx-no-target-blank': 'warn',
-      'react/jsx-no-undef': 'error',
-      'react/jsx-pascal-case': ['warn', { allowAllCaps: true, ignore: [] }],
-      'react/jsx-uses-vars': 'warn',
-      'react/no-danger-with-children': 'warn',
-      'react/no-direct-mutation-state': 'warn',
-      'react/no-is-mounted': 'warn',
-      'react/no-typos': 'error',
-      'react/jsx-uses-react': 'off',
-      'react/react-in-jsx-scope': 'off',
-      'react/require-render-return': 'error',
-      'react/style-prop-object': 'warn',
-      'react/jsx-no-useless-fragment': 'warn',
-
-      /**
-       * JSX Accessibility rule configurations
-       * https://github.com/evcohen/eslint-plugin-jsx-a11y
-       */
-      'jsx-a11y/accessible-emoji': 'warn',
-      'jsx-a11y/alt-text': 'warn',
-      'jsx-a11y/anchor-has-content': 'warn',
-      'jsx-a11y/anchor-is-valid': [
-        'warn',
-        { aspects: ['noHref', 'invalidHref'] },
-      ],
-      'jsx-a11y/aria-activedescendant-has-tabindex': 'warn',
-      'jsx-a11y/aria-props': 'warn',
-      'jsx-a11y/aria-proptypes': 'warn',
-      'jsx-a11y/aria-role': 'warn',
-      'jsx-a11y/aria-unsupported-elements': 'warn',
-      'jsx-a11y/heading-has-content': 'warn',
-      'jsx-a11y/iframe-has-title': 'warn',
-      'jsx-a11y/img-redundant-alt': 'warn',
-      'jsx-a11y/no-access-key': 'warn',
-      'jsx-a11y/no-distracting-elements': 'warn',
-      'jsx-a11y/no-redundant-roles': 'warn',
-      'jsx-a11y/role-has-required-aria-props': 'warn',
-      'jsx-a11y/role-supports-aria-props': 'warn',
-      'jsx-a11y/scope': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
-  }
-);
+  });
+} else {
+  const jsxA11yPlugin = require('eslint-plugin-jsx-a11y');
+  const reactPlugin = require('eslint-plugin-react');
+  config = tseslint.config(
+    {
+      files,
+      plugins: {
+        'react-hooks': reactHooksPlugin,
+      },
+      rules: reactHooksPlugin.configs.recommended.rules,
+    },
+    {
+      files,
+      settings: { react: { version: 'detect' } },
+      plugins: {
+        'jsx-a11y': jsxA11yPlugin,
+        react: reactPlugin,
+      },
+      rules: {
+        /**
+         * React-specific rule configurations
+         * https://github.com/yannickcr/eslint-plugin-react
+         */
+        'react/forbid-foreign-prop-types': ['warn', { allowInPropTypes: true }],
+        'react/jsx-no-comment-textnodes': 'warn',
+        'react/jsx-no-duplicate-props': 'warn',
+        'react/jsx-no-target-blank': 'warn',
+        'react/jsx-no-undef': 'error',
+        'react/jsx-pascal-case': ['warn', { allowAllCaps: true, ignore: [] }],
+        'react/jsx-uses-vars': 'warn',
+        'react/no-danger-with-children': 'warn',
+        'react/no-direct-mutation-state': 'warn',
+        'react/no-is-mounted': 'warn',
+        'react/no-typos': 'error',
+        'react/jsx-uses-react': 'off',
+        'react/react-in-jsx-scope': 'off',
+        'react/require-render-return': 'error',
+        'react/style-prop-object': 'warn',
+        'react/jsx-no-useless-fragment': 'warn',
+
+        /**
+         * JSX Accessibility rule configurations
+         * https://github.com/evcohen/eslint-plugin-jsx-a11y
+         */
+        'jsx-a11y/accessible-emoji': 'warn',
+        'jsx-a11y/alt-text': 'warn',
+        'jsx-a11y/anchor-has-content': 'warn',
+        'jsx-a11y/anchor-is-valid': [
+          'warn',
+          { aspects: ['noHref', 'invalidHref'] },
+        ],
+        'jsx-a11y/aria-activedescendant-has-tabindex': 'warn',
+        'jsx-a11y/aria-props': 'warn',
+        'jsx-a11y/aria-proptypes': 'warn',
+        'jsx-a11y/aria-role': 'warn',
+        'jsx-a11y/aria-unsupported-elements': 'warn',
+        'jsx-a11y/heading-has-content': 'warn',
+        'jsx-a11y/iframe-has-title': 'warn',
+        'jsx-a11y/img-redundant-alt': 'warn',
+        'jsx-a11y/no-access-key': 'warn',
+        'jsx-a11y/no-distracting-elements': 'warn',
+        'jsx-a11y/no-redundant-roles': 'warn',
+        'jsx-a11y/role-has-required-aria-props': 'warn',
+        'jsx-a11y/role-supports-aria-props': 'warn',
+        'jsx-a11y/scope': 'warn',
+      },
+    }
+  );
+}
 
 export default config;

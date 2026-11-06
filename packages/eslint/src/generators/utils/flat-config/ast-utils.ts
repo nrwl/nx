@@ -53,14 +53,65 @@ export function removeOverridesFromLintConfig(content: string): string {
 
 // TODO Change name
 function findExportDefault(source: ts.SourceFile): ts.NodeArray<ts.Node> {
-  return ts.forEachChild(source, function analyze(node) {
+  return findExportedArray(source)?.elements;
+}
+
+/**
+ * The array an ESM flat config exports, either directly (`export default [...]`)
+ * or through a top-level `const` (`const eslintConfig = [...]; export default eslintConfig;`).
+ */
+function findExportedArray(
+  source: ts.SourceFile
+): ts.ArrayLiteralExpression | undefined {
+  const exportDefault = findExportDefaultStatement(source);
+  if (!exportDefault) {
+    return undefined;
+  }
+  const value =
+    findExportedDeclaration(source, exportDefault)?.initializer ??
+    exportDefault.expression;
+
+  return ts.isArrayLiteralExpression(value) ? value : undefined;
+}
+
+function findExportDefaultStatement(
+  source: ts.SourceFile
+): ts.ExportAssignment | undefined {
+  return source.statements.find(
+    (statement): statement is ts.ExportAssignment =>
+      ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+}
+
+/**
+ * The top-level `const` declaration of the binding an `export default <name>` exports.
+ * A `let` or `var` is skipped because a later assignment can replace its value.
+ */
+function findExportedDeclaration(
+  source: ts.SourceFile,
+  exportDefault: ts.ExportAssignment
+): ts.VariableDeclaration | undefined {
+  if (!ts.isIdentifier(exportDefault.expression)) {
+    return undefined;
+  }
+  const name = exportDefault.expression.text;
+  for (const statement of source.statements) {
     if (
-      ts.isExportAssignment(node) &&
-      ts.isArrayLiteralExpression(node.expression)
+      !ts.isVariableStatement(statement) ||
+      (statement.declarationList.flags & ts.NodeFlags.BlockScoped) !==
+        ts.NodeFlags.Const
     ) {
-      return node.expression.elements;
+      continue;
     }
-  });
+    const declaration = statement.declarationList.declarations.find(
+      (declaration) =>
+        ts.isIdentifier(declaration.name) && declaration.name.text === name
+    );
+    if (declaration) {
+      return declaration;
+    }
+  }
+  return undefined;
 }
 
 function findModuleExports(source: ts.SourceFile): ts.NodeArray<ts.Node> {
@@ -865,9 +916,7 @@ function removeImportFromFlatConfigCJS(
  * AST-based so a commented-out `export default` in a CJS file isn't misdetected.
  */
 export function isEsmExport(source: ts.SourceFile): boolean {
-  return source.statements.some(
-    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
-  );
+  return findExportDefaultStatement(source) !== undefined;
 }
 
 /**
@@ -922,16 +971,9 @@ function addBlockToFlatConfigExportESM(
     insertAtTheEnd: true,
   }
 ): string {
-  const exportDefaultStatement = source.statements.find(
-    (statement): statement is ts.ExportAssignment =>
-      ts.isExportAssignment(statement) &&
-      ts.isArrayLiteralExpression(statement.expression)
-  );
+  const exportArrayLiteral = findExportedArray(source);
 
-  if (!exportDefaultStatement) return content;
-
-  const exportArrayLiteral =
-    exportDefaultStatement.expression as ts.ArrayLiteralExpression;
+  if (!exportArrayLiteral) return content;
 
   let updatedArrayElements: ts.Expression[];
   if (options.checkBaseConfig) {
@@ -954,10 +996,35 @@ function addBlockToFlatConfigExportESM(
       : [config, ...exportArrayLiteral.elements];
   }
 
+  const updatedArrayLiteral = ts.factory.createArrayLiteralExpression(
+    updatedArrayElements,
+    true
+  );
+
+  if (!ts.isExportAssignment(exportArrayLiteral.parent)) {
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Delete,
+        start: exportArrayLiteral.getStart(),
+        length: exportArrayLiteral.end - exportArrayLiteral.getStart(),
+      },
+      {
+        type: ChangeType.Insert,
+        index: exportArrayLiteral.getStart(),
+        text: printer.printNode(
+          ts.EmitHint.Expression,
+          updatedArrayLiteral,
+          source
+        ),
+      },
+    ]);
+  }
+
+  const exportDefaultStatement = exportArrayLiteral.parent;
   const updatedExportDefault = ts.factory.createExportAssignment(
     undefined,
     false,
-    ts.factory.createArrayLiteralExpression(updatedArrayElements, true)
+    updatedArrayLiteral
   );
 
   // update the existing export default array
@@ -1111,107 +1178,98 @@ export function removePlugin(
       }
     });
   }
-  ts.forEachChild(source, function analyze(node) {
-    if (
-      ts.isExportAssignment(node) &&
-      ts.isArrayLiteralExpression(node.expression)
-    ) {
-      const blockElements = node.expression.elements;
-      blockElements.forEach((element) => {
-        if (ts.isObjectLiteralExpression(element)) {
-          const pluginsElem = element.properties.find(
-            (prop) => prop.name?.getText() === 'plugins'
-          ) as ts.PropertyAssignment;
-          if (!pluginsElem) {
-            return;
-          }
-          if (ts.isArrayLiteralExpression(pluginsElem.initializer)) {
-            const pluginsArray = pluginsElem.initializer;
-            const plugins = parseTextToJson(
-              pluginsElem.initializer
-                .getText()
-                .replace(SPREAD_ELEMENTS_REGEXP, '')
-            );
+  const blockElements = findExportedArray(source)?.elements;
+  blockElements?.forEach((element) => {
+    if (ts.isObjectLiteralExpression(element)) {
+      const pluginsElem = element.properties.find(
+        (prop) => prop.name?.getText() === 'plugins'
+      ) as ts.PropertyAssignment;
+      if (!pluginsElem) {
+        return;
+      }
+      if (ts.isArrayLiteralExpression(pluginsElem.initializer)) {
+        const pluginsArray = pluginsElem.initializer;
+        const plugins = parseTextToJson(
+          pluginsElem.initializer.getText().replace(SPREAD_ELEMENTS_REGEXP, '')
+        );
+        if (!plugins.includes(pluginName)) {
+          return;
+        }
 
-            if (plugins.length > 1) {
-              changes.push({
-                type: ChangeType.Delete,
-                start: pluginsArray.pos,
-                length: pluginsArray.end - pluginsArray.pos,
-              });
-              changes.push({
-                type: ChangeType.Insert,
-                index: pluginsArray.pos,
-                text: JSON.stringify(plugins.filter((p) => p !== pluginName)),
-              });
-            } else {
-              const keys = element.properties.map((prop) =>
-                prop.name?.getText()
-              );
-              if (keys.length > 1) {
-                const removeComma =
-                  keys.indexOf('plugins') < keys.length - 1 ||
-                  element.properties.hasTrailingComma;
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: pluginsElem.pos + (removeComma ? 1 : 0),
-                  length:
-                    pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
-                });
-              } else {
-                const removeComma =
-                  blockElements.indexOf(element) < blockElements.length - 1 ||
-                  blockElements.hasTrailingComma;
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: element.pos + (removeComma ? 1 : 0),
-                  length: element.end - element.pos + (removeComma ? 1 : 0),
-                });
-              }
-            }
-          } else if (ts.isObjectLiteralExpression(pluginsElem.initializer)) {
-            const pluginsObj = pluginsElem.initializer;
-            if (pluginsElem.initializer.properties.length > 1) {
-              const plugin = pluginsObj.properties.find(
-                (prop) => prop.name?.['text'] === pluginName
-              ) as ts.PropertyAssignment;
-              const removeComma =
-                pluginsObj.properties.indexOf(plugin) <
-                  pluginsObj.properties.length - 1 ||
-                pluginsObj.properties.hasTrailingComma;
-              changes.push({
-                type: ChangeType.Delete,
-                start: plugin.pos + (removeComma ? 1 : 0),
-                length: plugin.end - plugin.pos + (removeComma ? 1 : 0),
-              });
-            } else {
-              const keys = element.properties.map((prop) =>
-                prop.name?.getText()
-              );
-              if (keys.length > 1) {
-                const removeComma =
-                  keys.indexOf('plugins') < keys.length - 1 ||
-                  element.properties.hasTrailingComma;
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: pluginsElem.pos + (removeComma ? 1 : 0),
-                  length:
-                    pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
-                });
-              } else {
-                const removeComma =
-                  blockElements.indexOf(element) < blockElements.length - 1 ||
-                  blockElements.hasTrailingComma;
-                changes.push({
-                  type: ChangeType.Delete,
-                  start: element.pos + (removeComma ? 1 : 0),
-                  length: element.end - element.pos + (removeComma ? 1 : 0),
-                });
-              }
-            }
+        if (plugins.length > 1) {
+          changes.push({
+            type: ChangeType.Delete,
+            start: pluginsArray.pos,
+            length: pluginsArray.end - pluginsArray.pos,
+          });
+          changes.push({
+            type: ChangeType.Insert,
+            index: pluginsArray.pos,
+            text: JSON.stringify(plugins.filter((p) => p !== pluginName)),
+          });
+        } else {
+          const keys = element.properties.map((prop) => prop.name?.getText());
+          if (keys.length > 1) {
+            const removeComma =
+              keys.indexOf('plugins') < keys.length - 1 ||
+              element.properties.hasTrailingComma;
+            changes.push({
+              type: ChangeType.Delete,
+              start: pluginsElem.pos + (removeComma ? 1 : 0),
+              length: pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
+            });
+          } else {
+            const removeComma =
+              blockElements.indexOf(element) < blockElements.length - 1 ||
+              blockElements.hasTrailingComma;
+            changes.push({
+              type: ChangeType.Delete,
+              start: element.pos + (removeComma ? 1 : 0),
+              length: element.end - element.pos + (removeComma ? 1 : 0),
+            });
           }
         }
-      });
+      } else if (ts.isObjectLiteralExpression(pluginsElem.initializer)) {
+        const pluginsObj = pluginsElem.initializer;
+        const plugin = pluginsObj.properties.find(
+          (prop) => prop.name?.['text'] === pluginName
+        );
+        if (!plugin) {
+          return;
+        }
+        if (pluginsObj.properties.length > 1) {
+          const removeComma =
+            pluginsObj.properties.indexOf(plugin) <
+              pluginsObj.properties.length - 1 ||
+            pluginsObj.properties.hasTrailingComma;
+          changes.push({
+            type: ChangeType.Delete,
+            start: plugin.pos + (removeComma ? 1 : 0),
+            length: plugin.end - plugin.pos + (removeComma ? 1 : 0),
+          });
+        } else {
+          const keys = element.properties.map((prop) => prop.name?.getText());
+          if (keys.length > 1) {
+            const removeComma =
+              keys.indexOf('plugins') < keys.length - 1 ||
+              element.properties.hasTrailingComma;
+            changes.push({
+              type: ChangeType.Delete,
+              start: pluginsElem.pos + (removeComma ? 1 : 0),
+              length: pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
+            });
+          } else {
+            const removeComma =
+              blockElements.indexOf(element) < blockElements.length - 1 ||
+              blockElements.hasTrailingComma;
+            changes.push({
+              type: ChangeType.Delete,
+              start: element.pos + (removeComma ? 1 : 0),
+              length: element.end - element.pos + (removeComma ? 1 : 0),
+            });
+          }
+        }
+      }
     }
   });
   return applyChangesToString(content, changes);
@@ -1418,7 +1476,19 @@ function addFlatCompatToFlatConfigESM(content: string) {
     content = addImportToFlatConfig(content, variable, module);
   }
 
-  const index = content.indexOf('export default');
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const exportDefault = findExportDefaultStatement(source);
+  // `compat` must precede the array that uses it, which a named export declares above `export default`.
+  const configStatement =
+    findExportedDeclaration(source, exportDefault)?.parent.parent ??
+    exportDefault;
+  const index = configStatement.getStart();
   return applyChangesToString(content, [
     {
       type: ChangeType.Insert,
@@ -1456,8 +1526,8 @@ export function createNodeList(
 
   const exports =
     format === 'mjs'
-      ? generateESMExport(exportElements)
-      : generateCJSExport(exportElements);
+      ? generateESMExport(exportElements, new Set(importsMap.values()))
+      : [generateCJSExport(exportElements)];
 
   return ts.factory.createNodeArray([
     // add plugin imports
@@ -1469,17 +1539,42 @@ export function createNodeList(
       false,
       ts.ScriptKind.JS
     ),
-    exports,
+    ...exports,
   ]);
 }
 
-function generateESMExport(elements: ts.Expression[]): ts.ExportAssignment {
-  // creates: export default = [...]
-  return ts.factory.createExportAssignment(
-    undefined,
-    false,
-    ts.factory.createArrayLiteralExpression(elements, true)
-  );
+const ESM_CONFIG_VARIABLE = 'eslintConfig';
+
+function generateESMExport(
+  elements: ts.Expression[],
+  importedNames: ReadonlySet<string>
+): [ts.VariableStatement, ts.ExportAssignment] {
+  let name = ESM_CONFIG_VARIABLE;
+  for (let suffix = 2; importedNames.has(name); suffix++) {
+    name = `${ESM_CONFIG_VARIABLE}${suffix}`;
+  }
+  // eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`.
+  return [
+    ts.factory.createVariableStatement(
+      undefined,
+      ts.factory.createVariableDeclarationList(
+        [
+          ts.factory.createVariableDeclaration(
+            name,
+            undefined,
+            undefined,
+            ts.factory.createArrayLiteralExpression(elements, true)
+          ),
+        ],
+        ts.NodeFlags.Const
+      )
+    ),
+    ts.factory.createExportAssignment(
+      undefined,
+      false,
+      ts.factory.createIdentifier(name)
+    ),
+  ];
 }
 
 function generateCJSExport(elements: ts.Expression[]): ts.ExpressionStatement {
@@ -1564,7 +1659,8 @@ export function stringifyNodeList(
     );
 
   if (result.includes('export default')) {
-    return result // add new line before export default = ...
+    return result
+      .replace(new RegExp(`^const ${ESM_CONFIG_VARIABLE}\\d* =`, 'm'), '\n$&')
       .replace(/export default/, '\nexport default');
   } else {
     return result.replace(/module.exports/, '\nmodule.exports');
