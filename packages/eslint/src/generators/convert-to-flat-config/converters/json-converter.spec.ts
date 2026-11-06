@@ -349,6 +349,23 @@ describe('convertEslintJsonToFlatConfig', () => {
       `);
     });
 
+    it('names the export eslintConfig2 when an import binds eslintConfig', async () => {
+      const { content } = convertEslintJsonToFlatConfig(
+        tree,
+        'mylib',
+        { parser: 'eslint-config', rules: {} },
+        [],
+        'mjs',
+        new Set()
+      );
+
+      expect(content).toContain(
+        'import eslintConfig from "eslint-config";\n\nconst eslintConfig2 = ['
+      );
+      expect(content).toContain('export default eslintConfig2;');
+      expect(content).not.toContain('const eslintConfig =');
+    });
+
     it('should hand the parser of an override that needs FlatCompat to compat.config', async () => {
       // Repro for NXC-4675: an override with a parser plus a non-Nx plugin goes
       // through the FlatCompat path, which used to drop the parser entirely.
