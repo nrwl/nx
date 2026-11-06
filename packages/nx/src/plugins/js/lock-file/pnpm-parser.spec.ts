@@ -1,3 +1,5 @@
+import { parseAndNormalizePnpmLockfile } from './utils/pnpm-normalizer';
+import { generatePrunedDeployOutput } from './lock-file';
 import { joinPathFragments } from '../../../utils/path';
 import {
   getPnpmLockfileNodes,
@@ -53,6 +55,287 @@ vi.mock('../../../hasher/file-hasher', () => ({
 describe('pnpm LockFile utility', () => {
   afterEach(() => {
     vol.reset();
+  });
+
+  describe('authoritative importer peer snapshots', () => {
+    const first = '1.2.3(peer@1.0.0)';
+    const second = '1.2.3(peer@2.0.0)';
+    const graph: ProjectGraph = {
+      nodes: {},
+      dependencies: {},
+      externalNodes: {
+        'npm:foo': {
+          type: 'npm',
+          name: 'npm:foo',
+          data: { packageName: 'foo', version: '1.2.3' },
+        },
+      },
+    };
+    const entry = (version: string) => ({ specifier: '1.2.3', version });
+    function fixture(importers: object, refs = [first, second]) {
+      return JSON.stringify({
+        lockfileVersion: '9.0',
+        importers,
+        packages: {
+          'foo@1.2.3': { resolution: { integrity: 'foo' } },
+          'foo@1.2.30': { resolution: { integrity: 'foo30' } },
+        },
+        snapshots: Object.fromEntries(refs.map((ref) => [`foo@${ref}`, {}])),
+      });
+    }
+    function serialize(
+      content: string,
+      sourceProjectRoot?: string,
+      section = 'dependencies',
+      dependency = 'foo',
+      inputGraph = graph
+    ) {
+      return parseAndNormalizePnpmLockfile(
+        stringifyPnpmLockfile(
+          inputGraph,
+          content,
+          {
+            [section]: {
+              [dependency]: dependency === 'foo' ? '1.2.3' : 'npm:foo@1.2.3',
+            },
+          },
+          '/root',
+          sourceProjectRoot
+        )
+      ).importers['.'][section][dependency];
+    }
+
+    it.each([
+      [first, second],
+      [second, first],
+    ])(
+      'preserves the root peer reference with snapshot order %j, %j',
+      (a, b) => {
+        expect(
+          serialize(
+            fixture({ '.': { dependencies: { foo: entry(second) } } }, [a, b])
+          )
+        ).toBe(second);
+      }
+    );
+    it.each([5.4, 6])(
+      'preserves peer references in lockfile version %s',
+      (lockfileVersion) => {
+        const refs =
+          lockfileVersion < 6
+            ? ['1.2.3_peer@1.0.0', '1.2.3_peer@2.0.0']
+            : [first, second];
+        const packageSeparator = lockfileVersion < 6 ? '/' : '@';
+        const content = JSON.stringify({
+          lockfileVersion,
+          importers: {
+            '.': {
+              specifiers: { foo: '1.2.3' },
+              dependencies: {
+                foo: lockfileVersion < 6 ? refs[1] : entry(refs[1]),
+              },
+            },
+          },
+          packages: Object.fromEntries(
+            refs.map((ref) => [
+              `/foo${packageSeparator}${ref}`,
+              { resolution: { integrity: 'foo' } },
+            ])
+          ),
+        });
+        expect(serialize(content)).toBe(refs[1]);
+      }
+    );
+    it('prefers the explicit project importer over the workspace root', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': { dependencies: { foo: entry(first) } },
+            'apps/app': { dependencies: { foo: entry(second) } },
+          }),
+          'apps/app'
+        )
+      ).toBe(second);
+    });
+    it('uses the root when the project does not record the dependency', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': { dependencies: { foo: entry(second) } },
+            'apps/app': {},
+          }),
+          'apps/app'
+        )
+      ).toBe(second);
+    });
+    it.each(['optionalDependencies', 'devDependencies'])(
+      'preserves %s references',
+      (section) => {
+        expect(
+          serialize(
+            fixture({ '.': { [section]: { foo: entry(second) } } }),
+            undefined,
+            section
+          )
+        ).toBe(second);
+      }
+    );
+    it('prefers the requested section before other dependency sections', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': {
+              dependencies: { foo: entry(first) },
+              optionalDependencies: { foo: entry(second) },
+            },
+          }),
+          undefined,
+          'optionalDependencies'
+        )
+      ).toBe(second);
+    });
+    it('finds a dependency promoted from the dev section', () => {
+      expect(
+        serialize(fixture({ '.': { devDependencies: { foo: entry(second) } } }))
+      ).toBe(second);
+    });
+    it('preserves the full reference of an npm alias', () => {
+      const aliasGraph: ProjectGraph = {
+        ...graph,
+        externalNodes: {
+          'npm:alias': {
+            type: 'npm',
+            name: 'npm:alias',
+            data: { packageName: 'alias', version: 'npm:foo@1.2.3' },
+          },
+        },
+      };
+      expect(
+        serialize(
+          fixture({ '.': { dependencies: { alias: entry(`foo@${second}`) } } }),
+          undefined,
+          'dependencies',
+          'alias',
+          aliasGraph
+        )
+      ).toBe(`foo@${second}`);
+    });
+    it.each([
+      [5.4, false],
+      [5.4, true],
+      [6, false],
+      [6, true],
+    ])(
+      'preserves legacy aliases in version %s with reversed order %s',
+      (lockfileVersion, reverse) => {
+        const suffix = lockfileVersion < 6 ? '_' : '(';
+        const end = lockfileVersion < 6 ? '' : ')';
+        const refs = [
+          `1.2.3${suffix}${'a'.repeat(32)}${end}`,
+          `1.2.3${suffix}${'b'.repeat(32)}${end}`,
+        ];
+        const separator = lockfileVersion < 6 ? '/' : '@';
+        const authoritative = `/foo${separator}${refs[1]}`;
+        const content = JSON.stringify({
+          lockfileVersion,
+          importers: {
+            '.': {
+              specifiers: { alias: 'npm:foo@1.2.3' },
+              dependencies: {
+                alias:
+                  lockfileVersion < 6
+                    ? authoritative
+                    : { specifier: 'npm:foo@1.2.3', version: authoritative },
+              },
+            },
+          },
+          packages: Object.fromEntries(
+            (reverse ? [...refs].reverse() : refs).map((ref) => [
+              `/foo${separator}${ref}`,
+              { resolution: { integrity: 'foo' } },
+            ])
+          ),
+        });
+        const aliasGraph: ProjectGraph = {
+          ...graph,
+          externalNodes: {
+            'npm:alias': {
+              type: 'npm',
+              name: 'npm:alias',
+              data: { packageName: 'alias', version: 'npm:foo@1.2.3' },
+            },
+          },
+        };
+        expect(
+          serialize(content, undefined, 'dependencies', 'alias', aliasGraph)
+        ).toBe(
+          parseAndNormalizePnpmLockfile(content).importers['.'].dependencies
+            .alias
+        );
+      }
+    );
+    it('keeps fallback when the importer snapshot is unavailable', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': { dependencies: { foo: entry('1.2.3(peer@3.0.0)') } },
+          })
+        )
+      ).toBe(first);
+    });
+    it('does not replace the selected base version with a prefix match', () => {
+      expect(
+        serialize(
+          fixture(
+            { '.': { dependencies: { foo: entry('1.2.30(peer@2.0.0)') } } },
+            [first, '1.2.30(peer@2.0.0)', second]
+          )
+        )
+      ).toBe(first);
+    });
+    it('does not borrow root identity when the explicit project ref is incompatible', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': { dependencies: { foo: entry(second) } },
+            'apps/app': { dependencies: { foo: entry('2.0.0(peer@2.0.0)') } },
+          }),
+          'apps/app'
+        )
+      ).toBe(first);
+    });
+    it('does not scan an unrelated importer', () => {
+      expect(
+        serialize(
+          fixture({
+            '.': {},
+            'apps/other': { dependencies: { foo: entry(second) } },
+          })
+        )
+      ).toBe(first);
+    });
+    it('passes project provenance through the real deploy lockfile path', () => {
+      const content = fixture({
+        '.': { dependencies: { foo: entry(first) } },
+        'apps/app': { dependencies: { foo: entry(second) } },
+      });
+      vol.fromJSON({ 'pnpm-lock.yaml': content }, '/root');
+      const emitted = new Map<string, string | Buffer>();
+      generatePrunedDeployOutput(
+        { name: 'app', version: '1.0.0', dependencies: { foo: '1.2.3' } },
+        graph,
+        'apps/app',
+        {
+          workspaceRoot: '/root',
+          packageManager: 'pnpm',
+          emit: (path, content) => emitted.set(path, content),
+        }
+      );
+      expect(
+        parseAndNormalizePnpmLockfile(emitted.get('pnpm-lock.yaml') as string)
+          .importers['.'].dependencies.foo
+      ).toBe(second);
+    });
   });
 
   describe('next.js generated', () => {
