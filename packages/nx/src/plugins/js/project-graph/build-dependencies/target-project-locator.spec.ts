@@ -1251,21 +1251,41 @@ describe('TargetProjectLocator', () => {
       expect(result).toEqual('npm:foo@0.0.1');
     });
 
-    it.each(['/root', '/root/'])(
-      'should resolve a local package to the copy its nearest node_modules installs when the workspace root is %s',
-      (workspaceRoot) => {
+    // lib vendors its own `x` 2.0.0. The root's `x` is a vendored copy, as a
+    // Bun 1.3.13 install records it, or the registry package of the same
+    // version, as a pnpm 12.8.1 install records it
+    const rootVendoredX = {
+      rootCopy: 'a vendored copy',
+      rootSpec: 'file:./vendor/x',
+      rootVersion: '1.0.0',
+      rootNodes: [
+        ['npm:x', 'file:vendor/x'],
+        ['npm:x@file:vendor/x', 'file:vendor/x'],
+      ],
+    };
+    it.each([
+      { workspaceRoot: '/root', ...rootVendoredX },
+      { workspaceRoot: '/root/', ...rootVendoredX },
+      {
+        workspaceRoot: '/root',
+        rootCopy: 'the registry package of the same version',
+        rootSpec: '2.0.0',
+        rootVersion: '2.0.0',
+        rootNodes: [['npm:x', '2.0.0']],
+      },
+    ])(
+      'should resolve a local package to the copy its nearest node_modules installs when the workspace root is $workspaceRoot and the root installs $rootCopy',
+      ({ workspaceRoot, rootSpec, rootVersion, rootNodes }) => {
         mockedWorkspaceRoot.path = workspaceRoot;
         try {
-          // The layout and nodes of a Bun 1.3.13 install where the root and
-          // lib vendor their own `x`
           vol.fromJSON(
             {
               'package.json': JSON.stringify({
-                dependencies: { x: 'file:./vendor/x' },
+                dependencies: { x: rootSpec },
               }),
               'node_modules/x/package.json': JSON.stringify({
                 name: 'x',
-                version: '1.0.0',
+                version: rootVersion,
               }),
               'libs/lib/package.json': JSON.stringify({
                 name: 'lib',
@@ -1284,8 +1304,7 @@ describe('TargetProjectLocator', () => {
           );
           const externalNodes = Object.fromEntries(
             [
-              ['npm:x', 'file:vendor/x'],
-              ['npm:x@file:vendor/x', 'file:vendor/x'],
+              ...rootNodes,
               ['npm:x@file:libs/vendor/x', 'file:libs/vendor/x'],
             ].map(([name, version]) => [
               name,
