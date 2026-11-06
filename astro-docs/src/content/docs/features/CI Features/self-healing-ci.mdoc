@@ -47,10 +47,8 @@ By default, your CI provider will only run the step if the previous steps succee
 
 On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), Nx Cloud adds this step for you, so you can skip this section.
 
-{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
-The `ai` section is now `self-healing`, with the same two keys.
-The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
 {% /aside %}
 
 These examples distribute tasks across Workers, so they also need a `.nx/pipelines/ci.yaml` file.

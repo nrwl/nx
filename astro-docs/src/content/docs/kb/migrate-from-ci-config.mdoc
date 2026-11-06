@@ -120,6 +120,7 @@ npx nx-cloud start-workers --workers main
 
 `worker-templates` has no setting for `distribute-on: manual`.
 Use `nx-cloud start-ci-run --distribute-on=manual` instead, as shown in [bring your own compute](/docs/kb/bring-your-own-compute).
+Delete `.nx/ci-config.yaml` when you switch, because `start-ci-run` exits with an error while the file exists.
 
 ### Main-job worker
 

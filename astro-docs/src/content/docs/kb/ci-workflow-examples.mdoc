@@ -12,10 +12,8 @@ For GitHub Actions and a step-by-step walkthrough, see [setting up CI](/docs/get
 
 {% course_video src="https://www.youtube.com/watch?v=8mqHXYIl_qI" courseTitle="From pnpm Workspaces to Distributed CI" courseUrl="https://nx.dev/courses/pnpm-nx-next/lessons-06-nx-cloud-setup" /%}
 
-{% aside type="note" title="Still on `.nx/ci-config.yaml`?" %}
-`.nx/pipelines/ci.yaml` replaces the deprecated `.nx/ci-config.yaml`.
-`dte.distribute-on` and `lifecycle.stop-after` are now `workers` and `stop-after` on a worker entry.
-The [migration guide](/docs/kb/migrate-from-ci-config) maps every old key and has the old file's reference.
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
 {% /aside %}
 
 Every example uses the same `.nx/pipelines/ci.yaml`:
