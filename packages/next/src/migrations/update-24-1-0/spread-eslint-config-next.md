@@ -7,7 +7,7 @@ Replaces the Next.js entries Nx generated in flat ESLint configs with a spread o
 
 The migration also removes the `@next/eslint-plugin-next`, `FlatCompat` and `fixupConfigRules` setup once no other entry uses it.
 
-An ESM config also gets a named export (`const eslintConfig = [...]; export default eslintConfig;`). eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`. If the config already uses the name `eslintConfig`, the export takes the first unused name of `eslintConfig2`, `eslintConfig3` and so on.
+When the migration spreads eslint-config-next in an ESM config, it also names the exported array (`const eslintConfig = [...]; export default eslintConfig;`). eslint-config-next turns on `import/no-anonymous-default-export`, which reports `export default [...]`. If the config already uses the name `eslintConfig`, the export takes the first unused name of `eslintConfig2`, `eslintConfig3` and so on.
 
 The config, or a config at the workspace root, may register the `react`, `react-hooks`, `import` or `jsx-a11y` plugin. eslint-config-next registers those plugins too, and ESLint fails when two configs register different copies of one plugin. In that case the migration replaces the `@next/next` registration with the `core-web-vitals` config of `@next/eslint-plugin-next`, which registers only the Next.js plugin. Files that the other config does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules. Rules and directive comments that name a `react/`, `jsx-a11y/` or `import/` rule then fail in that config and the files it lints, unless another config registers the plugin. The migration lists each config it changes this way.
 
