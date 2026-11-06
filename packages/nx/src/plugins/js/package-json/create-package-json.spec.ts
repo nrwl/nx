@@ -141,6 +141,53 @@ describe('createPackageJson', () => {
         ).dependencies
       ).toEqual({ tslib: '2.4.0' });
     });
+
+    it('should skip a bare outside link when registry versions exist', () => {
+      const lib1 = {
+        type: 'lib' as const,
+        name: 'lib1',
+        data: { targets: {}, root: '' },
+      };
+      const externalNodes = {
+        ...tslibNodes,
+        'npm:tslib': {
+          type: 'npm' as const,
+          name: 'npm:tslib' as const,
+          data: {
+            version: 'link:../outside/tslib',
+            hash: '',
+            packageName: 'tslib',
+          },
+        },
+      };
+
+      expect(
+        createPackageJson(
+          'lib1',
+          {
+            nodes: { lib1 },
+            externalNodes,
+            dependencies: {
+              lib1: [
+                {
+                  source: 'lib1',
+                  target: 'npm:tslib@1.14.1',
+                  type: DependencyType.static,
+                },
+              ],
+            },
+          },
+          { helperDependencies: ['npm:tslib'], root: '' }
+        ).dependencies
+      ).toEqual({ tslib: '1.14.1' });
+      expect(
+        createPackageJson(
+          'lib1',
+          { nodes: { lib1 }, externalNodes, dependencies: {} },
+          { helperDependencies: ['npm:tslib'], root: '' }
+        ).dependencies
+      ).toEqual({ tslib: '2.4.0' });
+    });
   });
 
   it('should only add file dependencies if target is specified', () => {

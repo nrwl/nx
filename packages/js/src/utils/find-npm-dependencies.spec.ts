@@ -1,6 +1,7 @@
 import '@nx/devkit/internal-testing-utils/mock-fs';
 import { createRequire } from 'node:module';
 import { fs as memfs, vol } from 'memfs';
+import type { ProjectGraph } from '@nx/devkit';
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { findNpmDependencies } from './find-npm-dependencies';
 
@@ -498,6 +499,59 @@ describe('findNpmDependencies', () => {
           { runtimeHelpers: ['tslib'] }
         )
       ).toEqual({ tslib: '2.6.0' });
+    });
+
+    it('should skip a bare outside link when registry versions exist', () => {
+      const linkNode = {
+        name: 'npm:tslib' as const,
+        type: 'npm' as const,
+        data: { packageName: 'tslib', version: 'link:../outside/tslib' },
+      };
+      const graphWith = (dependencies: ProjectGraph['dependencies']) => ({
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: { ...helperNodes, 'npm:tslib': linkNode },
+        dependencies,
+      });
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          graphWith({
+            'my-lib': [
+              {
+                type: 'static',
+                source: 'my-lib',
+                target: 'npm:tslib@1.14.1',
+              },
+            ],
+          }),
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '1.14.1' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          graphWith({}),
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '2.6.0' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          {
+            nodes: { 'my-lib': libWithHelpers },
+            externalNodes: { 'npm:tslib': linkNode },
+            dependencies: {},
+          },
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: 'link:../outside/tslib' });
     });
   });
 

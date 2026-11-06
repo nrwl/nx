@@ -21,7 +21,10 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { output } from '../../../utils/output';
-import { findNodeMatchingVersion } from '../lock-file/project-graph-pruning';
+import {
+  findNodeMatchingVersion,
+  isLinkNode,
+} from '../lock-file/project-graph-pruning';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
@@ -446,12 +449,14 @@ function findHelperDependencyNode(
   projectName: string,
   dep: string
 ): ProjectGraphExternalNode | undefined {
-  if (graph.externalNodes[dep]) {
-    return graph.externalNodes[dep];
+  const bareNode = graph.externalNodes[dep];
+  if (bareNode && !isLinkNode(bareNode)) {
+    return bareNode;
   }
   // A helper with several versions can have only versioned nodes, for
-  // example when the pnpm root importer does not declare it. Prefer the
-  // version that the project depends on, else the highest.
+  // example when the pnpm root importer does not declare it, and an outside
+  // `link:` can then hold the bare name. Prefer the version that the project
+  // depends on, else the highest registry version, else the link.
   const packageName = dep.replace(/^npm:/, '');
   const projectDependency = graph.dependencies[projectName]?.find(
     (d) => graph.externalNodes[d.target]?.data.packageName === packageName

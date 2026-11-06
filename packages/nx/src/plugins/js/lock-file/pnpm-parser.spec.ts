@@ -1054,16 +1054,14 @@ describe('pnpm LockFile utility', () => {
           joinPathFragments(__dirname, '__fixtures__/pruning/pnpm-lock-v9.yaml')
         ).default;
         lockFileHash = '__fixtures__/pruning/pnpm-lock-v9.yaml';
+        graph = buildGraph(lockFile, lockFileHash);
+      });
 
+      function buildGraph(lockFile: string, lockFileHash: string) {
         const { nodes: externalNodes, keyMap } = getPnpmLockfileNodes(
           lockFile,
           lockFileHash
         );
-        graph = {
-          nodes: {},
-          dependencies: {},
-          externalNodes,
-        };
         const ctx: CreateDependenciesContext = {
           projects: {},
           externalNodes,
@@ -1085,7 +1083,11 @@ describe('pnpm LockFile utility', () => {
           keyMap
         );
 
-        const builder = new ProjectGraphBuilder(graph);
+        const builder = new ProjectGraphBuilder({
+          nodes: {},
+          dependencies: {},
+          externalNodes,
+        });
         for (const dep of dependencies) {
           builder.addDependency(
             dep.source,
@@ -1094,14 +1096,41 @@ describe('pnpm LockFile utility', () => {
             'sourceFile' in dep ? dep.sourceFile : null
           );
         }
-        graph = builder.getUpdatedProjectGraph();
-      });
+        return builder.getUpdatedProjectGraph();
+      }
 
       it('should not name the bare node after the hoisted version', () => {
         // .modules.yaml hoists tslib@2.5.0, but the root declares neither version.
         expect(graph.externalNodes['npm:tslib']).toBeUndefined();
         expect(graph.externalNodes['npm:tslib@1.14.1']).toBeDefined();
         expect(graph.externalNodes['npm:tslib@2.5.0']).toBeDefined();
+      });
+
+      it('should prune a wildcard dependency to a registry version when a nested importer links it from outside', () => {
+        const withNestedLink = lockFile.replace(
+          '\nimporters:\n\n',
+          `\nimporters:\n\n  packages/other:\n    dependencies:\n      tslib:\n        specifier: link:../../../outside/tslib\n        version: link:../../../outside/tslib\n\n`
+        );
+        const linkGraph = buildGraph(withNestedLink, '__nested_tslib_link__');
+        expect(linkGraph.externalNodes['npm:tslib'].data.version).toBe(
+          'link:../../../outside/tslib'
+        );
+        const appPackageJson = {
+          name: 'app',
+          version: '0.0.1',
+          dependencies: { tslib: '*' },
+        };
+
+        const prunedGraph = pruneProjectGraph(linkGraph, appPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          withNestedLink,
+          appPackageJson,
+          '/virtual'
+        );
+
+        expect(result).toContain('tslib@2.5.0');
+        expect(result).not.toContain('outside/tslib');
       });
 
       it('should prune single package', () => {

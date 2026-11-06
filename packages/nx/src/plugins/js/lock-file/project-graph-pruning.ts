@@ -173,6 +173,16 @@ export function isLocalPathSpecifier(versionExpr: string): boolean {
 }
 
 /**
+ * The pnpm parser gives the bare `npm:<name>` to an outside `link:` when no
+ * registry version holds it. Such a node says nothing about which registry
+ * version a project resolves, so lookups that fall back to registry versions
+ * skip it.
+ */
+export function isLinkNode(node: ProjectGraphExternalNode): boolean {
+  return node.data.version.startsWith('link:');
+}
+
+/**
  * The external node for a `file:`/`link:` local-path dependency.
  *
  * The target path is what identifies one: an aliased dependency (`"alias":
@@ -224,15 +234,18 @@ export function findNodeMatchingVersion(
   packageName: string,
   versionExpr: string
 ) {
-  if (versionExpr === '*' && graph.externalNodes[`npm:${packageName}`]) {
-    return graph.externalNodes[`npm:${packageName}`];
+  const bareNode = graph.externalNodes[`npm:${packageName}`];
+  if (versionExpr === '*' && bareNode && !isLinkNode(bareNode)) {
+    return bareNode;
   }
   const nodes = Object.values(graph.externalNodes)
     .filter((n) => n.data.packageName === packageName)
     .sort(compareVersionsDescending);
 
-  // A package with several versions can have no bare node, for example
-  // when the pnpm root importer does not declare it.
+  // A package with several versions can have no bare registry node, for
+  // example when the pnpm root importer does not declare it. An outside
+  // `link:` can then hold the bare name; it sorts last, so any registry
+  // version wins over it.
   if (versionExpr === '*' || versionExpr === 'latest') {
     return nodes[0];
   }

@@ -93,6 +93,17 @@ describe('project-graph-pruning', () => {
       expect(node?.name).toBe('npm:lodash@4.17.20');
     });
 
+    it('should match the highest registry version for a wildcard when an outside link holds the bare node', () => {
+      graph.externalNodes['npm:lodash'] = {
+        type: 'npm',
+        name: 'npm:lodash',
+        data: { packageName: 'lodash', version: 'link:../outside/lodash' },
+      };
+      expect(findNodeMatchingVersion(graph, 'lodash', '*')?.name).toBe(
+        'npm:lodash@4.17.20'
+      );
+    });
+
     it('should sort local-path versions after semver versions', () => {
       delete graph.externalNodes['npm:lodash'];
       graph.externalNodes['npm:lodash@file:vendor/lodash.tgz'] = {

@@ -272,12 +272,16 @@ function findHelperVersion(
   helper: string
 ): string | undefined {
   const bareNode = projectGraph.externalNodes[`npm:${helper}`];
-  if (bareNode) {
+  const bareLinkVersion = bareNode?.data.version.startsWith('link:')
+    ? bareNode.data.version
+    : undefined;
+  if (bareNode && !bareLinkVersion) {
     return bareNode.type === 'npm' ? bareNode.data.version : undefined;
   }
   // A helper with several versions can have only versioned nodes, for
-  // example when the pnpm root importer does not declare it. Prefer the
-  // version that the project depends on, else the highest.
+  // example when the pnpm root importer does not declare it, and an outside
+  // `link:` can then hold the bare name. Prefer the version that the project
+  // depends on, else the highest registry version, else the link.
   const isHelperNode = (name: string) =>
     projectGraph.externalNodes[name]?.type === 'npm' &&
     projectGraph.externalNodes[name].data.packageName === helper;
@@ -302,7 +306,7 @@ function findHelperVersion(
         .sort(rcompare)[0]
     );
   }
-  return versions.get(helper);
+  return versions.get(helper) ?? bareLinkVersion;
 }
 
 function resolveTsConfigForRunCommandsTarget(
