@@ -1,6 +1,5 @@
 const DIRECTIVE = /^@nx-([\w-]+)(?::(.*))?$/;
 
-/** The `@nx-<name>` directives Nx reads. */
 export const NX_DIRECTIVE_NAMES = [
   'depends-on',
   'ignore-server-inputs',
