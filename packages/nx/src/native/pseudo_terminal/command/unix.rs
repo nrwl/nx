@@ -5,13 +5,13 @@ use std::{
 };
 use tracing::trace;
 
-use super::pseudo_terminal::WriterArc;
+use super::pseudo_terminal::LiveWriter;
 
 pub fn handle_path_space(path: String) -> String {
     format!("'{}'", path.replace('\'', r"'\''"))
 }
 
-pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
+pub fn write_to_pty(stdin: &mut Stdin, live_writer: LiveWriter) -> anyhow::Result<()> {
     let mut buffer = [0; 1024];
 
     let mut poll = mio::Poll::new()?;
@@ -45,6 +45,9 @@ pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> 
                         match stdin.read(&mut buffer) {
                             Ok(0) => return Ok(()),
                             Ok(n) => {
+                                let Some(writer) = live_writer.read().clone() else {
+                                    continue;
+                                };
                                 let mut writer = writer.lock();
                                 writer.write_all(&buffer[..n])?;
                                 writer.flush()?;

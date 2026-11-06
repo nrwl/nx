@@ -1400,7 +1400,12 @@ mod tests {
     /// Build an interactive PtyInstance backed by a real pty, returning the
     /// instance alongside the master so tests can read back the winsize the
     /// kernel reports — which is what the child process sees.
-    fn create_interactive_pty_instance(rows: u16, cols: u16) -> (PtyInstance, MasterArc) {
+    fn create_interactive_pty_instance(
+        rows: u16,
+        cols: u16,
+    ) -> (PtyInstance, MasterArc, std::sync::MutexGuard<'static, ()>) {
+        // Same lock as the pty fd accounting test: both run in one process.
+        let real_pty = crate::native::pseudo_terminal::pseudo_terminal::lock_real_pty();
         let pair = portable_pty::NativePtySystem::default()
             .openpty(portable_pty::PtySize {
                 rows,
@@ -1411,21 +1416,26 @@ mod tests {
             .expect("failed to open pty");
 
         let writer = Arc::new(Mutex::new(pair.master.take_writer().unwrap()));
-        let master: MasterArc = Arc::new(Mutex::new(pair.master));
+        let master: MasterArc = Arc::new(Mutex::new(Some(pair.master)));
         let parser = Arc::new(RwLock::new(TerminalParser::new(rows, cols, 1000)));
 
         let pty = PtyInstance::interactive(parser, writer, master.clone());
-        (pty, master)
+        (pty, master, real_pty)
     }
 
     fn master_size(master: &MasterArc) -> (u16, u16) {
-        let size = master.lock().get_size().expect("failed to read pty size");
+        let guard = master.lock();
+        let size = guard
+            .as_ref()
+            .expect("pty master closed")
+            .get_size()
+            .expect("failed to read pty size");
         (size.rows, size.cols)
     }
 
     #[test]
     fn test_resize_updates_kernel_winsize() {
-        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+        let (mut pty, master, _real_pty) = create_interactive_pty_instance(24, 80);
         assert_eq!(master_size(&master), (24, 80));
 
         pty.resize(30, 100).unwrap();
@@ -1439,7 +1449,7 @@ mod tests {
 
     #[test]
     fn test_resize_async_updates_kernel_winsize() {
-        let (pty, master) = create_interactive_pty_instance(24, 80);
+        let (pty, master, _real_pty) = create_interactive_pty_instance(24, 80);
 
         // The reparse is backgrounded, but the child must be notified eagerly —
         // so the ioctl lands before resize_async returns.
@@ -1450,7 +1460,7 @@ mod tests {
 
     #[test]
     fn test_resize_to_same_dimensions_does_not_notify_child() {
-        let (mut pty, master) = create_interactive_pty_instance(24, 80);
+        let (mut pty, master, _real_pty) = create_interactive_pty_instance(24, 80);
 
         pty.resize(24, 80).unwrap();
 
