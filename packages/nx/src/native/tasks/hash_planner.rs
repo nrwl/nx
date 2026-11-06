@@ -3682,7 +3682,7 @@ mod always_tests {
         };
         assert!(plan(false).is_ok());
         let error = plan(true).unwrap_err().to_string();
-        assert!(error.contains("Task \"e2e:e2e\""), "{error}");
+        assert!(error.starts_with("Task \"e2e:e2e\":"), "{error}");
         assert!(error.contains("\"featrue\""), "{error}");
     }
 
