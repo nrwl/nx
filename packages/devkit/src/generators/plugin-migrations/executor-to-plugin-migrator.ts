@@ -1,6 +1,6 @@
 import { minimatch } from 'minimatch';
 import { deepStrictEqual } from 'node:assert';
-import { join } from 'node:path/posix';
+import { dirname, join } from 'node:path/posix';
 import type {
   InputDefinition,
   ProjectConfiguration,
@@ -2601,24 +2601,78 @@ function addPluginRegistrations<T>(
     ...nonMigratedProjectConfigFiles,
   ];
 
+  // Config files that no project owns but that sit above a migrated root, e.g.
+  // a workspace-root `eslint.config.mjs` that a child project without its own
+  // config is linted with. A scoped `include` made only of `<root>/**/*` globs
+  // would hide them from the plugin, so it would stop inferring the target for
+  // such a project. They are added to a scoped `include` as literal paths.
+  // `project.json`/`package.json` files are skipped: they describe projects
+  // rather than configure them, and pulling an unowned one in could make the
+  // plugin infer a project that is not in the graph today.
+  const allProjectRoots = new Set([
+    ...migratedRoots,
+    ...nonMigratedProjectRoots,
+  ]);
+  const unownedConfigFiles = rawMatchedConfigFiles.filter((file) => {
+    const fileName = file.slice(file.lastIndexOf('/') + 1);
+    return (
+      fileName !== 'project.json' &&
+      fileName !== 'package.json' &&
+      !isFileOwnedByAnyRoot(file, allProjectRoots)
+    );
+  });
+
   const registrationGroups = new Map<
     string,
-    { options: Record<string, string>; include: string[] }
+    {
+      options: Record<string, string>;
+      include: string[];
+      ancestorConfigFiles: Set<string>;
+    }
   >();
   for (const [project, options] of projects.entries()) {
+    const projectRoot = projectGraph.nodes[project].data.root;
     const projectIncludeGlob =
-      projectGraph.nodes[project].data.root === '.'
-        ? '*'
-        : join(projectGraph.nodes[project].data.root, '**/*');
+      projectRoot === '.' ? '*' : join(projectRoot, '**/*');
     const key = stableStringify(options);
     if (!registrationGroups.has(key)) {
-      registrationGroups.set(key, { options, include: [] });
+      registrationGroups.set(key, {
+        options,
+        include: [],
+        ancestorConfigFiles: new Set(),
+      });
     }
-    registrationGroups.get(key).include.push(projectIncludeGlob);
+    const group = registrationGroups.get(key);
+    group.include.push(projectIncludeGlob);
+    for (const file of unownedConfigFiles) {
+      const dir = dirname(file);
+      if (dir === '.' || projectRoot.startsWith(`${dir}/`)) {
+        group.ancestorConfigFiles.add(file);
+      }
+    }
   }
 
+  const addAncestorConfigFiles = (
+    plugin: ExpandedPluginConfiguration,
+    ancestorConfigFiles: Set<string>
+  ) => {
+    for (const file of ancestorConfigFiles) {
+      if (
+        !plugin.include.some((include) =>
+          minimatch(file, include, { dot: true })
+        )
+      ) {
+        plugin.include.push(file);
+      }
+    }
+  };
+
   let index = 0;
-  for (const { options, include } of registrationGroups.values()) {
+  for (const {
+    options,
+    include,
+    ancestorConfigFiles,
+  } of registrationGroups.values()) {
     index++;
     spinner.updateText(
       `${index}/${registrationGroups.size} - Applying plugin configuration...`
@@ -2651,6 +2705,8 @@ function addPluginRegistrations<T>(
         )
       ) {
         delete plugin.include;
+      } else {
+        addAncestorConfigFiles(plugin, ancestorConfigFiles);
       }
 
       nxJson.plugins.push(plugin);
@@ -2673,6 +2729,8 @@ function addPluginRegistrations<T>(
         )
       ) {
         delete existingPlugin.include;
+      } else {
+        addAncestorConfigFiles(existingPlugin, ancestorConfigFiles);
       }
     }
   }
