@@ -942,7 +942,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       expect(updatedProject.targets.lint).toMatchInlineSnapshot(`
         {
           "options": {
-            "cache-location": "cache-dir",
+            "cache-location": "../cache-dir/myapp",
           },
         }
       `);
@@ -962,6 +962,30 @@ describe('Eslint - Convert Executors To Plugin', () => {
       }
     });
 
+    it('should keep one ESLint cache per project under cacheLocation', async () => {
+      const app1 = createTestProject(tree, {
+        appName: 'app1',
+        appRoot: 'apps/app1',
+      });
+      app1.targets.lint.options.cacheLocation = 'tmp/eslint';
+      updateProjectConfiguration(tree, app1.name, app1);
+      const app2 = createTestProject(tree, {
+        appName: 'app2',
+        appRoot: 'apps/app2',
+      });
+      app2.targets.lint.options.cacheLocation = 'tmp/eslint';
+      updateProjectConfiguration(tree, app2.name, app2);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.lint.options
+      ).toEqual({ 'cache-location': '../../tmp/eslint/app1' });
+      expect(
+        readProjectConfiguration(tree, 'app2').targets.lint.options
+      ).toEqual({ 'cache-location': '../../tmp/eslint/app2' });
+    });
+
     it('centralizes shared lint config without changing the effective target (equivalence)', async () => {
       // Two projects share a non-inferred option, so it must be hoisted once
       // into targetDefaults and still resolve identically for each project.
@@ -969,13 +993,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
         appName: 'app1',
         appRoot: 'app1',
       });
-      app1.targets.lint.options.cacheLocation = 'cache-dir';
+      app1.targets.lint.options.quiet = true;
       updateProjectConfiguration(tree, app1.name, app1);
       const app2 = createTestProject(tree, {
         appName: 'app2',
         appRoot: 'app2',
       });
-      app2.targets.lint.options.cacheLocation = 'cache-dir';
+      app2.targets.lint.options.quiet = true;
       updateProjectConfiguration(tree, app2.name, app2);
 
       await convertToInferred(tree, { skipFormat: true });
@@ -986,7 +1010,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const hoisted = (targetDefault as any[]).find(
         (entry) => entry?.filter?.plugin === '@nx/eslint/plugin'
       );
-      expect(hoisted?.options?.['cache-location']).toBe('cache-dir');
+      expect(hoisted?.options?.quiet).toBe(true);
       for (const name of ['app1', 'app2']) {
         const projectTarget =
           readProjectConfiguration(tree, name).targets?.lint ?? {};
@@ -996,7 +1020,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
         // resolveSourcePlugin gate) is verified in the engine spec's
         // "through the REAL Nx resolution pipeline" tests; a JS-spread merge
         // here could not observe that gate.
-        expect(projectTarget.options?.['cache-location']).toBeUndefined();
+        expect(projectTarget.options?.quiet).toBeUndefined();
       }
     });
 
@@ -1199,6 +1223,66 @@ describe('Eslint - Convert Executors To Plugin', () => {
         );
       }
     );
+
+    it.each`
+      option             | value         | expectedOptions
+      ${'maxWarnings'}   | ${0}          | ${{ 'max-warnings': 0 }}
+      ${'maxWarnings'}   | ${-1}         | ${{ 'max-warnings': -1 }}
+      ${'fix'}           | ${true}       | ${{ fix: true }}
+      ${'fix'}           | ${false}      | ${undefined}
+      ${'cache'}         | ${false}      | ${undefined}
+      ${'quiet'}         | ${false}      | ${undefined}
+      ${'noEslintrc'}    | ${false}      | ${undefined}
+      ${'cacheLocation'} | ${''}         | ${undefined}
+      ${'cacheStrategy'} | ${''}         | ${undefined}
+      ${'cacheStrategy'} | ${'metadata'} | ${{ 'cache-strategy': 'metadata' }}
+    `(
+      'should convert $option: $value to its ESLint CLI flag',
+      async ({ option, value, expectedOptions }) => {
+        const project = createTestProject(tree, {
+          appName: 'core',
+          appRoot: 'libs/core',
+        });
+        project.targets.lint.options[option] = value;
+        updateProjectConfiguration(tree, project.name, project);
+
+        await convertToInferred(tree, { skipFormat: true });
+
+        const updatedProject = readProjectConfiguration(tree, project.name);
+        expect(updatedProject.targets?.lint?.options).toStrictEqual(
+          expectedOptions
+        );
+      }
+    );
+
+    it('should convert falsy options in a configuration and unset the disabled ones', async () => {
+      const project = createTestProject(tree, {
+        appName: 'core',
+        appRoot: 'libs/core',
+      });
+      project.targets.lint.options.fix = true;
+      project.targets.lint.options.cache = true;
+      project.targets.lint.configurations = {
+        ci: { maxWarnings: 0, fix: false, cache: false, cacheLocation: '' },
+      };
+      updateProjectConfiguration(tree, project.name, project);
+
+      await convertToInferred(tree, { skipFormat: true });
+
+      const updatedProject = readProjectConfiguration(tree, project.name);
+      expect(updatedProject.targets.lint.options).toStrictEqual({
+        fix: true,
+        cache: true,
+      });
+      expect(updatedProject.targets.lint.configurations).toStrictEqual({
+        ci: {
+          'max-warnings': 0,
+          fix: null,
+          cache: null,
+          'cache-location': null,
+        },
+      });
+    });
 
     it.each`
       outputs                                                 | expectedOutputs
