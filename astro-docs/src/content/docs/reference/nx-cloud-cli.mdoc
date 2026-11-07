@@ -385,6 +385,9 @@ Invoke `npx nx-cloud start-workers` at the beginning of your main job to provisi
 
 Nx Cloud reads your CI configuration from a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file, and this command starts one of its `worker-templates` entries. Nx Cloud reads the file from your repository at the commit of the run.
 
+While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
+With neither file, the command fails.
+
 **Usage:**
 
 ```shell
@@ -395,7 +398,7 @@ npx nx-cloud start-workers [--workers <name>] [--config <path>]
 # .nx/pipelines/ci.yaml
 worker-templates:
   default:
-    workers: 5 linux-large
+    workers: 5 linux-large-js
     stop-after:
       - build
       - test
@@ -758,7 +761,7 @@ This command is the same as running `nx fix-ci`. It is not supported on Windows.
 npx nx-cloud fix-ci
 ```
 
-Configure which tasks are eligible and which fixes apply automatically through `start-ci-run --fix-tasks` and `--auto-apply-fixes`, or through the Nx Cloud UI. See [self-healing CI](/docs/features/ci-features/self-healing-ci) for the full configuration.
+Configure which tasks are eligible and which fixes apply automatically through the `self-healing` section of [`ci.yaml`](/docs/reference/nx-cloud/ci-config#self-healing), `start-ci-run --fix-tasks` and `--auto-apply-fixes`, or the Nx Cloud UI. See [self-healing CI](/docs/features/ci-features/self-healing-ci) for the full configuration.
 
 ### `nx-cloud apply-locally`
 
@@ -884,7 +887,7 @@ npx nx-cloud validate --workflow-file=<file>
 #### Examples
 
 ```shell
-npx nx-cloud validate --workflow-file=./.nx/pipelines/ci.yaml
+npx nx-cloud validate --workflow-file=./.nx/pipelines/launch-templates.yaml
 npx nx-cloud validate --workflow-file=./.nx/pipelines/custom-steps.yaml --step-file
 ```
 

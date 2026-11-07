@@ -146,7 +146,7 @@ ultracache:
         - .next/cache/**
 ```
 
-`start-ci-run` pipelines read the same keys from `.nx/workflows/ultracache-config.yaml`.
+Pipelines that don't run `nx-cloud start-workers`, including `start-ci-run` ones, read the same keys from `.nx/workflows/ultracache-config.yaml`.
 
 Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.

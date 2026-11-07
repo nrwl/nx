@@ -139,10 +139,10 @@ For the triggers and how to turn it on, see [Nx Cloud CI](/docs/features/ci-feat
 
 Nx runs the affected tasks in parallel on the CI machine, in the order the task graph requires.
 
-## Distribute tasks with Workers
+## Distribute tasks with workers
 
-With Workers, your tasks run across several machines instead of one.
-With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep agents close to capacity, so fewer machine-minutes sit idle.
+With workers, your tasks run across several machines instead of one.
+With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep workers close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
 Set the number of workers in `.nx/pipelines/ci.yaml`:
@@ -187,7 +187,7 @@ jobs:
 {% /tabs %}
 
 {% aside type="note" title="Nothing to tune" %}
-Nx Cloud decides how many tasks run on each agent, so there's no `--parallel` value to set.
+Nx Cloud decides how many tasks run on each worker, so there's no `--parallel` value to set.
 For every configuration option, see the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 {% /aside %}
 
@@ -202,9 +202,9 @@ These pipelines combine affected, remote caching, and distribution.
 // .nx/pipelines/ci.yaml
 worker-templates:
   default:
-    # Distribute across 3 agents using the linux-large-js launch template
+    # Distribute across 3 workers using the linux-large-js launch template
     workers: 3 linux-large-js
-    # Shut idle agents down once every build task has been requested
+    # Shut idle workers down once every build task has been requested
     stop-after:
       - build
 ```
@@ -233,8 +233,8 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      # Provisions the agents declared in .nx/pipelines/ci.yaml.
-      # Run it before installing dependencies so agents boot while this job installs.
+      # Provisions the workers declared in .nx/pipelines/ci.yaml.
+      # Run it before installing dependencies so workers boot while this job installs.
       - run: npx nx-cloud start-workers
 
       - uses: actions/setup-node@v6
@@ -248,7 +248,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v5
 
       # Runs lint, test, and build only for projects affected by this change.
-      # Nx Cloud distributes these tasks across the agents started above.
+      # Nx Cloud distributes these tasks across the workers started above.
       - run: npx nx affected -t lint test build
 ```
 
@@ -271,9 +271,9 @@ on:
 
 worker-templates:
   default:
-    # Distribute across 3 agents using the linux-large-js launch template
+    # Distribute across 3 workers using the linux-large-js launch template
     workers: 3 linux-large-js
-    # Shut idle agents down once every build task has been requested
+    # Shut idle workers down once every build task has been requested
     stop-after:
       - build
 
@@ -284,7 +284,7 @@ jobs:
     workers: default
     steps:
       # Runs lint, test, and build only for projects affected by this change.
-      # Nx Cloud distributes these tasks across the agents started above.
+      # Nx Cloud distributes these tasks across the workers started above.
       - run: npx nx affected -t lint test build
 ```
 
@@ -297,6 +297,6 @@ jobs:
 
 {% linkcard title="Remote caching" description="Share task results across CI runs and developer machines" href="/docs/features/ci-features/remote-cache" /%}
 
-{% linkcard title="Distribute task execution" description="See how dynamic task packing fills agents" href="/docs/features/ci-features/distribute-task-execution" /%}
+{% linkcard title="Distribute task execution" description="See how dynamic task packing fills workers" href="/docs/features/ci-features/distribute-task-execution" /%}
 
 {% /cardgrid %}

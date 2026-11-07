@@ -105,7 +105,7 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
 5. Identify env vars and secrets:
    - CI-provider-only vars.
    - Main orchestration job vars.
-   - Worker-required vars to set on the launch template `env` or in the Nx Cloud environment variables settings.
+   - Worker-required vars to set on the launch template `env`. Values stored in the Nx Cloud environment variables settings still need a mapping there, such as `NAME: ${{ secrets.NAME }}`.
    - Vars that must be configured in Nx Cloud UI.
    - Secrets that must not be forwarded.
    - If a worker needs a value only the main job can produce at run time, flag it: `start-workers` forwards only `NX_`-prefixed vars, and `start-ci-run --with-env-vars` is the alternative.

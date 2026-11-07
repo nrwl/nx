@@ -19,11 +19,11 @@ Read {pageUrl} and https://nx.dev/docs/reference/nx-cloud/ci-config before editi
 
 1. Read `.nx/ci-config.yaml` (or `.yml`), every file it points to (`distribute-on` or `assignment-rules` paths), and each CI workflow that runs `nx-cloud start-workers`, `nx start-workers`, or `nx start-nx-agents`. Note any job that sets `NX_CI_EXECUTION_ENV`, because it selects `overrides`.
 2. Create `.nx/pipelines/ci.yaml`. If it already exists, it may hold an Nx Cloud CI pipeline, so keep its `on` and `jobs` and add to it. Translate every key with the mapping table on the page. Create one `worker-templates` entry for the base config and one for each `overrides` key, carrying over the base values each override didn't set.
-3. Every count string must name a launch template and separate templates with `;`, not `,`. A `distribute-on` changeset map must become exactly `small`, `medium`, and `large`. If it has a different number of changesets, ask me how to map them.
-4. If the config sets `dte.distribute-on: manual`, `workers.with-env-vars`, `lifecycle.heartbeat: false`, or `dte.main-job-worker`, stop and show me the matching section of the page before changing that part. `ci.yaml` has no direct equivalent for them on external CI.
+3. Every count string must name a launch template and separate templates with `;`, not `,`. A `distribute-on` changeset map must become exactly `small`, `medium`, and `large`. If it has a different number of changesets, ask me how to map them. A template's count can't go down in a larger size, so keep a smaller size's templates in the larger sizes.
+4. If the config sets `dte.distribute-on: manual`, `workers.with-env-vars`, `lifecycle.heartbeat: false`, `dte.main-job-worker`, or `ai` under `overrides`, stop and show me the matching section of the page before changing that part. `ci.yaml` has no direct equivalent for them on external CI.
 5. Update each workflow. With one entry, `nx-cloud start-workers` needs no flags. With several, pass `--workers <name>`. Jobs that used `NX_CI_EXECUTION_ENV` to select an override pass the entry made from it. Leave the provider's checkout, install, and `nx` steps as they are.
 6. Delete `.nx/ci-config.yaml` and any file only it referenced. Keep `.nx/workflows/agents.yaml`, or import it with `launch-templates: .nx/workflows/agents.yaml`.
-7. Move `.nx/workflows/ultracache-config.yaml` or `sandboxing-config.yaml` into the `ultracache` section, or import the file, and rename `exclude-reads` and `exclude-writes` to `ignore-reads` and `ignore-writes`.
+7. Move `.nx/workflows/ultracache-config.yaml` or `sandboxing-config.yaml` into the `ultracache` section, or import the file, and rename `exclude-reads` and `exclude-writes` to `ignore-reads` and `ignore-writes`. If a workflow keeps using `start-ci-run`, keep the file in `.nx/workflows`, because `start-ci-run` only reads it there, and import it with `ultracache: .nx/workflows/ultracache-config.yaml`.
 
 Show me the diff and a table of each old key and where it went. Do not commit on my behalf. Tell me to confirm on a trial CI run that the workers start and the tasks distribute.
 {% /llm_copy_prompt %}
@@ -63,23 +63,23 @@ Run the pipeline and confirm that tasks distribute across the workers you set an
 
 ## Key mapping
 
-| `.nx/ci-config.yaml`              | `.nx/pipelines/ci.yaml`                                                    |
-| --------------------------------- | -------------------------------------------------------------------------- |
-| `dte.distribute-on: <count>`      | `worker-templates.<name>: <count>`, or `workers` inside an entry           |
-| `dte.distribute-on: <changesets>` | `small`, `medium`, and `large` on an entry                                 |
-| `dte.distribute-on: <file>`       | `worker-templates: <file>`, with the file holding the entries              |
-| `dte.distribute-on: manual`       | [No equivalent](#bring-your-own-compute)                                   |
-| `dte.assignment-rules`            | `assignment-rules` on an entry, written inline                             |
-| `dte.scheduling-constraints`      | `scheduling-constraints` on an entry, written inline                       |
-| `dte.main-job-worker`             | [`main-job-worker` on an entry, on Nx Cloud CI](#main-job-worker)          |
-| `dte.enabled-by-default`          | Removed. Run a command with `--no-distribution` to keep it on the main job |
-| `lifecycle.stop-after`            | `stop-after` on an entry                                                   |
-| `lifecycle.fail-after`            | `fail-after` on an entry                                                   |
-| `lifecycle.heartbeat`             | [Removed](#heartbeat)                                                      |
-| `ai.fix-tasks-patterns`           | `self-healing.fix-tasks-patterns`                                          |
-| `ai.auto-apply-patterns`          | `self-healing.auto-apply-patterns`                                         |
-| `workers.with-env-vars`           | [Removed](#environment-variables-for-workers)                              |
-| `overrides.<env>`                 | A separate entry, picked with `--workers <name>`                           |
+| `.nx/ci-config.yaml`              | `.nx/pipelines/ci.yaml`                                           |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `dte.distribute-on: <count>`      | `worker-templates.<name>: <count>`, or `workers` inside an entry  |
+| `dte.distribute-on: <changesets>` | `small`, `medium`, and `large` on an entry                        |
+| `dte.distribute-on: <file>`       | `worker-templates: <file>`, with the file holding the entries     |
+| `dte.distribute-on: manual`       | [No equivalent](#bring-your-own-compute)                          |
+| `dte.assignment-rules`            | `assignment-rules` on an entry, written inline                    |
+| `dte.scheduling-constraints`      | `scheduling-constraints` on an entry, written inline              |
+| `dte.main-job-worker`             | [`main-job-worker` on an entry, on Nx Cloud CI](#main-job-worker) |
+| `dte.enabled-by-default`          | Removed. Run a command with `--no-dte` to keep it on the main job |
+| `lifecycle.stop-after`            | `stop-after` on an entry                                          |
+| `lifecycle.fail-after`            | `fail-after` on an entry                                          |
+| `lifecycle.heartbeat`             | [Removed](#heartbeat)                                             |
+| `ai.fix-tasks-patterns`           | `self-healing.fix-tasks-patterns`                                 |
+| `ai.auto-apply-patterns`          | `self-healing.auto-apply-patterns`                                |
+| `workers.with-env-vars`           | [Removed](#environment-variables-for-workers)                     |
+| `overrides.<env>`                 | A separate entry, picked with `--workers <name>`                  |
 
 Other files move into `ci.yaml` too:
 
@@ -90,10 +90,13 @@ Other files move into `ci.yaml` too:
 | `.nx/workflows/ultracache-config.yaml`   | `ultracache`, inline or imported                            |
 | `.nx/workflows/sandboxing-config.yaml`   | `ultracache`, inline or imported                            |
 
+A workflow that keeps using `start-ci-run` still reads `.nx/workflows/ultracache-config.yaml`, so keep that file and import it with `ultracache: .nx/workflows/ultracache-config.yaml`.
+
 Values change in a few places:
 
 - Count strings separate templates with `;`. Replace `2 linux-medium-js, 1 linux-large-js` with `2 linux-medium-js; 1 linux-large-js`.
 - Changesets become exactly three sizes. Sizes are picked from the remaining work instead of the share of affected projects, so review your counts after the first few runs.
+- A template's count can't go down in a larger size. Keep a smaller size's templates in the larger sizes, because `3 linux-medium-js` in `small` and `10 linux-large-js` in `large` is an error.
 - `exclude-reads` and `exclude-writes` become `ignore-reads` and `ignore-writes`.
 - Every count needs a template name on external CI. `default: 3` is an error.
 
@@ -116,6 +119,8 @@ worker-templates:
 npx nx-cloud start-workers --workers main
 ```
 
+`ai` keys in an override have no counterpart, because `self-healing` applies to the whole file.
+
 ### Bring your own compute
 
 `worker-templates` has no setting for `distribute-on: manual`.
@@ -125,6 +130,7 @@ Delete `.nx/ci-config.yaml` when you switch, because `start-ci-run` exits with a
 ### Main-job worker
 
 `main-job-worker` works on Nx Cloud CI.
+`main-job-worker: true` isn't valid in `ci.yaml`, which requires `cpu` and `memory`.
 On external CI, `start-workers` doesn't start this worker from `ci.yaml`, so add a remote worker in place of it.
 
 ### Heartbeat
@@ -138,7 +144,8 @@ On Nx Cloud CI, the run ends when the main job does, so there's no heartbeat to 
 On Nx Cloud CI, workers get the `env` of the file and the job.
 
 On external CI, `start-workers` forwards variables prefixed with `NX_` from the main job.
-For the rest, set them on the `env` of the [launch template](/docs/kb/launch-templates) or on the **Environment variables** page of your workspace settings.
+For the rest, set them on the `env` of the [launch template](/docs/kb/launch-templates).
+To use a value from the **Environment variables** page of your workspace settings, map it there with `NAME: ${{ secrets.NAME }}`.
 To forward other values from the main job at run time, use `nx-cloud start-ci-run --with-env-vars`.
 
 ## Move `start-ci-run` flags to the file
@@ -147,17 +154,17 @@ To forward other values from the main job at run time, use `nx-cloud start-ci-ru
 You can keep using it, and new pipelines should use `start-workers`.
 To move, replace the command with `npx nx-cloud start-workers` and translate each flag:
 
-| `start-ci-run` flag         | `.nx/pipelines/ci.yaml`                                   |
-| --------------------------- | --------------------------------------------------------- |
-| `--distribute-on`           | `workers`, or `small`, `medium`, and `large` on an entry  |
-| `--assignment-rules`        | `assignment-rules` on an entry                            |
-| `--scheduling-constraints`  | `scheduling-constraints` on an entry                      |
-| `--stop-workers-after`      | `stop-after` on an entry                                  |
-| `--stop-workers-on-failure` | `fail-after` on an entry: `1` for `true`, `0` for `false` |
-| `--fix-tasks`               | `self-healing.fix-tasks-patterns`                         |
-| `--auto-apply-fixes`        | `self-healing.auto-apply-patterns`                        |
+| `start-ci-run` flag                                       | `.nx/pipelines/ci.yaml`                                   |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `--distribute-on`                                         | `workers`, or `small`, `medium`, and `large` on an entry  |
+| `--assignment-rules`                                      | `assignment-rules` on an entry                            |
+| `--scheduling-constraints`                                | `scheduling-constraints` on an entry                      |
+| `--stop-workers-after` or `--stop-agents-after`           | `stop-after` on an entry                                  |
+| `--stop-workers-on-failure` or `--stop-agents-on-failure` | `fail-after` on an entry: `1` for `true`, `0` for `false` |
+| `--fix-tasks`                                             | `self-healing.fix-tasks-patterns`                         |
+| `--auto-apply-fixes`                                      | `self-healing.auto-apply-patterns`                        |
 
-`--no-distribution`, `--distribute-on=manual`, `--with-env-vars`, and `--require-explicit-completion` have no counterpart in the file, so keep `start-ci-run` if you rely on them.
+`--no-distribution`, `--distribute-on=manual`, `--use-dte-by-default`, `--with-env-vars`, and `--require-explicit-completion` have no counterpart in the file, so keep `start-ci-run` if you rely on them.
 
 ## Reference for `.nx/ci-config.yaml`
 
@@ -170,7 +177,7 @@ It has five optional top-level sections.
 ```yaml
 # .nx/ci-config.yaml
 dte:
-  distribute-on: 5 linux-large
+  distribute-on: 5 linux-large-js
 lifecycle:
   stop-after:
     - build
@@ -180,7 +187,7 @@ lifecycle:
 
 - `lifecycle.fail-after`: number of task failures allowed before the run group is marked failed. `0` means never fail. Default: `1`.
 - `lifecycle.heartbeat`: when `true`, Nx Cloud marks the run failed if the main job stops reporting in. Default: `true`.
-- `lifecycle.stop-after`: targets that mark the run complete once each one has finished.
+- `lifecycle.stop-after`: targets after which workers shut down. Once a command running each listed target has started, workers stop when they have no tasks left.
 
 ### `ai`
 
