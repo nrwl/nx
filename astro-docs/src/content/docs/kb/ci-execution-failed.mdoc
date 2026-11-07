@@ -51,22 +51,22 @@ This behavior can be disabled by setting [`fail-after`](/docs/reference/nx-cloud
 `nx-cloud start-workers` found neither `.nx/pipelines/ci.yaml` nor the deprecated `.nx/ci-config.yaml`, or the file named by `--config` is missing.
 Add `.nx/pipelines/ci.yaml` and commit it. See the [CI configuration file reference](/docs/reference/nx-cloud/ci-config).
 
-### No worker entries
+### No worker-templates entry to start workers from
 
 `worker-templates` is missing or empty, so `start-workers` has nothing to start.
 Add an [entry](/docs/reference/nx-cloud/ci-config#worker-templates).
 
-### Unknown worker entry
+### No worker-templates entry 'name'
 
 The name passed to `--workers` isn't in `worker-templates`.
 Pass one of the names the error lists, or add the entry.
 
-### Several worker entries
+### File has several worker-templates entries
 
 `worker-templates` has more than one entry, and `start-workers` ran without `--workers`.
 Pass `--workers <name>` to pick one.
 
-### Worker entry has no launch template
+### Entry has no launch template
 
 A count such as `default: 3` doesn't name a launch template.
 External CI has no job to take a machine setup from, so every count needs a template name, such as `default: 3 linux-medium-js`.

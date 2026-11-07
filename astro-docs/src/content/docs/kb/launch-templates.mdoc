@@ -18,14 +18,14 @@ We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs
 ## Getting started with custom launch templates
 
 To create a custom launch template, copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) under the [`launch-templates`](/docs/reference/nx-cloud/ci-config#launch-templates) key of `.nx/pipelines/ci.yaml` and customize the steps as needed.
-Templates can also live in another file in the `.nx/pipelines` folder, such as `launch-templates.yaml`, with the same top-level key.
+Templates can also live in another file that `ci.yaml` [imports](/docs/reference/nx-cloud/ci-config#import-a-section-from-another-file), with `launch-templates: .nx/pipelines/launch-templates.yaml`.
 `nx-cloud start-ci-run` reads templates only from `.nx/workflows`.
 
 ## Launch template structure
 
 ### `launch-templates`
 
-A `map` of launch template configurations. This value is required.
+A `map` of launch template configurations.
 
 ```yaml
 // .nx/pipelines/ci.yaml
@@ -360,10 +360,11 @@ Before Nx Cloud can validate your custom templates, you must first commit any ch
 After creating your custom launch template, it's recommended to validate it. This ensures that all necessary fields
 within the launch template and all respective inputs within each step are appropriately defined.
 
-To do this, run the `nx-cloud validate` command, with the path to the launch template:
+To do this, run the `nx-cloud validate` command, with the path to the launch template.
+The command checks a launch templates file, not a full `ci.yaml`, so keep templates you validate in their own file and import it:
 
 ```shell
-nx-cloud validate --workflow-file=./.nx/pipelines/ci.yaml
+nx-cloud validate --workflow-file=./.nx/pipelines/launch-templates.yaml
 ```
 
 For examples of common configurations such as private registries, custom node versions, AWS CLI setup, and more, see the [launch template examples](/docs/kb/launch-template-examples).

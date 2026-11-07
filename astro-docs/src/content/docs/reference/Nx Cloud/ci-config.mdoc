@@ -74,7 +74,7 @@ jobs:
 | `defaults`         | Defaults for the steps in every job.                |
 | `jobs`             | The jobs and their steps.                           |
 
-External CI ignores `name`, `on`, `env`, `defaults`, and `jobs`, so one file can serve both kinds of run in the same repository.
+External CI doesn't run `name`, `on`, `env`, `defaults`, and `jobs`, but still validates them, so one file can serve both kinds of run in the same repository.
 
 {% aside type="note" title="File name" %}
 Nx Cloud CI runs every `.yaml` or `.yml` file in `.nx/pipelines` that has an `on` section, so you can name the file something other than `ci.yaml`.
@@ -134,7 +134,8 @@ All three are required.
 - Counts are totals per template, so picking a larger size adds the difference. A template's count can't go down from one size to the next, and workers are never removed.
 
 By default, `small` covers up to 33% of the stored task time, `medium` up to 66%, and `large` the rest.
-`small` and `medium` can set their own upper limit, a whole percent from 1% to 99%:
+`small` and `medium` can set their own upper limit, a whole percent from 1% to 99%.
+`small`'s limit must be below `medium`'s, and a size without `workload` keeps its default:
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -184,17 +185,17 @@ To give a task a worker to itself, set `parallelism: false` on its target in [pr
 
 ### `stop-after`
 
-Targets that mark the CI run complete once each one has finished.
-List every target you expect in the pipeline so the run doesn't end before all work is done.
+Targets after which workers shut down: once a command running each listed target has started, workers stop when they have no tasks left.
+Include at least one target from each Nx command your pipeline runs.
 
 Type: array of strings.
 
 ### `fail-after`
 
-Number of task failures allowed before the run is marked failed.
+Number of task failures after which the run is marked failed.
 `0` means never fail, so the run always finishes. `1` stops on the first failure.
 
-Type: `integer`, minimum `0`.
+Type: `integer`, minimum `0`. Default: `1`.
 
 ### `main-job-worker`
 
@@ -229,7 +230,7 @@ launch-templates:
         uses: nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml
 ```
 
-Nx Cloud looks up a template name in `ci.yaml` first, then in other files in `.nx/pipelines` and `.nx/workflows`, then in the public `nrwl/nx-cloud-workflows` templates.
+Nx Cloud looks up a template name in `ci.yaml` and the files it imports, then in `.nx/workflows`, then in the public `nrwl/nx-cloud-workflows` templates.
 
 ## `ultracache`
 
@@ -251,6 +252,7 @@ For when to use each option, see [Ultracache sandboxing](/docs/kb/sandboxing).
 ## `self-healing`
 
 Overrides for [self-healing CI](/docs/features/ci-features/self-healing-ci#advanced-configuration-overrides).
+On external CI, these apply to runs started with `nx-cloud start-workers`.
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -278,7 +280,7 @@ ultracache: .nx/pipelines/ultracache.yaml
 worker-templates: .nx/pipelines/workers.yaml
 ```
 
-Paths are relative to the workspace root and read at the commit of the run.
+Paths are relative to the repository root and read at the commit of the run.
 The imported file holds only the content of the section, with no top-level key naming it, and can't import again.
 A `launch-templates` file can also keep a top-level `launch-templates:` key, so an existing `.nx/workflows/agents.yaml` can be imported as it is.
 
@@ -299,7 +301,7 @@ on:
     branches: [main]
 ```
 
-Triggers can also filter with `branches-ignore`, `tags`, `tags-ignore`, `paths`, and `types`.
+Triggers can also filter with `branches-ignore` and `paths`, `PUSH` triggers with `tags` and `tags-ignore`, and `PR` triggers with `types`.
 A positive filter can't be combined with its `-ignore` counterpart.
 
 ## `jobs`
@@ -357,6 +359,8 @@ For the rest of what jobs and steps support, see [run CI on Nx Cloud](/docs/feat
 ## How `start-workers` picks a file and an entry
 
 On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) reads `.nx/pipelines/ci.yaml`, or the file named by `--config`.
+While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
+With neither file, the command fails.
 
 | `--workers` | Entries in `worker-templates` | Result                              |
 | ----------- | ----------------------------- | ----------------------------------- |
