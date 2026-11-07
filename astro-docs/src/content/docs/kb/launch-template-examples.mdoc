@@ -8,12 +8,16 @@ topics:
 
 This page contains common configuration examples for [launch templates](/docs/kb/launch-templates). For the full reference of available fields, see the [launch templates reference page](/docs/kb/launch-templates).
 
+{% aside type="note" title="Using .nx/ci-config.yaml?" %}
+We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
+{% /aside %}
+
 ## Full example
 
 This is an example of a launch template using all pre-built features:
 
 ```yaml
-// ./nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 # Define common setup steps that can be reused across templates
 common-js-init-steps: &common-js-init-steps
   # using a reusable step in an external GitHub repo,
@@ -69,7 +73,7 @@ common-rust-init-steps: &common-rust-init-steps
       echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
 launch-templates:
-  # Custom template name, the name is referenced via 'distribute-on: 3 my-linux-medium-js'
+  # Custom template name, the name is referenced in a worker count such as '3 my-linux-medium-js'
   # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
@@ -99,17 +103,17 @@ launch-templates:
     init-steps: *common-rust-init-steps
 ```
 
-Use these templates by setting the number of agents desired and the template name on `dte.distribute-on` in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file.
+Use these templates by setting the number of agents desired and the template name on a [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates) entry in the same file.
 Pick whichever template suits the job, swapping `my-linux-medium-js` for `my-linux-large-js` or `my-linux-rust-large`.
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 4 my-linux-medium-js
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default: 4 my-linux-medium-js
 ```
 
 Your main CI job then starts the agents with [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
-The command takes no configuration flags, since all configuration lives in the file.
+With one entry, the command takes no flags.
 
 ```shell
 npx nx-cloud start-workers
@@ -117,16 +121,25 @@ npx nx-cloud start-workers
 
 ## Pass environment variables
 
-If you need to send environment variables to agents, list them under [`workers.with-env-vars`](/docs/reference/nx-cloud/ci-config#workerswith-env-vars). You can pass a specific list of environment variables like this:
+`nx-cloud start-workers` forwards variables prefixed with `NX_` from the main job to your agents.
+Set other values on the launch template:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: 8 linux-medium-js
-workers:
-  with-env-vars:
-    - VAR1
-    - VAR2
+// .nx/pipelines/ci.yaml
+launch-templates:
+  my-linux-medium-js:
+    env:
+      VAR1: value1
+      VAR2: value2
+```
+
+For secrets, add them on the **Environment variables** page of your [workspace settings](https://cloud.nx.app/go/workspace/settings), then map them in the template's `env`, such as `API_TOKEN: ${{ secrets.API_TOKEN }}`.
+
+If the main job only has a value at run time, start the run with `nx-cloud start-ci-run` to forward it.
+This command takes its configuration from CLI flags instead of `ci.yaml`:
+
+```shell
+npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
 ```
 
 ## Pass values between steps
@@ -136,7 +149,7 @@ If you need to pass a value from one step to another step, such as assigning the
 Commonly used for redefining the `PATH` or setting options for tooling.
 
 ```yaml
-// ./nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-template-name:
     init-steps:
@@ -156,14 +169,16 @@ launch-templates:
 To prevent any sensitive values from showing up in a `git diff`, we recommend using the `user` level location for the `.npmrc` or `.yarnrc` file.
 {% /aside %}
 
-If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and authenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. You can pass the auth token from your main agent, so it's available to the agent machines.
+If your project consumes packages from a private registry, you'll have to set up an authentication step in a custom launch template and authenticate like you normally would, usually this is via a `.npmrc` or `.yarnrc` file. Add `SOME_AUTH_TOKEN` on the **Environment variables** page of your workspace settings, then map it in the template's `env` with `${{ secrets.SOME_AUTH_TOKEN }}`.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
+    env:
+      SOME_AUTH_TOKEN: ${{ secrets.SOME_AUTH_TOKEN }}
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
@@ -176,18 +191,6 @@ launch-templates:
           npm config set -L user "//npm.pkg.github.com/:_authToken" "${SOME_AUTH_TOKEN}"
       - name: Install Node Modules
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
-```
-
-Pass `SOME_AUTH_TOKEN` via `workers.with-env-vars`
-
-```yaml
-# .nx/ci-config.yaml
-# this assumes SOME_AUTH_TOKEN is already defined on the main agent
-dte:
-  distribute-on: 5 my-linux-medium-js
-workers:
-  with-env-vars:
-    - SOME_AUTH_TOKEN
 ```
 
 ## Custom node version
@@ -205,7 +208,7 @@ Which file the step reads depends on which step you use:
 You can use [mise](#install-tools-with-mise) to manage node versions alongside other toolchains.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   node-22:
     resource-class: 'docker_linux_amd64/medium'
@@ -237,7 +240,7 @@ The step resolves the node version in this order, using the first source it find
 If none of these are set, the agent keeps the node version that ships with the image.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   node-22:
     resource-class: 'docker_linux_amd64/medium'
@@ -268,7 +271,7 @@ The steps follow the general pattern of:
 1. persist any environment variable changes for future steps
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   node-22:
     resource-class: 'docker_linux_amd64/medium'
@@ -321,7 +324,7 @@ You can use `apt` to install popular linux packages. This is helpful in streamli
 For example, you can install the [GitHub CLI](https://cli.github.com/) on the agents if needed.
 
 ```yaml
-// ./nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
@@ -348,7 +351,7 @@ If you're trying to install a package that isn't available on `apt`, check that 
 If your repo already has a `mise.toml` file, mise automatically installs the tools defined there.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
@@ -368,7 +371,7 @@ launch-templates:
 You can define tools inline using the `tools` input. Each line specifies a tool and version separated by `=`, `@`, or a space.
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
@@ -396,14 +399,18 @@ Defining tools inline overrides any `mise.toml` in your repo. This can cause dif
 
 ## AWS CLI
 
-First, define the environment variables on your main agent, where you call `nx-cloud start-workers`. Pass the same environment variables to your agents by listing them under `workers.with-env-vars`.
+First, add the environment variables on the **Environment variables** page of your workspace settings, then map them in the template's `env`.
 
 Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` environment variables are required.
 
 {% aside type="tip" %}
 **OIDC Provider**
 
-If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured for you after authentication to AWS. Since the credentials created for with OIDC provider flow are temporary, you'll need to pass the `AWS_SESSION_TOKEN` environment variable to your agents.
+If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured on the main job after authentication to AWS. These credentials are temporary and only exist at run time, so forward them from the main job with `nx-cloud start-ci-run`, which takes its configuration from CLI flags. That command only finds templates in `.nx/workflows`, so keep `my-linux-medium-js` in `.nx/workflows/agents.yaml` and import it into `ci.yaml`:
+
+```shell
+npx nx-cloud start-ci-run --distribute-on="8 my-linux-medium-js" --with-env-vars="AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN"
+```
 
 {% /aside %}
 
@@ -412,16 +419,20 @@ If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_
 
 Using the pre-built step simplifies and provides debugging checks to make sure the AWS CLI is properly authenticated to AWS before continuing. The step is recommended for most use cases.
 
-```yaml {% meta="{6-8}" %}
-// ./nx/workflows/agents.yaml
+```yaml {% meta="{6-12}" %}
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     init-steps:
       - name: Install AWS CLI
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-aws-cli/main.yaml'
-        # no additional inputs required, as all configuration is via environment variables via workers.with-env-vars
+        # no additional inputs required, as all configuration is via environment variables
 ```
 
 {% /tabitem %}
@@ -431,14 +442,17 @@ Manual installation follows [installing the AWS CLI using the official direction
 Manual installation is helpful if a custom installation setup is required.
 It is helpful to run `aws sts get-caller-identity` command to make sure you're properly authenticated to AWS before proceeding
 
-```yaml {% meta="{6-20}" %}
-// ./nx/workflows/agents.yaml
+```yaml {% meta="{6-24}" %}
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'
     image: 'ubuntu22.04-node24.14-v1'
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     init-steps:
-      # step assumes you've passed all required AWS_* environment variables from the main agent via workers.with-env-vars
       - name: Install AWS CLI
         script: |
           # unzip is required to unzip the AWS CLI installer
@@ -458,26 +472,18 @@ launch-templates:
 {% /tabitem %}
 {% /tabs %}
 
-## Dynamic changesets
+## Size Workers by workload
 
-NxCloud can calculate how big your pull request is based on how many projects in your workspace it affects. You can then configure Workers to dynamically use a different number of agents based on your changeset size.
-
-Here we define a `small`, `medium` and `large` distribution strategy:
-
-```yaml
-// .nx/workflows/dynamic-changesets.yaml
-distribute-on:
-  small-changeset: 3 linux-medium-js
-  medium-changeset: 8 linux-medium-js
-  large-changeset: 12 linux-medium-js
-```
-
-Then you can point `dte.distribute-on` at the path to that file.
+Nx Cloud can size your Workers by the work each run has to do, picking a size from the remaining work after cache hits.
+Set [`small`, `medium`, and `large`](/docs/reference/nx-cloud/ci-config#small-medium-and-large) on a worker entry:
 
 ```yaml
-# .nx/ci-config.yaml
-dte:
-  distribute-on: .nx/workflows/dynamic-changesets.yaml
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default:
+    small: 3 linux-medium-js
+    medium: 8 linux-medium-js
+    large: 12 linux-medium-js
 ```
 
 ## Debugging
@@ -492,7 +498,7 @@ Exercise caution when printing out environment variables, they will be shown in 
 {% /aside %}
 
 ```yaml
-// .nx/workflows/agents.yaml
+// .nx/pipelines/ci.yaml
 launch-templates:
   my-linux-medium-js:
     resource-class: 'docker_linux_amd64/medium'

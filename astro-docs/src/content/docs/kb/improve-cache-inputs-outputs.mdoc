@@ -21,7 +21,7 @@ Follow the steps from this guide exactly: {pageUrl}
    - (a) Nx config issue - the task legitimately needs the access. Inspect resolved config with `npx nx show target <project>:<target> --json`, then extend `inputs`/`outputs` in `project.json`, declare a `dependsOn`, or use `dependentTasksOutputFiles`. On Nx 23+ prefer the spread token `"..."` to append to plugin-inferred config without re-listing it.
    - (b) Task or app bug - the unexpected read/write reflects a problem in the script, build tool, or application code itself. Fix the offending code, not the Nx config.
 
-   - (c) Benign access, last resort - exclude the path. For a single target use `ultracache.ignoreReads`/`ultracache.ignoreWrites` in `project.json`; for the whole workspace use `.nx/workflows/ultracache-config.yaml` (`ignore-reads`/`ignore-writes` or `task-exclusions`). Use sparingly, like a `ts-ignore` - excluded paths are not tracked...
+   - (c) Benign access, last resort - exclude the path. For a single target use `ultracache.ignoreReads`/`ultracache.ignoreWrites` in `project.json`; for the whole workspace use the `ultracache` section of `.nx/pipelines/ci.yaml` (`ignore-reads`/`ignore-writes` or `task-exclusions`). Use sparingly, like a `ts-ignore` - excluded paths are not tracked...
 
 5. After editing, run `npx nx reset` then re-validate the same per-task report. Once it reports `ok: true`, go back to step 2 to pick the next task. Loop until every task in `index.json` is clean.
 6. Commit and push. After CI runs, re-download with `--since 1h` and re-validate to catch tasks that did not run locally. Print the **Analytics** > **Cache inputs and outputs** page URL for the branch to the user (you cannot open it yourself) so they can confirm fixed tasks no longer appear - cache hits will not regenerate reports, so a clean local validate is not enough on its own.
@@ -131,21 +131,24 @@ When the access belongs to one target, exclude it on that target with [`ultracac
 }
 ```
 
-When the access spans the workspace, exclude the path in `.nx/workflows/ultracache-config.yaml`:
+When the access spans the workspace, exclude the path in the [`ultracache` section](/docs/reference/nx-cloud/ci-config#ultracache) of `.nx/pipelines/ci.yaml`:
 
 ```yaml
-# .nx/workflows/ultracache-config.yaml
-ignore-reads:
-  - '**/.tmp-cache/**'
+# .nx/pipelines/ci.yaml
+ultracache:
+  ignore-reads:
+    - '**/.tmp-cache/**'
 
-task-exclusions:
-  - project: myapp
-    target: build
-    ignore-reads:
-      - .next/cache/**
+  task-exclusions:
+    - project: myapp
+      target: build
+      ignore-reads:
+        - .next/cache/**
 ```
 
-Global `exclude-reads` and `exclude-writes` apply to all tasks.
+Pipelines that don't run `nx-cloud start-workers`, including `start-ci-run` ones, read the same keys from `.nx/workflows/ultracache-config.yaml`.
+
+Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 Patterns use glob syntax relative to the workspace root, and they add to a target's own `ultracache` patterns rather than replacing them.
 

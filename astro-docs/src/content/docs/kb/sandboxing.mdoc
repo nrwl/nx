@@ -255,29 +255,31 @@ Contact your Nx representative to turn on sandboxing for your deployment.
 
 ### Excluding paths
 
-Create a `.nx/workflows/ultracache-config.yaml` file to exclude paths from sandboxing checks.
+Add an [`ultracache` section](/docs/reference/nx-cloud/ci-config#ultracache) to `.nx/pipelines/ci.yaml` to exclude paths from sandboxing checks.
 
 ```yaml
-# .nx/workflows/ultracache-config.yaml
-ignore-reads:
-  - '**/vite.config.*.timestamp-*'
+# .nx/pipelines/ci.yaml
+ultracache:
+  ignore-reads:
+    - '**/vite.config.*.timestamp-*'
 
-task-exclusions:
-  - project: myapp
-    target: build
-    ignore-reads:
-      - .next/cache/**
-    ignore-writes:
-      - logs/**
-  - target: lint
-    ignore-reads:
-      - .eslintcache/**
+  task-exclusions:
+    - project: myapp
+      target: build
+      ignore-reads:
+        - .next/cache/**
+      ignore-writes:
+        - logs/**
+    - target: lint
+      ignore-reads:
+        - .eslintcache/**
 ```
 
 Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 
 Patterns use glob syntax relative to the workspace root.
+Pipelines that don't run `nx-cloud start-workers`, including `start-ci-run` ones, read the same keys from `.nx/workflows/ultracache-config.yaml`.
 
 To exclude paths for a single target, or to stop tracking it altogether, use the
 [`ultracache` target property](/docs/reference/project-configuration#ultracache).

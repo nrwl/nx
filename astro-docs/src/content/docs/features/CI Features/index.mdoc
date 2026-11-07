@@ -2,27 +2,29 @@
 title: Continuous Integration (CI) with Nx Cloud
 sidebar:
   hidden: true
-description: Nx Cloud cuts CI time and cost with remote caching, Ultracache, and distributed task execution with dynamic task packing, which fills machines by CPU and memory use.
+description: Run your whole CI pipeline on Nx Cloud, or add it to your CI provider, to cut time and cost with remote caching, Ultracache, and distributed task execution.
 filter: 'type:Features'
 ---
 
 Nx Cloud makes CI faster and cheaper in two ways:
 
 - [Remote caching](/docs/features/ci-features/remote-cache) skips any task that already ran with the same inputs, in CI or on a developer machine. On Nx Cloud, Ultracache records the files each task actually reads, improving both cache correctness and efficiency.
-- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across Workers, and _dynamic task packing_ fills each agent by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
+- [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads the remaining tasks across workers, and _dynamic task packing_ fills each worker by the CPU and memory its tasks use, so fewer machine-minutes sit idle.
 
 In most workspaces, distribution uses about **50% fewer machine-minutes** than remote caching alone.
 Teams using Nx Cloud report **40% to 90% faster CI**.
 
+[Run your whole pipeline on Nx Cloud](#run-ci-on-nx-cloud), or [keep your CI provider](#use-your-existing-ci-provider) and add Nx Cloud to it.
+
 ## What you get with Nx Cloud on top of Nx Core
 
-|                 | Nx Core                                                                                                    | Nx Cloud                                                                                                          |
-| --------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Caching         | [Local cache](/docs/features/cache-task-results), per machine                                              | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI                     |
-| Task inputs     | Hashes each task from its declared or inferred `inputs`                                                    | Ultracache records what each task reads in CI and hashes from that                                                |
-| Task scheduling | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across agents](/docs/features/ci-features/distribute-task-execution) with dynamic task packing |
-| Failing CI      | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR                            |
-| Visibility      | Terminal output for the run in front of you                                                                | [Run history, task analytics, and CI observability](/docs/kb/optimize-your-ttg)                                   |
+|                 | Nx Core                                                                                                    | Nx Cloud                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Caching         | [Local cache](/docs/features/cache-task-results), per machine                                              | Adds a [remote cache](/docs/features/ci-features/remote-cache) shared across your team and CI                      |
+| Task inputs     | Hashes each task from its declared or inferred `inputs`                                                    | Ultracache records what each task reads in CI and hashes from that                                                 |
+| Task scheduling | Task graph on one machine, [`nx affected`](/docs/features/ci-features/affected) to skip untouched projects | Adds [distribution across workers](/docs/features/ci-features/distribute-task-execution) with dynamic task packing |
+| Failing CI      | You read the logs and fix it                                                                               | [Self-healing CI](/docs/features/ci-features/self-healing-ci) proposes a fix on the PR                             |
+| Visibility      | Terminal output for the run in front of you                                                                | [Run history, task analytics, and CI observability](/docs/kb/optimize-your-ttg)                                    |
 
 ## Connect your workspace to Nx Cloud
 
@@ -33,15 +35,223 @@ npx nx@latest connect
 ```
 
 Remote caching works as soon as the workspace is connected.
-To add distribution and the rest of the pipeline, see [setting up CI](/docs/getting-started/setup-ci).
 
 {% call_to_action title="Connect from your browser" url="https://cloud.nx.app/get-started?utm_source=nx-docs&utm_medium=website&utm_campaign=nx-cloud-signup&utm_content=ci-features" icon="nxcloud" description="Sign in to Nx Cloud and connect your repository without the CLI" /%}
+
+## Run CI on Nx Cloud
+
+Nx Cloud CI runs your whole pipeline on Nx Cloud from one `.nx/pipelines/ci.yaml` file, so you don't need a separate CI provider.
+A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as GitHub checks.
+Remote caching, workers, and self-healing CI work without extra steps.
+
+{% aside type="note" title="Private beta" %}
+Nx Cloud CI is in private beta, and the Nx Cloud team turns it on for your workspace.
+To join, [contact us](https://nx.dev/contact/engineering).
+{% /aside %}
+
+Your repository must be on github.com and connected to Nx Cloud through the [GitHub App](/docs/kb/github-integration).
+Personal access tokens, GitHub Enterprise, and other providers aren't supported yet.
+
+### Set up a pipeline
+
+Commit this file on a branch and open a pull request into `main`.
+The name is up to you, because Nx Cloud CI runs every file in `.nx/pipelines` that has an `on` section:
+
+```yaml
+# .nx/pipelines/ci.yaml
+# yaml-language-server: $schema=https://cloud.nx.app/nx-cloud/static/schemas/workflow.schema.json
+name: CI
+
+on:
+  pull-requests:
+    event: PR
+    branches: [main]
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: linux-medium-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+`linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
+Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
+
+Each job appears on the pull request as a check named `<name> / <job>`, where `<name>` is the file's `name` or, without one, its file name.
+Nx Cloud CI runs alongside any CI you already have, so CI runs twice until you remove the old workflow.
+A newer push to a pull request cancels the older run of the same file.
+
+### Distribute tasks with workers
+
+Add `workers` to a job to run its tasks across several machines:
+
+```yaml
+# .nx/pipelines/ci.yaml
+jobs:
+  main:
+    runs-on: linux-medium-js
+    workers: 3 linux-large-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+Workers start with the job, so they install dependencies in parallel with it.
+To scale the number of workers with the work in each run, list three sizes: `small` starts with the job, and Nx Cloud adds workers up to `medium` or `large` when a command has more work left.
+A count without a template name reuses the setup of the job:
+
+```yaml
+# .nx/pipelines/ci.yaml
+jobs:
+  main:
+    runs-on: linux-large-js
+    workers:
+      small: 3
+      medium: 6
+      large: 8
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+For setups shared across jobs and for task rules such as `stop-after`, see [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates).
+
+### Secrets and environment variables
+
+Add variables on the **Environment variables** page of your [workspace settings](https://cloud.nx.app/go/workspace/settings).
+Read the ones marked secret with `${{ secrets.<NAME> }}` and the rest with `${{ vars.<NAME> }}`.
+A stored variable only reaches a job where an `env` maps it:
+
+```yaml
+# .nx/pipelines/ci.yaml
+env:
+  NODE_OPTIONS: --max-old-space-size=8192
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  NPM_REGISTRY: ${{ vars.NPM_REGISTRY }}
+```
+
+`env` at the top of the file or on a job also reaches the workers of that job, and step logs mask secret values.
+Terminal output from tasks uploaded to Nx Cloud isn't masked.
+
+### Self-healing CI
+
+When self-healing CI is on for your workspace, Nx Cloud adds the `Fix CI` step at the end of each job in `jobs`.
+Don't add `nx fix-ci` yourself.
+To limit which tasks it fixes, use the [`self-healing`](/docs/reference/nx-cloud/ci-config#self-healing) section.
+
+### Coming from GitHub Actions
+
+The file reads like a GitHub Actions workflow, and most step-level syntax carries over.
+This workflow:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v5
+      - run: npx nx-cloud start-workers
+      - run: npx nx affected -t lint test build
+      - run: npx nx fix-ci
+        if: always()
+```
+
+Becomes this file:
+
+```yaml
+# .nx/pipelines/ci.yaml
+name: CI
+
+on:
+  main-pushes:
+    event: PUSH
+    branches: [main]
+  pull-requests:
+    event: PR
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: linux-medium-js
+    workers: 3 linux-large-js
+    steps:
+      - run: npx nx affected -t lint test build
+```
+
+| GitHub Actions                                                   | Nx Cloud CI                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------- |
+| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`     |
+| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)       |
+| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                  |
+| `nrwl/nx-set-shas`                                               | Automatic                                            |
+| `start-workers`                                                  | `workers` on the job                                 |
+| `nx fix-ci`                                                      | Automatic                                            |
+| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps) |
+| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                            |
+| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same expressions                                     |
+| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | Same files                                           |
+| `github.event_name` in a condition                               | `nxcloud.event_name`                                 |
+
+Required status checks need updating, because the check names change to `<name> / <job>`.
+
+### Current limits
+
+These aren't supported yet:
+
+- Pull requests from forks.
+- Events other than push and pull request, including `schedule`, `workflow_dispatch`, and merge queues.
+- `strategy.matrix`, `concurrency`, `services`, and job `outputs`.
+- Actions from the GitHub Marketplace and `action.yml` files, including `actions/cache` and `actions/upload-artifact`. `uses` runs Nx Cloud step templates.
+- OIDC identity tokens for cloud providers. Use secrets for now.
+- macOS and Windows. Jobs run on Linux.
+
+A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
+You can't turn off GitHub status checks while Nx Cloud CI is on.
+Configuration errors in `ci.yaml` show on the GitHub check.
+
+## Use your existing CI provider
+
+To keep your pipeline on GitHub Actions, CircleCI, GitLab, or another provider, add Nx Cloud to it.
+The same [CI configuration file](/docs/reference/nx-cloud/ci-config) sets your workers, and `nx-cloud start-workers` starts them from your main job:
+
+```yaml
+# .nx/pipelines/ci.yaml
+worker-templates:
+  default: 3 linux-large-js
+```
+
+```shell
+npx nx-cloud start-workers
+```
+
+For the full pipeline on your provider, see [setting up CI](/docs/getting-started/setup-ci).
+If your workspace has a `.nx/ci-config.yaml` file, [migrate it to `ci.yaml`](/docs/kb/migrate-from-ci-config).
 
 ## Building blocks of fast CI
 
 Fast CI comes from two things:
 
-- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across Workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a Worker, so you get more work out of each machine.
+- **Get more out of your machine minutes.** [Distributed task execution](/docs/features/ci-features/distribute-task-execution) spreads tasks across workers so work runs in parallel. Dynamic task packing runs tasks together when their combined CPU and memory needs fit on a worker, so you get more work out of each machine.
 - **Only run what you have to.** [`nx affected`](/docs/features/ci-features/affected) selects tasks whose inputs your changes touch. [Remote caching](/docs/features/ci-features/remote-cache) reuses results from tasks that already ran with the same inputs, so they don't run again.
 
 ## Why task-based CI costs less
@@ -50,8 +260,8 @@ Most CI setups use static partitioning (binning and sharding), assigning work to
 
 ![CI tasks divided into fixed bins](../../../../assets/concepts/ci-concepts/binning.svg)
 
-Nx Cloud assigns individual tasks as agents free up, using the task graph and each task's past duration, CPU, and memory use.
-Agents stay busy, an agent that fails during setup has its work picked up by the others, and adding agents needs no change to how work is split.
+Nx Cloud assigns individual tasks as workers free up, using the task graph and each task's past duration, CPU, and memory use.
+Workers stay busy, a worker that fails during setup has its work picked up by the others, and adding workers needs no change to how work is split.
 
 ![CI tasks distributed across three agents](../../../../assets/concepts/ci-concepts/3agents.svg)
 
@@ -64,6 +274,8 @@ Agents stay busy, an agent that fails during setup has its work picked up by the
 ## Related guides
 
 {% cardgrid %}
+
+{% linkcard title="Create custom launch templates" description="Set up jobs and workers with the tools and machine size your tasks need" href="/docs/kb/launch-templates" /%}
 
 {% linkcard title="CI workflow examples" description="Pipelines for CircleCI, GitLab, Azure Pipelines, Jenkins, and Bitbucket" href="/docs/kb/ci-workflow-examples" /%}
 
