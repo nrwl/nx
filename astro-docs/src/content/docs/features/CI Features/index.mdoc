@@ -131,8 +131,7 @@ env:
   NPM_REGISTRY: ${{ vars.NPM_REGISTRY }}
 ```
 
-`env` at the top of the file or on a job also reaches the workers of that job, and step logs mask secret values.
-Terminal output from tasks uploaded to Nx Cloud isn't masked.
+`env` at the top of the file or on a job also reaches the workers of that job.
 
 ### Self-healing CI
 
@@ -198,36 +197,12 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
-| GitHub Actions                                                   | Nx Cloud CI                                          |
-| ---------------------------------------------------------------- | ---------------------------------------------------- |
-| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`     |
-| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)       |
-| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                  |
-| `nrwl/nx-set-shas`                                               | Automatic                                            |
-| `start-workers`                                                  | `workers` on the job                                 |
-| `nx fix-ci`                                                      | Automatic                                            |
-| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps) |
-| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                            |
-| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same expressions                                     |
-| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | Same files                                           |
-| `github.event_name` in a condition                               | `nxcloud.event_name`                                 |
+For how each GitHub Actions key and expression maps, see [the CI configuration reference](/docs/reference/nx-cloud/ci-config#coming-from-github-actions).
 
 Required status checks need updating, because the check names change to `<name> / <job>`.
 
-### Current limits
-
-These aren't supported yet:
-
-- Pull requests from forks.
-- Events other than push and pull request, including `schedule`, `workflow_dispatch`, and merge queues.
-- `strategy.matrix`, `concurrency`, `services`, and job `outputs`.
-- Actions from the GitHub Marketplace and `action.yml` files, including `actions/cache` and `actions/upload-artifact`. `uses` runs Nx Cloud step templates.
-- OIDC identity tokens for cloud providers. Use secrets for now.
-- macOS and Windows. Jobs run on Linux.
-
-A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
-You can't turn off GitHub status checks while Nx Cloud CI is on.
-Configuration errors in `ci.yaml` show on the GitHub check.
+Pull requests from forks, scheduled runs, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
+For the full list, see [current limits](/docs/reference/nx-cloud/ci-config#current-limits).
 
 ## Use your existing CI provider
 

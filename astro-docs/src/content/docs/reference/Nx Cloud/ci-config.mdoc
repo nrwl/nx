@@ -334,7 +334,7 @@ The jobs of the pipeline, each on its own machine.
 | `workers: <name>`                            | An entry from `worker-templates`.                                      |
 | No `workers`                                 | One machine, no workers.                                               |
 
-Workers get the `env` of the file and the job, and those values are masked in logs when they come from `${{ secrets.<NAME> }}`.
+Workers get the `env` of the file and the job.
 
 ### `jobs.<job>.steps`
 
@@ -354,7 +354,36 @@ jobs:
         run: npx nx affected -t lint test build
 ```
 
-For the rest of what jobs and steps support, see [run CI on Nx Cloud](/docs/features/ci-features#run-ci-on-nx-cloud).
+### Coming from GitHub Actions
+
+| GitHub Actions                                                   | Nx Cloud CI                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------- |
+| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`     |
+| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)       |
+| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                  |
+| `nrwl/nx-set-shas`                                               | Automatic                                            |
+| `start-workers`                                                  | `workers` on the job                                 |
+| `nx fix-ci`                                                      | Automatic                                            |
+| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps) |
+| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                            |
+| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same expressions                                     |
+| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | Same files                                           |
+| `github.event_name` in a condition                               | `nxcloud.event_name`                                 |
+
+### Current limits
+
+Nx Cloud CI doesn't support these yet:
+
+- Pull requests from forks.
+- Events other than push and pull request, including `schedule`, `workflow_dispatch`, and merge queues.
+- `strategy.matrix`, `concurrency`, `services`, and job `outputs`.
+- Actions from the GitHub Marketplace and `action.yml` files, including `actions/cache` and `actions/upload-artifact`. `uses` runs Nx Cloud step templates.
+- OIDC identity tokens for cloud providers. Use secrets for now.
+- macOS and Windows. Jobs run on Linux.
+
+A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
+You can't turn off GitHub status checks while Nx Cloud CI is on.
+Configuration errors in `ci.yaml` show on the GitHub check.
 
 ## How `start-workers` picks a file and an entry
 

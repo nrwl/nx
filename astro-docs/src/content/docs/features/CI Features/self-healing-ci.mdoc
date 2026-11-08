@@ -43,10 +43,6 @@ Next, check the [Nx Cloud workspace settings](https://cloud.nx.app/go/workspace/
 
 On [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud), Nx Cloud adds this step for you, so you can skip this section.
 
-{% aside type="note" title="Using .nx/ci-config.yaml?" %}
-We've added support for `.nx/pipelines/ci.yaml`. See the [migration guide](/docs/kb/migrate-from-ci-config).
-{% /aside %}
-
 Add a step to your CI configuration's "main" job that runs the `fix-ci` command. It doesn't matter exactly what this job is called, it is whichever job in your config where you invoke `nx-cloud start-workers` and kick off your `nx run-many` or `nx affected` commands.
 
 By default, your CI provider will only run the step if the previous steps succeeded, but by definition we want to run Self-Healing CI even when previous steps fail. Therefore make sure you are using a condition of `if: always()` or equivalent to ensure it runs even when previous steps fail:
