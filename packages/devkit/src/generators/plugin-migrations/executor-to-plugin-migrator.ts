@@ -2577,16 +2577,19 @@ async function migrateProjects<T>(
 }
 
 /**
- * Compares both ways, so a registration that sets an option the migrated
- * projects leave unset does not absorb them, and the reverse.
+ * Compares both ways over the keys this migration can set, so a registration
+ * that sets such an option the migrated projects leave unset does not absorb
+ * them, and the reverse. Registration keys the migration never sets (e.g. one
+ * written by the plugin's init generator) do not block a match.
  */
 function hasSameEffectiveOptions(
   registrationOptions: Record<string, unknown>,
   options: Record<string, unknown>,
-  defaultPluginOptions: Record<string, unknown>
+  defaultPluginOptions: Record<string, unknown>,
+  migrationKeys: Set<string>
 ): boolean {
   const keys = new Set([
-    ...Object.keys(registrationOptions),
+    ...Object.keys(registrationOptions).filter((key) => migrationKeys.has(key)),
     ...Object.keys(options),
   ]);
   return [...keys].every((key) =>
@@ -2678,6 +2681,13 @@ function addPluginRegistrations<T>(
     registrationGroups.get(key).include.push(projectIncludeGlob);
   }
 
+  const migrationKeys = new Set(Object.keys(defaultPluginOptions ?? {}));
+  for (const options of projects.values()) {
+    for (const key of Object.keys(options)) {
+      migrationKeys.add(key);
+    }
+  }
+
   let index = 0;
   for (const { options, include } of registrationGroups.values()) {
     index++;
@@ -2691,7 +2701,8 @@ function addPluginRegistrations<T>(
         hasSameEffectiveOptions(
           (plugin.options ?? {}) as Record<string, unknown>,
           options,
-          defaultPluginOptions as Record<string, unknown>
+          defaultPluginOptions as Record<string, unknown>,
+          migrationKeys
         )
     );
 

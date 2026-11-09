@@ -649,6 +649,30 @@ describe('per-project plugin options', () => {
     ]);
   });
 
+  it('folds projects into a registration that also sets an option the migration never sets', async () => {
+    ctx = setupFixture('per-project-options-registrations-extra-key');
+    for (const name of ['app1', 'app2']) {
+      addExecutorProject(ctx, { name, root: name, targetName: 'build' });
+    }
+
+    const plugins = await migrateWithRegistrations(
+      [
+        {
+          plugin: SYNTHETIC_PLUGIN_PATH,
+          options: { targetName: 'build', ciTargetName: 'build-ci' },
+        },
+      ],
+      syntheticMigrations()
+    );
+
+    expect(plugins).toStrictEqual([
+      {
+        plugin: SYNTHETIC_PLUGIN_PATH,
+        options: { targetName: 'build', ciTargetName: 'build-ci' },
+      },
+    ]);
+  });
+
   it('folds a project into a registration with deeply equal object-valued options', async () => {
     ctx = setupFixture('per-project-options-registrations-object');
     addExecutorProject(ctx, {
