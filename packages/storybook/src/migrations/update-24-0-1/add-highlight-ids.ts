@@ -6,8 +6,13 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
-import { hasParseErrors } from '@nx/devkit/internal';
-import { ensureClassicTypescript } from '@nx/js/internal';
+import {
+  hasParseErrors,
+  withSourceFileChecker,
+  type SourceFileChecker,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   CallExpression,
   Identifier,
@@ -15,7 +20,6 @@ import type {
   ObjectLiteralExpression,
   PropertyName,
   SourceFile,
-  TypeChecker,
 } from 'typescript';
 
 const HIGHLIGHT_MODULE = 'storybook/highlight';
@@ -34,7 +38,7 @@ type ImportBindings = {
   useChannel: Identifier[];
 };
 
-let ts: typeof import('typescript') | undefined;
+let ts: TypescriptAst | undefined;
 
 export default async function addHighlightIds(tree: Tree) {
   let rewritten = false;
@@ -83,67 +87,65 @@ export default async function addHighlightIds(tree: Tree) {
 // `useChannel`, which Storybook types as `(eventName: string, ...args: any)`.
 // Any other payload can have a type that rejects the new property.
 function addIds(filePath: string, content: string): string {
-  ts ??= ensureClassicTypescript('The "add-highlight-ids" migration');
-  const sourceFile = ts.createSourceFile(
+  ts ??= ensureTypescript();
+  const parsed = ts.createSourceFile(
     filePath,
     content,
     ts.ScriptTarget.Latest,
     /* setParentNodes */ true
   );
-  if (hasParseErrors(sourceFile)) {
-    return content;
-  }
-  const imports = readImports(sourceFile);
-  if (imports.useChannel.length === 0) {
+  if (hasParseErrors(parsed) || readImports(parsed).useChannel.length === 0) {
     return content;
   }
 
-  const checker = createChecker(sourceFile);
-  const isHighlightBinding = createImportBindingCheck(
-    checker,
-    imports.highlight
-  );
-  const isUseChannelBinding = createImportBindingCheck(
-    checker,
-    imports.useChannel
-  );
-  const isHighlightEvent = (node: Node) =>
-    ts.isStringLiteralLike(node)
-      ? node.text === HIGHLIGHT_EVENT
-      : isHighlightBinding(node);
-  const isUseChannelEmitter = (callee: Node) => {
-    const declaration = checker.getSymbolAtLocation(callee)?.valueDeclaration;
-    return (
-      declaration !== undefined &&
-      ts.isVariableDeclaration(declaration) &&
-      !declaration.type &&
-      !ts.getJSDocType(declaration) &&
-      declaration.initializer !== undefined &&
-      ts.isCallExpression(declaration.initializer) &&
-      isUseChannelBinding(declaration.initializer.expression)
+  return withSourceFileChecker(filePath, content, (sourceFile, checker) => {
+    const imports = readImports(sourceFile);
+    const isHighlightBinding = createImportBindingCheck(
+      checker,
+      imports.highlight
     );
-  };
+    const isUseChannelBinding = createImportBindingCheck(
+      checker,
+      imports.useChannel
+    );
+    const isHighlightEvent = (node: Node) =>
+      ts.isStringLiteralLike(node)
+        ? node.text === HIGHLIGHT_EVENT
+        : isHighlightBinding(node);
+    const isUseChannelEmitter = (callee: Node) => {
+      const declaration = checker.getSymbolAtLocation(callee)?.valueDeclaration;
+      return (
+        declaration !== undefined &&
+        ts.isVariableDeclaration(declaration) &&
+        !declaration.type &&
+        !ts.getJSDocTags(declaration).some(ts.isJSDocTypeTag) &&
+        declaration.initializer !== undefined &&
+        ts.isCallExpression(declaration.initializer) &&
+        isUseChannelBinding(declaration.initializer.expression)
+      );
+    };
 
-  // A fixed id would make a repeated emit replace the earlier highlight.
-  const id = `\`${escapeTemplateText(filePath)}-\${Math.random().toString(36).slice(2)}\``;
-  const changes: StringChange[] = [];
-  const visit = (node: Node): void => {
-    if (ts.isCallExpression(node)) {
-      const payload = getAddablePayload(node);
-      if (
-        payload &&
-        isHighlightEvent(node.arguments[0]) &&
-        isUseChannelEmitter(node.expression) &&
-        !hasLocalMath(checker, payload)
-      ) {
-        changes.push(insertIdProperty(payload, id, sourceFile));
+    // A fixed id would make a repeated emit replace the earlier highlight.
+    const id = `\`${escapeTemplateText(filePath)}-\${Math.random().toString(36).slice(2)}\``;
+    const changes: StringChange[] = [];
+    const visit = (node: Node): void => {
+      if (ts.isCallExpression(node)) {
+        const payload = getAddablePayload(node);
+        if (
+          payload &&
+          isHighlightEvent(node.arguments[0]) &&
+          isUseChannelEmitter(node.expression) &&
+          !hasLocalMath(checker, payload)
+        ) {
+          changes.push(insertIdProperty(payload, id, sourceFile));
+        }
       }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
+      ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
 
-  return applyChangesToString(content, changes);
+    return applyChangesToString(content, changes);
+  });
 }
 
 function readImports(sourceFile: SourceFile): ImportBindings {
@@ -206,7 +208,7 @@ function getPropertyName(name: PropertyName): string | undefined {
 // A local declaration can reuse an imported name, so names are compared by the
 // symbol the checker binds them to.
 function createImportBindingCheck(
-  checker: TypeChecker,
+  checker: SourceFileChecker,
   bindings: Identifier[]
 ): (node: Node) => boolean {
   const importSymbols = new Set(
@@ -218,30 +220,9 @@ function createImportBindingCheck(
   };
 }
 
-function createChecker(sourceFile: SourceFile): TypeChecker {
-  const fileName = sourceFile.fileName;
-  return ts
-    .createProgram(
-      [fileName],
-      { noLib: true, noResolve: true, allowJs: true, types: [] },
-      {
-        getSourceFile: (name) => (name === fileName ? sourceFile : undefined),
-        getDefaultLibFileName: () => 'lib.d.ts',
-        writeFile: () => {},
-        getCurrentDirectory: () => '',
-        getCanonicalFileName: (name) => name,
-        useCaseSensitiveFileNames: () => true,
-        getNewLine: () => '\n',
-        fileExists: (name) => name === fileName,
-        readFile: () => undefined,
-      }
-    )
-    .getTypeChecker();
-}
-
 // Without lib files the global `Math` has no symbol, so any match is a local
 // binding. Imports, type-only ones included, are unresolved aliases.
-function hasLocalMath(checker: TypeChecker, node: Node): boolean {
+function hasLocalMath(checker: SourceFileChecker, node: Node): boolean {
   return checker
     .getSymbolsInScope(node, ts.SymbolFlags.Value | ts.SymbolFlags.Alias)
     .some((symbol) => symbol.name === 'Math');
