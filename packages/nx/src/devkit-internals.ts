@@ -103,6 +103,7 @@ export {
   getSyntaxErrors,
   getTypescriptAst,
   hasParseErrors,
+  printNode,
 } from './plugins/js/utils/typescript-ast';
 export type { TypescriptAst } from './plugins/js/utils/typescript-ast';
 export {

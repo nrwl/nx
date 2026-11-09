@@ -19,6 +19,46 @@ type RenamedNodeGuard =
   | 'isStringLiteralLike'
   | 'isTypeAssertionExpression';
 
+// TypeScript 6 kinds TypeScript 7.1 does not have. 7.1 names `EndOfFileToken`
+// `EndOfFile`, and the adapter aliases it.
+type AbsentSyntaxKind =
+  | 'AssertClause'
+  | 'AssertEntry'
+  | 'Bundle'
+  | 'CommaListExpression'
+  | 'ImportTypeAssertionContainer'
+  | 'JSDocAuthorTag'
+  | 'JSDocClassTag'
+  | 'JSDocComment'
+  | 'JSDocEnumTag'
+  | 'JSDocFunctionType'
+  | 'JSDocMemberName'
+  | 'JSDocNamepathType'
+  | 'JSDocTag'
+  | 'JSDocUnknownType'
+  | 'ShebangTrivia';
+
+// The node builders both versions have, with TypeScript 6's signatures.
+type TypescriptFactory = Pick<
+  ts.NodeFactory,
+  | 'createArrayLiteralExpression'
+  | 'createCallExpression'
+  | 'createFalse'
+  | 'createIdentifier'
+  | 'createImportSpecifier'
+  | 'createObjectLiteralExpression'
+  | 'createPropertyAssignment'
+  | 'createSpreadAssignment'
+  | 'createStringLiteral'
+  | 'createTrue'
+  | 'createVariableDeclaration'
+  | 'createVariableDeclarationList'
+  | 'createVariableStatement'
+> & {
+  // TypeScript 7.1's token flags have other values.
+  createNumericLiteral(value: string | number): ts.NumericLiteral;
+};
+
 // Guards both versions export that answer differently for some nodes.
 const divergentNodeGuards = [
   'isCallLikeExpression',
@@ -46,6 +86,8 @@ const divergentNodeGuards = [
  * binding hole as a `BindingElement`, interface `extends` and class
  * `implements` types as `TypeReference`s, and gives the inner declaration of
  * `namespace A.B` an `export` modifier.
+ *
+ * Print nodes built with `factory` through {@link printNode}.
  */
 export type TypescriptAst = Pick<
   typeof ts,
@@ -56,7 +98,6 @@ export type TypescriptAst = Pick<
   | 'LanguageVariant'
   | 'ScriptKind'
   | 'ScriptTarget'
-  | 'SyntaxKind'
   | RenamedNodeGuard
   | Exclude<
       Extract<keyof typeof ts & keyof TypescriptAstGuardsModule, `is${string}`>,
@@ -73,6 +114,12 @@ export type TypescriptAst = Pick<
     start?: number,
     length?: number
   ): TypescriptScanner;
+  factory: TypescriptFactory;
+  NodeFlags: Pick<
+    typeof ts.NodeFlags,
+    'BlockScoped' | 'Const' | 'Let' | 'None'
+  >;
+  SyntaxKind: Omit<typeof ts.SyntaxKind, AbsentSyntaxKind>;
 };
 
 // The scanner members TypeScript 7.1 also has.
@@ -134,6 +181,44 @@ export function hasParseErrors(sourceFile: ts.SourceFile): boolean {
   }
 }
 
+/**
+ * Prints a node built with {@link TypescriptAst}'s `factory`. Throws for a
+ * node that holds parsed code, which TypeScript 7.1 reprints without its
+ * comments: insert the printed text into the source instead.
+ */
+export function printNode(node: ts.Node): string {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      assertBuiltNode(node, backend.ts.forEachChild);
+      return backend.ts
+        .createPrinter()
+        .printNode(backend.ts.EmitHint.Unspecified, node, undefined);
+    case 'api':
+      assertBuiltNode(node, (parent, visit) => parent.forEachChild(visit));
+      return withTypescriptApi(backend, (api) =>
+        api.printer.printNode(node as never)
+      );
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+// Built nodes have no position in a source file.
+function assertBuiltNode(
+  node: ts.Node,
+  forEachChild: (node: ts.Node, visit: (child: ts.Node) => void) => void
+): void {
+  if (node.pos >= 0) {
+    throw new Error(
+      'printNode only prints nodes built with the TypeScript factory, but the node holds code parsed from a file. Insert the printed nodes into the file text instead.'
+    );
+  }
+  forEachChild(node, (child) => assertBuiltNode(child, forEachChild));
+}
+
 // A TypeScript 7.1 source file carries no parse diagnostics, and some syntax
 // errors, such as an unclosed JSX element, mark no node. A program holding only
 // the file reports them.
@@ -174,7 +259,7 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
   const sharedGuards = Object.fromEntries(
     Object.entries(astGuards).filter(([name]) => !divergent.has(name))
   );
-  const { ScriptKind, SyntaxKind } = ast;
+  const { NodeFlags, ScriptKind, SyntaxKind, TokenFlags } = ast;
   // The kinds TypeScript 6's `isFunctionLike` adds to function declarations.
   const signatureKinds = new Set<number>(
     [
@@ -257,6 +342,75 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
     return sourceFile;
   };
 
+  const f = backend.factory;
+  // TypeScript 6 builders also take a name as a string.
+  const asIdentifier = (name: unknown) =>
+    (typeof name === 'string' ? f.createIdentifier(name) : name) as never;
+  const factory = {
+    createArrayLiteralExpression: (elements?: never[], multiLine?: boolean) =>
+      f.createArrayLiteralExpression(elements ?? [], multiLine),
+    createCallExpression: (
+      expression: never,
+      typeArguments: never[] | undefined,
+      argumentsArray: never[] | undefined
+    ) =>
+      f.createCallExpression(
+        expression,
+        undefined,
+        typeArguments,
+        argumentsArray ?? [],
+        NodeFlags.None
+      ),
+    createFalse: () => f.createKeywordExpression(SyntaxKind.FalseKeyword),
+    createIdentifier: f.createIdentifier,
+    createImportSpecifier: f.createImportSpecifier,
+    createNumericLiteral: (value: string | number) =>
+      f.createNumericLiteral(String(value), TokenFlags.None),
+    createObjectLiteralExpression: (
+      properties?: never[],
+      multiLine?: boolean
+    ) => f.createObjectLiteralExpression(properties ?? [], multiLine),
+    createPropertyAssignment: (name: unknown, initializer: never) =>
+      f.createPropertyAssignment(
+        undefined,
+        asIdentifier(name),
+        undefined,
+        undefined,
+        initializer
+      ),
+    createSpreadAssignment: f.createSpreadAssignment,
+    createStringLiteral: (text: string, isSingleQuote?: boolean) =>
+      f.createStringLiteral(
+        text,
+        isSingleQuote ? TokenFlags.SingleQuote : TokenFlags.None
+      ),
+    createTrue: () => f.createKeywordExpression(SyntaxKind.TrueKeyword),
+    createVariableDeclaration: (
+      name: unknown,
+      exclamationToken?: never,
+      type?: never,
+      initializer?: never
+    ) =>
+      f.createVariableDeclaration(
+        asIdentifier(name),
+        exclamationToken,
+        type,
+        initializer
+      ),
+    createVariableDeclarationList: (declarations: never[], flags?: number) =>
+      f.createVariableDeclarationList(declarations, flags ?? NodeFlags.None),
+    createVariableStatement: (
+      modifiers: never[] | undefined,
+      declarationList: never
+    ) =>
+      f.createVariableStatement(
+        modifiers,
+        Array.isArray(declarationList)
+          ? f.createVariableDeclarationList(declarationList, NodeFlags.None)
+          : declarationList
+      ),
+  };
+
   // 7.1 nodes have TypeScript 6's shape for what Nx reads, but not its
   // declared types.
   return {
@@ -305,10 +459,12 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
       );
       return modifiers?.length ? modifiers : undefined;
     },
+    factory,
     LanguageVariant: ast.LanguageVariant,
+    NodeFlags,
     ScriptKind,
     ScriptTarget: ast.ScriptTarget,
-    SyntaxKind,
+    SyntaxKind: { ...SyntaxKind, EndOfFileToken: SyntaxKind.EndOfFile },
   } as unknown as TypescriptAst;
 }
 

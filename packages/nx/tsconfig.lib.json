@@ -23,6 +23,9 @@
       ],
       "typescript/ast/is": [
         "../../node_modules/@typescript/native/dist/ast/is.d.ts"
+      ],
+      "typescript/ast/factory": [
+        "../../node_modules/@typescript/native/dist/ast/factory.generated.d.ts"
       ]
     }
   },
