@@ -2711,11 +2711,17 @@ function addPluginRegistrations<T>(
     }
     // Shallower roots first, so a re-admitted migrated root wins over the
     // fence of the project it sits in, and a fence nested under it wins again.
-    added.sort((a, b) => rootDepth(a.root) - rootDepth(b.root));
-    let exclude = [...kept, ...added.map(({ glob }) => glob)];
+    // A later duplicate of an entry overrides it, so the earlier one is dropped.
+    const sortedExclude = () => {
+      added.sort((a, b) => rootDepth(a.root) - rootDepth(b.root));
+      const globs = added.map(({ glob }) => glob);
+      return [...kept.filter((glob) => !globs.includes(glob)), ...globs];
+    };
+    let exclude = sortedExclude();
 
-    // A re-admit also reopens files an existing entry excludes deeper down. In
-    // that case leave the excludes as they were.
+    // A re-admit also reopens files an existing entry excludes deeper down.
+    // Exclude them again after it: by their owner's root glob when that glob
+    // reaches only files that should stay out, otherwise file by file.
     if (added.some(({ glob }) => glob.startsWith('!'))) {
       const touched = new Set([...fenced.keys(), ...roots]);
       const untouched = rawMatchedConfigFiles.filter(
@@ -2724,14 +2730,33 @@ function addPluginRegistrations<T>(
       const admittedBefore = new Set(
         findMatchingConfigFiles(untouched, [], kept)
       );
-      if (
-        findMatchingConfigFiles(untouched, [], exclude).some(
-          (file) => !admittedBefore.has(file)
-        )
-      ) {
-        exclude = kept;
-        fenced.clear();
+      const excludedBefore = new Set(
+        untouched.filter((file) => !admittedBefore.has(file))
+      );
+      const reopenedByOwner = new Map<string | undefined, string[]>();
+      for (const file of findMatchingConfigFiles(untouched, [], exclude)) {
+        if (excludedBefore.has(file)) {
+          const owner = ownerOf(file);
+          reopenedByOwner.set(owner, [
+            ...(reopenedByOwner.get(owner) ?? []),
+            file,
+          ]);
+        }
       }
+      for (const [owner, files] of reopenedByOwner) {
+        const ownerGlob = owner == null ? null : rootIncludeGlob(owner);
+        if (
+          ownerGlob &&
+          findMatchingConfigFiles(rawMatchedConfigFiles, [ownerGlob], []).every(
+            (file) => excludedBefore.has(file) || fenced.has(ownerOf(file))
+          )
+        ) {
+          added.push({ root: owner, glob: ownerGlob });
+        } else {
+          added.push(...files.map((file) => ({ root: file, glob: file })));
+        }
+      }
+      exclude = sortedExclude();
     }
 
     if (exclude.length > 0) {

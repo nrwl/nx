@@ -5112,7 +5112,7 @@ describe('targets another source already provides', () => {
     ]);
   });
 
-  it('leaves the excludes alone when a re-admit would reopen an existing one', async () => {
+  it('keeps an existing exclude that a re-admit would reopen', async () => {
     ctx = setupFixture('collision-readmit-reopens');
     addExecutorProject(ctx, {
       name: 'libs',
@@ -5143,14 +5143,24 @@ describe('targets another source already provides', () => {
     ];
     updateNxJson(ctx.tree, nxJson);
 
-    const { warn } = await migrate();
+    const { plugin, warn } = await migrate();
 
     expect(syntheticRegistrations()[0].exclude).toEqual([
+      'libs/proto/**/*',
+      '!libs/proto/sub/**/*',
       'libs/proto/sub/legacy/**/*',
     ]);
-    expect(warnings(warn)).not.toContainEqual(
-      expect.stringContaining('did not apply')
+    expect(warnings(warn)).toContainEqual(
+      expect.stringContaining(
+        'did not apply @acme/tool/plugin to project "proto" (libs/proto)'
+      )
     );
+    const resolved = await resolve(plugin);
+    expect(resolved['libs/proto'].build.options.command).toBe(
+      './gradlew build'
+    );
+    expect(resolved['libs/proto/sub'].build.options.command).toBe('acme-build');
+    expect(resolved['libs/proto/sub/legacy']?.build).toBeUndefined();
   });
 
   it('only fences a project from the registration that infers the colliding target', async () => {
