@@ -45,7 +45,6 @@ export async function migrateRemovedExecutors(
   if (pluginTargets === null) {
     const message =
       'The project graph could not be created, so targets created by plugins were not checked for removed executors. Inspect the project graph for targets that still use them, and change the plugin that creates each one.';
-    logger.warn(message);
     nextSteps.push(message);
     agentContext.push(message);
   }
@@ -164,6 +163,12 @@ const configurationPlugins = new Set([
   'nx/target-defaults',
 ]);
 
+// Every plugin's remove-executors migration runs in one `nx migrate` process,
+// and a failed graph build leaves no usable cache, so build it at most once.
+const graphUnavailable = Symbol.for(
+  '@nx/devkit/remove-executors/graph-unavailable'
+);
+
 /**
  * Graph targets that use a removed executor which project configuration does
  * not declare. Returns `null` when the graph cannot be created.
@@ -172,6 +177,9 @@ async function findPluginTargets(
   removed: Set<string>,
   projects: ReturnType<typeof getProjects>
 ): Promise<PluginTarget[] | null> {
+  if (globalThis[graphUnavailable]) {
+    return null;
+  }
   let graph: ReturnType<typeof readCachedProjectGraph>;
   try {
     graph = readCachedProjectGraph();
@@ -179,6 +187,10 @@ async function findPluginTargets(
     try {
       graph = await createProjectGraphAsync();
     } catch {
+      globalThis[graphUnavailable] = true;
+      logger.warn(
+        'The project graph could not be created, so targets created by plugins were not checked for removed executors.'
+      );
       return null;
     }
   }

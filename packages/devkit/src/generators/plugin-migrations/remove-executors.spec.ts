@@ -50,7 +50,12 @@ describe('migrateRemovedExecutors', () => {
   }
 
   beforeEach(() => writeCachedGraph());
-  afterEach(() => removeCachedGraph());
+  afterEach(() => {
+    removeCachedGraph();
+    delete globalThis[
+      Symbol.for('@nx/devkit/remove-executors/graph-unavailable')
+    ];
+  });
 
   it('skips the prompt only when there is nothing to convert', async () => {
     const tree = createTreeWithEmptyWorkspace();
@@ -384,6 +389,26 @@ describe('migrateRemovedExecutors', () => {
           ),
         ],
       });
+      warn.mockRestore();
+    });
+
+    it('creates the graph once when it cannot be created', async () => {
+      removeCachedGraph();
+      vi.mocked(createProjectGraphAsync).mockClear();
+      vi.mocked(createProjectGraphAsync).mockRejectedValueOnce(
+        new Error('plugin failed')
+      );
+      const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      const note = 'targets created by plugins were not checked';
+      for (const executor of ['@nx/next:build', '@nx/jest:jest']) {
+        const tree = createTreeWithEmptyWorkspace();
+        const result = await migrateRemovedExecutors(tree, [executor], vi.fn());
+        expect(result.nextSteps.join('\n')).toContain(note);
+      }
+      expect(createProjectGraphAsync).toHaveBeenCalledTimes(1);
+      expect(
+        warn.mock.calls.filter(([message]) => String(message).includes(note))
+      ).toHaveLength(1);
       warn.mockRestore();
     });
   });
