@@ -1,6 +1,6 @@
 import { updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { createSourceFile, ScriptTarget } from 'typescript';
+import { ensureTypescript } from '@nx/devkit/internal';
 import {
   addImportToComponent,
   addImportToDirective,
@@ -11,6 +11,8 @@ import {
   addViewProviderToComponent,
   isStandalone,
 } from './ast-utils';
+
+const { createSourceFile, ScriptTarget } = ensureTypescript();
 
 describe('Angular AST Utils', () => {
   it('should correctly add the imported symbol to the NgModule', () => {

@@ -79,6 +79,42 @@ export const config = mergeApplicationConfig(appConfig, serverConfig);
     `);
   });
 
+  it('should keep the other "@angular/platform-server" imports', async () => {
+    tree.write(
+      'apps/app1/src/app/app.config.server.ts',
+      `import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering, renderModule } from '@angular/platform-server';
+import { provideServerRouting } from '@angular/ssr';
+import { appConfig } from './app.config';
+import { serverRoutes } from './app.routes.server';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+      import { renderModule } from '@angular/platform-server';
+      import { provideServerRouting, provideServerRendering } from '@angular/ssr';
+      import { appConfig } from './app.config';
+      import { serverRoutes } from './app.routes.server';
+
+      const serverConfig: ApplicationConfig = {
+        providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
+      };
+
+      export const config = mergeApplicationConfig(appConfig, serverConfig);
+      "
+    `);
+  });
+
   it('should add "@angular/ssr" when the import is changed', async () => {
     tree.write(
       'apps/app1/src/app/app.config.server.ts',
