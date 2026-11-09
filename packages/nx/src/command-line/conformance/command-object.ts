@@ -14,8 +14,10 @@ export function resolveConformanceCommandObject(
       command === 'conformance'
         ? conformance.yargsConformanceCommand
         : conformance.yargsConformanceCheckCommand;
-  } catch {
-    return createMissingConformanceCommand(command);
+  } catch (e) {
+    return isConformanceNotInstalled(e)
+      ? createMissingConformanceCommand(command)
+      : createUnloadableConformanceCommand(command, e);
   }
 
   return {
@@ -23,6 +25,15 @@ export function resolveConformanceCommandObject(
     builder: (yargs) =>
       (commandObject.builder as (yargs: Argv) => Argv)(withVerbose(yargs)),
   };
+}
+
+// Only a missing @nx/conformance itself means the plugin is not installed.
+// Any other load error is a broken install and is reported as such.
+function isConformanceNotInstalled(e: unknown): boolean {
+  return (
+    (e as NodeJS.ErrnoException)?.code === 'MODULE_NOT_FOUND' &&
+    (e as Error).message.includes(`'@nx/conformance'`)
+  );
 }
 
 function createMissingConformanceCommand(
@@ -39,6 +50,27 @@ function createMissingConformanceCommand(
           'Install it by running `nx add @nx/conformance`.',
           '',
           'To learn more, visit https://nx.dev/docs/reference/conformance/overview',
+        ],
+      });
+      process.exit(1);
+    },
+  };
+}
+
+function createUnloadableConformanceCommand(
+  command: ConformanceCommand,
+  error: unknown
+): CommandModule {
+  return {
+    command,
+    describe: false,
+    handler: () => {
+      output.error({
+        title: `nx ${command} could not load the @nx/conformance plugin`,
+        bodyLines: [
+          error instanceof Error ? error.message : String(error),
+          '',
+          'Reinstall your dependencies, and make sure @nx/conformance matches your nx version.',
         ],
       });
       process.exit(1);
