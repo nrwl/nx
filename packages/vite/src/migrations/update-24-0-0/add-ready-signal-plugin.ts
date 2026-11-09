@@ -84,7 +84,11 @@ export default async function addReadySignalPlugin(tree: Tree) {
 }
 
 function addPlugin(content: string, configPath: string): EditResult {
-  const { tsquery, ensureTypescript } = require('@nx/devkit/internal');
+  const {
+    tsquery,
+    ensureTypescript,
+    hasParseErrors,
+  } = require('@nx/devkit/internal');
   const ts: TypescriptAst = ensureTypescript();
   const file: SourceFile = tsquery.ast(
     content,
@@ -94,7 +98,7 @@ function addPlugin(content: string, configPath: string): EditResult {
 
   // The parser recovers from syntax errors, so the edit would land in a
   // guessed tree.
-  if ((file as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length) {
+  if (hasParseErrors(file)) {
     return { kind: 'skipped', reason: 'it has syntax errors' };
   }
 

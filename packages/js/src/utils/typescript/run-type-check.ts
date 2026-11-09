@@ -18,6 +18,7 @@ import { readTsConfig } from '../../utils/typescript/ts-config';
 import { isFileSystemCaseSensitive } from './file-system-case';
 import {
   codeFrameColumns,
+  flattenApiDiagnosticMessage,
   getTypescriptBackend,
   withTypescriptApi,
   type ApiTypescriptBackend,
@@ -496,7 +497,7 @@ function sortAndDeduplicateApiDiagnostics(
 ): ApiDiagnostic[] {
   const entries = diagnostics.map((diagnostic) => ({
     diagnostic,
-    message: flattenApiDiagnosticMessage(diagnostic),
+    message: flattenApiDiagnosticMessage(diagnostic, '\n'),
   }));
   const compare = (a: (typeof entries)[number], b: (typeof entries)[number]) =>
     compareStrings(a.diagnostic.fileName, b.diagnostic.fileName) ||
@@ -625,7 +626,7 @@ function getFormattedApiDiagnostic(
   return formatDiagnostic(backend.sync.DiagnosticCategory, workspaceRoot, {
     category: diagnostic.category,
     code: diagnostic.code,
-    reason: flattenApiDiagnosticMessage(diagnostic),
+    reason: flattenApiDiagnosticMessage(diagnostic, '\n'),
     location:
       fileName && startPosition
         ? {
@@ -637,19 +638,6 @@ function getFormattedApiDiagnostic(
           }
         : undefined,
   });
-}
-
-// Matches TypeScript 6's `flattenDiagnosticMessageText(messageText, '\n')`.
-function flattenApiDiagnosticMessage(
-  diagnostic: ApiDiagnostic,
-  indent = 0
-): string {
-  let result = indent ? '\n' + '  '.repeat(indent) : '';
-  result += diagnostic.text;
-  for (const child of diagnostic.messageChain ?? []) {
-    result += flattenApiDiagnosticMessage(child, indent + 1);
-  }
-  return result;
 }
 
 interface DiagnosticLocation {

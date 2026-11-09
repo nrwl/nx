@@ -1,10 +1,14 @@
+import { join } from 'path';
 import type * as ts from 'typescript';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import {
   getTypescriptBackend,
   withTypescriptApi,
   type ApiTypescriptBackend,
   type TypescriptAstGuardsModule,
 } from './typescript-backend';
+
+type ApiDiagnostic = import('typescript/sync').Diagnostic;
 
 // TypeScript 6 guards that TypeScript 7.1 exports under another name.
 type RenamedNodeGuard =
@@ -81,6 +85,58 @@ export function getTypescriptAst(): TypescriptAst {
       throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
     }
   }
+}
+
+/**
+ * Whether parsing `sourceFile`, from {@link getTypescriptAst}, reported a
+ * syntax error. The parser recovers from syntax errors, so the tree of such a
+ * file is a guess.
+ */
+export function hasParseErrors(sourceFile: ts.SourceFile): boolean {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return !!(sourceFile as { parseDiagnostics?: readonly unknown[] })
+        .parseDiagnostics?.length;
+    case 'api':
+      return hasApiParseErrors(backend, sourceFile);
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+// A TypeScript 7.1 source file carries no parse diagnostics, and some syntax
+// errors, such as an unclosed JSX element, mark no node. A program holding only
+// the file reports them.
+function hasApiParseErrors(
+  backend: ApiTypescriptBackend,
+  sourceFile: ts.SourceFile
+): boolean {
+  const fileName = join(
+    workspaceRoot,
+    (sourceFile.languageVariant as number) === backend.ast.LanguageVariant.JSX
+      ? '.nx-parse-check.tsx'
+      : '.nx-parse-check.ts'
+  );
+  return withTypescriptApi(backend, (api) => {
+    const snapshot = api.createSnapshot({
+      fileSystem: { kind: 'layer', files: { [fileName]: sourceFile.text } },
+      createPrograms: [
+        {
+          rootFiles: [fileName],
+          compilerOptions: { noLib: true, noResolve: true, types: [] },
+        },
+      ],
+    });
+    try {
+      const [program] = snapshot.operation.createdPrograms;
+      return program.getSyntacticDiagnostics(fileName).length > 0;
+    } finally {
+      snapshot.dispose();
+    }
+  });
 }
 
 const jsFilePattern = /\.[cm]?jsx?$/i;
@@ -165,4 +221,80 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
     ScriptTarget: ast.ScriptTarget,
     SyntaxKind,
   } as unknown as TypescriptAst;
+}
+
+/**
+ * The syntax errors TypeScript reports for `content` as the workspace file
+ * `fileName`, as `transpileModule` reports them: a JS file also reports
+ * TypeScript-only syntax. Each message is on one line.
+ */
+export function getSyntaxErrors(fileName: string, content: string): string[] {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic': {
+      const { diagnostics } = backend.ts.transpileModule(content, {
+        fileName,
+        reportDiagnostics: true,
+        compilerOptions: { allowJs: true },
+      });
+      return (diagnostics ?? []).map((diagnostic) =>
+        backend.ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')
+      );
+    }
+    case 'api':
+      return getApiSyntaxErrors(backend, fileName, content);
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+function getApiSyntaxErrors(
+  backend: ApiTypescriptBackend,
+  fileName: string,
+  content: string
+): string[] {
+  const filePath = join(workspaceRoot, fileName);
+  return withTypescriptApi(backend, (api) => {
+    const snapshot = api.createSnapshot({
+      fileSystem: { kind: 'layer', files: { [filePath]: content } },
+      createPrograms: [
+        {
+          rootFiles: [filePath],
+          compilerOptions: {
+            allowJs: true,
+            noLib: true,
+            noResolve: true,
+            types: [],
+          },
+        },
+      ],
+    });
+    try {
+      const [program] = snapshot.operation.createdPrograms;
+      return program
+        .getSyntacticDiagnostics(filePath)
+        .map((diagnostic) => flattenApiDiagnosticMessage(diagnostic, ' '));
+    } finally {
+      snapshot.dispose();
+    }
+  });
+}
+
+/**
+ * The message of a TypeScript 7.1 diagnostic with its chain, as TypeScript 6's
+ * `flattenDiagnosticMessageText(messageText, newLine)` returns it.
+ */
+export function flattenApiDiagnosticMessage(
+  diagnostic: ApiDiagnostic,
+  newLine: string,
+  indent = 0
+): string {
+  let result = indent ? newLine + '  '.repeat(indent) : '';
+  result += diagnostic.text;
+  for (const child of diagnostic.messageChain ?? []) {
+    result += flattenApiDiagnosticMessage(child, newLine, indent + 1);
+  }
+  return result;
 }
