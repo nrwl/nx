@@ -1,14 +1,15 @@
 import { joinPathFragments, logger, Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
-import * as ts from 'typescript';
 import {
   addFlatCompatToFlatConfig,
   createNodeList,
   generateAst,
   generateFlatOverride,
   generateFlatPredefinedConfig,
+  generateObjectLiteral,
   generatePluginExtendsElement,
   generateSpreadElement,
+  generateStringLiteral,
   stringifyNodeList,
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
@@ -111,11 +112,11 @@ export function convertEslintJsonToFlatConfig(
   addGlobals: boolean;
 } {
   const importsMap = new Map<string, string>();
-  const exportElements: ts.Expression[] = [];
+  const exportElements: string[] = [];
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
-  let combinedConfig: ts.PropertyAssignment[] = [];
-  let languageOptions: ts.PropertyAssignment[] = [];
+  let combinedConfig: string[] = [];
+  let languageOptions: string[] = [];
 
   if (config.rules) {
     config.rules = preprocessRules(
@@ -160,21 +161,11 @@ export function convertEslintJsonToFlatConfig(
     const parserName = names(imp).propertyName;
     importsMap.set(imp, parserName);
 
-    languageOptions.push(
-      ts.factory.createPropertyAssignment(
-        'parser',
-        ts.factory.createIdentifier(parserName)
-      )
-    );
+    languageOptions.push(`parser: ${parserName}`);
   }
 
   if (config.parserOptions) {
-    languageOptions.push(
-      ts.factory.createPropertyAssignment(
-        'parserOptions',
-        generateAst(config.parserOptions)
-      )
-    );
+    languageOptions.push(`parserOptions: ${generateAst(config.parserOptions)}`);
   }
 
   // Like FlatCompat, add only enabled environments. Setting a disabled one's globals
@@ -196,35 +187,23 @@ export function convertEslintJsonToFlatConfig(
     }
 
     languageOptions.push(
-      ts.factory.createPropertyAssignment(
-        'globals',
-        ts.factory.createObjectLiteralExpression([
-          ...builtInEnvs.map((env) =>
-            ts.factory.createSpreadAssignment(
-              accessProperty(ts.factory.createIdentifier('globals'), env)
-            )
+      `globals: ${generateObjectLiteral(
+        [
+          ...builtInEnvs.map((env) => `...${accessProperty('globals', env)}`),
+          ...getPluginEnvironmentGlobals(config.env, importsMap).map(
+            generateSpreadElement
           ),
-          ...getPluginEnvironmentGlobals(config.env, importsMap).map((env) =>
-            ts.factory.createSpreadAssignment(env)
+          ...Object.keys(config.globals || {}).map(
+            (key) => `${key}: ${generateAst(config.globals[key])}`
           ),
-          ...Object.keys(config.globals || {}).map((key) =>
-            ts.factory.createPropertyAssignment(
-              key,
-              generateAst(config.globals[key])
-            )
-          ),
-        ])
-      )
+        ],
+        false
+      )}`
     );
   }
 
   if (config.settings) {
-    combinedConfig.push(
-      ts.factory.createPropertyAssignment(
-        'settings',
-        generateAst(config.settings)
-      )
-    );
+    combinedConfig.push(`settings: ${generateAst(config.settings)}`);
   }
 
   if (
@@ -232,34 +211,25 @@ export function convertEslintJsonToFlatConfig(
     config.reportUnusedDisableDirectives !== undefined
   ) {
     combinedConfig.push(
-      ts.factory.createPropertyAssignment(
-        'linterOptions',
-        generateAst({
-          noInlineConfig: config.noInlineConfig,
-          reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
-        })
-      )
+      `linterOptions: ${generateAst({
+        noInlineConfig: config.noInlineConfig,
+        reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
+      })}`
     );
   }
 
   if (languageOptions.length > 0) {
     combinedConfig.push(
-      ts.factory.createPropertyAssignment(
-        'languageOptions',
-        ts.factory.createObjectLiteralExpression(
-          languageOptions,
-          languageOptions.length > 1
-        )
-      )
+      `languageOptions: ${generateObjectLiteral(
+        languageOptions,
+        languageOptions.length > 1
+      )}`
     );
   }
 
   if (combinedConfig.length > 0) {
     exportElements.push(
-      ts.factory.createObjectLiteralExpression(
-        combinedConfig,
-        combinedConfig.length > 1
-      )
+      generateObjectLiteral(combinedConfig, combinedConfig.length > 1)
     );
   }
 
@@ -418,7 +388,7 @@ function addExtends(
   tree: Tree,
   root: string,
   importsMap: Map<string, string | string[]>,
-  configBlocks: ts.Expression[],
+  configBlocks: string[],
   config: ESLint.ConfigData,
   format: 'mjs' | 'cjs',
   convertedEslintrcFiles: ReadonlySet<string>
@@ -481,13 +451,7 @@ function addExtends(
       importsMap.set('@eslint/js', 'js');
       eslintPluginExtends.forEach((plugin) => {
         configBlocks.push(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createPropertyAccessExpression(
-              ts.factory.createIdentifier('js'),
-              ts.factory.createIdentifier('configs')
-            ),
-            ts.factory.createIdentifier(plugin.slice(7)) // strip 'eslint:' prefix
-          )
+          `js.configs.${plugin.slice(7)}` // strip 'eslint:' prefix
         );
       });
     }
@@ -504,7 +468,7 @@ function addExtends(
 
 function addPlugins(
   importsMap: Map<string, string | string[]>,
-  configBlocks: ts.Expression[],
+  configBlocks: string[],
   config: ESLint.ConfigData
 ) {
   // Replace @nx plugin with flat/base predefined config to match fresh generation.
@@ -530,27 +494,16 @@ function addPlugins(
   mappedPlugins.forEach(({ varName, imp }) => {
     importsMap.set(imp, varName);
   });
-  const pluginsAst = ts.factory.createObjectLiteralExpression(
+  const pluginsAst = generateObjectLiteral(
     [
-      ts.factory.createPropertyAssignment(
-        'plugins',
-        ts.factory.createObjectLiteralExpression(
-          mappedPlugins.map(({ name, varName }) => {
-            return ts.factory.createPropertyAssignment(
-              ts.factory.createStringLiteral(name),
-              ts.factory.createIdentifier(varName)
-            );
-          }),
-          mappedPlugins.length > 1
-        )
-      ),
+      `plugins: ${generateObjectLiteral(
+        mappedPlugins.map(
+          ({ name, varName }) => `${generateStringLiteral(name)}: ${varName}`
+        ),
+        mappedPlugins.length > 1
+      )}`,
       ...(config.processor
-        ? [
-            ts.factory.createPropertyAssignment(
-              'processor',
-              ts.factory.createStringLiteral(config.processor)
-            ),
-          ]
+        ? [`processor: ${generateStringLiteral(config.processor)}`]
         : []),
     ],
     false
@@ -570,7 +523,7 @@ function isPluginEnvironment(env: string): boolean {
 function getPluginEnvironmentGlobals(
   env: ESLint.ConfigData['env'],
   importsMap: Map<string, string | string[]>
-): ts.Expression[] {
+): string[] {
   return Object.keys(env ?? {})
     .filter((name) => env[name] && isPluginEnvironment(name))
     .map((name) => {
@@ -579,43 +532,29 @@ function getPluginEnvironmentGlobals(
       const varName =
         (importsMap.get(imp) as string) ?? names(imp).propertyName;
       importsMap.set(imp, varName);
-      return ts.factory.createPropertyAccessChain(
-        accessProperty(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier(varName),
-            'environments'
-          ),
-          name.slice(separator + 1),
-          ts.factory.createToken(ts.SyntaxKind.QuestionDotToken)
-        ),
-        ts.factory.createToken(ts.SyntaxKind.QuestionDotToken),
-        'globals'
-      );
+      return `${accessProperty(
+        `${varName}.environments`,
+        name.slice(separator + 1),
+        true
+      )}?.globals`;
     });
 }
 
 // `globals.shared-node-browser` would read as a subtraction.
 function accessProperty(
-  object: ts.Expression,
+  object: string,
   name: string,
-  questionDotToken?: ts.QuestionDotToken
-): ts.Expression {
+  optionalChain = false
+): string {
   const isIdentifier = /^[A-Za-z_$][\w$]*$/.test(name);
-  if (questionDotToken) {
+  if (optionalChain) {
     return isIdentifier
-      ? ts.factory.createPropertyAccessChain(object, questionDotToken, name)
-      : ts.factory.createElementAccessChain(
-          object,
-          questionDotToken,
-          ts.factory.createStringLiteral(name)
-        );
+      ? `${object}?.${name}`
+      : `${object}?.[${generateStringLiteral(name)}]`;
   }
   return isIdentifier
-    ? ts.factory.createPropertyAccessExpression(object, name)
-    : ts.factory.createElementAccessExpression(
-        object,
-        ts.factory.createStringLiteral(name)
-      );
+    ? `${object}.${name}`
+    : `${object}[${generateStringLiteral(name)}]`;
 }
 
 const nxPluginToFlatConfigMap: Record<string, string> = {
