@@ -14,6 +14,10 @@ import {
   RULE_NAME as validSchemaDescriptionName,
   rule as validSchemaDescription,
 } from './rules/valid-schema-description';
+import {
+  RULE_NAME as noRuntimeTypescriptImportName,
+  rule as noRuntimeTypescriptImport,
+} from './rules/no-runtime-typescript-import';
 /**
  * Import your custom workspace rules at the top of this file.
  *
@@ -44,5 +48,6 @@ module.exports = {
     [validCommandObjectName]: validCommandObject,
     [ensurePnpmLockVersionName]: ensurePnpmLockVersion,
     [requireWindowsHideName]: requireWindowsHide,
+    [noRuntimeTypescriptImportName]: noRuntimeTypescriptImport,
   },
 };
