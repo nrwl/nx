@@ -28,6 +28,8 @@ export type SuccessfulResolveRuleResultData = {
   scheduledStatusDate?: number | null;
 };
 
+const MOVED_ENSURE_OWNERS_RULE = '@nx/conformance/ensure-owners';
+
 type ResolveRuleResult =
   | {
       error: Error;
@@ -138,7 +140,9 @@ export async function resolveRule({
     // Detail rides on `cause`: Nx's handleErrors only prints it under --verbose.
     return {
       error: new Error(
-        `Failed to resolve rule specifier: "${rule}". Make sure the specifier is correct and the path/package is installed and available.`,
+        rule === MOVED_ENSURE_OWNERS_RULE
+          ? `The "${rule}" rule moved to "@nx/owners/ensure-owners". Run \`nx migrate\` to update nx.json, or change the rule specifier and install @nx/owners.`
+          : `Failed to resolve rule specifier: "${rule}". Make sure the specifier is correct and the path/package is installed and available.`,
         { cause: error }
       ),
       data: null,

@@ -64,4 +64,15 @@ describe('resolveRule', () => {
     );
     expect(result.data).toBeNull();
   });
+
+  it('points the old ensure-owners specifier at @nx/owners', async () => {
+    registerTsProject.mockReturnValue(vi.fn());
+
+    const result = await resolveRule({ rule: '@nx/conformance/ensure-owners' });
+
+    expect(result.error?.message).toContain(
+      'moved to "@nx/owners/ensure-owners". Run `nx migrate`'
+    );
+    expect(result.data).toBeNull();
+  });
 });
