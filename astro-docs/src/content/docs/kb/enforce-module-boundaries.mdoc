@@ -133,11 +133,12 @@ It still checks imports of e2e projects, circular dependencies, and direct impor
 packages.
 Imports that name values or types get the usual checks.
 A test file with only an `@nx-depends-on` directive gets every check.
-The rule skips these checks only when a split task that runs the file applies the directive.
-The Playwright and Cypress e2e plugins record the file and the directives on each split task
-they create, such as `e2e-ci--src/checkout.spec.ts`.
-When no split task applies the directive, as in Jest, Vitest, and Cypress component test files,
-the rule runs every check.
+The rule skips these checks only when a split task that runs the file records that it applies
+`@nx-ignore-server-inputs`.
+Playwright and Cypress e2e split tasks record it.
+Jest, Vitest, and Cypress component test files get every check.
+A workspace or third-party plugin can record it by calling `applyTestFileDirectives` from
+`@nx/devkit/internal` with `ignoreServerInputs: true`.
 
 Read more about the proper usage of this rule:
 
