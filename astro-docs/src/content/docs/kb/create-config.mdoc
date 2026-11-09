@@ -19,9 +19,6 @@ It takes an optional `Configuration` object as an argument, which allows for cus
 On Rspack 2, `createConfig` turns lazy compilation off for the browser build by default.
 To turn it on, set `rspackConfigOverrides.lazyCompilation` to `true`.
 The override doesn't affect the server build.
-With server-side rendering (SSR), pages from the SSR server's port (`PORT`, 4000 by default)
-can't load lazily compiled code, because only the dev server compiles it.
-Use the dev-server URL, or keep lazy compilation off when you need server-rendered pages.
 
 ```ts
 async function createConfig(
