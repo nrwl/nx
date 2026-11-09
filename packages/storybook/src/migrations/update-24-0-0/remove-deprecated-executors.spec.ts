@@ -7,8 +7,6 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   readNxJson,
-  type ExpandedPluginConfiguration,
-  updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {

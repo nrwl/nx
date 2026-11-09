@@ -36,6 +36,7 @@ export {
   shouldIncludePnpmMajorRuntimeInput,
 } from './src/utils/pnpm-install-settings-inputs';
 export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export { readRuntimeDependencies } from './src/utils/package-json/runtime-dependencies';
 export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
 
 // TS solution setup detection
@@ -153,4 +154,5 @@ export {
   swcNodeVersion,
   tsLibVersion,
   typesNodeVersion,
+  typescriptVersion,
 } from './src/utils/versions';

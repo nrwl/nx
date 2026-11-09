@@ -2,6 +2,7 @@ import { stripVTControlCharacters } from 'util';
 import { Task } from '../../config/task-graph';
 import type { TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
+import { output } from '../../utils/output';
 import { SummaryTerminalOutputLifeCycle } from './summary-terminal-output-life-cycle';
 
 vi.mock('../terminal-output-path', async () => ({
@@ -141,6 +142,32 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).toContain('2 skipped');
   });
 
+  // A batch worker that stops before reaching a task reports it skipped, which
+  // fails the run. A continuous task nothing needed is never started at all.
+  it.each([
+    ['discrete', 'error', false],
+    ['continuous', 'success', true],
+  ] as const)(
+    'headlines a run whose %s task never reported through output.%s',
+    (_, method, continuous) => {
+      const a = makeTask('a');
+      const b = { ...makeTask('b'), continuous };
+      const lifeCycle = new SummaryTerminalOutputLifeCycle([a, b]);
+      const headline = vi.spyOn(output, method).mockImplementation(() => {});
+
+      try {
+        lifeCycle.endTasks([result(a, 'success')]);
+        lifeCycle.endCommand();
+
+        expect(headline).toHaveBeenCalledWith(
+          expect.objectContaining({ title: '2 tasks: 1 succeeded, 1 skipped' })
+        );
+      } finally {
+        headline.mockRestore();
+      }
+    }
+  );
+
   it('reports a stopped run as such rather than as a success', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
@@ -204,7 +231,7 @@ describe('SummaryTerminalOutputLifeCycle', () => {
     expect(out).not.toContain('full log');
   });
 
-  it('addresses the batch worker log it was told about', () => {
+  it('addresses every batch worker log it was told about', () => {
     const a = makeTask('a');
     const lifeCycle = new SummaryTerminalOutputLifeCycle([a]);
 
@@ -213,12 +240,19 @@ describe('SummaryTerminalOutputLifeCycle', () => {
         '@nx/gradle:batch 1',
         '/cache/batchOutputs/g.log'
       );
+      // A batch that reports a strict subset of its tasks re-runs the rest
+      // under the same id, in a new worker with its own log.
+      lifeCycle.batchOutputAvailable(
+        '@nx/gradle:batch 1',
+        '/cache/batchOutputs/g-2.log'
+      );
       lifeCycle.endTasks([result(a, 'stopped')]);
       lifeCycle.endCommand();
     });
 
     expect(out).toContain('Batch worker logs:');
     expect(out).toContain('@nx/gradle:batch 1: /cache/batchOutputs/g.log');
+    expect(out).toContain('@nx/gradle:batch 1: /cache/batchOutputs/g-2.log');
   });
 
   it('renders the cloud link when one is set', () => {

@@ -25,7 +25,7 @@ overrides:
   minimist: '^1.2.6'
   underscore: '^1.13.8'
   brace-expansion: '^5.0.12'
-  axios: '1.18.1'
+  axios: '1.20.0'
   minimatch: '^10.2.5'
   shell-quote: '^1.11.0'
   tmp: '~0.2.7'
@@ -43,15 +43,31 @@ overrides:
   # @nuxt/devtools wants simple-git 3, whose advisories are only fixed in 4. v4
   # breaks the devtools dev-server module, which nothing in this repo runs.
   simple-git: '^4.0.2'
-  # astro/ipx/next pull their own sharp, all below 0.35. The libheif RCE behind
-  # GHSA-26w7-cxv4-gfx2 is only patched from 0.35.4 on.
-  'sharp@<0.35.4': '^0.35.4'
+  # sharp 0.35.5 ships the librsvg fix for GHSA-wq5f-xc86-pv6w.
+  'sharp@<0.35.5': '0.35.5'
   # Only the 0.1.x line is affected by the ReDoS (GHSA-37ch-88jc-xwx2);
   # express 5 / nestjs pull 8.x and 3.x, which must stay put.
   'path-to-regexp@<0.1.13': '^0.1.13'
-  # nest 9 / express 4.18 pin body-parser below the DoS fix (GHSA-qwcr-r2fm-qrc7);
-  # express 5 pulls the 2.x line, which the advisory does not cover.
-  'body-parser@<1.20.3': '^1.20.3'
+  # express 4 / nest 9 and express 5 pin body-parser below the DoS fixes
+  # (GHSA-qwcr-r2fm-qrc7, GHSA-27r3-jxmh-p828); keep each major on its own line.
+  'body-parser@<1.20.9': '^1.20.9'
+  'body-parser@>=2.0.0 <2.4.0': '^2.4.0'
+  # GHSA-mrhx-c7xc-m3w5 is in zod 4's $ZodArray; ai 3 / expo still need zod 3.
+  'zod@>=4.0.0 <4.6.6': '^4.6.6'
+  # cypress pins systeminformation below the fix for GHSA-3f7j-7jwc-fxfj.
+  'systeminformation@<5.33.16': '^5.33.16'
+  # remix 2, module-federation (exact 7.24.7) and unifont resolve undici below
+  # the fixes in 6.29.1 / 7.30.1 / 8.12.2 (e.g. GHSA-2m5v-pch6-74hx).
+  'undici@>=6.0.0 <6.29.1': '^6.29.1'
+  'undici@>=7.0.0 <7.30.1': '^7.30.1'
+  'undici@>=8.0.0 <8.12.2': '^8.12.2'
+  '@jest/diff-sequences@30.0.1': 30.3.0
+  follow-redirects@>=1.16.0 <1.16.1: 1.16.1
+  '@xmldom/xmldom@>=0.8.0 <0.8.15': 0.8.15
+  '@xmldom/xmldom@>=0.9.0 <0.9.12': 0.9.12
+  '@nx/webpack@24.0.0-rc.1>mini-css-extract-plugin': 2.10.2
+  '@nx/js@24.0.0-rc.1>source-map-support': 0.5.21
+  karma-source-map-support@1.4.0>source-map-support: 0.5.21
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -73,7 +89,7 @@ catalog:
   minimatch: '10.2.5'
   next-seo: '^5.13.0'
   ora: '^5.3.0'
-  picomatch: '4.0.4'
+  picomatch: '^4.0.7'
   picocolors: '^1.1.0'
   react-textarea-autosize: '^8.5.3'
   rxjs: '^7.8.0'
@@ -156,30 +172,30 @@ catalogs:
     '@swc/jest': '0.2.39'
     '@swc-contrib/mut-cjs-exports': '^14.3.0'
   nx:
-    '@nx/angular': '24.0.0-rc.1'
-    '@nx/cypress': '24.0.0-rc.1'
-    '@nx/devkit': '24.0.0-rc.1'
-    '@nx/dotnet': '24.0.0-rc.1'
-    '@nx/esbuild': '24.0.0-rc.1'
-    '@nx/eslint': '24.0.0-rc.1'
-    '@nx/eslint-plugin': '24.0.0-rc.1'
-    '@nx/gradle': '24.0.0-rc.1'
-    '@nx/jest': '24.0.0-rc.1'
-    '@nx/js': '24.0.0-rc.1'
-    '@nx/maven': '24.0.0-rc.1'
-    '@nx/next': '24.0.0-rc.1'
-    '@nx/oxlint': '24.0.0-rc.1'
-    '@nx/playwright': '24.0.0-rc.1'
-    '@nx/plugin': '24.0.0-rc.1'
-    '@nx/react': '24.0.0-rc.1'
-    '@nx/rsbuild': '24.0.0-rc.1'
-    '@nx/rspack': '24.0.0-rc.1'
-    '@nx/storybook': '24.0.0-rc.1'
-    '@nx/vite': '24.0.0-rc.1'
-    '@nx/vitest': '24.0.0-rc.1'
-    '@nx/web': '24.0.0-rc.1'
-    '@nx/webpack': '24.0.0-rc.1'
-    nx: '24.0.0-rc.1'
+    '@nx/angular': '24.0.5'
+    '@nx/cypress': '24.0.5'
+    '@nx/devkit': '24.0.5'
+    '@nx/dotnet': '24.0.5'
+    '@nx/esbuild': '24.0.5'
+    '@nx/eslint': '24.0.5'
+    '@nx/eslint-plugin': '24.0.5'
+    '@nx/gradle': '24.0.5'
+    '@nx/jest': '24.0.5'
+    '@nx/js': '24.0.5'
+    '@nx/maven': '24.0.5'
+    '@nx/next': '24.0.5'
+    '@nx/oxlint': '24.0.5'
+    '@nx/playwright': '24.0.5'
+    '@nx/plugin': '24.0.5'
+    '@nx/react': '24.0.5'
+    '@nx/rsbuild': '24.0.5'
+    '@nx/rspack': '24.0.5'
+    '@nx/storybook': '24.0.5'
+    '@nx/vite': '24.0.5'
+    '@nx/vitest': '24.0.5'
+    '@nx/web': '24.0.5'
+    '@nx/webpack': '24.0.5'
+    nx: '24.0.5'
   react:
     '@types/react': '18.3.1'
     '@types/react-dom': '18.3.1'

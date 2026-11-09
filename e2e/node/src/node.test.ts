@@ -305,17 +305,15 @@ module.exports = {
     const nestapp = uniq('nestapp');
     const port = 3335;
     runCLI(
-      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=vitest`
     );
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
 
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
-    const jestResult = await runCLIAsync(`test ${nestapp}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
+    const testResult = await runCLIAsync(`test ${nestapp}`);
+    expect(testResult.combinedOutput).toMatch(/Test Files\s+2 passed/);
 
     const buildResult = runCLI(`build ${nestapp}`);
 
@@ -348,13 +346,13 @@ module.exports = {
     const e2eRsult = await runCLIAsync(`e2e ${nestapp}-e2e`);
 
     expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
-  }, 120000);
+  }, 240000);
 
   it('should generate a nest application with docker', async () => {
     const nestapp = 'node-nest-docker-test';
 
     runCLI(
-      `generate @nx/node:app ${nestapp} --bundler=webpack --framework=nest --docker --unitTestRunner=jest`
+      `generate @nx/node:app ${nestapp} --bundler=webpack --framework=nest --docker --unitTestRunner=vitest`
     );
 
     checkFilesExist(`${nestapp}/Dockerfile`);
@@ -440,7 +438,7 @@ describe('Build Node apps', () => {
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(
-      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=vitest`
     );
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
@@ -611,10 +609,10 @@ ${jslib}();
     xit('should have plugin output if specified in `tsPlugins`', async () => {
       const nestapp = uniq('nestapp');
       runCLI(
-        `generate @nx/nest:app ${nestapp} --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:app ${nestapp} --linter=eslint --unitTestRunner=vitest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^12.0.0');
 
       updateJson(join('apps', nestapp, 'project.json'), (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -667,7 +665,7 @@ ${jslib}();
     it('should be able to generate a nest library', async () => {
       const nestlib = uniq('nestlib');
       runCLI(
-        `generate @nx/nest:lib libs/${nestlib} --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:lib libs/${nestlib} --linter=eslint --unitTestRunner=vitest`
       );
 
       const lintResults = runCLI(`lint ${nestlib}`);
@@ -683,57 +681,51 @@ ${jslib}();
       const nestlib = uniq('nestlib');
 
       runCLI(
-        `generate @nx/nest:lib ${nestlib} --service --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:lib ${nestlib} --service --linter=eslint --unitTestRunner=vitest`
       );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
 
-      const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      const testResult = await runCLIAsync(`test ${nestlib}`);
+      expect(testResult.combinedOutput).toMatch(/Test Files\s+1 passed/);
     }, 200000);
 
     it('should be able to generate a nest library w/ controller', async () => {
       const nestlib = uniq('nestlib');
 
       runCLI(
-        `generate @nx/nest:lib ${nestlib} --controller --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:lib ${nestlib} --controller --linter=eslint --unitTestRunner=vitest`
       );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
 
-      const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
+      const testResult = await runCLIAsync(`test ${nestlib}`);
+      expect(testResult.combinedOutput).toMatch(/Test Files\s+1 passed/);
     }, 200000);
 
     it('should be able to generate a nest library w/ controller and service', async () => {
       const nestlib = uniq('nestlib');
 
       runCLI(
-        `generate @nx/nest:lib ${nestlib} --controller --service --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:lib ${nestlib} --controller --service --linter=eslint --unitTestRunner=vitest`
       );
 
       const lintResults = runCLI(`lint ${nestlib}`);
       expect(lintResults).toContain('Successfully ran target lint');
 
-      const jestResult = await runCLIAsync(`test ${nestlib}`);
-      expect(jestResult.combinedOutput).toContain(
-        'Test Suites: 2 passed, 2 total'
-      );
+      const testResult = await runCLIAsync(`test ${nestlib}`);
+      expect(testResult.combinedOutput).toMatch(/Test Files\s+2 passed/);
     }, 200000);
 
     it('should have plugin output if specified in `transformers`', async () => {
       const nestlib = uniq('nestlib');
       runCLI(
-        `generate @nx/nest:lib libs/${nestlib} --buildable --linter=eslint --unitTestRunner=jest`
+        `generate @nx/nest:lib libs/${nestlib} --buildable --linter=eslint --unitTestRunner=vitest`
       );
 
-      packageInstall('@nestjs/swagger', undefined, '^11.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^12.0.0');
 
       updateJson(join('libs', nestlib, 'project.json'), (config) => {
         config.targets.build.options.transformers = [

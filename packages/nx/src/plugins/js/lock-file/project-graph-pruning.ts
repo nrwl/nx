@@ -1,4 +1,4 @@
-import { gte, satisfies } from 'semver';
+import { rcompare, satisfies, valid } from 'semver';
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -173,6 +173,16 @@ export function isLocalPathSpecifier(versionExpr: string): boolean {
 }
 
 /**
+ * The pnpm parser gives the bare `npm:<name>` to an outside `link:` when no
+ * registry version holds it. Such a node says nothing about which registry
+ * version a project resolves, so lookups that fall back to registry versions
+ * skip it.
+ */
+export function isLinkNode(node: ProjectGraphExternalNode): boolean {
+  return node.data.version.startsWith('link:');
+}
+
+/**
  * The external node for a `file:`/`link:` local-path dependency.
  *
  * The target path is what identifies one: an aliased dependency (`"alias":
@@ -224,15 +234,21 @@ export function findNodeMatchingVersion(
   packageName: string,
   versionExpr: string
 ) {
-  if (versionExpr === '*') {
-    return graph.externalNodes[`npm:${packageName}`];
+  const bareNode = graph.externalNodes[`npm:${packageName}`];
+  if (versionExpr === '*' && bareNode && !isLinkNode(bareNode)) {
+    return bareNode;
   }
   const nodes = Object.values(graph.externalNodes)
     .filter((n) => n.data.packageName === packageName)
-    .sort((a, b) => (gte(b.data.version, a.data.version) ? 1 : -1));
+    .sort(compareVersionsDescending);
 
-  if (versionExpr === 'latest') {
-    return nodes.sort((a, b) => +gte(b.data.version, a.data.version))[0];
+  // A package with several versions can have no bare registry node, for
+  // example when the pnpm root importer does not declare it. An outside
+  // `link:` can then hold the bare name; it sorts last, so any registry
+  // version wins over it. A stable version wins over a prerelease, which
+  // `*` does not match.
+  if (versionExpr === '*' || versionExpr === 'latest') {
+    return nodes.find((n) => satisfies(n.data.version, '*')) ?? nodes[0];
   }
   if (
     graph.externalNodes[`npm:${packageName}`] &&
@@ -244,6 +260,20 @@ export function findNodeMatchingVersion(
     return graph.externalNodes[`npm:${packageName}`];
   }
   return nodes.find((n) => satisfies(n.data.version, versionExpr));
+}
+
+// Local-path and other non-semver versions, such as file:vendor/foo.tgz,
+// sort after every semver version.
+function compareVersionsDescending(
+  a: ProjectGraphExternalNode,
+  b: ProjectGraphExternalNode
+): number {
+  const aIsSemver = valid(a.data.version) !== null;
+  const bIsSemver = valid(b.data.version) !== null;
+  if (aIsSemver && bIsSemver) {
+    return rcompare(a.data.version, b.data.version);
+  }
+  return Number(bIsSemver) - Number(aIsSemver);
 }
 
 export function addNodesAndDependencies(

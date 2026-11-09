@@ -3,8 +3,10 @@ import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
 import { signalToCode } from '../utils/exit-codes';
 
-const pseudoIPCPath = process.argv[2];
-const forkId = process.argv[3];
+const pseudoIPCPath = process.env['NX_PSEUDO_IPC_PATH'];
+const forkId = process.env['NX_PSEUDO_IPC_FORK_ID'];
+delete process.env['NX_PSEUDO_IPC_PATH'];
+delete process.env['NX_PSEUDO_IPC_FORK_ID'];
 
 const script = join(__dirname, '../../bin/run-executor.js');
 

@@ -3,10 +3,13 @@ export function parseChangelogMarkdown(contents: string) {
    * The release header may include prerelease identifiers (e.g., -alpha.13),
    * and major releases may use a single #, instead of the standard ## used
    * for minor and patch releases. This regex matches all of these cases.
+   *
+   * Headings must follow a \n. The m flag would also match after \r, U+2028
+   * and U+2029, which commit text can carry mid-line.
    */
   const CHANGELOG_RELEASE_HEAD_RE = new RegExp(
-    '^#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
-    'gm'
+    '(?<=^|\\n)#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
+    'g'
   );
 
   const headings = [...contents.matchAll(CHANGELOG_RELEASE_HEAD_RE)];

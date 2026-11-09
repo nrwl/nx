@@ -517,7 +517,6 @@ export async function computeResidualByProject<T>(
 function writeResiduals<T>(
   tree: Tree,
   projectConfigsByName: Map<string, ProjectConfiguration>,
-  projectGraph: ProjectGraph,
   scope: MigrationScope<T>,
   residualByProject: ResidualByProject,
   logger?: typeof devkitLogger
@@ -2477,7 +2476,6 @@ async function migrateProjects<T>(
     writeResiduals(
       tree,
       projectConfigsByName,
-      projectGraph,
       scope,
       residualByProject,
       logger

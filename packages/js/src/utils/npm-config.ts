@@ -14,7 +14,11 @@ export async function parseRegistryOptions(
     tag?: string;
   },
   logWarnFn: (message: string) => void = console.warn
-): Promise<{ registry: string; tag: string; registryConfigKey: string }> {
+): Promise<{
+  registry: string | undefined;
+  tag: string;
+  registryConfigKey: string;
+}> {
   const npmRcPath = join(pkg.packageRoot, '.npmrc');
   if (existsSync(npmRcPath)) {
     const relativeNpmRcPath = relative(cwd, npmRcPath);
@@ -72,18 +76,22 @@ export async function parseRegistryOptions(
 export async function getNpmRegistry(
   cwd: string,
   scope?: string
-): Promise<string> {
-  let registry: string | undefined;
-
+): Promise<string | undefined> {
   if (scope) {
-    registry = await getNpmConfigValue(`${scope}:registry`, cwd);
+    let scopedRegistry: string | undefined;
+    try {
+      scopedRegistry = await readNpmConfigValue(`${scope}:registry`, cwd);
+    } catch {
+      // npm refuses to print values it would redact, so the scope may still
+      // have a registry. Falling back to the unscoped one would override it.
+      return undefined;
+    }
+    if (scopedRegistry) {
+      return scopedRegistry;
+    }
   }
 
-  if (!registry) {
-    registry = await getNpmConfigValue('registry', cwd);
-  }
-
-  return registry;
+  return getNpmConfigValue('registry', cwd);
 }
 
 /**
@@ -96,9 +104,24 @@ export async function getNpmTag(cwd: string): Promise<string> {
   return getNpmConfigValue('tag', cwd);
 }
 
-async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
+async function getNpmConfigValue(
+  key: string,
+  cwd: string
+): Promise<string | undefined> {
+  try {
+    return await readNpmConfigValue(key, cwd);
+  } catch {
+    return undefined;
+  }
+}
+
+async function readNpmConfigValue(
+  key: string,
+  cwd: string
+): Promise<string | undefined> {
   const binaries =
     detectPackageManager(cwd) === 'pnpm' ? ['pnpm', 'npm'] : ['npm'];
+  const failures: unknown[] = [];
 
   for (const binary of binaries) {
     try {
@@ -106,9 +129,12 @@ async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
       if (result && result !== 'undefined' && result !== 'null') {
         return result;
       }
-    } catch {
-      continue;
+    } catch (e) {
+      failures.push(e);
     }
+  }
+  if (failures.length > 0) {
+    throw failures[0];
   }
   return undefined;
 }

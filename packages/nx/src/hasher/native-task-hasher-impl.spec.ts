@@ -1575,6 +1575,26 @@ describe('native task hasher', () => {
     expect(reused.details).toEqual(planned.details);
   });
 
+  it('plans from a graph without task results', async () => {
+    const { taskGraph, impl } = await upfrontFixture();
+    const child = taskGraph.tasks['child:compile'];
+    child.hash = 'hash';
+    child.hashDetails = {
+      command: '',
+      nodes: {},
+      implicitDeps: {},
+      runtime: {},
+    };
+    const getPlans = vi.spyOn(impl.planner, 'getPlansReference');
+
+    await impl.hashTask(taskGraph.tasks['parent:compile'], taskGraph, {});
+
+    const planned = getPlans.mock.calls[0][1].tasks['child:compile'];
+    expect(planned).not.toHaveProperty('hash');
+    expect(planned).not.toHaveProperty('hashDetails');
+    expect(child.hash).toEqual('hash');
+  });
+
   // The entry digest covers the writes, not the reads, because a read
   // reaches the hash as the file group it becomes. That is only true while
   // every read-driven difference has another carrier, so assert it directly
@@ -1669,6 +1689,66 @@ describe('native task hasher', () => {
 
     expect(hash.inputs.files).toContain('libs/parent/doc.md');
     expect(hash.inputs.files).not.toContain('libs/parent/README.md');
+  });
+
+  it('hashes new compound suffixes despite a learned simple-extension exclusion', async () => {
+    await tempFs.createFiles({ '.gitignore': 'libs/child/excluded/\n' });
+    const { taskGraph, impl } = await upfrontFixture();
+    await tempFs.createFiles({ 'libs/child/excluded/cat.ts': 'unread' });
+    const db = connectToNxDb(
+      join(tempFs.tempDir, 'ultracache-category-db'),
+      'ultracache'
+    );
+    try {
+      const configurations = new UltracacheConfigurationStore(db).import({
+        requestedCommit: 'head',
+        configurationsJson: JSON.stringify({
+          'child:compile': {
+            commit: 'head',
+            inputs: [
+              'libs/child/excluded/**/*.ts',
+              '!libs/child/excluded/**/*.{ts,js}',
+            ],
+          },
+        }),
+      });
+      const hash = () =>
+        impl.hashTask(
+          taskGraph.tasks['child:compile'],
+          taskGraph,
+          {},
+          tempFs.tempDir,
+          true,
+          configurations
+        );
+      const before = await hash();
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'new test',
+        'libs/child/excluded/cat.d.ts': 'declaration',
+        'libs/child/excluded/cat.impl.ts': 'implementation',
+      });
+      const added = await hash();
+      expect(added.value).not.toBe(before.value);
+      expect(added.inputs.files).toEqual(
+        expect.arrayContaining([
+          'libs/child/excluded/cat.one.two.spec.ts',
+          'libs/child/excluded/cat.d.ts',
+          'libs/child/excluded/cat.impl.ts',
+        ])
+      );
+      expect(added.inputs.files).not.toContain('libs/child/excluded/cat.ts');
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.one.two.spec.ts': 'changed test',
+      });
+      const edited = await hash();
+      expect(edited.value).not.toBe(added.value);
+      await tempFs.createFiles({
+        'libs/child/excluded/cat.ts': 'still unread',
+      });
+      expect((await hash()).value).toBe(edited.value);
+    } finally {
+      closeDbConnection(db);
+    }
   });
 
   it('names Ultracache groups in hash details by their recorded globs', async () => {

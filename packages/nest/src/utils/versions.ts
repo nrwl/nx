@@ -11,13 +11,13 @@ export const nxVersion = require(join('@nx/nest', 'package.json')).version;
 export const tsLibVersion = '^2.3.0';
 
 // NestJS has no public LTS table; cadence is roughly one major per year.
-// Support window: v10 + v11 (Rule 2 — N & N-1 — since v10.4.x still receives
-// upstream patches).
+// Support window: v11 + v12 (Rule 2 — N & N-1), with v10 kept while v10.4.x
+// still receives upstream patches.
 export const minSupportedNestJsVersion = '10.0.0';
 
 // Fresh-install constants — latest supported major.
-export const nestJsVersion = '^11.0.0';
-export const nestJsSchematicsVersion = '^11.0.0';
+export const nestJsVersion = '^12.0.0';
+export const nestJsSchematicsVersion = '^12.0.0';
 export const rxjsVersion = '^7.8.0';
 export const reflectMetadataVersion = '^0.2.0';
 
@@ -35,13 +35,21 @@ const latestVersions: NestJsVersions = {
   reflectMetadataVersion,
 };
 
-type CompatVersions = 10;
+// Every major below the latest carries its own entry; the latest one is
+// latestVersions, which a major above the support window also falls back to.
+type CompatVersions = 10 | 11;
 const versionMap: Record<CompatVersions, NestJsVersions> = {
   10: {
     nestJsVersion: '^10.0.2',
     nestJsSchematicsVersion: '^10.0.1',
     rxjsVersion: '^7.8.0',
     reflectMetadataVersion: '^0.1.13',
+  },
+  11: {
+    nestJsVersion: '^11.0.0',
+    nestJsSchematicsVersion: '^11.0.0',
+    rxjsVersion: '^7.8.0',
+    reflectMetadataVersion: '^0.2.0',
   },
 };
 

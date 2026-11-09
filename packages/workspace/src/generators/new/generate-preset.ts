@@ -1,8 +1,4 @@
-import {
-  addDependenciesToPackageJson,
-  getPackageManagerCommand,
-  Tree,
-} from '@nx/devkit';
+import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
 import { Preset } from '../utils/presets';
 import {
   angularCliVersion,
@@ -113,7 +109,6 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
     stdio: 'inherit',
     cwd: newWorkspaceRoot,
   };
-  const pmc = getPackageManagerCommand();
   const nxInstallationPaths = getNxRequirePaths(newWorkspaceRoot);
   const nxBinForNewWorkspaceRoot = require.resolve('nx/bin/nx', {
     paths: nxInstallationPaths,

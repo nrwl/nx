@@ -98,6 +98,30 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "24.0.2-next15": {
+      "version": "24.0.2-beta.0",
+      "requires": {
+        "next": ">=15.0.0 <16.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~15.5.28",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.0.2-next16": {
+      "version": "24.0.2-beta.0",
+      "requires": {
+        "next": ">=16.0.0 <17.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~16.4.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

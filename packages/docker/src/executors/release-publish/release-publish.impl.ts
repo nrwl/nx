@@ -57,15 +57,12 @@ async function normalizeOptions(
 ): Promise<NormalizedDockerReleasePublishSchema> {
   return {
     quiet: schema.quiet ?? false,
-    imageReference: await findImageReference(projectConfig, schema),
+    imageReference: await findImageReference(projectConfig),
     dryRun: process.env.NX_DRY_RUN === 'true' || schema.dryRun || false,
   };
 }
 
-async function findImageReference(
-  projectConfig: ProjectGraphProjectNode,
-  schema: DockerReleasePublishSchema
-) {
+async function findImageReference(projectConfig: ProjectGraphProjectNode) {
   let imageRef = readVersionFromFile(projectConfig.data.root);
   if (imageRef) {
     if (await checkDockerImageExistsLocally(imageRef)) {

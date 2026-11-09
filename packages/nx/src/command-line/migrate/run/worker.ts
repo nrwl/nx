@@ -771,7 +771,7 @@ async function runRecorded(
         }
         awaitingKind = 'generator-validation';
       } else if (generatorAlreadyCompleted) {
-        state = await finishCompletedGenerator(
+        await finishCompletedGenerator(
           dir,
           root,
           state,
@@ -868,7 +868,7 @@ async function runRecorded(
           !validationOwed &&
           !promptOwed
         ) {
-          state = await commitStepChanges(
+          await commitStepChanges(
             dir,
             root,
             state,
@@ -989,7 +989,7 @@ async function finishCompletedGenerator(
   skipInstall: boolean,
   rerunCommand: string,
   scope: TreeScope
-): Promise<MigrateRunState> {
+): Promise<void> {
   const installDeps = () =>
     recordingInstallFailure(dir, step.id, () =>
       installDepsChangedSinceDispense(
@@ -1005,7 +1005,7 @@ async function finishCompletedGenerator(
   // answer, and the commit is kept as that version's retries did.
   if (!state.createCommits || step.generatorMadeChanges === false) {
     await installStepTree(dir, step, 'install', installDeps, scope);
-    return state;
+    return;
   }
   return commitStepChanges(
     dir,
@@ -1030,7 +1030,7 @@ async function commitStepChanges(
   migration: PlannedMigration,
   installDeps: () => Promise<void>,
   scope: TreeScope
-): Promise<MigrateRunState> {
+): Promise<void> {
   const absorbedStepIds = uncoveredFailedStepIds(state).filter(
     (id) => id !== step.id
   );
@@ -1075,18 +1075,17 @@ async function commitStepChanges(
     commit.absorbedStepIds
   );
   // A session's parent records what it commits itself, receipt included.
-  return entry && !commit.recorded ? recordCommitEntry(dir, entry) : state;
+  if (entry && !commit.recorded) {
+    recordCommitEntry(dir, entry);
+  }
 }
 
 // The git commit itself already ran outside the lock; only this pure append is
 // locked. A landed entry carries the resolved issues of every step it names,
 // same as the orchestrator's fold and adopt appends: an absorbed step's
 // resolutions would otherwise land unattached.
-function recordCommitEntry(
-  dir: string,
-  entry: MigrateCommitLedgerEntry
-): MigrateRunState {
-  return updateRunState(dir, (fresh) =>
+function recordCommitEntry(dir: string, entry: MigrateCommitLedgerEntry): void {
+  updateRunState(dir, (fresh) =>
     appendCommit(fresh, attachIssueIdsToCommitEntry(fresh, entry))
   );
 }

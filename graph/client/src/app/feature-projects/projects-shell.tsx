@@ -241,6 +241,13 @@ function ProjectsShellInner() {
     environmentConfig.watch
   );
 
+  useEffect(() => {
+    externalApiService.sendProjectGraphEvent = send;
+    return () => {
+      externalApiService.sendProjectGraphEvent = undefined;
+    };
+  }, [externalApiService, send]);
+
   const onViewProjectDetailsClick = (project: ElementData.ProjectNode) => {
     if (handleEventResult.rendererConfig.platform === 'nx-dev') return;
 

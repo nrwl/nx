@@ -16,6 +16,8 @@ vi.mock('@nx/devkit/internal', async () => {
     npm: {
       '@scope:registry': 'https://scoped-registry.com',
       '@missing:registry': 'undefined',
+      '@empty:registry': 'undefined',
+      '@nullish:registry': 'undefined',
       registry: 'https://custom-registry.com',
       tag: 'next',
     },
@@ -24,6 +26,7 @@ vi.mock('@nx/devkit/internal', async () => {
       '@empty:registry': '',
       '@nullish:registry': 'null',
       '@missing:registry': 'undefined',
+      '@guarded:registry': 'undefined',
       registry: 'https://pnpm-registry.com/',
       tag: 'undefined',
     },
@@ -72,6 +75,11 @@ describe('npm-config', () => {
       expect(registry).toEqual('https://custom-registry.com');
     });
 
+    it('should not fall back to the unscoped registry if npm refuses to print the scoped registry', async () => {
+      const registry = await getNpmRegistry(tempFs.tempDir, '@protected');
+      expect(registry).toBeUndefined();
+    });
+
     it('should return registry if package is not scoped', async () => {
       const registry = await getNpmRegistry(tempFs.tempDir);
       expect(registry).toEqual('https://custom-registry.com');
@@ -113,6 +121,11 @@ describe('npm-config', () => {
         expect(registry).toEqual('https://pnpm-registry.com/');
       }
     );
+
+    it('should not fall back to the unscoped registry if pnpm reports the scope as unset but npm refuses to print it', async () => {
+      const registry = await getNpmRegistry(tempFs.tempDir, '@guarded');
+      expect(registry).toBeUndefined();
+    });
 
     it('should fall back to npm config if pnpm config fails', async () => {
       const registry = await getNpmRegistry(tempFs.tempDir, '@scope');
@@ -331,6 +344,23 @@ describe('npm-config', () => {
 
       expect(registry).toEqual('https://custom-registry.com');
       expect(registryConfigKey).toEqual('@missing:registry');
+    });
+
+    it('should leave the registry to npm if npm refuses to print the scoped registry', async () => {
+      const { registry, registryConfigKey } = await parseRegistryOptions(
+        tempFs.tempDir,
+        {
+          packageRoot: tempFs.tempDir,
+          packageJson: {
+            name: '@protected/pkg1',
+          } as PackageJson,
+        },
+        {},
+        logFn
+      );
+
+      expect(registry).toBeUndefined();
+      expect(registryConfigKey).toEqual('@protected:registry');
     });
 
     it('should defer to npm config for registry if package is not scoped', async () => {

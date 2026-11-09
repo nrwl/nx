@@ -204,7 +204,7 @@ export async function getCommonConfig(
       ...stylesConfig.plugins,
     ],
   };
-  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // TODO(v25): drop once @rspack/core v1 is out of the support window (NXC-5161).
   // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (normalizedOptions.statsJson && !isRspackV2()) {
     (defaultConfig as { profile?: boolean }).profile = true;

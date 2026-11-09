@@ -1,6 +1,5 @@
 import {
   augmentAppWithServiceWorker,
-  type BudgetCalculatorResult,
   checkBudgets,
   ThresholdSeverity,
 } from '@angular/build/private';
@@ -164,11 +163,16 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     let currentWatchingModifiedFiles = new Set<string>();
     let watchRunInitialized = false;
 
-    // Register compilation hook once - adds modified files to dependencies
     compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
       currentWatchingModifiedFiles.forEach((file) => {
         compilation.fileDependencies.add(file);
       });
+      if (this.#_options.hasServer) {
+        // Server-only sources must invalidate the browser-owned Angular compilation.
+        for (const file of this.#sourceFileCache.referencedFiles ?? []) {
+          compilation.fileDependencies.add(normalize(file));
+        }
+      }
     });
 
     compiler.hooks.watchRun.tapAsync(
@@ -343,6 +347,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               name: PLUGIN_NAME,
               message: error.text || '',
               file: error.location?.file,
+              ...toRspackLocation(error.location),
               stack: error.text,
             });
           }
@@ -351,6 +356,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               name: PLUGIN_NAME,
               message: warning.text || '',
               file: warning.location?.file,
+              ...toRspackLocation(warning.location),
               stack: warning.text,
             });
           }
@@ -674,6 +680,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           sass: this.#_options.stylePreprocessorOptions?.sass,
           watch,
           sourceMap: this.#_options.sourceMap.scripts,
+          minifyStyles: this.#_options.optimization.styles.minify,
           preserveSymlinks: this.#_options.preserveSymlinks,
           // '...' splices rspack's default conditions back in; the rest are
           // the bundler's custom conditions the program must match.
@@ -770,6 +777,18 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
     this.#stylesheetMetafileInputs = flattened;
   }
+}
+
+function toRspackLocation(
+  location: { line?: number; column?: number } | null | undefined
+): { loc?: { start: { line: number; column?: number } } } {
+  if (location?.line === undefined) {
+    return {};
+  }
+  // Angular's columns are 0-based, rspack's `loc` columns are 1-based.
+  const column =
+    location.column === undefined ? undefined : location.column + 1;
+  return { loc: { start: { line: location.line, column } } };
 }
 
 function formatError(error: unknown): string {

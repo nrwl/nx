@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { output } from '../../utils/output';
-import { join, sep } from 'path';
+import { sep } from 'path';
 import { homedir } from 'os';
 import {
   detectPackageManager,
