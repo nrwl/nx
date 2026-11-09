@@ -5465,7 +5465,10 @@ describe('kept include warning', () => {
 
   const header = `convert-to-inferred kept an explicit "include" list on the ${SYNTHETIC_PLUGIN_PATH} registration in nx.json. Without it, the plugin would also apply to:`;
 
-  async function migrate(createNodes: CreateNodes<SyntheticPluginOptions>) {
+  async function migrate(
+    createNodes: CreateNodes<SyntheticPluginOptions>,
+    specificProject?: string
+  ) {
     const warn = vi.fn();
     await migrateProjectExecutorsToPlugin(
       ctx.tree,
@@ -5474,7 +5477,7 @@ describe('kept include warning', () => {
       createNodes,
       { targetName: 'build' },
       syntheticMigrations(),
-      undefined,
+      specificProject,
       { warn } as any
     );
     return warn.mock.calls
@@ -5482,8 +5485,25 @@ describe('kept include warning', () => {
       .filter((message) => message.startsWith(header));
   }
 
-  it('names the projects that were not migrated, capped at five', async () => {
+  it('names the projects that were not migrated', async () => {
     ctx = setupFixture('kept-include-not-migrated');
+    for (const name of ['app0', 'app1']) {
+      addExecutorProject(ctx, {
+        name,
+        root: `apps/${name}`,
+        target: uniformExecutorTarget(),
+      });
+    }
+
+    const messages = await migrate(createSyntheticPlugin().createNodes, 'app0');
+
+    expect(messages).toEqual([
+      `${header}\n  - projects that were not migrated: apps/app1. Migrate them too to drop the "include".`,
+    ]);
+  });
+
+  it('names the projects with no target to migrate, capped at five', async () => {
+    ctx = setupFixture('kept-include-nothing-to-migrate');
     addExecutorProject(ctx, {
       name: 'app0',
       root: 'apps/app0',
@@ -5500,7 +5520,23 @@ describe('kept include warning', () => {
     const messages = await migrate(createSyntheticPlugin().createNodes);
 
     expect(messages).toEqual([
-      `${header}\n  - projects that were not migrated: libs/other1, libs/other2, libs/other3, libs/other4, libs/other5 and 2 more. Migrate them too to drop the "include".`,
+      `${header}\n  - projects with no target this conversion can migrate: libs/other1, libs/other2, libs/other3, libs/other4, libs/other5 and 2 more. The "include" keeps the plugin from adding targets to them.`,
+    ]);
+  });
+
+  it('names the config files where the plugin would create a new project', async () => {
+    ctx = setupFixture('kept-include-new-projects');
+    addExecutorProject(ctx, {
+      name: 'app0',
+      root: 'apps/app0',
+      target: uniformExecutorTarget(),
+    });
+    ctx.fs.createFileSync(`tools/rules/${SYNTHETIC_CONFIG_FILE}`, '{}');
+
+    const messages = await migrate(createSyntheticPlugin().createNodes);
+
+    expect(messages).toEqual([
+      `${header}\n  - config files outside any project, where the plugin would create a new project: tools/rules/${SYNTHETIC_CONFIG_FILE}.`,
     ]);
   });
 
@@ -5598,7 +5634,7 @@ describe('kept include warning', () => {
     const messages = await migrate(createSyntheticPlugin().createNodes);
 
     expect(messages).toEqual([
-      `${header}\n  - projects that were not migrated: libs/other. Migrate them too to drop the "include".`,
+      `${header}\n  - projects with no target this conversion can migrate: libs/other. The "include" keeps the plugin from adding targets to them.`,
     ]);
   });
 

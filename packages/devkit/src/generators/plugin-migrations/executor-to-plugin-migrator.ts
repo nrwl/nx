@@ -2490,6 +2490,7 @@ async function migrateProjects<T>(
     migratedTargetNamesByProject,
     nonMigratedInferredTargetNames,
     projectConfigsByName,
+    rootsWithExecutorTarget(projectConfigsByName, migrations),
     logger ?? devkitLogger
   );
 
@@ -2602,6 +2603,8 @@ function addPluginRegistrations<T>(
   migratedTargetNamesByProject: Map<string, Set<string>>,
   nonMigratedInferredTargetNames: Map<string, Set<string>>,
   projectConfigsByName: Map<string, ProjectConfiguration>,
+  // Roots of projects with a target on an executor this conversion migrates.
+  executorTargetRoots: Set<string>,
   logger: typeof devkitLogger
 ) {
   const nxJson = readNxJson(tree);
@@ -2637,16 +2640,22 @@ function addPluginRegistrations<T>(
   // the project root or config file the warning names.
   const keptIncludeReasons: KeptIncludeReasons = {
     notMigrated: new Map(),
+    nothingToMigrate: new Map(),
+    newProjects: new Map(),
     otherOptions: new Map(),
     errored: new Map(),
   };
   const projectRoots = new Set([...migratedRoots, ...nonMigratedProjectRoots]);
   const recordProjectConfigFile = (file: string) => {
     const root = findOwningRoot(file, projectRoots);
-    if (root !== undefined && migratedRoots.has(root)) {
+    if (root === undefined) {
+      keptIncludeReasons.newProjects.set(file, file);
+    } else if (migratedRoots.has(root)) {
       keptIncludeReasons.otherOptions.set(file, root);
+    } else if (executorTargetRoots.has(root)) {
+      keptIncludeReasons.notMigrated.set(file, root);
     } else {
-      keptIncludeReasons.notMigrated.set(file, root ?? file);
+      keptIncludeReasons.nothingToMigrate.set(file, root);
     }
   };
   for (const file of matchedConfigFiles) {
@@ -2658,16 +2667,14 @@ function addPluginRegistrations<T>(
     }
   }
   for (const file of erroredConfigFiles) {
-    keptIncludeReasons.notMigrated.delete(file);
+    for (const labelsByFile of Object.values(keptIncludeReasons)) {
+      labelsByFile.delete(file);
+    }
     keptIncludeReasons.errored.set(file, file);
   }
-  const coverageConfigFiles = [
-    ...new Set([
-      ...keptIncludeReasons.notMigrated.keys(),
-      ...keptIncludeReasons.otherOptions.keys(),
-      ...keptIncludeReasons.errored.keys(),
-    ]),
-  ];
+  const coverageConfigFiles = Object.values(keptIncludeReasons).flatMap(
+    (labelsByFile) => [...labelsByFile.keys()]
+  );
 
   const ownerRootByPath = buildOwnerRootByPath(
     Object.values(projectGraph.nodes).map((node) => node.data.root),
@@ -3032,8 +3039,28 @@ function treeAuthorsTargetIdentity(
 /** Config file -> the project root or config file a kept-include warning names. */
 interface KeptIncludeReasons {
   notMigrated: Map<string, string>;
+  nothingToMigrate: Map<string, string>;
+  newProjects: Map<string, string>;
   otherOptions: Map<string, string>;
   errored: Map<string, string>;
+}
+
+function rootsWithExecutorTarget(
+  projectConfigsByName: Map<string, ProjectConfiguration>,
+  migrations: Array<{ executors: string[] }>
+): Set<string> {
+  const executors = new Set(migrations.flatMap((m) => m.executors));
+  const roots = new Set<string>();
+  for (const project of projectConfigsByName.values()) {
+    if (
+      Object.values(project.targets ?? {}).some((target) =>
+        executors.has(target.executor)
+      )
+    ) {
+      roots.add(project.root);
+    }
+  }
+  return roots;
 }
 
 const KEPT_INCLUDE_LIST_LIMIT = 5;
@@ -3061,6 +3088,18 @@ function keptIncludeWarning(
   if (notMigrated) {
     lines.push(
       `projects that were not migrated: ${notMigrated}. Migrate them too to drop the "include".`
+    );
+  }
+  const nothingToMigrate = list(reasons.nothingToMigrate);
+  if (nothingToMigrate) {
+    lines.push(
+      `projects with no target this conversion can migrate: ${nothingToMigrate}. The "include" keeps the plugin from adding targets to them.`
+    );
+  }
+  const newProjects = list(reasons.newProjects);
+  if (newProjects) {
+    lines.push(
+      `config files outside any project, where the plugin would create a new project: ${newProjects}.`
     );
   }
   const errored = list(reasons.errored);
