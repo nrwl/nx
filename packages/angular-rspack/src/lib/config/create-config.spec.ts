@@ -538,6 +538,30 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should keep devServer overrides off the server build while serving', async () => {
+    const root = await createSsrProjectRoot();
+    vi.stubEnv('WEBPACK_SERVE', 'true');
+    try {
+      const [browserConfig, serverConfig] = await _createConfig(
+        {
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+        },
+        { devServer: { headers: { 'x-override': '1' } } }
+      );
+
+      expect(browserConfig.devServer).toMatchObject({
+        headers: { 'x-override': '1' },
+      });
+      expect(serverConfig.devServer).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it.each([
     ['prerender', { prerender: { discoverRoutes: true } }],
     ['appShell', { appShell: true }],
