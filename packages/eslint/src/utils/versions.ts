@@ -53,29 +53,37 @@ export function versions(tree: Tree): EslintVersions {
   // Fresh install: latest stack (v10) by default. A workspace that stays on
   // eslintrc gets v9, the last major that reads it, so the scaffolded config
   // stays readable. Angular 20 and Next.js < 16 get v9 too: no release of
-  // angular-eslint 20 or eslint-config-next < 16 supports ESLint v10.
-  return useFlatConfig(tree) && !usesFrameworkWithoutEslintV10Support(tree)
+  // angular-eslint 20 or eslint-config-next < 16 supports ESLint v10. A
+  // workspace that declares a package below its ESLint v10 floor gets v9 too.
+  return useFlatConfig(tree) && !declaresPackageWithoutEslintV10Support(tree)
     ? latestVersions
     : versionMap[9];
 }
 
-// The first release of each framework integration that runs on ESLint v10.
+// The first release of each package whose eslint peer range admits v10.
 // Generators keep a declared version, so a workspace below one stays on v9.
-const FRAMEWORK_INTEGRATION_V10_FLOORS = {
+const ESLINT_V10_FLOORS = {
   'angular-eslint': '21.3.0',
   '@angular-eslint/eslint-plugin': '21.3.0',
   // 16.0-16.3 admit v10 in their peer range, but the React plugins they
   // bundle fail on it.
   'eslint-config-next': '16.4.0',
+  '@nuxt/eslint-config': '1.15.0',
+  '@typescript-eslint/parser': '8.56.0',
+  '@vue/eslint-config-typescript': '14.7.0',
+  'eslint-plugin-import-x': '4.16.2',
+  'eslint-plugin-react-hooks': '7.1.0',
+  'eslint-plugin-vue': '10.8.0',
+  'typescript-eslint': '8.56.0',
 };
 
-function usesFrameworkWithoutEslintV10Support(tree: Tree): boolean {
+function declaresPackageWithoutEslintV10Support(tree: Tree): boolean {
   const angularVersion = getResolvedPackageVersion(tree, '@angular/core');
   const nextVersion = getResolvedPackageVersion(tree, 'next');
   return (
     (!!angularVersion && major(angularVersion) < 21) ||
     (!!nextVersion && major(nextVersion) < 16) ||
-    Object.entries(FRAMEWORK_INTEGRATION_V10_FLOORS).some(([name, floor]) => {
+    Object.entries(ESLINT_V10_FLOORS).some(([name, floor]) => {
       const version = getResolvedPackageVersion(tree, name);
       return !!version && lt(version, floor);
     })

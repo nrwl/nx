@@ -79,6 +79,38 @@ describe('versions(tree)', () => {
       { next: '~16.1.0', 'eslint-config-next': '16.4.0' },
       /^\^10\./,
     ],
+    [
+      'eslint-plugin-react-hooks 5.0.0',
+      { 'eslint-plugin-react-hooks': '5.0.0' },
+      /^\^9\./,
+    ],
+    [
+      'eslint-plugin-react-hooks 7.1.0',
+      { 'eslint-plugin-react-hooks': '7.1.0' },
+      /^\^10\./,
+    ],
+    ['typescript-eslint 8.55.0', { 'typescript-eslint': '8.55.0' }, /^\^9\./],
+    [
+      '@typescript-eslint/parser 8.55.0',
+      { '@typescript-eslint/parser': '8.55.0' },
+      /^\^9\./,
+    ],
+    [
+      'eslint-plugin-import-x 4.16.1',
+      { 'eslint-plugin-import-x': '4.16.1' },
+      /^\^9\./,
+    ],
+    ['eslint-plugin-vue 10.7.0', { 'eslint-plugin-vue': '10.7.0' }, /^\^9\./],
+    [
+      '@vue/eslint-config-typescript 14.6.0',
+      { '@vue/eslint-config-typescript': '14.6.0' },
+      /^\^9\./,
+    ],
+    [
+      '@nuxt/eslint-config 1.14.0',
+      { '@nuxt/eslint-config': '1.14.0' },
+      /^\^9\./,
+    ],
   ])('should pick the ESLint major for %s', (_, dependencies, expected) => {
     const tree = createTreeWithEmptyWorkspace();
     delete process.env.ESLINT_USE_FLAT_CONFIG;
