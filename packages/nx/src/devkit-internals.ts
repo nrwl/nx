@@ -104,8 +104,13 @@ export {
   getTypescriptAst,
   hasParseErrors,
   printNode,
+  withSourceFileChecker,
 } from './plugins/js/utils/typescript-ast';
-export type { TypescriptAst } from './plugins/js/utils/typescript-ast';
+export type {
+  SourceFileChecker,
+  SourceFileSymbol,
+  TypescriptAst,
+} from './plugins/js/utils/typescript-ast';
 export {
   createTsModuleResolver,
   parseTsConfigContent,

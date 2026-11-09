@@ -5,6 +5,7 @@ import {
   getTypescriptBackend,
   withTypescriptApi,
   type ApiTypescriptBackend,
+  type ClassicTypescriptBackend,
   type TypescriptAstGuardsModule,
 } from './typescript-backend';
 
@@ -94,6 +95,7 @@ export type TypescriptAst = Pick<
   | 'canHaveModifiers'
   | 'createSourceFile'
   | 'forEachChild'
+  | 'getJSDocTags'
   | 'getModifiers'
   | 'LanguageVariant'
   | 'ScriptKind'
@@ -119,6 +121,7 @@ export type TypescriptAst = Pick<
     typeof ts.NodeFlags,
     'BlockScoped' | 'Const' | 'Let' | 'None'
   >;
+  SymbolFlags: Pick<typeof ts.SymbolFlags, 'Alias' | 'Value'>;
   SyntaxKind: Omit<typeof ts.SyntaxKind, AbsentSyntaxKind>;
 };
 
@@ -251,7 +254,170 @@ function hasApiParseErrors(
   });
 }
 
+export interface SourceFileSymbol {
+  readonly name: string;
+  readonly declarations?: readonly ts.Node[];
+  readonly valueDeclaration?: ts.Node;
+}
+
+export interface SourceFileChecker {
+  getSymbolAtLocation(node: ts.Node): SourceFileSymbol | undefined;
+  getShorthandAssignmentValueSymbol(
+    node: ts.Node
+  ): SourceFileSymbol | undefined;
+  /** `meaning` takes {@link TypescriptAst}'s `SymbolFlags`. */
+  getSymbolsInScope(
+    location: ts.Node,
+    meaning: ts.SymbolFlags
+  ): SourceFileSymbol[];
+}
+
+type ReadSourceFile<T> = (
+  sourceFile: ts.SourceFile,
+  checker: SourceFileChecker
+) => T;
+
+const checkerCompilerOptions = {
+  noLib: true,
+  noResolve: true,
+  allowJs: true,
+  types: [],
+};
+
+/**
+ * Type-checks `content` as a program of one file and passes the file and its
+ * checker to `read`. `fileName` is workspace-relative, and its extension picks
+ * how `content` is parsed. No lib files or imports are loaded, so a global name
+ * has no symbol and an imported name resolves to its import.
+ *
+ * Within one call, every lookup of a symbol returns the same object, and its
+ * declarations are nodes of the file passed to `read`. The checker must not be
+ * used after `read` returns.
+ */
+export function withSourceFileChecker<T>(
+  fileName: string,
+  content: string,
+  read: ReadSourceFile<T>
+): T {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return checkWithClassicTypescript(backend, fileName, content, read);
+    case 'api':
+      return checkWithTypescriptApi(backend, fileName, content, read);
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
+function checkWithClassicTypescript<T>(
+  { ts }: ClassicTypescriptBackend,
+  fileName: string,
+  content: string,
+  read: ReadSourceFile<T>
+): T {
+  const sourceFile = ts.createSourceFile(
+    fileName,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const program = ts.createProgram([fileName], checkerCompilerOptions, {
+    getSourceFile: (name) => (name === fileName ? sourceFile : undefined),
+    getDefaultLibFileName: () => 'lib.d.ts',
+    writeFile: () => {},
+    getCurrentDirectory: () => '',
+    getCanonicalFileName: (name) => name,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+    fileExists: (name) => name === fileName,
+    readFile: (name) => (name === fileName ? content : undefined),
+  });
+  return read(sourceFile, program.getTypeChecker());
+}
+
+interface ApiSymbol {
+  name: string;
+  declarations: readonly { resolve(): unknown }[];
+  valueDeclaration: { resolve(): unknown } | undefined;
+}
+
+function checkWithTypescriptApi<T>(
+  backend: ApiTypescriptBackend,
+  fileName: string,
+  content: string,
+  read: ReadSourceFile<T>
+): T {
+  // A JS file is checked as TSX for the tree TypeScript 6 produces, as in
+  // `createSourceFile`.
+  const filePath = join(
+    workspaceRoot,
+    jsFilePattern.test(fileName) ? `${fileName}.tsx` : fileName
+  );
+  return withTypescriptApi(backend, (api) => {
+    const snapshot = api.createSnapshot({
+      fileSystem: { kind: 'layer', files: { [filePath]: content } },
+      createPrograms: [
+        { rootFiles: [filePath], compilerOptions: checkerCompilerOptions },
+      ],
+    });
+    try {
+      const [program] = snapshot.operation.createdPrograms;
+      const { checker } = snapshot.getProject(program.id);
+      // The API returns the same symbol object for every lookup, but its
+      // declarations are handles, so each symbol gets one resolved copy.
+      const symbols = new Map<ApiSymbol, SourceFileSymbol>();
+      const toSymbol = (
+        symbol: ApiSymbol | undefined
+      ): SourceFileSymbol | undefined => {
+        if (!symbol) {
+          return undefined;
+        }
+        let resolved = symbols.get(symbol);
+        if (!resolved) {
+          resolved = {
+            name: symbol.name,
+            declarations: symbol.declarations.map(
+              (declaration) => declaration.resolve() as ts.Node
+            ),
+            valueDeclaration: symbol.valueDeclaration?.resolve() as
+              | ts.Node
+              | undefined,
+          };
+          symbols.set(symbol, resolved);
+        }
+        return resolved;
+      };
+
+      const sourceFile = program.getSourceFile(filePath);
+      keepByteOrderMark(sourceFile, content);
+      return read(sourceFile as unknown as ts.SourceFile, {
+        getSymbolAtLocation: (node) =>
+          toSymbol(checker.getSymbolAtLocation(node as never)),
+        getShorthandAssignmentValueSymbol: (node) =>
+          toSymbol(checker.getShorthandAssignmentValueSymbol(node as never)),
+        getSymbolsInScope: (location, meaning) =>
+          checker
+            .getSymbolsInScope(location as never, meaning as never)
+            .map((symbol) => toSymbol(symbol)),
+      });
+    } finally {
+      snapshot.dispose();
+    }
+  });
+}
+
 const jsFilePattern = /\.[cm]?jsx?$/i;
+
+// TypeScript 7.1 drops a leading BOM from the text but still counts it in
+// positions.
+function keepByteOrderMark(sourceFile: { text: string }, text: string): void {
+  if (text.charCodeAt(0) === 0xfeff) {
+    Object.defineProperty(sourceFile, 'text', { value: text });
+  }
+}
 
 function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
   const { ast, astGuards } = backend;
@@ -334,11 +500,7 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
       retained.dispose();
       return retained.sourceFile;
     });
-    // TypeScript 7.1 drops a leading BOM from the text but still counts it in
-    // positions.
-    if (sourceText.charCodeAt(0) === 0xfeff) {
-      Object.defineProperty(sourceFile, 'text', { value: sourceText });
-    }
+    keepByteOrderMark(sourceFile, sourceText);
     return sourceFile;
   };
 
@@ -460,10 +622,12 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
       return modifiers?.length ? modifiers : undefined;
     },
     factory,
+    getJSDocTags: ast.getJSDocTags,
     LanguageVariant: ast.LanguageVariant,
     NodeFlags,
     ScriptKind,
     ScriptTarget: ast.ScriptTarget,
+    SymbolFlags: backend.sync.SymbolFlags,
     SyntaxKind: { ...SyntaxKind, EndOfFileToken: SyntaxKind.EndOfFile },
   } as unknown as TypescriptAst;
 }
