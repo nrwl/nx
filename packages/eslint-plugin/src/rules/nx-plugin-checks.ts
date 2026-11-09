@@ -10,6 +10,7 @@ import {
 } from '@nx/devkit';
 import { loadTsFile, requireWithTsconfigFallback } from '@nx/js/internal';
 import {
+  getTypescriptAst,
   ImplementationResolutionError,
   PromptResolutionError,
   resolveImplementation,
@@ -655,7 +656,7 @@ export function checkIfIdentifierIsFunction(
   identifier: string
 ): boolean {
   try {
-    const ts = require('typescript');
+    const ts = getTypescriptAst();
     const sourceCode = readFileSync(filePath, 'utf-8');
     const sourceFile = ts.createSourceFile(
       filePath,
