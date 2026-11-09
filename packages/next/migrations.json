@@ -147,6 +147,34 @@
         }
       }
     },
+    "24.1.0-@next/eslint-plugin-next-14": {
+      "version": "24.1.0-beta.0",
+      "requires": {
+        "@next/eslint-plugin-next": ">=14.0.0 <15.0.0",
+        "next": ">=16.0.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
+        "@next/eslint-plugin-next": {
+          "version": "^16.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "24.1.0-@next/eslint-plugin-next-15": {
+      "version": "24.1.0-beta.0",
+      "requires": {
+        "@next/eslint-plugin-next": ">=15.0.0 <16.0.0",
+        "next": ">=16.0.0",
+        "eslint": ">=10.0.0"
+      },
+      "packages": {
+        "@next/eslint-plugin-next": {
+          "version": "^16.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "24.1.0-@next/eslint-plugin-next": {
       "version": "24.1.0-beta.0",
       "requires": {
