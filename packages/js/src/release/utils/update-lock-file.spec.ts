@@ -28,7 +28,8 @@ describe('updateLockFile', () => {
 
   function writeWorkspaceFiles(
     packageJsonVersion: string | undefined,
-    lockFileRootVersion: string | undefined
+    lockFileRootVersion: string | undefined,
+    lockfileVersion = 3
   ) {
     writeFileSync(
       join(cwd, 'package.json'),
@@ -36,12 +37,24 @@ describe('updateLockFile', () => {
     );
     writeFileSync(
       join(cwd, 'package-lock.json'),
-      JSON.stringify({
-        name: 'root-pkg',
-        version: lockFileRootVersion,
-        lockfileVersion: 3,
-        packages: { '': { name: 'root-pkg', version: lockFileRootVersion } },
-      })
+      JSON.stringify(
+        lockfileVersion === 1
+          ? {
+              name: 'root-pkg',
+              version: lockFileRootVersion,
+              lockfileVersion,
+              requires: true,
+              dependencies: {},
+            }
+          : {
+              name: 'root-pkg',
+              version: lockFileRootVersion,
+              lockfileVersion,
+              packages: {
+                '': { name: 'root-pkg', version: lockFileRootVersion },
+              },
+            }
+      )
     );
   }
 
@@ -70,6 +83,27 @@ describe('updateLockFile', () => {
 
   it('skips the npm lock file update without workspaces when the root version is already in sync', async () => {
     writeWorkspaceFiles('1.0.0', '1.0.0');
+
+    const changedFiles = await updateLockFile(cwd, {});
+
+    expect(execSync).not.toHaveBeenCalled();
+    expect(changedFiles).toEqual([]);
+  });
+
+  it('updates a v1 npm lock file without workspaces when the root version in the lock file is stale', async () => {
+    writeWorkspaceFiles('1.1.0', '1.0.0', 1);
+
+    const changedFiles = await updateLockFile(cwd, {});
+
+    expect(execSync).toHaveBeenCalledWith(
+      'npm install --package-lock-only',
+      expect.objectContaining({ cwd })
+    );
+    expect(changedFiles).toContain('package-lock.json');
+  });
+
+  it('skips the update of a v1 npm lock file without workspaces when the root version is already in sync', async () => {
+    writeWorkspaceFiles('1.0.0', '1.0.0', 1);
 
     const changedFiles = await updateLockFile(cwd, {});
 

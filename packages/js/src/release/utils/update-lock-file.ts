@@ -157,7 +157,11 @@ function isNpmLockFileRootVersionStale(cwd: string): boolean {
       readFileSync(join(cwd, 'package.json'), 'utf-8')
     );
     const lockFile = JSON.parse(readFileSync(lockFilePath, 'utf-8'));
-    return !!version && lockFile.packages?.['']?.version !== version;
+    const lockFileRootVersion =
+      lockFile.lockfileVersion === 1
+        ? lockFile.version
+        : lockFile.packages?.['']?.version;
+    return !!version && lockFileRootVersion !== version;
   } catch {
     return false;
   }
