@@ -1,10 +1,13 @@
 import type { Tree } from '@nx/devkit';
-import { ensureClassicTypescript } from '@nx/js/internal';
-import { tsquery } from '@nx/devkit/internal';
-import type { CallExpression, PropertyName } from 'typescript';
+import {
+  ensureTypescript,
+  tsquery,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { CallExpression, Expression, PropertyName } from 'typescript';
 import { getPropertyName, parseSourceFile } from '../../../utils/migrations';
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 /**
  * Sets `buildTarget` in the `nxComponentTestingPreset` options. A non-empty
@@ -16,7 +19,7 @@ export function addBuildTargetToComponentTestingPreset(
   configFilePath: string,
   buildTarget: string
 ): boolean {
-  ts ??= ensureClassicTypescript('The Cypress "convert-to-inferred" generator');
+  ts ??= ensureTypescript();
 
   const contents = tree.read(configFilePath, 'utf-8');
   if (contents === null) {
@@ -96,21 +99,39 @@ export function addBuildTargetToComponentTestingPreset(
   if (ts.isStringLiteralLike(value) && value.text) {
     return true;
   }
-  // The factory parenthesizes the left operand when precedence requires it
-  const needsParentheses = ts.isParenthesizedExpression(
-    ts.factory.createBinaryExpression(
-      value,
-      ts.SyntaxKind.BarBarToken,
-      ts.factory.createStringLiteral(buildTarget)
-    ).left
-  );
   const valueText = value.getText();
   replace(
     value.getStart(),
     value.getEnd(),
-    `${needsParentheses ? `(${valueText})` : valueText} || ${buildTargetLiteral}`
+    `${needsParentheses(configFilePath, value) ? `(${valueText})` : valueText} || ${buildTargetLiteral}`
   );
   return true;
+}
+
+function needsParentheses(filePath: string, value: Expression): boolean {
+  // `a ?? b || c` is a syntax error that still parses as `(a ?? b) || c`
+  if (
+    ts.isBinaryExpression(value) &&
+    value.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken
+  ) {
+    return true;
+  }
+  const valueText = value.getText();
+  const [statement] = parseSourceFile(
+    filePath,
+    `(${valueText} || '')`
+  ).statements;
+  const expression =
+    ts.isExpressionStatement(statement) &&
+    ts.isParenthesizedExpression(statement.expression)
+      ? statement.expression.expression
+      : undefined;
+  return !(
+    expression &&
+    ts.isBinaryExpression(expression) &&
+    expression.operatorToken.kind === ts.SyntaxKind.BarBarToken &&
+    expression.left.getText() === valueText
+  );
 }
 
 function isUnresolvedComputedName(name: PropertyName): boolean {

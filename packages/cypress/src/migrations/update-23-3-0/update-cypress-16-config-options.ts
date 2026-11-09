@@ -19,7 +19,11 @@ import {
   resolveCypressConfigObject,
   resolveObjectLiteral,
 } from '../../utils/config';
-import { cypressProjectConfigs, getPropertyName } from '../../utils/migrations';
+import {
+  cypressProjectConfigs,
+  getPropertyName,
+  removeProperty,
+} from '../../utils/migrations';
 
 // Cypress 16 breakingOptions (packages/config/src/options.ts).
 const REMOVED_OPTIONS = [
@@ -264,41 +268,6 @@ function getVisibilityStrategy(
     default:
       return null;
   }
-}
-
-// Removes the property with its trailing comma, and the whole line when the
-// property is alone on it.
-function removeProperty(
-  contents: string,
-  property: ConfigProperty
-): StringChange[] {
-  let start = property.getStart();
-  let end = property.getEnd();
-  // The node ends before its trailing trivia, so the comma can sit behind a
-  // comment or a line break.
-  const scanner = ts.createScanner(
-    ts.ScriptTarget.Latest,
-    true,
-    ts.LanguageVariant.Standard,
-    contents,
-    undefined,
-    end
-  );
-  if (scanner.scan() === ts.SyntaxKind.CommaToken) {
-    end = scanner.getTokenEnd();
-  }
-  const lineStart = contents.lastIndexOf('\n', start - 1) + 1;
-  const lineEnd = contents.indexOf('\n', end);
-  const restOfLine =
-    lineEnd === -1 ? contents.slice(end) : contents.slice(end, lineEnd);
-  if (
-    contents.slice(lineStart, start).trim() === '' &&
-    restOfLine.trim() === ''
-  ) {
-    start = lineStart;
-    end = lineEnd === -1 ? contents.length : lineEnd + 1;
-  }
-  return [{ type: ChangeType.Delete, start, length: end - start }];
 }
 
 function replaceNode(node: Node, text: string): StringChange[] {

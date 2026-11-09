@@ -1,11 +1,18 @@
-import { formatFiles, visitNotIgnoredFiles, type Tree } from '@nx/devkit';
-import { ensureClassicTypescript } from '@nx/js/internal';
-import { tsquery } from '@nx/devkit/internal';
-import type { CallExpression, Printer, PropertyName } from 'typescript';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import {
+  applyChangesToString,
+  formatFiles,
+  visitNotIgnoredFiles,
+  type Tree,
+} from '@nx/devkit';
+import {
+  ensureTypescript,
+  tsquery,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { CallExpression, PropertyName } from 'typescript';
+import { cypressProjectConfigs, removeProperty } from '../../utils/migrations';
 
-let printer: Printer;
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateSelectorPlaygroundApi(tree: Tree) {
   for await (const { projectConfig } of cypressProjectConfigs(tree)) {
@@ -43,37 +50,33 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
     return updated;
   }
 
-  ts ??= ensureClassicTypescript(
-    'The "update-selector-playground-api" migration'
-  );
-  printer ??= ts.createPrinter();
+  ts ??= ensureTypescript();
 
-  const sourceFile = tsquery.ast(updated);
-  let hasChanges = false;
-
-  const result = tsquery.replace(
-    updated,
-    'CallExpression:has(Identifier[name="defaults"])',
-    (node: CallExpression) => {
+  const changes = tsquery
+    .query<CallExpression>(
+      updated,
+      'CallExpression:has(Identifier[name="defaults"])'
+    )
+    .flatMap((node) => {
       if (!ts.isPropertyAccessExpression(node.expression)) {
-        return node.getText();
+        return [];
       }
 
       if (node.expression.name.getText() !== 'defaults') {
-        return node.getText();
+        return [];
       }
 
       const selectorExpr = node.expression.expression;
       if (!ts.isPropertyAccessExpression(selectorExpr)) {
-        return node.getText();
+        return [];
       }
 
       if (!ts.isIdentifier(selectorExpr.expression)) {
-        return node.getText();
+        return [];
       }
 
       if (selectorExpr.expression.text !== 'Cypress') {
-        return node.getText();
+        return [];
       }
 
       const selectorName = selectorExpr.name.getText();
@@ -81,65 +84,36 @@ function migrateSelectorPlaygroundApi(fileContent: string): string {
         selectorName !== 'ElementSelector' &&
         selectorName !== 'SelectorPlayground'
       ) {
-        return node.getText();
+        return [];
       }
 
       if (!node.arguments.length) {
-        return node.getText();
+        return [];
       }
 
-      const [firstArg, ...restArgs] = node.arguments;
+      const [firstArg] = node.arguments;
       if (!ts.isObjectLiteralExpression(firstArg)) {
-        return node.getText();
+        return [];
       }
 
-      const filteredProperties = firstArg.properties.filter((prop) => {
-        if (
-          ts.isPropertyAssignment(prop) ||
-          ts.isShorthandPropertyAssignment(prop) ||
-          ts.isMethodDeclaration(prop) ||
-          ts.isGetAccessorDeclaration(prop) ||
-          ts.isSetAccessorDeclaration(prop)
-        ) {
-          return !isOnElementProperty(prop.name);
-        }
+      return firstArg.properties
+        .filter(
+          (prop) =>
+            (ts.isPropertyAssignment(prop) ||
+              ts.isShorthandPropertyAssignment(prop) ||
+              ts.isMethodDeclaration(prop) ||
+              ts.isGetAccessorDeclaration(prop) ||
+              ts.isSetAccessorDeclaration(prop)) &&
+            isOnElementProperty(prop.name)
+        )
+        .flatMap((prop) => removeProperty(updated, prop));
+    });
 
-        return true;
-      });
-
-      if (filteredProperties.length === firstArg.properties.length) {
-        return node.getText();
-      }
-
-      hasChanges = true;
-
-      const updatedObjectLiteral = ts.factory.updateObjectLiteralExpression(
-        firstArg,
-        filteredProperties
-      );
-
-      const updatedCall = ts.factory.updateCallExpression(
-        node,
-        node.expression,
-        node.typeArguments,
-        [updatedObjectLiteral, ...restArgs]
-      );
-
-      return printer.printNode(
-        ts.EmitHint.Unspecified,
-        updatedCall,
-        sourceFile
-      );
-    }
-  );
-
-  return hasChanges ? result : updated;
+  return applyChangesToString(updated, changes);
 }
 
 function isOnElementProperty(name: PropertyName): boolean {
-  ts ??= ensureClassicTypescript(
-    'The "update-selector-playground-api" migration'
-  );
+  ts ??= ensureTypescript();
 
   if (ts.isIdentifier(name)) {
     return name.text === 'onElement';

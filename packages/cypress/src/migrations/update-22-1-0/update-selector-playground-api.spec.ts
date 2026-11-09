@@ -138,6 +138,26 @@ Cypress.SelectorPlayground.defaults({
       `);
   });
 
+  it('should remove the onElement option from a defaults() call nested in another call', async () => {
+    tree.write(
+      'apps/web-e2e/src/support/nested.ts',
+      `before(() => {
+  Cypress.SelectorPlayground.defaults({ selectorPriority: ['id'], onElement: (el) => el });
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/web-e2e/src/support/nested.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "before(() => {
+        Cypress.ElementSelector.defaults({ selectorPriority: ['id'] });
+      });
+      "
+    `);
+  });
+
   it('should handle onElement as the only property', async () => {
     tree.write(
       'apps/web-e2e/src/support/only.ts',
