@@ -190,6 +190,71 @@ describe('updateEslint', () => {
     }
   );
 
+  const nextPluginConfig = [
+    'nextEslintPluginNext.configs["core-web-vitals"]',
+    'eslint-config-next',
+  ] as const;
+  const nextVitalsSpread = [
+    '...nextVitals',
+    '@next/eslint-plugin-next',
+  ] as const;
+  const localModuleChain = (lastModule: string): Record<string, string> => ({
+    'eslint.config.mjs': `import nx from '@nx/eslint-plugin';\nimport shared from './tools/eslint/index.mjs';\n\nexport default [...nx.configs['flat/base'], ...shared];\n`,
+    'tools/eslint/index.mjs': `import './cycle.mjs';\n\nexport { default } from './react.cjs';\n`,
+    'tools/eslint/cycle.mjs': `import './index.mjs';\n`,
+    'tools/eslint/react.cjs': `const hooks = require('./hooks');\n\nmodule.exports = [hooks];\n`,
+    'tools/eslint/hooks.js': lastModule,
+  });
+
+  it.each([
+    [
+      'one of them registers a plugin eslint-config-next also registers',
+      localModuleChain(
+        `const reactHooks = require('eslint-plugin-react-hooks');\n\nmodule.exports = { plugins: { 'react-hooks': reactHooks } };\n`
+      ),
+      ...nextPluginConfig,
+    ],
+    [
+      'one of them registers such a plugin under a computed key',
+      localModuleChain(
+        `const name = 'react-hooks';\n\nmodule.exports = { plugins: { [name]: require('eslint-plugin-react-hooks') } };\n`
+      ),
+      ...nextPluginConfig,
+    ],
+    [
+      'one of them loads a config of such a plugin by subpath',
+      localModuleChain(
+        `module.exports = require('eslint-plugin-react/configs/recommended');\n`
+      ),
+      ...nextPluginConfig,
+    ],
+    [
+      'none of them registers such a plugin',
+      localModuleChain(`module.exports = { rules: {} };\n`),
+      ...nextVitalsSpread,
+    ],
+  ])(
+    'should follow the local modules the root config loads when %s',
+    async (_, files, expectedElement, absentModule) => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, eslint: '~9.39.0' },
+      }));
+      for (const [file, content] of Object.entries(files)) {
+        tree.write(file, content);
+      }
+
+      await addLinting(tree, schema);
+
+      const appConfig = tree.read(
+        `${schema.appProjectRoot}/eslint.config.mjs`,
+        'utf-8'
+      );
+      expect(appConfig).toContain(expectedElement);
+      expect(appConfig).not.toContain(absentModule);
+    }
+  );
+
   it('should pin ESLint v9 when the workspace uses Next.js 15', async () => {
     updateJson(tree, 'package.json', (json) => ({
       ...json,
