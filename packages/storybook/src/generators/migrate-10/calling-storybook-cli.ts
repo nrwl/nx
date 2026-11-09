@@ -10,9 +10,13 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { Schema } from './schema';
 
-export function callUpgrade(schema: Schema): 1 | Buffer {
+export function callUpgrade(schema: Schema): {
+  success: boolean;
+  nxVersionsRestored: boolean;
+} {
   const packageManager = detectPackageManager();
   const pm = getPackageManagerCommand(packageManager);
+  let nxVersionsRestored = false;
   try {
     output.log({
       title: `Calling sb upgrade`,
@@ -35,7 +39,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
         }
       );
     } finally {
-      restoreNxDependencyVersions(nxVersions);
+      nxVersionsRestored = restoreNxDependencyVersions(nxVersions);
     }
 
     output.log({
@@ -57,8 +61,9 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       color: 'red',
     });
     console.log(e);
-    return 1;
+    return { success: false, nxVersionsRestored };
   }
+  return { success: true, nxVersionsRestored };
 }
 
 const dependencySections = ['dependencies', 'devDependencies'] as const;
@@ -82,7 +87,7 @@ function readNxDependencyVersions(): Record<string, Record<string, string>> {
 
 function restoreNxDependencyVersions(
   versions: Record<string, Record<string, string>>
-) {
+): boolean {
   const packageJsonPath = join(workspaceRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   let changed = false;
@@ -97,6 +102,7 @@ function restoreNxDependencyVersions(
   if (changed) {
     writeJsonFile(packageJsonPath, packageJson);
   }
+  return changed;
 }
 
 export function checkStorybookInstalled(

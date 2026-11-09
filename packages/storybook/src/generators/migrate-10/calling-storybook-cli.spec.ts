@@ -60,8 +60,9 @@ describe('callUpgrade', () => {
       return Buffer.from('');
     });
 
-    callUpgrade({ autoAcceptAllPrompts: true });
+    const result = callUpgrade({ autoAcceptAllPrompts: true });
 
+    expect(result).toEqual({ success: true, nxVersionsRestored: true });
     expect(readPackageJson().devDependencies).toEqual({
       nx: '22.7.12',
       '@nx/js': '22.7.12',
@@ -77,7 +78,10 @@ describe('callUpgrade', () => {
       throw new Error('upgrade failed');
     });
 
-    expect(callUpgrade({ autoAcceptAllPrompts: true })).toBe(1);
+    expect(callUpgrade({ autoAcceptAllPrompts: true })).toEqual({
+      success: false,
+      nxVersionsRestored: true,
+    });
     expect(readPackageJson().devDependencies['@nx/storybook']).toBe('22.7.12');
   });
 
@@ -88,8 +92,9 @@ describe('callUpgrade', () => {
     writeFileSync(join(workspace, 'package.json'), original);
     vi.mocked(execSync).mockImplementation(() => Buffer.from(''));
 
-    callUpgrade({ autoAcceptAllPrompts: true });
+    const result = callUpgrade({ autoAcceptAllPrompts: true });
 
+    expect(result).toEqual({ success: true, nxVersionsRestored: false });
     expect(readFileSync(join(workspace, 'package.json'), 'utf-8')).toBe(
       original
     );
