@@ -1,13 +1,16 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
-import { CompilerOptions } from 'typescript';
+import type { TypescriptAst } from '@nx/devkit/internal';
 import { findNodes } from '@nx/js';
-import ts = require('typescript');
+import { ensureTypescript } from '@nx/js/internal';
+import type * as ts from 'typescript';
 import { versions } from './versions';
 
 export {
   storybookMajorVersion,
   getInstalledStorybookVersion,
 } from './versions';
+
+let tsModule: TypescriptAst;
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -41,7 +44,7 @@ export function safeFileDelete(tree: Tree, path: string): boolean {
 
 export type TsConfig = {
   extends: string;
-  compilerOptions: CompilerOptions;
+  compilerOptions: ts.CompilerOptions;
   files?: string[];
   include?: string[];
   exclude?: string[];
@@ -130,19 +133,23 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
   let fileIsStory = false;
   if (ext === '.tsx' || ext === '.ts') {
     const file = getTsSourceFile(tree, path);
-    const importArray = findNodes(file, [ts.SyntaxKind.ImportDeclaration]);
+    const importArray = findNodes(file, [
+      tsModule.SyntaxKind.ImportDeclaration,
+    ]);
     let nodeContainsStorybookImport = false;
     let nodeContainsStoryImport = false;
     importArray.forEach((importNode: ts.ImportClause) => {
-      const importPath = findNodes(importNode, [ts.SyntaxKind.StringLiteral]);
+      const importPath = findNodes(importNode, [
+        tsModule.SyntaxKind.StringLiteral,
+      ]);
       importPath.forEach((importPath: ts.StringLiteral) => {
         if (importPath.getText()?.includes('@storybook/')) {
           nodeContainsStorybookImport = true;
         }
       });
       const importSpecifiers = findNodes(importNode, [
-        ts.SyntaxKind.ImportSpecifier,
-        ts.SyntaxKind.NamespaceImport,
+        tsModule.SyntaxKind.ImportSpecifier,
+        tsModule.SyntaxKind.NamespaceImport,
       ]);
       importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
         if (
@@ -177,10 +184,11 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
     throw new Error(`Could not read TS file (${path}).`);
   }
   const content = buffer.toString();
-  const source = ts.createSourceFile(
+  tsModule ??= ensureTypescript();
+  const source = tsModule.createSourceFile(
     path,
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
