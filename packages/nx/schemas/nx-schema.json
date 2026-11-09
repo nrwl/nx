@@ -999,7 +999,7 @@
         "...": {
           "type": "boolean",
           "const": true,
-          "description": "Merges with the inherited target instead of replacing it. Keys before this token defer to the inherited value; keys after it win. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
+          "description": "Controls merge priority against a compatible inherited target: keys before this token defer to the inherited value, and keys after it take precedence. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
         },
         "filter": {
           "type": "object",
@@ -1076,7 +1076,7 @@
         "...": {
           "type": "boolean",
           "const": true,
-          "description": "Merges with the inherited target instead of replacing it. Keys before this token defer to the inherited value; keys after it win. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
+          "description": "Controls merge priority against a compatible inherited target: keys before this token defer to the inherited value, and keys after it take precedence. options, configurations, ultracache and metadata merge by their own rules wherever the token sits."
         },
         "executor": {
           "description": "The function that Nx will invoke when you run this target",

@@ -422,9 +422,11 @@ export interface TargetConfiguration<T = any> {
   syncGenerators?: string[];
 
   /**
-   * Spread token used when merging target configurations. Keys before it defer
-   * to the base (inferred) value; keys after it win. `options`, `configurations`,
-   * `ultracache` and `metadata` merge by their own rules wherever the token sits.
+   * Spread token used when merging with a compatible base (inferred) target.
+   * Keys before it defer to the base value; keys after it win. In project
+   * configuration, a target with a different executor, command or script
+   * replaces the base regardless. `options`, `configurations`, `ultracache`
+   * and `metadata` merge by their own rules wherever the token sits.
    * See {@link https://nx.dev/reference/project-configuration#spread-token}.
    */
   '...'?: true;
