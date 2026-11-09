@@ -4,7 +4,7 @@
 
 import { globAsync, Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
-import {
+import type {
   BinaryExpression,
   ExpressionStatement,
   ExportAssignment,
