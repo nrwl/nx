@@ -15,9 +15,9 @@ import {
 import { ensureTypescript } from '@nx/js/internal';
 import type * as ts from 'typescript';
 import {
+  findConfigWithConflictingPlugin,
   findRootConfigWithConflictingPlugin,
   getEslintMajorVersion,
-  registersConflictingPlugin,
 } from '../../utils/eslint-config-next-conflicts';
 import {
   getImports,
@@ -75,9 +75,15 @@ export default async function update(
     if (usage.importsEslintConfigNext) {
       reason = 'it already imports eslint-config-next';
     } else {
-      const conflictingConfig = registersConflictingPlugin(source, eslintMajor)
-        ? 'it'
-        : rootConfigWithConflictingPlugin;
+      const configWithConflictingPlugin = findConfigWithConflictingPlugin(
+        tree,
+        path,
+        eslintMajor
+      );
+      const conflictingConfig =
+        configWithConflictingPlugin === path
+          ? 'it'
+          : (configWithConflictingPlugin ?? rootConfigWithConflictingPlugin);
       if (conflictingConfig) {
         const updated = addNextPluginConfig(source);
         if (updated) {

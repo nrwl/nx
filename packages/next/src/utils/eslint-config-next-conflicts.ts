@@ -1,26 +1,23 @@
-import type { Tree } from '@nx/devkit';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import {
   getInstalledEslintVersion,
   isEslintConfigFile,
   versions as eslintVersions,
 } from '@nx/eslint/internal';
 import { ensureTypescript } from '@nx/js/internal';
+import { dirname, extname } from 'path';
 import { coerce } from 'semver';
 import type * as ts from 'typescript';
-import {
-  getModuleBindings,
-  getPropertyName,
-  parseFlatConfig,
-} from './flat-config-source';
+import { getPropertyName, parseFlatConfig } from './flat-config-source';
 
 // The plugins eslint-config-next registers. ESLint fails when two configs
 // register different copies of one plugin.
-const CONFLICTING_PLUGIN_MODULES = new Set([
+const CONFLICTING_PLUGIN_MODULES = [
   'eslint-plugin-react',
   'eslint-plugin-react-hooks',
   'eslint-plugin-import',
   'eslint-plugin-jsx-a11y',
-]);
+];
 const CONFLICTING_PLUGIN_NAMES = new Set([
   'react',
   'react-hooks',
@@ -32,6 +29,7 @@ const CONFLICTING_CONFIG_REFERENCE_BELOW_ESLINT_10 =
   /^(?:flat\/react(?:-base|-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
 const CONFLICTING_CONFIG_REFERENCE =
   /^(?:flat\/react(?:-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
+const LOCAL_MODULE_EXTENSIONS = ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'];
 
 let tsModule: typeof import('typescript');
 
@@ -44,8 +42,8 @@ export function getEslintMajorVersion(tree: Tree): number {
 
 /**
  * Returns the first root ESLint config that registers a plugin eslint-config-next
- * also registers. Generated project configs spread the root config, so its
- * plugins load next to theirs.
+ * also registers, directly or through a local module it imports. Generated
+ * project configs spread the root config, so its plugins load next to theirs.
  */
 export function findRootConfigWithConflictingPlugin(
   tree: Tree,
@@ -54,26 +52,117 @@ export function findRootConfigWithConflictingPlugin(
   return tree
     .children('')
     .filter((file) => isEslintConfigFile(file) && tree.isFile(file))
-    .find((file) =>
-      registersConflictingPlugin(
-        parseFlatConfig(tree.read(file, 'utf-8')),
-        eslintMajor
-      )
+    .find(
+      (file) =>
+        findConfigWithConflictingPlugin(tree, file, eslintMajor) !== undefined
     );
 }
 
-export function registersConflictingPlugin(
+/**
+ * Returns `configPath`, or the first local module reachable through its imports,
+ * that registers a plugin eslint-config-next also registers. Only relative specifiers are
+ * followed, so plugins registered by an npm config package are not found.
+ */
+export function findConfigWithConflictingPlugin(
+  tree: Tree,
+  configPath: string,
+  eslintMajor: number
+): string | undefined {
+  const visited = new Set<string>();
+  const find = (file: string): string | undefined => {
+    if (visited.has(file)) {
+      return undefined;
+    }
+    visited.add(file);
+    const source = parseFlatConfig(tree.read(file, 'utf-8'));
+    if (registersConflictingPlugin(source, eslintMajor)) {
+      return file;
+    }
+    for (const specifier of getLocalModuleSpecifiers(source)) {
+      const imported = resolveLocalModule(tree, file, specifier);
+      const found = imported && find(imported);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
+  };
+  return find(configPath);
+}
+
+function getLocalModuleSpecifiers(source: ts.SourceFile): string[] {
+  tsModule ??= ensureTypescript();
+  const specifiers: string[] = [];
+  const visit = (node: ts.Node) => {
+    const specifier = getLoadedModuleSpecifier(node);
+    if (specifier !== undefined && /^\.\.?\//.test(specifier)) {
+      specifiers.push(specifier);
+    }
+    tsModule.forEachChild(node, visit);
+  };
+  visit(source);
+  return specifiers;
+}
+
+// The specifier of an import, re-export, `require` or `import()` that loads a
+// module at runtime. Type-only imports and exports are erased before it runs.
+function getLoadedModuleSpecifier(node: ts.Node): string | undefined {
+  let specifier: ts.Expression | undefined;
+  if (tsModule.isImportDeclaration(node)) {
+    specifier = node.importClause?.isTypeOnly
+      ? undefined
+      : node.moduleSpecifier;
+  } else if (tsModule.isExportDeclaration(node)) {
+    specifier = node.isTypeOnly ? undefined : node.moduleSpecifier;
+  } else if (
+    tsModule.isCallExpression(node) &&
+    node.arguments.length === 1 &&
+    ((tsModule.isIdentifier(node.expression) &&
+      node.expression.text === 'require') ||
+      node.expression.kind === tsModule.SyntaxKind.ImportKeyword)
+  ) {
+    specifier = node.arguments[0];
+  }
+  return specifier && tsModule.isStringLiteralLike(specifier)
+    ? specifier.text
+    : undefined;
+}
+
+// Matches subpaths too: `eslint-plugin-react/configs/recommended.js` registers `react`.
+function isConflictingPluginModule(specifier: string): boolean {
+  return CONFLICTING_PLUGIN_MODULES.some(
+    (module) => specifier === module || specifier.startsWith(`${module}/`)
+  );
+}
+
+// `require` accepts specifiers without an extension and directory specifiers.
+function resolveLocalModule(
+  tree: Tree,
+  importer: string,
+  specifier: string
+): string | undefined {
+  const path = joinPathFragments(dirname(importer), specifier);
+  if (path === '..' || path.startsWith('../')) {
+    return undefined;
+  }
+  return [
+    path,
+    ...LOCAL_MODULE_EXTENSIONS.map((extension) => path + extension),
+    ...LOCAL_MODULE_EXTENSIONS.map((extension) =>
+      joinPathFragments(path, `index${extension}`)
+    ),
+  ].find(
+    (file) =>
+      LOCAL_MODULE_EXTENSIONS.includes(extname(file)) && tree.isFile(file)
+  );
+}
+
+// Any load of one of the plugins counts, so a plugin registered under a
+// computed key is found when its object comes from one of those packages.
+function registersConflictingPlugin(
   source: ts.SourceFile,
   eslintMajor: number
 ): boolean {
-  const bindings = getModuleBindings(source);
-  if (
-    [...bindings.values()].some((module) =>
-      CONFLICTING_PLUGIN_MODULES.has(module)
-    )
-  ) {
-    return true;
-  }
   const configReference =
     eslintMajor < 10
       ? CONFLICTING_CONFIG_REFERENCE_BELOW_ESLINT_10
@@ -84,7 +173,9 @@ export function registersConflictingPlugin(
     if (found) {
       return;
     }
+    const specifier = getLoadedModuleSpecifier(node);
     if (
+      (specifier !== undefined && isConflictingPluginModule(specifier)) ||
       (tsModule.isStringLiteralLike(node) && configReference.test(node.text)) ||
       (tsModule.isPropertyAssignment(node) &&
         getPropertyName(node.name) === 'plugins' &&
