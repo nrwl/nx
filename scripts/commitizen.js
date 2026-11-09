@@ -1,3 +1,4 @@
+// Throwaway staging Nx Cloud GitHub integration check. Do not merge.
 // prettier-ignore
 const scopes = [
   { value: 'angular',           name: 'angular:               anything Angular specific' },
