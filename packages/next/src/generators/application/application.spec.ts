@@ -631,6 +631,72 @@ describe('app', () => {
         });
       });
 
+      it('should use the FlatCompat config in a Next.js 16 project that keeps eslint-config-next 15', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.0' },
+            devDependencies: { 'eslint-config-next': '15.5.29' },
+          })
+        );
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: name,
+          style: 'css',
+        });
+
+        const config = tree.read(`${name}/eslint.config.mjs`, 'utf-8');
+        expect(config).toMatch(
+          /fixupConfigRules\(compat\.extends\(['"]next\/core-web-vitals['"]\)\)/
+        );
+        expect(config).not.toContain('nextVitals');
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies.eslint).toMatch(/^\^9\./);
+        expect(devDependencies['eslint-config-next']).toBe('15.5.29');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+      });
+
+      it('should load the core-web-vitals config of a kept @next/eslint-plugin-next 15 through FlatCompat when the root config registers React plugins', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: {
+              eslint: '^9.8.0',
+              'eslint-config-next': '^16.1.6',
+              '@next/eslint-plugin-next': '^15.5.18',
+            },
+          })
+        );
+        tree.write(
+          'eslint.config.mjs',
+          "import react from 'eslint-plugin-react';\n\nexport default [{ plugins: { react } }];\n"
+        );
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: name,
+          style: 'css',
+        });
+
+        const config = tree.read(`${name}/eslint.config.mjs`, 'utf-8');
+        expect(config).toMatch(
+          /fixupConfigRules\(\s*compat\.extends\(['"]plugin:@next\/next\/core-web-vitals['"]\)\s*\)/
+        );
+        expect(config).not.toMatch(/compat\.extends\(['"]next/);
+        expect(config).not.toContain('nextVitals');
+        expect(config).not.toMatch(/configs\[['"]core-web-vitals['"]\]/);
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+        expect(devDependencies['eslint-config-next']).toBe('^16.1.6');
+        expect(devDependencies['@eslint/compat']).toBeDefined();
+      });
+
       it('should add .eslintrc.json and dependencies', async () => {
         process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
