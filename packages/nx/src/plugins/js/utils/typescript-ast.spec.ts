@@ -140,6 +140,58 @@ describe('getTypescriptAst', () => {
     }
   );
 
+  it.each(['typescript', '@typescript/native'])(
+    'should resolve the names a file binds with %s',
+    async (packageName) => {
+      const { ast } = await loadWithTypescript(packageName);
+      const { withSourceFileChecker } = await import('./typescript-ast');
+      const content = [
+        "\ufeffimport { shared } from './shared';",
+        '/** @typedef {{ a: number }} Options */',
+        'const options = { a: 1 };',
+        'export default [{ options }, options, shared, Math];',
+      ].join('\n');
+
+      withSourceFileChecker('config.js', content, (sourceFile, checker) => {
+        expect(sourceFile.text).toBe(content);
+        expect(sourceFile.statements).toHaveLength(3);
+        const [importStatement, optionsStatement, exportStatement] =
+          sourceFile.statements as unknown as [
+            ts.ImportDeclaration,
+            ts.VariableStatement,
+            ts.ExportAssignment,
+          ];
+        const [importSpecifier] = (
+          importStatement.importClause.namedBindings as ts.NamedImports
+        ).elements;
+        const [declaration] = optionsStatement.declarationList.declarations;
+        const [object, reference, imported, global] = (
+          exportStatement.expression as ts.ArrayLiteralExpression
+        ).elements;
+        const [shorthand] = (object as ts.ObjectLiteralExpression).properties;
+
+        const symbol = checker.getSymbolAtLocation(reference);
+        expect(symbol?.name).toBe('options');
+        expect(symbol?.declarations?.[0]).toBe(declaration);
+        expect(symbol?.valueDeclaration).toBe(declaration);
+        expect(checker.getShorthandAssignmentValueSymbol(shorthand)).toBe(
+          symbol
+        );
+        expect(checker.getSymbolAtLocation(imported)?.declarations?.[0]).toBe(
+          importSpecifier
+        );
+        expect(checker.getSymbolAtLocation(global)).toBeUndefined();
+        const inScope = checker.getSymbolsInScope(
+          global,
+          ast.SymbolFlags.Value | ast.SymbolFlags.Alias
+        );
+        expect(inScope).toContain(symbol);
+        expect(inScope.map(({ name }) => name)).toContain('shared');
+        expect(inScope.map(({ name }) => name)).not.toContain('Math');
+      });
+    }
+  );
+
   describe('with TypeScript 7.1', () => {
     let ast: TypescriptAst;
 
