@@ -231,7 +231,9 @@ pub enum HashInstruction {
         /// Learned exclusions use suffix categories; declared globs stay unchanged.
         ultracache: bool,
     },
-    ProjectConfiguration(String),
+    /// A project's configuration, and the target of the task being hashed when
+    /// the project is that task's own (`hash_project_config`).
+    ProjectConfiguration(String, Option<String>),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
     External(String),
@@ -453,7 +455,7 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::UltracacheConfiguration(digest) => {
                     format!("io-snapshot:{digest}")
                 }
-                HashInstruction::ProjectConfiguration(project_name) => {
+                HashInstruction::ProjectConfiguration(project_name, _) => {
                     format!("{project_name}:ProjectConfiguration")
                 }
                 HashInstruction::TsConfiguration(project_name) => {
@@ -547,7 +549,7 @@ mod tests {
     #[test]
     fn pool_key_matches_display_and_is_shared() {
         let pool = InstructionPool::new();
-        let instruction = HashInstruction::ProjectConfiguration("proj".to_string());
+        let instruction = HashInstruction::ProjectConfiguration("proj".to_string(), None);
         let id = pool.intern(instruction.clone());
 
         let key = pool.key(id);

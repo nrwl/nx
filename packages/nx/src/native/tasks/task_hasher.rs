@@ -99,7 +99,7 @@ impl From<&HashInstruction> for HashInputsBuilder {
                 ..Default::default()
             },
             HashInstruction::UltracacheConfiguration(_)
-            | HashInstruction::ProjectConfiguration(_)
+            | HashInstruction::ProjectConfiguration(..)
             | HashInstruction::Cwd(_) => HashInputsBuilder::default(),
             // These variants require external context — callers must match on them
             // explicitly before falling through to `.into()`.
@@ -611,7 +611,7 @@ impl TaskHasher {
                 | HashInstruction::Cwd(_)
                 | HashInstruction::ProjectFileSet(_, _)
                 | HashInstruction::IgnoredFileSet { .. }
-                | HashInstruction::ProjectConfiguration(_)
+                | HashInstruction::ProjectConfiguration(..)
                 | HashInstruction::TsConfiguration(_)
                 | HashInstruction::TaskOutput(_, _)
                 | HashInstruction::External(_)
@@ -891,9 +891,12 @@ impl TaskHasher {
                 };
                 ((*hashed).clone(), inputs)
             }
-            HashInstruction::ProjectConfiguration(project_name) => {
-                let hashed_project_config =
-                    hash_project_config(project_name, &self.project_graph.nodes)?;
+            HashInstruction::ProjectConfiguration(project_name, target) => {
+                let hashed_project_config = hash_project_config(
+                    project_name,
+                    target.as_deref(),
+                    &self.project_graph.nodes,
+                )?;
                 trace!(parent: &span, "hash_project_config: {:?}", now.elapsed());
                 (hashed_project_config, empty)
             }
