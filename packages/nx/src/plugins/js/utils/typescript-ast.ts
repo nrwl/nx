@@ -49,8 +49,11 @@ const divergentNodeGuards = [
  */
 export type TypescriptAst = Pick<
   typeof ts,
+  | 'canHaveModifiers'
   | 'createSourceFile'
   | 'forEachChild'
+  | 'getModifiers'
+  | 'LanguageVariant'
   | 'ScriptKind'
   | 'ScriptTarget'
   | 'SyntaxKind'
@@ -59,6 +62,30 @@ export type TypescriptAst = Pick<
       Extract<keyof typeof ts & keyof TypescriptAstGuardsModule, `is${string}`>,
       (typeof divergentNodeGuards)[number]
     >
+> & {
+  // TypeScript 7.1's scanner takes no error callback.
+  createScanner(
+    languageVersion: ts.ScriptTarget,
+    skipTrivia: boolean,
+    languageVariant?: ts.LanguageVariant,
+    textInitial?: string,
+    onError?: undefined,
+    start?: number,
+    length?: number
+  ): TypescriptScanner;
+};
+
+// The scanner members TypeScript 7.1 also has.
+type TypescriptScanner = Omit<
+  ts.Scanner,
+  | 'getStartPos'
+  | 'getTextPos'
+  | 'getTokenPos'
+  | 'setJSDocParsingMode'
+  | 'setOnError'
+  | 'setScriptKind'
+  | 'setScriptTarget'
+  | 'setTextPos'
 >;
 
 const astByPackageJsonPath = new Map<string, TypescriptAst>();
@@ -163,6 +190,38 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
       .map((name) => SyntaxKind[name as keyof typeof SyntaxKind])
       .filter((kind) => kind !== undefined)
   );
+  // The kinds TypeScript 6's `canHaveModifiers` accepts.
+  const modifiableKinds = new Set<number>(
+    [
+      'TypeParameter',
+      'Parameter',
+      'PropertySignature',
+      'PropertyDeclaration',
+      'MethodSignature',
+      'MethodDeclaration',
+      'Constructor',
+      'GetAccessor',
+      'SetAccessor',
+      'IndexSignature',
+      'ConstructorType',
+      'FunctionExpression',
+      'ArrowFunction',
+      'ClassExpression',
+      'VariableStatement',
+      'FunctionDeclaration',
+      'ClassDeclaration',
+      'InterfaceDeclaration',
+      'TypeAliasDeclaration',
+      'EnumDeclaration',
+      'ModuleDeclaration',
+      'ImportEqualsDeclaration',
+      'ImportDeclaration',
+      'ExportAssignment',
+      'ExportDeclaration',
+    ].map((name) => SyntaxKind[name as keyof typeof SyntaxKind])
+  );
+  const canHaveModifiers = (node: { kind: number }) =>
+    modifiableKinds.has(node.kind);
 
   const createSourceFile = (
     fileName: string,
@@ -211,12 +270,42 @@ function createApiAst(backend: ApiTypescriptBackend): TypescriptAst {
     isPropertySignature: astGuards.isPropertySignatureDeclaration,
     isStringLiteralLike: astGuards.isStringLiteralLikeNode,
     isTypeAssertionExpression: astGuards.isTypeAssertion,
+    canHaveModifiers,
+    createScanner: (
+      _languageVersion: unknown,
+      skipTrivia: boolean,
+      languageVariant?: number,
+      textInitial?: string,
+      _onError?: undefined,
+      start?: number,
+      length?: number
+    ) =>
+      ast.createScanner(
+        skipTrivia,
+        languageVariant,
+        textInitial,
+        start,
+        length
+      ),
     createSourceFile,
     forEachChild: (
       node: { forEachChild: (...args: unknown[]) => unknown },
       cbNode: unknown,
       cbNodes?: unknown
     ) => node.forEachChild(cbNode, cbNodes),
+    getModifiers: (node: {
+      kind: number;
+      modifiers?: readonly { kind: number }[];
+    }) => {
+      if (!canHaveModifiers(node)) {
+        return undefined;
+      }
+      const modifiers = node.modifiers?.filter((modifier) =>
+        astGuards.isModifier(modifier as never)
+      );
+      return modifiers?.length ? modifiers : undefined;
+    },
+    LanguageVariant: ast.LanguageVariant,
     ScriptKind,
     ScriptTarget: ast.ScriptTarget,
     SyntaxKind,

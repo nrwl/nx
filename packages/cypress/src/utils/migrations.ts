@@ -13,7 +13,7 @@ import {
   readTargetDefaultsForTarget,
   type TypescriptAst,
 } from '@nx/devkit/internal';
-import { ensureClassicTypescript, ensureTypescript } from '@nx/js/internal';
+import { ensureTypescript } from '@nx/js/internal';
 import { isAbsolute, posix, relative } from 'path';
 import type {
   ModuleDeclaration,
@@ -28,7 +28,6 @@ import type { CypressExecutorOptions } from '../executors/cypress/schema';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
 
 let ts: TypescriptAst;
-let classicTs: typeof import('typescript');
 
 export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   projectName: string;
@@ -232,7 +231,6 @@ export function hasLocalValueBinding(
   name: string
 ): boolean {
   ts ??= ensureTypescript();
-  classicTs ??= ensureClassicTypescript('Finding a local binding');
   if (sourceFile.isDeclarationFile) {
     return false;
   }
@@ -280,8 +278,8 @@ export function hasLocalValueBinding(
 
   const visit = (node: Node): boolean => {
     if (
-      classicTs.canHaveModifiers(node) &&
-      classicTs
+      ts.canHaveModifiers(node) &&
+      ts
         .getModifiers(node)
         ?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword)
     ) {
@@ -319,7 +317,7 @@ function isInstantiatedNamespace(node: ModuleDeclaration): boolean {
       ts.isImportDeclaration(statement) ||
       ts.isImportEqualsDeclaration(statement)
     ) {
-      return !!classicTs
+      return !!ts
         .getModifiers(statement)
         ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
     }

@@ -5,7 +5,8 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
-import { ensureClassicTypescript } from '@nx/js/internal';
+import type { TypescriptAst } from '@nx/devkit/internal';
+import { ensureTypescript } from '@nx/js/internal';
 import type {
   Expression,
   Node,
@@ -47,7 +48,7 @@ const NX_PRESET_CALLS = ['nxE2EPreset', 'nxComponentTestingPreset'];
 // The property forms with a static name; methods are left alone.
 type ConfigProperty = PropertyAssignment | ShorthandPropertyAssignment;
 
-let ts: typeof import('typescript');
+let ts: TypescriptAst;
 
 export default async function updateCypress16ConfigOptions(tree: Tree) {
   const unhandled: string[] = [];
@@ -67,9 +68,7 @@ export default async function updateCypress16ConfigOptions(tree: Tree) {
       continue;
     }
 
-    ts ??= ensureClassicTypescript(
-      'The "update-cypress-16-config-options" migration'
-    );
+    ts ??= ensureTypescript();
     const { blocks, unresolvedSpreads } = getOptionBlocks(config);
     for (const spread of unresolvedSpreads) {
       unhandled.push(
