@@ -615,7 +615,10 @@
               "type": "array",
               "description": "List of ownership patterns to apply.",
               "items": {
-                "$ref": "#/definitions/ownersPattern"
+                "allOf": [
+                  { "$ref": "#/definitions/ownersPattern" },
+                  { "required": ["owners"] }
+                ]
               }
             },
             "sections": {
@@ -645,7 +648,7 @@
                   },
                   "patterns": {
                     "type": "array",
-                    "description": "List of ownership patterns within this section.",
+                    "description": "List of ownership patterns within this section. A pattern without owners uses the section's defaultOwners.",
                     "items": {
                       "$ref": "#/definitions/ownersPattern"
                     }
@@ -748,7 +751,7 @@
         },
         "files": {
           "type": "array",
-          "description": "File glob patterns this ownership pattern applies to (for non-project-based ownership).",
+          "description": "File glob patterns this ownership pattern applies to. With projects, they are relative to each matched project root.",
           "items": {
             "type": "string"
           }
@@ -777,7 +780,6 @@
           "description": "Prefix for this pattern's owners, taking precedence over the root owners prefix."
         }
       },
-      "required": ["owners"],
       "additionalProperties": false
     },
     "inputs": {

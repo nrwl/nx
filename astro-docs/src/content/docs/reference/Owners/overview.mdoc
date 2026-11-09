@@ -426,6 +426,7 @@ Use this to give a team specific files across a set of projects without changing
 
 If a project's `project.json` sets owners for the same file pattern, the project-level entry wins.
 A `**/*` key in `project.json` replaces the owners the root config gives the whole project.
+Project-scoped file patterns must stay inside the project root, so `nx sync` fails on a pattern such as `../other-project/**`.
 
 ## Prefix owners
 

@@ -225,6 +225,12 @@ function createCodeownersEntry(
   owners: OwnerId[] | false,
   commentLines?: string[]
 ): string {
+  const invalidOwner = owners ? owners.find((owner) => /\s/.test(owner)) : '';
+  if (invalidOwner) {
+    exitWithError({
+      title: `The owner "${invalidOwner}" for "${pattern}" contains whitespace, which CODEOWNERS cannot represent.`,
+    });
+  }
   return `${
     commentLines?.length ? createComment(commentLines) : ''
   }${pattern}${owners && owners.length ? ` ${owners.join(' ')}` : ''}\n`;
@@ -256,8 +262,17 @@ function addProjectEntries(
     }
   }
   for (const [pathOverride, override] of Object.entries(fileOverrides)) {
+    const pattern = joinPathFragments(anchoredRoot, pathOverride);
+    if (
+      /[\r\n]/.test(pathOverride) ||
+      !(anchoredRoot === '/' || pattern.startsWith(`${anchoredRoot}/`))
+    ) {
+      exitWithError({
+        title: `The owners file pattern "${pathOverride}" for the project at "${projectRoot}" must stay within the project root and fit on one line.`,
+      });
+    }
     content.projectEntries += createCodeownersEntry(
-      joinPathFragments(anchoredRoot, pathOverride),
+      pattern,
       override.owners,
       override.description?.split('\n')
     );

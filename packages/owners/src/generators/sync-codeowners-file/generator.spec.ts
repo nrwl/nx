@@ -457,6 +457,28 @@ package-lock.json @JamesHenry
 `);
     });
 
+    it.each([
+      [{ '../package-b/**': ['@a'] }, 'must stay within the project root'],
+      [{ 'src/x\n* @evil': ['@a'] }, 'must stay within the project root'],
+      [{ 'src/**': ['@a\n* @evil'] }, 'contains whitespace'],
+    ])('should reject the project.json owners %j', async (owners, message) => {
+      mockCreateProjectGraphAsync.mockResolvedValue({
+        nodes: {
+          'package-a': {
+            type: 'lib',
+            data: { root: 'packages/package-a', owners },
+          },
+        },
+        dependencies: {},
+      });
+      writeJson(tree, 'nx.json', { owners: {} });
+
+      await expect(
+        withSerializedSyncError(syncCodeownersFileGenerator(tree))
+      ).rejects.toThrow(message);
+      expect(tree.exists('.github/CODEOWNERS')).toBe(false);
+    });
+
     it('should support explicitly defining files without owners', async () => {
       writeJson(tree, 'nx.json', {
         owners: {

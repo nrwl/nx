@@ -811,16 +811,20 @@ type NxOwnersPatternBase = {
   prefix?: string;
 };
 
+type NxOwnersPattern = NxOwnersPatternBase & NxOwnersPatternTarget;
+
+type NxOwnersSectionPattern = Omit<NxOwnersPatternBase, 'owners'> &
+  Partial<Pick<NxOwnersPatternBase, 'owners'>> &
+  NxOwnersPatternTarget;
+
 /**
  * When both `projects` and `files` are provided, file patterns are evaluated relative to each
  * matched project root instead of the workspace root.
  */
-type NxOwnersPattern = NxOwnersPatternBase &
-  (
-    | { files: string[] }
-    | { projects: string[] }
-    | { projects: string[]; files: string[] }
-  );
+type NxOwnersPatternTarget =
+  | { files: string[] }
+  | { projects: string[] }
+  | { projects: string[]; files: string[] };
 
 /**
  * Configuration for CODEOWNERS generation, provided by `@nx/owners`.
@@ -844,7 +848,10 @@ export interface NxOwnersConfiguration {
    */
   sections?: {
     name: string;
-    patterns: NxOwnersPattern[];
+    /**
+     * A pattern without `owners` uses the section's `defaultOwners`.
+     */
+    patterns: NxOwnersSectionPattern[];
     defaultOwners?: string[];
     numberOfRequiredApprovals?: number;
     optional?: boolean;
