@@ -106,6 +106,7 @@ export {
   parseTsConfigContent,
   readTsConfig,
   readTsConfigWithoutFiles,
+  transpileTypescript,
 } from './plugins/js/utils/typescript';
 export {
   ModuleKind,

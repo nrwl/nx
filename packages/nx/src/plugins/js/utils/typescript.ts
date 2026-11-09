@@ -263,6 +263,33 @@ export function parseTsConfigContent(
   }
 }
 
+/**
+ * Transpiles one module to JavaScript without type checking, as `ts.transpile`
+ * does.
+ */
+export function transpileTypescript(
+  input: string,
+  compilerOptions: ts.CompilerOptions
+): string {
+  const backend = getTypescriptBackend();
+  switch (backend.kind) {
+    case 'classic':
+      return backend.ts.transpile(input, compilerOptions);
+    case 'api':
+      return withTypescriptApi(
+        backend,
+        (api) =>
+          api.transpileModule(input, {
+            compilerOptions: compilerOptions as unknown as ApiCompilerOptions,
+          }).outputText
+      );
+    default: {
+      const unhandled: never = backend;
+      throw new Error(`Unhandled TypeScript backend: ${unhandled}`);
+    }
+  }
+}
+
 function readTsConfigWithApi(
   backend: ApiTypescriptBackend,
   tsConfigPath: string,
