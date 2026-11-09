@@ -522,7 +522,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -574,7 +573,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -721,7 +719,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -775,7 +772,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -1022,7 +1018,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -1076,7 +1071,6 @@ describe('@nx/playwright/plugin', () => {
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -4050,7 +4044,6 @@ module.exports = {};`,
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me.spec.ts",
             "ignore-server-inputs": true,
           },
@@ -4112,7 +4105,6 @@ module.exports = {};`,
             "playwright",
           ],
           "testFileDirectives": {
-            "depends-on": true,
             "file": "tests/run-me-2.spec.ts",
             "ignore-server-inputs": true,
           },

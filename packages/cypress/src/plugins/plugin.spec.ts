@@ -454,7 +454,6 @@ describe('@nx/cypress/plugin', () => {
                         "cypress",
                       ],
                       "testFileDirectives": {
-                        "depends-on": true,
                         "file": "src/test.cy.ts",
                         "ignore-server-inputs": true,
                       },
@@ -675,7 +674,6 @@ describe('@nx/cypress/plugin', () => {
                         "cypress",
                       ],
                       "testFileDirectives": {
-                        "depends-on": true,
                         "file": "src/test.cy.ts",
                         "ignore-server-inputs": true,
                       },
@@ -1028,7 +1026,6 @@ describe('@nx/cypress/plugin', () => {
                         "cypress",
                       ],
                       "testFileDirectives": {
-                        "depends-on": true,
                         "file": "src/test.cy.ts",
                         "ignore-server-inputs": true,
                       },
@@ -1460,7 +1457,6 @@ describe('@nx/cypress/plugin', () => {
                         "cypress",
                       ],
                       "testFileDirectives": {
-                        "depends-on": true,
                         "file": "src/test.cy.ts",
                         "ignore-server-inputs": true,
                       },
@@ -1904,7 +1900,6 @@ describe('@nx/cypress/plugin', () => {
                         "cypress",
                       ],
                       "testFileDirectives": {
-                        "depends-on": true,
                         "file": "apps/myapp/src/test.cy.ts",
                         "ignore-server-inputs": true,
                       },

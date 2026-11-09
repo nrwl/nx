@@ -16,7 +16,7 @@ export type TestFileDirective = 'depends-on' | 'ignore-server-inputs';
  * directives of a workspace-relative test file applied. A directive that lists
  * no projects, has a value it does not take, or is not supported
  * (`ignoreServerInputs: false`) is skipped with a warning. The target's
- * metadata records the file and the supported directives for
+ * metadata records the file, and `ignore-server-inputs` when supported, for
  * `recordedTestFile` and `appliesTestFileDirective`.
  */
 export function applyTestFileDirectives(
@@ -32,11 +32,9 @@ export function applyTestFileDirectives(
     ...target,
     metadata: {
       ...target.metadata,
-      testFileDirectives: {
-        file: normalizePath(file),
-        'depends-on': true,
-        'ignore-server-inputs': options.ignoreServerInputs,
-      } satisfies Record<TestFileDirective, boolean> & { file: string },
+      testFileDirectives: options.ignoreServerInputs
+        ? { file: normalizePath(file), 'ignore-server-inputs': true }
+        : { file: normalizePath(file) },
     },
   };
 
@@ -84,12 +82,15 @@ export function recordedTestFile(
 }
 
 /**
- * Whether `target` applies `directive` to its test file. A target that
- * `applyTestFileDirectives` didn't return applies neither.
+ * Whether `target` applies `directive` to its test file. Every target that
+ * `applyTestFileDirectives` returned applies `depends-on`, and any other
+ * target applies neither.
  */
 export function appliesTestFileDirective(
   target: TargetConfiguration,
   directive: TestFileDirective
 ): boolean {
-  return target.metadata?.testFileDirectives?.[directive] === true;
+  return directive === 'depends-on'
+    ? recordedTestFile(target) !== undefined
+    : target.metadata?.testFileDirectives?.[directive] === true;
 }
