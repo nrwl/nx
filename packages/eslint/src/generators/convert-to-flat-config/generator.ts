@@ -168,7 +168,6 @@ export async function convertToFlatConfigGenerator(
     }
   }
 
-  const replacedFiles = new Set(convertedEslintrcFiles);
   // Flat config never reads an ignore file. Keep one another tool may read,
   // such as .gitignore, or one a remaining `ignore-path` still names.
   const referencedIgnoreFiles = findReferencedIgnoreFiles(tree);
@@ -177,16 +176,13 @@ export async function convertToFlatConfigGenerator(
       basename(ignoreFile).includes('eslintignore') &&
       !referencedIgnoreFiles.has(joinPathFragments(ignoreFile))
     ) {
-      if (tree.exists(ignoreFile)) {
-        replacedFiles.add(joinPathFragments(ignoreFile));
-      }
       tree.delete(ignoreFile);
     }
   }
 
   // replace references in nx.json and project.json files
-  updateNxJsonConfig(tree, options.eslintConfigFormat, replacedFiles);
-  updateProjectConfigsInputs(tree, options.eslintConfigFormat, replacedFiles);
+  updateNxJsonConfig(tree, options.eslintConfigFormat);
+  updateProjectConfigsInputs(tree, options.eslintConfigFormat);
 
   // The converter carries angular-eslint's removed eslintrc configs over as
   // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
@@ -621,8 +617,6 @@ function isWorkspaceWidePluginTargetDefault(
 interface InputRewriteContext {
   tree: Tree;
   format: 'cjs' | 'mjs';
-  // Workspace paths of the eslintrc and ignore files this run converted or deleted.
-  replacedFiles: ReadonlySet<string>;
   // The roots `{projectRoot}` stands for: one project's, or every project's in nx.json.
   projectRoots: readonly string[];
   // Every project's root: without a project graph, a dependency input may reach any of them.
@@ -674,8 +668,9 @@ function rewriteLegacyInputs(
 }
 
 // A pattern keeps its original form while a file it names is still in the tree, so
-// task hashes keep covering that file. It takes the flat-config name when its files
-// were replaced or never existed, and a glob, which can match both kinds, gets both.
+// task hashes keep covering that file. It also takes the flat-config name when a root
+// without that file has a flat config, converted now or before, and takes only that
+// name when no file it names remains. A glob, which can match both kinds, gets both.
 function rewriteLegacyPattern(
   pattern: string,
   roots: readonly string[],
@@ -692,7 +687,11 @@ function rewriteLegacyPattern(
   if (!files.some((file) => context.tree.exists(file))) {
     return [renamed];
   }
-  return files.some((file) => context.replacedFiles.has(file))
+  return files.some(
+    (file) =>
+      !context.tree.exists(file) &&
+      context.tree.exists(renameLegacyEslintrcFile(file, context.format))
+  )
     ? [pattern, renamed]
     : [pattern];
 }
@@ -730,11 +729,7 @@ function ensureInputPresent(
 // inputs and namedInputs, and ensures lint targets include the new flat config file as an input
 // (and `production` excludes it). Handles both the legacy record shape and the new array shape
 // of `targetDefaults`.
-function updateNxJsonConfig(
-  tree: Tree,
-  format: 'cjs' | 'mjs',
-  replacedFiles: ReadonlySet<string>
-) {
+function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (!tree.exists('nx.json')) {
     return;
   }
@@ -742,7 +737,6 @@ function updateNxJsonConfig(
   const context: InputRewriteContext = {
     tree,
     format,
-    replacedFiles,
     projectRoots: allRoots,
     dependencyRoots: allRoots,
   };
@@ -791,18 +785,13 @@ function updateNxJsonConfig(
 }
 
 // Walks every project's `targets.*.inputs` and `namedInputs.*`, rewriting stale references.
-function updateProjectConfigsInputs(
-  tree: Tree,
-  format: 'cjs' | 'mjs',
-  replacedFiles: ReadonlySet<string>
-) {
+function updateProjectConfigsInputs(tree: Tree, format: 'cjs' | 'mjs') {
   const projects = getProjects(tree);
   const dependencyRoots = [...projects.values()].map(({ root }) => root);
   for (const [project, projectConfig] of projects) {
     const context: InputRewriteContext = {
       tree,
       format,
-      replacedFiles,
       projectRoots: [projectConfig.root],
       dependencyRoots,
     };
