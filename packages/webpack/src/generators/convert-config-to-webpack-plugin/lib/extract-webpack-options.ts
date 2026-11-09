@@ -1,6 +1,12 @@
 import { Tree } from '@nx/devkit';
-import { tsquery } from '@nx/devkit/internal';
-import * as ts from 'typescript';
+import {
+  ensureTypescript,
+  tsquery,
+  type TypescriptAst,
+} from '@nx/devkit/internal';
+import type { CallExpression, Identifier, Node, NodeArray } from 'typescript';
+
+let ts: TypescriptAst;
 
 export function extractWebpackOptions(tree: Tree, webpackConfigPath: string) {
   const source = tree.read(webpackConfigPath).toString('utf-8');
@@ -10,24 +16,21 @@ export function extractWebpackOptions(tree: Tree, webpackConfigPath: string) {
   const withReactQuery = 'CallExpression:has(Identifier[name="withReact"])';
   const withWebQuery = 'CallExpression:has(Identifier[name="withWeb"])';
 
-  const withNxCall = tsquery.query(
-    sourceFile,
-    withNxQuery
-  ) as ts.CallExpression[];
+  const withNxCall = tsquery.query(sourceFile, withNxQuery) as CallExpression[];
 
   const withReactCall = tsquery.query(
     sourceFile,
     withReactQuery
-  ) as ts.CallExpression[];
+  ) as CallExpression[];
 
   const withWebCall = tsquery.query(
     sourceFile,
     withWebQuery
-  ) as ts.CallExpression[];
+  ) as CallExpression[];
 
   // If the config is empty set to empty string to avoid undefined. Undefined is used to check if the withNx exists inside of the config file.
-  let withNxConfig: ts.Node | '' | undefined,
-    withReactConfig: ts.Node | '' | undefined;
+  let withNxConfig: Node | '' | undefined,
+    withReactConfig: Node | '' | undefined;
   // Returned rather than written here so the caller can reject configs whose
   // options are not a plain literal before touching the file.
   let strippedSource: string | undefined;
@@ -95,7 +98,7 @@ const REMOVED_HELPERS = new Set([
 
 function findHelperReferences(source: string): string[] {
   const names = tsquery
-    .query<ts.Identifier>(tsquery.ast(source), 'Identifier')
+    .query<Identifier>(tsquery.ast(source), 'Identifier')
     .map((node) => node.text)
     .filter((name) => REMOVED_HELPERS.has(name));
   return [...new Set(names)];
@@ -109,7 +112,7 @@ function inlineComposePlugins(source: string): string {
     source,
     'CallExpression > Identifier[name="composePlugins"]',
     (node) => {
-      if ((node.parent as ts.CallExpression).expression !== node) {
+      if ((node.parent as CallExpression).expression !== node) {
         return node.getText();
       }
       found = true;
@@ -138,13 +141,22 @@ function removeCallExpressions(
   functionNames.forEach((functionName) => {
     const callExpressionQuery = `CallExpression:has(Identifier[name="composePlugins"]) > CallExpression:has(Identifier[name="${functionName}"])`;
 
-    modifiedSource = tsquery.replace(
-      modifiedSource,
-      callExpressionQuery,
-      () => {
-        return ''; // Removes the entire CallExpression
-      }
-    );
+    let callExpression: CallExpression | undefined;
+    while (
+      (callExpression = tsquery.query<CallExpression>(
+        modifiedSource,
+        callExpressionQuery
+      )[0])
+    ) {
+      const { arguments: args } = callExpression.parent as CallExpression;
+      const index = args.indexOf(callExpression);
+      modifiedSource = removeRange(
+        modifiedSource,
+        index === -1
+          ? [callExpression.getStart(), callExpression.getEnd()]
+          : listElementRange(modifiedSource, args, index)
+      );
+    }
   });
 
   return modifiedSource;
@@ -155,88 +167,80 @@ function removeImportDeclarations(
   importName: string,
   moduleName: string
 ) {
-  const sourceFile = tsquery.ast(source);
+  let updatedSource = source;
+  let range: [number, number] | undefined;
+  while (
+    (range = findImportDeclarationRange(updatedSource, importName, moduleName))
+  ) {
+    updatedSource = removeRange(updatedSource, range);
+  }
+  return updatedSource;
+}
 
-  const modifiedStatements = sourceFile.statements
-    .map((statement) => {
-      if (!ts.isVariableStatement(statement)) return statement;
+function findImportDeclarationRange(
+  source: string,
+  importName: string,
+  moduleName: string
+): [number, number] | undefined {
+  ts ??= ensureTypescript();
+  for (const statement of tsquery.ast(source).statements) {
+    if (!ts.isVariableStatement(statement)) continue;
 
-      const declarationList = statement.declarationList;
-      const newDeclarations = declarationList.declarations
-        .map((declaration) => {
-          if (
-            !ts.isVariableDeclaration(declaration) ||
-            !declaration.initializer
-          )
-            return declaration;
-
-          if (
-            ts.isCallExpression(declaration.initializer) &&
-            ts.isIdentifier(declaration.initializer.expression)
-          ) {
-            const callExpr = declaration.initializer.expression;
-            if (
-              callExpr.text === 'require' &&
-              declaration.initializer.arguments[0]
-                ?.getText()
-                .replace(/['"]/g, '') === moduleName
-            ) {
-              if (ts.isObjectBindingPattern(declaration.name)) {
-                const bindingElements = declaration.name.elements.filter(
-                  (element) => {
-                    const elementName = element.name.getText();
-                    return elementName !== importName;
-                  }
-                );
-
-                if (bindingElements.length > 0) {
-                  const newBindingPattern =
-                    ts.factory.updateObjectBindingPattern(
-                      declaration.name,
-                      bindingElements
-                    );
-
-                  // Update the variable declaration with the new binding pattern without the specified import name
-                  return ts.factory.updateVariableDeclaration(
-                    declaration,
-                    newBindingPattern,
-                    declaration.exclamationToken,
-                    declaration.type,
-                    declaration.initializer
-                  );
-                } else {
-                  return null; // Remove this declaration entirely if no bindings remain
-                }
-              }
-            }
-          }
-          return declaration;
-        })
-        .filter(Boolean);
-
-      if (newDeclarations.length > 0) {
-        const newDeclarationList = ts.factory.updateVariableDeclarationList(
-          declarationList,
-          newDeclarations as ts.VariableDeclaration[]
-        );
-        return ts.factory.updateVariableStatement(
-          statement,
-          statement.modifiers,
-          newDeclarationList
-        );
-      } else {
-        return null; // Remove the entire statement
+    const { declarations } = statement.declarationList;
+    for (let index = 0; index < declarations.length; index++) {
+      const { initializer, name } = declarations[index];
+      if (
+        !initializer ||
+        !ts.isCallExpression(initializer) ||
+        !ts.isIdentifier(initializer.expression) ||
+        initializer.expression.text !== 'require' ||
+        initializer.arguments[0]?.getText().replace(/['"]/g, '') !==
+          moduleName ||
+        !ts.isObjectBindingPattern(name)
+      ) {
+        continue;
       }
-    })
-    .filter(Boolean);
 
-  // Use printer to format the source code and rewrite the modified
-  const newSourceFile = ts.factory.updateSourceFile(
-    sourceFile,
-    modifiedStatements as ts.Statement[]
-  );
-  const printer = ts.createPrinter();
-  const formattedSource = printer.printFile(newSourceFile);
+      const elementIndex = name.elements.findIndex(
+        (element) => element.name.getText() === importName
+      );
+      if (elementIndex !== -1 && name.elements.length > 1) {
+        return listElementRange(source, name.elements, elementIndex);
+      }
+      if (elementIndex !== -1 || name.elements.length === 0) {
+        return declarations.length > 1
+          ? listElementRange(source, declarations, index)
+          : [statement.getStart(), statement.getEnd()];
+      }
+    }
+  }
+  return undefined;
+}
 
-  return formattedSource;
+// The element with one adjacent comma, so the list stays valid.
+function listElementRange(
+  source: string,
+  elements: NodeArray<Node>,
+  index: number
+): [number, number] {
+  const element = elements[index];
+  const next = elements[index + 1];
+  if (next) {
+    const spaces = source.slice(next.pos, next.getStart()).match(/^[ \t]*/)[0];
+    return [element.getStart(), next.pos + spaces.length];
+  }
+  return index > 0
+    ? [elements[index - 1].getEnd(), element.getEnd()]
+    : [element.getStart(), elements.end];
+}
+
+// Also removes the line when nothing else is left on it.
+function removeRange(source: string, [start, end]: [number, number]): string {
+  const lineStart = source.lastIndexOf('\n', start - 1) + 1;
+  const lineBreak = source.indexOf('\n', end);
+  const lineEnd = lineBreak === -1 ? source.length : lineBreak + 1;
+  return source.slice(lineStart, start).trim() ||
+    source.slice(end, lineEnd).trim()
+    ? source.slice(0, start) + source.slice(end)
+    : source.slice(0, lineStart) + source.slice(lineEnd);
 }

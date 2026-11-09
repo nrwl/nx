@@ -152,6 +152,7 @@ describe('convertConfigToWebpackPluginGenerator', () => {
         module.exports = composeLegacyPlugins((config) => {
           return config;
         });
+
         function composeLegacyPlugins(...plugins) {
           return async (config, ctx) => {
             for (const plugin of plugins) {
@@ -217,6 +218,31 @@ describe('convertConfigToWebpackPluginGenerator', () => {
     await expect(
       oldConfig.exports({ plugins: [] }, { mode: 'production' })
     ).resolves.toEqual({ plugins: ['custom'], mode: 'production' });
+  });
+
+  it('should remove the Nx helpers from any position in the old config', async () => {
+    const project = createProject(tree, { name: 'my-app', root: 'my-app' });
+    tree.write(
+      `${project.name}/webpack.config.js`,
+      `const path = require('path'), { withNx, composePlugins } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+module.exports = composePlugins(withReact(), withNx(),);
+`
+    );
+
+    await convertConfigToWebpackPluginGenerator(tree, {
+      project: project.name,
+    });
+
+    const oldConfig = tree.read(
+      `${project.name}/webpack.config.old.js`,
+      'utf-8'
+    );
+    expect(oldConfig.split('\n').slice(0, 3)).toEqual([
+      "const path = require('path');",
+      'module.exports = composeLegacyPlugins();',
+      '',
+    ]);
   });
 
   it('should not add the React plugin to a config that does not use withReact', async () => {
@@ -453,6 +479,7 @@ module.exports = composePlugins(withNx(), (config) => {
           // e.g. \`config.plugins.push(new MyPlugin())\`
           return config;
         });
+
         function composeLegacyPlugins(...plugins) {
           return async (config, ctx) => {
             for (const plugin of plugins) {
