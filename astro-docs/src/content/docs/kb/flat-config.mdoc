@@ -54,7 +54,10 @@ them, and converts one only when it assigns `module.exports` an object built fro
 It skips a project config that computes its values, for example with `require`, a spread, or a
 function call, and logs a warning naming it, so convert those by hand using the steps below.
 If the root config computes its values, the generator fails with an error before changing any
-file, and you convert the whole workspace by hand.
+file, and you convert the whole workspace by hand. When the workspace has `.eslintrc.base.json`,
+that file is the root config, so this check doesn't cover a JavaScript config next to it. The
+generator handles the JavaScript config as the root project's config, or leaves it in place when
+the workspace has no root project.
 New Nx workspaces generate flat config by default, and the
 [@nx/eslint/plugin inferred targets](/docs/technologies/eslint/introduction) run it without
 extra configuration.
