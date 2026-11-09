@@ -517,15 +517,13 @@ module.exports = [
       addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
 
       expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
-        "
-        export default [
+        "export default [
             {
                 ignores: [
                     "**/some-dir/**/*"
                 ]
             }
-        ];
-        "
+        ];"
       `);
     });
 
