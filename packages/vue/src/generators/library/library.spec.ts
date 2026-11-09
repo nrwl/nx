@@ -78,10 +78,6 @@ describe('library', () => {
   });
 
   it('should add vue and vitest to package.json when non-buildable', async () => {
-    // Force the v9 flat-config lane. Jest's pnpm hoisting can resolve
-    // `require('eslint')` to a v8 copy in the workspace store, which would
-    // otherwise make `useFlatConfig` route the fresh-install lane through
-    // the v8/v7 stack and not match the v9/v8 snapshot.
     const original = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     try {
