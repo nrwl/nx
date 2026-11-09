@@ -317,8 +317,8 @@ The jobs of the pipeline, each on its own machine.
 | `steps`           | Steps the job runs in order.                                                        |
 | `workers`         | Workers that run the tasks of the job. Without it, the job uses its one machine.    |
 | `needs`           | Job or jobs that must finish before this job starts.                                |
-| `if`              | Condition that must hold for the job to run.                                        |
-| `env`             | Environment variables for every step of the job.                                    |
+| `if`              | Condition that must hold for the job to run. See [expressions](#expressions).       |
+| `env`             | Environment variables for every step of the job. Takes [expressions](#expressions). |
 | `defaults`        | Defaults for the steps of the job, such as `run.working-directory`.                 |
 | `timeout-minutes` | Minutes before the job is stopped, at most 60.                                      |
 | `permissions`     | Permissions of the repository token. Set `repository-contents: write` to push tags. |
@@ -354,6 +354,34 @@ jobs:
         run: npx nx affected -t lint test build
 ```
 
+### Expressions
+
+Nx Cloud CI evaluates `${{ <expression> }}` in these keys:
+
+- `env` at the top of the file, on a job, and on a step.
+- A step's `name`, `run`, and `with`.
+- `if` on a job or a step, where the `${{ }}` around the expression is optional.
+
+Other keys, such as `runs-on` and `workers`, take their value as written.
+
+| Context   | Holds                                                                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nxcloud` | `event_name`, `sha`, `ref`, `ref_name`, `repository`, `repository_owner`, `workspace`, `server_url`, `api_url`, and `is_fork`. `github` reads the same values. |
+| `env`     | The `env` of the file and the job.                                                                                                                             |
+| `job`     | `status`, which is `success` or `failure`.                                                                                                                     |
+| `steps`   | `<id>.outcome`, `<id>.conclusion`, and `<id>.outputs` of each finished step.                                                                                   |
+| `needs`   | `<job>.result` of each job in `needs`.                                                                                                                         |
+| `runner`  | `os`, `arch`, `temp`, `tool_cache`, and `name`.                                                                                                                |
+| `secrets` | Stored variables marked secret, and `GITHUB_TOKEN`, a repository token from the GitHub App. `NX_CLOUD_VCS_TOKEN` is the same token.                            |
+| `vars`    | The other stored variables.                                                                                                                                    |
+| `inputs`  | The inputs of a step template, inside that template.                                                                                                           |
+
+`matrix`, `strategy`, and `jobs` aren't available, and reading them is an error.
+
+The functions are `contains`, `startsWith`, `endsWith`, `format`, `join`, `toJSON`, `fromJSON`, `hashFiles`, and the status functions `success()`, `failure()`, and `always()`.
+`cancelled()` isn't supported.
+An `if` without a status function runs only when the earlier steps succeeded, as if it started with `success() &&`.
+
 ### Coming from GitHub Actions
 
 | GitHub Actions                                                   | Nx Cloud CI                                          |
@@ -366,7 +394,7 @@ jobs:
 | `nx fix-ci`                                                      | Automatic                                            |
 | `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps) |
 | `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                            |
-| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same expressions                                     |
+| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same [expressions](#expressions)                     |
 | `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | Same files                                           |
 | `github.event_name` in a condition                               | `nxcloud.event_name`                                 |
 
