@@ -74,8 +74,10 @@ anything the tool resolves against the working directory can change after conver
 - Code that resolves a relative path from a `.env` file against the working directory now gets a
   path under the project root.
 
-For Vitest, a `targetDefaults` entry scoped to the plugin restores the old working directory.
-It sets `cwd` to the workspace root and passes the project root to Vitest as `--root`:
+For Vitest, `targetDefaults` entries scoped to the plugin restore the old working directory.
+They set `cwd` to the workspace root and pass the project root to Vitest as `--root`.
+If the plugin sets `ciTargetName`, add the same entry under a second key for the per-file CI
+tasks, because each of those sets its own `cwd`:
 
 ```json
 // nx.json
@@ -89,21 +91,38 @@ It sets `cwd` to the workspace root and passes the project root to Vitest as `--
           "args": ["--root={projectRoot}"]
         }
       }
+    ],
+    "test-ci--{*,*/**}": [
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "options": {
+          "cwd": "{workspaceRoot}",
+          "args": ["--root={projectRoot}"]
+        }
+      }
     ]
   }
 }
 ```
 
-Use your inferred target name as the key, and set `filter.plugin` to the plugin as it appears in
-the `plugins` array of `nx.json`.
+Replace `test` with your `testTargetName` and `test-ci` with your `ciTargetName`.
+Keep the `{*,*/**}` suffix, since the CI task names contain the spec file's path, and a plain `*`
+doesn't match across a `/`.
+Set `filter.plugin` to the plugin as it appears in the `plugins` array of `nx.json`.
 
 ESLint can't use the same entry, because the inferred command lints `.`, which from the workspace
 root is the whole workspace.
-Instead, move each ignore pattern into an `.eslintignore` in its project root, and rewrite it
-relative to that root with a leading slash.
-For example, `libs/a/src/gen/**` becomes `/src/gen/**`.
-ESLint doesn't report a pattern that matches nothing, so a pattern moved as is, or without the
-leading slash, can silently stop applying.
+Instead, copy each ignore pattern that applies to a project into an `.eslintignore` in that
+project's root:
+
+- A pattern that starts with the project's path loses that prefix.
+  For example, `libs/a/src/gen/**` becomes `src/gen/**` or `/src/gen/**`.
+- A pattern with no `/`, or with only a trailing `/`, such as `*.min.js` or `dist/`, matches at any
+  depth. Copy it unchanged.
+  A leading slash would anchor it to the project root and stop it from matching nested files.
+
+ESLint doesn't report a pattern that matches nothing, so a path pattern copied with its project
+prefix still in place silently stops applying.
 A project with its own ESLint configuration can use `ignorePatterns` there instead.
 The inferred lint task already tracks a project-root `.eslintignore` as an input.
 
