@@ -347,7 +347,9 @@ Don't contract proper nouns: "the Vite plugin is..." not "Vite's a plugin..."
 
 ### Capitalization
 
-Use sentence case for headings. Capitalize proper nouns only.
+Use sentence case for headings, page titles (frontmatter `title`), and sidebar labels.
+Capitalize proper nouns only.
+When you name a UI element, match the casing the UI shows.
 
 - `# Use remote caching to speed up CI`
 - `## Configure the Vite plugin`
