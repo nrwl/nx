@@ -511,18 +511,28 @@ describe('createConfig', () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');
     try {
-      const [browserConfig, serverConfig] = await _createConfig({
+      const options: AngularRspackPluginOptions = {
         ...configBase,
         root,
         server: './src/main.server.ts',
         ssr: { entry: './src/server.ts' },
-      });
+      };
+      const [browserConfig, serverConfig] = await _createConfig(options);
 
       expect(browserConfig.devServer).toMatchObject({
         historyApiFallback: false,
         devMiddleware: { index: false },
       });
       expect(serverConfig.devServer).toBe(false);
+
+      const [overriddenBrowserConfig, overriddenServerConfig] =
+        await _createConfig(options, {
+          devServer: { headers: { 'x-override': '1' } },
+        });
+      expect(overriddenBrowserConfig.devServer).toMatchObject({
+        headers: { 'x-override': '1' },
+      });
+      expect(overriddenServerConfig.devServer).toBe(false);
 
       const [browserOnlyConfig] = await _createConfig({ ...configBase, root });
       expect(browserOnlyConfig.devServer).toMatchObject({

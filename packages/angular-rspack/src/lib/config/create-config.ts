@@ -123,7 +123,7 @@ export async function _createConfig(
     );
     const mergedConfig = rspackMerge(
       serverConfig,
-      withoutLazyCompilation(rspackConfigOverrides ?? {})
+      toServerOverrides(rspackConfigOverrides ?? {})
     );
     configs.push(mergedConfig);
   }
@@ -145,12 +145,16 @@ export async function _createConfig(
   return configs;
 }
 
-// rspack's node lazy-compilation client throws in the server bundle, so an
-// override turns lazy compilation on for the browser compiler only.
-function withoutLazyCompilation(
+// rspack's node lazy-compilation client throws in the server bundle, and on
+// rspack 2 a `devServer` key adds the dev-server client and HMR code to it.
+function toServerOverrides(
   overrides: Partial<Configuration>
 ): Partial<Configuration> {
-  const { lazyCompilation: _lazyCompilation, ...serverOverrides } = overrides;
+  const {
+    lazyCompilation: _lazyCompilation,
+    devServer: _devServer,
+    ...serverOverrides
+  } = overrides;
   if (!serverOverrides.experiments) {
     return serverOverrides;
   }
