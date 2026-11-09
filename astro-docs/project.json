@@ -170,6 +170,27 @@
         "cwd": "astro-docs"
       }
     },
+    "validate-package-links": {
+      "dependsOn": ["build", "nx-dev:build"],
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/validate-package-links.ts",
+        "{projectRoot}/link-validation/**/*",
+        "{projectRoot}/redirects.mjs",
+        "{projectRoot}/netlify.toml",
+        "{workspaceRoot}/nx-dev/nx-dev/_redirects",
+        "{workspaceRoot}/packages/**/*.{ts,md}",
+        "{workspaceRoot}/packages/**/*.{ts,md}__tpl__",
+        "{workspaceRoot}/packages/**/*.{ts,md}__tmpl__",
+        "{workspaceRoot}/packages/**/*.{ts,md}.template",
+        "!{workspaceRoot}/packages/**/*.spec.ts",
+        { "dependentTasksOutputFiles": "**/sitemap*.xml" }
+      ],
+      "command": "tsx validate-package-links.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
     "vale": {
       "command": "node scripts/vale-changed.mjs",
       "options": {
