@@ -52,6 +52,7 @@ struct State<'a> {
     lexer: Lexer<'a>,
     pub current_token: Option<TokenAndSpan>,
     pub previous_token: Option<TokenAndSpan>,
+    pub token_before_previous: Option<TokenAndSpan>,
     pub import_type: ImportType,
     open_brace_count: i128,
     open_bracket_count: i128,
@@ -68,6 +69,7 @@ impl<'a> State<'a> {
             lexer,
             current_token: None,
             previous_token: None,
+            token_before_previous: None,
             open_brace_count: 0,
             open_bracket_count: 0,
             open_angle_count: 0,
@@ -85,6 +87,7 @@ impl<'a> State<'a> {
 
     pub fn next(&mut self) -> &Option<TokenAndSpan> {
         // Keep the current token as the last token before calling next
+        self.token_before_previous = self.previous_token.take();
         self.previous_token = self.current_token.clone();
 
         let next = self.lexer.next();
@@ -507,8 +510,18 @@ fn find_specifier_in_export(state: &mut State) -> Option<(String, ImportType)> {
 fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> {
     let mut import = None;
     let mut set = false;
+    let mut token_index = 0;
+    let mut previous_was_dot = false;
     while let Some(current) = state.next() {
+        token_index += 1;
+        let is_dot = matches!(current.token, Token::Dot);
+        let is_member_of_receiver = token_index == 2 && previous_was_dot;
+        previous_was_dot = is_dot;
+
         match &current.token {
+            Token::Word(Ident(ident)) if is_member_of_receiver && ident.as_ref() == "require" => {
+                return None;
+            }
             // This opens the require call
             Token::LParen |
             // Matches things like require.resolve
@@ -669,6 +682,24 @@ fn process_file(
                 ..
             })
         );
+        let is_module_loader = |token: &Option<TokenAndSpan>| {
+            matches!(
+                token,
+                Some(TokenAndSpan {
+                    token: Token::Word(Ident(receiver)),
+                    ..
+                }) if matches!(receiver.as_ref(), "module" | "parent" | "main" | "mainModule")
+            )
+        };
+        let follows_module_dot = follows_dot
+            && (is_module_loader(&state.previous_token)
+                || (matches!(
+                    &state.previous_token,
+                    Some(TokenAndSpan {
+                        token: Token::QuestionMark | Token::Bang,
+                        ..
+                    })
+                ) && is_module_loader(&state.token_before_previous)));
         let current_token = state.next();
 
         // This is the end of the file
@@ -685,7 +716,9 @@ fn process_file(
                     continue;
                 }
             };
-            if follows_dot {
+            let is_module_require =
+                follows_module_dot && matches!(word, Ident(ident) if ident.as_ref() == "require");
+            if follows_dot && !is_module_require {
                 continue;
             }
             let import = match word {
@@ -1842,7 +1875,6 @@ import(myTag`react@${version}`);
         .import("multi-line");
       this.require("on-this");
       scope.child.import("Node");
-      module.require("from-module");
       registry.
         import("dot-then-newline");
 
@@ -1878,6 +1910,91 @@ import(myTag`react@${version}`);
                 String::from("after-member-call")
             ]
         );
+    }
+
+    #[test]
+    fn should_treat_module_require_calls_as_module_imports() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+      const first = module.require("from-module");
+      const second = module?.require("from-optional-module");
+      const third = require.main.require("from-main");
+      const fourth = require.resolve("from-resolve");
+      const fifth = require("from-require");
+      const sixth = module.parent.require("from-parent");
+      const seventh = process.mainModule.require("from-main-module");
+      const eighth = require.main?.require("from-optional-main");
+      const ninth = module!.require("from-non-null");
+      registry.require("from-registry");
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![
+                String::from("from-module"),
+                String::from("from-optional-module"),
+                String::from("from-main"),
+                String::from("from-resolve"),
+                String::from("from-require"),
+                String::from("from-parent"),
+                String::from("from-main-module"),
+                String::from("from-optional-main"),
+                String::from("from-non-null"),
+            ]
+        );
+        assert!(result.dynamic_import_expressions.is_empty());
+    }
+
+    #[test]
+    fn should_not_treat_a_require_member_call_on_a_require_receiver_as_a_module_import() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.mjs")
+            .write_str(
+                r#"
+      const require = { require: (name) => name };
+      require.require("chalk");
+      const kept = require("real-require");
+      const resolved = require.resolve("real-resolve");
+      const nested = require(require("real-nested"));
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.mjs";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+
+        assert_eq!(
+            result.static_import_expressions,
+            vec![
+                String::from("real-require"),
+                String::from("real-resolve"),
+                String::from("real-nested")
+            ]
+        );
+        assert!(result.dynamic_import_expressions.is_empty());
     }
 
     /// Based on `swc_ecma_dep_graph::analyze_dependencies`, which no longer builds against current swc.
