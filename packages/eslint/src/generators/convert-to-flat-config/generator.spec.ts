@@ -1578,6 +1578,46 @@ describe('convert-to-flat-config generator', () => {
         '^{workspaceRoot}/eslint.config.mjs',
       ]);
     });
+
+    it('should keep the flat config name next to a retained eslintrc name when another project already uses a flat config', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'mjs',
+      });
+      tree.delete('libs/test-lib/.eslintrc.json');
+      tree.write('libs/test-lib/eslint.config.mjs', 'export default [];');
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        delete json.plugins;
+        json.targetDefaults = {
+          ...json.targetDefaults,
+          lint: { inputs: ['default', '{projectRoot}/.eslintrc.json'] },
+        };
+        return json;
+      });
+      // Without a lint target or the ESLint plugin, the conversion leaves this
+      // project's config in place.
+      addProjectConfiguration(tree, 'other-lib', {
+        root: 'libs/other-lib',
+        targets: {},
+      });
+      tree.write('libs/other-lib/.eslintrc.json', '{}');
+
+      await convertToFlatConfigGenerator(tree, {
+        skipFormat: false,
+        eslintConfigFormat: 'mjs',
+      });
+
+      expect(tree.exists('libs/other-lib/.eslintrc.json')).toBe(true);
+      expect(readJson(tree, 'nx.json').targetDefaults.lint.inputs).toEqual([
+        'default',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/eslint.config.mjs',
+        '{workspaceRoot}/eslint.config.mjs',
+      ]);
+    });
   });
 
   describe('keepExistingVersions', () => {
