@@ -80,7 +80,10 @@ export const appConfig: ApplicationConfig = {
         import { appRoutes } from './app.routes';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+          providers: [provideRouter(
+            appRoutes,
+            withEnabledBlockingInitialNavigation(),
+          )],
         };
         "
       `);
@@ -255,6 +258,86 @@ export class AppModule {}
       expect(tree.read('apps/app1/src/app.module.ts', 'utf-8')).toContain(
         `RouterModule.forRoot(appRoutes, ${start}initialNavigation: 'enabledBlocking' })`
       );
+    });
+
+    it(`should replace an existing "initialNavigation" and keep the other router options`, () => {
+      tree.write(
+        'apps/app1/src/app.module.ts',
+        `import { NgModule } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { appRoutes } from './app.routes';
+
+@NgModule({
+  imports: [
+    RouterModule.forRoot(appRoutes, {
+      initialNavigation: 'enabledNonBlocking',
+      useHash: true,
+    }),
+  ],
+})
+export class AppModule {}
+`
+      );
+
+      setRouterInitialNavigation(tree, {
+        project: 'app1',
+        standalone: false,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
+      });
+
+      expect(tree.read('apps/app1/src/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { RouterModule } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        @NgModule({
+          imports: [
+            RouterModule.forRoot(appRoutes, {
+              useHash: true,
+              initialNavigation: 'enabledBlocking',
+            }),
+          ],
+        })
+        export class AppModule {}
+        "
+      `);
+    });
+
+    it(`should set "initialNavigation" in empty router options`, () => {
+      tree.write(
+        'apps/app1/src/app.module.ts',
+        `import { NgModule } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { appRoutes } from './app.routes';
+
+@NgModule({
+  imports: [RouterModule.forRoot(appRoutes, {})],
+})
+export class AppModule {}
+`
+      );
+
+      setRouterInitialNavigation(tree, {
+        project: 'app1',
+        standalone: false,
+        isUsingApplicationBuilder: true,
+        buildTargetTsConfigPath: 'apps/app1/tsconfig.app.json',
+      });
+
+      expect(tree.read('apps/app1/src/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { RouterModule } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        @NgModule({
+          imports: [RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })],
+        })
+        export class AppModule {}
+        "
+      `);
     });
   });
 });
