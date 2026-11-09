@@ -13,6 +13,9 @@ export type ApiCompilerOptions = import('typescript/sync').CompilerOptions;
 export type TypescriptAstModule = typeof import('typescript/ast');
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 export type TypescriptAstGuardsModule = typeof import('typescript/ast/is');
+
+/** @ts-ignore resolves only when `typescript` is >= 7.1 */
+type TypescriptAstFactoryModule = typeof import('typescript/ast/factory');
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
 type TypescriptApiFsModule = typeof import('typescript/fs');
 /** @ts-ignore resolves only when `typescript` is >= 7.1 */
@@ -33,6 +36,7 @@ export type ApiTypescriptBackend = {
   fs: TypescriptApiFsModule;
   ast: TypescriptAstModule;
   astGuards: TypescriptAstGuardsModule;
+  factory: TypescriptAstFactoryModule;
 };
 
 /**
@@ -291,15 +295,28 @@ function loadBackend(
   const astGuards: TypescriptAstGuardsModule = require(
     require.resolve('typescript/ast/is', { paths: lookupPaths })
   );
+  const factory: TypescriptAstFactoryModule = require(
+    require.resolve('typescript/ast/factory', { paths: lookupPaths })
+  );
   if (
     typeof sync?.API !== 'function' ||
     !fs?.serverFS ||
     !ast?.SyntaxKind ||
-    typeof astGuards?.isIdentifier !== 'function'
+    typeof astGuards?.isIdentifier !== 'function' ||
+    typeof factory?.createIdentifier !== 'function'
   ) {
     throw unrecognizedShape(version, packageRoot);
   }
-  return { kind: 'api', version, packageJsonPath, sync, fs, ast, astGuards };
+  return {
+    kind: 'api',
+    version,
+    packageJsonPath,
+    sync,
+    fs,
+    ast,
+    astGuards,
+    factory,
+  };
 }
 
 function unrecognizedShape(version: string, packageRoot: string) {

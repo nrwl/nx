@@ -343,6 +343,7 @@ export {
   parseVersionFromPackageManagerField,
   pathExists,
   preventRecursionInGraphConstruction,
+  printNode,
   quoteShellArg,
   readCachedProjectConfiguration,
   readFileIfExisting,

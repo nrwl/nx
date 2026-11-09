@@ -111,6 +111,35 @@ describe('getTypescriptAst', () => {
     }
   );
 
+  it.each(['typescript', '@typescript/native'])(
+    'should refuse to print parsed code with %s',
+    async (packageName) => {
+      const { ast } = await loadWithTypescript(packageName);
+      const { printNode } = await import('./typescript-ast');
+      const sourceFile = ast.createSourceFile(
+        'a.ts',
+        'const a = 1;\n',
+        ast.ScriptTarget.Latest,
+        true
+      );
+      const [statement] = sourceFile.statements;
+      const parsedName = (statement as ts.VariableStatement).declarationList
+        .declarations[0].name as ts.Identifier;
+
+      expect(() => printNode(statement)).toThrow(/parsed from a file/);
+      expect(() =>
+        printNode(ast.factory.createArrayLiteralExpression([parsedName]))
+      ).toThrow(/parsed from a file/);
+      expect(
+        printNode(
+          ast.factory.createArrayLiteralExpression([
+            ast.factory.createIdentifier(parsedName.text),
+          ])
+        )
+      ).toBe('[a]');
+    }
+  );
+
   describe('with TypeScript 7.1', () => {
     let ast: TypescriptAst;
 
@@ -259,6 +288,118 @@ describe('getTypescriptAst', () => {
           );
         }
       }
+    });
+
+    it('should print built nodes as TypeScript 6 does', async () => {
+      const { printNode } = await import('./typescript-ast');
+      const build = ({
+        factory: f,
+        NodeFlags,
+      }: Pick<TypescriptAst, 'factory' | 'NodeFlags'>): ts.Node[] => [
+        f.createStringLiteral('plain'),
+        f.createStringLiteral('single', true),
+        f.createStringLiteral('\u00fcn\u00ef \u{1F600}'),
+        f.createStringLiteral('quote" and \\ and \n'),
+        f.createStringLiteral("quote' single", true),
+        f.createNumericLiteral(0),
+        f.createNumericLiteral(1.5),
+        f.createNumericLiteral(1e21),
+        f.createNumericLiteral('0x10'),
+        f.createTrue(),
+        f.createFalse(),
+        f.createIdentifier('name'),
+        f.createObjectLiteralExpression(),
+        f.createObjectLiteralExpression([], true),
+        f.createObjectLiteralExpression([
+          f.createPropertyAssignment('a', f.createNumericLiteral(1)),
+          f.createPropertyAssignment(
+            f.createStringLiteral('b-c'),
+            f.createObjectLiteralExpression([
+              f.createPropertyAssignment('d', f.createTrue()),
+            ])
+          ),
+          f.createSpreadAssignment(f.createIdentifier('rest')),
+        ]),
+        f.createObjectLiteralExpression(
+          [
+            f.createPropertyAssignment(
+              'nested',
+              f.createObjectLiteralExpression(
+                [
+                  f.createPropertyAssignment(
+                    'list',
+                    f.createArrayLiteralExpression([
+                      f.createStringLiteral('x'),
+                      f.createNumericLiteral(2),
+                    ])
+                  ),
+                ],
+                true
+              )
+            ),
+          ],
+          true
+        ),
+        f.createArrayLiteralExpression(),
+        f.createArrayLiteralExpression(
+          [f.createStringLiteral('a'), f.createFalse()],
+          true
+        ),
+        f.createCallExpression(f.createIdentifier('fn'), undefined, undefined),
+        f.createCallExpression(f.createIdentifier('fn'), undefined, [
+          f.createIdentifier('a'),
+          f.createObjectLiteralExpression([
+            f.createPropertyAssignment('b', f.createStringLiteral('c')),
+          ]),
+        ]),
+        f.createImportSpecifier(false, undefined, f.createIdentifier('a')),
+        f.createImportSpecifier(
+          true,
+          f.createIdentifier('a'),
+          f.createIdentifier('b')
+        ),
+        f.createVariableStatement(
+          undefined,
+          f.createVariableDeclarationList(
+            [
+              f.createVariableDeclaration(
+                'configValues',
+                undefined,
+                undefined,
+                f.createObjectLiteralExpression(
+                  [f.createPropertyAssignment('a', f.createNumericLiteral(1))],
+                  true
+                )
+              ),
+            ],
+            NodeFlags.Const
+          )
+        ),
+        f.createVariableStatement(undefined, [
+          f.createVariableDeclaration('v'),
+          f.createVariableDeclaration(
+            f.createIdentifier('w'),
+            undefined,
+            undefined,
+            f.createNumericLiteral(1)
+          ),
+        ]),
+        f.createVariableStatement(
+          undefined,
+          f.createVariableDeclarationList(
+            [f.createVariableDeclaration('l')],
+            NodeFlags.Let
+          )
+        ),
+        f.createVariableDeclarationList([f.createVariableDeclaration('n')]),
+      ];
+
+      const ts6Printer = ts6.createPrinter();
+      expect(build(ast).map((node) => printNode(node))).toEqual(
+        build(ts6).map((node) =>
+          ts6Printer.printNode(ts6.EmitHint.Unspecified, node, undefined)
+        )
+      );
     });
 
     it('should stop forEachChild at the first truthy callback result', () => {
