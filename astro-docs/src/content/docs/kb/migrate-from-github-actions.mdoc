@@ -101,6 +101,7 @@ New files can use the Nx Cloud names:
 
 For every variable and file, see [variables and files in each step](/docs/reference/nx-cloud/ci-config#variables-and-files-in-each-step).
 `GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
+To check for Nx Cloud CI in a script, read `NX_CLOUD_CI`, which is `true` in every job and worker.
 
 ## What doesn't carry over
 

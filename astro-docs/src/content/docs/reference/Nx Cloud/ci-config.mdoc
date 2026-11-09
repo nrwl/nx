@@ -487,6 +487,7 @@ Every step runs with these variables:
 
 The same values are in the `nxcloud` and `runner` [expression](#expressions) contexts.
 `GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
+To check for Nx Cloud CI in a script, read `NX_CLOUD_CI`, which is `true` in every job and worker.
 
 A step can write to these files to affect later steps:
 
