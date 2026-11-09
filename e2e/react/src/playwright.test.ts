@@ -1,4 +1,5 @@
 import {
+  configureTargetOptions,
   fileExists,
   readFile,
   reservePort,
@@ -69,6 +70,9 @@ describe('React Playwright e2e tests', () => {
       );
     });
 
+    const restoreServerOptions = configureTargetOptions([localServerTarget], {
+      strictPort: true,
+    });
     try {
       // runCLI sets CI, and an undefined value drops it from the child env.
       // Without CI and a TTY, an out-of-sync workspace fails the run.
@@ -85,6 +89,7 @@ describe('React Playwright e2e tests', () => {
     } finally {
       updateFile(configPath, originalConfig);
       updateFile(viteConfigPath, originalViteConfig);
+      restoreServerOptions();
     }
   });
 

@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  configureTargetOptions,
   createFile,
   ensureCypressInstallation,
   killPorts,
@@ -67,9 +68,21 @@ describe('React Applications', () => {
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
       if (await shouldRunPlaywrightTests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`);
-        expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts(port)).toBeTruthy();
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview'],
+          {
+            strictPort: true,
+          }
+        );
+        try {
+          const e2eResults = runCLI(`e2e ${appName}-e2e`);
+          expect(e2eResults).toContain(
+            'Successfully ran target e2e for project'
+          );
+          expect(await killPorts(port)).toBeTruthy();
+        } finally {
+          restoreServerOptions();
+        }
       }
     }, 250_000);
 

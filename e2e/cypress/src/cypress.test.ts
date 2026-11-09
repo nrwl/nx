@@ -124,6 +124,9 @@ describe('Cypress E2E Test runner', () => {
         ) ?? [];
       expect(localServerTarget).toBeDefined();
 
+      const restoreServerOptions = configureTargetOptions([localServerTarget], {
+        strictPort: true,
+      });
       try {
         // runCLI sets CI, and an undefined value drops it from the child env.
         // Without CI and a TTY, an out-of-sync workspace fails the run.
@@ -138,6 +141,7 @@ describe('Cypress E2E Test runner', () => {
         );
         expect(result).not.toContain(`nx run ${app}:${ciServerTarget}`);
       } finally {
+        restoreServerOptions();
         await killPorts(port);
       }
     },
@@ -175,18 +179,22 @@ describe('env vars', () => {
       );
 
       if (await shouldRunCypressTests()) {
-        // contains the correct output and works
-        const run1 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+        const restoreServerOptions = configureTargetOptions(
+          ['dev', 'preview', 'serve'],
+          { strictPort: true }
         );
-        expect(run1).toContain('All specs passed!');
-        // tests should not fail because of a config change. The ESM
-        // shape (import / export default) uses `import.meta.url` rather
-        // than `__filename` so it works under both Nx's native TS strip
-        // (ESM) and Cypress's bundled tsx CJS loader.
-        updateFile(
-          `apps/${myapp}-e2e/cypress.config.ts`,
-          `
+        try {
+          const run1 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run1).toContain('All specs passed!');
+          // tests should not fail because of a config change. The ESM
+          // shape (import / export default) uses `import.meta.url` rather
+          // than `__filename` so it works under both Nx's native TS strip
+          // (ESM) and Cypress's bundled tsx CJS loader.
+          updateFile(
+            `apps/${myapp}-e2e/cypress.config.ts`,
+            `
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
@@ -209,18 +217,17 @@ export default defineConfig({
     fromCyConfig: 'i am from the cypress config file'
   }
 });`
-        );
+          );
 
-        const run2 = runCLI(
-          `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
-        );
-        expect(run2).toContain('All specs passed!');
+          const run2 = runCLI(
+            `e2e ${myapp}-e2e --config \\'{\\"env\\":{\\"cliArg\\":\\"i am from the cli args\\"}}\\'`
+          );
+          expect(run2).toContain('All specs passed!');
 
-        // make sure project.json env vars also work
-        checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
-        updateFile(
-          `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
-          `
+          checkFilesExist(`apps/${myapp}-e2e/src/e2e/env.cy.ts`);
+          updateFile(
+            `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
+            `
         describe('env vars', () => {
           it('should not have cli args', () => {
             cy.env(['cliArg']).then(({ cliArg }) => {
@@ -240,9 +247,12 @@ export default defineConfig({
             });
           });
         });`
-        );
-        const run3 = runCLI(`e2e ${myapp}-e2e`);
-        expect(run3).toContain('All specs passed!');
+          );
+          const run3 = runCLI(`e2e ${myapp}-e2e`);
+          expect(run3).toContain('All specs passed!');
+        } finally {
+          restoreServerOptions();
+        }
       }
     },
     TEN_MINS_MS
