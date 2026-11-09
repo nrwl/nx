@@ -69,45 +69,89 @@ describe('UpdateNextConfig', () => {
 
     const result = tree.read(`${projectName}/next.config.js`, 'utf-8');
     expect(result).toMatchInlineSnapshot(`
-      "//@ts-check
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { composePlugins, withNx } = require('@nx/next');
-      const configValues = {
+      "
+          //@ts-check
+
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { composePlugins, withNx } = require('@nx/next')
+
+
+          const configValues = {
           default: {
-              fileReplacements: [
-                  {
-                      replace: './environments/environment.ts',
-                      with: './environments/environment.foo.ts',
-                  },
-              ],
+            fileReplacements: [
+              {
+                replace: './environments/environment.ts',
+                with: './environments/environment.foo.ts',
+              },
+            ],
           },
           development: {},
-      };
-      const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
-      const options = {
+        };
+        const configuration = process.env.NX_TASK_TARGET_CONFIGURATION || 'default';
+        const options = {
           ...configValues.default,
           //@ts-expect-error: Ignore TypeScript error for indexing configValues with a dynamic key
           ...configValues[configuration],
-      };
+        };
+
       ;
-      /**
-       * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
-       **/
-      const nextConfig = {
-          nx: {
+
+          /**
+           * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
+           **/
+          const nextConfig = {
+            nx: {
               // Set this to true if you would like to use SVGR
               // See: https://github.com/gregberge/svgr
               svgr: false,
-              ...options
-          },
-      };
-      const plugins = [
-          // Add more Next.js plugins to this list if needed.
-          withNx,
-      ];
-      module.exports = composePlugins(...plugins)(nextConfig);
-      "
+              ...options,
+            },
+          };
+
+          const plugins = [
+            // Add more Next.js plugins to this list if needed.
+            withNx,
+          ];
+
+          module.exports = composePlugins(...plugins)(nextConfig);
+          "
     `);
+  });
+
+  it.each([
+    ['an empty object', 'nx: {}', 'nx: { ...options }'],
+    ['an empty object with a space', 'nx: { }', 'nx: { ...options }'],
+    [
+      'a single-line object',
+      'nx: { svgr: false }',
+      'nx: { svgr: false, ...options }',
+    ],
+    [
+      'a multi-line object without a trailing comma',
+      'nx: {\n    svgr: false // keep\n  }',
+      'nx: {\n    svgr: false, // keep\n    ...options\n  }',
+    ],
+  ])('should add the options spread to %s', (_, nxBefore, nxAfter) => {
+    tree.write(
+      'my-app/next.config.js',
+      `const { composePlugins, withNx } = require('@nx/next');
+const nextConfig = {
+  ${nxBefore},
+};
+module.exports = composePlugins(withNx)(nextConfig);
+`
+    );
+
+    updateNextConfig(
+      tree,
+      'const options = {};',
+      { projectName: 'my-app', root: 'my-app' },
+      mockLog
+    );
+
+    expect(tree.read('my-app/next.config.js', 'utf-8')).toContain(
+      `const nextConfig = {\n  ${nxAfter},\n};`
+    );
   });
 
   it('should warm the user if the next config file is not support (.mjs)', () => {
