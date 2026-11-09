@@ -138,7 +138,7 @@ A list of string globs that matches against configurations in your workspace.
 Specification of which agent and how to run your tasks:
 
 - **agent**: the type of agent to run on (`linux-medium`, `linux-large`)
-- **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute
+- **parallelism**: the number of parallel executions allowed for agents of a given type when you bring your own compute. With dynamic task packing on, it is ignored
 
 ### Glob reference
 
@@ -214,7 +214,7 @@ If none of these methods of configuring parallelism are used, the parallelism of
 
 Note that there are two special cases for parallelism with assignment rules where the behaviour may differ.
 
-1. All tasks that are marked as `non-cacheable` (they are configured with `cache: false`) will be run with a parallelism of `1` regardless of the parallelism defined in the assignment rules or execution. This is usually the case with tasks such as `e2e-ci` which may requires each process to have its own environment or resources to run.
+1. A task whose target sets `parallelism: false` in [project configuration](/docs/reference/project-configuration) ignores the parallelism defined in the assignment rules or the command. Without dynamic task packing, it runs alone on its agent. With packing, other tasks run beside it. For both cases, see [non-parallel tasks](/docs/reference/nx-cloud/ci-config#non-parallel-tasks).
 2. Assignment rules only apply to distributed executions (DTE). If you want to run multiple tasks in parallel without DTE (via the `--no-dte` flag), you will need to use the `--parallel` flag in your commands.
 
 ```shell
@@ -322,6 +322,101 @@ assignment-rules:
       - agent: linux-medium-js
         parallelism: 5
 ```
+
+## Combine assignment rules with scheduling constraints
+
+Assignment rules decide which agent types can run a task.
+Scheduling constraints decide which tasks can run on the same agent at the same time.
+Nx Cloud applies both, so a task goes only to an agent type its rule allows, and only while no conflicting task runs on that agent.
+
+Constraints apply on every agent, whichever rule sent the tasks there, and never move a task to another agent type.
+With dynamic task packing on, Nx Cloud ignores `parallelism` from assignment rules. Each agent takes as many tasks as fit its CPU and memory, and constraints keep conflicting tasks apart among them.
+Without packing, a rule's `parallelism` caps how many tasks an agent runs at once, and constraints apply within that cap.
+For the full constraint format, see the [`dte.scheduling-constraints` reference](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints).
+Nx Cloud enforces constraints only when continuous task assignment is on, which [dynamic task packing](/docs/features/ci-features/distribute-task-execution#turn-on-dynamic-task-packing) turns on.
+
+The examples below go in `.nx/ci-config.yaml` next to your `distribute-on` and `assignment-rules` settings.
+
+### Keep e2e tests of one project apart
+
+Each app's e2e tests start a dev server on that app's port.
+Tests of the same app collide, and tests of different apps don't.
+`${self.project}` matches only tasks of the same project as the task the constraint matched:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  distribute-on: 3 linux-medium-js, 3 linux-large-js
+  assignment-rules:
+    - targets:
+        - e2e-ci*
+      run-on:
+        - agent: linux-large-js
+  scheduling-constraints:
+    - targets: ['e2e-ci*']
+      cannot-run-with:
+        - projects: ['${self.project}']
+          targets: ['e2e-ci*']
+```
+
+Every `e2e-ci` task runs on a `linux-large-js` agent.
+Two of them run on the same agent at the same time only when they belong to different projects.
+
+### Keep a shared service apart
+
+When each e2e task starts its app's `serve` task as a continuous dependency, constrain the `serve` tasks instead of the tests:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    # Every dev server listens on port 4200
+    - targets: ['serve']
+      cannot-run-with:
+        - targets: ['serve']
+```
+
+A continuous dependency runs on the same agent as the task that needs it, so Nx Cloud checks it against the constraints too.
+A test of `app-b` doesn't start on an agent while `app-a:serve` runs there.
+
+A task can't be kept apart from its own continuous dependencies.
+If one e2e task needs both `web:serve` and `api:serve`, this constraint fails the run, so give the servers different targets or ports.
+
+### Keep one side of a shared resource apart
+
+A constraint doesn't have to name the same tasks on both sides.
+Here, `seed-db` resets the test database that `integration-test` tasks read:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    - targets: ['seed-db']
+      cannot-run-with:
+        - targets: ['integration-test*']
+        - targets: ['seed-db']
+```
+
+Conflicts go both ways, so an `integration-test` task doesn't start beside a running `seed-db` either.
+The second selector also keeps two `seed-db` tasks apart.
+Integration tests can still run beside each other.
+
+### Separate tasks by configuration
+
+E2e tasks that run against one environment share its emulator, and the configuration selects the environment:
+
+```yaml
+# .nx/ci-config.yaml
+dte:
+  scheduling-constraints:
+    - targets: ['e2e*']
+      cannot-run-with:
+        - targets: ['e2e*']
+          configurations: ['${self.configuration}']
+```
+
+`app-a:e2e:staging` and `app-b:e2e:staging` never run on one agent at the same time, while `app-a:e2e:staging` and `app-b:e2e:production` can.
+A task run without a configuration counts as `default`.
 
 ## Using assignment rules when you bring your own compute
 

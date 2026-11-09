@@ -468,6 +468,8 @@ When `--distribute-on` points at a configuration file that already embeds assign
 
 Point this at a YAML file with a top-level `scheduling-constraints` list.
 Each entry names tasks by `projects`, `targets`, or `configurations`, and `cannot-run-with` lists the tasks they must never share an agent with at the same time.
+The file uses the same format as [`dte.scheduling-constraints`](/docs/reference/nx-cloud/ci-config#dtescheduling-constraints), including self-referential selectors such as `${self.project}`.
+Nx Cloud enforces the constraints only when continuous task assignment is on for the run.
 `start-ci-run` exits with an error when the file can't be read or is empty.
 
 When `--distribute-on` points at a configuration file that already embeds scheduling constraints, the `--scheduling-constraints` file replaces them.
