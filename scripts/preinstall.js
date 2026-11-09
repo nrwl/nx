@@ -12,8 +12,21 @@ if (process.env.CI) {
 }
 
 const { execSync } = require('child_process');
-const lt = require('semver/functions/lt');
 const { packageManager } = require('../package.json');
+
+// pnpm runs the root preinstall before linking dependencies (pnpm/pnpm#3760), so semver can't be required here.
+// `floor` must be a plain x.y.z.
+function lt(version, floor) {
+  const [core, prerelease] = version.replace(/^v/, '').split('-', 2);
+  const actual = core.split('.').map(Number);
+  const required = floor.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (actual[i] !== required[i]) {
+      return actual[i] < required[i];
+    }
+  }
+  return prerelease !== undefined;
+}
 
 // packageManager is "pnpm@<version>"; the major is the floor we accept.
 const requiredPnpmVersion = packageManager.split('@')[1];
