@@ -7,7 +7,11 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import {
+  acknowledgeBuildScripts,
+  getResolvedPackageVersion,
+} from '@nx/devkit/internal';
+import { major } from 'semver';
 import { addExtraEslintDependencies } from '@nx/react/internal';
 import { NormalizedSchema } from './normalize-options';
 import {
@@ -28,6 +32,7 @@ import {
   getEslintConfigNextDependenciesVersionsToInstall,
   isNext16,
 } from '../../../utils/version-utils';
+import { eslintConfigNext15Version } from '../../../utils/versions';
 import { addLintingToProject } from '@nx/js/internal';
 
 export async function addLinting(
@@ -55,6 +60,7 @@ export async function addLinting(
   // Everything below configures ESLint — predefined configs, `extends`, ignore
   // entries — which have no equivalent in other linters.
 
+  let usesFlatNextConfigs = isNext16App;
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
       if (isNext16App) {
@@ -66,27 +72,47 @@ export async function addLinting(
         if (rootConfigWithConflictingPlugin) {
           // ESLint rejects eslint-config-next's own copies of React plugins the root
           // config already registers, so add only the Next.js plugin and its rules.
-          addPluginConfigToFlatLintConfig(
-            host,
-            options.appProjectRoot,
-            'nextEslintPluginNext',
-            '@next/eslint-plugin-next',
-            'core-web-vitals',
-            { insertAtTheEnd: false }
-          );
+          if (
+            declaresNextEslintPackageBelow16(host, '@next/eslint-plugin-next')
+          ) {
+            // Generators keep a declared version, and the plugin's flat
+            // `configs['core-web-vitals']` starts in v16.
+            tasks.push(
+              addExtendsToLintConfig(host, options.appProjectRoot, {
+                name: 'plugin:@next/next/core-web-vitals',
+                needCompatFixup: true,
+              })
+            );
+          } else {
+            addPluginConfigToFlatLintConfig(
+              host,
+              options.appProjectRoot,
+              'nextEslintPluginNext',
+              '@next/eslint-plugin-next',
+              'core-web-vitals',
+              { insertAtTheEnd: false }
+            );
+          }
           logger.warn(
             `The ESLint config of the "${options.projectName}" project uses the "core-web-vitals" config of @next/eslint-plugin-next instead of eslint-config-next. ` +
               `The root config ${rootConfigWithConflictingPlugin} registers react, react-hooks, import or jsx-a11y, and ESLint rejects a second copy of a plugin. ` +
               `Files that ${rootConfigWithConflictingPlugin} does not lint with those plugins get no React, React Hooks, jsx-a11y or import rules.`
           );
         } else {
-          addSpreadConfigToFlatLintConfig(
+          // Generators keep a declared version, which can predate v16.
+          usesFlatNextConfigs = !declaresNextEslintPackageBelow16(
             host,
-            options.appProjectRoot,
-            'nextVitals',
-            'eslint-config-next/core-web-vitals',
-            { insertAtTheEnd: false }
+            'eslint-config-next'
           );
+          if (usesFlatNextConfigs) {
+            addSpreadConfigToFlatLintConfig(
+              host,
+              options.appProjectRoot,
+              'nextVitals',
+              'eslint-config-next/core-web-vitals',
+              { insertAtTheEnd: false }
+            );
+          }
         }
       }
       addPredefinedConfigToFlatLintConfig(
@@ -95,8 +121,8 @@ export async function addLinting(
         'flat/react-typescript',
         { checkBaseConfig: true }
       );
-      if (!isNext16App) {
-        // Since Next.js < 16 does not support flat configs yet, we need to use compat fixup.
+      if (!usesFlatNextConfigs) {
+        // eslint-config-next < 16 has no flat config, so load it through FlatCompat.
         const addExtendsTask = addExtendsToLintConfig(
           host,
           options.appProjectRoot,
@@ -150,8 +176,12 @@ export async function addLinting(
   }
 
   if (options.linter === 'eslint' && !options.skipPackageJson) {
+    // A Next.js 16 app on the FlatCompat config needs the v15 packages that
+    // Next.js 15 apps get.
     const eslintConfigNextVersion =
-      await getEslintConfigNextDependenciesVersionsToInstall(host);
+      isNext16App && !usesFlatNextConfigs
+        ? eslintConfigNext15Version
+        : await getEslintConfigNextDependenciesVersionsToInstall(host);
 
     // eslint-config-next pulls in unrs-resolver via
     // eslint-import-resolver-typescript, whose postinstall only fetches a
@@ -166,7 +196,7 @@ export async function addLinting(
     };
     // eslint-config-next 16 brings its own React plugins.
     tasks.push(
-      isNext16App
+      usesFlatNextConfigs
         ? addDependenciesToPackageJson(
             host,
             {},
@@ -179,4 +209,12 @@ export async function addLinting(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function declaresNextEslintPackageBelow16(
+  tree: Tree,
+  packageName: string
+): boolean {
+  const version = getResolvedPackageVersion(tree, packageName);
+  return !!version && major(version) < 16;
 }
