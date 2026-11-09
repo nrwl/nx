@@ -13,6 +13,6 @@
 
 Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.
 
-This package is an [Oxlint plugin for Nx](https://nx.dev/nx-api/oxlint).
+This package is an [Oxlint plugin for Nx](https://nx.dev/docs/technologies/oxlint/introduction).
 
 {{content}}
