@@ -10,7 +10,7 @@ topics:
 Read-write tokens allow full write access to your remote cache. They should only be used in trusted environments. For instance, open source projects should only use read-write tokens as secrets configured for protected branches (e.g, main). Read-only tokens should be used in all other cases.
 {% /aside %}
 
-A cache allows you to reuse work that has already been done, but it also introduces a potential security risk - cache poisoning. A poisoned cache is one where the cached files have been altered in some way by a malicious actor. When a developer or the CI pipeline use that poisoned cache, the task output will be what the malicious actor wants instead of the correct task output.
+A cache allows you to reuse work that has already been done, but it also introduces a potential security risk called cache poisoning. A poisoned cache is one where the cached files have been altered in some way by a malicious actor. When a developer or the CI pipeline use that poisoned cache, the task output will be what the malicious actor wants instead of the correct task output.
 
 Nx takes security seriously and has put in place many precautions (we're [SOC 2 compliant](https://security.nx.app)). Listed below are some precautions that you need to take in your own codebase.
 
@@ -73,7 +73,8 @@ Nx implicitly trusts the local cache which is stored by default in a per-user `~
 
 ### Configure end to end encryption
 
-Nx Cloud guarantees your cache entries will remain immutable - once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API and we have policies enabled in our cloud storage that specifically disables overwrites and deletions of cached artifacts. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/docs/kb/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace.
+Nx Cloud guarantees your cache entries will remain immutable.
+Once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API and we have policies enabled in our cloud storage that specifically disables overwrites and deletions of cached artifacts. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/docs/kb/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace.
 
 ### Use an on-Premise version of Nx Cloud if needed
 
