@@ -235,6 +235,43 @@ export default [...nextVitals];
 If you can't upgrade, register `@next/eslint-plugin-next` as a plugin directly and spread its
 recommended rules into a config object rather than extending through `FlatCompat`.
 
+### Fix: Cannot redefine plugin with eslint-config-next
+
+`eslint-config-next` 16 registers the `react`, `react-hooks`, `import`, and `jsx-a11y` plugins
+from its own dependencies.
+When another config in the same array registers a different copy of one of them, ESLint fails
+with an error such as `Key "plugins": Cannot redefine plugin "react-hooks"`.
+For example, a root config that registers `eslint-plugin-react-hooks` 5 conflicts with the v7
+copy that `eslint-config-next` brings, in every project config that spreads both.
+
+Replace the `eslint-config-next` spread in the project config with the `core-web-vitals` config
+of `@next/eslint-plugin-next` 16, which registers only the Next.js plugin:
+
+```js
+// apps/my-app/eslint.config.mjs
+import nextEslintPluginNext from '@next/eslint-plugin-next';
+import baseConfig from '../../eslint.config.mjs';
+
+export default [...baseConfig, nextEslintPluginNext.configs['core-web-vitals']];
+```
+
+The project then gets React, jsx-a11y, and import rules only from the config that registers those
+plugins.
+The `@nx/next:application` generator and the `@nx/next` migration to `eslint-config-next` 16.4
+pick that config when they find one of these in the root config, the app's config, or a local
+module one of them loads by a relative path:
+
+- an `import` or `require` of the package of one of those plugins, or of a file inside it
+- the name of a config that registers one of them, such as `flat/react`
+- a `plugins` object with one of their names
+
+Nx checks each local module as a whole, except for type-only imports.
+A module that registers one of those plugins only in a config the app doesn't use still counts.
+To get the React, jsx-a11y, and import rules of `eslint-config-next` in that case, replace the
+`core-web-vitals` config with the `eslint-config-next` spread by hand.
+Nx misses any other registration, such as a plugin that an npm config package registers or a
+module loaded by a computed path, so make the change by hand when ESLint reports the error.
+
 ## Compare eslintrc and flat config formats
 
 Compare the same Nx workspace configuration in flat, JSON, and JS formats:
