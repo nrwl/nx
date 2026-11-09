@@ -71,7 +71,6 @@
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
-    "@typescript-eslint/type-utils": "catalog:eslint",
     "jsonc-parser": "catalog:",
     "magic-string": "~0.30.2",
     "picocolors": "catalog:",

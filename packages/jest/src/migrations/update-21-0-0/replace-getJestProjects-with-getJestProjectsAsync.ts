@@ -39,7 +39,7 @@ export default async function update(tree: Tree) {
             (declaration) =>
               tsModule.isCallExpression(declaration.initializer) &&
               tsModule.isIdentifier(declaration.initializer.expression) &&
-              declaration.initializer.expression.escapedText === 'require' &&
+              declaration.initializer.expression.text === 'require' &&
               tsModule.isStringLiteral(declaration.initializer.arguments[0]) &&
               declaration.initializer.arguments[0].text === '@nx/jest'
           )
@@ -60,18 +60,17 @@ export default async function update(tree: Tree) {
             statement.expression.operatorToken.kind ===
               tsModule.SyntaxKind.EqualsToken &&
             tsModule.isIdentifier(statement.expression.left.expression) &&
-            statement.expression.left.expression.escapedText === 'module' &&
+            statement.expression.left.expression.text === 'module' &&
             tsModule.isIdentifier(statement.expression.left.name) &&
-            statement.expression.left.name.escapedText === 'exports' &&
+            statement.expression.left.name.text === 'exports' &&
             statement.expression.right.properties.some(
               (property) =>
                 tsModule.isPropertyAssignment(property) &&
                 tsModule.isIdentifier(property.name) &&
-                property.name.escapedText === 'projects' &&
+                property.name.text === 'projects' &&
                 tsModule.isCallExpression(property.initializer) &&
                 tsModule.isIdentifier(property.initializer.expression) &&
-                property.initializer.expression.escapedText ===
-                  'getJestProjects'
+                property.initializer.expression.text === 'getJestProjects'
             )
         ) as ExpressionStatement;
 
@@ -113,7 +112,7 @@ export default async function update(tree: Tree) {
               property.name.getText() === 'projects' &&
               tsModule.isCallExpression(property.initializer) &&
               tsModule.isIdentifier(property.initializer.expression) &&
-              property.initializer.expression.escapedText === 'getJestProjects'
+              property.initializer.expression.text === 'getJestProjects'
           );
           if (projectProperty) {
             // replace getJestProjects with getJestProjectsAsync in export statement
