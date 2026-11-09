@@ -69,6 +69,9 @@ jobs:
       - run: npx nx affected -t lint test build
 ```
 
+Drop `NX_CLOUD_ACCESS_TOKEN` from `env`.
+Nx Cloud CI sets it for you, and a value from a GitHub secret overrides the token of the run, usually with an empty value.
+
 Required status checks need updating, because the check names change to `<name> / <job>`.
 
 ## How keys map

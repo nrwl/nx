@@ -130,7 +130,7 @@ Worker counts sized by the work the run has to do.
 All three are required.
 
 - `small` starts with the run, every time.
-- At each distributed command, Nx Cloud compares the remaining work, after cache hits, with the stored timings of your workspace and picks a size.
+- At each distributed command, Nx Cloud compares the remaining work, after cache hits, with the stored timings of your workspace and picks a size. With no stored timings yet, as in a new workspace, every command picks `large`.
 - Counts are totals per template, so picking a larger size adds the difference. A template's count can't go down from one size to the next, and workers are never removed.
 
 By default, `small` covers up to 33% of the stored task time, `medium` up to 66%, and `large` the rest.
@@ -524,6 +524,7 @@ Nx Cloud CI doesn't support these yet:
 - Actions from the GitHub Marketplace and `action.yml` files, including `actions/cache` and `actions/upload-artifact`. `uses` runs Nx Cloud step templates.
 - OIDC identity tokens for cloud providers. Use secrets for now.
 - macOS and Windows. Jobs run on Linux.
+- Git LFS. The job image doesn't include it, so a repository that uses LFS checks out pointer files.
 
 A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
 You can't turn off GitHub status checks while Nx Cloud CI is on.
