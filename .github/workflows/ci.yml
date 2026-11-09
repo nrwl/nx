@@ -122,6 +122,10 @@ jobs:
           pnpm nx affected --targets=lint,oxlint,test,build,e2e,e2e-ci,format-native,lint-native,check-native-wasm,gradle:build-ci,vale,validate-links,format,run,validate-example &
           pids+=($!)
 
+          # astro-docs has no graph dependency on packages/, so `affected` would skip this
+          pnpm nx run astro-docs:validate-package-links &
+          pids+=($!)
+
           for pid in "${pids[@]}"; do
             wait "$pid"
           done

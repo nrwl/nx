@@ -5,7 +5,7 @@ let hasWarned = false;
 // TODO(v25): remove the deprecated tailwind glob helpers (NXC-5174).
 /**
  * @deprecated `@nx/vue/tailwind` will be removed in Nx 25. Migrate to Tailwind CSS v4 which no longer needs glob patterns.
- * See: https://nx.dev/docs/technologies/vue/guides/using-tailwind-css-in-vue
+ * See: https://tailwindcss.com/docs/upgrade-guide
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
@@ -16,7 +16,7 @@ export function createGlobPatternsForDependencies(
     console.warn(
       `\nWARNING: "@nx/vue/tailwind" is deprecated and will be removed in Nx 25.\n` +
         `Migrate to Tailwind CSS v4 which no longer needs glob patterns for content detection.\n` +
-        `See: https://nx.dev/docs/technologies/vue/guides/using-tailwind-css-in-vue\n`
+        `See: https://tailwindcss.com/docs/upgrade-guide\n`
     );
   }
   try {
