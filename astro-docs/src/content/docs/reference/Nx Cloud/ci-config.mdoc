@@ -362,6 +362,7 @@ Nx Cloud CI evaluates `${{ <expression> }}` in these keys:
 - A step's `name`, `run`, and `with`.
 - `if` on a job or a step, where the `${{ }}` around the expression is optional.
 
+Launch templates also evaluate `${{ }}` in their `env`.
 Other keys, such as `runs-on` and `workers`, take their value as written.
 
 | Context   | Holds                                                                                                                                                          |
@@ -382,21 +383,150 @@ The functions are `contains`, `startsWith`, `endsWith`, `format`, `join`, `toJSO
 `cancelled()` isn't supported.
 An `if` without a status function runs only when the earlier steps succeeded, as if it started with `success() &&`.
 
+#### Operators
+
+| Operator                         | Meaning                                                             |
+| -------------------------------- | ------------------------------------------------------------------- |
+| `( )`                            | Grouping                                                            |
+| `.` and `[ ]`                    | Property and index access, such as `steps.build.outputs['version']` |
+| `.*`                             | Every element, such as `needs.*.result`                             |
+| `!`                              | Not                                                                 |
+| `==`, `!=`, `<`, `<=`, `>`, `>=` | Comparison                                                          |
+
+`&&` is and, and `||` is or.
+Both return one of their operands, so `${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}` gives a default.
+
+Literals are `null`, `true`, `false`, numbers, and strings in single quotes.
+Write `''` for a quote inside a string.
+
+- Strings compare without regard to case.
+- Values of different types are converted to numbers before they're compared.
+- `false`, `0`, `''`, `null`, and `NaN` are false. Every other value is true.
+
+```yaml
+# .nx/pipelines/ci.yaml
+env:
+  NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
+  CACHE_KEY: ${{ format('deps-{0}-{1}', runner.os, hashFiles('pnpm-lock.yaml')) }}
+
+jobs:
+  main:
+    runs-on: linux-medium-js
+    steps:
+      - name: Read version
+        id: version
+        run: echo "value=$(node -p 'require(\"./package.json\").version')" >> "$NX_CLOUD_OUTPUT"
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: npx nx affected -t lint
+
+      # Only on pushes to main
+      - name: Publish
+        if: nxcloud.event_name == 'push' && nxcloud.ref_name == 'main'
+        run: npx nx release publish --version ${{ steps.version.outputs.value }}
+
+      # A leading ! needs ${{ }} or quotes, because YAML reads a bare ! as a tag
+      - name: Upload coverage
+        if: ${{ !nxcloud.is_fork }}
+        run: npx codecov
+
+      # Runs although Lint's failure was allowed
+      - name: Report lint failures
+        if: steps.lint.outcome == 'failure'
+        run: node ./tools/report-lint.mjs
+
+      # Runs only when an earlier step failed
+      - name: Collect logs
+        if: failure()
+        run: tar czf logs.tgz dist/logs
+
+      - name: Long-lived branches
+        if: contains(fromJSON('["main", "next"]'), nxcloud.ref_name)
+        run: npx nx affected -t e2e
+
+  deploy:
+    needs: main
+    if: needs.main.result == 'success' && nxcloud.event_name == 'push'
+    runs-on: linux-medium-js
+    steps:
+      - name: Deploy
+        run: ./deploy.sh
+```
+
+With `continue-on-error`, a failed step has `outcome` set to `failure` and `conclusion` set to `success`.
+On a pull request, `nxcloud.ref` is `refs/pull/<number>/merge`, so branch checks on `ref` or `ref_name` only make sense on `push`.
+
+#### `{{ }}` in older files
+
+Files written for `.nx/workflows` may use `{{ secrets.NAME }}` or `{{ nxBranch }}`.
+These still work, but use `${{ }}` in new files.
+
+### Variables and files in each step
+
+Every step runs with these variables:
+
+| Variable                     | Value                                                       | GitHub Actions name       |
+| ---------------------------- | ----------------------------------------------------------- | ------------------------- |
+| `NX_CLOUD_SHA`               | Commit being built                                          | `GITHUB_SHA`              |
+| `NX_CLOUD_REF`               | Full ref, such as `refs/heads/main` or `refs/pull/12/merge` | `GITHUB_REF`              |
+| `NX_CLOUD_REF_NAME`          | Short ref, such as `main`                                   | `GITHUB_REF_NAME`         |
+| `NX_CLOUD_EVENT_NAME`        | `push` or `pull_request`                                    | `GITHUB_EVENT_NAME`       |
+| `NX_CLOUD_REPOSITORY`        | `owner/repo`                                                | `GITHUB_REPOSITORY`       |
+| `NX_CLOUD_REPOSITORY_OWNER`  | `owner`                                                     | `GITHUB_REPOSITORY_OWNER` |
+| `NX_CLOUD_REPOSITORY_DIR`    | Directory the repository is checked out to                  | `GITHUB_WORKSPACE`        |
+| `NX_CLOUD_VCS_SERVER_URL`    | Git host, such as `https://github.com`                      | `GITHUB_SERVER_URL`       |
+| `NX_CLOUD_VCS_API_URL`       | Git host API, such as `https://api.github.com`              | `GITHUB_API_URL`          |
+| `NX_CLOUD_RUNNER_OS`         | Operating system of the machine                             | `RUNNER_OS`               |
+| `NX_CLOUD_RUNNER_ARCH`       | CPU architecture of the machine                             | `RUNNER_ARCH`             |
+| `NX_CLOUD_RUNNER_TEMP`       | Temporary directory                                         | `RUNNER_TEMP`             |
+| `NX_CLOUD_RUNNER_TOOL_CACHE` | Directory for cached tools                                  | `RUNNER_TOOL_CACHE`       |
+| `NX_CLOUD_RUNNER_NAME`       | Name of the machine                                         | `RUNNER_NAME`             |
+
+The same values are in the `nxcloud` and `runner` [expression](#expressions) contexts.
+`GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
+
+A step can write to these files to affect later steps:
+
+| File                     | Write                | Effect                                                 | GitHub Actions name    |
+| ------------------------ | -------------------- | ------------------------------------------------------ | ---------------------- |
+| `$NX_CLOUD_ENV`          | `NAME=value`         | Sets `NAME` for the following steps of the job         | `$GITHUB_ENV`          |
+| `$NX_CLOUD_PATH`         | A directory per line | Adds it to the front of `PATH` for the following steps | `$GITHUB_PATH`         |
+| `$NX_CLOUD_OUTPUT`       | `name=value`         | Sets `steps.<id>.outputs.<name>`                       | `$GITHUB_OUTPUT`       |
+| `$NX_CLOUD_STEP_SUMMARY` | Text                 | Saved as the step's summary                            | `$GITHUB_STEP_SUMMARY` |
+| `$NX_CLOUD_STATE`        | `name=value`         | State a step template reads back later                 | `$GITHUB_STATE`        |
+
+```yaml
+# .nx/pipelines/ci.yaml
+steps:
+  - name: Read version
+    id: version
+    run: echo "value=$(node -p 'require(\"./package.json\").version')" >> "$NX_CLOUD_OUTPUT"
+  - name: Add tools to PATH
+    run: echo "$HOME/.cargo/bin" >> "$NX_CLOUD_PATH"
+  - name: Build
+    run: npx nx run app:build --version=${{ steps.version.outputs.value }}
+```
+
+`$NX_CLOUD_ENV` takes one `NAME=value` per line.
+For a multi-line value, write to `$GITHUB_ENV` with `NAME<<EOF`.
+
 ### Coming from GitHub Actions
 
-| GitHub Actions                                                   | Nx Cloud CI                                          |
-| ---------------------------------------------------------------- | ---------------------------------------------------- |
-| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`     |
-| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)       |
-| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                  |
-| `nrwl/nx-set-shas`                                               | Automatic                                            |
-| `start-workers`                                                  | `workers` on the job                                 |
-| `nx fix-ci`                                                      | Automatic                                            |
-| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps) |
-| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                            |
-| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same [expressions](#expressions)                     |
-| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | Same files                                           |
-| `github.event_name` in a condition                               | `nxcloud.event_name`                                 |
+| GitHub Actions                                                   | Nx Cloud CI                                                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`                                                               |
+| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)                                                                 |
+| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                                                                            |
+| `nrwl/nx-set-shas`                                               | Automatic                                                                                                      |
+| `start-workers`                                                  | `workers` on the job                                                                                           |
+| `nx fix-ci`                                                      | Automatic                                                                                                      |
+| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps)                                                           |
+| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                                                                                      |
+| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same [expressions](#expressions)                                                                               |
+| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | [Same files](#variables-and-files-in-each-step), also named `NX_CLOUD_ENV`, `NX_CLOUD_OUTPUT`, `NX_CLOUD_PATH` |
+| `github.event_name` in a condition                               | Works as written. `nxcloud.event_name` is the Nx Cloud name                                                    |
 
 ### Current limits
 

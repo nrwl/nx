@@ -147,6 +147,7 @@ npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="V
 If you need to pass a value from one step to another step, such as assigning the value to an existing or new environment variable. You can write to the `NX_CLOUD_ENV` environment file.
 
 Commonly used for redefining the `PATH` or setting options for tooling.
+For the other files a step can write to, such as `$NX_CLOUD_OUTPUT`, see [variables and files in each step](/docs/reference/nx-cloud/ci-config#variables-and-files-in-each-step).
 
 ```yaml
 // .nx/pipelines/ci.yaml
