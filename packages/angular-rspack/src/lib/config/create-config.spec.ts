@@ -539,6 +539,39 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it.each([
+    ['prerender', { prerender: { discoverRoutes: true } }],
+    ['appShell', { appShell: true }],
+  ])(
+    'should prerender with %s only outside the dev server',
+    async (_option, prerenderOptions) => {
+      const root = await createSsrProjectRoot();
+      const hasPrerenderPlugin = (config: Configuration) =>
+        config.plugins?.some(
+          (plugin) => plugin?.constructor.name === 'PrerenderPlugin'
+        );
+      const options: AngularRspackPluginOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        ...prerenderOptions,
+      };
+      try {
+        const [, buildServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(buildServerConfig)).toBe(true);
+
+        vi.stubEnv('WEBPACK_SERVE', 'true');
+        const [, serveServerConfig] = await _createConfig(options);
+        expect(hasPrerenderPlugin(serveServerConfig)).toBe(false);
+      } finally {
+        vi.unstubAllEnvs();
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+    10000
+  );
+
   it('should allow the dev-server hosts in the engine manifest while serving', async () => {
     const root = await createSsrProjectRoot();
     vi.stubEnv('WEBPACK_SERVE', 'true');

@@ -211,8 +211,8 @@ export async function getServerConfig(
         sharedAngularPlugin,
         ssrDevServer,
       }),
-      ...(normalizedOptions.prerender ||
-      (normalizedOptions.appShell && !isDevServer)
+      ...((normalizedOptions.prerender || normalizedOptions.appShell) &&
+      !isDevServer
         ? [new PrerenderPlugin(normalizedOptions, i18n, serverRenderingInputs)]
         : []),
     ],
