@@ -170,6 +170,13 @@ import '@myorg/checkout/checkout-page';
 Repeat the line to list more.
 `@nx-ignore-server-inputs` takes no value.
 
+An exclusion such as `!shop-legacy` is allowed to match no project.
+Any other pattern that matches no project fails every Nx command that includes the task, with an error that names the task and the pattern:
+
+```text
+Task "shop-e2e:e2e-ci--src/checkout.spec.ts": the input { "input": "production", "projects" } with "always": true selects "chekout", which matches no project.
+```
+
 A test file can have both directives, and Nx then scopes it by projects, because `@nx-depends-on` also leaves out the server task's inputs.
 
 Nx ignores a directive it can't read, such as one with a misspelled name or a missing colon.
@@ -231,7 +238,6 @@ Decide what each test file is meant to test, then use bare library subpath impor
 This may require multiple imports. Avoid relative cross-project imports, route tables, application entry points, and barrels.
 If a needed subpath is not exported by the library, explain the required package-export change before using it.
 When the test runner compiles a TypeScript test file, it can drop a named import that the file uses only as a type or doesn't use.
-Import feature modules with bare imports.
 
 Lazy-loaded modules sometimes belong in that scope, but often represent other parts of the app that the test doesn't exercise.
 Include them only when they are part of what the test is meant to cover.
