@@ -99,7 +99,12 @@ export {
   withTypescriptApi,
 } from './plugins/js/utils/typescript-backend';
 export type { ApiTypescriptBackend } from './plugins/js/utils/typescript-backend';
-export { getTypescriptAst } from './plugins/js/utils/typescript-ast';
+export {
+  flattenApiDiagnosticMessage,
+  getSyntaxErrors,
+  getTypescriptAst,
+  hasParseErrors,
+} from './plugins/js/utils/typescript-ast';
 export type { TypescriptAst } from './plugins/js/utils/typescript-ast';
 export {
   createTsModuleResolver,

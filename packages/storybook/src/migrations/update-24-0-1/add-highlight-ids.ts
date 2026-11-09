@@ -6,6 +6,7 @@ import {
   type StringChange,
   type Tree,
 } from '@nx/devkit';
+import { hasParseErrors } from '@nx/devkit/internal';
 import { ensureClassicTypescript } from '@nx/js/internal';
 import type {
   CallExpression,
@@ -89,9 +90,7 @@ function addIds(filePath: string, content: string): string {
     ts.ScriptTarget.Latest,
     /* setParentNodes */ true
   );
-  if (
-    (sourceFile as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length
-  ) {
+  if (hasParseErrors(sourceFile)) {
     return content;
   }
   const imports = readImports(sourceFile);

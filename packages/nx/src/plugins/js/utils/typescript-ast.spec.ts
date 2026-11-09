@@ -89,6 +89,27 @@ describe('getTypescriptAst', () => {
     expect(ast).toBe(backend.kind === 'classic' && backend.ts);
   });
 
+  it.each(['typescript', '@typescript/native'])(
+    'should report syntax errors with %s',
+    async (packageName) => {
+      const { ast } = await loadWithTypescript(packageName);
+      const { hasParseErrors } = await import('./typescript-ast');
+      const parse = (fileName: string, text: string) =>
+        hasParseErrors(
+          ast.createSourceFile(fileName, text, ast.ScriptTarget.Latest, true)
+        );
+
+      expect(
+        parse('valid.tsx', 'export const A = () => <div><b /></div>;')
+      ).toBe(false);
+      expect(parse('call.ts', 'foo(1;')).toBe(true);
+      // TypeScript 7.1 marks no node for an unclosed JSX element.
+      expect(
+        parse('unclosed.tsx', 'export const A = () => <div><b></div>;')
+      ).toBe(true);
+    }
+  );
+
   describe('with TypeScript 7.1', () => {
     let ast: import('./typescript-ast').TypescriptAst;
 
