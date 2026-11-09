@@ -35,12 +35,14 @@ vi.mock('../../utils/perf-logging', () => ({}));
 
 describe('invalidateGraphCache', () => {
   let fs: TempFs;
+  let cleanupPlugins: (() => void) | undefined;
 
   beforeEach(() => {
     fs = new TempFs('pgir-invalidate');
   });
 
   afterEach(() => {
+    cleanupPlugins?.();
     fs.cleanup();
   });
 
@@ -105,6 +107,69 @@ describe('invalidateGraphCache', () => {
     // The successor's retrieval, proving the parked compute discarded its
     // own result and chained instead of committing.
     expect(retrieveCallCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it('settles a request when the cache is cleared while a stale plugin set loads', async (ctx) => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'libs/foo/project.json': JSON.stringify({
+        name: 'foo',
+        root: 'libs/foo',
+      }),
+      'noop-plugin.cjs': `
+        exports.name = 'noop';
+        exports.createNodes = ['**/never.json', () => []];
+      `,
+    });
+
+    vi.resetModules();
+    vi.doUnmock('../../project-graph/utils/retrieve-workspace-files');
+    const { setWorkspaceRoot } = await import('../../utils/workspace-root');
+    setWorkspaceRoot(fs.tempDir);
+
+    let releasePlugins: () => void;
+    const pluginsGate = new Promise<void>((resolve) => {
+      releasePlugins = resolve;
+    });
+    let pluginsCallCount = 0;
+    vi.doMock('../../project-graph/plugins/get-plugins', async () => {
+      const actual = (await vi.importActual(
+        '../../project-graph/plugins/get-plugins'
+      )) as any;
+      return {
+        ...actual,
+        getPluginsSeparated: async (...args: unknown[]) => {
+          if (++pluginsCallCount === 1) {
+            await pluginsGate;
+          }
+          return actual.getPluginsSeparated(...args);
+        },
+      };
+    });
+
+    ({ cleanupPlugins } =
+      await import('../../project-graph/plugins/get-plugins'));
+    const { getCachedSerializedProjectGraphPromise, invalidateGraphCache } =
+      await import('./project-graph-incremental-recomputation');
+
+    const waitFor = waitForIn(ctx);
+
+    const request = getCachedSerializedProjectGraphPromise();
+    await waitFor(() => pluginsCallCount === 1, 'the plugin load');
+
+    // The parked computation's plugin set is stale once it resumes, and no
+    // newer computation holds the cache.
+    writeFileSync(
+      join(fs.tempDir, 'nx.json'),
+      JSON.stringify({ plugins: [join(fs.tempDir, 'noop-plugin.cjs')] })
+    );
+    invalidateGraphCache();
+    releasePlugins!();
+
+    const result = await request;
+    expect(result.error).toBeNull();
+    expect(result.projectGraph.nodes.foo).toBeDefined();
   });
 });
 

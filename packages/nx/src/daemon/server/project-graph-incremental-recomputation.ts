@@ -191,19 +191,26 @@ function isStale(expectedHash: string): boolean {
   return readNxJsonPluginsHash() !== expectedHash;
 }
 
-/**
- * Starts a successor recompute only when this IIFE is still the cached one.
- * If a newer recompute already replaced the cached pointer, that newer
- * recompute will produce the fresh result and we just need to return the
- * pointer so awaiters chain onto it.
- */
 function chainToSuccessor(
   myPromise: Promise<SerializedProjectGraph>
 ): Promise<SerializedProjectGraph> {
   serverLogger.log(
     'Discarding stale recompute result (nx.json plugins changed mid-compute).'
   );
-  if (cachedSerializedProjectGraphPromise === myPromise) kickOffRecompute();
+  return successorOf(myPromise);
+}
+
+// Kicks a successor unless a newer computation holds the cache: a cleared
+// cache leaves nothing to chain to, and our own promise would await itself.
+function successorOf(
+  myPromise: Promise<SerializedProjectGraph>
+): Promise<SerializedProjectGraph> {
+  if (
+    !cachedSerializedProjectGraphPromise ||
+    cachedSerializedProjectGraphPromise === myPromise
+  ) {
+    kickOffRecompute();
+  }
   return cachedSerializedProjectGraphPromise;
 }
 
@@ -599,15 +606,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   const chainToLatest = (notifyAbort: boolean) => {
     if (myGeneration === recomputationGeneration) return null;
     if (notifyAbort) notifyPluginsGraphAborted(plugins);
-    // Kick a successor when there is nothing newer to chain to. Otherwise a
-    // cleared cache commits stale data and our own promise awaits itself.
-    if (
-      !cachedSerializedProjectGraphPromise ||
-      cachedSerializedProjectGraphPromise === myPromise
-    ) {
-      kickOffRecompute();
-    }
-    return cachedSerializedProjectGraphPromise;
+    return successorOf(myPromise);
   };
 
   try {
