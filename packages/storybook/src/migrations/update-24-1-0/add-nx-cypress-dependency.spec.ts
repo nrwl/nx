@@ -234,6 +234,11 @@ describe('add-nx-cypress-dependency migration', () => {
   describe('long expression chains', () => {
     const longChain = `export const x = ${Array(50_000).fill('a').join(' + ')};`;
 
+    beforeEach(() => {
+      // oxfmt crashes the process on these fixtures instead of throwing.
+      tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    });
+
     it('should add @nx/cypress when a reference follows one', async () => {
       tree.write(
         'apps/app1-e2e/bundle.js',
@@ -273,7 +278,7 @@ describe('add-nx-cypress-dependency migration', () => {
   });
 
   it('should report the files that mention @nx/cypress when typescript cannot be loaded', async () => {
-    const ensurePackage = jest.spyOn(devkit, 'ensurePackage');
+    const ensurePackage = vi.spyOn(devkit, 'ensurePackage');
     ensurePackage.mockClear();
     ensurePackage.mockImplementationOnce(() => {
       throw new Error('Failed to install typescript');

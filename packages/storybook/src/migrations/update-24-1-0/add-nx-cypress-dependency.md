@@ -26,7 +26,7 @@ export default defineConfig({
 ```json title="package.json"
 {
   "devDependencies": {
-    "@nx/storybook": "23.3.0"
+    "@nx/storybook": "24.1.0"
   }
 }
 ```
@@ -36,8 +36,8 @@ export default defineConfig({
 ```json title="package.json"
 {
   "devDependencies": {
-    "@nx/cypress": "23.3.0",
-    "@nx/storybook": "23.3.0"
+    "@nx/cypress": "24.1.0",
+    "@nx/storybook": "24.1.0"
   }
 }
 ```
