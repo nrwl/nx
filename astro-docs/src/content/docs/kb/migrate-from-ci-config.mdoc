@@ -151,7 +151,7 @@ To forward other values from the main job at run time, use `nx-cloud start-ci-ru
 ## Move `start-ci-run` flags to the file
 
 `nx-cloud start-ci-run` takes its configuration from CLI flags and doesn't read `ci.yaml`.
-You can keep using it, and new pipelines should use `start-workers`.
+It still works, but new pipelines should use `start-workers`.
 To move, replace the command with `npx nx-cloud start-workers` and translate each flag:
 
 | `start-ci-run` flag                                       | `.nx/pipelines/ci.yaml`                                   |

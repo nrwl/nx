@@ -40,9 +40,9 @@ Remote caching works as soon as the workspace is connected.
 
 ## Run CI on Nx Cloud
 
-Nx Cloud CI runs your whole pipeline on Nx Cloud from one `.nx/pipelines/ci.yaml` file, so you don't need a separate CI provider.
+Nx Cloud CI runs your whole pipeline on Nx Cloud from a `.nx/pipelines/ci.yaml` file, so you don't need a separate CI provider.
 A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as GitHub checks.
-Remote caching, workers, and self-healing CI work without extra steps.
+Remote caching and self-healing CI work without extra steps, and workers take one line in the file.
 
 {% aside type="note" title="Private beta" %}
 Nx Cloud CI is in private beta, and the Nx Cloud team turns it on for your workspace.
