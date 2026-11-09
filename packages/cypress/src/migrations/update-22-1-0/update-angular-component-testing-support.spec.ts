@@ -68,7 +68,8 @@ export default defineConfig({
     );
     tree.write(
       'apps/dashboard/src/app/app.component.cy.ts',
-      `import { mount } from 'cypress/angular';
+      `// Angular component test
+import { mount } from 'cypress/angular'; // mount helper
 
 describe('AppComponent', () => {
   it('renders', () => {
@@ -82,7 +83,8 @@ describe('AppComponent', () => {
 
     expect(tree.read('apps/dashboard/src/app/app.component.cy.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { mount } from '@cypress/angular';
+        "// Angular component test
+        import { mount } from '@cypress/angular'; // mount helper
 
         describe('AppComponent', () => {
           it('renders', () => {

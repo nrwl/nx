@@ -1,9 +1,11 @@
 import {
+  ChangeType,
   getProjects,
   globAsync,
   normalizePath,
   readNxJson,
   type ProjectConfiguration,
+  type StringChange,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
@@ -18,6 +20,7 @@ import { isAbsolute, posix, relative } from 'path';
 import type {
   ModuleDeclaration,
   Node,
+  ObjectLiteralElementLike,
   ObjectLiteralExpression,
   PropertyAssignment,
   PropertyName,
@@ -179,6 +182,43 @@ export function getPropertyName(name: PropertyName): string | null {
     return name.expression.text;
   }
   return null;
+}
+
+// Removes the property with its trailing comma, and the whole line when the
+// property is alone on it.
+export function removeProperty(
+  contents: string,
+  property: ObjectLiteralElementLike
+): StringChange[] {
+  ts ??= ensureTypescript();
+
+  let start = property.getStart();
+  let end = property.getEnd();
+  // The node ends before its trailing trivia, so the comma can sit behind a
+  // comment or a line break.
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    true,
+    ts.LanguageVariant.Standard,
+    contents,
+    undefined,
+    end
+  );
+  if (scanner.scan() === ts.SyntaxKind.CommaToken) {
+    end = scanner.getTokenEnd();
+  }
+  const lineStart = contents.lastIndexOf('\n', start - 1) + 1;
+  const lineEnd = contents.indexOf('\n', end);
+  const restOfLine =
+    lineEnd === -1 ? contents.slice(end) : contents.slice(end, lineEnd);
+  if (
+    contents.slice(lineStart, start).trim() === '' &&
+    restOfLine.trim() === ''
+  ) {
+    start = lineStart;
+    end = lineEnd === -1 ? contents.length : lineEnd + 1;
+  }
+  return [{ type: ChangeType.Delete, start, length: end - start }];
 }
 
 function isStringLiteralName(node: Node): node is StringLiteralLike {
