@@ -1388,6 +1388,10 @@ module.exports = [];`
   });
 
   const flatConfig = `module.exports = [{ files: ['**/*.ts'] }];`;
+  const mixedLibsConfigs = {
+    'libs/.eslintrc.json': '{}',
+    'libs/eslint.config.cjs': flatConfig,
+  };
   it.each`
     configs                                                                      | cwd                | expectedCommand                                    | expectedConfigInput
     ${{ 'eslint.config.cjs': flatConfig }}                                       | ${undefined}       | ${'eslint .'}                                      | ${'eslint.config.cjs'}
@@ -1396,6 +1400,8 @@ module.exports = [];`
     ${{ 'eslint.config.cjs': flatConfig, 'libs/eslint.config.cjs': flatConfig }} | ${'workspaceRoot'} | ${'eslint libs/a --config libs/eslint.config.cjs'} | ${'libs/eslint.config.cjs'}
     ${{ '.eslintrc.json': '{}', 'libs/.eslintrc.json': '{}' }}                   | ${undefined}       | ${'eslint .'}                                      | ${'libs/.eslintrc.json'}
     ${{ '.eslintrc.json': '{}', 'libs/.eslintrc.json': '{}' }}                   | ${'workspaceRoot'} | ${'eslint libs/a'}                                 | ${'libs/.eslintrc.json'}
+    ${{ 'eslint.config.cjs': flatConfig, ...mixedLibsConfigs }}                  | ${undefined}       | ${'eslint .'}                                      | ${'libs/eslint.config.cjs'}
+    ${{ 'eslint.config.cjs': flatConfig, ...mixedLibsConfigs }}                  | ${'workspaceRoot'} | ${'eslint libs/a --config libs/eslint.config.cjs'} | ${'libs/eslint.config.cjs'}
   `(
     'should lint a project with the parent configs an include leaves out ($expectedConfigInput, cwd: $cwd)',
     async ({ configs, cwd, expectedCommand, expectedConfigInput }) => {

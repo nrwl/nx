@@ -1134,13 +1134,14 @@ describe('Eslint - Convert Executors To Plugin', () => {
     });
 
     it.each`
-      key                  | targetDefault                                                                         | expectedOutputFile
-      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                         | ${'./reports/lint/libs/core/eslint.json'}
-      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]} | ${'./reports/lint/libs/core/eslint.json'}
-      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{projectRoot}' } }]}   | ${'../../reports/lint/libs/core/eslint.json'}
-      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                      | ${'../reports/lint/libs/core/eslint.json'}
-      ${'lint'}            | ${{ options: { command: 'eslint src' } }}                                             | ${'./reports/lint/libs/core/eslint.json'}
-      ${'lint'}            | ${{ executor: 'nx:run-commands', options: { command: 'eslint src' } }}                | ${'./reports/lint/libs/core/eslint.json'}
+      key                  | targetDefault                                                                                                                                      | expectedOutputFile
+      ${'lint'}            | ${{ options: { cwd: '.', command: 'eslint {projectRoot}' } }}                                                                                      | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{workspaceRoot}' } }]}                                                              | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${[{ filter: { plugin: '@nx/eslint/plugin' }, options: { cwd: '{projectRoot}' } }]}                                                                | ${'../../reports/lint/libs/core/eslint.json'}
+      ${'nx:run-commands'} | ${{ options: { cwd: 'tools' } }}                                                                                                                   | ${'../reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ options: { command: 'eslint src' } }}                                                                                                          | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${{ executor: 'nx:run-commands', options: { command: 'eslint src' } }}                                                                             | ${'./reports/lint/libs/core/eslint.json'}
+      ${'lint'}            | ${[{ options: { cwd: 'tools' } }, { executor: 'nx:run-commands', options: { command: 'eslint libs/core --config libs/core/eslint.config.cjs' } }]} | ${'../reports/lint/libs/core/eslint.json'}
     `(
       'should rebase outputFile onto the cwd Nx runs the target in with the $key target default $targetDefault',
       async ({ key, targetDefault, expectedOutputFile }) => {

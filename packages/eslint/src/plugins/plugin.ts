@@ -290,7 +290,7 @@ function withAncestorEslintConfigs(
 ): readonly string[] {
   const included = new Set(configFiles);
   const visited = new Set<string>();
-  const ancestorConfigs: string[] = [];
+  const ancestorConfigsByDir: string[][] = [];
   for (const configFile of configFiles) {
     let dir = dirname(configFile);
     while (dir !== '.') {
@@ -299,20 +299,22 @@ function withAncestorEslintConfigs(
         break;
       }
       visited.add(dir);
-      for (const file of ESLINT_CONFIG_FILENAMES) {
-        const ancestorConfig = join(dir, file);
-        if (
-          !included.has(ancestorConfig) &&
-          existsSync(join(workspaceRoot, ancestorConfig))
-        ) {
-          ancestorConfigs.push(ancestorConfig);
-        }
+      const dirConfigs = ESLINT_CONFIG_FILENAMES.map((file) =>
+        join(dir, file)
+      ).filter(
+        (config) =>
+          !included.has(config) && existsSync(join(workspaceRoot, config))
+      );
+      if (dirConfigs.length !== 0) {
+        ancestorConfigsByDir.push(dirConfigs);
       }
     }
   }
-  return ancestorConfigs.length === 0
+  // parents first; within a directory a flat config follows an eslintrc, so
+  // its result wins as it does for an unscoped registration
+  return ancestorConfigsByDir.length === 0
     ? configFiles
-    : [...ancestorConfigs.reverse(), ...configFiles];
+    : [...ancestorConfigsByDir.reverse().flat(), ...configFiles];
 }
 
 async function createSharedEslint(
