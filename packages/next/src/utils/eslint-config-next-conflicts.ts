@@ -104,8 +104,9 @@ function getLocalModuleSpecifiers(source: ts.SourceFile): string[] {
   return specifiers;
 }
 
-// The specifier of an import, re-export, `require` or `import()` that loads a
-// module at runtime. Type-only imports and exports are erased before it runs.
+// The specifier of an import, re-export, `require`, `import x = require()` or
+// `import()` that loads a module at runtime. Type-only imports and exports are
+// erased before it runs.
 function getLoadedModuleSpecifier(node: ts.Node): string | undefined {
   let specifier: ts.Expression | undefined;
   if (tsModule.isImportDeclaration(node)) {
@@ -114,6 +115,11 @@ function getLoadedModuleSpecifier(node: ts.Node): string | undefined {
       : node.moduleSpecifier;
   } else if (tsModule.isExportDeclaration(node)) {
     specifier = node.isTypeOnly ? undefined : node.moduleSpecifier;
+  } else if (
+    tsModule.isImportEqualsDeclaration(node) &&
+    tsModule.isExternalModuleReference(node.moduleReference)
+  ) {
+    specifier = node.isTypeOnly ? undefined : node.moduleReference.expression;
   } else if (
     tsModule.isCallExpression(node) &&
     node.arguments.length === 1 &&

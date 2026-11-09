@@ -1,4 +1,4 @@
-import { formatFiles, type Tree } from '@nx/devkit';
+import { formatFiles, type Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './spread-eslint-config-next';
 
@@ -16,6 +16,15 @@ describe('spread-eslint-config-next', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.dependencies = { ...json.dependencies, next: '^16.0.0' };
+      json.devDependencies = {
+        ...json.devDependencies,
+        eslint: '^10.0.0',
+        'eslint-config-next': '^16.4.0',
+      };
+      return json;
+    });
     tree.write('eslint.config.mjs', rootConfig);
   });
 
@@ -266,18 +275,42 @@ export default [{ plugins: { 'react-hooks': reactHooks } }];
       'because tools/eslint/hooks.mjs registers react, react-hooks, import or jsx-a11y',
       { 'tools/eslint/hooks.mjs': rootConfigWithReactHooks },
     ],
+    [
+      'a local module the app config loads through import-equals registers a plugin eslint-config-next also registers',
+      pluginOnlyAppConfig({
+        imports: `import hooks = require('../../tools/eslint/hooks.cjs');`,
+        entries: `hooks,`,
+      }),
+      rootConfig,
+      'because tools/eslint/hooks.cjs registers react, react-hooks, import or jsx-a11y',
+      {
+        'tools/eslint/hooks.cjs': `const reactHooks = require('eslint-plugin-react-hooks');
+
+module.exports = { plugins: { 'react-hooks': reactHooks } };
+`,
+      },
+      'apps/web/eslint.config.cts',
+    ],
   ])(
     'adds the core-web-vitals config of @next/eslint-plugin-next in place of the @next/next registration when %s',
-    async (_, appConfig, root, reason, files: Record<string, string>) => {
-      tree.write('apps/web/eslint.config.mjs', appConfig);
+    async (
+      _,
+      appConfig,
+      root,
+      reason,
+      files: Record<string, string>,
+      appConfigPath = 'apps/web/eslint.config.mjs'
+    ) => {
+      tree.write(appConfigPath, appConfig);
       tree.write('eslint.config.mjs', root);
       for (const [file, content] of Object.entries(files)) {
         tree.write(file, content);
       }
+      const appConfigPattern = appConfigPath.replaceAll('.', '\\.');
 
       const result = await migration(tree);
 
-      const migrated = tree.read('apps/web/eslint.config.mjs', 'utf-8');
+      const migrated = tree.read(appConfigPath, 'utf-8');
       expect(migrated).toContain(
         `import nextEslintPluginNext from '@next/eslint-plugin-next';`
       );
@@ -290,21 +323,21 @@ export default [{ plugins: { 'react-hooks': reactHooks } }];
         nextSteps: [
           expect.stringMatching(
             new RegExp(
-              `^apps/web/eslint\\.config\\.mjs now uses the "core-web-vitals" config of "@next/eslint-plugin-next" .*${reason}`
+              `^${appConfigPattern} now uses the "core-web-vitals" config of "@next/eslint-plugin-next" .*${reason}`
             )
           ),
         ],
         agentContext: [
           expect.stringMatching(
             new RegExp(
-              `${reason}.* eslint-disable comments that name a react/, jsx-a11y/ or import/ rule, in apps/web/eslint\\.config\\.mjs or in the files it lints, make lint fail .* Delete or rewrite them\\.$`
+              `${reason}.* eslint-disable comments that name a react/, jsx-a11y/ or import/ rule, in ${appConfigPattern} or in the files it lints, make lint fail .* Delete or rewrite them\\.$`
             )
           ),
         ],
       });
 
       expect(await migration(tree)).toEqual({ skipAgentic: true });
-      expect(tree.read('apps/web/eslint.config.mjs', 'utf-8')).toBe(migrated);
+      expect(tree.read(appConfigPath, 'utf-8')).toBe(migrated);
     }
   );
 
@@ -313,9 +346,17 @@ export default [{ plugins: { 'react-hooks': reactHooks } }];
       'apps/web/eslint.config.ts',
       pluginOnlyAppConfig({
         imports: `import type { ReactPreset } from '../../tools/eslint/react';
-export type { HooksPreset } from '../../tools/eslint/hooks';`,
+export type { HooksPreset } from '../../tools/eslint/hooks';
+import type ImportPreset = require('../../tools/eslint/import.cjs');`,
         entries: '',
       })
+    );
+    tree.write(
+      'tools/eslint/import.cjs',
+      `const importPlugin = require('eslint-plugin-import');
+
+module.exports = { plugins: { import: importPlugin } };
+`
     );
     tree.write(
       'tools/eslint/react.ts',
