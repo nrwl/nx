@@ -137,11 +137,17 @@
       }
     },
     "pw-e2e": {
-      "dependsOn": [{ "target": "serve", "waitFor": "ready" }],
+      "dependsOn": [
+        { "target": "serve", "waitFor": "ready" },
+        "@nx/nx-source:playwright-install"
+      ],
       "parallelism": true
     },
     "e2e-ci--**/*": {
-      "dependsOn": [{ "target": "preview", "waitFor": "ready" }],
+      "dependsOn": [
+        { "target": "preview", "waitFor": "ready" },
+        "@nx/nx-source:playwright-install"
+      ],
       "parallelism": true,
       "options": {
         "args": []
