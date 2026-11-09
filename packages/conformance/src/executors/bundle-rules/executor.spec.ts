@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import runExecutor from './executor';
 
 describe('Bundle Rules Executor', () => {
@@ -317,6 +319,38 @@ describe('Bundle Rules Executor', () => {
         )
       );
     });
+
+    it.each([
+      ['.', 'the workspace root'],
+      ['projects', 'projects/rules/src'],
+    ])(
+      'should refuse an outputPath of "%s" without deleting anything',
+      async (outputPath, protectedDir) => {
+        await tempFs.createFiles({
+          'projects/rules/src/test-rule/index.ts': '',
+          'projects/rules/src/test-rule/schema.json': '{}',
+        });
+
+        const consoleSpy = vi.spyOn(console, 'error');
+        const result = await runExecutor({ outputPath }, {
+          projectName: 'rules',
+          root: tempFs.tempDir,
+          projectsConfigurations: {
+            projects: { rules: { root: 'projects/rules' } },
+          },
+        } as any);
+
+        expect(result.success).toBe(false);
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining(`contains ${protectedDir}`)
+        );
+        expect(
+          existsSync(
+            join(tempFs.tempDir, 'projects/rules/src/test-rule/index.ts')
+          )
+        ).toBe(true);
+      }
+    );
 
     it(`should fail if no rules are found in the project's src directory`, async () => {
       await tempFs.createFiles({

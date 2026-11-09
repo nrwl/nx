@@ -1,5 +1,5 @@
 import { PromiseExecutor, readJsonFile, workspaceRoot } from '@nx/devkit';
-import * as esbuild from 'esbuild';
+import type * as esbuild from 'esbuild';
 import {
   cpSync,
   existsSync,
@@ -8,9 +8,10 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import * as semver from 'semver';
 
+import { loadEsbuild } from './load-esbuild';
 import { BundleRulesExecutorSchema } from './schema';
 
 interface RuleFiles {
@@ -111,6 +112,14 @@ function discoverRules(srcDir: string): RuleFiles[] {
   }
 }
 
+function isWithin(path: string, dir: string): boolean {
+  const rel = relative(dir, path);
+  return (
+    rel === '' ||
+    (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))
+  );
+}
+
 const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
   options,
   context
@@ -132,6 +141,17 @@ const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
         : join(context.root, projectRoot, 'src');
     const outDir = join(context.root, options.outputPath);
 
+    // outputPath is emptied before bundling, so it must not hold the workspace or the rule sources
+    for (const protectedDir of [context.root, srcDir]) {
+      if (isWithin(protectedDir, outDir)) {
+        throw new Error(
+          `The outputPath "${options.outputPath}" contains ${relative(context.root, protectedDir) || 'the workspace root'}, which would be deleted before bundling. Choose a separate output directory.`
+        );
+      }
+    }
+
+    const { build } = await loadEsbuild();
+
     if (existsSync(outDir)) {
       rmSync(outDir, { recursive: true });
     }
@@ -147,7 +167,7 @@ const runExecutor: PromiseExecutor<BundleRulesExecutorSchema> = async (
       const ruleOutDir = join(outDir, rule.ruleName);
       const outFile = join(ruleOutDir, 'index.js');
 
-      const result = await esbuild.build({
+      const result = await build({
         entryPoints: [rule.indexPath],
         bundle: true,
         minify: true,

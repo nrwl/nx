@@ -6,6 +6,12 @@
       "description": "Point the `ensure-owners` conformance rule at `@nx/owners`, where it now lives.",
       "implementation": "./dist/src/migrations/update-24-1-0/move-ensure-owners-rule",
       "documentation": "./dist/src/migrations/update-24-1-0/move-ensure-owners-rule.md"
+    },
+    "update-24-1-0-add-esbuild-for-bundle-rules": {
+      "version": "24.1.0-beta.0",
+      "description": "Add `esbuild` when a project uses the `@nx/conformance:bundle-rules` executor, since `@nx/conformance` no longer installs it.",
+      "implementation": "./dist/src/migrations/update-24-1-0/add-esbuild-for-bundle-rules",
+      "documentation": "./dist/src/migrations/update-24-1-0/add-esbuild-for-bundle-rules.md"
     }
   }
 }
