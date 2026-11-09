@@ -49,14 +49,19 @@ function updateTsSourceFile(
   sourceFile: ts.SourceFile,
   filePath: string
 ): ts.SourceFile {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const newFileContents = host.read(filePath).toString('utf-8');
-  return sourceFile.update(newFileContents, {
-    newLength: newFileContents.length,
-    span: {
-      length: sourceFile.text.length,
-      start: 0,
-    },
-  });
+  // TypeScript 7.1 source files have no `update`. A full parse gives the tree
+  // TypeScript 6's `update` returns for a whole-file change.
+  return tsModule.createSourceFile(
+    sourceFile.fileName,
+    newFileContents,
+    sourceFile.languageVersion,
+    true,
+    (sourceFile as { scriptKind?: ts.ScriptKind }).scriptKind
+  );
 }
 
 export function insertChange(
