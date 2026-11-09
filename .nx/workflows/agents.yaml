@@ -83,7 +83,6 @@ common-init-steps: &common-init-steps
   - name: Install browsers
     script: |
       pnpm exec cypress install
-      pnpm exec playwright install --with-deps
 
   - name: Install rust deps
     script: |

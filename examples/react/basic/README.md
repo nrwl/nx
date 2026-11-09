@@ -54,4 +54,6 @@ nx e2e
 nx lint
 ```
 
-> The Playwright target needs browsers installed once: `npx playwright install chromium`.
+> `e2e` depends on `playwright-install`, a target defined in `package.json`
+> that downloads the headless Chromium build matching this workspace's
+> Playwright version.
