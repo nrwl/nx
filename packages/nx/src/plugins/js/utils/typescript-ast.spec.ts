@@ -2,6 +2,7 @@ import { symlinkSync } from 'fs';
 import { dirname, join } from 'path';
 import type * as ts from 'typescript';
 import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import type { TypescriptAst } from './typescript-ast';
 
 // TypeScript 6 parses every fixture the way Nx expects.
 const ts6: typeof ts = require('typescript');
@@ -111,7 +112,7 @@ describe('getTypescriptAst', () => {
   );
 
   describe('with TypeScript 7.1', () => {
-    let ast: import('./typescript-ast').TypescriptAst;
+    let ast: TypescriptAst;
 
     beforeEach(async () => {
       let backend: { kind: string };
@@ -179,6 +180,84 @@ describe('getTypescriptAst', () => {
             list.map((node) => `${guard} ${node.pos} ${module[guard](node)}`)
           );
         expect(answers(ast, nodes)).toEqual(answers(ts6, ts6Nodes));
+      }
+    });
+
+    it('should report the modifiers TypeScript 6 reports', () => {
+      const modifiers = (
+        module: Pick<
+          typeof ts,
+          'canHaveModifiers' | 'forEachChild' | 'getModifiers' | 'SyntaxKind'
+        >,
+        sourceFile: ts.SourceFile
+      ) =>
+        collectNodes(module, sourceFile).map(
+          (node) =>
+            `${node.pos} ${module.canHaveModifiers(node)} ${module
+              .getModifiers(node as ts.HasModifiers)
+              ?.map((modifier) => kindName(module.SyntaxKind, modifier.kind))}`
+        );
+
+      for (const [fileName, text] of Object.entries(fixtures)) {
+        expect(
+          modifiers(
+            ast,
+            ast.createSourceFile(fileName, text, ast.ScriptTarget.Latest, true)
+          )
+        ).toEqual(
+          modifiers(
+            ts6,
+            ts6.createSourceFile(fileName, text, ts6.ScriptTarget.Latest, true)
+          )
+        );
+      }
+    });
+
+    it('should scan the tokens TypeScript 6 scans', () => {
+      const tokens = (
+        module: Pick<
+          typeof ts,
+          'LanguageVariant' | 'ScriptTarget' | 'SyntaxKind'
+        > & { createScanner: TypescriptAst['createScanner'] },
+        fileName: string,
+        text: string,
+        start: number,
+        length: number
+      ) => {
+        const scanner = module.createScanner(
+          module.ScriptTarget.Latest,
+          true,
+          fileName.endsWith('x')
+            ? module.LanguageVariant.JSX
+            : module.LanguageVariant.Standard,
+          text,
+          undefined,
+          start,
+          length
+        );
+        const result: string[] = [];
+        let token: string;
+        while (
+          (token = kindName(module.SyntaxKind, scanner.scan())) !==
+          'EndOfFileToken'
+        ) {
+          result.push(
+            `${token} ${scanner.getTokenStart()}-${scanner.getTokenEnd()}`
+          );
+        }
+        return result;
+      };
+
+      for (const [fileName, text] of Object.entries(fixtures)) {
+        const third = Math.floor(text.length / 3);
+        for (const [start, length] of [
+          [0, text.length],
+          [third, third],
+        ]) {
+          expect(tokens(ast, fileName, text, start, length)).toEqual(
+            tokens(ts6, fileName, text, start, length)
+          );
+        }
       }
     });
 
