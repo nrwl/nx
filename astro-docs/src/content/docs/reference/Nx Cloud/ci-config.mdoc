@@ -307,6 +307,7 @@ A positive filter can't be combined with its `-ignore` counterpart.
 ## `jobs`
 
 The jobs of the pipeline, each on its own machine.
+To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx Cloud CI](/docs/kb/migrate-from-github-actions).
 
 | Key               | Description                                                                         |
 | ----------------- | ----------------------------------------------------------------------------------- |
@@ -511,22 +512,6 @@ steps:
 
 `$NX_CLOUD_ENV` takes one `NAME=value` per line.
 For a multi-line value, write to `$GITHUB_ENV` with `NAME<<EOF`.
-
-### Coming from GitHub Actions
-
-| GitHub Actions                                                   | Nx Cloud CI                                                                                                    |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `on: push` and `on: pull_request`                                | Named triggers with `event: PUSH` or `event: PR`                                                               |
-| `runs-on: ubuntu-latest`                                         | A [launch template](/docs/kb/launch-templates)                                                                 |
-| `actions/checkout`, `actions/setup-node`, `npm ci`               | `init-steps` of the launch template                                                                            |
-| `nrwl/nx-set-shas`                                               | Automatic                                                                                                      |
-| `start-workers`                                                  | `workers` on the job                                                                                           |
-| `nx fix-ci`                                                      | Automatic                                                                                                      |
-| `uses: owner/repo@ref`                                           | `uses` with a [step template](/docs/kb/custom-steps)                                                           |
-| `needs`, `if`, `env`, `timeout-minutes`                          | Same keys                                                                                                      |
-| `${{ secrets.X }}`, `${{ vars.X }}`, `${{ needs.<job>.result }}` | Same [expressions](#expressions)                                                                               |
-| `GITHUB_ENV`, `GITHUB_OUTPUT`, `GITHUB_PATH`                     | [Same files](#variables-and-files-in-each-step), also named `NX_CLOUD_ENV`, `NX_CLOUD_OUTPUT`, `NX_CLOUD_PATH` |
-| `github.event_name` in a condition                               | Works as written. `nxcloud.event_name` is the Nx Cloud name                                                    |
 
 ### Current limits
 

@@ -143,64 +143,7 @@ To limit which tasks it fixes, use the [`self-healing`](/docs/reference/nx-cloud
 ### Coming from GitHub Actions
 
 The file reads like a GitHub Actions workflow, and most step-level syntax carries over.
-This workflow:
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  main:
-    runs-on: ubuntu-latest
-    env:
-      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - uses: nrwl/nx-set-shas@v5
-      - run: npx nx-cloud start-workers
-      - run: npx nx affected -t lint test build
-      - run: npx nx fix-ci
-        if: always()
-```
-
-Becomes this file:
-
-```yaml
-# .nx/pipelines/ci.yaml
-name: CI
-
-on:
-  main-pushes:
-    event: PUSH
-    branches: [main]
-  pull-requests:
-    event: PR
-    branches: [main]
-
-jobs:
-  main:
-    runs-on: linux-medium-js
-    workers: 3 linux-large-js
-    steps:
-      - run: npx nx affected -t lint test build
-```
-
-For how each GitHub Actions key and expression maps, see [the CI configuration reference](/docs/reference/nx-cloud/ci-config#coming-from-github-actions).
-
-Required status checks need updating, because the check names change to `<name> / <job>`.
+To convert a workflow, see [move a GitHub Actions workflow to Nx Cloud CI](/docs/kb/migrate-from-github-actions).
 
 Pull requests from forks, scheduled runs, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
 For the full list, see [current limits](/docs/reference/nx-cloud/ci-config#current-limits).
