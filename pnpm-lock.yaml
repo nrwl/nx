@@ -2141,9 +2141,6 @@ importers:
       '@schematics/angular':
         specifier: catalog:angular-supported-versions
         version: 22.2.3(chokidar@5.0.0)
-      '@typescript-eslint/type-utils':
-        specifier: catalog:eslint
-        version: 8.73.0(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)(typescript@7.1.0-beta)
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
@@ -44022,7 +44019,6 @@ snapshots:
   dtrace-provider@0.8.8:
     dependencies:
       nan: 2.23.0
-    optional: true
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
     optionalDependencies:
@@ -45839,7 +45835,6 @@ snapshots:
       minimatch: 10.2.5
       once: 1.4.0
       path-is-absolute: 1.0.1
-    optional: true
 
   glob@7.2.3:
     dependencies:
@@ -50666,8 +50661,7 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  moment@2.30.1:
-    optional: true
+  moment@2.30.1: {}
 
   motion-dom@11.18.1:
     dependencies:
@@ -50759,7 +50753,6 @@ snapshots:
       mkdirp: 0.5.6
       ncp: 2.0.0
       rimraf: 2.4.5
-    optional: true
 
   mz@2.7.0:
     dependencies:
@@ -50767,8 +50760,7 @@ snapshots:
       object-assign: 4.1.1
       thenify-all: 1.6.0
 
-  nan@2.23.0:
-    optional: true
+  nan@2.23.0: {}
 
   nanoid@3.3.20: {}
 
@@ -50780,8 +50772,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  ncp@2.0.0:
-    optional: true
+  ncp@2.0.0: {}
 
   needle@2.9.1(supports-color@10.2.2):
     dependencies:
@@ -54172,7 +54163,6 @@ snapshots:
   rimraf@2.4.5:
     dependencies:
       glob: 6.0.4
-    optional: true
 
   rimraf@3.0.2:
     dependencies:
@@ -54361,8 +54351,7 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-json-stringify@1.2.0:
-    optional: true
+  safe-json-stringify@1.2.0: {}
 
   safe-regex-test@1.1.0:
     dependencies:

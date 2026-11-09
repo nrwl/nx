@@ -715,7 +715,7 @@ export function parseComponentPropsInfo(
     if (heritageClause) {
       const propsTypeExpression = heritageClause.types.find((x) => {
         const name =
-          (x.expression as ts.Identifier).escapedText ||
+          (x.expression as ts.Identifier).text ||
           (x.expression as ts.PropertyAccessExpression).name.text;
         return name === 'Component' || name === 'PureComponent';
       });
