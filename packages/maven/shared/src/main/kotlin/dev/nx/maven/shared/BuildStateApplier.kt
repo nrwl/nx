@@ -6,34 +6,67 @@ import org.apache.maven.project.MavenProjectHelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 
 /**
  * Utility for applying build state to Maven projects.
  *
- * Note on warnings: This class uses warnings (not errors) for missing files/artifacts
- * because build state may reference files that don't exist yet in incremental builds,
- * or were cleaned between builds. These conditions are recoverable - Maven will rebuild
- * the missing artifacts as needed. Failing hard would break valid incremental build scenarios.
+ * Paths that no longer exist are skipped rather than failing the build, because build state
+ * may reference files that were cleaned between builds. Maven rebuilds them as needed.
+ *
+ * The build state file can be restored from a remote cache, so its paths are only applied when
+ * they stay where the recorder would have put them: inputs inside the workspace or the project,
+ * output directories inside the build directory or where the POM already points them.
  */
 object BuildStateApplier {
     private val log: Logger = LoggerFactory.getLogger(BuildStateApplier::class.java)
+
+    private fun realPath(root: File): Path =
+        runCatching { root.toPath().toRealPath() }.getOrElse { root.canonicalFile.toPath() }
+
+    private fun resolveWithin(path: String, basedir: File, roots: List<Path>, warnIfMissing: Boolean = false): String? {
+        val resolved = try {
+            File(path).let { if (it.isAbsolute) it else File(basedir, path) }.toPath().toRealPath()
+        } catch (_: NoSuchFileException) {
+            val message = "    Skipping missing build state path: $path"
+            if (warnIfMissing) log.warn(message) else log.debug(message)
+            return null
+        } catch (_: Exception) {
+            null
+        }
+        if (resolved != null && roots.any { resolved.startsWith(it) }) {
+            return resolved.toString()
+        }
+        log.warn("    Ignoring build state path outside of ${roots.joinToString()}: $path")
+        return null
+    }
+
+    private fun resolveAllWithin(paths: Set<String>, basedir: File, roots: List<Path>): Set<String> {
+        return paths.mapNotNull { resolveWithin(it, basedir, roots) }.toSet()
+    }
 
     /**
      * Apply a build state to a Maven project.
      *
      * @param project The MavenProject to apply state to
      * @param buildState The BuildState to apply
+     * @param workspaceRoot With the project and build directories, bounds source, resource and artifact paths. Classpath entries are not checked.
      * @param projectHelper Optional MavenProjectHelper for attaching artifacts
      */
     fun applyBuildState(
         project: MavenProject,
         buildState: BuildState,
+        workspaceRoot: File,
         projectHelper: MavenProjectHelper? = null
     ) {
         val basedir = project.basedir
+        val buildDirectory = File(project.build.directory)
+        val buildRoot = realPath(buildDirectory)
+        val inputRoots = listOf(realPath(workspaceRoot), realPath(basedir), buildRoot)
 
         // Apply compile source roots
-        val compileSourceRoots = PathUtils.toAbsolutePaths(buildState.compileSourceRoots, basedir, log)
+        val compileSourceRoots = resolveAllWithin(buildState.compileSourceRoots, basedir, inputRoots)
         compileSourceRoots.forEach { path ->
             if (File(path).isDirectory) {
                 project.addCompileSourceRoot(path)
@@ -44,7 +77,7 @@ object BuildStateApplier {
         }
 
         // Apply test compile source roots
-        val testCompileSourceRoots = PathUtils.toAbsolutePaths(buildState.testCompileSourceRoots, basedir, log)
+        val testCompileSourceRoots = resolveAllWithin(buildState.testCompileSourceRoots, basedir, inputRoots)
         testCompileSourceRoots.forEach { path ->
             if (File(path).isDirectory) {
                 project.addTestCompileSourceRoot(path)
@@ -55,7 +88,7 @@ object BuildStateApplier {
         }
 
         // Apply resources
-        val resources = PathUtils.toAbsolutePaths(buildState.resources, basedir, log)
+        val resources = resolveAllWithin(buildState.resources, basedir, inputRoots)
         resources.forEach { path ->
             if (File(path).isDirectory) {
                 val resource = Resource().apply { directory = path }
@@ -67,7 +100,7 @@ object BuildStateApplier {
         }
 
         // Apply test resources
-        val testResources = PathUtils.toAbsolutePaths(buildState.testResources, basedir, log)
+        val testResources = resolveAllWithin(buildState.testResources, basedir, inputRoots)
         testResources.forEach { path ->
             if (File(path).isDirectory) {
                 val resource = Resource().apply { directory = path }
@@ -80,7 +113,8 @@ object BuildStateApplier {
 
         // Apply output directories
         buildState.outputDirectory?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+            resolveWithin(it, basedir, listOfNotNull(buildRoot, project.build.outputDirectory?.let { dir -> realPath(File(dir)) }))
+        }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.outputDirectory = absPath
                 log.debug("    Set output directory: $absPath")
@@ -88,7 +122,8 @@ object BuildStateApplier {
         }
 
         buildState.testOutputDirectory?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+            resolveWithin(it, basedir, listOfNotNull(buildRoot, project.build.testOutputDirectory?.let { dir -> realPath(File(dir)) }))
+        }?.let { absPath ->
             if (File(absPath).isDirectory) {
                 project.build.testOutputDirectory = absPath
                 log.debug("    Set test output directory: $absPath")
@@ -108,43 +143,34 @@ object BuildStateApplier {
             log.debug("    Added ${testClasspath.size} test classpath elements")
         }
 
-        // Apply main artifact (only if file exists)
-        buildState.mainArtifact?.let { artifactInfo ->
-            val absPath = PathUtils.toAbsolutePath(artifactInfo.file, basedir, log)
+        // Apply main artifact
+        buildState.mainArtifact?.let { resolveWithin(it.file, basedir, inputRoots, warnIfMissing = true) }?.let { absPath ->
             val file = File(absPath)
-            if (file.exists()) {
-                log.debug("    Applied main artifact: ${file.name}")
-                project.artifact.file = file
-            } else {
-                log.warn("    Main artifact file does not exist: ${file.absolutePath}")
-            }
+            log.debug("    Applied main artifact: ${file.name}")
+            project.artifact.file = file
         }
 
-        // Apply attached artifacts (only if files exist and not already attached)
+        // Apply attached artifacts (only if not already attached)
         var attachedCount = 0
         buildState.attachedArtifacts.forEach { artifactInfo ->
-            val absPath = PathUtils.toAbsolutePath(artifactInfo.file, basedir, log)
+            val absPath = resolveWithin(artifactInfo.file, basedir, inputRoots, warnIfMissing = true) ?: return@forEach
             val file = File(absPath)
-            if (file.exists()) {
-                if (projectHelper != null) {
-                    val classifier = artifactInfo.classifier
-                    // Check if already attached to avoid "already attached, replacing" warnings
-                    val alreadyAttached = project.attachedArtifacts.any { existing ->
-                        existing.type == artifactInfo.type &&
-                        (existing.classifier ?: "") == (classifier ?: "")
+            if (projectHelper != null) {
+                val classifier = artifactInfo.classifier
+                // Check if already attached to avoid "already attached, replacing" warnings
+                val alreadyAttached = project.attachedArtifacts.any { existing ->
+                    existing.type == artifactInfo.type &&
+                    (existing.classifier ?: "") == (classifier ?: "")
+                }
+                if (!alreadyAttached) {
+                    when {
+                        classifier.isNullOrEmpty() -> projectHelper.attachArtifact(project, artifactInfo.type, file)
+                        else -> projectHelper.attachArtifact(project, artifactInfo.type, classifier, file)
                     }
-                    if (!alreadyAttached) {
-                        when {
-                            classifier.isNullOrEmpty() -> projectHelper.attachArtifact(project, artifactInfo.type, file)
-                            else -> projectHelper.attachArtifact(project, artifactInfo.type, classifier, file)
-                        }
-                        attachedCount++
-                    }
-                } else {
-                    log.warn("    Cannot attach artifact (no MavenProjectHelper): ${file.name}")
+                    attachedCount++
                 }
             } else {
-                log.warn("    Attached artifact file does not exist: ${file.absolutePath}")
+                log.warn("    Cannot attach artifact (no MavenProjectHelper): ${file.name}")
             }
         }
         if (attachedCount > 0) {
@@ -154,15 +180,10 @@ object BuildStateApplier {
         // Skip outputTimestamp - it causes cache invalidation issues
 
         // Apply pomFile if it was modified (e.g., by flatten-maven-plugin)
-        buildState.pomFile?.let {
-            val absPath = PathUtils.toAbsolutePath(it, basedir, log)
+        buildState.pomFile?.let { resolveWithin(it, basedir, inputRoots, warnIfMissing = true) }?.let { absPath ->
             val pomFile = File(absPath)
-            if (pomFile.exists()) {
-                log.info("Applying modified pomFile: ${pomFile.absolutePath}")
-                project.setPomFile(pomFile)
-            } else {
-                log.warn("Modified pomFile does not exist, skipping: ${pomFile.absolutePath}")
-            }
+            log.info("Applying modified pomFile: ${pomFile.absolutePath}")
+            project.setPomFile(pomFile)
         }
     }
 }

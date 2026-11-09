@@ -2130,6 +2130,113 @@ describe('TaskOrchestrator', () => {
     });
   });
 
+  describe('continuous task exit', () => {
+    function createOrchestrator({
+      initiating,
+      neededBy = [],
+    }: {
+      initiating: boolean;
+      neededBy?: string[];
+    }) {
+      const serve = {
+        id: 'app:serve',
+        target: { project: 'app', target: 'serve' },
+        overrides: {},
+        outputs: [],
+        projectRoot: 'app',
+        continuous: true,
+      } as Task;
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.initializingTaskIds = new Set(
+        initiating ? ['app:serve'] : ['e2e:e2e']
+      );
+      orchestrator.taskGraph = {
+        continuousDependencies: {
+          'app:serve': [],
+          'e2e:e2e': [{ id: 'app:serve', waitFor: 'started' }],
+        },
+      };
+      orchestrator.tasksSchedule = {
+        getIncompleteTasks: () => neededBy.map((id) => ({ id })),
+      };
+      orchestrator.stopRequested = false;
+      orchestrator.cleanupPromise = null;
+      orchestrator.readiness = new Map();
+      orchestrator.readinessFailures = new Map();
+      orchestrator.completedTasks = new Map();
+      orchestrator.runningContinuousTasks = new Map([
+        ['app:serve', { groupId: 1 }],
+      ]);
+      orchestrator.runningTasksService = { removeRunningTask: vi.fn() };
+      orchestrator.complete = vi.fn(async (results: any[]) => {
+        for (const { task, status } of results) {
+          orchestrator.completedTasks.set(task.id, status);
+        }
+      });
+      orchestrator.abortReadiness = vi.fn();
+      orchestrator.releaseThreads = vi.fn();
+      const exit = (code: number) =>
+        orchestrator.handleContinuousTaskExit(code, serve, 1, true);
+      const status = () => orchestrator.completedTasks.get('app:serve');
+      return { orchestrator, exit, status };
+    }
+
+    let consoleError: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => consoleError.mockRestore());
+
+    it('fails an initiating task that exits non-zero on its own', async () => {
+      const { exit, status } = createOrchestrator({ initiating: true });
+
+      await exit(1);
+
+      expect(status()).toBe('failure');
+      expect(consoleError).toHaveBeenCalledWith(
+        'Task "app:serve" is continuous but exited with code 1'
+      );
+    });
+
+    it('succeeds when an initiating task exits cleanly', async () => {
+      const { exit, status } = createOrchestrator({ initiating: true });
+
+      await exit(0);
+
+      expect(status()).toBe('success');
+    });
+
+    it('does not fail an initiating task that exits non-zero once the run is stopping', async () => {
+      const { orchestrator, exit, status } = createOrchestrator({
+        initiating: true,
+      });
+      orchestrator.stopRequested = true;
+
+      await exit(1);
+
+      expect(status()).toBe('success');
+    });
+
+    it('does not fail a dependency nothing needs any more when it exits non-zero', async () => {
+      const { exit, status } = createOrchestrator({ initiating: false });
+
+      await exit(1);
+
+      expect(status()).toBe('success');
+    });
+
+    it('fails a dependency that exits while a task still needs it', async () => {
+      const { exit, status } = createOrchestrator({
+        initiating: false,
+        neededBy: ['e2e:e2e'],
+      });
+
+      await exit(0);
+
+      expect(status()).toBe('failure');
+    });
+  });
+
   describe('continuous task readiness', () => {
     function createTask(id: string, continuous = false): Task {
       const [project, target] = id.split(':');

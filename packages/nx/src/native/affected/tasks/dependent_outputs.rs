@@ -102,6 +102,7 @@ impl OutputReads {
                 HashInstruction::IgnoredFileSet {
                     globs: patterns,
                     project_roots,
+                    ..
                 } => {
                     let scope = ProjectScope::new(project_roots);
                     // Negated patterns are exclusions, not things read.
@@ -319,6 +320,7 @@ mod tests {
         let scoped = HashInstruction::IgnoredFileSet {
             globs: strings(&["packages/gradle/**/*"]),
             project_roots: strings(&["packages/gradle", "packages/gradle/runner"]),
+            ultracache: false,
         };
         let e = edges(
             &[

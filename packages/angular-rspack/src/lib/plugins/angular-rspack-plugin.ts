@@ -1,6 +1,5 @@
 import {
   augmentAppWithServiceWorker,
-  type BudgetCalculatorResult,
   checkBudgets,
   ThresholdSeverity,
 } from '@angular/build/private';
@@ -681,6 +680,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           sass: this.#_options.stylePreprocessorOptions?.sass,
           watch,
           sourceMap: this.#_options.sourceMap.scripts,
+          minifyStyles: this.#_options.optimization.styles.minify,
           preserveSymlinks: this.#_options.preserveSymlinks,
           // '...' splices rspack's default conditions back in; the rest are
           // the bundler's custom conditions the program must match.

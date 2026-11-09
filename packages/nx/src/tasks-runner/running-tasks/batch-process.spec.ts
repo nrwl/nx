@@ -156,6 +156,34 @@ describe('BatchProcess', () => {
     expect(child.disconnect).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps what a crashed worker writes after exiting in its captured log', async () => {
+    await withFoldingEnvAsync(async () => {
+      const child = fakeChildProcess();
+      const batch = new BatchProcess(child, '@nx/gradle:batch');
+      const onExit = vi.fn();
+      batch.onExit(onExit);
+      // The orchestrator's crash path: flush the capture, then read it.
+      const captured = batch.getResults().then(
+        () => null,
+        async () => {
+          await batch.flushCapturedOutput();
+          return readFileSync(batch.getCapturedOutputPath(), 'utf-8');
+        }
+      );
+
+      (child as any).stdout.emit('data', Buffer.from('HEAD\n'));
+      child.emit('exit', 1, null);
+      expect(onExit).toHaveBeenCalledWith(1);
+      await new Promise((resolve) => setImmediate(resolve));
+      (child as any).stdout.emit('data', Buffer.from('LATE-OUT\n'));
+      (child as any).stderr.emit('data', Buffer.from('LATE-ERR\n'));
+      child.emit('close', 1, null);
+
+      expect(await captured).toEqual('HEAD\nLATE-OUT\nLATE-ERR\n');
+      batch.discardCapturedOutput();
+    });
+  });
+
   it('keeps the worker connected while it streams task results', () => {
     const child = fakeChildProcess();
     const batch = new BatchProcess(child, '@nx/js:tsc');
@@ -366,9 +394,9 @@ describe('BatchProcess', () => {
     });
 
     const path = batch.getCapturedOutputPath();
-    // Production order: both readers flush before touching the path. stdout can
-    // still deliver past the exit event that getResults() settles on, and the
-    // flush has ended the stream by then - so the late chunk is lost. What must
+    // Production order: both readers flush before touching the path. A worker
+    // can still write after the results message getResults() settles on, and
+    // the flush has ended the stream by then - so the late chunk is lost. What must
     // NOT happen is a second file, or the write killing the run.
     await batch.flushCapturedOutput();
     expect(() =>

@@ -22,6 +22,7 @@ import {
 import { readEnv } from '../../tasks-runner/tokens';
 import type { Task } from '../../config/task-graph';
 import { registerTaskProcessStart } from '../../tasks-runner/task-io-service';
+import { hasExited, whenStdioClosed } from '../../utils/child-process';
 import { signalToCode } from '../../utils/exit-codes';
 import { output as cliOutput } from '../../utils/output';
 import {
@@ -171,6 +172,16 @@ export class ParallelRunningTasks implements RunningTask {
                 }
               });
               childProcess.onExit((code, terminalOutput) => {
+                // A failed command reports only once its output is read, so
+                // readyWhen text a sibling prints meanwhile must not hide it.
+                if (
+                  code === 0 &&
+                  this.childProcesses.some(
+                    (p) => p !== childProcess && p.exitedWithFailure
+                  )
+                ) {
+                  return;
+                }
                 res({
                   childProcess,
                   result: { code, terminalOutput },
@@ -215,11 +226,13 @@ export class ParallelRunningTasks implements RunningTask {
       this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
-      let hasFailure = false;
-      let failureDetails: {
-        childProcess: RunningNodeProcess;
-      } | null = null;
+      let failedProcess: RunningNodeProcess | null = null;
       const terminalOutputs = new Map<RunningNodeProcess, string>();
+      const failFast = (childProcess: RunningNodeProcess) => {
+        if (failedProcess) return;
+        failedProcess = childProcess;
+        this.terminateRemainingProcesses(runningProcesses, childProcess);
+      };
 
       await Promise.allSettled(
         this.childProcesses.map(async (childProcess) => {
@@ -230,16 +243,15 @@ export class ParallelRunningTasks implements RunningTask {
               cb(terminalOutput);
             }
           });
+          // Results wait for the output to drain, which a descendant holding
+          // the pipes can stretch to a second.
+          childProcess.onFailedExit(() => failFast(childProcess));
 
           const { code, terminalOutput } = await childProcess.getResults();
           terminalOutputs.set(childProcess, terminalOutput);
 
-          if (code !== 0 && !hasFailure) {
-            hasFailure = true;
-            failureDetails = { childProcess };
-
-            // Immediately terminate all other running processes
-            this.terminateRemainingProcesses(runningProcesses, childProcess);
+          if (code !== 0) {
+            failFast(childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -248,11 +260,9 @@ export class ParallelRunningTasks implements RunningTask {
 
       let terminalOutput = Array.from(terminalOutputs.values()).join('\r\n');
 
-      if (hasFailure && failureDetails) {
+      if (failedProcess) {
         // Add failure message
-        const warning = commandExitedNonZeroWarning(
-          failureDetails.childProcess.command
-        );
+        const warning = commandExitedNonZeroWarning(failedProcess.command);
         terminalOutput += warning;
         streamChunk(warning, this.streamOutput, process.stderr);
 
@@ -287,6 +297,9 @@ export class SeriallyRunningTasks implements RunningTask {
   private outputCallbacks: Array<
     (terminalOutput: string, isCommandHeader?: boolean) => void
   > = [];
+  // A command can be killed after it exits, while its output drains. The
+  // signal then reaches no process, so this is what stops the next command.
+  private killSignal: NodeJS.Signals | null = null;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -364,6 +377,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
+    this.killSignal = signal ?? 'SIGTERM';
     return this.currentProcess?.kill(signal);
   }
 
@@ -372,6 +386,10 @@ export class SeriallyRunningTasks implements RunningTask {
     context: ExecutorContext
   ) {
     for (const c of options.commands) {
+      if (this.killSignal) {
+        this.code = signalToCode(this.killSignal);
+        break;
+      }
       const childProcess = await this.createProcess(
         c,
         options.color,
@@ -522,9 +540,13 @@ class RunningNodeProcess implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private failedExitCallbacks: Array<() => void> = [];
   private killPromise: Promise<void> | null = null;
   private closedPromise: Promise<void>;
+  private stdioClosed: Promise<void>;
   public command: string;
+  // Set at 'exit', while the output may still be unread.
+  public exitedWithFailure = false;
 
   // Memoized exit so late getResults()/onExit() callers don't hang.
   private exited = false;
@@ -556,6 +578,7 @@ class RunningNodeProcess implements RunningTask {
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
+    this.stdioClosed = whenStdioClosed(this.childProcess);
     this.closedPromise = new Promise<void>((resolve) => {
       this.childProcess.on('close', resolve);
     });
@@ -597,6 +620,11 @@ class RunningNodeProcess implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
+  /** Runs at a non-zero 'exit', before the rest of the output is read. */
+  onFailedExit(cb: () => void): void {
+    this.failedExitCallbacks.push(cb);
+  }
+
   send(message: Serializable): void {
     this.childProcess.send(message);
   }
@@ -619,13 +647,15 @@ class RunningNodeProcess implements RunningTask {
   kill(signal?: NodeJS.Signals): Promise<void> {
     if (this.killPromise) return this.killPromise;
     if (!this.childProcess.pid) return Promise.resolve();
+    // An exited child's pid is free for reuse, so signalling it could reach an
+    // unrelated process.
+    const signalled = hasExited(this.childProcess)
+      ? Promise.resolve()
+      : killProcessTreeGraceful(this.childProcess.pid, signal);
     // Cache the promise so concurrent callers (e.g. cleanup() after a
     // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
     // same in-progress operation instead of no-oping.
-    this.killPromise = killProcessTreeGraceful(
-      this.childProcess.pid,
-      signal
-    ).then(() =>
+    this.killPromise = signalled.then(() =>
       // Wait for stdio drain and close events before the orchestrator
       // tears down the event loop via process.exit().
       Promise.race([
@@ -653,9 +683,16 @@ class RunningNodeProcess implements RunningTask {
   private addListeners(commandConfig: RunCommandsCommandOptions) {
     this.childProcess.stdout.setEncoding('utf8');
     this.childProcess.stderr.setEncoding('utf8');
+    const exitedWithFailure = () => this.exitedWithFailure;
     // Separate matchers, so a ready string never spans stdout and stderr
-    const stdoutReady = readyWhenMatcher(this.readyWhenStatus);
-    const stderrReady = readyWhenMatcher(this.readyWhenStatus);
+    const stdoutReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
+    const stderrReady = readyWhenMatcher(
+      this.readyWhenStatus,
+      exitedWithFailure
+    );
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
@@ -693,11 +730,19 @@ class RunningNodeProcess implements RunningTask {
       untrackRunningNodeProcess(this);
       this.emitExit(1, terminalOutput);
     });
-    this.childProcess.on('exit', (code, signal) => {
+    this.childProcess.on('exit', async (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
       untrackRunningNodeProcess(this);
+      this.exitedWithFailure = code !== 0;
+      if (this.exitedWithFailure) {
+        for (const cb of this.failedExitCallbacks) {
+          cb();
+        }
+      }
+      // The last stdout and stderr chunks can still be unread at 'exit'.
+      await this.stdioClosed;
       if (
         code === 0 &&
         this.readyWhenStatus.length &&
@@ -845,25 +890,35 @@ function isReady(
 // sequences. LogMatcher, absent from the WASM binding, matches text with
 // escapes inside it.
 function readyWhenMatcher(
-  readyWhenStatus: { stringToMatch: string; found: boolean }[]
+  readyWhenStatus: { stringToMatch: string; found: boolean }[],
+  exitedWithFailure: () => boolean
 ): (chunk: string) => boolean {
   const matchers = readyWhenStatus.map((status) => ({
     status,
     matcher: IS_WASM ? null : new LogMatcher([status.stringToMatch]),
     tail: '',
+    matched: false,
   }));
   return (chunk) => {
+    // The status is shared, so only a chunk with this command's own match
+    // reports ready. Once ready, only a failed command can change the result.
+    if (isReady(readyWhenStatus) && !exitedWithFailure()) return false;
+    let matchedNow = false;
     for (const entry of matchers) {
       const { status, matcher } = entry;
-      if (status.found) continue;
+      if (entry.matched) continue;
       const printed = entry.tail + chunk;
-      status.found =
+      entry.matched =
         printed.includes(status.stringToMatch) || !!matcher?.feed(chunk);
       entry.tail = printed.slice(
         Math.max(0, printed.length - status.stringToMatch.length + 1)
       );
+      if (entry.matched) {
+        status.found = true;
+        matchedNow = true;
+      }
     }
-    return isReady(readyWhenStatus);
+    return matchedNow && isReady(readyWhenStatus);
   };
 }
 

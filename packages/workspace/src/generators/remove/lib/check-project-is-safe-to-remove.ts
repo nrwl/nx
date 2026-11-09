@@ -23,7 +23,7 @@ export function checkProjectIsSafeToRemove(
     return;
   }
   const containedProjects = [];
-  for (const [_, p] of getProjects(tree)) {
+  for (const [, p] of getProjects(tree)) {
     if (
       project.name !== p.name &&
       !normalizePath(relative(project.root, p.root)).startsWith('..')

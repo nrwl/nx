@@ -38,5 +38,10 @@ export type TasksRunner<T = unknown> = (
      * their results are not written.
      */
     tasksRunWithoutDependencies?: ReadonlySet<string>;
+    /**
+     * Tasks hashed from an Ultracache configuration that `nx affected` selection
+     * dropped. Empty when nothing was, unset for commands that do not select.
+     */
+    ultracacheSkippedTaskIds?: ReadonlySet<string>;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;

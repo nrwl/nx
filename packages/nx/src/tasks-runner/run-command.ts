@@ -81,6 +81,8 @@ export interface TaskSelection {
    * to the cache; a hit may still be restored.
    */
   tasksRunWithoutDependencies?: readonly string[];
+  /** What `nx affected` dropped from tasks hashed from a configuration. Unset for commands that do not select. */
+  ultracacheSkippedTaskIds?: string[];
 }
 import { isTuiEnabled, ORIGINAL_TUI_ENV_VALUE } from './is-tui-enabled';
 import {
@@ -661,6 +663,7 @@ export async function runTasksForCommand(
       ultracacheConfigurationOutcome:
         taskSelection.ultracacheConfigurationOutcome,
       tasksRunWithoutDependencies: taskSelection.tasksRunWithoutDependencies,
+      ultracacheSkippedTaskIds: taskSelection.ultracacheSkippedTaskIds,
     });
 
     await renderIsDone.finally(() => restoreTerminal?.());
@@ -1043,6 +1046,7 @@ export async function invokeTasksRunner({
   planningContext,
   ultracacheConfigurationOutcome: loadedUltracacheConfigurationOutcome,
   tasksRunWithoutDependencies,
+  ultracacheSkippedTaskIds,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -1057,6 +1061,7 @@ export async function invokeTasksRunner({
   /** Already loaded for this command; `undefined` loads it here. */
   ultracacheConfigurationOutcome?: UltracacheConfigurationOutcome | null;
   tasksRunWithoutDependencies?: readonly string[];
+  ultracacheSkippedTaskIds?: string[];
 }): Promise<{
   taskResults: { [id: string]: TaskResult };
   taskStatuses?: Record<string, TaskStatus>;
@@ -1102,7 +1107,8 @@ export async function invokeTasksRunner({
     ultracacheConfigurationOutcome,
     projectGraph,
     taskGraph,
-    nxArgs
+    nxArgs,
+    ultracacheSkippedTaskIds
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
@@ -1197,6 +1203,8 @@ export async function invokeTasksRunner({
       tasksRunWithoutDependencies: tasksRunWithoutDependencies?.length
         ? new Set(tasksRunWithoutDependencies)
         : undefined,
+      ultracacheSkippedTaskIds:
+        ultracacheSkippedTaskIds && new Set(ultracacheSkippedTaskIds),
     }
   );
   if ((promiseOrObservable as any).subscribe) {
@@ -1309,13 +1317,15 @@ function reportUltracacheConfigurations(
   outcome: UltracacheConfigurationOutcome | null,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
+  ultracacheSkippedTaskIds: string[] | undefined
 ): void {
   if (!outcome || outcome.status === 'skipped') return;
   if (!nxArgs.verbose && process.env.NX_VERBOSE_LOGGING !== 'true') return;
   const summary = formatUltracacheSummary(
     buildUltracacheOverrides(projectGraph, taskGraph, outcome.configurations),
-    outcome.status
+    outcome.status,
+    ultracacheSkippedTaskIds?.length
   );
   output.note({ title: summary.line, bodyLines: summary.bodyLines });
 }

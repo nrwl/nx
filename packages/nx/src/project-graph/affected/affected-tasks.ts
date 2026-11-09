@@ -8,7 +8,10 @@ import {
   type FileRevisions,
   type UltracacheConfigurations,
 } from '../../native';
-import { ultracacheEligibilityOptions } from '../../ultracache/overrides';
+import {
+  buildUltracacheOverrides,
+  ultracacheEligibilityOptions,
+} from '../../ultracache/overrides';
 import {
   configurationsOf,
   type UltracacheConfigurationOutcome,
@@ -285,7 +288,12 @@ async function matchAffectedTasks(
     return {
       affectedTaskIds: new Set(),
       taskGraph: empty,
-      taskSelection: { taskGraph: empty, initiatingTaskIds: [], taskIds: [] },
+      taskSelection: {
+        taskGraph: empty,
+        initiatingTaskIds: [],
+        taskIds: [],
+        ultracacheSkippedTaskIds: [],
+      },
       explanation: request.explain
         ? {
             inputs: [],
@@ -380,6 +388,37 @@ async function matchAffectedTasks(
       )
     : [];
 
+  let ultracacheSkippedTaskIds: string[] = [];
+  if (ultracacheConfigurations) {
+    // `--exclude` and `--exclude-task-dependencies` drop tasks with or without Ultracache.
+    const runnable = new Set(
+      taskIds.filter((id) => {
+        const { project, target } = taskGraph.tasks[id].target;
+        return (
+          targets.includes(target) &&
+          !options.excludedProjects.includes(project)
+        );
+      })
+    );
+    if (!request.excludeTaskDependencies) {
+      // A Set visits what is added while iterating it.
+      for (const id of runnable) {
+        for (const dep of [
+          ...(taskGraph.dependencies[id] ?? []),
+          ...(taskGraph.continuousDependencies[id] ?? []),
+        ]) {
+          runnable.add(dep.id);
+        }
+      }
+    }
+    const kept = new Set(keep);
+    ultracacheSkippedTaskIds = buildUltracacheOverrides(
+      projectGraph,
+      taskGraph,
+      ultracacheConfigurations
+    ).used.filter((id) => runnable.has(id) && !kept.has(id));
+  }
+
   return {
     affectedTaskIds: new Set(selection.affected),
     taskGraph,
@@ -423,6 +462,7 @@ async function matchAffectedTasks(
       ...(tasksRunWithoutDependencies.length
         ? { tasksRunWithoutDependencies }
         : {}),
+      ultracacheSkippedTaskIds,
     },
   };
 }

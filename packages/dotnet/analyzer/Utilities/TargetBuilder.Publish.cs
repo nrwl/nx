@@ -9,9 +9,7 @@ public static partial class TargetBuilder
 {
     private static void AddPublishTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        bool isTest,
         EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
