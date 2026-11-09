@@ -1,7 +1,14 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import type { ModuleKind, ScriptTarget } from 'typescript';
-import { typescriptVersion } from '../utils/versions';
+import { transpileTypescript } from 'nx/src/devkit-internals';
+import type { CompilerOptions, ModuleKind, ScriptTarget } from 'typescript';
+import { ensureTypescript } from '../utils/ensure-typescript';
 import { ensurePackage } from '../utils/package-json';
+import { typescriptVersion } from '../utils/versions';
+
+// The same values in every TypeScript version Nx supports.
+const JSX_EMIT_PRESERVE = 1;
+const SCRIPT_TARGET_ESNEXT = 99;
+const MODULE_KIND_ESNEXT = 99;
 
 export type ToJSOptions = {
   extension?: '.js' | '.mjs' | '.cjs';
@@ -14,10 +21,7 @@ export type ToJSOptions = {
  * Rename and transpile any new typescript files created to javascript files
  */
 export function toJS(tree: Tree, options?: ToJSOptions): void {
-  const { JsxEmit, ScriptTarget, transpile, ModuleKind } = ensurePackage(
-    'typescript',
-    typescriptVersion
-  ) as typeof import('typescript');
+  const transpile = loadTranspile();
 
   // Match `.ts`, `.mts`, `.cts`, `.tsx`. The optional `[cm]` keeps native
   // ESM (`.mts`) and CommonJS (`.cts`) TypeScript extensions in the rename
@@ -30,9 +34,9 @@ export function toJS(tree: Tree, options?: ToJSOptions): void {
         c.path,
         transpile(c.content.toString('utf-8'), {
           allowJs: true,
-          jsx: JsxEmit.Preserve,
-          target: options?.target ?? ScriptTarget.ESNext,
-          module: options?.module ?? ModuleKind.ESNext,
+          jsx: JSX_EMIT_PRESERVE,
+          target: options?.target ?? SCRIPT_TARGET_ESNEXT,
+          module: options?.module ?? MODULE_KIND_ESNEXT,
         })
       );
       const targetExt = options?.extension ?? '.js';
@@ -44,4 +48,20 @@ export function toJS(tree: Tree, options?: ToJSOptions): void {
       }
     }
   }
+}
+
+function loadTranspile(): (
+  input: string,
+  compilerOptions: CompilerOptions
+) => string {
+  // @nx/devkit's nx peer range includes versions without transpileTypescript.
+  // Those do not support TypeScript 7.1, so the TypeScript module transpiles.
+  if (typeof transpileTypescript !== 'function') {
+    return ensurePackage<typeof import('typescript')>(
+      'typescript',
+      typescriptVersion
+    ).transpile;
+  }
+  ensureTypescript();
+  return transpileTypescript;
 }
