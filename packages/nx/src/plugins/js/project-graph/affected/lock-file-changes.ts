@@ -8,6 +8,7 @@ import {
   LockFileChange,
   WholeFileChange,
 } from '../../../../project-graph/file-utils';
+import { join } from 'node:path';
 import { jsPluginConfig as readJsPluginConfig } from '../../utils/config';
 import { findMatchingProjects } from '../../../../utils/find-matching-projects';
 import {
@@ -17,12 +18,21 @@ import {
 } from '../../../../config/project-graph';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { hashArray } from '../../../../hasher/file-hasher';
+import { fileExists, readJsonFile } from '../../../../utils/fileutils';
 import { output } from '../../../../utils/output';
 import { PackageJson } from '../../../../utils/package-json';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   AUTO_AFFECTED_LOCK_FILES,
   getLockFileNodesForName,
 } from '../../lock-file/lock-file';
+
+const PACKAGE_JSON_DEPENDENCY_SECTIONS = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+] as const;
 
 export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   WholeFileChange | LockFileChange
@@ -41,12 +51,15 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
     if (!changedLockFile) {
       return [];
     }
-    // External node names, which the reverse walk in filterAffected carries
-    // back to the projects depending on them.
-    return (
-      changedExternalNodes(changedLockFile, projectGraph, packageJson) ??
-      allProjectNames
+    // External nodes the reverse walk carries to dependents, plus projects
+    // that still depend on a package only the base lockfile contains.
+    // Null falls back to every project when the diff cannot be pinned.
+    const pinned = changedExternalNodes(
+      changedLockFile,
+      projectGraph,
+      packageJson
     );
+    return pinned ? [...pinned.externals, ...pinned.projects] : allProjectNames;
   } else if (Array.isArray(projectsAffectedByDependencyUpdates)) {
     return findMatchingProjects(
       projectsAffectedByDependencyUpdates,
@@ -88,12 +101,12 @@ export function lockFileDependencyChanges(
       ),
     };
   }
-  const externals =
+  const pinned =
     projectsAffectedByDependencyUpdates === 'auto'
       ? changedExternalNodes(changedLockFile, projectGraph, packageJson)
       : null;
-  return externals
-    ? { ...none, externals }
+  return pinned
+    ? { ...none, externals: pinned.externals, projects: pinned.projects }
     : { ...none, changedExternalTypes: ['npm'] };
 }
 
@@ -108,68 +121,86 @@ function findChangedLockFile(
 }
 
 /**
- * Diffs the lock file's base and head revisions with the parsers the project
- * graph is built from, and names the external nodes whose package changed.
+ * External nodes whose package changed, and projects that depended on a
+ * package present only in the base lockfile.
  *
- * Null when the diff cannot be pinned to packages: a WholeFileChange (a
- * revision could not be read), a parse failure, or a changed package with no
- * external node in the head graph.
+ * Null when the diff cannot be pinned: a WholeFileChange (a revision could
+ * not be read), a parse failure, or a package that changed in the head
+ * lockfile but has no external node in the head graph. A package that exists
+ * only in the base lockfile is a removal, not one of those misses.
  */
 function changedExternalNodes(
   changedLockFile: FileChange<WholeFileChange | LockFileChange>,
   projectGraph: ProjectGraph,
   packageJson: PackageJson | undefined
-): string[] | null {
+): { externals: string[]; projects: string[] } | null {
   const changes = changedLockFile.getChanges();
   if (!changes.every(isLockFileChange)) {
     return null;
   }
 
-  const changedPackageNames = getChangedPackageNames(
+  const diff = getChangedPackageNames(
     changedLockFile.file,
     changes,
     packageJson
   );
-  if (changedPackageNames === null) {
+  if (diff === null) {
     return null;
   }
-  if (changedPackageNames.size === 0) {
-    return [];
+  if (diff.changed.size === 0 && diff.removed.size === 0) {
+    return { externals: [], projects: [] };
   }
 
+  const externalNodes = projectGraph.externalNodes ?? {};
   const { touchedNodeNames, missingPackageNames } =
-    findExternalNodesByPackageName(
-      changedPackageNames,
-      projectGraph.externalNodes ?? {}
-    );
-  return missingPackageNames.size > 0 ? null : touchedNodeNames;
+    findExternalNodesByPackageName(diff.changed, externalNodes);
+  if (missingPackageNames.size > 0) {
+    return null;
+  }
+
+  const { touchedNodeNames: removedExternalNodes } =
+    findExternalNodesByPackageName(diff.removed, externalNodes);
+
+  return {
+    externals: [...touchedNodeNames, ...removedExternalNodes],
+    projects: projectsDependingOnRemovedPackages(
+      diff.removed,
+      diff.removedNodeNames,
+      projectGraph,
+      packageJson
+    ),
+  };
 }
 
 /**
- * Parse the base and head revisions of the lock file with Nx's
- * existing parsers and diff the resulting package -> version maps.
- *
- * Returns the set of changed package names, or null if parsing failed.
+ * Diff the parsed package fingerprints. `changed` is in the head with a
+ * different fingerprint, including additions. `removed` is only in the base,
+ * and `removedNodeNames` are that revision's external node names. Null when
+ * parsing fails.
  */
 function getChangedPackageNames(
   file: string,
   changes: LockFileChange[],
   packageJson: PackageJson | undefined
-): Set<string> | null {
+): {
+  changed: Set<string>;
+  removed: Set<string>;
+  removedNodeNames: Set<string>;
+} | null {
   try {
     const changed = new Set<string>();
+    const removed = new Set<string>();
+    const baseNodeSets: Record<string, ProjectGraphExternalNode>[] = [];
     // calculateFileChanges emits a single LockFileChange per lock file, but
     // the iteration keeps the contract open in case multiple ranges are ever
     // emitted for the same file.
     for (const change of changes) {
-      const baseFingerprints = collectPackageFingerprints(
-        getLockFileNodesForName(
-          file,
-          change.baseContent,
-          hashArray([change.baseContent]),
-          packageJson
-        ).nodes
-      );
+      const baseNodes = getLockFileNodesForName(
+        file,
+        change.baseContent,
+        hashArray([change.baseContent]),
+        packageJson
+      ).nodes;
       const headFingerprints = collectPackageFingerprints(
         getLockFileNodesForName(
           file,
@@ -178,6 +209,8 @@ function getChangedPackageNames(
           packageJson
         ).nodes
       );
+      baseNodeSets.push(baseNodes);
+      const baseFingerprints = collectPackageFingerprints(baseNodes);
 
       for (const [name, fingerprints] of headFingerprints) {
         const baseSet = baseFingerprints.get(name);
@@ -187,11 +220,27 @@ function getChangedPackageNames(
       }
       for (const name of baseFingerprints.keys()) {
         if (!headFingerprints.has(name)) {
-          changed.add(name);
+          removed.add(name);
         }
       }
     }
-    return changed;
+
+    // A package that one range removes and another changes is not gone.
+    for (const name of changed) {
+      removed.delete(name);
+    }
+
+    const removedNodeNames = new Set<string>();
+    for (const nodes of baseNodeSets) {
+      for (const node of Object.values(nodes ?? {})) {
+        const packageName = node.data?.packageName;
+        if (packageName && removed.has(packageName) && node.name) {
+          removedNodeNames.add(node.name);
+        }
+      }
+    }
+
+    return { changed, removed, removedNodeNames };
   } catch (e) {
     output.warn({
       title: `Failed to parse "${file}" for projectsAffectedByDependencyUpdates "auto" mode. All projects will be marked as affected.`,
@@ -234,6 +283,93 @@ function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
     if (!b.has(value)) return false;
   }
   return true;
+}
+
+/**
+ * Projects that still depend on a removed package. Match graph edges to the
+ * base lockfile node name, and package.json manifests that still declare it.
+ */
+function projectsDependingOnRemovedPackages(
+  removed: Set<string>,
+  removedNodeNames: Set<string>,
+  projectGraph: ProjectGraph,
+  packageJson: PackageJson | undefined
+): string[] {
+  if (removed.size === 0) {
+    return [];
+  }
+
+  const projects = new Set<string>();
+  const nodes = projectGraph.nodes ?? {};
+
+  for (const [source, deps] of Object.entries(
+    projectGraph.dependencies ?? {}
+  )) {
+    if (!nodes[source] || !deps?.length) continue;
+    if (
+      deps.some((dep) =>
+        dependencyTargetsRemovedPackage(dep.target, removed, removedNodeNames)
+      )
+    ) {
+      projects.add(source);
+    }
+  }
+
+  for (const project of Object.values(nodes)) {
+    if (projects.has(project.name)) continue;
+    const root = project.data?.root;
+    const isWorkspaceRoot = root === '.' || root === '';
+    const manifest = isWorkspaceRoot
+      ? (packageJson ?? readProjectManifest(root))
+      : readProjectManifest(root);
+    if (manifestDeclaresRemovedPackage(manifest, removed)) {
+      projects.add(project.name);
+    }
+  }
+
+  return [...projects];
+}
+
+function dependencyTargetsRemovedPackage(
+  target: string,
+  removed: Set<string>,
+  removedNodeNames: Set<string>
+): boolean {
+  if (removedNodeNames.has(target)) return true;
+  if (!target.startsWith('npm:')) return false;
+  const spec = target.slice('npm:'.length);
+  if (removed.has(spec)) return true;
+  // `npm:@scope/name@version` — the version separator is the last `@`.
+  const at = spec.lastIndexOf('@');
+  return at > 0 && removed.has(spec.slice(0, at));
+}
+
+function readProjectManifest(
+  projectRoot: string | undefined
+): PackageJson | undefined {
+  if (projectRoot == null) return undefined;
+  const manifestPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (!fileExists(manifestPath)) return undefined;
+  try {
+    return readJsonFile<PackageJson>(manifestPath);
+  } catch {
+    return undefined;
+  }
+}
+
+function manifestDeclaresRemovedPackage(
+  manifest: PackageJson | undefined,
+  removed: Set<string>
+): boolean {
+  if (!manifest) return false;
+  for (const section of PACKAGE_JSON_DEPENDENCY_SECTIONS) {
+    const deps = manifest[section];
+    if (!deps) continue;
+    for (const name of Object.keys(deps)) {
+      if (removed.has(name)) return true;
+    }
+  }
+  return false;
 }
 
 /**
