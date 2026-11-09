@@ -73,10 +73,7 @@ export {
   createTreeParseConfigHost,
   type TreeParseConfigHost,
 } from './src/utils/typescript/ts-config';
-export {
-  ensureClassicTypescript,
-  ensureTypescript,
-} from './src/utils/typescript/ensure-typescript';
+export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
 export {
   getRangeMinimum,
   getTsConfigModuleResolution,
