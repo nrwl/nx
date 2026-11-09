@@ -226,7 +226,7 @@ describe('migrate-to-eslint-v10 migration', () => {
     // Left in place, and reported as an eslintrc ESLint v10 stops reading.
     expect(tree.exists('.eslintrc.js')).toBe(true);
     expect(result.nextSteps.join('\n')).toContain(
-      'fold these into flat config and delete them: .eslintrc.js.'
+      'except any a flat config loads that way: .eslintrc.js.'
     );
   });
 
@@ -279,7 +279,7 @@ describe('migrate-to-eslint-v10 migration', () => {
       'ESLint v10 removed the eslintrc format'
     );
     expect(result.nextSteps.join('\n')).toContain(
-      'ESLint v10 no longer reads eslintrc files; fold these into flat config and delete them: apps/app1/nested/.eslintrc.json.'
+      'ESLint v10 no longer reads eslintrc files unless a flat config loads them through FlatCompat. Fold these into flat config and delete them, except any a flat config loads that way: apps/app1/nested/.eslintrc.json.'
     );
   });
 

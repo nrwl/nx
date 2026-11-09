@@ -206,27 +206,31 @@ async function convertRemainingEslintrcConfigs(
   }
 
   const list = remaining.join(', ');
+  // The converter leaves a shared eslintrc in place and loads it through
+  // FlatCompat, so a listed file can still be in effect.
+  const loadedThroughFlatCompat =
+    'A file a flat config loads through FlatCompat, with `compat.extends` or the `extends` of a file loaded that way, still applies and can stay. To fold one in anyway, also remove the `compat.extends` entry that loads it.';
   // A flat config at the root already won over every eslintrc below it on
-  // ESLint v9, so those files were dead before this migration ran. Folding them
-  // in turns their rules back on, which is a different decision from restoring
-  // enforcement this run just dropped.
+  // ESLint v9, so the files no flat config loaded through FlatCompat were dead
+  // before this migration ran. Folding them in turns their rules back on, which
+  // is a different decision from restoring enforcement this run just dropped.
   if (rootState.kind === 'flat') {
     agentContext.push(
-      `These eslintrc files are still in the workspace: ${list}. The workspace already had a flat config at its root, so ESLint resolved that one instead and the rules these files hold have not been applied for a while. ` +
-        'Fold each one into the flat config that covers the same files, then delete it, and expect new lint errors from rules that were effectively off.'
+      `These eslintrc files are still in the workspace: ${list}. The workspace already had a flat config at its root, so ESLint resolved that one instead, and the rules of a listed file that no flat config loads through FlatCompat have not been applied for a while. ` +
+        `Fold each of those into the flat config that covers the same files, then delete it, and expect new lint errors from rules that were effectively off. ${loadedThroughFlatCompat}`
     );
     nextSteps.push(
-      `The root flat config was already shadowing these eslintrc files; fold them into flat config and delete them: ${list}. The rules they hold are not in effect today, so folding them in can surface new lint errors.`
+      `The root flat config was already shadowing these eslintrc files, unless a flat config loads them through FlatCompat. Fold them into flat config and delete them, except any a flat config loads that way: ${list}. The rules of a file no flat config loads are not in effect today, so folding it in can surface new lint errors.`
     );
     return;
   }
 
   agentContext.push(
-    `These eslintrc files are still in the workspace: ${list}. ESLint v10 removed the eslintrc format, so it no longer reads them and the rules they hold are silently not applied. ` +
-      'Fold each one into the flat config that covers the same files, then delete it.'
+    `These eslintrc files are still in the workspace: ${list}. ESLint v10 removed the eslintrc format, so the rules of a listed file that no flat config loads through FlatCompat are silently not applied. ` +
+      `Fold each of those into the flat config that covers the same files, then delete it. ${loadedThroughFlatCompat}`
   );
   nextSteps.push(
-    `ESLint v10 no longer reads eslintrc files; fold these into flat config and delete them: ${list}.`
+    `ESLint v10 no longer reads eslintrc files unless a flat config loads them through FlatCompat. Fold these into flat config and delete them, except any a flat config loads that way: ${list}.`
   );
 }
 
@@ -269,10 +273,10 @@ function reportNewEslintJsRecommendedRules(
   }
 
   nextSteps.push(
-    'The conversion added @eslint/js, which now supplies the recommended set the eslintrc config took from "eslint:recommended". Its ESLint v10 release enables three rules the v9 one did not: no-unassigned-vars, no-useless-assignment and preserve-caught-error.'
+    'The conversion added @eslint/js, which now supplies the "eslint:recommended" set to converted configs and to eslintrc files loaded through FlatCompat. Its ESLint v10 release enables three rules the v9 one did not: no-unassigned-vars, no-useless-assignment and preserve-caught-error. They apply only where a config extends "eslint:recommended".'
   );
   agentContext.push(
-    'The conversion added @eslint/js to package.json to replace an "eslint:recommended" extends. Its recommended set enables no-unassigned-vars, no-useless-assignment and preserve-caught-error, which the workspace was not running before, so expect those three to account for newly reported errors when lint runs.'
+    'The conversion added @eslint/js to package.json. Converted configs and eslintrc files loaded through FlatCompat take the "eslint:recommended" set from it. Its recommended set enables no-unassigned-vars, no-useless-assignment and preserve-caught-error, which the workspace was not running before. Where a config extends "eslint:recommended", expect those three to account for newly reported errors when lint runs.'
   );
 }
 

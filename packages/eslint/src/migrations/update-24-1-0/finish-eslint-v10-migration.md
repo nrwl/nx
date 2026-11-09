@@ -77,9 +77,11 @@ In your handoff `summary` (1 to 3 sentences per the system prompt), name the sec
 
 **What changed**: ESLint v10 does not read eslintrc files. A file left behind is not an error, it is silently ignored, so the rules it holds stop being enforced.
 
+The exception is a file a flat config loads through `FlatCompat`, with `compat.extends` or the `extends` of a file loaded that way. The pre-pass loads this way any local eslintrc that a converted config extends but the run did not convert, such as a shared config outside any project. Such a file still applies, so it can stay. To fold one in anyway, convert it to a module the loading configs import, and remove the `compat.extends` entry that loads it.
+
 Some leftovers were already dormant before this migration: a flat config at the workspace root wins over every eslintrc below it, so ESLint had stopped reading those files well before v10. `<advisory_context>` says which case each one is. Folding a dormant file in turns rules back on that the workspace has not been running, so expect new errors there and keep them separate in your summary from the enforcement this migration actually dropped.
 
-Convert each one to a flat config next to it, mirroring the shape of the configs the pre-pass produced.
+Convert each of the other files to a flat config next to it, mirroring the shape of the configs the pre-pass produced.
 
 **Before:**
 
@@ -271,7 +273,7 @@ The pre-pass already moved the `ignore-path` files that apply to every run of a 
 
    Expect failures from four places, all of them addressed above. Three are not rule violations at all: a directive comment naming a rule that no longer exists (section 2) and an `/* eslint-env */` comment (section 3), each reported against the comment itself, and a lint target option section 6 covers, which fails as an `Invalid option` error or, for `rulesdir`, as a rule ESLint cannot find.
 
-   The fourth is a rule-set change, and ESLint v10 is not its source: v10 enforces the same rules as v9, so anything newly enabled comes from a package the pre-pass moved. Two can do that, and `<advisory_context>` says which of them applied. A config that extends `eslint:recommended` and was converted here picks up `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error` from `@eslint/js` when the workspace had no such dependency before. A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset picks up the React Compiler rules, which v7 added to that preset with 12 of them at error severity. Both came from a changed preset default, not from the user, so turn the rules off in the flat config with a short comment rather than editing source, and never weaken `rules-of-hooks` or `exhaustive-deps`.
+   The fourth is a rule-set change, and ESLint v10 is not its source: v10 enforces the same rules as v9, so anything newly enabled comes from a package the pre-pass moved. Two can do that, and `<advisory_context>` says which of them applied. A config that extends `eslint:recommended` and was converted here, or that a converted config loads through `FlatCompat`, picks up `no-unassigned-vars`, `no-useless-assignment` and `preserve-caught-error` from `@eslint/js` when the workspace had no such dependency before. A config that pulls `eslint-plugin-react-hooks`'s own `recommended` preset picks up the React Compiler rules, which v7 added to that preset with 12 of them at error severity. Both came from a changed preset default, not from the user, so turn the rules off in the flat config with a short comment rather than editing source, and never weaken `rules-of-hooks` or `exhaustive-deps`.
 
 4. Spot-check that a converted project resolves its config:
 
