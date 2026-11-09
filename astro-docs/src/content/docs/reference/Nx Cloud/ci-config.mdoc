@@ -394,8 +394,7 @@ An `if` without a status function runs only when the earlier steps succeeded, as
 | `!`                              | Not                                                                 |
 | `==`, `!=`, `<`, `<=`, `>`, `>=` | Comparison                                                          |
 
-`&&` is and, and `||` is or.
-Both return one of their operands, so `${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}` gives a default.
+`&&` (and) and `||` (or) return one of their operands, so `${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}` gives a default.
 
 Literals are `null`, `true`, `false`, numbers, and strings in single quotes.
 Write `''` for a quote inside a string.
