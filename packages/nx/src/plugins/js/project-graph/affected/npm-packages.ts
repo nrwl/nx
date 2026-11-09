@@ -82,7 +82,6 @@ function touchedNpmPackages(
   if (workspaceYamlChange) {
     for (const c of workspaceYamlChange.getChanges()) {
       // Unparseable yaml - be conservative and fall back to all projects.
-      if (isWholeFileChange(c)) return null;
       if (!isJsonChange(c)) return null;
 
       // Catalog, patchedDependencies, settings, etc. do not change which
