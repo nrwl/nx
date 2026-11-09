@@ -246,7 +246,7 @@ Every project with `vitest.config.e2e.mts` in its root gets an `e2e` task that r
 
 - Keys are file names, not paths, and must match `{vite,vitest}.config*.{js,ts,mjs,mts,cjs,cts}`. The plugin warns about any other key and ignores it.
 - The directory needs a `package.json` or `project.json`, as it does for the default config files.
-- Two config files in one project root can't infer the same task name. The plugin reports an error for the mapped file and still infers the other.
+- Two config files in one project root can't infer the same task name. The plugin reports an error for each mapped file whose task another config file in that root also infers, and infers no tasks from it. A default config file keeps its tasks. A `vite.config.*` file without `test` settings infers no `test` task, so a mapped file can take that name.
 
 ### Configure unit and e2e separately
 

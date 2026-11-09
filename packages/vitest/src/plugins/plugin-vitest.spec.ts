@@ -492,6 +492,88 @@ describe('@nx/vitest', () => {
         ],
       });
     });
+
+    function mockViteConfigWithTest(hasTest: boolean) {
+      const viteImport = {
+        resolveConfig: vi.fn(async ({ configFile }) => ({
+          path: configFile,
+          config: {},
+          dependencies: [],
+          ...(hasTest && configFile.endsWith('vite.config.ts')
+            ? { test: {} }
+            : {}),
+        })),
+      };
+      (loadViteDynamicImport as Mock)
+        .mockResolvedValueOnce(viteImport)
+        .mockResolvedValueOnce(viteImport);
+    }
+
+    it('maps a config to the test target when vite.config has no test block', async () => {
+      mockViteConfigWithTest(false);
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts', 'vitest.config.unit.mts'],
+        {
+          testTargetName: 'test',
+          testMode: 'run',
+          configToTargetName: { 'vitest.config.unit.mts': 'test' },
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects!['.'].targets).toEqual({});
+      expect(nodes[1][1].projects!['.'].targets!.test.command).toBe(
+        'vitest run --config vitest.config.unit.mts'
+      );
+    });
+
+    it('reports a mapped config that infers the test target of a vite.config with a test block', async () => {
+      mockViteConfigWithTest(true);
+
+      await expect(
+        createNodesFunction(
+          ['vite.config.ts', 'vitest.config.unit.mts'],
+          {
+            testTargetName: 'test',
+            configToTargetName: { 'vitest.config.unit.mts': 'test' },
+          },
+          context
+        )
+      ).rejects.toMatchObject({
+        errors: [
+          [
+            'vitest.config.unit.mts',
+            expect.objectContaining({
+              message:
+                '@nx/vitest: "vitest.config.unit.mts" and "vite.config.ts" in "." both infer the "test" target. Give each config file its own target name.',
+            }),
+          ],
+        ],
+      });
+    });
+
+    it('reports both mapped configs that infer the same target', async () => {
+      await expect(
+        createNodesFunction(
+          ['vitest.config.ts', 'vitest.config.a.mts', 'vitest.config.b.mts'],
+          {
+            testTargetName: 'test',
+            configToTargetName: {
+              'vitest.config.a.mts': 'e2e',
+              'vitest.config.b.mts': 'e2e',
+            },
+          },
+          context
+        )
+      ).rejects.toMatchObject({
+        errors: [
+          ['vitest.config.a.mts', expect.any(Error)],
+          ['vitest.config.b.mts', expect.any(Error)],
+        ],
+        partialResults: [['vitest.config.ts', expect.anything()]],
+      });
+    });
   });
 
   describe('atomized test discovery', () => {

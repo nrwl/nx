@@ -116,31 +116,30 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 
     const projectRoots: string[] = [];
     const validConfigFiles: string[] = [];
-    const configFileTargets: VitestConfigFileTargets[] = [];
-    const configFileTargetsByRoot = new Map<
-      string,
-      VitestConfigFileTargets[]
-    >();
+    const configFileOptions: VitestConfigFileOptions[] = [];
+    const configFileIndexesByRoot = new Map<string, number[]>();
     for (const configFile of configFilePaths) {
-      const fileTargets = getConfigFileTargets(
+      const fileOptions = getConfigFileOptions(
         configFile,
         normalizedOptions,
         configTargetNames
       );
       const potentialRoot = dirname(configFile);
       if (
-        !fileTargets ||
+        !fileOptions ||
         !checkIfConfigFileShouldBeProject(potentialRoot, context)
       ) {
         continue;
       }
       projectRoots.push(potentialRoot);
       validConfigFiles.push(configFile);
-      configFileTargets.push(fileTargets);
-      if (!configFileTargetsByRoot.has(potentialRoot)) {
-        configFileTargetsByRoot.set(potentialRoot, []);
+      configFileOptions.push(fileOptions);
+      if (!configFileIndexesByRoot.has(potentialRoot)) {
+        configFileIndexesByRoot.set(potentialRoot, []);
       }
-      configFileTargetsByRoot.get(potentialRoot).push(fileTargets);
+      configFileIndexesByRoot
+        .get(potentialRoot)
+        .push(validConfigFiles.length - 1);
     }
 
     const lockfile = getLockFileName(
@@ -162,43 +161,69 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 
     const setupTsconfigJsonCache: RawTsconfigJsonCache = new Map();
 
+    const builtTargets = new Map<number, Promise<VitestTargets | null>>();
+    const getTargets = (idx: number): Promise<VitestTargets | null> => {
+      if (!builtTargets.has(idx)) {
+        builtTargets.set(idx, buildOrReadCachedTargets(idx));
+      }
+      return builtTargets.get(idx);
+    };
+    const buildOrReadCachedTargets = async (
+      idx: number
+    ): Promise<VitestTargets | null> => {
+      const configFile = validConfigFiles[idx];
+      const projectRoot = projectRoots[idx];
+      // results from vitest.config.js will be different from results of vite.config.js
+      // but the hash will be the same because it is based on the files under the project root.
+      // Adding the config file path to the hash ensures that the final hash value is different
+      // for different config files.
+      const hash = hashes[idx] + configFile;
+      const cachedTargets = targetsCache.get(hash);
+      // Older cache entries predate `setupFileCandidates`.
+      if (
+        cachedTargets === undefined ||
+        (cachedTargets && !cachedTargets.setupFileCandidates)
+      ) {
+        const result = await buildVitestTargets(
+          configFile,
+          projectRoot,
+          configFileOptions[idx].options,
+          configFileOptions[idx].mapped,
+          context,
+          pmc,
+          tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+        );
+        // Cache the result even when it's null (a root orchestrator config)
+        // so the config isn't re-resolved on every project-graph build.
+        targetsCache.set(hash, result);
+      }
+      return targetsCache.get(hash);
+    };
+    // A failed sibling reports its own error, so it infers nothing here.
+    const getInferredTargets = async (
+      idx: number
+    ): Promise<ConfigFileTargets> => ({
+      configFile: validConfigFiles[idx],
+      isDefault: !configFileOptions[idx].mapped,
+      targetNames: Object.keys(
+        (await getTargets(idx).catch(() => null))?.targets ?? {}
+      ),
+    });
+
     try {
       return await createNodesFromFiles(
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
-          const fileTargets = configFileTargets[idx];
+          const fileOptions = configFileOptions[idx];
+          const cached = await getTargets(idx);
           assertUniqueConfigTargetNames(
             '@nx/vitest',
             projectRoot,
-            fileTargets,
-            configFileTargetsByRoot.get(projectRoot)
+            await getInferredTargets(idx),
+            await Promise.all(
+              configFileIndexesByRoot.get(projectRoot).map(getInferredTargets)
+            )
           );
-
-          // results from vitest.config.js will be different from results of vite.config.js
-          // but the hash will be the same because it is based on the files under the project root.
-          // Adding the config file path to the hash ensures that the final hash value is different
-          // for different config files.
-          const hash = hashes[idx] + configFile;
-          const cachedTargets = targetsCache.get(hash);
-          // Older cache entries predate `setupFileCandidates`.
-          if (
-            cachedTargets === undefined ||
-            (cachedTargets && !cachedTargets.setupFileCandidates)
-          ) {
-            const result = await buildVitestTargets(
-              configFile,
-              projectRoot,
-              fileTargets.options,
-              fileTargets.mapped,
-              context,
-              pmc,
-              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-            );
-            // Cache the result even when it's null (a root orchestrator config)
-            // so the config isn't re-resolved on every project-graph build.
-            targetsCache.set(hash, result);
-          }
-          const cached = targetsCache.get(hash);
           // `buildVitestTargets` returns null for a root orchestrator config
           // that must not become a project; register no node for it.
           if (!cached) {
@@ -212,7 +237,7 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
             // or their tsconfigs.
             targets: withSetupFileInputs(
               targets,
-              fileTargets.options.testTargetName,
+              fileOptions.options.testTargetName,
               setupFileCandidates,
               projectRoot,
               context.workspaceRoot,
@@ -239,28 +264,20 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
 
 export const createNodesV2 = createNodes;
 
-interface VitestConfigFileTargets extends ConfigFileTargets {
+interface VitestConfigFileOptions {
   options: VitestPluginOptions;
   mapped: boolean;
 }
 
-/** The targets a config file infers, or undefined when it infers none. */
-function getConfigFileTargets(
+/** The options a config file infers targets with, or undefined when it infers none. */
+function getConfigFileOptions(
   configFile: string,
   options: VitestPluginOptions,
   configTargetNames: Map<string, string>
-): VitestConfigFileTargets | undefined {
+): VitestConfigFileOptions | undefined {
   const fileName = posix.basename(configFile);
   if (vitestConfigFileNamePatterns.defaultName.test(fileName)) {
-    return {
-      configFile,
-      isDefault: true,
-      targetNames: [options.testTargetName, options.ciTargetName].filter(
-        Boolean
-      ),
-      options,
-      mapped: false,
-    };
+    return { options, mapped: false };
   }
   const testTargetName = configTargetNames.get(fileName);
   if (!testTargetName) {
@@ -270,9 +287,6 @@ function getConfigFileTargets(
     ? `${testTargetName}-ci`
     : undefined;
   return {
-    configFile,
-    isDefault: false,
-    targetNames: [testTargetName, ciTargetName].filter(Boolean),
     options: {
       ...options,
       testTargetName,
