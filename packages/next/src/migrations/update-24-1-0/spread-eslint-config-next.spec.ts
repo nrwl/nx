@@ -140,12 +140,13 @@ export default [
     `);
   });
 
-  it('spreads eslint-config-next in place of the generated FlatCompat entries and removes their setup', async () => {
+  it('spreads eslint-config-next in place of the generated FlatCompat entries and removes the setup only they use', async () => {
     tree.write(
       'apps/web/eslint.config.cjs',
       `const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const { fixupConfigRules } = require('@eslint/compat');
+const { configs: { recommended } } = require('@eslint/js');
 const nx = require('@nx/eslint-plugin');
 const baseConfig = require('../../eslint.config.cjs');
 
@@ -159,6 +160,7 @@ module.exports = [
 
   ...fixupConfigRules(compat.extends('next/core-web-vitals')),
 
+  recommended,
   ...nx.configs['flat/react-typescript'],
   ...baseConfig,
   {
@@ -173,12 +175,16 @@ module.exports = [
     expect(tree.read('apps/web/eslint.config.cjs', 'utf-8'))
       .toMatchInlineSnapshot(`
       "const nextVitals = require('eslint-config-next/core-web-vitals');
+      const {
+        configs: { recommended },
+      } = require('@eslint/js');
       const nx = require('@nx/eslint-plugin');
       const baseConfig = require('../../eslint.config.cjs');
 
       module.exports = [
         ...nextVitals,
 
+        recommended,
         ...nx.configs['flat/react-typescript'],
         ...baseConfig,
         {
