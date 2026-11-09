@@ -54,6 +54,31 @@ describe('versions(tree)', () => {
       { '@angular/core': '~20.3.0', eslint: '^10.0.0' },
       /^\^10\./,
     ],
+    [
+      'Angular 21 with angular-eslint 21.2.0',
+      { '@angular/core': '~21.0.0', 'angular-eslint': '21.2.0' },
+      /^\^9\./,
+    ],
+    [
+      'Angular 21 with @angular-eslint/eslint-plugin 21.2.0',
+      { '@angular/core': '~21.0.0', '@angular-eslint/eslint-plugin': '21.2.0' },
+      /^\^9\./,
+    ],
+    [
+      'Angular 21 with angular-eslint 21.3.0',
+      { '@angular/core': '~21.0.0', 'angular-eslint': '21.3.0' },
+      /^\^10\./,
+    ],
+    [
+      'Next.js 16 with eslint-config-next 16.3.0',
+      { next: '~16.1.0', 'eslint-config-next': '16.3.0' },
+      /^\^9\./,
+    ],
+    [
+      'Next.js 16 with eslint-config-next 16.4.0',
+      { next: '~16.1.0', 'eslint-config-next': '16.4.0' },
+      /^\^10\./,
+    ],
   ])('should pick the ESLint major for %s', (_, dependencies, expected) => {
     const tree = createTreeWithEmptyWorkspace();
     delete process.env.ESLINT_USE_FLAT_CONFIG;
