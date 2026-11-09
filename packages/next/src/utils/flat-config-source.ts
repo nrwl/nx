@@ -61,16 +61,27 @@ export function getImports(
     ) {
       return [];
     }
-    const names = tsModule.isIdentifier(declaration.name)
-      ? [declaration.name.text]
-      : tsModule.isObjectBindingPattern(declaration.name)
-        ? declaration.name.elements.flatMap((element) =>
-            tsModule.isIdentifier(element.name) ? [element.name.text] : []
-          )
-        : [];
-    return [{ module: initializer.arguments[0].text, names }];
+    return [
+      {
+        module: initializer.arguments[0].text,
+        names: getBoundNames(declaration.name),
+      },
+    ];
   }
   return [];
+}
+
+function getBoundNames(name: ts.BindingName): string[] {
+  if (tsModule.isIdentifier(name)) {
+    return [name.text];
+  }
+  const names: string[] = [];
+  for (const element of name.elements) {
+    if (!tsModule.isOmittedExpression(element)) {
+      names.push(...getBoundNames(element.name));
+    }
+  }
+  return names;
 }
 
 export function getPropertyName(name: ts.PropertyName): string | undefined {
