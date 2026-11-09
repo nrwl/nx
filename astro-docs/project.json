@@ -155,6 +155,7 @@
       "cache": true,
       "inputs": [
         "{projectRoot}/validate-links.ts",
+        "{projectRoot}/link-validation/sitemap-routes.ts",
         { "dependentTasksOutputFiles": "**/*.html" },
         { "dependentTasksOutputFiles": "**/sitemap*.xml" },
         "{projectRoot}/src/**/*",
