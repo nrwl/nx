@@ -1,9 +1,18 @@
-import * as ts from 'typescript';
+import { ensureTypescript, type TypescriptAst } from '@nx/devkit/internal';
+import type {
+  Expression,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  SourceFile,
+} from 'typescript';
+
+let ts: TypescriptAst;
 
 export function toPropertyAssignment(
   key: string,
   value: unknown
-): ts.PropertyAssignment {
+): PropertyAssignment {
+  ts ??= ensureTypescript();
   if (typeof value === 'string') {
     return ts.factory.createPropertyAssignment(
       ts.factory.createStringLiteral(key),
@@ -38,7 +47,8 @@ export function toPropertyAssignment(
   }
 }
 
-export function toExpression(value: unknown): ts.Expression {
+export function toExpression(value: unknown): Expression {
+  ts ??= ensureTypescript();
   if (typeof value === 'string') {
     return ts.factory.createStringLiteral(value);
   } else if (typeof value === 'number') {
@@ -58,11 +68,28 @@ export function toExpression(value: unknown): ts.Expression {
   }
 }
 
+export function appendProperties(
+  object: ObjectLiteralExpression,
+  properties: string[]
+): string {
+  const objectText = object.getText();
+  if (!properties.length) {
+    return objectText;
+  }
+  const lastProperty = object.properties[object.properties.length - 1];
+  if (!lastProperty) {
+    return `{ ${properties.join(', ')} ${objectText.slice(1)}`;
+  }
+  const index = lastProperty.getEnd() - object.getStart();
+  return `${objectText.slice(0, index)}, ${properties.join(', ')}${objectText.slice(index)}`;
+}
+
 /** Whether a top-level `configValues` object written by convert-to-inferred has `key`. */
 export function hasMigratedConfigValues(
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   key: string
 ): boolean {
+  ts ??= ensureTypescript();
   return sourceFile.statements.some(
     (statement) =>
       ts.isVariableStatement(statement) &&
