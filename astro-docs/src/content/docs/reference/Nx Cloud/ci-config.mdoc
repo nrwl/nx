@@ -470,6 +470,7 @@ Every step runs with these variables:
 
 | Variable                     | Value                                                       | GitHub Actions name       |
 | ---------------------------- | ----------------------------------------------------------- | ------------------------- |
+| `NX_CLOUD_CI`                | `true`, so scripts can tell they're running on Nx Cloud CI  | None, see below           |
 | `NX_CLOUD_SHA`               | Commit being built                                          | `GITHUB_SHA`              |
 | `NX_CLOUD_REF`               | Full ref, such as `refs/heads/main` or `refs/pull/12/merge` | `GITHUB_REF`              |
 | `NX_CLOUD_REF_NAME`          | Short ref, such as `main`                                   | `GITHUB_REF_NAME`         |
@@ -487,7 +488,7 @@ Every step runs with these variables:
 
 The same values are in the `nxcloud` and `runner` [expression](#expressions) contexts.
 `GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
-To check for Nx Cloud CI in a script, read `NX_CLOUD_CI`, which is `true` in every job and worker.
+Check `NX_CLOUD_CI` instead.
 
 A step can write to these files to affect later steps:
 
