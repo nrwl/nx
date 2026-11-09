@@ -13,6 +13,7 @@ import {
   readProjectConfiguration,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import { convertToFlatConfigGenerator } from './generator';
@@ -1935,11 +1936,39 @@ describe('convert-to-flat-config generator', () => {
         '.eslintrc.js',
         `module.exports = { rules: require('./rules') };`
       );
+      updateProjectConfiguration(tree, 'test-lib', {
+        root: 'libs/test-lib',
+        targets: { lint: { executor: '@nx/eslint:lint' } },
+      });
+      writeJson(tree, 'libs/test-lib/.eslintrc.json', {
+        extends: ['../../.eslintrc.js'],
+        rules: { 'no-console': 'warn' },
+      });
+      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+        json.targetDefaults = {
+          ...json.targetDefaults,
+          lint: {
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.js',
+              '{projectRoot}/.eslintrc.json',
+            ],
+          },
+        };
+        return json;
+      });
+      const pendingChanges = () =>
+        tree.listChanges().map(({ path, type, content }) => ({
+          path,
+          type,
+          content: content?.toString(),
+        }));
+      const changesBeforeConversion = pendingChanges();
 
       await expect(convertToFlatConfigGenerator(tree, options)).rejects.toThrow(
         `Cannot convert ".eslintrc.js" automatically because "rules" is not a literal value (require('./rules')).`
       );
-      expect(tree.exists('.eslintrc.js')).toBeTruthy();
+      expect(pendingChanges()).toEqual(changesBeforeConversion);
     });
 
     it.each(ESLINT_FLAT_CONFIG_FILENAMES)(
