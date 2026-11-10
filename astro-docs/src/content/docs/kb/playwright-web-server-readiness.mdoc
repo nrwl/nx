@@ -124,10 +124,10 @@ those helpers import.
 Editing one re-infers the address.
 Nx doesn't track computed imports, arbitrary filesystem reads, or files outside the workspace, so
 run `nx reset` when those change.
-Also run `nx reset` after editing a helper that `.gitignore` or `.nxignore` excludes, because Nx
-doesn't rebuild the project graph for it.
-The same applies to an ES module helper the config loads with `import` while the Nx daemon is
-running, because the daemon keeps the version it loaded first.
+While the Nx daemon is running, also run `nx reset` after editing a helper that `.gitignore` or
+`.nxignore` excludes, because the daemon doesn't rebuild the project graph for it.
+The same applies to an ES module helper the config loads with `import`, because the daemon keeps
+the version it loaded first.
 
 When the wait task waits for a single server configured with a `url`, and the serve task reported
 its address in `NX_READY_URL`, the wait task takes the protocol and port from the reported address
