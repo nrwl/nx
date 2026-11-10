@@ -232,6 +232,30 @@ describe('config file dependencies', () => {
     expect(builds).toHaveBeenCalledTimes(2);
   });
 
+  it('rebuilds alias matchers every pass when the project tsconfig is only valid JSON5', () => {
+    fs.createFilesSync({
+      'apps/e2e/tsconfig.json': `{extends: '../../tsconfig.base.json'}`,
+      'tsconfig.base.json':
+        '{"compilerOptions":{"paths":{"@selection":["shared/selection.json"]}}}',
+    });
+    const builds = vi.mocked(devkitInternal.createTsConfigPathMatcher);
+    builds.mockClear();
+    collect();
+    collect();
+    expect(builds).toHaveBeenCalledTimes(2);
+  });
+
+  it('rebuilds alias matchers every pass when a parent tsconfig is missing', () => {
+    fs.createFilesSync({
+      'apps/e2e/tsconfig.json': '{"extends":"../../tsconfig.missing.json"}',
+    });
+    const builds = vi.mocked(devkitInternal.createTsConfigPathMatcher);
+    builds.mockClear();
+    collect();
+    collect();
+    expect(builds).toHaveBeenCalledTimes(2);
+  });
+
   it('skips package export targets that are not files', () => {
     fs.createFilesSync({
       'apps/e2e/config.cjs': `module.exports = require('@workspace/settings/dir');`,

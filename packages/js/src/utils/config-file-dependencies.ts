@@ -173,7 +173,10 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
         },
         { jsonCache: json }
       );
-      if (parentFiles.some((file) => !files.includes(file) && exists(file))) {
+      if (
+        !files.includes(path) ||
+        parentFiles.some((file) => !files.includes(file))
+      ) {
         reusable = false;
       }
       // Read before building, so an edit during the build invalidates it.
