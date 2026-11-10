@@ -44,6 +44,10 @@ enum BlockType {
     TryCatchFinally,
 }
 
+fn is_module_loader_name(name: &str) -> bool {
+    matches!(name, "module" | "parent" | "main" | "mainModule")
+}
+
 fn is_identifier(token: &Token) -> bool {
     matches!(token, Token::Word(Ident(_)))
 }
@@ -52,7 +56,9 @@ struct State<'a> {
     lexer: Lexer<'a>,
     pub current_token: Option<TokenAndSpan>,
     pub previous_token: Option<TokenAndSpan>,
-    pub token_before_previous: Option<TokenAndSpan>,
+    pub receiver_is_module_loader: bool,
+    paren_groups_with_module_loader: Vec<bool>,
+    pub last_closed_paren_group_has_module_loader: bool,
     pub import_type: ImportType,
     open_brace_count: i128,
     open_bracket_count: i128,
@@ -69,7 +75,9 @@ impl<'a> State<'a> {
             lexer,
             current_token: None,
             previous_token: None,
-            token_before_previous: None,
+            receiver_is_module_loader: false,
+            paren_groups_with_module_loader: vec![],
+            last_closed_paren_group_has_module_loader: false,
             open_brace_count: 0,
             open_bracket_count: 0,
             open_angle_count: 0,
@@ -87,7 +95,6 @@ impl<'a> State<'a> {
 
     pub fn next(&mut self) -> &Option<TokenAndSpan> {
         // Keep the current token as the last token before calling next
-        self.token_before_previous = self.previous_token.take();
         self.previous_token = self.current_token.clone();
 
         let next = self.lexer.next();
@@ -136,7 +143,34 @@ impl<'a> State<'a> {
                 Token::RBracket => {
                     self.open_bracket_count -= 1;
                 }
+                Token::LParen => {
+                    self.paren_groups_with_module_loader.push(false);
+                }
+                Token::RParen => {
+                    let has_module_loader =
+                        self.paren_groups_with_module_loader.pop().unwrap_or(false);
+                    self.last_closed_paren_group_has_module_loader = has_module_loader;
+                    if let Some(enclosing) = self.paren_groups_with_module_loader.last_mut() {
+                        *enclosing |= has_module_loader;
+                    }
+                }
+                Token::Word(Ident(ident)) if is_module_loader_name(ident.as_ref()) => {
+                    if let Some(group) = self.paren_groups_with_module_loader.last_mut() {
+                        *group = true;
+                    }
+                }
                 _ => {}
+            }
+
+            if !matches!(
+                &current.token,
+                Token::Dot | Token::QuestionMark | Token::Bang
+            ) {
+                self.receiver_is_module_loader = match &current.token {
+                    Token::Word(Ident(ident)) => is_module_loader_name(ident.as_ref()),
+                    Token::RParen => self.last_closed_paren_group_has_module_loader,
+                    _ => false,
+                };
             }
 
             // Keep track of when we are in an object declaration because colons mean different things
@@ -682,24 +716,7 @@ fn process_file(
                 ..
             })
         );
-        let is_module_loader = |token: &Option<TokenAndSpan>| {
-            matches!(
-                token,
-                Some(TokenAndSpan {
-                    token: Token::Word(Ident(receiver)),
-                    ..
-                }) if matches!(receiver.as_ref(), "module" | "parent" | "main" | "mainModule")
-            )
-        };
-        let follows_module_dot = follows_dot
-            && (is_module_loader(&state.previous_token)
-                || (matches!(
-                    &state.previous_token,
-                    Some(TokenAndSpan {
-                        token: Token::QuestionMark | Token::Bang,
-                        ..
-                    })
-                ) && is_module_loader(&state.token_before_previous)));
+        let follows_module_dot = follows_dot && state.receiver_is_module_loader;
         let current_token = state.next();
 
         // This is the end of the file
@@ -1928,7 +1945,22 @@ import(myTag`react@${version}`);
       const seventh = process.mainModule.require("from-main-module");
       const eighth = require.main?.require("from-optional-main");
       const ninth = module!.require("from-non-null");
+      const tenth = (module).require("from-grouped");
+      const eleventh = (module as any).require("from-assertion");
+      const twelfth = (<any>module).require("from-angle-assertion");
+      const thirteenth = (module.parent).require("from-grouped-parent");
+      const fourteenth = (require.main).require("from-grouped-main");
+      const fifteenth = (module as any)!.require("from-assertion-non-null");
+      const sixteenth = ((module)).require("from-nested-group");
+      const seventeenth = (module)?.require("from-grouped-optional");
+      const eighteenth = module!?.require("from-bang-optional");
+      const nineteenth = module.parent!?.require("from-parent-bang-optional");
+      const twentieth = (module as any)!?.require("from-assertion-bang-optional");
+      foo(module);
+      (registry).require("from-after-loader-group");
       registry.require("from-registry");
+      (registry).require("from-grouped-registry");
+      (registry as any).require("from-asserted-registry");
                 "#,
             )
             .unwrap();
@@ -1955,6 +1987,17 @@ import(myTag`react@${version}`);
                 String::from("from-main-module"),
                 String::from("from-optional-main"),
                 String::from("from-non-null"),
+                String::from("from-grouped"),
+                String::from("from-assertion"),
+                String::from("from-angle-assertion"),
+                String::from("from-grouped-parent"),
+                String::from("from-grouped-main"),
+                String::from("from-assertion-non-null"),
+                String::from("from-nested-group"),
+                String::from("from-grouped-optional"),
+                String::from("from-bang-optional"),
+                String::from("from-parent-bang-optional"),
+                String::from("from-assertion-bang-optional"),
             ]
         );
         assert!(result.dynamic_import_expressions.is_empty());
