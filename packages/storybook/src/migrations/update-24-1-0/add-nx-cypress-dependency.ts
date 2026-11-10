@@ -1,15 +1,12 @@
 import {
   addDependenciesToPackageJson,
-  ensurePackage,
   formatFiles,
   getProjects,
-  type MigrationReturnObject,
   readJson,
   readNxJson,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import type { CallExpression, Node, SourceFile } from 'typescript';
 import { nxVersion } from '../../utils/versions';
 
 const NX_CYPRESS = '@nx/cypress';
@@ -25,22 +22,15 @@ const SOURCE_EXTENSIONS = [
   '.mjs',
 ] as const;
 
-type TypeScript = typeof import('typescript');
-
 export default async function addNxCypressDependency(
   tree: Tree
-): Promise<void | MigrationReturnObject> {
+): Promise<void> {
   if (!tree.exists('package.json') || isNxCypressDeclared(tree)) {
     return;
   }
 
-  if (!usesNxCypressInConfig(tree)) {
-    const { found, unparseableFiles } = findNxCypressInSource(tree);
-    if (!found) {
-      return unparseableFiles.length
-        ? reportUnparseableFiles(unparseableFiles)
-        : undefined;
-    }
+  if (!usesNxCypressInConfig(tree) && !mentionsNxCypressInSource(tree)) {
+    return;
   }
 
   addDependenciesToPackageJson(
@@ -105,14 +95,10 @@ function usesNxCypressInConfig(tree: Tree): boolean {
   );
 }
 
-function findNxCypressInSource(tree: Tree): {
-  found: boolean;
-  unparseableFiles: string[];
-} {
+// Any quoted mention counts, loaded or not: JavaScript has too many ways to
+// load a module to list, and a false match only adds an unused devDependency.
+function mentionsNxCypressInSource(tree: Tree): boolean {
   let found = false;
-  const unparseableFiles: string[] = [];
-  // `null` records a failed load, so later files don't retry it.
-  let ts: TypeScript | null | undefined;
   visitNotIgnoredFiles(tree, '.', (filePath) => {
     if (
       found ||
@@ -121,26 +107,24 @@ function findNxCypressInSource(tree: Tree): {
       return;
     }
     const content = tree.read(filePath, 'utf-8');
-    const decoded = content && decodeEscapes(content);
-    if (
-      !decoded?.includes(NX_CYPRESS) &&
-      !decoded?.includes(STORYBOOK_CYPRESS_PRESET)
-    ) {
-      return;
-    }
-    if (ts === undefined) {
-      ts = loadTypescript();
-    }
-    const reference = ts
-      ? findNxCypressReference(ts, filePath, content)
-      : 'unparseable';
-    if (reference === 'found') {
+    if (content && mentionsNxCypressModule(content)) {
       found = true;
-    } else if (reference === 'unparseable') {
-      unparseableFiles.push(filePath);
     }
   });
-  return { found, unparseableFiles };
+  return found;
+}
+
+// Each quote starts a candidate `@nx/` name (no quotes or line breaks). The
+// lookahead stops a rejected template prefix from consuming a nested name.
+const QUOTED_NX_NAME = /(?=(['"`])(@nx\/[^'"`\r\n]*)\1)/g;
+
+function mentionsNxCypressModule(content: string): boolean {
+  for (const [, , name] of decodeEscapes(content).matchAll(QUOTED_NX_NAME)) {
+    if (isNxCypressModule(name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // A JavaScript string escape: `\u{...}`, `\uXXXX`, `\xXX`, a legacy octal
@@ -149,8 +133,8 @@ const ESCAPE_SEQUENCE =
   /\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([0-3][0-7]{0,2}|[4-7][0-7]?)|(\r\n|[\s\S]))/g;
 const LINE_TERMINATOR = /^[\r\n\u2028\u2029]/;
 
-// Lets escaped module names (`cypr\u0065ss`) reach the parser. It decodes the
-// whole file, so a match outside a string only costs a parse: the AST decides.
+// Lets escaped module names (`cypr\u0065ss`) match. Decoding the whole file
+// keeps every quote character, so it cannot hide a quoted name.
 function decodeEscapes(content: string): string {
   return content.replace(
     ESCAPE_SEQUENCE,
@@ -164,115 +148,5 @@ function decodeEscapes(content: string): string {
       const code = parseInt(codePoint ?? unit ?? hex, 16);
       return code <= 0x10ffff ? String.fromCodePoint(code) : sequence;
     }
-  );
-}
-
-function findNxCypressReference(
-  ts: TypeScript,
-  filePath: string,
-  content: string
-): 'found' | 'unparseable' | 'none' {
-  let sourceFile: SourceFile;
-  try {
-    sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest);
-  } catch {
-    // The parser recurses, so deeply nested code overflows the call stack.
-    return 'unparseable';
-  }
-
-  // A recursive visitor overflows the call stack on long expression chains.
-  const pending: Node[] = [sourceFile];
-  while (pending.length) {
-    const node = pending.pop()!;
-    if (isNxCypressModuleReference(ts, node)) {
-      return 'found';
-    }
-    // forEachChild stops at the first truthy callback result.
-    ts.forEachChild(node, (child) => {
-      pending.push(child);
-    });
-  }
-
-  // Error recovery can drop a module reference from the AST, so a file with
-  // syntax errors does not prove the reference is absent.
-  return (sourceFile as { parseDiagnostics?: unknown[] }).parseDiagnostics
-    ?.length
-    ? 'unparseable'
-    : 'none';
-}
-
-function loadTypescript(): TypeScript | null {
-  try {
-    return ensurePackage<TypeScript>('typescript', '*');
-  } catch {
-    return null;
-  }
-}
-
-function reportUnparseableFiles(files: string[]): MigrationReturnObject {
-  const fileList = files.join(', ');
-  return {
-    nextSteps: [
-      `Could not parse ${fileList}. If any of them loads \`${NX_CYPRESS}\` or \`${STORYBOOK_CYPRESS_PRESET}\`, add \`${NX_CYPRESS}\` to the root package.json devDependencies.`,
-    ],
-    agentContext: [
-      `The migration could not parse these files, so it could not tell whether they load ${NX_CYPRESS} or ${STORYBOOK_CYPRESS_PRESET}: ${fileList}. If one does, add "${NX_CYPRESS}": "${nxVersion}" to the root package.json devDependencies.`,
-    ],
-  };
-}
-
-function isNxCypressModuleReference(ts: TypeScript, node: Node): boolean {
-  let specifier: Node | undefined;
-
-  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-    specifier = node.moduleSpecifier;
-  } else if (
-    ts.isImportEqualsDeclaration(node) &&
-    ts.isExternalModuleReference(node.moduleReference)
-  ) {
-    specifier = node.moduleReference.expression;
-  } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
-    specifier = node.argument.literal;
-  } else if (
-    ts.isCallExpression(node) &&
-    isModuleLoadCall(ts, node) &&
-    node.arguments.length
-  ) {
-    specifier = skipTransparentWrappers(ts, node.arguments[0]);
-  }
-
-  return (
-    !!specifier &&
-    (ts.isStringLiteral(specifier) ||
-      ts.isNoSubstitutionTemplateLiteral(specifier)) &&
-    isNxCypressModule(specifier.text)
-  );
-}
-
-// Parentheses and TypeScript-only syntax (`as`, `<T>`, `!`, `satisfies`) leave
-// the module name unchanged at runtime.
-function skipTransparentWrappers(ts: TypeScript, node: Node): Node {
-  while (
-    ts.isParenthesizedExpression(node) ||
-    ts.isAsExpression(node) ||
-    ts.isNonNullExpression(node) ||
-    // Added in TypeScript 4.0 and 4.9.
-    ts.isTypeAssertionExpression?.(node) ||
-    ts.isSatisfiesExpression?.(node)
-  ) {
-    node = node.expression;
-  }
-  return node;
-}
-
-function isModuleLoadCall(ts: TypeScript, node: CallExpression): boolean {
-  const callee = node.expression;
-  return (
-    callee.kind === ts.SyntaxKind.ImportKeyword ||
-    (ts.isIdentifier(callee) && callee.text === 'require') ||
-    (ts.isPropertyAccessExpression(callee) &&
-      ts.isIdentifier(callee.expression) &&
-      callee.expression.text === 'require' &&
-      callee.name.text === 'resolve')
   );
 }

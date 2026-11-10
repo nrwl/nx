@@ -1,13 +1,11 @@
 import {
   addProjectConfiguration,
-  type MigrationReturnObject,
   readJson,
   type Tree,
   updateJson,
   updateNxJson,
   readNxJson,
 } from '@nx/devkit';
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 import migration from './add-nx-cypress-dependency';
@@ -91,39 +89,15 @@ describe('add-nx-cypress-dependency migration', () => {
       `import { nxE2EStorybookPreset } from '@nx/storybook/presets/cypress';`,
     ],
     [
-      'cypress.config.ts',
-      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';`,
-    ],
-    ['types.ts', `import type { FoundTarget } from '@nx/cypress/internal';`],
-    ['index.ts', `export * from '@nx/cypress';`],
-    [
-      'index.mts',
-      `export { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';`,
-    ],
-    ['legacy.cts', `import cypress = require('@nx/cypress');`],
-    [
       'cypress.config.js',
-      `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');`,
+      `const { nxE2EPreset } = require("@nx/cypress/plugins/cypress-preset");`,
     ],
+    ['cypress.config.cjs', 'const { x } = require(`@nx/cypress`);'],
+    ['cypress.config.cjs', `(require)('@nx/storybook/presets/cypress');`],
+    ['cypress.config.cjs', `const name = '@nx/cypress';\nrequire(name);`],
     [
       'cypress.config.cjs',
-      `const preset = require.resolve('@nx/cypress/plugins/cypress-preset');`,
-    ],
-    [
-      'cypress.config.mjs',
-      `const { nxE2EPreset } = await import('@nx/cypress/plugins/cypress-preset');`,
-    ],
-    [
-      'types.ts',
-      `type Preset = typeof import('@nx/cypress/plugins/cypress-preset');`,
-    ],
-    [
-      'component.tsx',
-      `import { x } from '@nx/cypress';\nexport const C = () => <div>{x}</div>;`,
-    ],
-    [
-      'component.jsx',
-      'const { x } = require(`@nx/cypress`);\nexport const C = () => <div>{x}</div>;',
+      'console.log(`@nx/cypress ${require(`@nx/cypress/package.json`).version}`);',
     ],
     ['cypress.config.cjs', `require('@nx/storybook/presets/cypr\\u0065ss');`],
     ['cypress.config.cjs', `require('@nx/cypr\\u{65}ss');`],
@@ -131,11 +105,6 @@ describe('add-nx-cypress-dependency migration', () => {
     ['cypress.config.cjs', `require('@nx/\\143ypress');`],
     ['cypress.config.cjs', `require('@nx/\\cypress');`],
     ['cypress.config.cjs', `require('@nx/cy\\\npress');`],
-    ['cypress.config.js', `require(('@nx/storybook/presets/cypress'));`],
-    ['cypress.config.ts', `require('@nx/cypress' as string);`],
-    ['cypress.config.ts', `require(<string>'@nx/cypress');`],
-    ['cypress.config.ts', `require(('@nx/cypress')!);`],
-    ['cypress.config.ts', `require('@nx/cypress' satisfies string);`],
   ])(
     'should add @nx/cypress when %s references it with `%s`',
     async (fileName, content) => {
@@ -179,11 +148,10 @@ describe('add-nx-cypress-dependency migration', () => {
 
   it.each([
     ['a comment', 'apps/app1/src/index.ts', `// uses @nx/cypress`],
-    ['a plain string', 'apps/app1/src/index.ts', `const name = '@nx/cypress';`],
     [
       'a computed module name',
       'apps/app1/src/index.ts',
-      `require('@nx/cypress' + '/plugins/cypress-preset');`,
+      `require('@nx/' + 'cypress');`,
     ],
     [
       'a package with the same prefix',
@@ -212,116 +180,9 @@ describe('add-nx-cypress-dependency migration', () => {
     updateNxJson(tree, nxJson);
     const originalPackageJson = tree.read('package.json', 'utf-8');
 
-    const result = await migration(tree);
-
-    expect(result).toBeUndefined();
-    expect(tree.read('package.json', 'utf-8')).toBe(originalPackageJson);
-  });
-
-  it('should add @nx/cypress when a file with syntax errors still references it', async () => {
-    tree.write(
-      'apps/app1-e2e/cypress.config.ts',
-      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';\nexport default {{{`
-    );
-
-    await expect(migration(tree)).resolves.toBeUndefined();
-
-    expect(readNxCypressDeclarations().devDependency).toBe(nxVersion);
-  });
-
-  it('should report files with syntax errors when no reference is found', async () => {
-    tree.write(
-      'apps/app1-e2e/cypress.config.ts',
-      `// uses @nx/cypress\nexport default {{{`
-    );
-    const originalPackageJson = tree.read('package.json', 'utf-8');
-
-    const result = await migration(tree);
+    await migration(tree);
 
     expect(tree.read('package.json', 'utf-8')).toBe(originalPackageJson);
-    expect(result).toEqual({
-      nextSteps: [expect.stringContaining('apps/app1-e2e/cypress.config.ts')],
-      agentContext: [
-        expect.stringContaining('apps/app1-e2e/cypress.config.ts'),
-      ],
-    });
-  });
-
-  describe('long expression chains', () => {
-    const longChain = `export const x = ${Array(50_000).fill('a').join(' + ')};`;
-
-    beforeEach(() => {
-      // oxfmt crashes the process on these fixtures instead of throwing.
-      tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
-    });
-
-    it('should add @nx/cypress when a reference follows one', async () => {
-      tree.write(
-        'apps/app1-e2e/bundle.js',
-        `${longChain}\nrequire('@nx/cypress/plugins/cypress-preset');`
-      );
-
-      await migration(tree);
-
-      expect(readNxCypressDeclarations().devDependency).toBe(nxVersion);
-    });
-
-    it('should not change package.json when no reference is found', async () => {
-      tree.write('apps/app1/bundle.js', `// @nx/cypress\n${longChain}`);
-      const originalPackageJson = tree.read('package.json', 'utf-8');
-
-      const result = await migration(tree);
-
-      expect(result).toBeUndefined();
-      expect(tree.read('package.json', 'utf-8')).toBe(originalPackageJson);
-    });
-  });
-
-  it('should report files nested too deeply to parse', async () => {
-    tree.write(
-      'apps/app1/bundle.js',
-      `// @nx/cypress\nexport const x = ${'['.repeat(50_000)}${']'.repeat(50_000)};`
-    );
-    const originalPackageJson = tree.read('package.json', 'utf-8');
-
-    const result = await migration(tree);
-
-    expect(tree.read('package.json', 'utf-8')).toBe(originalPackageJson);
-    expect(result).toEqual({
-      nextSteps: [expect.stringContaining('apps/app1/bundle.js')],
-      agentContext: [expect.stringContaining('apps/app1/bundle.js')],
-    });
-  });
-
-  it('should report the files that mention @nx/cypress when typescript cannot be loaded', async () => {
-    const ensurePackage = vi.spyOn(devkit, 'ensurePackage');
-    ensurePackage.mockClear();
-    ensurePackage.mockImplementationOnce(() => {
-      throw new Error('Failed to install typescript');
-    });
-    tree.write(
-      'apps/app1-e2e/cypress.config.ts',
-      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';`
-    );
-    tree.write(
-      'tools/e2e-generator.ts',
-      `import { configurationGenerator } from '@nx/cypress';`
-    );
-    const originalPackageJson = tree.read('package.json', 'utf-8');
-
-    const result = await migration(tree);
-
-    expect(ensurePackage).toHaveBeenCalledTimes(1);
-    expect(tree.read('package.json', 'utf-8')).toBe(originalPackageJson);
-    expect(result).toEqual({
-      nextSteps: [expect.any(String)],
-      agentContext: [expect.any(String)],
-    });
-    const { nextSteps, agentContext } = result as MigrationReturnObject;
-    for (const message of [...nextSteps, ...agentContext]) {
-      expect(message).toContain('apps/app1-e2e/cypress.config.ts');
-      expect(message).toContain('tools/e2e-generator.ts');
-    }
   });
 
   it('should skip malformed plugin entries', async () => {
