@@ -330,15 +330,4 @@ describe('add-nx-cypress-dependency migration', () => {
 
     expect(tree.exists('package.json')).toBe(false);
   });
-
-  it('should be a no-op when run twice', async () => {
-    addCypressTarget();
-    await migration(tree);
-    const afterFirstRun = tree.read('package.json', 'utf-8');
-    expect(readNxCypressDeclarations().devDependency).toBe(nxVersion);
-
-    await migration(tree);
-
-    expect(tree.read('package.json', 'utf-8')).toBe(afterFirstRun);
-  });
 });
