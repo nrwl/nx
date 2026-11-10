@@ -159,11 +159,14 @@ export default async function handler(
   if (nextjsPaths.has(pathname)) return context.next();
 
   // Blog/changelog routing: proxy to standalone blog site, or fall through to Next.js.
+  // The CI plan cost calculator is a route of the blog site too.
   const isBlogPath =
     pathname === '/blog' ||
     pathname.startsWith('/blog/') ||
     pathname === '/changelog' ||
-    pathname.startsWith('/changelog/');
+    pathname.startsWith('/changelog/') ||
+    pathname === '/pricing/calculator' ||
+    pathname === '/pricing/calculator/';
 
   if (isBlogPath && !blogUrl) return context.next();
 
