@@ -348,6 +348,10 @@ Read the distributed task execution guide at https://nx.dev/docs/features/ci-fea
 
 ## Tune distribution
 
+Your organization can run 25 workers at once across all of its pipelines on the Hobby and Team plans, more with a worker pack or on Enterprise.
+A run that needs more than are free waits for other runs to finish.
+See [concurrent worker limits](/docs/kb/concurrent-workers) for what counts and how to raise it.
+
 ### Scale workers with PR size
 
 A small pull request doesn't need as many workers as a change that affects the whole workspace.
@@ -436,6 +440,8 @@ title="Flamecharts for CI"
 {% linkcard title="Resource usage" description="See how much CPU and memory each task and worker uses" href="/docs/kb/resource-usage" /%}
 
 {% linkcard title="Dedicated compute cluster" description="Reserve an isolated cluster for Docker-in-Docker and read-through caches" href="/docs/kb/dedicated-compute-cluster" /%}
+
+{% linkcard title="Concurrent worker limits" description="How many workers your organization can run at once, and what a queued run looks like" href="/docs/kb/concurrent-workers" /%}
 
 {% /cardgrid %}
 
