@@ -2305,6 +2305,66 @@ describe('native task hasher', () => {
     expect(again).toEqual(upfront);
   });
 
+  it('hashes a project root up front as from disk when a sibling extends its name', async () => {
+    await tempFs.createFiles({
+      'libs/gen/project.json': JSON.stringify({ name: 'gen' }),
+      'libs/gen/src/a.ts': 'a',
+      'libs/gen/src/nested/b.ts': 'b',
+      'libs/gen-e2e/x.yaml': 'x',
+    });
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/gen': 'gen',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'gen',
+      type: 'lib',
+      data: {
+        root: 'libs/gen',
+        targets: {
+          compile: {
+            executor: 'nx:run-commands',
+            inputs: [
+              {
+                fileset: '{workspaceRoot}/libs/**/*.yaml',
+                includeIgnored: true,
+              },
+              { fileset: '{projectRoot}/**/*', includeIgnored: true },
+            ],
+          },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['gen'],
+      ['compile'],
+      undefined,
+      {}
+    );
+    const tasks = Object.values(taskGraph.tasks);
+    const envs = Object.fromEntries(tasks.map((t) => [t.id, {}]));
+    const impl = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    for (let i = 0; i < 2; i++) {
+      const upfront = (await impl.hashTasksUpfront(tasks, taskGraph, envs))[
+        'gen:compile'
+      ].value;
+      const [fromDisk] = await impl.hashTasks(tasks, taskGraph, envs);
+      expect(upfront).toEqual(fromDisk.value);
+    }
+  });
+
   it('hashes both disk-backed groups when a large group lists the same first globs as another', async () => {
     const dirs = 'abcdefgh'.split('');
     await tempFs.createFiles({

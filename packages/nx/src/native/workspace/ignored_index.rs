@@ -135,8 +135,8 @@ fn under(path: &str, dir: &str) -> bool {
         || (path.len() > dir.len() && path.starts_with(dir) && path.as_bytes()[dir.len()] == b'/')
 }
 
-/// The members that are `dir` or sit under it, sorted. Ranging from `dir`
-/// itself would stop at a sibling like `dir-e2e`, which sorts before `dir/`.
+/// The members that are `dir` or sit under it, sorted. A sibling like
+/// `dir-e2e` sorts between `dir` and `dir/`, so the range starts at `dir/`.
 fn members_under(members: &BTreeSet<String>, dir: &str) -> Vec<String> {
     if dir.is_empty() {
         return members.iter().cloned().collect();
@@ -725,6 +725,26 @@ mod tests {
                 "dist/other/c.js"
             ]
         );
+    }
+
+    #[test]
+    fn an_unwatched_sibling_whose_name_extends_a_directory_does_not_hide_it() {
+        let temp = workspace();
+        temp.child("dist/gen-e2e/x.js").write_str("x").unwrap();
+        let index = IgnoredIndex::new(None);
+        assert!(index.track(temp.path(), "dist"));
+        index
+            .files_under(temp.path(), "dist", true, &|_| true, &[])
+            .unwrap();
+        let files = |cached| {
+            let mut found = index
+                .files_under(temp.path(), "dist/gen", cached, &|_| true, &[])
+                .unwrap();
+            found.sort();
+            found
+        };
+        assert_eq!(files(true), files(false));
+        assert_eq!(files(true), vec!["dist/gen/a.js", "dist/gen/nested/b.js"]);
     }
 
     #[test]
