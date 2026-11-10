@@ -41,7 +41,7 @@ Remote caching works as soon as the workspace is connected.
 ## Run CI on Nx Cloud
 
 Nx Cloud CI runs your whole pipeline on Nx Cloud from a `.nx/pipelines/ci.yaml` file, so you don't need a separate CI provider.
-A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as GitHub checks.
+A push or pull request on GitHub starts the jobs in that file, and the results show up on Nx Cloud and as a status on the pull request.
 Remote caching and self-healing CI work without extra steps, and workers take one line in the file.
 
 {% aside type="note" title="Private beta" %}
@@ -80,7 +80,9 @@ jobs:
 `linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
 Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
 
-Each job appears on the pull request as a check named `<name> / <job>`, where `<name>` is the file's `name` or, without one, its file name.
+Each file reports one status on the pull request for the whole run, named `Nx Cloud: <name>`, where `<name>` is the file's `name` or, without one, its file name.
+To also get a check for each job, named `<name> / <job>`, turn on **Show check runs for individual Nx Cloud CI jobs** in the VCS integration settings of your [workspace](https://cloud.nx.app/go/workspace/settings).
+A configuration error in the file shows as its own failed check, `<file> / configuration`, either way.
 Nx Cloud CI runs alongside any CI you already have, so CI runs twice until you remove the old workflow.
 A newer push to a pull request cancels the older run of the same file.
 

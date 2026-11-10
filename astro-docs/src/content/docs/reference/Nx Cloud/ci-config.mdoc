@@ -577,5 +577,6 @@ Nx Cloud CI doesn't support these yet:
 - Git LFS. The job image doesn't include it, so a repository that uses LFS checks out pointer files.
 
 A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
-You can't turn off GitHub status checks while Nx Cloud CI is on.
-Configuration errors in `ci.yaml` show on the GitHub check.
+You can't turn off the `Nx Cloud: <name>` status while Nx Cloud CI is on.
+Checks for each job, named `<name> / <job>`, are off by default. Turn on **Show check runs for individual Nx Cloud CI jobs** in the VCS integration settings of your workspace.
+A configuration error in a pipeline file shows as a failed `<file> / configuration` check.

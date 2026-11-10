@@ -71,7 +71,8 @@ jobs:
 Drop `NX_CLOUD_ACCESS_TOKEN` from `env`.
 Nx Cloud CI sets it for you, and a value from a GitHub secret overrides the token of the run, usually with an empty value.
 
-Required status checks need updating, because the check names change to `<name> / <job>`.
+Required status checks need updating, because the check name changes to `Nx Cloud: <name>`.
+With **Show check runs for individual Nx Cloud CI jobs** on in the VCS integration settings of your workspace, each job also gets a check named `<name> / <job>`.
 
 ## How keys map
 
