@@ -126,10 +126,16 @@ function startVerdaccio(
         if (message?.verdaccio_started !== true) {
           return;
         }
-        const url = getVerdaccioListeningUrl(options);
+        const address = getVerdaccioAddress(options);
+        const url = address ? getVerdaccioListeningUrl(address) : undefined;
         // Settle the token before readiness, so dependent tasks never send a rejected one
         if (npmAuthTokenSet && url) {
           await removeRejectedNpmAuthToken(options, url);
+        }
+        if (address) {
+          // startLocalRegistry waits for an address on stdout, and Verdaccio 7
+          // logs its own at info level, which the generated config hides
+          logger.info(`Verdaccio is listening on ${address}`);
         }
         if (process.env.NX_READY_SIGNAL_SOCKET) {
           // Nx versions without signal readiness do not export this API.
@@ -153,7 +159,9 @@ function startVerdaccio(
   });
 }
 
-function getVerdaccioListeningUrl(options: VerdaccioExecutorSchema) {
+// Keeps wildcard hosts like Verdaccio's own address line, because
+// startLocalRegistry matches the host its caller passes
+function getVerdaccioAddress(options: VerdaccioExecutorSchema) {
   const listenAddress = options.listenAddress
     ? `${options.listenAddress}:${options.port}`
     : String(options.port);
@@ -165,9 +173,11 @@ function getVerdaccioListeningUrl(options: VerdaccioExecutorSchema) {
   if (!address) return undefined;
 
   const endpoint = `${address[1] ?? 'http'}://${address[2] || 'localhost'}:${address[3]}/`;
-  if (!URL.canParse(endpoint)) return undefined;
+  return URL.canParse(endpoint) ? new URL(endpoint).href : undefined;
+}
 
-  const url = new URL(endpoint);
+function getVerdaccioListeningUrl(address: string) {
+  const url = new URL(address);
   if (url.hostname === '0.0.0.0') url.hostname = '127.0.0.1';
   if (url.hostname === '[::]') url.hostname = '[::1]';
   return url.href;

@@ -109,12 +109,25 @@ describe('Verdaccio readiness', () => {
   }
 
   it.each([
-    ['localhost', 'localhost:4874', 'localhost', 'http://localhost:4874/'],
-    ['127.0.0.1', '127.0.0.1:4874', '127.0.0.1', 'http://127.0.0.1:4874/'],
+    [
+      'localhost',
+      'localhost:4874',
+      'localhost',
+      'http://localhost:4874/',
+      'http://localhost:4874/',
+    ],
+    [
+      '127.0.0.1',
+      '127.0.0.1:4874',
+      '127.0.0.1',
+      'http://127.0.0.1:4874/',
+      'http://127.0.0.1:4874/',
+    ],
     [
       'http://127.0.0.1',
       'http://127.0.0.1:4874',
       '127.0.0.1',
+      'http://127.0.0.1:4874/',
       'http://127.0.0.1:4874/',
     ],
     [
@@ -122,16 +135,42 @@ describe('Verdaccio readiness', () => {
       'http:127.0.0.1:4874',
       '127.0.0.1',
       'http://127.0.0.1:4874/',
+      'http://127.0.0.1:4874/',
     ],
-    ['', '4874', 'localhost', 'http://localhost:4874/'],
-    ['http:', 'http::4874', 'localhost', 'http://localhost:4874/'],
-    ['http://', 'http://:4874', 'localhost', 'http://localhost:4874/'],
-    ['0.0.0.0', '0.0.0.0:4874', '0.0.0.0', 'http://127.0.0.1:4874/'],
-    ['[::]', '[::]:4874', '::', 'http://[::1]:4874/'],
+    [
+      '',
+      '4874',
+      'localhost',
+      'http://localhost:4874/',
+      'http://localhost:4874/',
+    ],
+    [
+      'http:',
+      'http::4874',
+      'localhost',
+      'http://localhost:4874/',
+      'http://localhost:4874/',
+    ],
+    [
+      'http://',
+      'http://:4874',
+      'localhost',
+      'http://localhost:4874/',
+      'http://localhost:4874/',
+    ],
+    [
+      '0.0.0.0',
+      '0.0.0.0:4874',
+      '0.0.0.0',
+      'http://127.0.0.1:4874/',
+      'http://0.0.0.0:4874/',
+    ],
+    ['[::]', '[::]:4874', '::', 'http://[::1]:4874/', 'http://[::]:4874/'],
   ])(
     'starts %j on the fallback port and reports where Verdaccio listens once it has started',
-    async (listenAddress, listen, host, url) => {
+    async (listenAddress, listen, host, url, loggedAddress) => {
       vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+      const info = vi.spyOn(logger, 'info').mockImplementation(() => {});
       const { child } = await start({ listenAddress }, { freePort: 4874 });
 
       expect(vi.mocked(fork).mock.calls[0][1]).toEqual([
@@ -147,11 +186,17 @@ describe('Verdaccio readiness', () => {
       });
       child.emit('message', { verdaccio_started: false });
       expect(devkit.emitReadySignal).not.toHaveBeenCalled();
+      expect(info).not.toHaveBeenCalledWith(
+        expect.stringContaining(loggedAddress)
+      );
 
       child.emit('message', { verdaccio_started: true });
 
       expect(devkit.emitReadySignal).toHaveBeenCalledTimes(1);
       expect(devkit.emitReadySignal).toHaveBeenCalledWith(url);
+      // startLocalRegistry finds the registry by this address on stdout
+      expect(info).toHaveBeenCalledWith(expect.stringContaining(loggedAddress));
+      info.mockRestore();
     }
   );
 

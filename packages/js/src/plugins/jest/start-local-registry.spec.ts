@@ -87,7 +87,7 @@ describe('startLocalRegistry', () => {
       });
       registryProcess.child.stdout.emit(
         'data',
-        Buffer.from(` info --- http address: ${registryUrl}/\n`)
+        Buffer.from(`Verdaccio is listening on ${registryUrl}/\n`)
       );
       const stop = await started;
 
