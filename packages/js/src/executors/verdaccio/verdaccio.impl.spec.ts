@@ -1,7 +1,8 @@
-import type { ExecutorContext } from '@nx/devkit';
+import { logger, type ExecutorContext } from '@nx/devkit';
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
-import { fork } from 'child_process';
+import { execSync, fork } from 'child_process';
 import type { EventEmitter } from 'node:events';
+import { createServer, type Server } from 'node:http';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import type { VerdaccioExecutorSchema } from './schema';
@@ -21,6 +22,8 @@ vi.mock('child_process', async (importOriginal) => {
   const { EventEmitter } = await import('node:events');
   return {
     ...actual,
+    // Keeps the npm and yarn setup away from the real user config
+    execSync: vi.fn(),
     fork: vi.fn(() => {
       const child = Object.assign(new EventEmitter(), { kill: vi.fn() });
       verdaccio.children.push(child);
@@ -189,5 +192,79 @@ describe('Verdaccio readiness', () => {
     for (const listener of addedListeners('SIGTERM')) listener('SIGTERM');
 
     expect(child.kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  describe('with the placeholder npm auth token', () => {
+    let registry: Server;
+    let requests: string[];
+    let warn: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      vi.stubEnv('NX_READY_SIGNAL_SOCKET', '/tmp/nx-ready.sock');
+      warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(async () => {
+      warn.mockRestore();
+      await new Promise((resolve) => registry.close(resolve));
+    });
+
+    // Stands in for Verdaccio 7, which rejects the placeholder unless its config enables jwt tokens
+    async function startRegistry(rejectsPlaceholder: boolean) {
+      requests = [];
+      registry = createServer((req, res) => {
+        requests.push(`${req.url} ${req.headers.authorization}`);
+        res.statusCode =
+          rejectsPlaceholder &&
+          req.headers.authorization === 'Bearer secretVerdaccioToken'
+            ? 401
+            : 200;
+        res.end();
+      });
+      await new Promise<void>((resolve) =>
+        registry.listen(0, '127.0.0.1', resolve)
+      );
+      const { port } = registry.address() as { port: number };
+      const { child } = await start(
+        { location: 'user', listenAddress: '127.0.0.1' },
+        { freePort: port }
+      );
+      child.emit('message', { verdaccio_started: true });
+      await vi.waitFor(() =>
+        expect(devkit.emitReadySignal).toHaveBeenCalledWith(
+          `http://127.0.0.1:${port}/`
+        )
+      );
+      return port;
+    }
+
+    function tokenDeleteCalls() {
+      return vi
+        .mocked(execSync)
+        .mock.calls.flatMap(([command], i) =>
+          /^npm config delete \S+:_authToken/.test(command) ? [i] : []
+        );
+    }
+
+    it('removes a rejected token before reporting readiness', async () => {
+      const port = await startRegistry(true);
+
+      const [deleteCall] = tokenDeleteCalls();
+      expect(vi.mocked(execSync).mock.calls[deleteCall][0]).toBe(
+        `npm config delete //127.0.0.1:${port}/:_authToken --location user`
+      );
+      expect(
+        vi.mocked(execSync).mock.invocationCallOrder[deleteCall]
+      ).toBeLessThan(devkit.emitReadySignal.mock.invocationCallOrder[0]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('jwt:'));
+    });
+
+    it('keeps a token the registry accepts', async () => {
+      await startRegistry(false);
+
+      expect(requests).toEqual(['/-/ping Bearer secretVerdaccioToken']);
+      expect(tokenDeleteCalls()).toEqual([]);
+      expect(warn).not.toHaveBeenCalled();
+    });
   });
 });
