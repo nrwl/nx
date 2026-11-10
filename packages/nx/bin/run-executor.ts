@@ -1,6 +1,7 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
 import { Target, run } from '../src/command-line/run/run';
 import { TaskGraph } from '../src/config/task-graph';
+import { output } from '../src/utils/output';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -88,9 +89,13 @@ process.on(
         message.isVerbose,
         message.taskGraph
       );
+      // `process.exit` does not wait for pipe writes, so a task that ends with
+      // a large write would otherwise lose the end of its output.
+      await output.drain();
       process.exit(statusCode);
     } catch (e) {
       console.error(e);
+      await output.drain();
       process.exit(1);
     }
   }
