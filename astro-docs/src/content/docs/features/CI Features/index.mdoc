@@ -118,6 +118,7 @@ env:
 ```
 
 `env` at the top of the file or on a job also reaches the workers of that job.
+Pull requests from forks don't get your stored variables. See [keep secrets safe](/docs/reference/nx-cloud/ci-config#keep-secrets-safe).
 For the variables Nx Cloud CI sets in each step, such as `NX_CLOUD_SHA`, see [variables and files in each step](/docs/reference/nx-cloud/ci-config#variables-and-files-in-each-step).
 
 ### Self-healing CI
@@ -131,8 +132,8 @@ To limit which tasks it fixes, use the [`self-healing`](/docs/reference/nx-cloud
 The file reads like a GitHub Actions workflow, and most step-level syntax carries over.
 To convert a workflow, see [move a GitHub Actions workflow to Nx Cloud CI](/docs/kb/migrate-from-github-actions).
 
-Pull requests from forks, scheduled runs, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
-For the full list, see [current limits](/docs/reference/nx-cloud/ci-config#current-limits).
+Scheduled runs, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
+For the full list, see [Nx Cloud CI limits](/docs/reference/nx-cloud/ci-config#nx-cloud-ci-limits).
 
 ## Use your existing CI provider
 

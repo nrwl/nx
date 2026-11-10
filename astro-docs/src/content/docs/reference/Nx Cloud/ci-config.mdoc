@@ -326,7 +326,7 @@ To convert a GitHub Actions workflow, see [move a GitHub Actions workflow to Nx 
 | `env`             | Environment variables for every step of the job. Takes [expressions](#expressions). |
 | `defaults`        | Defaults for the steps of the job, such as `run.working-directory`.                 |
 | `timeout-minutes` | Minutes before the job is stopped, at most 60.                                      |
-| `permissions`     | Permissions of the repository token. Set `repository-contents: write` to push tags. |
+| `permissions`     | Permissions of the repository token. See [`permissions`](#jobsjobpermissions).      |
 | `name`            | Display name of the job.                                                            |
 
 ### `jobs.<job>.workers`
@@ -359,7 +359,37 @@ jobs:
         run: npx nx affected -t lint test build
 ```
 
-### Expressions
+### `jobs.<job>.permissions`
+
+A job's repository token is read-only by default.
+Set `repository-contents: write` to let the job push commits and tags:
+
+```yaml
+# .nx/pipelines/release.yaml
+on:
+  main-pushes:
+    event: PUSH
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: linux-medium-js
+    permissions:
+      repository-contents: write
+    steps:
+      - run: npx nx release --skip-publish
+```
+
+Put a job that sets this in a file whose only trigger is a push to a protected branch, like the one above.
+An `if` in a file that also runs on pull requests doesn't protect it, because the job gets the write token when it starts, before `if` is checked.
+See [keep secrets safe](#keep-secrets-safe).
+
+- Only the job's own machine gets the write token. Its workers keep a read-only one.
+- The token is `${{ secrets.NX_CLOUD_VCS_TOKEN }}` (or `${{ secrets.GITHUB_TOKEN }}`), and the checkout uses it, so `git push` works without extra setup.
+- It needs the Nx Cloud GitHub App. In a workspace connected another way, the job fails with a configuration error.
+- Runs for pull requests from forks never get it. A job that sets it fails on a fork.
+
+## Expressions
 
 Nx Cloud CI evaluates `${{ <expression> }}` in these keys:
 
@@ -370,17 +400,17 @@ Nx Cloud CI evaluates `${{ <expression> }}` in these keys:
 Launch templates also evaluate `${{ }}` in their `env`.
 Other keys, such as `runs-on` and `workers`, take their value as written.
 
-| Context   | Holds                                                                                                                                                          |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nxcloud` | `event_name`, `sha`, `ref`, `ref_name`, `repository`, `repository_owner`, `workspace`, `server_url`, `api_url`, and `is_fork`. `github` reads the same values. |
-| `env`     | The `env` of the file and the job.                                                                                                                             |
-| `job`     | `status`, which is `success` or `failure`.                                                                                                                     |
-| `steps`   | `<id>.outcome`, `<id>.conclusion`, and `<id>.outputs` of each finished step.                                                                                   |
-| `needs`   | `<job>.result` of each job in `needs`.                                                                                                                         |
-| `runner`  | `os`, `arch`, `temp`, `tool_cache`, and `name`.                                                                                                                |
-| `secrets` | Stored variables marked secret, and `GITHUB_TOKEN`, a repository token from the GitHub App. `NX_CLOUD_VCS_TOKEN` is the same token.                            |
-| `vars`    | The other stored variables.                                                                                                                                    |
-| `inputs`  | The inputs of a step template, inside that template.                                                                                                           |
+| Context   | Holds                                                                                                                                                                            |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nxcloud` | `event_name`, `sha`, `ref`, `ref_name`, `repository`, `repository_owner`, `workspace`, `server_url`, `api_url`, and `is_fork`. `github` reads the same values.                   |
+| `env`     | The `env` of the file and the job.                                                                                                                                               |
+| `job`     | `status`, which is `success` or `failure`.                                                                                                                                       |
+| `steps`   | `<id>.outcome`, `<id>.conclusion`, and `<id>.outputs` of each finished step.                                                                                                     |
+| `needs`   | `<job>.result` of each job in `needs`.                                                                                                                                           |
+| `runner`  | `os`, `arch`, `temp`, `tool_cache`, and `name`.                                                                                                                                  |
+| `secrets` | Stored variables marked secret, and `GITHUB_TOKEN`, a repository token from the GitHub App. `NX_CLOUD_VCS_TOKEN` is the same token. See [keep secrets safe](#keep-secrets-safe). |
+| `vars`    | The other stored variables.                                                                                                                                                      |
+| `inputs`  | The inputs of a step template, inside that template.                                                                                                                             |
 
 `matrix`, `strategy`, and `jobs` aren't available, and reading them is an error.
 
@@ -388,7 +418,7 @@ The functions are `contains`, `startsWith`, `endsWith`, `format`, `join`, `toJSO
 `cancelled()` isn't supported.
 An `if` without a status function runs only when the earlier steps succeeded, as if it started with `success() &&`.
 
-#### Operators
+### Operators
 
 | Operator                         | Meaning                                                             |
 | -------------------------------- | ------------------------------------------------------------------- |
@@ -462,12 +492,12 @@ jobs:
 With `continue-on-error`, a failed step has `outcome` set to `failure` and `conclusion` set to `success`.
 On a pull request, `nxcloud.ref` is `refs/pull/<number>/merge`, so branch checks on `ref` or `ref_name` only make sense on `push`.
 
-#### `{{ }}` in older files
+### `{{ }}` in older files
 
 Files written for `.nx/workflows` may use `{{ secrets.NAME }}` or `{{ nxBranch }}`.
 These still work, but use `${{ }}` in new files.
 
-### Variables and files in each step
+## Variables and files in each step
 
 Every step runs with these variables:
 
@@ -518,11 +548,27 @@ steps:
 `$NX_CLOUD_ENV` takes one `NAME=value` per line.
 For a multi-line value, write to `$GITHUB_ENV` with `NAME<<EOF`.
 
-### Current limits
+## Keep secrets safe
+
+- **Pull requests from forks** get none of the variables from the **Environment variables** page and a read-only repository token. Self-healing CI doesn't run on them, and a job that sets `repository-contents: write` fails. If the author isn't an owner, member, collaborator, or earlier contributor of the repository, a member of your Nx Cloud workspace approves the run before it starts.
+- **Pull requests from branches in your repository** get your secrets and run the code from that branch. Anyone who can push a branch can read them.
+- **Secrets that can publish or deploy**, and [`repository-contents: write`](#jobsjobpermissions), belong in a pipeline file whose only trigger is a push to a protected branch.
+- **`if` doesn't protect anything.** A pull request runs its own copy of `ci.yaml`, so it can change any condition. Use `if: ${{ !nxcloud.is_fork }}` only to skip steps that would fail without secrets:
+
+```yaml
+- name: Upload coverage
+  if: ${{ !nxcloud.is_fork }}
+  run: npx codecov --token "$CODECOV_TOKEN"
+  env:
+    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+```
+
+On external CI, [`start-workers --forward-secrets`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) forwards whatever the main job has, fork runs included, so your CI provider's settings decide whether forks get secrets.
+
+## Nx Cloud CI limits
 
 Nx Cloud CI doesn't support these yet:
 
-- Pull requests from forks.
 - Events other than push and pull request, including `schedule`, `workflow_dispatch`, and merge queues.
 - `strategy.matrix`, `concurrency`, `services`, and job `outputs`.
 - Actions from the GitHub Marketplace and `action.yml` files, including `actions/cache` and `actions/upload-artifact`. `uses` runs Nx Cloud step templates.
@@ -533,20 +579,3 @@ Nx Cloud CI doesn't support these yet:
 A job runs for at most 60 minutes, and that is also the default for `timeout-minutes`.
 You can't turn off GitHub status checks while Nx Cloud CI is on.
 Configuration errors in `ci.yaml` show on the GitHub check.
-
-## How `start-workers` picks a file and an entry
-
-On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers), or its deprecated alias `start-nx-agents`, reads `.nx/pipelines/ci.yaml`, or `.nx/workflows/ci.yaml` if that doesn't exist, or the file named by `--config`.
-While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
-With neither file, the command fails.
-
-| `--workers` | Entries in `worker-templates` | Result                              |
-| ----------- | ----------------------------- | ----------------------------------- |
-| Given       | Includes the name             | Starts that entry.                  |
-| Given       | Doesn't include the name      | An error that lists the entries.    |
-| Not given   | Exactly one                   | Starts that entry.                  |
-| Not given   | Several                       | An error that asks for `--workers`. |
-| Not given   | None                          | An error.                           |
-
-Nx Cloud reads the file from your repository at the commit of the run, so commit changes before they can take effect.
-An invalid file fails the command with an error naming the file, the import, and the key.

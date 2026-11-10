@@ -415,6 +415,16 @@ worker-templates:
 | `--forward-secrets` | string | Comma-separated names of main-job environment variables to send to workers as `${{ secrets.NAME }}`, masked in logs. Only with `ci.yaml`. | None                                                                  |
 | `--forward-vars`    | string | Comma-separated names of main-job environment variables to send to workers as `${{ vars.NAME }}`. Only with `ci.yaml`.                    | None                                                                  |
 
+| `--workers` | Entries in `worker-templates` | Result                              |
+| ----------- | ----------------------------- | ----------------------------------- |
+| Given       | Includes the name             | Starts that entry.                  |
+| Given       | Doesn't include the name      | An error that lists the entries.    |
+| Not given   | Exactly one                   | Starts that entry.                  |
+| Not given   | Several                       | An error that asks for `--workers`. |
+| Not given   | None                          | An error.                           |
+
+An invalid file fails the command with an error naming the file, the import, and the key.
+
 Workers read forwarded values in the `env` of their [launch template](/docs/kb/launch-templates), such as `NPM_TOKEN: ${{ secrets.NPM_TOKEN }}`.
 
 - A forwarded value replaces an Environment variables entry with the same name for that run.
@@ -422,6 +432,7 @@ Workers read forwarded values in the `env` of their [launch template](/docs/kb/l
 - Names match `[A-Za-z_][A-Za-z0-9_]*` and can't be in both flags. A run takes at most 100 names, 48 KiB per value, and 256 KiB in total.
 - Values aren't stored. They're sent again with each distributed command, so workers that start later get them too.
 - With `.nx/ci-config.yaml`, either flag fails the command. Use `workers.with-env-vars` in that file instead.
+- On a pull request from a fork, the flags forward whatever the main job has, so your CI provider's settings decide whether forks get secrets. See [keep secrets safe](/docs/reference/nx-cloud/ci-config#keep-secrets-safe).
 
 {% aside type="caution" title="start-workers and start-ci-run are separate paths" %}
 `start-ci-run` takes its configuration from CLI flags and doesn't read `.nx/pipelines/ci.yaml`.

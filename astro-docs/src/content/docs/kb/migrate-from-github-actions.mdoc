@@ -105,7 +105,13 @@ For every variable and file, see [variables and files in each step](/docs/refere
 `GITHUB_ACTIONS` and `GITHUB_RUN_ID` aren't set, so tools don't detect the job as running in GitHub Actions.
 Check `NX_CLOUD_CI` instead.
 
+## Pull requests and secrets
+
+There are no `pull_request_target` rules to port.
+Pull requests from forks run without your stored secrets, and branches in your repository run with them.
+See [keep secrets safe](/docs/reference/nx-cloud/ci-config#keep-secrets-safe).
+
 ## What doesn't carry over
 
-Pull requests from forks, scheduled runs, `strategy.matrix`, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
-For the full list, see [current limits](/docs/reference/nx-cloud/ci-config#current-limits).
+Scheduled runs, `strategy.matrix`, GitHub Marketplace actions, and macOS and Windows machines aren't supported yet.
+For the full list, see [Nx Cloud CI limits](/docs/reference/nx-cloud/ci-config#nx-cloud-ci-limits).
