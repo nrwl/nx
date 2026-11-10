@@ -2,9 +2,9 @@ import type { Configuration } from '@rspack/core';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import * as devkit from '@nx/devkit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
-import * as graph from '../utils/graph';
 import * as postcssConfiguration from '../utils/postcss-configuration';
 import { READY_SIGNAL_PLUGIN } from '../utils/dev-server-ready-signal';
 import { isRspackV2 } from '../utils/rspack-version';
@@ -16,6 +16,12 @@ vi.mock('../utils/rspack-version', async (importOriginal) => {
     await importOriginal<typeof import('../utils/rspack-version')>();
   return { isRspackV2: vi.fn(actual.isRspackV2) };
 });
+
+vi.mock('@nx/devkit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@nx/devkit')>()),
+  createProjectGraphAsync: async () => null,
+  readCachedProjectGraph: () => null,
+}));
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
@@ -813,21 +819,28 @@ describe('createConfig', () => {
       10000
     );
 
-    it('should keep checking the options when a project graph build started by the config load leaves its flag set', async () => {
-      vi.spyOn(graph, 'retrieveOrCreateProjectGraph').mockImplementation(
+    it('should check the options on every load when a failed project graph build leaves its flag set', async () => {
+      vi.spyOn(devkit, 'readCachedProjectGraph').mockImplementation(() => {
+        throw new Error('No cached ProjectGraph is available.');
+      });
+      vi.spyOn(devkit, 'createProjectGraphAsync').mockImplementation(
         async () => {
           global.NX_GRAPH_CREATION = true;
-          return null;
+          throw new Error('Failed to load 1 Nx plugin(s)');
         }
       );
+      const options = {
+        ...ssrOptions,
+        devServer: { proxyConfig: './proxy.conf.json' },
+      };
 
-      await expect(
-        _createConfig({
-          ...ssrOptions,
-          devServer: { proxyConfig: './proxy.conf.json' },
-        })
-      ).rejects.toThrow('proxy.conf.json does not exist.');
-      expect(global.NX_GRAPH_CREATION).toBe(true);
+      await expect(_createConfig(options)).rejects.toThrow(
+        'proxy.conf.json does not exist.'
+      );
+      await expect(_createConfig(options)).rejects.toThrow(
+        'proxy.conf.json does not exist.'
+      );
+      expect(global.NX_GRAPH_CREATION).toBeUndefined();
     }, 10000);
   });
 
