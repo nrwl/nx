@@ -11,6 +11,7 @@ import {
   getDependencyVersionFromPackageJson,
   isTarballPath,
   PackageJson,
+  type PackageJsonDependencySection,
   readModulePackageJson,
 } from '../../../utils/package-json';
 import { existsSync, realpathSync } from 'fs';
@@ -345,6 +346,13 @@ export function createPackageJson(
   return packageJson;
 }
 
+const LOCAL_PATH_SPEC_SECTIONS: PackageJsonDependencySection[] = [
+  'dependencies',
+  'optionalDependencies',
+  'devDependencies',
+  'peerDependencies',
+];
+
 /**
  * A local-path spec for a dependency the project inherits, rebased from its
  * declarer to the project root, where the pnpm and Bun deploy outputs relocate
@@ -421,16 +429,20 @@ function createInheritedLocalPathSpecResolver(
     const isPnpmLink =
       lookup.packageManager === 'pnpm' && version.startsWith('link:');
     for (const declarer of ordered) {
+      // The helper detects the package manager on every call, and most
+      // manifests don't list the package
+      if (
+        !LOCAL_PATH_SPEC_SECTIONS.some(
+          (section) => declarer.manifest[section]?.[packageName]
+        )
+      ) {
+        continue;
+      }
       const spec = getDependencyVersionFromPackageJson(
         packageName,
         root,
         declarer.manifest,
-        [
-          'dependencies',
-          'optionalDependencies',
-          'devDependencies',
-          'peerDependencies',
-        ]
+        LOCAL_PATH_SPEC_SECTIONS
       );
       if (!spec || !isLocalPathSpecifier(spec)) {
         continue;

@@ -1339,6 +1339,62 @@ describe('TargetProjectLocator', () => {
         ).toEqual('npm:x');
       }
     );
+
+    // As a Bun 1.4.4 install records a tarball whose path parses as semver,
+    // beside the registry package of the version the tarball holds
+    it('should resolve a local tarball whose path parses as semver to the copy its nearest node_modules installs', () => {
+      mockedWorkspaceRoot.path = '/root';
+      vol.fromJSON(
+        {
+          'package.json': JSON.stringify({
+            dependencies: { 'is-number': '7.0.0' },
+          }),
+          'node_modules/is-number/package.json': JSON.stringify({
+            name: 'is-number',
+            version: '7.0.0',
+          }),
+          'libs/a/package.json': JSON.stringify({
+            name: '@h/a',
+            dependencies: { 'is-number': 'file:7.0.0-rc.tgz' },
+          }),
+          'libs/a/node_modules/is-number/package.json': JSON.stringify({
+            name: 'is-number',
+            version: '7.0.0',
+          }),
+        },
+        '/root'
+      );
+      const externalNodes = Object.fromEntries(
+        [
+          ['npm:is-number', '7.0.0'],
+          ['npm:is-number@7.0.0', '7.0.0'],
+          ['npm:is-number@7.0.0-rc.tgz', '7.0.0-rc.tgz'],
+        ].map(([name, version]) => [
+          name,
+          {
+            name,
+            type: 'npm' as const,
+            data: { version, packageName: 'is-number' },
+          },
+        ])
+      );
+      const targetProjectLocator = new TargetProjectLocator(
+        {},
+        externalNodes,
+        new Map(),
+        new Map()
+      );
+
+      expect(
+        targetProjectLocator.findNpmProjectFromImport(
+          'is-number',
+          'libs/a/src/index.ts'
+        )
+      ).toEqual('npm:is-number@7.0.0-rc.tgz');
+      expect(
+        targetProjectLocator.findNpmProjectFromImport('is-number', 'index.ts')
+      ).toEqual('npm:is-number');
+    });
   });
 
   describe('findDependencyInWorkspaceProjects', () => {

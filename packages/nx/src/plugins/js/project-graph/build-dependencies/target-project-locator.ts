@@ -55,6 +55,30 @@ const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
+// Whether a version can be a `file:`/`link:` version or a Bun tarball's path,
+// which can parse as semver (`1.0.0-rc.tgz`). It runs for every node, so it is
+// a cheap check that also accepts some other versions.
+function isLocalPathVersion(version: string): boolean {
+  // 'f' or 'l'
+  const first = version.charCodeAt(0);
+  if (first === 102 || first === 108) {
+    return true;
+  }
+  // The part after the last '.' is letters and digits, led by a letter
+  for (let i = version.length - 1; i >= 0; i--) {
+    const code = version.charCodeAt(i);
+    if (code === 46) {
+      const next = version.charCodeAt(i + 1) | 32;
+      return next >= 97 && next <= 122;
+    }
+    const lower = code | 32;
+    if ((code < 48 || code > 57) && (lower < 97 || lower > 122)) {
+      return false;
+    }
+  }
+  return false;
+}
+
 // Node's isBuiltin is false for Bun's runtime modules (`bun`, `bun:*`).
 function isBunModuleImport(importExpr: string): boolean {
   return importExpr === 'bun' || importExpr.startsWith('bun:');
@@ -79,7 +103,8 @@ function startsWithConfigDirTemplate(value: string): boolean {
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
-  private packageNamesWithSeveralNodes = new Set<string>();
+  private packageNamesWithSeveralNodes: Set<string> | undefined;
+  private packageNamesWithLocalPathNodes = new Set<string>();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -105,14 +130,12 @@ export class TargetProjectLocator {
      * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
      * is set in the key for optimal lookup.
      */
-    const seenPackageNames = new Set<string>();
     this.npmProjects = Object.values(this.externalNodes).reduce(
       (acc, node) => {
         if (node.type === 'npm') {
-          if (seenPackageNames.has(node.data.packageName)) {
-            this.packageNamesWithSeveralNodes.add(node.data.packageName);
+          if (isLocalPathVersion(node.data.version)) {
+            this.packageNamesWithLocalPathNodes.add(node.data.packageName);
           }
-          seenPackageNames.add(node.data.packageName);
           const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
           if (!acc[node.name]) {
             acc[node.name] = node;
@@ -278,10 +301,11 @@ export class TargetProjectLocator {
         const versionedNode =
           this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
         // A vendored copy can share its name and version with a registry
-        // package, so the manifest that installed the copy decides
+        // package, so the manifest that installed the copy decides. The walk
+        // can only find a node with a local-path version.
         const installedNodeName =
-          !versionedNode ||
-          this.packageNamesWithSeveralNodes.has(externalPackageJson.name)
+          this.packageNamesWithLocalPathNodes.has(packageName) &&
+          (!versionedNode || this.hasSeveralNodes(externalPackageJson.name))
             ? this.findNpmProjectFromInstallingManifest(
                 packageName,
                 fullDirPath
@@ -402,6 +426,24 @@ export class TargetProjectLocator {
           )
         : null;
     }
+  }
+
+  // Built on first use, since only names with a local-path node need it
+  private hasSeveralNodes(packageName: string): boolean {
+    if (!this.packageNamesWithSeveralNodes) {
+      this.packageNamesWithSeveralNodes = new Set();
+      const seenPackageNames = new Set<string>();
+      for (const node of Object.values(this.externalNodes)) {
+        if (node.type !== 'npm') {
+          continue;
+        }
+        if (seenPackageNames.has(node.data.packageName)) {
+          this.packageNamesWithSeveralNodes.add(node.data.packageName);
+        }
+        seenPackageNames.add(node.data.packageName);
+      }
+    }
+    return this.packageNamesWithSeveralNodes.has(packageName);
   }
 
   /**
