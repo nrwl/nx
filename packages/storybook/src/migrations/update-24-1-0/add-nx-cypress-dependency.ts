@@ -121,9 +121,10 @@ function findNxCypressInSource(tree: Tree): {
       return;
     }
     const content = tree.read(filePath, 'utf-8');
+    const decoded = content && decodeEscapes(content);
     if (
-      !content?.includes(NX_CYPRESS) &&
-      !content?.includes(STORYBOOK_CYPRESS_PRESET)
+      !decoded?.includes(NX_CYPRESS) &&
+      !decoded?.includes(STORYBOOK_CYPRESS_PRESET)
     ) {
       return;
     }
@@ -140,6 +141,30 @@ function findNxCypressInSource(tree: Tree): {
     }
   });
   return { found, unparseableFiles };
+}
+
+// A JavaScript string escape: `\u{...}`, `\uXXXX`, `\xXX`, a legacy octal
+// escape, or a backslash before any other character (CRLF counts as one).
+const ESCAPE_SEQUENCE =
+  /\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([0-3][0-7]{0,2}|[4-7][0-7]?)|(\r\n|[\s\S]))/g;
+const LINE_TERMINATOR = /^[\r\n\u2028\u2029]/;
+
+// Lets escaped module names (`cypr\u0065ss`) reach the parser. It decodes the
+// whole file, so a match outside a string only costs a parse: the AST decides.
+function decodeEscapes(content: string): string {
+  return content.replace(
+    ESCAPE_SEQUENCE,
+    (sequence, codePoint, unit, hex, octal, other) => {
+      if (other !== undefined) {
+        return LINE_TERMINATOR.test(other) ? '' : other;
+      }
+      if (octal !== undefined) {
+        return String.fromCharCode(parseInt(octal, 8));
+      }
+      const code = parseInt(codePoint ?? unit ?? hex, 16);
+      return code <= 0x10ffff ? String.fromCodePoint(code) : sequence;
+    }
+  );
 }
 
 function findNxCypressReference(

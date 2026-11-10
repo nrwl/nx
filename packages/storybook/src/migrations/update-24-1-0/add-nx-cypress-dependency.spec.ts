@@ -125,6 +125,12 @@ describe('add-nx-cypress-dependency migration', () => {
       'component.jsx',
       'const { x } = require(`@nx/cypress`);\nexport const C = () => <div>{x}</div>;',
     ],
+    ['cypress.config.cjs', `require('@nx/storybook/presets/cypr\\u0065ss');`],
+    ['cypress.config.cjs', `require('@nx/cypr\\u{65}ss');`],
+    ['cypress.config.cjs', `require('@nx/\\x63ypress');`],
+    ['cypress.config.cjs', `require('@nx/\\143ypress');`],
+    ['cypress.config.cjs', `require('@nx/\\cypress');`],
+    ['cypress.config.cjs', `require('@nx/cy\\\npress');`],
   ])(
     'should add @nx/cypress when %s references it with `%s`',
     async (fileName, content) => {
