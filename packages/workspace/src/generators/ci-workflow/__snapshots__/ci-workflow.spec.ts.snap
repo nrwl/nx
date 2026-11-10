@@ -47,10 +47,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: npx cypress install
@@ -61,7 +61,7 @@ jobs:
       # - script: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -83,10 +83,10 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
             - npx cypress install
@@ -95,7 +95,7 @@ pipelines:
             # npx nx record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -108,9 +108,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - npx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - npx nx-cloud start-workers
 
             - npm ci
 
@@ -135,10 +135,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - run: npx cypress install
@@ -150,7 +150,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -188,10 +188,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -207,7 +207,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -237,10 +237,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -256,7 +256,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -312,10 +312,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: bunx nx start-nx-agents
+      # - script: bunx nx-cloud start-workers
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -324,7 +324,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: bun nx fix-ci
         condition: always()
 "
@@ -380,10 +380,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: bunx nx start-nx-agents
+      # - script: bunx nx-cloud start-workers
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -392,7 +392,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: bun nx fix-ci
         condition: always()
 "
@@ -416,17 +416,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - bun install --no-cache
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - bun nx fix-ci
@@ -439,9 +439,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - bunx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - bunx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -471,17 +471,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - bun install --no-cache
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - bun nx fix-ci
@@ -494,9 +494,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - bunx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - bunx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -527,10 +527,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -540,7 +540,7 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: bun nx fix-ci
           when: always
@@ -573,10 +573,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -586,7 +586,7 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: bun nx fix-ci
           when: always
@@ -628,10 +628,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -639,7 +639,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -673,10 +673,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -684,7 +684,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -718,10 +718,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -729,7 +729,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -752,10 +752,10 @@ CI:
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Uncomment this line to enable task distribution
-    # - bunx nx start-nx-agents
+    # - bunx nx-cloud start-workers
 
     - bun install --no-cache
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -764,7 +764,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
     - bun nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - bun nx fix-ci
@@ -818,10 +818,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: git branch --track main origin/main
@@ -830,7 +830,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -883,10 +883,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: git branch --track main origin/main
@@ -895,7 +895,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -917,17 +917,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -940,9 +940,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - npx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - npx nx-cloud start-workers
 
             - npm ci
 
@@ -968,17 +968,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -991,9 +991,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - npx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - npx nx-cloud start-workers
 
             - npm ci
 
@@ -1018,10 +1018,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - nx/set-shas:
@@ -1031,7 +1031,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -1060,10 +1060,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - nx/set-shas:
@@ -1073,7 +1073,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -1111,10 +1111,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1128,7 +1128,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -1158,10 +1158,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1175,7 +1175,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -1205,10 +1205,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1222,7 +1222,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -1243,10 +1243,10 @@ CI:
   script:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Uncomment this line to enable task distribution
-    # - npx nx start-nx-agents
+    # - npx nx-cloud start-workers
 
     - npm ci
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -1255,7 +1255,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
     - npx nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - npx nx fix-ci
@@ -1312,10 +1312,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: pnpm dlx nx start-nx-agents
+      # - script: pnpm dlx nx-cloud start-workers
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1324,7 +1324,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: pnpm exec nx fix-ci
         condition: always()
 "
@@ -1380,10 +1380,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: pnpm dlx nx start-nx-agents
+      # - script: pnpm dlx nx-cloud start-workers
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1392,7 +1392,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: pnpm exec nx fix-ci
         condition: always()
 "
@@ -1416,17 +1416,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - pnpm install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - pnpm exec nx fix-ci
@@ -1439,9 +1439,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - pnpm dlx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - pnpm dlx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g pnpm@11
 
@@ -1471,17 +1471,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - pnpm install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - pnpm exec nx fix-ci
@@ -1494,9 +1494,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - pnpm dlx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - pnpm dlx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g pnpm@11
 
@@ -1527,10 +1527,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -1540,7 +1540,7 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: pnpm exec nx fix-ci
           when: always
@@ -1573,10 +1573,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -1586,7 +1586,7 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: pnpm exec nx fix-ci
           when: always
@@ -1630,10 +1630,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1647,7 +1647,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -1682,10 +1682,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1699,7 +1699,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -1735,10 +1735,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -1752,7 +1752,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -1775,10 +1775,10 @@ CI:
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Uncomment this line to enable task distribution
-    # - pnpm dlx nx start-nx-agents
+    # - pnpm dlx nx-cloud start-workers
 
     - pnpm install --frozen-lockfile
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -1787,7 +1787,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
     - pnpm exec nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - pnpm exec nx fix-ci
@@ -1841,10 +1841,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1853,7 +1853,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: yarn nx fix-ci
         condition: always()
 "
@@ -1906,10 +1906,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -1918,7 +1918,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: yarn nx fix-ci
         condition: always()
 "
@@ -1940,17 +1940,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - yarn nx fix-ci
@@ -1963,9 +1963,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - npx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
@@ -1991,17 +1991,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - yarn nx fix-ci
@@ -2014,9 +2014,9 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
-            - npx nx start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
+            - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
@@ -2041,10 +2041,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -2054,7 +2054,7 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: yarn nx fix-ci
           when: always
@@ -2083,10 +2083,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -2096,7 +2096,7 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: yarn nx fix-ci
           when: always
@@ -2134,10 +2134,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -2151,7 +2151,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -2183,10 +2183,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -2200,7 +2200,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -2230,10 +2230,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -2247,7 +2247,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -2268,10 +2268,10 @@ CI:
   script:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Uncomment this line to enable task distribution
-    # - npx nx start-nx-agents
+    # - npx nx-cloud start-workers
 
     - yarn install --frozen-lockfile
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -2280,7 +2280,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World
     - yarn nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - yarn nx fix-ci
@@ -2334,10 +2334,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: npx cypress install
@@ -2348,7 +2348,7 @@ jobs:
       # - script: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -2370,10 +2370,10 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
             - npx cypress install
@@ -2382,7 +2382,7 @@ pipelines:
             # npx nx record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -2395,10 +2395,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
@@ -2423,10 +2423,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - run: npx cypress install
@@ -2438,7 +2438,7 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -2476,10 +2476,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -2495,7 +2495,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -2525,10 +2525,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -2544,7 +2544,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -2600,10 +2600,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx start-nx-agents
+      # - script: bunx nx-cloud start-workers
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -2612,7 +2612,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: bun nx fix-ci
         condition: always()
 "
@@ -2668,10 +2668,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: bunx nx start-nx-agents
+      # - script: bunx nx-cloud start-workers
 
       - script: bun install --no-cache
       - script: git branch --track main origin/main
@@ -2680,7 +2680,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: bun nx fix-ci
         condition: always()
 "
@@ -2704,17 +2704,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - bun install --no-cache
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - bun nx fix-ci
@@ -2727,10 +2727,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -2760,17 +2760,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - bun install --no-cache
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - bun nx fix-ci
@@ -2783,10 +2783,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - bunx nx start-nx-agents
+            # - bunx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g bun
 
@@ -2817,10 +2817,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -2830,7 +2830,7 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: bun nx fix-ci
           when: always
@@ -2863,10 +2863,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - nx/set-shas:
@@ -2876,7 +2876,7 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: bun nx fix-ci
           when: always
@@ -2918,10 +2918,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -2929,7 +2929,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -2963,10 +2963,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -2974,7 +2974,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -3008,10 +3008,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: bunx nx start-nx-agents
+      # - run: bunx nx-cloud start-workers
 
       - run: bun install --no-cache
       - uses: nrwl/nx-set-shas@v5
@@ -3019,7 +3019,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: bun nx fix-ci
         if: always()
 "
@@ -3042,10 +3042,10 @@ CI:
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - bunx nx start-nx-agents
+    # - bunx nx-cloud start-workers
 
     - bun install --no-cache
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -3054,7 +3054,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
     - bun nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - bun nx fix-ci
@@ -3108,10 +3108,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: git branch --track main origin/main
@@ -3120,7 +3120,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -3173,10 +3173,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: npm ci
       - script: git branch --track main origin/main
@@ -3185,7 +3185,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: npx nx fix-ci
         condition: always()
 "
@@ -3207,17 +3207,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -3230,10 +3230,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
@@ -3259,17 +3259,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - npx nx fix-ci
@@ -3282,10 +3282,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - npm ci
 
@@ -3310,10 +3310,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - nx/set-shas:
@@ -3323,7 +3323,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -3352,10 +3352,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: npm ci
       - nx/set-shas:
@@ -3365,7 +3365,7 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: npx nx fix-ci
           when: always
@@ -3403,10 +3403,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -3420,7 +3420,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -3450,10 +3450,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -3467,7 +3467,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -3497,10 +3497,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -3514,7 +3514,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
 "
@@ -3535,10 +3535,10 @@ CI:
   script:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - npx nx start-nx-agents
+    # - npx nx-cloud start-workers
 
     - npm ci
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -3547,7 +3547,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
     - npx nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - npx nx fix-ci
@@ -3604,10 +3604,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: pnpm dlx nx start-nx-agents
+      # - script: pnpm dlx nx-cloud start-workers
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -3616,7 +3616,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: pnpm exec nx fix-ci
         condition: always()
 "
@@ -3672,10 +3672,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: pnpm dlx nx start-nx-agents
+      # - script: pnpm dlx nx-cloud start-workers
 
       - script: pnpm install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -3684,7 +3684,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: pnpm exec nx fix-ci
         condition: always()
 "
@@ -3708,17 +3708,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - pnpm install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - pnpm exec nx fix-ci
@@ -3731,10 +3731,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g pnpm@11
 
@@ -3764,17 +3764,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - pnpm install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - pnpm exec nx fix-ci
@@ -3787,10 +3787,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - pnpm dlx nx start-nx-agents
+            # - pnpm dlx nx-cloud start-workers
 
             - npm install --prefix=$HOME/.local -g pnpm@11
 
@@ -3821,10 +3821,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -3834,7 +3834,7 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: pnpm exec nx fix-ci
           when: always
@@ -3867,10 +3867,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
@@ -3880,7 +3880,7 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: pnpm exec nx fix-ci
           when: always
@@ -3924,10 +3924,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -3941,7 +3941,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -3976,10 +3976,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -3993,7 +3993,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -4029,10 +4029,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: pnpm dlx nx start-nx-agents
+      # - run: pnpm dlx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -4046,7 +4046,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: pnpm exec nx fix-ci
         if: always()
 "
@@ -4069,10 +4069,10 @@ CI:
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - pnpm dlx nx start-nx-agents
+    # - pnpm dlx nx-cloud start-workers
 
     - pnpm install --frozen-lockfile
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -4081,7 +4081,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
     - pnpm exec nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - pnpm exec nx fix-ci
@@ -4135,10 +4135,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -4147,7 +4147,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: yarn nx fix-ci
         condition: always()
 "
@@ -4200,10 +4200,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - script: npx nx start-nx-agents
+      # - script: npx nx-cloud start-workers
 
       - script: yarn install --frozen-lockfile
       - script: git branch --track main origin/main
@@ -4212,7 +4212,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - script: yarn nx fix-ci
         condition: always()
 "
@@ -4234,17 +4234,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - yarn nx fix-ci
@@ -4257,10 +4257,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
@@ -4286,17 +4286,17 @@ pipelines:
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
           after-script:
             - yarn nx fix-ci
@@ -4309,10 +4309,10 @@ pipelines:
             - export NX_BRANCH=$BITBUCKET_BRANCH
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
-            # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-            # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+            # Configure workers and task distribution in .nx/pipelines/ci.yaml
+            # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
             # Connect your workspace by running "nx connect" and uncomment this
-            # - npx nx start-nx-agents
+            # - npx nx-cloud start-workers
 
             - yarn install --frozen-lockfile
 
@@ -4337,10 +4337,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -4350,7 +4350,7 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: yarn nx fix-ci
           when: always
@@ -4379,10 +4379,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
@@ -4392,7 +4392,7 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run:
           command: yarn nx fix-ci
           when: always
@@ -4430,10 +4430,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -4447,7 +4447,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -4479,10 +4479,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -4496,7 +4496,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -4526,10 +4526,10 @@ jobs:
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
-      # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+      # Configure workers and task distribution in .nx/pipelines/ci.yaml
+      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-      # - run: npx nx start-nx-agents
+      # - run: npx nx-cloud start-workers
 
       # Cache node_modules
       - uses: actions/setup-node@v6
@@ -4543,7 +4543,7 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
       - run: yarn nx fix-ci
         if: always()
 "
@@ -4564,10 +4564,10 @@ CI:
   script:
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
-    # Configure Nx Agents and task distribution in .nx/ci-config.yaml
-    # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#nx-cloud-start-nx-agents
+    # Configure workers and task distribution in .nx/pipelines/ci.yaml
+    # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#nx-cloud-start-workers
     # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
-    # - npx nx start-nx-agents
+    # - npx nx-cloud start-workers
 
     - yarn install --frozen-lockfile
     - export NX_HEAD=$CI_COMMIT_SHA
@@ -4576,7 +4576,7 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World
     - yarn nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
+    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
 
   after_script:
     - yarn nx fix-ci

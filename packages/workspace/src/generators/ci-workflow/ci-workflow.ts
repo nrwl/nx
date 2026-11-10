@@ -59,7 +59,7 @@ function getNxTasksCommand(
 function getNxCloudFixCiCommand(packageManagerPrefix: string): Command {
   return {
     comments: [
-      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci`,
+      `Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci`,
     ],
     command: `${packageManagerPrefix} nx fix-ci`,
     alwaysRun: true,
