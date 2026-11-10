@@ -10,12 +10,6 @@
       "options": {
         "max-warnings": 9
       }
-    },
-    "e2e-local": {
-      "dependsOn": ["...", "@nx/nx-source:playwright-install"]
-    },
-    "e2e-ci--src/projects-ssr.test.ts": {
-      "dependsOn": ["...", "@nx/nx-source:playwright-install"]
     }
   }
 }

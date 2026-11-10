@@ -85,6 +85,10 @@
       "cache": false,
       "command": "playwright install --only-shell chromium"
     },
+    "playwright-install-e2e": {
+      "cache": false,
+      "command": "node ./scripts/playwright-install-e2e.mjs"
+    },
     "check-format:quick": {
       "parallelism": false
     },
