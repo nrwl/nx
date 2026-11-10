@@ -141,7 +141,8 @@ function mergeAllowScripts(packageJson: PackageJson) {
  * Bun never installs the dependencies of a `file:` dependency declared by
  * another `file:` dependency, so a Bun output declares every workspace module
  * the app reaches through other modules. With the text bun.lock it also
- * declares every vendored `file:` package those modules declare. The binary
+ * declares each vendored `file:` package those modules declare, unless the
+ * manifest already declares that name. The binary
  * bun.lockb output ships no vendored copy for that declaration to point at.
  * A package a production section reaches goes to dependencies, one only
  * devDependencies reach to devDependencies. A vendored package is declared

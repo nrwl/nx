@@ -247,8 +247,9 @@ declares that version instead.
 Bun doesn't install the dependencies of a `file:` dependency that another `file:` dependency
 declares, and workspace libraries ship as `file:` dependencies.
 The emitted `package.json` therefore also lists every workspace library the app reaches through
-other workspace libraries, and every non-workspace `file:` dependency of a workspace library the app
-reaches.
+other workspace libraries.
+It also lists each non-workspace `file:` dependency of a workspace library the app reaches, unless a
+dependency with that name is already listed.
 The non-workspace `file:` and `link:` dependencies the output installs are copied under
 `local_path_modules/`, and the emitted `package.json` and `bun.lock` point at the copies.
 A `link:` dependency ships without its own dependencies, so the prune fails unless the app declares
