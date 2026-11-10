@@ -18,10 +18,7 @@ export async function getDevServerConfig(
   return {
     host: options.devServer.host,
     port: options.devServer.port,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      ...options.devServer.headers,
-    },
+    headers: options.devServer.headers,
     historyApiFallback: {
       index: posix.join(servePath, getIndexOutputFile(options.index)),
       disableDotRule: true,
