@@ -18,11 +18,7 @@ import * as devkitInternals from 'nx/src/devkit-internals';
 import { coerce } from 'semver';
 import * as ts from 'typescript';
 
-import update, {
-  ESLINT_PLUGIN_IMPORT_X_VERSION,
-  ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION,
-  V9_ONLY_PLUGINS,
-} from './migrate-to-eslint-v10';
+import update, { V9_ONLY_PLUGINS } from './migrate-to-eslint-v10';
 
 describe('migrate-to-eslint-v10 migration', () => {
   let tree: Tree;
@@ -135,15 +131,6 @@ describe('migrate-to-eslint-v10 migration', () => {
       "'no-console': 'error'"
     );
     expect(result.agentContext).toEqual([]);
-  });
-
-  it('should hand off to the prompt even when it found nothing to report', async () => {
-    tree.write('eslint.config.mjs', 'export default [];');
-
-    const result = await update(tree);
-
-    // The pass never runs lint, so it cannot know the workspace is done.
-    expect(result).not.toHaveProperty('skipAgentic');
   });
 
   it('should convert a project JavaScript-based eslintrc that extends the root', async () => {
@@ -264,57 +251,41 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(listed).toHaveLength(1);
   });
 
-  it('should report a project eslintrc the conversion shadowed as no longer applied', async () => {
-    tree.write('.eslintrc.json', JSON.stringify({ root: true, rules: {} }));
-    addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
-    // Not a config the generator converts: it is not at a project root.
-    tree.write(
-      'apps/app1/nested/.eslintrc.json',
-      JSON.stringify({ rules: {} })
-    );
+  it.each(['.eslintrc.json', '.eslintrc.base.json'])(
+    'should report an eslintrc the conversion of a root %s does not reach as no longer read',
+    async (rootConfig) => {
+      tree.write(rootConfig, JSON.stringify({ root: true, rules: {} }));
+      addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
+      // Not a config the generator converts: it is not at a project root.
+      tree.write(
+        'apps/app1/nested/.eslintrc.json',
+        JSON.stringify({ rules: {} })
+      );
 
-    const result = await update(tree);
+      const result = await update(tree);
 
-    expect(result.agentContext.join('\n')).toContain(
-      'ESLint v10 removed the eslintrc format'
-    );
-    expect(result.nextSteps.join('\n')).toContain(
-      'ESLint v10 no longer reads eslintrc files unless a flat config loads them through FlatCompat. Fold these into flat config and delete them, except any a flat config loads that way: apps/app1/nested/.eslintrc.json.'
-    );
-  });
+      expect(result.agentContext.join('\n')).toContain(
+        'These eslintrc files are still in the workspace: apps/app1/nested/.eslintrc.json. ESLint v10 does not read eslintrc files'
+      );
+      expect(result.nextSteps.join('\n')).toContain(
+        'Convert these to flat config and delete them, except any a flat config loads that way: apps/app1/nested/.eslintrc.json.'
+      );
+    }
+  );
 
-  it('should report a project eslintrc under an existing flat root as already dormant', async () => {
-    tree.write('eslint.config.mjs', 'export default [];');
-    addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
-    tree.write('apps/app1/.eslintrc.json', JSON.stringify({ rules: {} }));
-
-    const result = await update(tree);
-
-    // The flat config at the root already won over this file on ESLint v9, so
-    // folding it in turns rules back on rather than restoring lost enforcement.
-    expect(result.agentContext.join('\n')).toContain(
-      'These eslintrc files are still in the workspace: apps/app1/.eslintrc.json. Unless lint ran with ESLINT_USE_FLAT_CONFIG=false, ESLint v9 resolved the eslint.config file at the workspace root instead of them'
-    );
-    expect(result.nextSteps.join('\n')).toContain(
-      'can surface new lint errors'
-    );
-  });
-
-  it('should report a project eslintrc under a base-only flat root as applied until this run', async () => {
+  it('should say why it did not convert a project eslintrc under a base-only flat root', async () => {
     tree.write('eslint.base.config.mjs', 'export default [];');
     addProjectConfiguration(tree, 'app1', { root: 'apps/app1' });
     tree.write('apps/app1/.eslintrc.json', JSON.stringify({ rules: {} }));
 
     const result = await update(tree);
 
-    const context = result.agentContext.join('\n');
-    expect(context).toContain(
-      'These eslintrc files are still in the workspace: apps/app1/.eslintrc.json. The workspace root has eslint.base.config.mjs but no eslint.config file'
+    const notConverted =
+      'The workspace root has eslint.base.config.mjs but no eslint.config file, so this migration did not convert them.';
+    expect(result.agentContext.join('\n')).toContain(
+      `These eslintrc files are still in the workspace: apps/app1/.eslintrc.json. ${notConverted}`
     );
-    expect(context).not.toContain('resolved the eslint.config file');
-    expect(result.nextSteps.join('\n')).toContain(
-      'ESLint v10 does not read these eslintrc files, which this migration did not convert because the workspace root has eslint.base.config.mjs but no eslint.config file.'
-    );
+    expect(result.nextSteps.join('\n')).toContain(notConverted);
   });
 
   it('should not report an unparseable JavaScript config twice', async () => {
@@ -400,20 +371,25 @@ describe('migrate-to-eslint-v10 migration', () => {
     }
   );
 
-  it.each(['eslint-plugin-react-hooks', 'eslint-plugin-import-x'])(
-    'should report %s instead of rewriting a specifier it cannot read',
-    async (name) => {
+  it.each([
+    ['eslint-plugin-react-hooks', 'workspace:*', '7.1.0'],
+    ['eslint-plugin-import-x', 'workspace:*', '4.16.2'],
+    // Starts below the floor, but the dependency writer reads it as 5.0.0.
+    ['eslint-plugin-import-x', '<5 >=4.10.0', '4.16.2'],
+  ])(
+    'should report %s instead of rewriting "%s"',
+    async (name, specifier, floor) => {
       tree.write('eslint.config.mjs', 'export default [];');
-      setDevDependencies({ [name]: 'workspace:*' });
+      setDevDependencies({ [name]: specifier });
 
       const result = await update(tree);
 
       expect(readJson(tree, 'package.json').devDependencies).toEqual({
-        [name]: 'workspace:*',
+        [name]: specifier,
       });
-      expect(result.nextSteps.join('\n')).toContain(
-        `${name} is declared as "workspace:*" and was not updated.`
-      );
+      expect(result.nextSteps).toEqual([
+        `${name} is declared as "${specifier}" and was not updated. Check that it resolves to ${floor} or later, where its ESLint v10 support starts.`,
+      ]);
     }
   );
 
@@ -587,94 +563,67 @@ describe('migrate-to-eslint-v10 migration', () => {
     expect(context).not.toContain('local.ts');
   });
 
-  it('should not read a quoted rule id outside a config file as a plugin reference', async () => {
-    tree.write('eslint.config.mjs', `export default [];`);
-    // `react/jsx-runtime` is an import path, not a rule id.
-    tree.write(
-      'apps/app1/src/main.tsx',
-      `import { jsx } from 'react/jsx-runtime';`
-    );
-    setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
-
-    const result = await update(tree);
-
-    expect(result.agentContext.join('\n')).not.toContain('main.tsx');
-  });
-
-  it.each([
-    [
-      'a block directive, deleting the comment it leaves empty',
-      '/* eslint-disable react/no-danger */\nexport const a = 1;\n',
-      'export const a = 1;\n',
-    ],
-    [
-      'an eslint-enable directive',
-      'export const a = 1;\n/* eslint-enable jsx-a11y/alt-text */\n',
-      'export const a = 1;\n',
-    ],
-    [
-      'a line directive after code',
-      'export const a = 1; // eslint-disable-line react/no-danger\n',
-      'export const a = 1;\n',
-    ],
-    [
-      'a directive that keeps its other rules and its justification',
-      "// eslint-disable-next-line jsx-a11y/alt-text, 'no-console' -- legacy\nconsole.log(1);\n",
-      "// eslint-disable-next-line 'no-console' -- legacy\nconsole.log(1);\n",
-    ],
-    [
-      'a directive that quotes the rule id',
-      '/* eslint-disable "react/no-danger", no-console */\nconsole.log(1);\n',
-      '/* eslint-disable no-console */\nconsole.log(1);\n',
-    ],
-    [
-      'a directive between two tokens',
-      'let/* eslint-disable react/no-danger */x = 1;\nexport { x };\n',
-      'let x = 1;\nexport { x };\n',
-    ],
-  ])(
-    'should remove the react/ and jsx-a11y/ rules from %s',
-    async (_, before, after) => {
-      tree.write('eslint.config.mjs', 'export default [];');
-      tree.write('apps/app1/src/banner.tsx', before);
-      setDevDependencies({
-        'eslint-plugin-jsx-a11y': '6.10.1',
-        'eslint-plugin-react': '^7.35.0',
-      });
-
-      const result = await update(tree);
-
-      expect(tree.read('apps/app1/src/banner.tsx', 'utf-8')).toBe(after);
-      expect(result.nextSteps.join('\n')).toContain(
-        'from the ESLint directive comments in these files, and deleted the comments left with no rule: apps/app1/src/banner.tsx ('
-      );
-      expect(result.agentContext).toEqual([]);
-    }
-  );
-
-  it('should report the import/ rules in directives and the removed rules an inline config sets', async () => {
+  it('should report the directive comments that name rules of the removed plugins and leave them', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
-    tree.write(
-      'apps/app1/src/deps.ts',
-      '/* eslint-disable import/no-cycle, react/no-danger */\n/* eslint react/no-danger: "error" */\nexport const deps = [];\n'
-    );
+    const deps = `/* eslint-disable import/no-cycle, "react/no-danger" */
+/* eslint react/no-danger: "error" */
+// eslint-disable-next-line jsx-a11y/alt-text -- legacy markup
+export const deps = []; // eslint-disable-line react/no-danger
+/* eslint-enable jsx-a11y/alt-text */
+`;
+    tree.write('apps/app1/src/deps.tsx', deps);
     setDevDependencies({
       'eslint-plugin-import': '2.31.0',
+      'eslint-plugin-jsx-a11y': '6.10.1',
       'eslint-plugin-react': '^7.35.0',
     });
 
     const result = await update(tree);
 
-    expect(tree.read('apps/app1/src/deps.ts', 'utf-8')).toBe(
-      '/* eslint-disable import/no-cycle */\n/* eslint react/no-danger: "error" */\nexport const deps = [];\n'
-    );
+    expect(tree.read('apps/app1/src/deps.tsx', 'utf-8')).toBe(deps);
     expect(result.agentContext.join('\n')).toContain(
-      'These source files carry ESLint directive comments naming rules from plugins this migration removed: apps/app1/src/deps.ts (import, react).'
+      'These source files carry ESLint directive comments naming rules from plugins this migration removed: apps/app1/src/deps.tsx (import, react, jsx-a11y).'
     );
     expect(result.nextSteps.join('\n')).toContain(
-      'These source files have ESLint directive comments naming rules from the removed plugins: apps/app1/src/deps.ts.'
+      'These source files have ESLint directive comments naming rules from the removed plugins: apps/app1/src/deps.tsx.'
     );
   });
+
+  it.each([
+    [
+      'deletes it at the top of a file',
+      '/* eslint-disable jsx-a11y/accessible-emoji */\nexport const App = () => null;\n',
+      'export const App = () => null;\n',
+      { deleted: true, reported: false },
+    ],
+    [
+      'reports it below another line',
+      '// @ts-nocheck\n/* eslint-disable jsx-a11y/accessible-emoji */\nexport const App = () => null;\n',
+      '// @ts-nocheck\n/* eslint-disable jsx-a11y/accessible-emoji */\nexport const App = () => null;\n',
+      { deleted: false, reported: true },
+    ],
+  ])(
+    'should handle the directive Nx generated for the welcome page: %s',
+    async (_, before, after, expected) => {
+      tree.write('eslint.config.mjs', 'export default [];');
+      tree.write('apps/app1/src/app/App.tsx', before);
+      setDevDependencies({ 'eslint-plugin-jsx-a11y': '6.10.1' });
+
+      const result = await update(tree);
+
+      expect(tree.read('apps/app1/src/app/App.tsx', 'utf-8')).toBe(after);
+      expect({
+        deleted: result.nextSteps.some((step) =>
+          step.includes(
+            'comment Nx generated at the top of these files, because eslint-plugin-jsx-a11y was removed: apps/app1/src/app/App.tsx.'
+          )
+        ),
+        reported: result.agentContext.some((entry) =>
+          entry.includes('apps/app1/src/app/App.tsx (jsx-a11y)')
+        ),
+      }).toEqual(expected);
+    }
+  );
 
   it('should not report a rule prefix that is not inside an ESLint directive', async () => {
     tree.write('eslint.config.mjs', `export default [];`);
@@ -731,33 +680,6 @@ export const prose = 1;
 
   it.each([
     [
-      'deletes',
-      'function value(a) {\n  return /* eslint-env\n  node */ a;\n}\n',
-      'eslint-env',
-    ],
-    [
-      'rewrites',
-      'function value(a) {\n  return /* eslint-disable react/no-danger,\n  no-console */ a;\n}\n',
-      'react/no-danger',
-    ],
-  ])(
-    'should keep the line break of a multi-line comment it %s',
-    async (_, before, removed) => {
-      tree.write('eslint.config.mjs', 'export default [];');
-      tree.write('apps/app1/src/value.js', before);
-      setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
-
-      await update(tree);
-
-      const content = tree.read('apps/app1/src/value.js', 'utf-8');
-      expect(content).not.toContain(removed);
-      // The line break ends the return statement, so the call returns nothing.
-      expect(new Function(`${content}\nreturn value(1);`)()).toBeUndefined();
-    }
-  );
-
-  it.each([
-    [
       'the root package.json',
       () => setDevDependencies({ 'eslint-config-next': '^16.4.0' }),
     ],
@@ -776,11 +698,15 @@ export const prose = 1;
     'should leave the directive comments when %s declares eslint-config-next',
     async (_, declareEslintConfigNext) => {
       tree.write('eslint.config.mjs', 'export default [];');
-      const page = `// eslint-disable-next-line react/no-danger
+      const page = `/* eslint-disable jsx-a11y/accessible-emoji */
+// eslint-disable-next-line react/no-danger
 export const Page = () => null;
 `;
       tree.write('apps/web/src/page.tsx', page);
-      setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
+      setDevDependencies({
+        'eslint-plugin-jsx-a11y': '6.10.1',
+        'eslint-plugin-react': '^7.35.0',
+      });
       declareEslintConfigNext();
 
       const result = await update(tree);
@@ -813,102 +739,28 @@ export const deps = [];
     expect(result.agentContext).toEqual([]);
   });
 
-  it('should delete /* eslint-env */ comments when the workspace had no eslintrc config', async () => {
+  it('should report /* eslint-env */ comments and leave them', async () => {
+    // No eslintrc config is left, but one converted earlier in the same
+    // `nx migrate` run may have applied these globals.
     tree.write('eslint.config.mjs', 'export default [];');
-    tree.write(
-      'apps/app1/src/server.js',
-      '/* eslint-env node */\nmodule.exports = { port: process.env.PORT };\n'
-    );
-    tree.write(
-      'apps/app1/src/worker.ts',
-      "export const ping = () => self.postMessage('ping'); /* eslint-env browser, jest */\n"
-    );
+    const server =
+      '/* eslint-env node */\nmodule.exports = { port: process.env.PORT };\n';
+    const worker =
+      "export const ping = () => self.postMessage('ping'); /* eslint-env browser, jest */\n";
+    tree.write('apps/app1/src/server.js', server);
+    tree.write('apps/app1/src/worker.ts', worker);
 
     const result = await update(tree);
 
-    expect(tree.read('apps/app1/src/server.js', 'utf-8')).toBe(
-      'module.exports = { port: process.env.PORT };\n'
+    expect(tree.read('apps/app1/src/server.js', 'utf-8')).toBe(server);
+    expect(tree.read('apps/app1/src/worker.ts', 'utf-8')).toBe(worker);
+    expect(result.agentContext.join('\n')).toContain(
+      'These source files carry /* eslint-env */ comments: apps/app1/src/server.js, apps/app1/src/worker.ts.'
     );
-    expect(tree.read('apps/app1/src/worker.ts', 'utf-8')).toBe(
-      "export const ping = () => self.postMessage('ping');\n"
-    );
-    expect(result.agentContext).toEqual([]);
     expect(result.nextSteps.join('\n')).toContain(
-      'The workspace had no eslintrc config, so ESLint never applied their globals: apps/app1/src/server.js, apps/app1/src/worker.ts.'
+      'ESLint v10 reports /* eslint-env */ comments as errors; replace them with /* global */ comments or languageOptions.globals in: apps/app1/src/server.js, apps/app1/src/worker.ts.'
     );
   });
-
-  it.each([
-    [
-      'an /* eslint-env */ comment under an eslint-disable-next-line',
-      '// eslint-disable-next-line no-console\n/* eslint-env node */\nconsole.log(1);\n',
-    ],
-    [
-      'an emptied directive under an eslint-disable-next-line',
-      '// eslint-disable-next-line no-console\n// eslint-disable-next-line react/no-danger\nconsole.log(1);\n',
-    ],
-    [
-      'an /* eslint-env */ comment a blank line under a @ts-ignore',
-      "// @ts-ignore\n\n/* eslint-env node */\nexport const x: number = 'a';\n",
-    ],
-    [
-      'an /* eslint-env */ comment beside an emptied directive, under a @ts-ignore',
-      "// @ts-ignore\n/* eslint-env node */ /* eslint-disable react/no-danger */\nexport const value: number = 'wrong';\n",
-    ],
-    [
-      'a multi-line /* eslint-env */ comment before code, under a @ts-ignore',
-      "// @ts-ignore\n/* eslint-env\n  node */ export const x: number = 'a';\n",
-    ],
-  ])('should keep and report %s', async (_, main) => {
-    tree.write('eslint.config.mjs', 'export default [];');
-    tree.write('apps/app1/src/main.ts', main);
-    setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
-
-    const result = await update(tree);
-
-    expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toBe(main);
-    expect(
-      result.nextSteps.filter((step) => step.includes('apps/app1/src/main.ts'))
-    ).toEqual([
-      expect.stringContaining(
-        'because a comment ends on the line above each one: apps/app1/src/main.ts.'
-      ),
-    ]);
-  });
-
-  it.each([
-    [
-      'an eslintrc file this run converts',
-      (tree: Tree) => tree.write('.eslintrc.json', '{ "root": true }'),
-    ],
-    [
-      'an eslintConfig in package.json',
-      (tree: Tree) => {
-        tree.write('eslint.config.mjs', 'export default [];');
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          eslintConfig: { env: { node: true } },
-        }));
-      },
-    ],
-  ])(
-    'should report /* eslint-env */ comments when the workspace had %s',
-    async (_, addEslintrcConfig) => {
-      addEslintrcConfig(tree);
-      const server = '/* eslint-env node */\nmodule.exports = {};\n';
-      tree.write('apps/app1/src/server.js', server);
-
-      const result = await update(tree);
-
-      expect(tree.read('apps/app1/src/server.js', 'utf-8')).toBe(server);
-      expect(result.agentContext.join('\n')).toContain(
-        'These source files carry /* eslint-env */ comments: apps/app1/src/server.js.'
-      );
-      expect(result.nextSteps.join('\n')).toContain(
-        'ESLint v10 reports /* eslint-env */ comments as errors; replace them with /* global */ comments or languageOptions.globals in: apps/app1/src/server.js.'
-      );
-    }
-  );
 
   it('should leave a line-comment eslint-env, which ESLint never read', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
@@ -986,12 +838,11 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
 
     const result = await update(tree);
 
-    expect(tree.read('apps/app1/src/fixtures.ts', 'utf-8')).toBe(
-      "export const quoted = '/* eslint-disable jsx-a11y/alt-text */';\n"
+    const context = result.agentContext.join('\n');
+    expect(context).toContain(
+      'These source files carry /* eslint-env */ comments: apps/app1/src/fixtures.ts.'
     );
-    expect(result.nextSteps.join('\n')).toContain(
-      'apps/app1/src/fixtures.ts (react)'
-    );
+    expect(context).toContain('apps/app1/src/fixtures.ts (react).');
   });
 
   it('should report plugins whose peer range excludes the ESLint the workspace lands on', async () => {
@@ -1121,7 +972,7 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
       readJson(tree, 'package.json').devDependencies[
         'eslint-plugin-react-hooks'
       ]
-    ).toBe(ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION);
+    ).toBe('7.1.1');
     expect(
       result.nextSteps.find((step) =>
         step.includes('so update or replace them')
@@ -1247,27 +1098,9 @@ export const quoted = '/* eslint-disable jsx-a11y/alt-text */';
     ).properties.map((property) => (property.name as ts.StringLiteral).text);
 
     expect(installedPlugins).not.toHaveLength(0);
-    // react-hooks ships for every ESLint major, so it is updated rather than removed.
+    // react-hooks 7.1 supports ESLint v10, so it is updated rather than removed.
     expect(installedPlugins.sort()).toEqual(
       [...V9_ONLY_PLUGINS, 'eslint-plugin-react-hooks'].sort()
-    );
-  });
-
-  // Same frozen-copy problem for the two replacement versions this migration installs.
-  it('should stay in sync with the plugin versions @nx/react installs for ESLint v10', () => {
-    const readVersion = (name: string): string | undefined =>
-      (
-        readTopLevelInitializer(
-          join(__dirname, '../../../../react/src/utils/versions.ts'),
-          name
-        ) as ts.StringLiteral | undefined
-      )?.text;
-
-    expect(readVersion('eslintPluginImportXVersion')).toBe(
-      ESLINT_PLUGIN_IMPORT_X_VERSION
-    );
-    expect(readVersion('eslintPluginReactHooksV7Version')).toBe(
-      ESLINT_PLUGIN_REACT_HOOKS_V7_VERSION
     );
   });
 });
@@ -1281,11 +1114,14 @@ function readTopLevelInitializer(
     readFileSync(filePath, 'utf-8'),
     ts.ScriptTarget.Latest
   );
-  return source.statements
+  const initializer = source.statements
     .filter(ts.isVariableStatement)
     .flatMap((statement) => statement.declarationList.declarations)
     .find(
       (declaration) =>
         ts.isIdentifier(declaration.name) && declaration.name.text === name
     )?.initializer;
+  return initializer && ts.isSatisfiesExpression(initializer)
+    ? initializer.expression
+    : initializer;
 }
