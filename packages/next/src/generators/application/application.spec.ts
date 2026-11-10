@@ -759,6 +759,28 @@ describe('app', () => {
         `);
       });
 
+      it('should install eslint-config-next 15 when the root eslintrc config cannot be edited', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: { eslint: '^9.8.0' },
+          })
+        );
+        tree.write('.eslintrc.js', 'module.exports = {};\n');
+
+        await applicationGenerator(tree, {
+          linter: 'eslint',
+          directory: uniq(),
+          style: 'css',
+        });
+
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['eslint-config-next']).toBe('^15.5.18');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+      });
+
       it('should reject a declared eslint-config-next 16 in an eslintrc workspace before writing a config', async () => {
         tree.write(
           '/package.json',
