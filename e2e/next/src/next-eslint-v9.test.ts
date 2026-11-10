@@ -17,7 +17,8 @@ describe('Next.js linting on ESLint v9', () => {
   afterAll(() => cleanupProject());
 
   // eslint-config-next registers its own copies of the React plugins that
-  // `flat/react` registers on ESLint v9, and ESLint rejects two copies of one plugin.
+  // `flat/react` registers on ESLint v9, and ESLint rejects two different
+  // copies of one plugin.
   it('should lint a Next.js 16 app when the root config spreads flat/react', () => {
     const reactLib = uniq('reactlib');
     const appName = uniq('app');

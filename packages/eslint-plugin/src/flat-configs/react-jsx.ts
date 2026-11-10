@@ -14,8 +14,8 @@ import tseslint, { type ConfigArray } from 'typescript-eslint';
  */
 
 // eslint-plugin-react and -jsx-a11y have no ESLint v10 release, so their rules
-// only apply on ESLint <10. react-hooks ships for every major; require the
-// v9-only plugins lazily so they're never loaded on v10.
+// only apply on ESLint <10. react-hooks 7.1 supports ESLint v10. Require only
+// the plugins installed for the running ESLint major.
 const isEslint10OrLater = major(require('eslint/package.json').version) >= 10;
 
 const files = [
@@ -36,8 +36,8 @@ if (isEslint10OrLater) {
     plugins: {
       'react-hooks': reactHooksPlugin,
     },
-    // react-hooks v7's `recommended` enables the React Compiler rule set as
-    // errors; keep only the classic two rules to match ESLint <10 behavior.
+    // react-hooks v7's `recommended` enables the React Compiler rules, most
+    // as errors; keep only the classic two rules to match ESLint <10 behavior.
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',

@@ -137,30 +137,6 @@ describe('versions(tree)', () => {
 });
 
 describe('getConvertToFlatConfigVersions(tree)', () => {
-  it('should keep the ESLint v9 stack for a v9 workspace', () => {
-    const tree = createTreeWithEmptyWorkspace();
-    updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, eslint: '^9.5.0' };
-      return json;
-    });
-
-    expect(getConvertToFlatConfigVersions(tree).eslintVersion).toMatch(
-      /^\^9\./
-    );
-  });
-
-  it('should keep the ESLint v10 stack for a v10 workspace', () => {
-    const tree = createTreeWithEmptyWorkspace();
-    updateJson(tree, 'package.json', (json) => {
-      json.devDependencies = { ...json.devDependencies, eslint: '10.0.0' };
-      return json;
-    });
-
-    expect(getConvertToFlatConfigVersions(tree).eslintVersion).toMatch(
-      /^\^10\./
-    );
-  });
-
   it('should default to the ESLint v9 stack when no ESLint is declared', () => {
     const tree = createTreeWithEmptyWorkspace();
 

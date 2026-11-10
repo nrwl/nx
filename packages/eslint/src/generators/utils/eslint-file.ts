@@ -1128,7 +1128,8 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   const updated = addBlockToFlatConfigExport(content, block);
   if (updated === content) {
     // `addBlockToFlatConfigExport` only edits a plain array export
-    // (`export default [...]`, an exported `const` array, `module.exports = [...]`).
+    // (`export default [...]`, a `const` array exported by
+    // `export default <name>`, `module.exports = [...]`).
     // A wrapper config such as `export default tseslint.config(...)` is left
     // untouched, so warn rather than silently dropping the request.
     logger.warn(

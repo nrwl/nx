@@ -1488,7 +1488,7 @@ function addFlatCompatToFlatConfigESM(content: string) {
     ts.ScriptKind.JS
   );
   const exportDefault = findExportDefaultStatement(source);
-  // `compat` must precede the array that uses it, which a named export declares above `export default`.
+  // `compat` must precede the array that uses it, which a top-level `const` declares above `export default`.
   const configStatement =
     findExportedDeclaration(source, exportDefault)?.parent.parent ??
     exportDefault;

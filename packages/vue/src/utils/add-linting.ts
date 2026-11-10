@@ -107,7 +107,7 @@ export async function addLinting(
   return runTasksInSerial(...tasks);
 }
 
-// eslint-plugin-vue 10 renamed `vue3-essential` to `essential`, which means Vue 2 on 9.
+// On eslint-plugin-vue 9, `essential` is the Vue 2 config; 10 renamed `vue3-essential` to `essential`.
 function getVueEssentialConfig(tree: Tree): string {
   const version = getResolvedPackageVersion(
     tree,
