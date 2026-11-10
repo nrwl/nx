@@ -47,8 +47,8 @@ describe('componentStory generator', () => {
   });
 
   it('should not generate the component stories file when it already exists', async () => {
-    jest.spyOn(storybookUtils, 'getComponentProps');
-    jest.spyOn(devkit, 'generateFiles');
+    vi.spyOn(storybookUtils, 'getComponentProps');
+    vi.spyOn(devkit, 'generateFiles');
     tree.write(storyFile, '');
 
     await componentStoryGenerator(tree, {

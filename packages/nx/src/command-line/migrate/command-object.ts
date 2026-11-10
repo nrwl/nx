@@ -53,6 +53,7 @@ export interface MigrateArgs {
   runMigration?: string;
   runId?: string;
   stepAction?: StepAction;
+  startFresh?: boolean;
   include?: MigrateInclude;
   /**
    * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
@@ -66,6 +67,7 @@ export interface MigrateArgs {
   commitPrefix?: string;
   agentic?: AgenticArg;
   validate?: boolean;
+  finalValidation?: boolean;
   ifExists?: boolean;
   interactive?: boolean;
   // The rest of the yargs args bag flows through untyped.
@@ -109,15 +111,13 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('runMigration', {
       describe:
-        "Run a single migration from migrations.json by id. The id is '<package>:<name>'; a bare '<name>' is accepted when it matches exactly one migration. A name that contains ':' must use the full '<package>:<name>' form.",
+        "Run a single migration from migrations.json by id. The id is '<package>:<name>'; a bare '<name>' is accepted when it matches exactly one migration. A name that contains ':' must use the full '<package>:<name>' form. With an AI agent, nx runs the migration's generator itself, when it has one, and starts the agent only when the migration leaves a prompt to apply or changes to review. Refuses to start while another nx migrate process is working on a run.",
       type: 'string',
     })
     .option('runId', {
-      // Hidden with the orchestrator itself.
       describe:
-        'The orchestrated migrate run to record a single migration into, or to reconcile when given without --run-migration.',
+        "The id of a migrate run, as nx prints it. With --run-migrations: continue that run, or replace it with --start-fresh. The AI agent driving a run also passes it with --run-migration to record a migration into the run, and alone to record a step's outcome and get the next step.",
       type: 'string',
-      hidden: true,
     })
     .option('stepAction', {
       describe:
@@ -125,6 +125,11 @@ function withMigrationOptions(yargs: Argv) {
       choices: STEP_ACTIONS,
       type: 'string',
       hidden: true,
+    })
+    .option('startFresh', {
+      describe:
+        'With --run-migrations and --run-id=<id>: delete the record of the active migrate run the id names, then run the whole plan again, as a new run when orchestrated. Migrations the deleted run applied stay applied.',
+      type: 'boolean',
     })
     .option('ifExists', {
       describe: `Run migrations only if the migrations file exists, if not continues successfully.`,
@@ -183,12 +188,17 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('agentic', {
       describe:
-        'Enable the agentic flow for prompt-based migrations and AI-driven review. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable.',
+        'Use an AI agent to apply prompt-based migrations and review the results. With --run-migrations, one agent session drives the whole run. With --run-migration, the session covers that one migration. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable it. Inside an AI agent, disabling it stops nx from asking that agent to review the changes of generator-only migrations. Migration prompts still go to that agent.',
       coerce: coerceAgenticArg,
     })
     .option('validate', {
       describe:
-        'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
+        'Have the AI agent driving the run review the changes of generator-only migrations (those with no `prompt:` field). On by default; pass `--no-validate` to opt out. A continued run keeps the setting it started with. Has no effect when no agent drives the run. With --run-migration inside an AI agent, it controls whether nx prints review instructions for that agent. `--agentic=false` turns them off too.',
+      type: 'boolean',
+    })
+    .option('finalValidation', {
+      describe:
+        'With --run-migrations, when an AI agent drives the run: once every migration has run, the agent checks that the projects the run touched still lint, build, and pass their unit tests. On by default; pass --no-final-validation to opt out. A continued run keeps the setting it started with.',
       type: 'boolean',
     })
     .check(

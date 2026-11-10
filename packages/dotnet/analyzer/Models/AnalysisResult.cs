@@ -14,6 +14,14 @@ public record AnalysisResult
     /// Maps project root (relative to workspace root) to referenced project roots.
     /// </summary>
     public Dictionary<string, ReferencesInfo> ReferencesByRoot { get; init; } = new();
+
+    /// <summary>
+    /// Every workspace file MSBuild read while evaluating the projects, relative to the
+    /// workspace root. The plugin hashes these to decide whether a cached analysis is
+    /// still valid; it cannot know them up front, since an arbitrary import is only
+    /// discovered by evaluating.
+    /// </summary>
+    public List<string> EvaluationInputs { get; init; } = new();
 }
 
 public record ReferencesInfo

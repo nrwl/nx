@@ -31,7 +31,6 @@ export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export interface LintWorkspaceRulesProjectGeneratorOptions {
   skipFormat?: boolean;
-  addPlugin?: boolean;
 }
 
 export async function lintWorkspaceRulesProjectGenerator(

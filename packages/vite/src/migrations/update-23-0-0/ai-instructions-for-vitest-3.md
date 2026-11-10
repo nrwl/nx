@@ -20,19 +20,19 @@ The pre-pass handled, mechanically:
 - `browser.provider: 'none'` → `'preview'` (only when the value is a direct string literal under `test.browser.provider`)
 - `browser.indexScripts` → `orchestratorScripts` (only as a direct property name)
 
-The pre-pass **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any matches it finds there are forwarded to you in `<advisory_context>`.
+The pre-pass **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`), because YAML structure varies too much. Any matches it finds there are forwarded to you in `impl.agentContext`.
 
 **The vast majority of action items below are NOT covered by the pre-pass** and still require your attention — every section other than the six items above.
 
-How to read the wrapper sections above this file:
+How to read the `impl` fields of the step's `nx_migrate_prompt` block:
 
-- `<files_changed>` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
-- `<advisory_context>` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work** — address each one in the relevant section below, not as a separate task.
+- `impl.changes` lists files the pre-pass already wrote to. Verify the new shape is in place; do not re-apply the same edit.
+- `impl.agentContext` lists detections the pre-pass forwarded because it could not safely complete them. **Every entry is pending work.** Address each one in the relevant section below, not as a separate task.
 
 </pre_pass_summary>
 
 <handoff_guidance>
-In your handoff `summary` (1–3 sentences per the system prompt), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no browser-mode configs in this workspace").
+In your handoff `summary` (1-3 sentences, per the handoff format), name the breaking-change categories you applied; explicitly call out any you skipped because they didn't apply (e.g., "no browser-mode configs in this workspace").
 </handoff_guidance>
 
 ## Pre-Migration Checklist

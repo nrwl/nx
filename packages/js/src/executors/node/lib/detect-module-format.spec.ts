@@ -1,21 +1,20 @@
+import type { MockedFunction } from 'vitest';
 import { detectModuleFormat } from './detect-module-format';
 import { readTsConfig } from '../../../utils/typescript/ts-config';
 import * as ts from 'typescript';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'path';
 
-jest.mock('../../../utils/typescript/ts-config');
+vi.mock('../../../utils/typescript/ts-config');
 
-const mockReadTsConfig = readTsConfig as jest.MockedFunction<
-  typeof readTsConfig
->;
+const mockReadTsConfig = readTsConfig as MockedFunction<typeof readTsConfig>;
 
 describe('detectModuleFormat', () => {
   let tempFs: TempFs;
   let workspaceRoot: string;
 
   beforeEach(async () => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     tempFs = new TempFs('detect-module-format');
     workspaceRoot = tempFs.tempDir;
   });

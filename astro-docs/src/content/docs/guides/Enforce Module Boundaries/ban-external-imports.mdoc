@@ -1,10 +1,10 @@
 ---
 title: Ban External Imports
-description: Learn how to use ESLint module boundary constraints to prevent projects from importing specific external packages and enforce separation of concerns.
+description: Learn how to use module boundary constraints to prevent projects from importing specific external packages and enforce separation of concerns.
 filter: 'type:Guides'
 ---
 
-**This constraint is only available for projects using ESLint.**
+This constraint is only available in the `@nx/enforce-module-boundaries` lint rule, on ESLint or Oxlint. The [Conformance rule](/docs/enterprise/conformance) has no equivalent.
 
 You may want to constrain what external packages a project may import. For example, you may want to prevent backend projects from importing packages related to your frontend framework. You can ban these imports using `bannedExternalImports` property in your dependency constraints configuration.
 
@@ -82,6 +82,37 @@ export default [
 ```
 
 {% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  // @nx/oxlint/boundaries-plugin should already be registered under "jsPlugins"
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        // update depConstraints based on your tags
+        "depConstraints": [
+          // projects tagged with "frontend" can't import from "@nestjs/common"
+          {
+            "sourceTag": "frontend",
+            "bannedExternalImports": ["@nestjs/common"]
+          },
+          // projects tagged with "backend" can't import from "@angular/core"
+          {
+            "sourceTag": "backend",
+            "bannedExternalImports": ["@angular/core"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+{% /tabitem %}
 {% /tabs %}
 
 Another common example is ensuring that util libraries stay framework-free by banning imports from these frameworks. You can use wildcard `*` to match multiple projects e.g. `react*` would match `react`, but also `react-dom`, `react-native` etc. You can also have multiple wildcards e.g. `*react*` would match any package with word `react` in it's name. A workspace using React would have a configuration like this.
@@ -143,6 +174,32 @@ export default [
   ],
 
   // ... more ESLint config here
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  // @nx/oxlint/boundaries-plugin should already be registered under "jsPlugins"
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        // update depConstraints based on your tags
+        "depConstraints": [
+          // projects tagged with "type:util" can't import from "react" or related projects
+          {
+            "sourceTag": "type:util",
+            "bannedExternalImports": ["*react*"]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
@@ -238,6 +295,46 @@ export default [
       ],
     },
   ],
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  // @nx/oxlint/boundaries-plugin should already be registered under "jsPlugins"
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        // update depConstraints based on your tags
+        "depConstraints": [
+          // limiting the dependencies of util libraries to the bare minimum
+          // projects tagged with "type:util" can only import from "date-fns"
+          {
+            "sourceTag": "type:util",
+            "allowedExternalImports": ["date-fns"]
+          },
+          // ui libraries clean from data access concerns
+          // projects tagged with "type:ui" can only import packages matching "@angular/*" except "@angular/common/http"
+          {
+            "sourceTag": "type:ui",
+            "allowedExternalImports": ["@angular/*"],
+            "bannedExternalImports": ["@angular/common/http"]
+          },
+          // keeping the domain logic clean from infrastructure concerns
+          // projects tagged with "type:core" can't import any external packages.
+          {
+            "sourceTag": "type:core",
+            "allowedExternalImports": []
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 

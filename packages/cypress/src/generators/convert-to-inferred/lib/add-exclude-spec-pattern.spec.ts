@@ -197,4 +197,38 @@ export default defineConfig({
       });"
     `);
   });
+
+  it('should update an excludeSpecPattern value that uses a type assertion', () => {
+    // ARRANGE
+    tree.write(
+      configFilePath,
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+    baseUrl: "http://localhost:4200",
+    excludeSpecPattern: <string>"somefile.spec.ts"
+  },
+});`
+    );
+
+    // ACT
+    addExcludeSpecPattern(tree, configFilePath, 'mytests/**/*.spec.ts');
+
+    // ASSERT
+    expect(tree.read(configFilePath, 'utf-8')).toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+          baseUrl: "http://localhost:4200",
+          excludeSpecPattern: ["mytests/**/*.spec.ts"]
+        },
+      });"
+    `);
+  });
 });

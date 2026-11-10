@@ -1,2 +1,4 @@
-export * from './src/with-module-federation/webpack/with-module-federation';
-export * from './src/with-module-federation/webpack/with-module-federation-ssr';
+export {
+  withModuleFederation,
+  withModuleFederationForSSR,
+} from './src/stubs/stubs';

@@ -2,6 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc"],
   "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
+  "ignorePatterns": ["**/next-env.d.ts"],
   "categories": {
     "correctness": "error"
   },

@@ -98,9 +98,9 @@ describe('move-impl (Angular plugin for @nx/workspace:move)', () => {
       standalone: false,
     });
 
-    jest
-      .spyOn(devkit, 'createProjectGraphAsync')
-      .mockImplementation(() => Promise.resolve(projectGraph));
+    vi.spyOn(devkit, 'createProjectGraphAsync').mockImplementation(() =>
+      Promise.resolve(projectGraph)
+    );
   });
 
   it('should move a project', async () => {

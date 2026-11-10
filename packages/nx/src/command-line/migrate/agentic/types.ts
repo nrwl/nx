@@ -3,30 +3,34 @@ export type { AgentId };
 
 /**
  * Workspace-relative directory holding all migrate-run scratch: a run
- * directory per run id. Shared by the run-dir layout in `handoff.ts` and the
+ * directory per run id. Shared by the run-dir layout in `run-state.ts` and the
  * agent permission rules in `definitions.ts` so the pre-authorized write scope
  * can't drift from the actual layout. It lives here so `definitions.ts`,
- * loaded whenever the agentic flow is resolved, doesn't pull in the handoff
- * runtime for the path alone.
+ * loaded whenever the agentic flow is resolved, doesn't pull in the run state
+ * module for the path alone.
  */
 export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
 
 /**
  * The one subtree of a run directory an agent writes; everything beside it is
- * state Nx owns and reads back, so the pre-authorized write scope stops here.
- * Handoff names derive from step ids or package and migration names, so
- * flattening them into the run dir would leave Nx no name it could safely add.
+ * state Nx owns, so the pre-authorized write scope stops here. Handoff names
+ * derive from step ids, so flattening them into the run dir would leave Nx no
+ * name it could safely add.
  */
 export const HANDOFFS_DIR_NAME = 'handoffs';
+
+/**
+ * Sibling subtree holding the per-step prompt files Nx writes for the agent
+ * to read. They stay out of `handoffs/`, which is the agent's to write.
+ */
+export const PROMPTS_DIR_NAME = 'prompts';
 
 /**
  * Composite identity of the v23 migration that adds `.nx/migrate-runs` to
  * `.gitignore`. Hard-coded because the agentic preflight is a deliberate
  * one-off coupling: this exact migration owns the entry that keeps
  * `.nx/migrate-runs/<run-id>/...` scratch out of per-migration commits. If
- * the migration is ever renamed, this entry must move with it. It lives here
- * rather than in `handoff-gitignore.ts` so `sortMigrations`' hoist check
- * doesn't load that module's migration-execution machinery.
+ * the migration is ever renamed, this entry must move with it.
  */
 const HANDOFF_GITIGNORE_MIGRATION_PACKAGE = 'nx';
 const HANDOFF_GITIGNORE_MIGRATION_NAME =
@@ -46,7 +50,7 @@ export function isHandoffGitignoreMigration(m: {
  * A coding agent that was found on the user's machine, ready to be spawned.
  *
  * Produced by `detect-installed.ts`. The `binary` is an absolute path so the
- * runner can spawn it directly without re-resolving against PATH.
+ * master session can spawn it directly without re-resolving against PATH.
  */
 export interface DetectedInstalledAgent {
   id: AgentId;
@@ -56,26 +60,8 @@ export interface DetectedInstalledAgent {
 }
 
 /**
- * Inputs the runner provides when asking an agent definition to build its
- * spawn arguments. Kept minimal — agent-specific quirks (e.g. transient agent
- * name for OpenCode) are encoded inside the definition, not here.
- */
-export interface InvocationContext {
-  systemContext: string;
-  userPrompt: string;
-  workspaceRoot: string;
-  /**
-   * Name of the run directory under `MIGRATE_RUNS_RELATIVE_DIR` holding this
-   * invocation's handoff. A workspace can carry several run directories at
-   * once, so a definition that pre-authorizes the handoff write narrows it to
-   * this one: the others belong to runs this invocation is not executing.
-   */
-  runDirName: string;
-}
-
-/**
- * What an agent definition returns from `buildInteractive`. The runner combines
- * this with the detected binary path to actually spawn.
+ * What a master invocation builder returns. The master session combines this
+ * with the detected binary path to actually spawn.
  */
 export interface InvocationSpec {
   args: string[];
@@ -93,35 +79,17 @@ export interface AgentDefinition {
   binaryNames: string[];
   /** Absolute paths to probe as a fallback when PATH lookup misses. */
   wellKnownPaths(): string[];
-  buildInteractive(ctx: InvocationContext): InvocationSpec;
 }
 
 /**
  * Output of the agent's handoff file, written at the end of an agentic step.
- * The two locked fields drive the failure-handling matrix in the design doc;
- * extra fields are tolerated and surfaced via `extras`.
+ * Extra fields are tolerated and surfaced via `extras`.
  */
 export interface HandoffFile {
   status: 'success' | 'failed';
   summary: string;
   extras?: Record<string, unknown>;
 }
-
-/**
- * Outcome the runner reports back to the migrate orchestrator after a single
- * agentic step. The four kinds mirror the (a)/(b)/(c) matrix plus the user's
- * choice when (c) fires.
- *
- * `ambiguous-abort.causeSummary`: pre-rendered explanation lines. Populated
- * when Ctrl+C bypasses the ambiguous prompt (so the cause was never shown
- * inline) and forwarded so the caller can surface it. Omitted when the user
- * chose "abort" at the prompt — the cause was already shown there.
- */
-export type HandoffOutcome =
-  | { kind: 'success'; summary: string; extras?: Record<string, unknown> }
-  | { kind: 'failed'; summary: string; extras?: Record<string, unknown> }
-  | { kind: 'ambiguous-continue' }
-  | { kind: 'ambiguous-abort'; causeSummary?: string[] };
 
 /**
  * Result of the up-front resolution phase, run once per run-phase invocation
@@ -139,9 +107,3 @@ export type ResolvedAgentic =
   | { kind: 'inside-agent' }
   | { kind: 'disabled' }
   | { kind: 'enabled'; selectedAgent: DetectedInstalledAgent };
-
-/** The `enabled` variant, useful for narrowed function signatures. */
-export type EnabledResolvedAgentic = Extract<
-  ResolvedAgentic,
-  { kind: 'enabled' }
->;

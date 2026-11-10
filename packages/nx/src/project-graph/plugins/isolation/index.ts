@@ -1,1 +1,5 @@
-export { loadIsolatedNxPlugin } from './load-isolated-plugin';
+export {
+  disposeIsolatedPlugins,
+  loadIsolatedNxPlugin,
+  wantPlugins,
+} from './load-isolated-plugin';

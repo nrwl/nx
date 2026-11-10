@@ -2,6 +2,7 @@ import {
   getNamedInputs,
   calculateHashesForCreateNodes,
   clearRequireCache,
+  getReadyCheckReadyWhen,
   loadConfigFile,
   PluginCache,
   hashObject,
@@ -19,17 +20,17 @@ import {
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { getLockFileName } from '@nx/js';
 import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import { canResolve } from './router-plugin-utils';
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
-  typecheckTargetName?: string;
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
@@ -39,7 +40,6 @@ type ReactRouterTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-const pmCommand = getPackageManagerCommand();
 const reactRouterConfigBlob = '**/react-router.config.{ts,js,cjs,cts,mjs,mts}';
 
 export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
@@ -74,9 +74,9 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
         }
       );
 
-    const lockfile = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmCommand = getPackageManagerCommand(packageManager);
+    const lockfile = getLockFileName(packageManager);
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       { ...normalizedOptions, isUsingTsSolutionSetup },
@@ -89,10 +89,6 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
         async (configFile, _, context, idx) => {
           const projectRoot = dirname(configFile);
 
-          const siblingFiles = readdirSync(
-            joinPathFragments(context.workspaceRoot, projectRoot)
-          );
-
           const hash = hashes[idx] + configFile;
           if (!targetsCache.has(hash)) {
             targetsCache.set(
@@ -102,8 +98,8 @@ export const createNodes: CreateNodes<ReactRouterPluginOptions> = [
                 projectRoot,
                 normalizedOptions,
                 context,
-                siblingFiles,
-                isUsingTsSolutionSetup
+                isUsingTsSolutionSetup,
+                pmCommand
               )
             );
           }
@@ -145,8 +141,8 @@ async function buildReactRouterTargets(
   projectRoot: string,
   options: ReactRouterPluginOptions,
   context: CreateNodesContext,
-  siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  pmCommand: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ReactRouterTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
   const configPath = join(context.workspaceRoot, configFilePath);
@@ -174,7 +170,12 @@ async function buildReactRouterTargets(
 
   targets[options.devTargetName] = await devTarget(
     projectRoot,
-    isUsingTsSolutionSetup
+    namedInputs,
+    isUsingTsSolutionSetup,
+    getDevReadyWhen(
+      context.workspaceRoot,
+      join(context.workspaceRoot, projectRoot)
+    )
   );
 
   if (serverBuildPath) {
@@ -182,17 +183,10 @@ async function buildReactRouterTargets(
       projectRoot,
       serverBuildPath,
       options.buildTargetName,
+      namedInputs,
       isUsingTsSolutionSetup
     );
   }
-
-  targets[options.typecheckTargetName] = await typecheckTarget(
-    projectRoot,
-    options.typecheckTargetName,
-    namedInputs,
-    siblingFiles,
-    isUsingTsSolutionSetup
-  );
 
   addBuildAndWatchDepsTargets(
     context.workspaceRoot,
@@ -232,12 +226,7 @@ async function getBuildTargetConfig(
   const buildTarget: TargetConfiguration = {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['@react-router/dev'] },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs,
     command: 'react-router build',
     options: { cwd: projectRoot },
@@ -262,12 +251,33 @@ async function getBuildPaths(reactRouterConfig, isLibMode: boolean) {
   };
 }
 
-async function devTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    { externalDependencies: ['@react-router/dev'] },
+  ];
+}
+
+async function devTarget(
+  projectRoot: string,
+  namedInputs: { [inputName: string]: any[] },
+  isUsingTsSolutionSetup: boolean,
+  readyWhen: TargetConfiguration['readyWhen']
+) {
   const devTarget: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: 'react-router dev',
     options: { cwd: projectRoot },
   };
+
+  if (readyWhen) {
+    devTarget.readyWhen = readyWhen;
+  }
 
   if (isUsingTsSolutionSetup) {
     devTarget.syncGenerators = ['@nx/js:typescript-sync'];
@@ -275,10 +285,45 @@ async function devTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   return devTarget;
 }
 
+// Vite's lookup order for the config in its root
+const viteConfigFiles = [
+  'vite.config.js',
+  'vite.config.mjs',
+  'vite.config.ts',
+  'vite.config.cjs',
+  'vite.config.mts',
+  'vite.config.cts',
+];
+
+// The Vite check resolves the config when the task runs, with the task's env
+// and options, and waits for the server's port.
+function getDevReadyWhen(
+  workspaceRoot: string,
+  absoluteProjectRoot: string
+): TargetConfiguration['readyWhen'] {
+  // `react-router dev` serves with the default Vite config of its cwd.
+  const configFile = viteConfigFiles.find((file) =>
+    existsSync(join(absoluteProjectRoot, file))
+  );
+  if (!configFile) {
+    return undefined;
+  }
+  // Nx runs the check from the workspace root, where @nx/vite may be missing
+  if (!canResolve('@nx/vite/ready-check', workspaceRoot)) {
+    return undefined;
+  }
+  return getReadyCheckReadyWhen(
+    '@nx/vite/ready-check',
+    configFile,
+    'react-router-dev'
+  );
+}
+
 async function startTarget(
   projectRoot: string,
   serverBuildPath: string,
   buildTargetName: string,
+  namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ) {
   const serverPath =
@@ -289,8 +334,10 @@ async function startTarget(
   const startTarget: TargetConfiguration = {
     continuous: true,
     dependsOn: [buildTargetName],
+    inputs: buildInputs(namedInputs),
     command: `react-router-serve ${serverPath}`,
     options: { cwd: projectRoot },
+    readyWhen: getReadyCheckReadyWhen('@nx/react/ready-check'),
   };
 
   if (isUsingTsSolutionSetup) {
@@ -299,57 +346,11 @@ async function startTarget(
   return startTarget;
 }
 
-async function typecheckTarget(
-  projectRoot: string,
-  typecheckTargetName: string,
-  namedInputs: { [inputName: string]: any[] },
-  siblingFiles: string[],
-  isUsingTsSolutionSetup: boolean
-) {
-  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
-  const typecheckTarget: TargetConfiguration = {
-    cache: true,
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      { externalDependencies: ['typescript'] },
-    ],
-    command: isUsingTsSolutionSetup
-      ? `tsc --build --emitDeclarationOnly`
-      : `tsc${hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``} --noEmit`,
-    options: {
-      cwd: projectRoot,
-    },
-    metadata: {
-      description: `Runs type-checking for the project.`,
-      technologies: ['typescript'],
-      help: {
-        command: isUsingTsSolutionSetup
-          ? `${pmCommand.exec} tsc --build --help`
-          : `${pmCommand.exec} tsc${
-              hasTsConfigAppJson ? ` -p tsconfig.app.json` : ``
-            } --help`,
-        example: isUsingTsSolutionSetup
-          ? { args: ['--force'] }
-          : { options: { noEmit: true } },
-      },
-    },
-  };
-
-  if (isUsingTsSolutionSetup) {
-    typecheckTarget.dependsOn = [`^${typecheckTargetName}`];
-    typecheckTarget.syncGenerators = ['@nx/js:typescript-sync'];
-  }
-  return typecheckTarget;
-}
-
 function normalizeOptions(options: ReactRouterPluginOptions) {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.devTargetName ??= 'dev';
   options.startTargetName ??= 'start';
-  options.typecheckTargetName ??= 'typecheck';
 
   return options;
 }

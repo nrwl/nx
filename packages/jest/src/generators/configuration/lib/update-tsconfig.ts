@@ -5,8 +5,13 @@ import {
   updateJson,
   type Tree,
 } from '@nx/devkit';
+import { posix } from 'path';
 import type { NormalizedJestProjectSchema } from '../schema';
-import { getProjectType } from '@nx/js/internal';
+import {
+  createTreeParseConfigHost,
+  ensureTypescript,
+  getProjectType,
+} from '@nx/js/internal';
 
 export function updateTsConfig(
   host: Tree,
@@ -90,10 +95,48 @@ export function updateTsConfig(
       json.exclude = [...uniqueExclude];
       return json;
     });
+
+    // A composite spec config reaches runtime sources only through a project
+    // reference. Skip it when the runtime config references the spec config.
+    const specTsconfigPath = joinPathFragments(root, 'tsconfig.spec.json');
+    const runtimeReference = `./${posix.relative(root, runtimeTsconfigPath)}`;
+    if (
+      options.isTsSolutionSetup &&
+      canBeReferencedBy(host, runtimeTsconfigPath, specTsconfigPath)
+    ) {
+      updateJson(host, specTsconfigPath, (json) => {
+        json.references ??= [];
+        if (!json.references.some((r) => r.path === runtimeReference)) {
+          json.references.push({ path: runtimeReference });
+        }
+        return json;
+      });
+    }
   } else {
     logger.warn(
       `Couldn't find a runtime tsconfig file at ${runtimeTsconfigPath} to exclude the test files from. ` +
         `If you're using a different filename for your runtime tsconfig, please provide it with the '--runtimeTsconfigFileName' flag.`
     );
   }
+}
+
+function canBeReferencedBy(
+  tree: Tree,
+  tsconfigPath: string,
+  referrerPath: string
+): boolean {
+  const ts = ensureTypescript();
+  const host = createTreeParseConfigHost(tree);
+  const { options, projectReferences } = ts.parseJsonConfigFileContent(
+    ts.readConfigFile(tsconfigPath, host.readFile).config,
+    host,
+    posix.dirname(tsconfigPath)
+  );
+  return (
+    options.composite === true &&
+    !options.noEmit &&
+    !projectReferences?.some(
+      (r) => ts.resolveProjectReferencePath(r) === referrerPath
+    )
+  );
 }

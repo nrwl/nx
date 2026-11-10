@@ -1,4 +1,4 @@
-import { readJson, readNxJson, Tree } from '@nx/devkit';
+import { readJson, readNxJson, Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import reactInitGenerator from './init';
 
@@ -20,7 +20,6 @@ describe('init', () => {
   it('should NOT add react-router plugin when useReactRouterPlugin is false', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: false,
     });
     const nxJson = readNxJson(tree);
@@ -35,7 +34,6 @@ describe('init', () => {
   it('should add react-router plugin when useReactRouterPlugin is true', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: true,
       useReactRouterPlugin: true,
     });
     const nxJson = readNxJson(tree);
@@ -46,19 +44,40 @@ describe('init', () => {
     );
     expect(hasRouterPlugin).toBeTruthy();
   });
-
-  it('should NOT add react-router plugin when addPlugin is false even if useReactRouterPlugin is true', async () => {
+  it('should register @nx/js/typescript for typecheck only outside a TS solution setup', async () => {
     await reactInitGenerator(tree, {
       skipFormat: true,
-      addPlugin: false,
       useReactRouterPlugin: true,
     });
-    const nxJson = readNxJson(tree);
-    const hasRouterPlugin = nxJson.plugins?.some(
-      (p) =>
-        (typeof p === 'string' && p === '@nx/react/router-plugin') ||
-        (typeof p === 'object' && p.plugin === '@nx/react/router-plugin')
+
+    expect(readNxJson(tree).plugins).toContainEqual({
+      plugin: '@nx/js/typescript',
+      options: { typecheck: { targetName: 'typecheck' } },
+    });
+  });
+
+  it('should register @nx/js/typescript in a TS solution setup', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['packages/*'];
+      return json;
+    });
+    tree.write('pnpm-workspace.yaml', `packages:\n  - 'packages/*'\n`);
+    writeJson(tree, 'tsconfig.base.json', {
+      compilerOptions: { composite: true },
+    });
+    writeJson(tree, 'tsconfig.json', {
+      extends: './tsconfig.base.json',
+      files: [],
+      references: [],
+    });
+
+    await reactInitGenerator(tree, {
+      skipFormat: true,
+      useReactRouterPlugin: true,
+    });
+
+    expect(readNxJson(tree).plugins).toContainEqual(
+      expect.objectContaining({ plugin: '@nx/js/typescript' })
     );
-    expect(hasRouterPlugin).toBeFalsy();
   });
 });

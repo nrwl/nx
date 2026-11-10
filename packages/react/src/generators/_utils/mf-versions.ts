@@ -24,6 +24,9 @@ export const moduleFederationRsbuildPluginVersion = '^2.5.0';
 // Rspack stack.
 export const rspackCoreVersion = '^2.0.3';
 export const rspackCliVersion = '^2.0.3';
+// @rspack/plugin-react-refresh 2.x peers react-refresh >=0.10 <1.
+export const rspackPluginReactRefreshVersion = '^2.0.0';
+export const reactRefreshVersion = '~0.14.0';
 // Pinned (no ^) to dodge the broken 2.0.2 publish, which ships no dist/ so
 // @rspack/cli can't load it for `rspack serve`. Re-float to ^ once upstream
 // republishes a fixed 2.0.3+.

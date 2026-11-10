@@ -18,6 +18,8 @@ import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
 import { isRspackV2 } from '../../utils/rspack-version';
+import { ENGINE_MANIFEST_VIRTUAL_NAME } from '../../plugins/loaders/engine-manifest';
+import type { AngularPartialTransformLoaderOptions } from '../../plugins/loaders/angular-partial-transform.loader';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -151,6 +153,12 @@ export async function getCommonConfig(
               loader:
                 // oxlint-disable-next-line @nx/enforce-module-boundaries
                 require.resolve('@nx/angular-rspack/loaders/angular-partial-transform-loader'),
+              options: {
+                engineManifestPath: resolve(
+                  normalizedOptions.root,
+                  ENGINE_MANIFEST_VIRTUAL_NAME
+                ),
+              } satisfies AngularPartialTransformLoaderOptions,
             },
           ],
         },
@@ -196,7 +204,7 @@ export async function getCommonConfig(
       ...stylesConfig.plugins,
     ],
   };
-  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // TODO(v25): drop once @rspack/core v1 is out of the support window (NXC-5161).
   // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (normalizedOptions.statsJson && !isRspackV2()) {
     (defaultConfig as { profile?: boolean }).profile = true;

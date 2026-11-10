@@ -1,0 +1,12 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    name: '<%= e2eProjectName %>',
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.spec.ts'],<% if (projectType === 'server') { %>
+    globalSetup: ['src/support/global-setup.ts'],
+    setupFiles: ['src/support/test-setup.ts'],<% } %>
+  },
+});

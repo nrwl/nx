@@ -17,7 +17,10 @@ import { RawProjectGraphDependency } from '../../project-graph/project-graph-bui
 import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
 import { logger } from '../../utils/logger';
-import { detectPackageManager } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  type PackageManager,
+} from '../../utils/package-manager';
 import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -34,13 +37,24 @@ import { jsPluginConfig } from './utils/config';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
-// Separate in-memory caches
-let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
+// An install can rewrite the lockfile between createNodes and
+// createDependencies, so both parse the one createNodes read.
+let cachedLockFile:
+  | {
+      packageManager: PackageManager;
+      lockFile: string;
+      lockFileContents: string;
+      lockFileHash: string;
+    }
+  | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
 
 export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
   (files, _, context) => {
+    // A long-lived process must not reuse a lockfile this computation skipped.
+    cachedLockFile = undefined;
+    cachedKeyMap = undefined;
     return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
@@ -64,27 +78,33 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
       ? readFileSync(lockFilePath, 'utf-8')
       : readBunLockFile(lockFilePath);
   const lockFileHash = getLockFileHash(lockFileContents);
+  cachedLockFile = { packageManager, lockFile, lockFileContents, lockFileHash };
 
-  if (!lockFileNeedsReprocessing(lockFileHash, externalNodesHashFile)) {
-    const { nodes, keyMap } = readCachedExternalNodes();
-    cachedExternalNodes = nodes;
-    cachedKeyMap = keyMap;
+  const cached = readCache<ExternalNodesCache>(
+    externalNodesCache,
+    lockFileHash
+  );
+  if (cached) {
+    cachedKeyMap = deserializeKeyMap(cached.keyMap, cached.nodes);
 
     return {
-      externalNodes: nodes,
+      externalNodes: cached.nodes,
     };
   }
 
   const { nodes: externalNodes, keyMap } = getLockFileNodes(
     packageManager,
+    lockFile,
     lockFileContents,
     lockFileHash,
     context
   );
-  cachedExternalNodes = externalNodes;
   cachedKeyMap = keyMap;
 
-  writeExternalNodesCache(lockFileHash, externalNodes, keyMap);
+  writeCache(externalNodesCache, lockFileHash, {
+    nodes: externalNodes,
+    keyMap: serializeKeyMap(keyMap),
+  });
 
   return {
     externalNodes,
@@ -97,34 +117,39 @@ export const createDependencies: CreateDependencies = (
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);
 
-  const packageManager = detectPackageManager(workspaceRoot);
-
   let lockfileDependencies: RawProjectGraphDependency[] = [];
   // lockfile may not exist yet
   if (
     pluginConfig.analyzeLockfile &&
-    lockFileExists(packageManager) &&
-    cachedExternalNodes
+    cachedLockFile &&
+    lockFileExists(cachedLockFile.packageManager)
   ) {
-    const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
-    const lockFileContents =
-      packageManager !== 'bun'
-        ? readFileSync(lockFilePath, 'utf-8')
-        : readBunLockFile(lockFilePath);
-    const lockFileHash = getLockFileHash(lockFileContents);
+    const { packageManager, lockFile, lockFileContents, lockFileHash } =
+      cachedLockFile;
+    // Cached dependencies name their external nodes, and those names also
+    // depend on node_modules hoisting.
+    const dependenciesHash = hashArray([
+      lockFileHash,
+      ...Object.keys(ctx.externalNodes),
+    ]);
 
-    if (!lockFileNeedsReprocessing(lockFileHash, dependenciesHashFile)) {
-      lockfileDependencies = readCachedDependencies();
+    const cachedDependencies = readCache<RawProjectGraphDependency[]>(
+      dependenciesCache,
+      dependenciesHash
+    );
+    if (cachedDependencies) {
+      lockfileDependencies = cachedDependencies;
     } else {
       lockfileDependencies = getLockFileDependencies(
         packageManager,
+        lockFile,
         lockFileContents,
         lockFileHash,
         ctx,
         cachedKeyMap
       );
 
-      writeDependenciesCache(lockFileHash, lockfileDependencies);
+      writeCache(dependenciesCache, dependenciesHash, lockfileDependencies);
     }
   }
 
@@ -163,7 +188,7 @@ function serializeKeyMap(keyMap: Map<string, any>): Record<string, any> {
   return serialized;
 }
 
-// Deserialize keyMap from JSON format using ctx.externalNodes
+// Deserialize keyMap from JSON format
 function deserializeKeyMap(
   serialized: Record<string, any>,
   externalNodes: Record<string, ProjectGraphExternalNode>
@@ -189,65 +214,29 @@ function deserializeKeyMap(
   return keyMap;
 }
 
-function lockFileNeedsReprocessing(lockHash: string, hashFilePath: string) {
-  try {
-    return readFileSync(hashFilePath).toString() !== lockHash;
-  } catch {
-    return true;
-  }
-}
-
-// External nodes cache functions
-function writeExternalNodesCache(
-  hash: string,
-  nodes: ProjectGraph['externalNodes'],
-  keyMap: Map<string, any>
-) {
-  const serializedKeyMap = serializeKeyMap(keyMap);
-  const cacheData = { nodes, keyMap: serializedKeyMap };
-  const content = safeStringify(cacheData);
-  if (content === undefined) {
-    logger.warn(
-      `Failed to serialize external nodes cache. Skipping cache write.`
-    );
-    tryRemoveFile(externalNodesCache);
-    tryRemoveFile(externalNodesHashFile);
-    return;
-  }
-  safeWriteFileCache(externalNodesCache, content);
-  if (existsSync(externalNodesCache)) {
-    safeWriteFileCache(externalNodesHashFile, hash);
-  }
-}
-
-function readCachedExternalNodes(): {
+interface ExternalNodesCache {
   nodes: ProjectGraph['externalNodes'];
-  keyMap: Map<string, any>;
-} {
-  const { nodes, keyMap } = JSON.parse(
-    readFileSync(externalNodesCache, 'utf-8')
-  );
-  return { nodes, keyMap: deserializeKeyMap(keyMap, nodes) };
+  keyMap: Record<string, any>;
 }
 
-// Dependencies cache functions
-function writeDependenciesCache(
-  hash: string,
-  dependencies: RawProjectGraphDependency[]
-) {
-  const content = safeStringify(dependencies);
+function readCache<T>(path: string, key: string): T | undefined {
+  try {
+    const cache = JSON.parse(readFileSync(path, 'utf-8'));
+    return cache.key === key ? cache.data : undefined;
+  } catch {
+    // Another process can be mid-write, so an unreadable cache is a miss.
+    return undefined;
+  }
+}
+
+function writeCache(path: string, key: string, data: unknown) {
+  const content = safeStringify({ key, data });
   if (content === undefined) {
-    logger.warn(
-      `Failed to serialize dependencies cache. Skipping cache write.`
-    );
-    tryRemoveFile(dependenciesCache);
-    tryRemoveFile(dependenciesHashFile);
+    logger.warn(`Failed to serialize ${path}. Skipping cache write.`);
+    tryRemoveFile(path);
     return;
   }
-  safeWriteFileCache(dependenciesCache, content);
-  if (existsSync(dependenciesCache)) {
-    safeWriteFileCache(dependenciesHashFile, hash);
-  }
+  safeWriteFileCache(path, content);
 }
 
 function safeStringify(data: unknown): string | undefined {
@@ -268,24 +257,10 @@ function tryRemoveFile(path: string): void {
   }
 }
 
-function readCachedDependencies(): RawProjectGraphDependency[] {
-  return JSON.parse(readFileSync(dependenciesCache).toString());
-}
-
-// Cache file paths
-const externalNodesHashFile = join(
-  workspaceDataDirectory,
-  'lockfile-nodes.hash'
-);
-const dependenciesHashFile = join(
-  workspaceDataDirectory,
-  'lockfile-dependencies.hash'
-);
-const externalNodesCache = join(
-  workspaceDataDirectory,
-  'parsed-lock-file.nodes.json'
-);
+// Each cache file holds its key, so key and data come from one write.
+// Older Nx versions read other names with a hash file; keep these distinct.
+const externalNodesCache = join(workspaceDataDirectory, 'lockfile-nodes.json');
 const dependenciesCache = join(
   workspaceDataDirectory,
-  'parsed-lock-file.dependencies.json'
+  'lockfile-dependencies.json'
 );

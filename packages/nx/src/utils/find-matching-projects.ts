@@ -176,9 +176,10 @@ function addMatchingProjectsByName(
   }
 
   if (!isGlobPattern(pattern.value)) {
+    const escapedValue = pattern.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Custom regex that is basically \b but includes hyphens (-) and excludes underscores (_), so "foo" pattern matches "foo_bar" but not "foo-e2e".
     const regex = new RegExp(
-      `(?<![@a-zA-Z0-9-])${pattern.value}(?![@a-zA-Z0-9-])`,
+      `(?<![@a-zA-Z0-9-])${escapedValue}(?![@a-zA-Z0-9-])`,
       'i'
     );
     const matchingProjects = Object.keys(projects).filter((name) =>
@@ -264,11 +265,13 @@ function parseStringPattern(
     // The pattern may contain a label
   } else {
     const potentialType = pattern.substring(0, indexOfFirstPotentialSeparator);
-    return {
-      type: isValidPatternType(potentialType) ? potentialType : 'unlabeled',
-      value: pattern.substring(indexOfFirstPotentialSeparator + 1),
-      exclude: isExclude,
-    };
+    return isValidPatternType(potentialType)
+      ? {
+          type: potentialType,
+          value: pattern.substring(indexOfFirstPotentialSeparator + 1),
+          exclude: isExclude,
+        }
+      : { type: 'unlabeled', value: pattern, exclude: isExclude };
   }
 }
 

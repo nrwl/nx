@@ -1,8 +1,10 @@
 import { homedir } from 'os';
 import { join } from 'path';
+import { parse as parseToml } from 'smol-toml';
 import {
   claudeCodeDefinition,
-  codexDefinition,
+  claudeCodeHandoffAllowedTools,
+  encodeTomlString,
   opencodeDefinition,
 } from './definitions';
 
@@ -40,42 +42,6 @@ describe('claudeCodeDefinition', () => {
     expect(claudeCodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  it('builds the interactive spec with pre-authorized handoff writes, --system-prompt, and the user prompt', () => {
-    const spec = claudeCodeDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    });
-    expect(spec).toEqual({
-      args: [
-        '--allowedTools',
-        'Edit(.nx/migrate-runs/23.0.0/handoffs/**)',
-        '--system-prompt',
-        'system text',
-        'user text',
-      ],
-      cwd: '/workspace',
-    });
-  });
-
-  // A run directory holds the state Nx wrote and reads back beside the
-  // handoffs, and a sibling directory is another run's, whose handoffs decide
-  // how its steps settle. Both are reachable from the session cwd, so only the
-  // rule keeps this invocation out of them.
-  it('names one run directory rather than a pattern spanning several', () => {
-    const [, rule] = claudeCodeDefinition.buildInteractive({
-      systemContext: '',
-      userPrompt: '',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    }).args;
-
-    expect(rule).toBe('Edit(.nx/migrate-runs/23.0.0/handoffs/**)');
-    expect(rule).not.toContain('*/handoffs');
-    expect(rule).not.toContain('Write(');
-  });
-
   it.each([
     ['a comma, which starts another rule', '23.0.0,Edit(.env)'],
     ['a space, which also starts another rule', '23.0.0 Edit(.env)'],
@@ -85,35 +51,33 @@ describe('claudeCodeDefinition', () => {
   ])(
     'hands over no rule at all when the run directory name carries %s',
     (_label, runDirName) => {
-      const spec = claudeCodeDefinition.buildInteractive({
-        systemContext: 'system text',
-        userPrompt: 'user text',
-        workspaceRoot: '/workspace',
-        runDirName,
-      });
-
-      expect(spec.args).toEqual([
-        '--system-prompt',
-        'system text',
-        'user text',
-      ]);
+      expect(claudeCodeHandoffAllowedTools(runDirName)).toBeNull();
     }
   );
 });
 
-describe('codexDefinition', () => {
-  it('injects the system context via developer_instructions and appends the user prompt', () => {
-    const spec = codexDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    });
-    expect(spec).toEqual({
-      args: ['-c', 'developer_instructions=system text', 'user text'],
-      cwd: '/workspace',
-    });
-  });
+describe('encodeTomlString', () => {
+  // codex parses `-c key=value` as TOML and, on a parse failure, falls back to
+  // the raw text as a literal, so an encoding that does not survive a real TOML
+  // parse would ship a mangled system context.
+  it.each([
+    ['control characters', 'line1\nline2\r\n\ntabbed\tvalue'],
+    ['double quotes', 'workspace at "/Users/me/work"'],
+    ['backslashes', 'C:\\Users\\me\\My Documents\\ws'],
+    ['TOML punctuation', '{ key = "value" } at 100% of %PATH%'],
+    ['unicode', 'ends with an em dash — and an ellipsis …'],
+    // JSON leaves a DEL raw, and TOML rejects it.
+    ['a DEL', 'before\x7fafter'],
+  ])(
+    'round-trips the system context through a TOML parse (%s)',
+    (_label, systemContext) => {
+      const encoded = encodeTomlString(systemContext);
+      expect(encoded).not.toMatch(/[\r\n]/);
+      expect((parseToml(`value = ${encoded}`) as { value: string }).value).toBe(
+        systemContext
+      );
+    }
+  );
 });
 
 describe('opencodeDefinition', () => {
@@ -164,52 +128,5 @@ describe('opencodeDefinition', () => {
   it('returns no well-known paths on Windows (deferred)', () => {
     Object.defineProperty(process, 'platform', { value: 'win32' });
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
-  });
-
-  // Round-trip guard: the system context is embedded as a JSON-stringified
-  // value under OPENCODE_CONFIG_CONTENT. JSON handles quoting / newlines /
-  // angle-brackets, so hostile workspace paths in the prompt must come back
-  // out unchanged after a JSON.parse round-trip.
-  it.each([
-    ['embedded newlines', 'line1\nline2'],
-    ['equals signs and braces', '{ key: "value" }'],
-    ['double quotes', 'workspace at "/Users/me/work"'],
-    ['angle brackets', 'before <script>after'],
-    ['ampersands', 'a && b'],
-    ['backticks and dollars', '`whoami` $HOME'],
-    ['windows-style path', 'C:\\Users\\me\\My Documents\\ws'],
-  ])(
-    'round-trips hostile system context through OPENCODE_CONFIG_CONTENT (%s)',
-    (_label, hostile) => {
-      const spec = opencodeDefinition.buildInteractive({
-        systemContext: hostile,
-        userPrompt: 'user',
-        workspaceRoot: '/ws',
-        runDirName: '23.0.0',
-      });
-      const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
-      expect(parsed.agent['nx-migrate'].prompt).toBe(hostile);
-    }
-  );
-
-  it('injects the system context via OPENCODE_CONFIG_CONTENT under the transient agent name', () => {
-    const spec = opencodeDefinition.buildInteractive({
-      systemContext: 'system text',
-      userPrompt: 'user text',
-      workspaceRoot: '/workspace',
-      runDirName: '23.0.0',
-    });
-    expect(spec.args).toEqual([
-      '--agent',
-      'nx-migrate',
-      '--prompt',
-      'user text',
-    ]);
-    expect(spec.cwd).toBe('/workspace');
-    expect(spec.env?.OPENCODE_CONFIG_CONTENT).toBeDefined();
-    const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
-    expect(parsed).toEqual({
-      agent: { 'nx-migrate': { prompt: 'system text' } },
-    });
   });
 });

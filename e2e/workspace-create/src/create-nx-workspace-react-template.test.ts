@@ -1,5 +1,7 @@
 import {
   cleanupProject,
+  e2eCwd,
+  runCommand,
   runCLI,
   readJson,
   runCreateWorkspace,
@@ -16,11 +18,23 @@ describe('create-nx-workspace --template', () => {
       'should clone %s and run lint,test,build',
       (template) => {
         const wsName = uniq('template');
+        const packageManagerVersion = runCommand(
+          `${packageManager} --version`,
+          {
+            cwd: e2eCwd,
+            failOnError: true,
+          }
+        ).trim();
 
         runCreateWorkspace(wsName, {
           template,
           packageManager,
         });
+
+        const packageJson = readJson('package.json');
+        expect(packageJson.packageManager).toBe(
+          `${packageManager}@${packageManagerVersion}`
+        );
 
         expect(() => runCLI('run-many -t lint,test,build')).not.toThrow();
 

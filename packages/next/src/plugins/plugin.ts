@@ -5,10 +5,10 @@ import {
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  getReadyCheckReadyWhen,
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultArray,
@@ -23,6 +23,7 @@ import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
+import type { NextConfig } from 'next';
 import { readdirSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -40,14 +41,11 @@ export interface NextPluginOptions {
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
-type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
+// Next.js takes its port and hostname from the CLI and env, not from its
+// config, so the check gets no config file
+const readyWhen = getReadyCheckReadyWhen('@nx/next/ready-check');
 
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
+type NextTargets = Record<string, TargetConfiguration<NextPluginOptions>>;
 
 export const createNodes: CreateNodes<NextPluginOptions> = [
   nextConfigBlob,
@@ -60,6 +58,9 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
+    const typecheckTargetName = isTsSolutionSetup
+      ? getTypecheckTargetName(context.nxJsonConfiguration)
+      : false;
 
     try {
       const { entries, preErrors } = await filterNextConfigs(
@@ -69,7 +70,7 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
 
       const projectHashes = await calculateHashesForCreateNodes(
         entries.map((e) => e.projectRoot),
-        normalizedOptions,
+        { ...normalizedOptions, typecheckTargetName },
         context,
         entries.map(() => [lockFileName])
       );
@@ -85,6 +86,7 @@ export const createNodes: CreateNodes<NextPluginOptions> = [
               ctx,
               targetsCache,
               isTsSolutionSetup,
+              typecheckTargetName,
               pmc,
               projectHashes[idx]
             ),
@@ -120,6 +122,7 @@ async function createNodesInternal(
   context: CreateNodesContext,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   hash: string
 ) {
@@ -134,6 +137,7 @@ async function createNodesInternal(
         options,
         context,
         isTsSolutionSetup,
+        typecheckTargetName,
         pmc
       )
     );
@@ -155,6 +159,7 @@ async function buildNextTargets(
   options: NextPluginOptions,
   context: CreateNodesContext,
   isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nextConfig = await getNextConfig(nextConfigPath, context);
@@ -166,15 +171,17 @@ async function buildNextTargets(
     namedInputs,
     projectRoot,
     nextConfig,
-    isTsSolutionSetup
+    isTsSolutionSetup,
+    typecheckTargetName
   );
 
   targets[options.devTargetName] = getDevTargetConfig(
+    namedInputs,
     projectRoot,
     isTsSolutionSetup
   );
 
-  const startTarget = getStartTargetConfig(options, projectRoot);
+  const startTarget = getStartTargetConfig(namedInputs, options, projectRoot);
 
   targets[options.startTargetName] = startTarget;
 
@@ -195,7 +202,8 @@ async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
   nextConfig: any,
-  isTsSolutionSetup: boolean
+  isTsSolutionSetup: boolean,
+  typecheckTargetName: string | false
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -217,19 +225,50 @@ async function getBuildTargetConfig(
   targetConfig.options.tty = false;
 
   if (isTsSolutionSetup) {
+    // `next build` type-checks against dependency declarations, which the
+    // dependencies' typecheck targets emit in TS solution setups.
+    if (typecheckTargetName) {
+      targetConfig.dependsOn.push(`^${typecheckTargetName}`);
+    }
     targetConfig.syncGenerators = ['@nx/js:typescript-sync'];
   }
 
   return targetConfig;
 }
 
-function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
+function getTypecheckTargetName(
+  nxJson: NxJsonConfiguration | undefined
+): string | false {
+  const registration = nxJson?.plugins?.find(
+    (p) => (typeof p === 'string' ? p : p.plugin) === '@nx/js/typescript'
+  );
+  const typecheck =
+    typeof registration === 'object'
+      ? (
+          registration.options as {
+            typecheck?: boolean | { targetName?: string };
+          }
+        )?.typecheck
+      : undefined;
+  if (typecheck === false) {
+    return false;
+  }
+  return (typeof typecheck === 'object' && typecheck.targetName) || 'typecheck';
+}
+
+function getDevTargetConfig(
+  namedInputs: { [inputName: string]: any[] },
+  projectRoot: string,
+  isTsSolutionSetup: boolean
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `next dev`,
     options: {
       cwd: projectRoot,
     },
+    inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   if (isTsSolutionSetup) {
@@ -239,7 +278,11 @@ function getDevTargetConfig(projectRoot: string, isTsSolutionSetup: boolean) {
   return targetConfig;
 }
 
-function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
+function getStartTargetConfig(
+  namedInputs: { [inputName: string]: any[] },
+  options: NextPluginOptions,
+  projectRoot: string
+) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
     command: `next start`,
@@ -247,26 +290,37 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
+    inputs: getInputs(namedInputs),
+    readyWhen,
   };
 
   return targetConfig;
 }
 
 async function getOutputs(projectRoot, nextConfig) {
-  let dir = '.next';
   const { PHASE_PRODUCTION_BUILD } = require('next/constants');
+  let resolvedConfig: Pick<NextConfig, 'distDir' | 'output'> | undefined;
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
-    const configResult = await Promise.resolve(
+    resolvedConfig = await Promise.resolve(
       nextConfig(PHASE_PRODUCTION_BUILD, { defaultConfig: {} })
     );
-    if (configResult?.distDir) {
-      dir = configResult?.distDir;
-    }
-  } else if (typeof nextConfig === 'object' && nextConfig?.distDir) {
-    // If nextConfig is an object, directly use its 'distDir' property.
-    dir = nextConfig.distDir;
+  } else if (typeof nextConfig === 'object') {
+    resolvedConfig = nextConfig;
+  }
+
+  // Mirrors Next.js' own `hasCustomExportOutput` check. With `output: 'export'`,
+  // `next build` treats a custom `distDir` as the export directory and falls back
+  // to `out` otherwise, reusing `.next` internally for intermediate artifacts.
+  let dir: string;
+  if (resolvedConfig?.output === 'export') {
+    dir =
+      resolvedConfig.distDir && resolvedConfig.distDir !== '.next'
+        ? resolvedConfig.distDir
+        : 'out';
+  } else {
+    dir = resolvedConfig?.distDir || '.next';
   }
 
   if (projectRoot === '.') {

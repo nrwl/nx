@@ -15,8 +15,14 @@ import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace package managers', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
+  const originalYarnRegistry = process.env.YARN_REGISTRY;
 
-  afterEach(() => cleanupProject());
+  afterEach(() => {
+    if (originalYarnRegistry === undefined) delete process.env.YARN_REGISTRY;
+    else process.env.YARN_REGISTRY = originalYarnRegistry;
+    process.env.SELECTED_PM = packageManager;
+    cleanupProject();
+  });
 
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
@@ -123,10 +129,10 @@ describe('create-nx-workspace yarn berry', () => {
   const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
   let wsName: string;
   let yarnVersion: string;
+  const originalImmutableInstalls = process.env.YARN_ENABLE_IMMUTABLE_INSTALLS;
 
   beforeAll(() => {
     mkdirSync(tmpDir, { recursive: true });
-    runCommand('corepack prepare yarn@3.6.1 --activate', { cwd: tmpDir });
     runCommand('yarn set version 3.6.1', { cwd: tmpDir });
     yarnVersion = runCommand('yarn --version', { cwd: tmpDir }).trim();
     // previous command creates a package.json file which we don't want
@@ -135,6 +141,12 @@ describe('create-nx-workspace yarn berry', () => {
   });
 
   afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
+
+  afterAll(() => {
+    if (originalImmutableInstalls === undefined)
+      delete process.env.YARN_ENABLE_IMMUTABLE_INSTALLS;
+    else process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = originalImmutableInstalls;
+  });
 
   it('should create a workspace with yarn berry', () => {
     wsName = uniq('apps');

@@ -29,15 +29,13 @@ const {
 
 vi.mock('@nx/angular-rspack-compiler', () => ({
   buildAndAnalyze: buildAndAnalyzeMock,
+  createJavaScriptTransformer: (...args: unknown[]) => {
+    transformerCtorMock(...args);
+    return { close: transformerCloseMock };
+  },
   createJavascriptTransformerCache: createJavascriptTransformerCacheMock,
   DiagnosticModes: { All: 7, Semantic: 4 },
   disposeComponentStylesheetBundler: disposeComponentStylesheetBundlerMock,
-  JavaScriptTransformer: class {
-    close = transformerCloseMock;
-    constructor(...args: unknown[]) {
-      transformerCtorMock(...args);
-    }
-  },
   SourceFileCache: class {
     typeScriptFileCache = new Map<string, unknown>();
     babelFileCache = new Map<string, string>();
@@ -146,6 +144,11 @@ describe('AngularRspackPlugin', () => {
     skipTypeChecking: false,
     sourceMap: { scripts: true, styles: true, hidden: false, vendor: false },
     advancedOptimizations: false,
+    optimization: {
+      fonts: { inline: false },
+      scripts: true,
+      styles: { minify: true, inlineCritical: false },
+    },
     budgets: [],
     verbose: false,
     outputPath: { browser: '/root/dist/browser' },
@@ -177,6 +180,28 @@ describe('AngularRspackPlugin', () => {
     plugin.apply(compiler as never);
     return compiler;
   }
+
+  it.each([true, false])(
+    'passes component style minification to the compiler (%s)',
+    async (minify) => {
+      const compiler = createFakeCompiler();
+      const plugin = new AngularRspackPlugin({
+        ...options,
+        optimization: {
+          ...options.optimization,
+          styles: { ...options.optimization.styles, minify },
+        },
+      });
+      plugin.apply(compiler as never);
+
+      await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
+      await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+      expect(setupCompilationMock.mock.calls[0][1]).toEqual(
+        expect.objectContaining({ minifyStyles: minify })
+      );
+    }
+  );
 
   async function runBuildStart(
     compiler: ReturnType<typeof createFakeCompiler>
@@ -368,6 +393,118 @@ describe('AngularRspackPlugin', () => {
     expect(compilation.errors).toHaveLength(0);
   });
 
+  it('should also silently run semantic diagnostics when type checking is skipped, to keep the incremental compilation state warm', async () => {
+    const diagnoseFiles = vi.fn().mockResolvedValue({});
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    // DiagnosticModes.All & ~DiagnosticModes.Semantic === 7 & ~4 === 3
+    expect(diagnoseFiles).toHaveBeenCalledWith(3);
+    // DiagnosticModes.Semantic === 4
+    expect(diagnoseFiles).toHaveBeenCalledWith(4);
+    expect(diagnoseFiles).toHaveBeenCalledTimes(2);
+  });
+
+  it('should discard errors and warnings from the silent semantic warm-up pass', async () => {
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.Semantic === 4
+      modes === 4
+        ? Promise.resolve({
+            errors: [{ text: 'semantic error' }],
+            warnings: [{ text: 'semantic warning' }],
+          })
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(compilation.errors).toHaveLength(0);
+    expect(compilation.warnings).toHaveLength(0);
+  });
+
+  it('should not fail or hang the build when the silent semantic warm-up pass rejects', async () => {
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.Semantic === 4
+      modes === 4
+        ? Promise.reject(new Error('semantic warm-up crashed'))
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    // emit must resolve (the callback fires) rather than leak the rejection
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(compilation.errors).toHaveLength(0);
+  });
+
+  it('should start the silent semantic warm-up pass without waiting for the surfaced diagnostics to resolve first', async () => {
+    let resolveSurfaced: (value: unknown) => void = () => undefined;
+    const diagnoseFiles = vi.fn().mockImplementation((modes: number) =>
+      // DiagnosticModes.All & ~DiagnosticModes.Semantic === 3
+      modes === 3
+        ? new Promise((resolve) => {
+            resolveSurfaced = resolve;
+          })
+        : Promise.resolve({})
+    );
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    // Keep surfaced diagnostics pending while both build-start hooks settle.
+    await fireAsyncTaps(compiler.hooks.beforeRun, compiler);
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    // both calls were already started - the semantic warm-up was not
+    // gated behind the surfaced diagnostics call resolving first
+    expect(diagnoseFiles).toHaveBeenCalledWith(3);
+    expect(diagnoseFiles).toHaveBeenCalledWith(4);
+
+    resolveSurfaced({});
+  });
+
   it('should not throw from afterDone when the run failed before producing stats', async () => {
     const compiler = applyPlugin();
 
@@ -423,10 +560,23 @@ describe('AngularRspackPlugin', () => {
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
   });
 
-  it('should start diagnostics with the build and reuse the result on emit', async () => {
-    const diagnoseFiles = vi
-      .fn()
-      .mockResolvedValue({ errors: [{ text: 'type error' }] });
+  it('should start diagnostics with the build and reuse the result, with locations, on emit', async () => {
+    const diagnoseFiles = vi.fn().mockResolvedValue({
+      errors: [
+        {
+          text: 'type error',
+          location: { file: '/root/src/app.ts', line: 5, column: 8 },
+        },
+        { text: 'global error' },
+        { text: 'file-only error', location: { file: '/root/src/app.html' } },
+      ],
+      warnings: [
+        {
+          text: 'type warning',
+          location: { file: '/root/src/app.ts', line: 3, column: 2 },
+        },
+      ],
+    });
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles },
       collectedStylesheetAssets: [],
@@ -440,9 +590,27 @@ describe('AngularRspackPlugin', () => {
     await fireAsyncTaps(compiler.hooks.emit, compilation);
 
     expect(diagnoseFiles).toHaveBeenCalledTimes(1);
-    expect(
-      compilation.errors.some((error) => error.message.includes('type error'))
-    ).toBe(true);
+    expect(compilation.errors).toEqual([
+      expect.objectContaining({
+        message: 'type error',
+        file: '/root/src/app.ts',
+        loc: { start: { line: 5, column: 9 } },
+      }),
+      expect.objectContaining({ message: 'global error', file: undefined }),
+      expect.objectContaining({
+        message: 'file-only error',
+        file: '/root/src/app.html',
+      }),
+    ]);
+    expect(compilation.errors[1]).not.toHaveProperty('loc');
+    expect(compilation.errors[2]).not.toHaveProperty('loc');
+    expect(compilation.warnings).toEqual([
+      expect.objectContaining({
+        message: 'type warning',
+        file: '/root/src/app.ts',
+        loc: { start: { line: 3, column: 3 } },
+      }),
+    ]);
   });
 
   it('should use a persistent cache path scoped to the project', () => {
@@ -477,11 +645,7 @@ describe('AngularRspackPlugin', () => {
     expect(createJavascriptTransformerCacheMock).toHaveBeenCalledWith(
       expect.stringContaining(join('app', 'angular-rspack'))
     );
-    expect(transformerCtorMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      cache
-    );
+    expect(transformerCtorMock).toHaveBeenCalledWith(expect.anything(), cache);
 
     const compiler = createFakeCompiler();
     plugin.apply(compiler as never);
@@ -496,7 +660,6 @@ describe('AngularRspackPlugin', () => {
 
     expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();
     expect(transformerCtorMock).toHaveBeenCalledWith(
-      expect.anything(),
       expect.anything(),
       undefined
     );

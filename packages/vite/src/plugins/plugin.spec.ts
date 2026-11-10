@@ -1,18 +1,19 @@
+import type { Mock } from 'vitest';
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
-jest.mock('../utils/executor-utils', () => ({
-  loadViteDynamicImport: jest.fn().mockResolvedValue({
-    resolveConfig: jest.fn().mockResolvedValue({}),
+vi.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: vi.fn().mockResolvedValue({
+    resolveConfig: vi.fn().mockResolvedValue({}),
   }),
 }));
 
-jest.mock('@nx/js/internal', () => ({
-  ...jest.requireActual('@nx/js/internal'),
-  isUsingTsSolutionSetup: jest.fn(),
+vi.mock('@nx/js/internal', async () => ({
+  ...(await vi.importActual<any>('@nx/js/internal')),
+  isUsingTsSolutionSetup: vi.fn(),
 }));
 
 describe('@nx/vite/plugin', () => {
@@ -20,7 +21,7 @@ describe('@nx/vite/plugin', () => {
   let context: CreateNodesContext;
 
   beforeEach(() => {
-    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (isUsingTsSolutionSetup as Mock).mockReturnValue(false);
   });
 
   describe('root project', () => {
@@ -50,7 +51,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
     });
 
     it('should create nodes', async () => {
@@ -106,8 +107,8 @@ describe('@nx/vite/plugin', () => {
       // Don't need index.html if we're setting inputs
       tempFs.removeFileSync('index.html');
 
-      (loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
+      (loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi.fn().mockResolvedValue({
           build: {
             rollupOptions: {
               input: { index: 'src/index.js' },
@@ -130,95 +131,73 @@ describe('@nx/vite/plugin', () => {
       expect(targets?.['serve-input'].command).toMatch(/vite/);
     });
 
-    it('should infer typecheck with -p flag when not using TS solution setup', async () => {
-      tempFs.createFileSync('tsconfig.json', '');
+    it('waits for the signal when the config loads nxReadySignal()', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'nx-ready-signal' }] }),
+      });
 
-      const nodes = await createNodesFunction(
-        ['vite.config.ts'],
-        {
-          buildTargetName: 'build',
-          serveTargetName: 'serve',
-          previewTargetName: 'preview',
-          testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-        },
-        context
-      );
+      const nodes = await createNodesFunction(['vite.config.ts'], {}, context);
 
-      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
-        `tsc --noEmit -p tsconfig.json`
-      );
-      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
-        .toMatchInlineSnapshot(`
-        {
-          "description": "Runs type-checking for the project.",
-          "help": {
-            "command": "npx tsc -p tsconfig.json --help",
-            "example": {
-              "options": {
-                "noEmit": true,
-              },
-            },
-          },
-          "technologies": [
-            "typescript",
-          ],
-        }
-      `);
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.dependsOn
-      ).toBeUndefined();
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toBeUndefined();
+      const targets = nodes[0]?.[1]?.projects?.['.']?.targets;
+      expect(targets.dev.readyWhen).toEqual({ signal: true });
+      expect(targets.preview.readyWhen).toEqual({ signal: true });
     });
 
-    it('should infer typecheck with --build flag when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
-      tempFs.createFileSync('tsconfig.json', '');
+    it.each([false, true])(
+      'should not infer typecheck for non-Vue projects (TS solution: %s)',
+      async (tsSolution) => {
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(tsSolution);
+        tempFs.createFileSync('tsconfig.json', '');
 
-      const nodes = await createNodesFunction(
-        ['vite.config.ts'],
-        {
-          buildTargetName: 'build',
-          serveTargetName: 'serve',
-          previewTargetName: 'preview',
-          testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-        },
-        context
-      );
-
-      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
-        `tsc --build --emitDeclarationOnly`
-      );
-      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
-        .toMatchInlineSnapshot(`
-        {
-          "description": "Runs type-checking for the project.",
-          "help": {
-            "command": "npx tsc --build --help",
-            "example": {
-              "args": [
-                "--force",
-              ],
-            },
+        const nodes = await createNodesFunction(
+          ['vite.config.ts'],
+          {
+            buildTargetName: 'build',
+            serveTargetName: 'serve',
+            previewTargetName: 'preview',
+            testTargetName: 'test',
+            serveStaticTargetName: 'serve-static',
           },
-          "technologies": [
-            "typescript",
-          ],
-        }
-      `);
-      expect(nodes[0][1].projects['.'].targets.typecheck.dependsOn).toEqual([
-        `^typecheck`,
-      ]);
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync']);
-    });
+          context
+        );
 
-    it('should use tsgo for typecheck when compiler option is tsgo', async () => {
+        expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
+      }
+    );
+
+    it.each([false, true])(
+      'should not infer typecheck when compiler option is tsgo (TS solution: %s)',
+      async (tsSolution) => {
+        (isUsingTsSolutionSetup as Mock).mockReturnValue(tsSolution);
+        tempFs.createFileSync('tsconfig.json', '');
+
+        const nodes = await createNodesFunction(
+          ['vite.config.ts'],
+          {
+            buildTargetName: 'build',
+            serveTargetName: 'serve',
+            previewTargetName: 'preview',
+            testTargetName: 'test',
+            serveStaticTargetName: 'serve-static',
+            compiler: 'tsgo',
+          },
+          context
+        );
+
+        expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
+      }
+    );
+
+    it('should infer a vue-tsc --noEmit typecheck for Vue projects when not using TS solution setup', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+      });
       tempFs.createFileSync('tsconfig.json', '');
+      tempFs.createFileSync('tsconfig.app.json', '');
 
       const nodes = await createNodesFunction(
         ['vite.config.ts'],
@@ -228,20 +207,25 @@ describe('@nx/vite/plugin', () => {
           previewTargetName: 'preview',
           testTargetName: 'test',
           serveStaticTargetName: 'serve-static',
-          compiler: 'tsgo',
         },
         context
       );
 
       const typecheck = nodes[0][1].projects['.'].targets.typecheck;
-      expect(typecheck.command).toEqual(`tsgo --noEmit -p tsconfig.json`);
-      expect(typecheck.inputs).toContainEqual({
-        externalDependencies: ['@typescript/native-preview'],
-      });
+      expect(typecheck.command).toEqual(
+        `vue-tsc -p tsconfig.app.json --noEmit`
+      );
+      expect(typecheck.dependsOn).toBeUndefined();
+      expect(typecheck.syncGenerators).toBeUndefined();
+      expect(typecheck.metadata.technologies).toEqual(['typescript', 'vue']);
     });
 
-    it('should use tsgo with --build flag when compiler is tsgo and using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+    it('should not infer typecheck for Vue projects when compiler option is tsc', async () => {
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+      });
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -252,16 +236,12 @@ describe('@nx/vite/plugin', () => {
           previewTargetName: 'preview',
           testTargetName: 'test',
           serveStaticTargetName: 'serve-static',
-          compiler: 'tsgo',
+          compiler: 'tsc',
         },
         context
       );
 
-      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
-      expect(typecheck.command).toEqual(`tsgo --build --emitDeclarationOnly`);
-      expect(typecheck.inputs).toContainEqual({
-        externalDependencies: ['@typescript/native-preview'],
-      });
+      expect(nodes[0][1].projects['.'].targets.typecheck).toBeUndefined();
     });
 
     it('should use vue-tsc when compiler option is vue-tsc (for non-detected Vue setups)', async () => {
@@ -281,14 +261,23 @@ describe('@nx/vite/plugin', () => {
       );
 
       const typecheck = nodes[0][1].projects['.'].targets.typecheck;
-      expect(typecheck.command).toEqual(`vue-tsc --noEmit -p tsconfig.json`);
+      expect(typecheck.command).toEqual(`vue-tsc --noEmit`);
       expect(typecheck.inputs).toContainEqual({
         externalDependencies: ['vue-tsc', 'typescript'],
       });
     });
 
-    it('should infer the sync generator when using TS solution setup', async () => {
-      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+    it('should infer a vue-tsc typecheck for Vue projects when using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      (loadViteDynamicImport as Mock).mockResolvedValueOnce({
+        resolveConfig: vi
+          .fn()
+          .mockResolvedValue({ plugins: [{ name: 'vite:vue' }] }),
+      });
+      tempFs.createFileSync(
+        'vite.config.ts',
+        `import vue from '@vitejs/plugin-vue';`
+      );
       tempFs.createFileSync('tsconfig.json', '');
 
       const nodes = await createNodesFunction(
@@ -303,12 +292,65 @@ describe('@nx/vite/plugin', () => {
         context
       );
 
-      expect(nodes[0][1].projects['.'].targets.build.syncGenerators).toEqual([
-        '@nx/js:typescript-sync',
-      ]);
-      expect(
-        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
-      ).toEqual(['@nx/js:typescript-sync']);
+      const { build, typecheck } = nodes[0][1].projects['.'].targets;
+      expect(build.syncGenerators).toEqual(['@nx/js:typescript-sync']);
+      expect(typecheck.command).toEqual(
+        `vue-tsc --build --emitDeclarationOnly`
+      );
+      expect(typecheck.dependsOn).toEqual(['build', '^typecheck']);
+      expect(typecheck.syncGenerators).toEqual(['@nx/js:typescript-sync']);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['vue-tsc', 'typescript'],
+      });
+      expect(typecheck.metadata.technologies).toEqual(['typescript', 'vue']);
+      expect(typecheck.metadata.help).toEqual({
+        command: 'npx vue-tsc --build --help',
+        example: { args: ['--force'] },
+      });
+    });
+
+    it('should not infer typecheck when typecheckTargetName is false', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          typecheckTargetName: false,
+        },
+        context
+      );
+
+      const targets = nodes[0][1].projects['.'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
+    });
+
+    it('should not infer a vue-tsc typecheck when typecheckTargetName is false and using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          typecheckTargetName: false,
+          compiler: 'vue-tsc',
+        },
+        context
+      );
+
+      const targets = nodes[0][1].projects['.'].targets;
+      expect(targets.typecheck).toBeUndefined();
+      expect(targets['false']).toBeUndefined();
     });
   });
 
@@ -336,7 +378,7 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterEach(() => {
-      jest.resetModules();
+      vi.resetModules();
       tempFs.cleanup();
     });
 
@@ -391,15 +433,86 @@ describe('@nx/vite/plugin', () => {
   });
 
   describe('Library mode', () => {
+    const lib = { entry: 'index.ts', name: 'my-lib' };
+    const applicationTargets = ['dev', 'serve', 'preview', 'serve-static'];
+
+    // Runs the config hooks Vite runs before resolving: the user's plugins, then
+    // the injected one. As in Vite, the resolved config always has a server.
+    function mockResolveConfig(
+      getUserConfig: (command: 'build' | 'serve') => Record<string, any>
+    ) {
+      return vi.fn(async ({ plugins }, command) => {
+        let config = getUserConfig(command);
+        for (const plugin of [...(config.plugins ?? []), ...plugins]) {
+          if (!plugin.apply || plugin.apply === command) {
+            const hook = plugin.config?.handler ?? plugin.config;
+            config = { ...config, ...(await hook?.(config, { command })) };
+          }
+        }
+        return {
+          ...config,
+          server: { port: 5173, host: 'localhost', ...config.server },
+        };
+      });
+    }
+
+    async function inferProject(
+      resolveConfig: Mock,
+      extraFiles: string[] = []
+    ) {
+      const tempFs = new TempFs('test-library');
+      (loadViteDynamicImport as Mock).mockResolvedValue({ resolveConfig });
+      context = {
+        nxJsonConfiguration: {
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: tempFs.tempDir,
+      };
+      tempFs.createFileSync(
+        'my-lib/project.json',
+        JSON.stringify({ name: 'my-lib' })
+      );
+      // Unique content, so the plugin's target cache can't answer for the mock.
+      tempFs.createFileSync('my-lib/vite.config.ts', `// ${tempFs.tempDir}`);
+      tempFs.createFileSync('package-lock.json', '{}');
+      extraFiles.forEach((file) => tempFs.createFileSync(file, ''));
+
+      const nodes = await createNodesFunction(
+        ['my-lib/vite.config.ts'],
+        {},
+        context
+      );
+      tempFs.cleanup();
+
+      const { targets, projectType } = nodes[0][1].projects['my-lib'];
+      return {
+        targets,
+        projectType,
+        inferredApplicationTargets: applicationTargets.filter(
+          (target) => target in targets
+        ),
+        resolvedCommands: resolveConfig.mock.calls.map(
+          ([, command]) => command
+        ),
+      };
+    }
+
     it('should exclude serve and preview targets when vite.config.ts is in library mode', async () => {
       const tempFs = new TempFs('test');
-      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
+      ((loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: vi.fn().mockResolvedValue({
           build: {
             lib: {
               entry: 'index.ts',
               name: 'my-lib',
             },
+          },
+          server: {
+            port: 5173,
+            host: 'localhost',
           },
         }),
       }),
@@ -433,19 +546,20 @@ describe('@nx/vite/plugin', () => {
     });
     it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
       const tempFs = new TempFs('test-exclude');
-      ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
-          build: {
-            lib: {
-              entry: 'index.ts',
-              name: 'my-lib',
-            },
+      const userConfig = {
+        build: {
+          lib: {
+            entry: 'index.ts',
+            name: 'my-lib',
           },
-          server: {
-            port: 3000,
-            host: 'localhost',
-          },
-        }),
+        },
+        server: {
+          port: 3000,
+          host: 'localhost',
+        },
+      };
+      ((loadViteDynamicImport as Mock).mockResolvedValue({
+        resolveConfig: mockResolveConfig(() => userConfig),
       }),
         (context = {
           nxJsonConfiguration: {
@@ -529,6 +643,15 @@ describe('@nx/vite/plugin', () => {
                     "dev": {
                       "command": "vite",
                       "continuous": true,
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "metadata": {
                         "description": "Starts Vite dev server",
                         "help": {
@@ -546,12 +669,25 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "preview": {
                       "command": "vite preview",
                       "continuous": true,
                       "dependsOn": [
                         "build",
+                      ],
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
                       ],
                       "metadata": {
                         "description": "Locally preview Vite production build",
@@ -570,10 +706,23 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'preview')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "serve": {
                       "command": "vite",
                       "continuous": true,
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "metadata": {
                         "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
@@ -592,13 +741,32 @@ describe('@nx/vite/plugin', () => {
                       "options": {
                         "cwd": "my-lib",
                       },
+                      "readyWhen": {
+                        "command": "node -e "require('@nx/vite/ready-check').waitForDevServer(process.argv[1], 'serve')" vite.config.ts",
+                        "interval": 1000,
+                      },
                     },
                     "serve-static": {
                       "continuous": true,
+                      "dependsOn": [
+                        "build",
+                      ],
                       "executor": "@nx/web:file-server",
+                      "inputs": [
+                        "production",
+                        "^production",
+                        {
+                          "externalDependencies": [
+                            "vite",
+                          ],
+                        },
+                      ],
                       "options": {
                         "buildTarget": "build",
                         "spa": true,
+                      },
+                      "readyWhen": {
+                        "signal": true,
                       },
                     },
                     "watch-deps": {
@@ -616,5 +784,126 @@ describe('@nx/vite/plugin', () => {
         ]
       `);
     });
+
+    it('should keep the application targets when only the serve config has a server, with build outputs from the build config', async () => {
+      const resolveConfig = mockResolveConfig((command) => ({
+        build: {
+          lib,
+          outDir: command === 'build' ? 'dist-build' : 'dist-serve',
+        },
+        server: command === 'serve' ? { port: 4200 } : undefined,
+      }));
+
+      const {
+        targets,
+        projectType,
+        inferredApplicationTargets,
+        resolvedCommands,
+      } = await inferProject(resolveConfig);
+
+      expect(inferredApplicationTargets).toEqual(applicationTargets);
+      expect(targets.build.outputs).toEqual(['{projectRoot}/dist-build']);
+      expect(projectType).toEqual('library');
+      expect(resolvedCommands).toEqual(['build', 'serve']);
+    });
+
+    it.each([
+      ['in both modes', {}, ['build']],
+      ['only in serve mode', { apply: 'serve' }, ['build', 'serve']],
+    ])(
+      'should keep the application targets when a plugin config hook sets the server %s',
+      async (_, pluginOptions, expectedCommands) => {
+        const resolveConfig = mockResolveConfig(() => ({
+          build: { lib },
+          plugins: [
+            {
+              name: 'user-plugin',
+              config: () => ({ server: { port: 4200 } }),
+              ...pluginOptions,
+            },
+          ],
+        }));
+
+        const { inferredApplicationTargets, resolvedCommands } =
+          await inferProject(resolveConfig);
+
+        expect(inferredApplicationTargets).toEqual(applicationTargets);
+        expect(resolvedCommands).toEqual(expectedCommands);
+      }
+    );
+
+    it('should keep the build target and omit the application targets when the config throws in serve mode', async () => {
+      const resolveConfig = mockResolveConfig((command) => {
+        if (command === 'serve') {
+          throw new Error('This config only builds');
+        }
+        return { build: { lib } };
+      });
+
+      const { targets, inferredApplicationTargets } =
+        await inferProject(resolveConfig);
+
+      expect(targets.build.command).toEqual('vite build');
+      expect(inferredApplicationTargets).toEqual([]);
+      expect(resolveConfig).toHaveBeenLastCalledWith(
+        expect.objectContaining({ logLevel: 'silent' }),
+        'serve'
+      );
+    });
+
+    it('should keep the application targets for an explicit empty server block', async () => {
+      const { inferredApplicationTargets, resolvedCommands } =
+        await inferProject(
+          mockResolveConfig(() => ({ build: { lib }, server: {} }))
+        );
+
+      expect(inferredApplicationTargets).toEqual(applicationTargets);
+      expect(resolvedCommands).toEqual(['build']);
+    });
+
+    it('should exclude the application targets when neither mode has a server', async () => {
+      const { inferredApplicationTargets, resolvedCommands } =
+        await inferProject(mockResolveConfig(() => ({ build: { lib } })));
+
+      expect(inferredApplicationTargets).toEqual([]);
+      expect(resolvedCommands).toEqual(['build', 'serve']);
+    });
+
+    it.each([
+      ['an application', { build: {} }, ['my-lib/index.html']],
+      [
+        'a library with a build mode server',
+        { build: { lib }, server: { port: 3000 } },
+        [],
+      ],
+    ])(
+      'should resolve the config once for %s',
+      async (_, userConfig, extraFiles) => {
+        const resolveConfig = mockResolveConfig(() => userConfig);
+
+        const { inferredApplicationTargets, resolvedCommands } =
+          await inferProject(resolveConfig, extraFiles);
+
+        expect(inferredApplicationTargets).toEqual(applicationTargets);
+        expect(resolvedCommands).toEqual(['build']);
+        expect(resolveConfig.mock.calls[0][0].logLevel).toBeUndefined();
+      }
+    );
+
+    it.each([
+      ['a Remix plugin', { plugins: [{ name: 'remix' }] }, []],
+      ['a React Router config', {}, ['my-lib/react-router.config.ts']],
+    ])(
+      'should not check serve mode for a library with %s',
+      async (_, userConfig, extraFiles) => {
+        const { targets, resolvedCommands } = await inferProject(
+          mockResolveConfig(() => ({ build: { lib }, ...userConfig })),
+          extraFiles
+        );
+
+        expect(targets.build).toBeUndefined();
+        expect(resolvedCommands).toEqual(['build']);
+      }
+    );
   });
 });

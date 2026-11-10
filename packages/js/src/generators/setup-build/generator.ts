@@ -109,11 +109,6 @@ export async function setupBuildGenerator(
   options.tsConfig = tsConfigFile;
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   switch (options.bundler) {
     case 'vite': {
       const { viteConfigurationGenerator } = ensurePackage(
@@ -127,7 +122,6 @@ export async function setupBuildGenerator(
         uiFramework: 'none',
         includeVitest: false,
         includeLib: true,
-        addPlugin,
         skipFormat: true,
       });
       tasks.push(task);
@@ -158,7 +152,6 @@ export async function setupBuildGenerator(
         project: options.project,
         compiler: 'tsc',
         format: isTsSolutionSetup ? ['esm'] : ['cjs', 'esm'],
-        addPlugin,
         skipFormat: true,
         skipValidation: true,
       });

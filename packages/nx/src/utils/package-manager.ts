@@ -8,13 +8,17 @@ import {
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
+  readdirSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'fs';
 import { rm } from 'node:fs/promises';
-import { dirname, join, relative } from 'path';
-import { gte, lt, parse, satisfies } from 'semver';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'path';
+import { gte, lt, parse, satisfies, valid } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 import {
@@ -30,6 +34,7 @@ import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
 import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
+  fileExists,
   readFileIfExisting,
   readJsonFile,
   readYamlFile,
@@ -37,10 +42,18 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { logger } from './logger';
+import { homeDirIsDistinctFromSharedTmp, NX_HOME_TMP_DIR } from './nx-tmp-dir';
+import {
+  canonicalDir,
+  describeRefusal,
+  ensureOwnedPrivateDir,
+  isOwnedRealDirectory,
+} from './owned-private-dir';
 import { PackageJson, readModulePackageJson } from './package-json';
 // Type-only so it stays erased: a value import would defeat the deferred
 // require in createRegistrySpawnContext.
 import type { NpmConfigEnv } from './registry-config';
+import { redactUrlCredentials } from './redact-url-credentials';
 import { quoteShellArg } from './shell-quoting';
 import { workspaceRoot } from './workspace-root';
 
@@ -81,6 +94,24 @@ function execPackageManagerSync(
   return execFileSync(pm, args, options);
 }
 
+// The `@` keeps a scoped name from reading as an option, so its parts may start with `-` or `_`.
+const PACKAGE_NAME =
+  /^(?:@[a-z0-9~_-][a-z0-9-._~]*\/[a-z0-9~_-]|[a-z0-9~])[a-z0-9-._~]*$/i;
+
+/**
+ * Package managers read an argument starting with `-` as an option, and a
+ * path, URL or git remote wherever a name goes. `nx migrate` passes names
+ * read from fetched migration metadata, so only a registry-shaped name may
+ * reach a package manager command line.
+ */
+export function assertValidPackageName(packageName: string): void {
+  if (!PACKAGE_NAME.test(packageName)) {
+    throw new Error(
+      `Invalid package name: "${packageName}". Expected an npm package name such as "my-package" or "@scope/my-package".`
+    );
+  }
+}
+
 export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
@@ -98,33 +129,85 @@ export interface PackageManagerCommands {
   run: (script: string, args?: string) => string;
   // Make this required once bun adds programatically support for reading config https://github.com/oven-sh/bun/issues/7140
   getRegistryUrl?: string;
+  /**
+   * @deprecated Use `publishArgv` instead, which needs no shell off Windows.
+   * This will be removed in Nx 25.
+   */
   publish: (
     packageRoot: string,
-    registry: string,
+    registry: string | undefined,
     registryConfigKey: string,
     tag: string
   ) => string;
+  publishArgv: (
+    packageRoot: string,
+    registry: string | undefined,
+    registryConfigKey: string,
+    tag: string
+  ) => { command: string; args: string[] };
   // yarn berry doesn't support ignoring scripts via flag
   ignoreScriptsFlag?: string;
 }
 
 /**
- * Detects which package manager is used in the workspace based on the lock file.
+ * Detects the package manager from the CLI override or directory lockfiles.
+ * Project directories in the current workspace can fall back to its root lockfile.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(
+  dir: string = workspaceRoot
+): PackageManager {
   const nxJson = readNxJson();
-  return (
-    nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
-      ? 'bun'
-      : existsSync(join(dir, 'yarn.lock'))
-        ? 'yarn'
-        : existsSync(join(dir, 'pnpm-lock.yaml'))
-          ? 'pnpm'
-          : existsSync(join(dir, 'package-lock.json'))
-            ? 'npm'
-            : detectInvokedPackageManager())
-  );
+  if (nxJson.cli?.packageManager) {
+    return nxJson.cli.packageManager;
+  }
+
+  const dirsToCheck = isCurrentWorkspaceSubdirectory(dir)
+    ? [dir, workspaceRoot]
+    : [dir];
+  for (const directory of dirsToCheck) {
+    if (
+      existsSync(join(directory, 'bun.lockb')) ||
+      existsSync(join(directory, 'bun.lock'))
+    ) {
+      return 'bun';
+    }
+    if (existsSync(join(directory, 'yarn.lock'))) {
+      return 'yarn';
+    }
+    if (existsSync(join(directory, 'pnpm-lock.yaml'))) {
+      return 'pnpm';
+    }
+    if (existsSync(join(directory, 'package-lock.json'))) {
+      return 'npm';
+    }
+  }
+
+  return detectInvokedPackageManager();
+}
+
+function isCurrentWorkspaceSubdirectory(dir: string): boolean {
+  let directory = resolve(dir);
+  const relativePath = relative(workspaceRoot, directory);
+  if (
+    !relativePath ||
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    return false;
+  }
+
+  while (relative(workspaceRoot, directory) !== '') {
+    if (
+      ['nx.json', 'nx', 'nx.bat'].some((file) =>
+        fileExists(join(directory, file))
+      )
+    ) {
+      return false;
+    }
+    directory = dirname(directory);
+  }
+  return true;
 }
 
 /**
@@ -179,6 +262,17 @@ export function isWorkspacesEnabled(
 }
 
 /**
+ * The registry and tag reach `publish` from `.npmrc`, which an install script
+ * can write, so every token is quoted before it becomes shell syntax.
+ */
+function publishCommandFromArgv({
+  command,
+  args,
+}: ReturnType<PackageManagerCommands['publishArgv']>): string {
+  return [command, ...args].map(quoteShellArg).join(' ');
+}
+
+/**
  * Returns commands for the package manager used in the workspace.
  * By default, the package manager is derived based on the lock file,
  * but it can also be passed in explicitly.
@@ -207,6 +301,22 @@ export function getPackageManagerCommand(
         useBerry = true;
       }
 
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
+          `--tag=${tag}`,
+        ],
+      });
+
       // new versions of yarn only support ignoring scripts via .yarnrc.yml
       return {
         preInstall: `yarn set version ${yarnVersion}`,
@@ -229,8 +339,8 @@ export function getPackageManagerCommand(
         getRegistryUrl: useBerry
           ? 'yarn config get npmRegistryServer'
           : 'yarn config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: useBerry ? undefined : `--ignore-scripts`,
       };
     },
@@ -259,6 +369,34 @@ export function getPackageManagerCommand(
       }
 
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'pnpm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          ...(registry
+            ? [
+                `--${
+                  configForm
+                    ? `config.${registryConfigKey}`
+                    : scopedForm
+                      ? registryConfigKey
+                      : 'registry'
+                }=${registry}`,
+              ]
+            : []),
+          `--tag=${tag}`,
+          '--no-git-checks',
+        ],
+      });
+
       return {
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
@@ -283,18 +421,28 @@ export function getPackageManagerCommand(
         list: 'pnpm ls --depth 100',
         why: 'pnpm why',
         getRegistryUrl: 'pnpm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `pnpm publish "${packageRoot}" --json --"${
-            configForm
-              ? `config.${registryConfigKey}`
-              : scopedForm
-                ? registryConfigKey
-                : 'registry'
-          }=${registry}" --tag=${tag} --no-git-checks`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     npm: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        registryConfigKey,
+        tag
+      ) => ({
+        command: 'npm',
+        args: [
+          'publish',
+          packageRoot,
+          '--json',
+          ...(registry ? [`--${registryConfigKey}=${registry}`] : []),
+          `--tag=${tag}`,
+        ],
+      });
+
       return {
         install: 'npm install',
         ciInstall: 'npm ci',
@@ -309,12 +457,28 @@ export function getPackageManagerCommand(
         list: 'npm ls',
         why: 'npm explain',
         getRegistryUrl: 'npm config get registry',
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `npm publish "${packageRoot}" --json --"${registryConfigKey}=${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
     bun: () => {
+      const publishArgv: PackageManagerCommands['publishArgv'] = (
+        packageRoot,
+        registry,
+        _registryConfigKey,
+        tag
+      ) => ({
+        command: 'bun',
+        args: [
+          'publish',
+          `--cwd=${packageRoot}`,
+          '--json',
+          ...(registry ? [`--registry=${registry}`] : []),
+          `--tag=${tag}`,
+        ],
+      });
+
       // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
@@ -329,8 +493,8 @@ export function getPackageManagerCommand(
         list: 'bun pm ls',
         why: 'bun why',
         // Unlike npm, bun publish does not support a custom registryConfigKey option
-        publish: (packageRoot, registry, registryConfigKey, tag) =>
-          `bun publish --cwd="${packageRoot}" --json --registry="${registry}" --tag=${tag}`,
+        publish: (...args) => publishCommandFromArgv(publishArgv(...args)),
+        publishArgv,
         ignoreScriptsFlag: '--ignore-scripts',
       };
     },
@@ -368,6 +532,11 @@ export function getPackageManagerVersion(
         cwd,
         encoding: 'utf-8',
         windowsHide: true,
+        // Store discovery creates temporary workspace files even for --version.
+        env:
+          packageManager === 'pnpm'
+            ? { ...process.env, PNPM_CONFIG_STORE_DIR: tmpdir() }
+            : undefined,
       }).trim();
     } catch {}
   }
@@ -564,23 +733,215 @@ export function copyPackageManagerConfigurationFiles(
  * A non-JS workspace has no root package.json and keeps its package manager
  * files under the Nx installation directory instead.
  */
-function getPackageManagerConfigRoot(): string {
-  if (existsSync(join(workspaceRoot, 'package.json'))) {
-    return workspaceRoot;
+export function getPackageManagerConfigRoot(
+  root: string = workspaceRoot
+): string {
+  if (existsSync(join(root, 'package.json'))) {
+    return root;
   }
-  const installationPath = getNxInstallationPath(workspaceRoot);
+  const installationPath = getNxInstallationPath(root);
   // The installation directory can be missing or not a directory, and spawning
   // with such a cwd fails outright (ENOENT/ENOTDIR).
   try {
-    return statSync(installationPath).isDirectory()
-      ? installationPath
-      : workspaceRoot;
+    return statSync(installationPath).isDirectory() ? installationPath : root;
   } catch (e) {
     logger.verbose(
       `Failed to stat the Nx installation directory at "${installationPath}".`,
       e
     );
-    return workspaceRoot;
+    return root;
+  }
+}
+
+/**
+ * Creates an empty owner-only directory for a throwaway package install.
+ *
+ * Package managers and Node read config and modules from every ancestor of
+ * the install, so it lives under `~/.nx/tmp`, else under the OS temp dir, and
+ * only where that root and all of its ancestors are closed to other users.
+ * Throws when neither root qualifies or can be written. The OS does not reap
+ * it, so it is removed when the process exits.
+ */
+export function createTempInstallDirectory(): string {
+  const dir = createInPrivateInstallRoot();
+  if (tempInstallDirectories.size === 0) {
+    process.once('exit', removeTempInstallDirectories);
+  }
+  tempInstallDirectories.add(dir);
+  return dir;
+}
+
+/**
+ * Removes this user's throwaway install dirs under `~/.nx/tmp` and the temp
+ * dir fallback that are more than a day old. Best effort; creates nothing.
+ */
+export function removeStaleTempInstallDirectories(): void {
+  if (NX_HOME_TMP_DIR && homeDirIsDistinctFromSharedTmp()) {
+    const root = join(NX_HOME_TMP_DIR, 'tmp');
+    if (isOwnedRealDirectory(NX_HOME_TMP_DIR) && isOwnedRealDirectory(root)) {
+      removeStaleInstallDirectories(root);
+    }
+  }
+  const fallbackRoot = join(tmpdir(), TMPDIR_INSTALL_ROOT);
+  if (!privateTreeRefusal(tmpdir()) && isOwnedRealDirectory(fallbackRoot)) {
+    removeStaleInstallDirectories(fallbackRoot);
+  }
+}
+
+const tempInstallDirectories = new Set<string>();
+
+function removeTempInstallDirectories() {
+  for (const dir of tempInstallDirectories) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+const STALE_INSTALL_DIRECTORY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Removes install dirs left behind by processes that never reached their exit
+ * handler. A day outlasts any realistic install or `nx migrate` run, so a
+ * concurrent process's install survives.
+ */
+function removeStaleInstallDirectories(root: string) {
+  let entries: string[];
+  try {
+    entries = readdirSync(root);
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - STALE_INSTALL_DIRECTORY_MS;
+  for (const entry of entries) {
+    const path = join(root, entry);
+    try {
+      const stats = lstatSync(path);
+      if (
+        stats.isDirectory() &&
+        stats.mtimeMs < cutoff &&
+        (typeof process.getuid !== 'function' || stats.uid === process.getuid())
+      ) {
+        rmSync(path, { recursive: true, force: true });
+      }
+    } catch {}
+  }
+}
+
+const TMPDIR_INSTALL_ROOT = 'nx-installs';
+
+/**
+ * An existing `~/.nx/tmp` can still refuse writes, for example under an agent
+ * sandbox, so a failed create there moves on to the OS temp dir.
+ */
+function createInPrivateInstallRoot(): string {
+  let homeRefusal = homeInstallRootRefusal();
+  if (!homeRefusal) {
+    const root = join(NX_HOME_TMP_DIR, 'tmp');
+    try {
+      return createInstallDirectory(root);
+    } catch (e: any) {
+      homeRefusal = `${root} is not writable${e?.code ? ` (${e.code})` : ''}`;
+    }
+  }
+  const tmp = tmpdir();
+  const fallbackRoot = join(tmp, TMPDIR_INSTALL_ROOT);
+  let tmpRefusal = privateTreeRefusal(tmp);
+  if (!tmpRefusal) {
+    const result = ensureOwnedPrivateDir(fallbackRoot);
+    if (result.status === 'ok') {
+      return createInstallDirectory(fallbackRoot);
+    }
+    tmpRefusal = describeRefusal(result.refusal);
+  }
+  if (process.env.NX_ALLOW_INSECURE_DIRECTORIES === 'true') {
+    console.warn(
+      `NX_ALLOW_INSECURE_DIRECTORIES is set, so Nx is installing packages in ${tmp} although ${tmpRefusal}.`
+    );
+    return dirSync({ tmpdir: tmp, prefix: 'nx-install-' }).name;
+  }
+  throw new PrivateInstallRootError(homeRefusal, tmpRefusal);
+}
+
+function createInstallDirectory(root: string): string {
+  removeStaleInstallDirectories(root);
+  return dirSync({ tmpdir: root }).name;
+}
+
+function homeInstallRootRefusal(): string | undefined {
+  if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
+    return 'there is no home directory separate from the shared temp directory';
+  }
+  for (const dir of [NX_HOME_TMP_DIR, join(NX_HOME_TMP_DIR, 'tmp')]) {
+    const result = ensureOwnedPrivateDir(dir);
+    if (result.status === 'refused') {
+      return describeRefusal(result.refusal);
+    }
+  }
+  return privateTreeRefusal(join(NX_HOME_TMP_DIR, 'tmp'));
+}
+
+/**
+ * Why `dir` or one of its ancestors could be written by another user, if it
+ * could. Each must be a directory owned by us or root without group or other
+ * write, sticky or not, and `dir` itself must be ours and not a symlink. Both
+ * the path as written and its canonical form are checked, so a symlinked
+ * ancestor and the directory it leads to must each qualify.
+ */
+function privateTreeRefusal(dir: string): string | undefined {
+  if (typeof process.getuid !== 'function') {
+    return isOwnedRealDirectory(dir)
+      ? undefined
+      : `${dir} is not a real directory`;
+  }
+  for (const leaf of [resolve(dir), canonicalDir(dir)]) {
+    for (let p = leaf; ; p = dirname(p)) {
+      const refusal = privatePathRefusal(p, p === leaf);
+      if (refusal) {
+        return refusal;
+      }
+      if (dirname(p) === p) {
+        break;
+      }
+    }
+  }
+  return undefined;
+}
+
+function privatePathRefusal(path: string, isLeaf: boolean): string | undefined {
+  let stats: ReturnType<typeof lstatSync>;
+  try {
+    stats = lstatSync(path);
+  } catch (e: any) {
+    return `${path} could not be inspected${e?.code ? ` (${e.code})` : ''}`;
+  }
+  const uid = process.getuid();
+  const trustedOwner = stats.uid === uid || (!isLeaf && stats.uid === 0);
+  if (stats.isSymbolicLink() && !isLeaf) {
+    return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;
+  }
+  if (!stats.isDirectory()) {
+    return stats.isSymbolicLink()
+      ? `${path} is a symlink, not a real directory`
+      : `${path} is not a directory`;
+  }
+  if (stats.mode & 0o022) {
+    const mode = (stats.mode & 0o7777).toString(8).padStart(4, '0');
+    return `${path} is writable by other users (mode ${mode})`;
+  }
+  return trustedOwner ? undefined : `${path} is owned by uid ${stats.uid}`;
+}
+
+class PrivateInstallRootError extends Error {
+  constructor(homeRefusal: string, tmpRefusal: string) {
+    super(
+      'Nx cannot install packages because it found no directory closed to other users to install into.\n' +
+        `  ~/.nx/tmp: ${homeRefusal}.\n` +
+        `  The OS temp directory: ${tmpRefusal}.\n` +
+        'Package managers and Node read config and modules from every parent of the install directory, so Nx will not install where another user could write to it or to any of its parents.\n' +
+        'Point TMPDIR at a directory only you can write to, or set NX_ALLOW_INSECURE_DIRECTORIES=true to install in the OS temp directory anyway.'
+    );
+    this.name = 'PrivateInstallRootError';
   }
 }
 
@@ -596,7 +957,7 @@ function getPackageManagerConfigRoot(): string {
  *                   where no existing configuration files are available to copy.
  */
 export function createTempNpmDirectory(skipCopy = false) {
-  const dir = dirSync().name;
+  const dir = createTempInstallDirectory();
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
@@ -608,11 +969,30 @@ export function createTempNpmDirectory(skipCopy = false) {
     try {
       await rm(dir, { recursive: true, force: true });
     } catch {
-      // It's okay if this fails, the OS will clean it up eventually
+      // The exit handler retries the removal.
     }
   };
 
   return { dir, cleanup };
+}
+
+export class InvalidResolvedVersionError extends Error {
+  constructor(packageName: string, version: unknown) {
+    super(
+      `${packageName} reports "${version}" as its version, which is not a valid version.`
+    );
+    this.name = 'InvalidResolvedVersionError';
+  }
+}
+
+// A manifest's `version` is publisher-written and need not match the key it is
+// listed under. Callers reuse it after `<package>@`, where a non-version is a
+// spec of its own (git URL, tarball, path).
+function assertResolvedVersion(packageName: string, version: string): string {
+  if (!valid(version)) {
+    throw new InvalidResolvedVersionError(packageName, version);
+  }
+  return version;
 }
 
 /**
@@ -641,7 +1021,7 @@ export async function resolvePackageVersionUsingRegistry(
 
     const lines = result.split('\n');
     if (lines.length === 1) {
-      return lines[0];
+      return assertResolvedVersion(packageName, lines[0]);
     }
 
     /**
@@ -657,19 +1037,17 @@ export async function resolvePackageVersionUsingRegistry(
       .pop()
       .replace(/'/g, '');
 
-    return finalResolvedVersion;
+    return assertResolvedVersion(packageName, finalResolvedVersion);
   } catch (e) {
+    if (e instanceof InvalidResolvedVersionError) {
+      throw e;
+    }
     // npm masks a URL credential only in the password position, so a bare token
     // in the registry URL survives into the error kept as the cause.
     throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
       cause: redactErrorCause(e),
     });
   }
-}
-
-// Masks the userinfo in a URL: `user`, `user:pass`, or a bare token.
-function redactUrlCredentials(text: string): string {
-  return text.replace(/([a-z][a-z0-9+.-]*:\/\/)[^/@\s]+@/gi, '$1***@');
 }
 
 function redactErrorCause(error: unknown): unknown {
@@ -694,6 +1072,7 @@ export async function resolvePackageVersionUsingInstallation(
   packageName: string,
   version: string
 ): Promise<string> {
+  assertValidPackageName(packageName);
   const { dir, cleanup } = createTempNpmDirectory();
 
   try {
@@ -713,14 +1092,23 @@ export async function resolvePackageVersionUsingInstallation(
     }
 
     const pmc = getPackageManagerCommand();
-    await execAsync(`${pmc.add} ${packageName}@${resolvedVersion}`, {
+    const addCommand = [
+      pmc.add,
+      quoteShellArg(`${packageName}@${resolvedVersion}`),
+      pmc.ignoreScriptsFlag,
+    ]
+      .filter(Boolean)
+      .join(' ');
+    await execAsync(addCommand, {
       cwd: dir,
       windowsHide: true,
+      // Yarn Berry has no flag to skip lifecycle scripts.
+      env: { ...process.env, YARN_ENABLE_SCRIPTS: 'false' },
     });
 
     const { packageJson } = readModulePackageJson(packageName, [dir]);
 
-    return packageJson.version;
+    return assertResolvedVersion(packageName, packageJson.version);
   } finally {
     await cleanup();
   }
@@ -818,11 +1206,16 @@ export function getWorkspaceRegistryUrlForDisplay(pkg: string): string | null {
     if (!URL.canParse(value)) {
       return null;
     }
-    const protocol = new URL(value).protocol;
-    if (protocol !== 'http:' && protocol !== 'https:') {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return null;
     }
-    return redactUrlCredentials(value);
+    if (!url.username && !url.password) {
+      return value;
+    }
+    url.username = '***';
+    url.password = '';
+    return url.href;
   }
   return null;
 }
@@ -877,6 +1270,7 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
+  assertValidPackageName(pkg);
   const { workspacePm, workspacePmVersion, configRoot, buildEnv } =
     createRegistrySpawnContext(pkg);
   const { pm, env } = resolveRegistrySpawnTarget(
@@ -905,6 +1299,16 @@ export async function packageRegistryView(
 }
 
 /**
+ * Parses `npm view --json` output. npm 12 wraps the result in an array even
+ * when a single version matches; npm <= 11 and pnpm print the bare value. A
+ * multi-version match (range spec) stays an array.
+ */
+export function parseRegistryViewJson<T = unknown>(raw: string): T {
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) && parsed.length === 1 ? parsed[0] : parsed;
+}
+
+/**
  * Only `npm pack` supports downloading a tarball of a specified remote
  * package. `yarn` packs the active workspace, `pnpm pack` only packs
  * the local project, and `bun` doesn't support pack.
@@ -926,6 +1330,7 @@ export async function packageRegistryPack(
     bypassMinReleaseAge?: boolean;
   }
 ): Promise<{ tarballPath: string }> {
+  assertValidPackageName(pkg);
   const pm = 'npm';
 
   const { configRoot, buildEnv } = createRegistrySpawnContext(pkg);
@@ -943,6 +1348,8 @@ export async function packageRegistryPack(
           // downgrade npm's devEngines.packageManager enforcement (onFail:
           // error) to a warning so pack still runs in a non-npm workspace
           npm_config_force: 'true',
+          // callers only read files out of the tarball
+          npm_config_ignore_scripts: 'true',
           ...(options?.bypassMinReleaseAge
             ? { npm_config_min_release_age: '0' }
             : {}),

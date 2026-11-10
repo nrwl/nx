@@ -13,6 +13,7 @@ import {
 } from './utils/generate-plugin-markdown';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import type { CollectionEntry, RenderedContent } from 'astro:content';
+import { generatedDocFileURL } from './utils/generated-doc-file-url';
 import { watchAndCall } from './utils/watch';
 import {
   getGithubStars,
@@ -108,7 +109,7 @@ function createPluginOverview(
 export async function generateAllPluginDocs(
   logger: LoaderContext['logger'],
   watcher: LoaderContext['watcher'],
-  renderMarkdown: (content: string) => Promise<RenderedContent>,
+  renderMarkdown: LoaderContext['renderMarkdown'],
   store: LoaderContext['store']
 ) {
   logger.info('Generating plugin documentation...');
@@ -197,7 +198,9 @@ export async function generateAllPluginDocs(
           store.set({
             id: `${pluginName}-generators`,
             body: markdown,
-            rendered: await renderMarkdown(markdown),
+            rendered: await renderMarkdown(markdown, {
+              fileURL: generatedDocFileURL(slug),
+            }),
             data: {
               title: `@nx/${pluginName} Generators`,
               pluginName,
@@ -227,7 +230,9 @@ export async function generateAllPluginDocs(
           store.set({
             id: `${pluginName}-executors`,
             body: markdown,
-            rendered: await renderMarkdown(markdown),
+            rendered: await renderMarkdown(markdown, {
+              fileURL: generatedDocFileURL(slug),
+            }),
             data: {
               title: `@nx/${pluginName} Executors`,
               pluginName,
@@ -263,7 +268,9 @@ export async function generateAllPluginDocs(
           store.set({
             id: `${pluginName}-migrations`,
             body: markdown,
-            rendered: await renderMarkdown(markdown),
+            rendered: await renderMarkdown(markdown, {
+              fileURL: generatedDocFileURL(slug),
+            }),
             data: {
               title: `@nx/${pluginName} Migrations`,
               pluginName,
@@ -330,13 +337,7 @@ export function PluginLoader(options: any = {}): Loader {
     name: 'nx-plugin-loader',
     async load({ store, logger, watcher, renderMarkdown }: LoaderContext) {
       const generate = async () => {
-        await generateAllPluginDocs(
-          logger,
-          watcher,
-          // @ts-expect-error - astro:content types seem to always be out of sync w/ generated types
-          renderMarkdown,
-          store
-        );
+        await generateAllPluginDocs(logger, watcher, renderMarkdown, store);
       };
 
       if (watcher) {

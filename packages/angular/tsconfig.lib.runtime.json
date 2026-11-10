@@ -8,7 +8,7 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["index.ts", "mf/**/*"],
+  "include": ["index.ts"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
   }

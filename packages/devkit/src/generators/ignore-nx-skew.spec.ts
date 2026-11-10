@@ -9,7 +9,7 @@ import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 // function` thrown from inside whatever generator happened to run.
 //
 // The names stripped are the whole contract of this file. The factory repeats
-// them as a literal because jest hoists it above this declaration, so
+// them as a literal because vitest hoists it above this declaration, so
 // `guards the simulation itself` compares the mock's *effect* against this list
 // rather than trusting either copy - drift in either direction fails. That is
 // the hole the sibling formatter skew spec had, which let it certify a version
@@ -23,15 +23,18 @@ const ABSENT_ON_OLDER_NX = [
   'createPrettierIgnoreChecker',
 ] as const;
 
-jest.mock('nx/src/devkit-internals', () => {
-  const actual = jest.requireActual('nx/src/devkit-internals');
+vi.mock('nx/src/devkit-internals', async () => {
+  const actual = await vi.importActual<any>('nx/src/devkit-internals');
   const olderNx = { ...actual };
   for (const name of [
     'createGitIgnoreChecker',
     'createOxfmtIgnoreChecker',
     'createPrettierIgnoreChecker',
   ]) {
-    delete olderNx[name];
+    // `undefined`, not deleted: vitest throws on reading an export its mock
+    // factory did not return, where an older nx's CJS module reads as
+    // `undefined`.
+    olderNx[name] = undefined;
   }
   return olderNx;
 });
@@ -43,12 +46,12 @@ describe('ignore checkers against an nx without them', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('guards the simulation itself', () => {
-    const actual = jest.requireActual('nx/src/devkit-internals');
-    const mocked = require('nx/src/devkit-internals');
+  it('guards the simulation itself', async () => {
+    const actual = await vi.importActual<any>('nx/src/devkit-internals');
+    const mocked: any = await import('nx/src/devkit-internals');
 
     const stripped = Object.keys(actual)
-      .filter((name) => !(name in mocked))
+      .filter((name) => mocked[name] === undefined)
       .sort();
     expect(stripped).toEqual([...ABSENT_ON_OLDER_NX].sort());
     // Something must survive, or the mock is testing an empty module.

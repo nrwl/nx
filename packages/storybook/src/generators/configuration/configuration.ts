@@ -1,27 +1,27 @@
 import {
   addDependenciesToPackageJson,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   logger,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  getDependencyVersionFromPackageJson,
   Tree,
 } from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
+import { coerce, gte, major, minVersion } from 'semver';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
-import { warnStorybookExecutorGenerating } from '../../utils/deprecation';
 import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 import {
   addAngularStorybookTarget,
   addBuildStorybookToCacheableOperations,
   addStaticTarget,
-  addStorybookTarget,
   addStorybookToNamedInputs,
-  addStorybookToTargetDefaults,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
@@ -44,16 +44,17 @@ import {
   tsLibVersion,
   tsNodeVersion,
   versions,
+  viteTsconfigPathsVersion,
 } from '../../utils/versions';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
-import { getProjectType } from '@nx/js/internal';
+import { acknowledgeSwcBuildScripts, getProjectType } from '@nx/js/internal';
 
 export function configurationGenerator(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return configurationGeneratorInternal(tree, schema);
 }
 
 export async function configurationGeneratorInternal(
@@ -69,7 +70,7 @@ export async function configurationGeneratorInternal(
     );
   }
 
-  const schema = normalizeSchema(tree, rawSchema);
+  const schema = normalizeSchema(rawSchema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -112,19 +113,11 @@ export async function configurationGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     skipFormat: true,
-    addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
 
   editRootTsConfig(tree);
-
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/storybook/plugin'
-      : p.plugin === '@nx/storybook/plugin'
-  );
 
   const mainDir =
     !!nextConfigFilePath &&
@@ -135,6 +128,11 @@ export async function configurationGeneratorInternal(
   const usesVite =
     !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
   const usesReactNative = isUsingReactNative(schema.project);
+  // resolve.tsconfigPaths is native only from Vite 8; older majors ignore it.
+  const installedVite = coerce(
+    getDependencyVersionFromPackageJson(tree, 'vite') ?? ''
+  );
+  const useNativeTsconfigPaths = !installedVite || major(installedVite) >= 8;
 
   createProjectStorybookDir(
     tree,
@@ -151,9 +149,9 @@ export async function configurationGeneratorInternal(
     compiler === 'swc',
     usesVite,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
-    usesReactNative
+    usesReactNative,
+    useNativeTsconfigPaths
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
@@ -172,24 +170,13 @@ export async function configurationGeneratorInternal(
 
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree, schema);
-  if (!hasPlugin) {
-    addStorybookToTargetDefaults(tree, schema);
-  }
 
   let devDeps = {};
 
-  if (!hasPlugin || schema.addExplicitTargets) {
-    warnStorybookExecutorGenerating();
-    if (schema.uiFramework === '@storybook/angular') {
-      addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
-    } else {
-      addStorybookTarget(
-        tree,
-        schema.project,
-        schema.uiFramework,
-        schema.interactionTests
-      );
-    }
+  if (schema.uiFramework === '@storybook/angular') {
+    // `@storybook/angular:*` builders are third-party and still supported, so
+    // Angular keeps an explicit target rather than relying on inference.
+    addAngularStorybookTarget(tree, schema.project, schema.interactionTests);
     if (schema.configureStaticServe) {
       await addStaticTarget(tree, schema);
     }
@@ -198,7 +185,19 @@ export async function configurationGeneratorInternal(
   }
 
   if (schema.interactionTests) {
-    devDeps['@storybook/test-runner'] = versions(tree).testRunnerVersion;
+    const testRunnerVersion = versions(tree).testRunnerVersion;
+    // @storybook/test-runner depends on @swc/core.
+    acknowledgeSwcBuildScripts(tree);
+    if (gte(minVersion(testRunnerVersion), '0.24.0')) {
+      // Only the 0.24 line runs on jest 30, whose jest-resolve depends on
+      // unrs-resolver and, from 30.5.0, pins a jest-haste-map that depends on
+      // @parcel/watcher. Storybook 8 and 9 select jest 29, which needs neither.
+      acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+        '@parcel/watcher': false,
+        'unrs-resolver': false,
+      });
+    }
+    devDeps['@storybook/test-runner'] = testRunnerVersion;
   }
 
   if (schema.tsConfiguration) {
@@ -207,6 +206,9 @@ export async function configurationGeneratorInternal(
 
   if (usesVite && !viteConfigFilePath) {
     devDeps['tslib'] = tsLibVersion;
+    if (!useNativeTsconfigPaths) {
+      devDeps['vite-tsconfig-paths'] = viteTsconfigPathsVersion;
+    }
   }
 
   if (schema.configureStaticServe) {
@@ -217,15 +219,11 @@ export async function configurationGeneratorInternal(
     projectType !== 'application' &&
     schema.uiFramework === '@storybook/react-webpack5'
   ) {
+    // core-js' install script only prints a funding message.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      'core-js': false,
+    });
     devDeps['core-js'] = coreJsVersion;
-  }
-
-  if (schema.uiFramework?.endsWith('-vite') && !viteConfigFilePath) {
-    // This means that the user has selected a Vite framework
-    // but the project does not have Vite configuration.
-    // We need to install the @nx/vite plugin in order to be able to use
-    // the nxViteTsPaths plugin to register the tsconfig paths in Vite.
-    devDeps['@nx/vite'] = nxVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps, undefined, true));
@@ -238,19 +236,12 @@ export async function configurationGeneratorInternal(
 }
 
 function normalizeSchema(
-  tree: Tree,
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-
   const defaults = {
     interactionTests: true,
     js: false,
     tsConfiguration: true,
-    addPlugin,
   };
   return {
     ...defaults,

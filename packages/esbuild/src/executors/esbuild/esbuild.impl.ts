@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import type { ExecutorContext } from '@nx/devkit';
-import { createAsyncIterable } from '@nx/devkit/internal';
+import { createAsyncIterable, TargetProjectLocator } from '@nx/devkit/internal';
 import { cacheDir, logger, stripIndents, writeJsonFile } from '@nx/devkit';
 import {
   copyAssets,
@@ -34,11 +34,6 @@ const BUILD_WATCH_SUCCEEDED = `[ ${pc.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
-// since the workspace has esbuild 0.17+ installed, there's no definition
-// of esbuild without 'context', therefore, the esbuild import in the else
-// branch below has type never, getting the type to cast later
-type EsBuild = typeof esbuild;
-
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
@@ -51,9 +46,31 @@ export async function* esbuildExecutor(
 
   const assetsResult = await copyAssets(options, context);
 
+  let targetProjectLocator: TargetProjectLocator;
+  const sourceFile = join(
+    context.root,
+    context.projectGraph.nodes[context.projectName].data.root,
+    'package.json'
+  );
   const externalDependencies: DependentBuildableProjectNode[] =
     options.external.reduce((acc, name) => {
-      const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      let externalNode = context.projectGraph.externalNodes[`npm:${name}`];
+      if (
+        (!externalNode || externalNode.data.version.startsWith('link:')) &&
+        name.split('/').length === (name.startsWith('@') ? 2 : 1)
+      ) {
+        targetProjectLocator ??= new TargetProjectLocator(
+          context.projectGraph.nodes,
+          context.projectGraph.externalNodes
+        );
+        const target = targetProjectLocator.findNpmProjectFromImport(
+          name,
+          sourceFile
+        );
+        externalNode = target
+          ? context.projectGraph.externalNodes[target]
+          : externalNode;
+      }
       if (externalNode) {
         acc.push({
           name,

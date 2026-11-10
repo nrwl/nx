@@ -1,3 +1,11 @@
+disallowed-methods = [
+  # On Windows, std::fs::canonicalize returns an extended-length verbatim path
+  # that does not compare equal to the normal paths the rest of the code uses
+  # (and which notify reports). Use dunce::canonicalize, which strips the prefix.
+  { path = "std::fs::canonicalize", reason = "Use dunce::canonicalize; std returns a Windows extended-length verbatim path that mismatches normal paths" },
+  { path = "std::path::Path::canonicalize", reason = "Use dunce::canonicalize; std returns a Windows extended-length verbatim path that mismatches normal paths" },
+]
+
 disallowed-types = [
   # We need to ensure adjustments for light and dark themes are applied appropriately
   { path = "ratatui::style::Color", reason = "Use our utils from crate::native::tui::colors instead to ensure appropriate light/dark theme support" },

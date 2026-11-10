@@ -75,6 +75,10 @@ describe('getInstalledPackageVersion', () => {
   });
 
   it('returns the concrete installed version for a resolvable package', () => {
-    expect(getInstalledPackageVersion('semver')).toMatch(/^\d+\.\d+\.\d+/);
+    // The default require paths start at the unit-test workspace root, a
+    // scratch dir outside the repo with no node_modules.
+    expect(getInstalledPackageVersion('semver', [__dirname])).toMatch(
+      /^\d+\.\d+\.\d+/
+    );
   });
 });

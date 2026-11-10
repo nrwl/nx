@@ -56,6 +56,17 @@ describe('TaskHasher', () => {
       expect(result.selfInputs).toEqual([]);
     });
 
+    it('keeps a project selection with dependencies a project selection', () => {
+      const result = splitInputsIntoSelfAndDependencies(
+        [{ input: 'production', projects: ['app'], dependencies: true }],
+        {}
+      );
+      expect(result.projectInputs).toEqual([
+        { input: 'production', projects: ['app'], dependencies: true },
+      ]);
+      expect(result.depsInputs).toEqual([]);
+    });
+
     it('should handle mixed inputs correctly', () => {
       const result = splitInputsIntoSelfAndDependencies(
         [

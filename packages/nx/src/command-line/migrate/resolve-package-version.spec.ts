@@ -1,4 +1,4 @@
-import type { Mock, MockInstance } from 'vitest';
+import type { Mock } from 'vitest';
 vi.mock('../../config/configuration', () => ({
   readNxJson: vi.fn(() => ({})),
 }));
@@ -85,20 +85,13 @@ function violation(blocked: { version: string; publishedAt: string }[]) {
 
 describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
-  let warnSpy: MockInstance;
 
-  beforeEach(async () => {
-    resetResolvePackageVersionState();
-    warnSpy = vi
-      .spyOn((await import('../../utils/output')).output, 'warn')
-      .mockImplementation(() => {});
+  beforeEach(() => {
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
-    delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
     mockReadNxJson.mockReturnValue({});
   });
 
   afterEach(() => {
-    warnSpy.mockRestore();
     process.env = { ...originalEnv };
   });
 
@@ -113,58 +106,18 @@ describe('isRegistryResolutionEnabled', () => {
     expect(isRegistryResolutionEnabled()).toBe(false);
   });
 
-  it('legacy NX_MIGRATE_SKIP_REGISTRY_FETCH=true disables, overriding nx.json', () => {
+  it('NX_MIGRATE_USE_REGISTRY_RESOLUTION wins over nx.json', () => {
+    mockReadNxJson.mockReturnValue({
+      migrate: { useRegistryResolution: false },
+    });
+    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'true';
+    expect(isRegistryResolutionEnabled()).toBe(true);
+
     mockReadNxJson.mockReturnValue({
       migrate: { useRegistryResolution: true },
     });
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
-    expect(isRegistryResolutionEnabled()).toBe(false);
-  });
-
-  it('legacy NX_MIGRATE_SKIP_REGISTRY_FETCH=false enables', () => {
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'false';
-    expect(isRegistryResolutionEnabled()).toBe(true);
-  });
-
-  it('new NX_MIGRATE_USE_REGISTRY_RESOLUTION wins over the legacy env', () => {
-    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'true';
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
-    expect(isRegistryResolutionEnabled()).toBe(true);
-
     process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'false';
     expect(isRegistryResolutionEnabled()).toBe(false);
-  });
-
-  it('warns once when the legacy env var is set, pointing to the replacement', () => {
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
-
-    isRegistryResolutionEnabled();
-    isRegistryResolutionEnabled();
-
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy.mock.calls[0][0].title).toContain(
-      'NX_MIGRATE_SKIP_REGISTRY_FETCH is deprecated'
-    );
-    expect(warnSpy.mock.calls[0][0].bodyLines.join(' ')).toContain(
-      'NX_MIGRATE_USE_REGISTRY_RESOLUTION'
-    );
-  });
-
-  it('does not warn when the legacy env var is unset', () => {
-    isRegistryResolutionEnabled();
-    expect(warnSpy).not.toHaveBeenCalled();
-  });
-
-  it('notes the override when the new env var is also set', () => {
-    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
-    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
-
-    isRegistryResolutionEnabled();
-
-    expect(warnSpy.mock.calls[0][0].bodyLines.join(' ')).toContain(
-      'being overridden by NX_MIGRATE_USE_REGISTRY_RESOLUTION'
-    );
   });
 });
 
@@ -176,7 +129,6 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     resetResolvePackageVersionState();
     vi.clearAllMocks();
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
-    delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
     delete process.env.CI;
     mockReadNxJson.mockReturnValue({});
     mockUsingRegistry.mockResolvedValue('registry-resolved');
@@ -524,7 +476,7 @@ describe('preapproved packages with min-release-age', () => {
         windowMs: 24 * 60 * 60 * 1000,
         sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
         // isExcluded checks both exact name ('nx') and glob ('@nx/*')
-        isExcluded: (name: string, version: string) => {
+        isExcluded: (name: string) => {
           return name === 'nx' || name.startsWith('@nx/');
         },
         behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
@@ -564,7 +516,7 @@ describe('preapproved packages with min-release-age', () => {
         windowMs: 24 * 60 * 60 * 1000,
         sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
         // Only 'nx' and '@nx/*' are preapproved; other packages are not
-        isExcluded: (name: string, version: string) => {
+        isExcluded: (name: string) => {
           return name === 'nx' || name.startsWith('@nx/');
         },
         behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },

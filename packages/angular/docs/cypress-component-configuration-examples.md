@@ -72,29 +72,13 @@ nx g @nx/angular:cypress-component-configuration --project=my-cool-angular-proje
 
 ## Running Component Tests
 
-A new `component-test` target will be added to the specified project to run your component tests.
+The `@nx/cypress/plugin` plugin infers a `component-test` target from the project's `cypress.config.ts`.
 
 ```shell
-nx g component-test my-cool-angular-project
+nx component-test my-cool-angular-project
 ```
 
-Here is an example of the project configuration that is generated. The `--build-target` option is added as the `devServerTarget` which can be changed as needed.
-
-```json title="project.json"
-{
-  "targets" {
-    "component-test": {
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "<path-to-project-root>/cypress.config.ts",
-        "testingType": "component",
-        "devServerTarget": "some-angular-app:build",
-        "skipServe": true
-      }
-    }
-  }
-}
-```
+The generator passes the `--build-target` option to `nxComponentTestingPreset` in `cypress.config.ts` as `buildTarget`. Change it there as needed.
 
 ## What is bundled
 

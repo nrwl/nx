@@ -36,7 +36,7 @@
     },
     "testTarget": {
       "type": "string",
-      "description": "The test target of the project to be transformed to use the @nx/vitest:test executor.",
+      "description": "The name of the test target the @nx/vitest plugin infers for the project. Defaults to `test`.",
       "hidden": true
     },
     "skipFormat": {

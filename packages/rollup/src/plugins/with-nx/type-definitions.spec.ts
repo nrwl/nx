@@ -41,7 +41,7 @@ describe('typeDefinitions', () => {
 
     const mockOpts = {}; // Can be left empty for this scenario
 
-    const mockEmitFile = jest.fn();
+    const mockEmitFile = vi.fn();
 
     const plugin = typeDefinitions({ projectRoot: '/project' });
 

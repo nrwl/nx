@@ -24,9 +24,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkit, 'formatFiles')
-      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(devkit, 'formatFiles').mockImplementation(() => Promise.resolve());
   });
 
   it.each(executors)(

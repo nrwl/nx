@@ -25,12 +25,12 @@ describe.each([
     );
 
     // ASSERT
-    expect(tree.read('routes-file.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { ${routeType} } from '@angular/router';
-      import { ROUTES } from '@proj/lib';
-            export const ROUTES: ${routes} = [
-          {path: 'test', children: ROUTES },];"
-    `);
+    expect(tree.read('routes-file.ts', 'utf-8')).toBe(
+      `import { ${routeType} } from '@angular/router';
+import { ROUTES } from '@proj/lib';
+      export const ROUTES: ${routes} = [
+    {path: 'test', children: ROUTES },];`
+    );
   });
 
   it('should add a lazy route to the routes file', () => {
@@ -50,11 +50,11 @@ describe.each([
     );
 
     // ASSERT
-    expect(tree.read('routes-file.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { ${routeType} } from '@angular/router';
-            export const ROUTES: ${routes} = [
-          {path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },];"
-    `);
+    expect(tree.read('routes-file.ts', 'utf-8')).toBe(
+      `import { ${routeType} } from '@angular/router';
+      export const ROUTES: ${routes} = [
+    {path: 'test', loadChildren: () => import('@proj/lib').then(m => m.ROUTES) },];`
+    );
   });
 
   it('should add a lazy route to a routes file when there is a static route', () => {

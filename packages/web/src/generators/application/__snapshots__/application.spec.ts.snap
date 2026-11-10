@@ -1,12 +1,16 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`app not nested should generate files if bundler is vite 1`] = `
+exports[`app > not nested > should generate files if bundler is vite 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const isCI = !!process.env['CI'];
+// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env['BASE_URL'] || webServerAddress;
 
 /**
  * Read environment variables from file.
@@ -32,10 +36,9 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+    url: webServerAddress,
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -79,13 +82,15 @@ export default defineConfig({
 "
 `;
 
-exports[`app not nested should setup playwright e2e project correctly for webpack 1`] = `
+exports[`app > not nested > should setup playwright e2e project correctly for webpack 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 
+const isCI = !!process.env['CI'];
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+// getReadyUrl moves the address to the port the dev server task reported.
+const baseURL = process.env['BASE_URL'] || getReadyUrl('http://localhost:4200');
 
 /**
  * Read environment variables from file.
@@ -111,10 +116,9 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run cool-app:serve-static',
-    url: 'http://localhost:4200',
+    command: isCI ? 'npx nx run cool-app:serve-static' : 'npx nx run cool-app:serve',
+    url: getReadyUrl('http://localhost:4200'),
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -158,13 +162,17 @@ export default defineConfig({
 "
 `;
 
-exports[`app not nested should use serve target and port if bundler=vite, e2eTestRunner=playwright, addPlugin=false 1`] = `
+exports[`app > not nested > should use serve target and port if bundler=vite, e2eTestRunner=playwright 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
+
+const isCI = !!process.env['CI'];
+// getReadyUrl moves the address to the port the server task reported.
+const webServerAddress = getReadyUrl(isCI ? 'http://localhost:4300' : 'http://localhost:4200');
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const baseURL = process.env['BASE_URL'] || webServerAddress;
 
 /**
  * Read environment variables from file.
@@ -190,10 +198,9 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run my-app:preview',
-    url: 'http://localhost:4300',
+    command: isCI ? 'npx nx run my-app:preview' : 'npx nx run my-app:dev',
+    url: webServerAddress,
     reuseExistingServer: true,
     cwd: workspaceRoot,
   },
@@ -237,9 +244,9 @@ export default defineConfig({
 "
 `;
 
-exports[`app setup web app with --bundler=vite should setup vite configuration 1`] = `null`;
+exports[`app > setup web app with --bundler=vite > should setup vite configuration 1`] = `null`;
 
-exports[`app should setup eslint (eslintrc) 1`] = `
+exports[`app > should setup eslint (eslintrc) 1`] = `
 "{
   "extends": ["../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
@@ -261,7 +268,7 @@ exports[`app should setup eslint (eslintrc) 1`] = `
 "
 `;
 
-exports[`app should setup the web build builder 1`] = `
+exports[`app > should setup the web build builder 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 
@@ -290,7 +297,7 @@ module.exports = {
 "
 `;
 
-exports[`app should setup the web dev server 1`] = `
+exports[`app > should setup the web dev server 1`] = `
 "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { join } = require('path');
 

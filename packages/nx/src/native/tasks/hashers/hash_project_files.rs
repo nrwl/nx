@@ -5,7 +5,7 @@ use anyhow::*;
 use tracing::{trace, trace_span};
 
 use super::once_cache::OnceCache;
-use crate::native::glob::build_glob_set;
+use crate::native::glob::{build_glob_set, fileset_patterns};
 use crate::native::types::FileData;
 
 /// Compute-once cache for project fileset hashes. Holds only the hash, so
@@ -85,7 +85,7 @@ fn collect_project_file_indices(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<u32>> {
-    let glob_set = build_glob_set(file_sets)?;
+    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),
         |files| {
@@ -137,7 +137,7 @@ pub fn collect_project_files<'a>(
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
     let now = std::time::Instant::now();
-    let glob_set = build_glob_set(file_sets)?;
+    let glob_set = build_glob_set(&fileset_patterns(file_sets))?;
     trace!("build_glob_set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
@@ -160,6 +160,94 @@ mod tests {
 
     use super::*;
     use std::collections::HashMap;
+
+    // The rule that a path with no glob pattern means that file, or that
+    // directory and everything under it, is implemented twice: here against
+    // the file map, and in the expansion against the disk. Neither knows
+    // about the other, so this is what stops them drifting apart.
+    #[test]
+    fn a_directory_entry_means_the_same_on_both_roads() {
+        use crate::native::tasks::hashers::disk_expansion::tests::expand_files;
+        use assert_fs::TempDir;
+        use assert_fs::prelude::*;
+
+        let temp = TempDir::new().unwrap();
+        // `@`, `+` and `,` are ordinary characters in a path. A directory
+        // named with one used to expand on the disk road and match nothing on
+        // the file map road, because the two disagreed on what a pattern is.
+        let files = [
+            "libs/x/src/a.ts",
+            "libs/x/src/nested/b.ts",
+            "libs/x/src/@types/c.d.ts",
+            "libs/x/src/+state/d.ts",
+            "libs/x/src/co,ma/e.ts",
+            "libs/x/src/bra]cket/f.ts",
+            "libs/x/src/paren)/g.ts",
+            "libs/x/src/pi|pe/h.ts",
+            "libs/x/other.ts",
+        ];
+        for file in files {
+            temp.child(file).write_str(file).unwrap();
+        }
+        let mut file_map = HashMap::new();
+        file_map.insert(
+            "x".to_string(),
+            files
+                .iter()
+                .map(|file| FileData {
+                    file: (*file).into(),
+                    hash: Default::default(),
+                })
+                .collect::<Vec<_>>(),
+        );
+
+        let groups: &[&[&str]] = &[
+            &["libs/x/src"],
+            &["libs/x/src/"],
+            &["libs/x/src/**/*"],
+            &["libs/x/other.ts"],
+            &["libs/x/src/@types"],
+            &["libs/x/src/+state"],
+            &["libs/x/src/co,ma"],
+            &["libs/x/src/bra]cket"],
+            &["libs/x/src/paren)"],
+            &["libs/x/src/pi|pe"],
+            // A negation naming a directory has to drop the same files.
+            &["libs/x/src", "!libs/x/src/@types"],
+            &["libs/x/src", "!libs/x/src/nested"],
+        ];
+        for group in groups {
+            let entries: Vec<String> = group.iter().map(|g| (*g).to_string()).collect();
+            let mut tracked: Vec<String> = collect_project_files("x", &entries, &file_map)
+                .unwrap()
+                .into_iter()
+                .map(|data| data.file.clone())
+                .collect();
+            tracked.sort();
+            let from_disk = expand_files(temp.path(), &entries).unwrap().files;
+            assert_eq!(tracked, from_disk, "{group:?}");
+            assert!(!tracked.is_empty(), "{group:?} matched nothing at all");
+        }
+
+        // A path that is not there matches nothing on either road, rather
+        // than one road inventing an entry for it.
+        for missing in ["libs/x/src/absent", "libs/x/absent.ts"] {
+            let entries = vec![missing.to_string()];
+            assert!(
+                collect_project_files("x", &entries, &file_map)
+                    .unwrap()
+                    .is_empty(),
+                "{missing}"
+            );
+            assert!(
+                expand_files(temp.path(), &entries)
+                    .unwrap()
+                    .files
+                    .is_empty(),
+                "{missing}"
+            );
+        }
+    }
 
     #[test]
     fn test_collect_files() {

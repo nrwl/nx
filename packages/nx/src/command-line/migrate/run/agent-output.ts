@@ -9,6 +9,7 @@
 // `require`s and runs it in process), so the guarantee is that data cannot
 // corrupt the framing, nothing more.
 
+import { logger } from '../../../utils/logger';
 import { output } from '../../../utils/output';
 import { escapeXmlAttr } from '../agentic/print-dropped-agent-context';
 import { singleLine } from '../text';
@@ -46,6 +47,14 @@ export function logToAgent(message: AgentMessage): void {
 
 export function warnToAgent(message: AgentMessage): void {
   output.warn(safe(message));
+}
+
+export function errorToAgent(message: AgentMessage): void {
+  output.error(safe(message));
+}
+
+export function logLineToAgent(line: string): void {
+  logger.info(singleLine(line));
 }
 
 /**
@@ -92,6 +101,11 @@ export function emitPromptBlock(migrationId: string, payload: object): void {
     [['migration', migrationId]],
     blockPayload(payload)
   );
+}
+
+// For work that belongs to no migration (the final-validation step).
+export function emitStepPromptBlock(stepId: string, payload: object): void {
+  writeBlock('nx_migrate_prompt', [['step', stepId]], blockPayload(payload));
 }
 
 /**

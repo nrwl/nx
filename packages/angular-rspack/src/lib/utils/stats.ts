@@ -19,48 +19,14 @@ import {
   Stats,
   StatsOptions,
 } from '@rspack/core';
-import {
-  NormalizedAngularRspackPluginOptions,
-  NormalizedEntryPoint,
-  ScriptOrStyleEntry,
-} from '../models/angular-rspack-plugin-options';
+import { NormalizedAngularRspackPluginOptions } from '../models/angular-rspack-plugin-options';
 import { normalizeOptimization } from '../models/normalize-options';
 import { colors as ansiColors } from './color';
-import { markAsyncChunksNonInitial } from './async-chunks';
-import { getStatsOptions } from '../config/config-utils/get-stats-options';
-
-export interface RspackLoggingCallback {
-  (stats: Stats, config: Configuration): void;
-}
 
 export type RspackStatsOptions = Exclude<
   Configuration['stats'],
   string | boolean | undefined
 >;
-
-export function normalizeExtraEntryPoints(
-  extraEntryPoints: ScriptOrStyleEntry[],
-  defaultBundleName: string
-): NormalizedEntryPoint[] {
-  return extraEntryPoints.map((entry) => {
-    if (typeof entry === 'string') {
-      return { input: entry, inject: true, bundleName: defaultBundleName };
-    }
-
-    const { inject = true, ...newEntry } = entry;
-    let bundleName;
-    if (entry.bundleName) {
-      bundleName = entry.bundleName;
-    } else if (!inject) {
-      // Lazy entry points use the file name as bundle name.
-      bundleName = path.parse(entry.input).name;
-    } else {
-      bundleName = defaultBundleName;
-    }
-
-    return { ...newEntry, inject, bundleName };
-  });
-}
 
 function getBuildDuration(rspackStats: StatsCompilation): number {
   assert(rspackStats.builtAt, 'buildAt cannot be undefined');
@@ -283,14 +249,12 @@ export function statsWarningsToString(
         }
         output += ' - ';
       }
-      if (!/^error/i.test(warning.message)) {
-        const errorIndex = warning.message.indexOf('Error: ');
-        warning.message = warning.message.substring(errorIndex + 7);
-      }
-      if (!/^warning/i.test(warning.message)) {
+      // rspack 1.3 prefixes an Error warning with its name, e.g. "  ⚠ Error: ".
+      const message = warning.message.replace(/^\s*⚠\s*Error: /, '');
+      if (!/^warning/i.test(message)) {
         output += y('Warning: ');
       }
-      output += `${warning.message}\n\n`;
+      output += `${message}\n\n`;
     }
   }
 
@@ -375,31 +339,6 @@ export function statsHasWarnings(json: StatsCompilation): boolean {
   return !!(
     json.warnings?.length || json.children?.some((c) => c.warnings?.length)
   );
-}
-
-export function createRspackLoggingCallback(
-  options: NormalizedAngularRspackPluginOptions
-) {
-  const { verbose = false, scripts = [], styles = [] } = options;
-  const extraEntryPoints = [
-    ...normalizeExtraEntryPoints(styles, 'styles'),
-    ...normalizeExtraEntryPoints(scripts, 'scripts'),
-  ];
-
-  return (stats, config) => {
-    if (verbose && config.stats !== false) {
-      const statsOptions = config.stats === true ? undefined : config.stats;
-      console.info(stats.toString(statsOptions));
-    }
-
-    const rawStats = stats.toJson(getStatsOptions(false));
-    const rspackStats = {
-      ...rawStats,
-      chunks: markAsyncChunksNonInitial(rawStats, extraEntryPoints),
-    };
-
-    rspackStatsLogger(rspackStats, config);
-  };
 }
 
 export interface BuildEventStats {

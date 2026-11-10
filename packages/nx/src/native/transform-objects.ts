@@ -1,14 +1,70 @@
 import { ProjectGraph } from '../config/project-graph';
 import {
   ExternalNode,
+  ExternalObject,
   Project,
   Target,
   ProjectGraph as RustProjectGraph,
+  transferProjectGraph,
 } from './index';
 
+/**
+ * Keyed by graph identity, but weak so a replaced graph is collectable. A run's
+ * hasher reuses what affected's planner already copied.
+ */
+const transferred = new WeakMap<
+  ProjectGraph,
+  ExternalObject<RustProjectGraph>
+>();
+
+/** The graph copied into Rust, once per graph. */
 export function transformProjectGraphForRust(
   graph: ProjectGraph
-): RustProjectGraph {
+): ExternalObject<RustProjectGraph> {
+  let ref = transferred.get(graph);
+  if (!ref) {
+    ref = transferProjectGraph(toRustProjectGraph(graph));
+    transferred.set(graph, ref);
+  }
+  return ref;
+}
+
+/** Per graph like `transferred`: `nx release` runs the locators once per commit. */
+const transferredForLocators = new WeakMap<
+  ProjectGraph,
+  ExternalObject<RustProjectGraph>
+>();
+
+/**
+ * Only what the touched-project locators read: project roots, named inputs and
+ * target inputs. Copying target options and every edge costs several times
+ * what the locators themselves do on a large workspace.
+ */
+export function transformProjectGraphForLocators(
+  graph: ProjectGraph
+): ExternalObject<RustProjectGraph> {
+  let ref = transferredForLocators.get(graph);
+  if (!ref) {
+    const nodes: Record<string, Project> = {};
+    for (const [name, node] of Object.entries(graph.nodes)) {
+      const targets: Record<string, Target> = {};
+      for (const [target, config] of Object.entries(node.data.targets ?? {})) {
+        targets[target] = { inputs: config.inputs };
+      }
+      nodes[name] = {
+        root: node.data.root,
+        namedInputs: node.data.namedInputs,
+        targets,
+      };
+    }
+    ref = transferProjectGraph({ nodes, externalNodes: {}, dependencies: {} });
+    transferredForLocators.set(graph, ref);
+  }
+  return ref;
+}
+
+/** The graph in Rust's shape, still a JS object. Uncached, so safe to edit. */
+export function toRustProjectGraph(graph: ProjectGraph): RustProjectGraph {
   const dependencies: Record<string, string[]> = {};
   const nodes: Record<string, Project> = {};
   const externalNodes: Record<string, ExternalNode> = {};
@@ -21,7 +77,13 @@ export function transformProjectGraphForRust(
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
-        options: JSON.stringify(targetConfig.options),
+        options: JSON.stringify(
+          targetConfig.executor === 'nx:run-script' &&
+            typeof targetConfig.metadata?.scriptContent === 'string' &&
+            targetConfig.metadata.scriptContent !== ''
+            ? [targetConfig.options, targetConfig.metadata.scriptContent]
+            : targetConfig.options
+        ),
         configurations: JSON.stringify(targetConfig.configurations),
         parallelism: targetConfig.parallelism,
       };
@@ -43,6 +105,7 @@ export function transformProjectGraphForRust(
     graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
+      type: externalNode.type,
       packageName: externalNode.data.packageName,
       hash: externalNode.data.hash,
       version: externalNode.data.version,

@@ -4,6 +4,7 @@ import {
   BatchStatus,
   ExternalObject,
   PerformanceSummaryPayload,
+  TaskReadiness,
   TaskResult,
   TaskStatus as NativeTaskStatus,
 } from '../native';
@@ -81,6 +82,9 @@ export interface LifeCycle {
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
+  /** Only continuous tasks that declare a `readyWhen` report readiness. */
+  setTaskReadiness?(taskId: string, readiness: TaskReadiness): void;
+
   setTaskTiming?(taskId: string, startTime: number, endTime: number): void;
 
   registerForcedShutdownCallback?(callback: () => void): void;
@@ -91,6 +95,13 @@ export interface LifeCycle {
   registerRunningBatch?(batchId: string, batchInfo: BatchInfo): void;
 
   appendBatchOutput?(batchId: string, output: string): void;
+
+  /**
+   * The batch worker's own log is on disk and worth reading — its tasks did not
+   * all succeed. One log per worker, so this is addressed once for the batch
+   * rather than copied into any task's output.
+   */
+  batchOutputAvailable?(batchId: string, path: string): void;
 
   setBatchStatus?(batchId: string, status: BatchStatus): void;
 
@@ -215,6 +226,14 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
+  setTaskReadiness(taskId: string, readiness: TaskReadiness): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskReadiness) {
+        l.setTaskReadiness(taskId, readiness);
+      }
+    }
+  }
+
   setTaskTiming(taskId: string, startTime: number, endTime: number): void {
     for (let l of this.lifeCycles) {
       if (l.setTaskTiming) {
@@ -251,6 +270,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.appendBatchOutput) {
         l.appendBatchOutput(batchId, output);
+      }
+    }
+  }
+
+  batchOutputAvailable(batchId: string, path: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.batchOutputAvailable) {
+        l.batchOutputAvailable(batchId, path);
       }
     }
   }

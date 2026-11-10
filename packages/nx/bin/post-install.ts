@@ -10,6 +10,8 @@ import { isNxCloudUsed } from '../src/utils/nx-cloud-utils';
 import { readNxJson } from '../src/config/nx-json';
 import { logger } from '../src/utils/logger';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { resolveWithoutCachePollution } from '../src/utils/package-json';
+import { getNxRequirePaths } from '../src/utils/installation-directory';
 
 // The post install is not critical, to avoid any chance that it may hang
 // we will kill this process after 30 seconds.
@@ -42,9 +44,12 @@ const postinstallTimeout = setTimeout(() => {
 })();
 
 function isMainNxPackage() {
-  const mainNxPath = require.resolve('nx', {
-    paths: [workspaceRoot],
-  });
+  // A plain `require.resolve('nx', { paths })` self-references this package,
+  // so every installed nx copy would pass.
+  const mainNxPath = resolveWithoutCachePollution(
+    'nx',
+    getNxRequirePaths(workspaceRoot)
+  );
   const thisNxPath = require.resolve('nx');
   return mainNxPath === thisNxPath;
 }

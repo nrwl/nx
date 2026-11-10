@@ -2,10 +2,10 @@ import { checkGitVersion } from './git';
 import * as childProcessUtils from '../child-process-utils';
 
 describe('checkGitVersion', () => {
-  const execAndWaitSpy = jest.spyOn(childProcessUtils, 'execAndWait');
+  const execAndWaitSpy = vi.spyOn(childProcessUtils, 'execAndWait');
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should work with text before semver', async () => {

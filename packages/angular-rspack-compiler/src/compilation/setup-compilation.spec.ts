@@ -1,9 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadCompilerCli } from '../utils';
 import {
+  disposeComponentStylesheetBundler,
   setupCompilation,
   type SetupCompilationOptions,
 } from './setup-compilation';
+
+const { isAngularBuildVersionAtLeastMock, stylesheetBundlerOptionsMock } =
+  vi.hoisted(() => ({
+    isAngularBuildVersionAtLeastMock: vi.fn((_version: string) => true),
+    stylesheetBundlerOptionsMock: vi.fn(),
+  }));
+
+vi.mock('../utils/angular-build-version', () => ({
+  isAngularBuildVersionAtLeast: isAngularBuildVersionAtLeastMock,
+}));
 
 vi.mock('../utils', () => ({
   loadCompilerCli: vi.fn().mockResolvedValue({
@@ -23,7 +34,12 @@ vi.mock('../utils/assert-supported-versions', () => ({
 }));
 
 vi.mock('@angular/build/private', () => ({
-  ComponentStylesheetBundler: class {},
+  ComponentStylesheetBundler: class {
+    constructor(options: unknown) {
+      stylesheetBundlerOptionsMock(options);
+    }
+    dispose() {}
+  },
   findTailwindConfiguration: vi.fn().mockReturnValue(undefined),
   generateSearchDirectories: vi.fn().mockResolvedValue([]),
   loadPostcssConfiguration: vi.fn().mockResolvedValue(undefined),
@@ -31,6 +47,11 @@ vi.mock('@angular/build/private', () => ({
 }));
 
 describe('setupCompilation', () => {
+  afterEach(async () => {
+    await disposeComponentStylesheetBundler();
+    isAngularBuildVersionAtLeastMock.mockReturnValue(true);
+  });
+
   const options: SetupCompilationOptions = {
     root: '/root',
     tsConfig: '/root/tsconfig.json',
@@ -38,6 +59,20 @@ describe('setupCompilation', () => {
     inlineStyleLanguage: 'css',
     fileReplacements: [],
   };
+
+  it.each([true, false])(
+    'uses the requested component style minification setting (%s)',
+    async (minifyStyles) => {
+      await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        { ...options, minifyStyles }
+      );
+
+      expect(stylesheetBundlerOptionsMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ optimization: minifyStyles })
+      );
+    }
+  );
 
   it('should not emit TS sourcemaps when script sourcemaps are disabled', async () => {
     const { compilerOptions } = await setupCompilation(
@@ -61,8 +96,10 @@ describe('setupCompilation', () => {
     expect(compilerOptions.sourceMap).toBeUndefined();
   });
 
-  it('should not emit TS sourcemaps when using TS project references', async () => {
-    const { compilerOptions } = await setupCompilation(
+  it('should not emit TS sourcemaps when using TS project references with @angular/build < 22.2', async () => {
+    isAngularBuildVersionAtLeastMock.mockReturnValue(false);
+
+    const { compilerOptions, setupWarnings } = await setupCompilation(
       { source: { tsconfigPath: '/root/tsconfig.json' } },
       { ...options, sourceMap: true, useTsProjectReferences: true }
     );
@@ -71,6 +108,26 @@ describe('setupCompilation', () => {
     expect(compilerOptions.inlineSources).toBe(false);
     expect(compilerOptions.sourceMap).toBe(false);
     expect(compilerOptions.isolatedModules).toBe(true);
+    expect(setupWarnings).not.toContainEqual(
+      expect.stringContaining('useTsProjectReferences')
+    );
+  });
+
+  it('should ignore TS project references and warn with @angular/build >= 22.2', async () => {
+    const { compilerOptions, setupWarnings } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      { ...options, sourceMap: true, useTsProjectReferences: true }
+    );
+
+    expect(compilerOptions.inlineSourceMap).toBe(true);
+    expect(compilerOptions.inlineSources).toBe(true);
+    expect(compilerOptions.sourceMap).toBeUndefined();
+    expect(compilerOptions.isolatedModules).toBeUndefined();
+    expect(setupWarnings).toContainEqual(
+      expect.stringContaining(
+        "The 'useTsProjectReferences' option has no effect with Angular 22.2 and later."
+      )
+    );
   });
 
   it.each([undefined, true])(
@@ -84,6 +141,26 @@ describe('setupCompilation', () => {
       expect(compilerOptions.composite).toBe(false);
     }
   );
+
+  it('should keep comments over the tsconfig value', async () => {
+    vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+      readConfiguration: (
+        _tsconfig: string,
+        existingOptions: Record<string, unknown>
+      ) => ({
+        // Like readConfiguration, the passed options win over the tsconfig.
+        options: { removeComments: true, module: 99, ...existingOptions },
+        rootNames: ['/root/src/main.ts'],
+      }),
+    } as never);
+
+    const { compilerOptions } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+
+    expect(compilerOptions.removeComments).toBe(false);
+  });
 
   it('should raise targets below ES2022 and warn about it', async () => {
     // The mocked readConfiguration echoes the existing options, which carry

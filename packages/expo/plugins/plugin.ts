@@ -1,5 +1,6 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   calculateHashesForCreateNodes,
   loadConfigFile,
   PluginCache,
@@ -139,13 +140,16 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
       continuous: true,
+      readyWhen: getReadyCheckReadyWhen('@nx/expo/ready-check'),
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
       continuous: true,
       options: { cwd: projectRoot, args: ['--clear'] },
+      readyWhen: getReadyCheckReadyWhen('@nx/expo/ready-check'),
     },
     [options.runIosTargetName]: {
       command: `expo run:ios`,
@@ -166,15 +170,18 @@ function buildExpoTargets(
       outputs: [getOutputs(projectRoot, 'dist')],
     },
     [options.installTargetName]: {
-      executor: '@nx/expo:install',
+      command: `expo install`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.prebuildTargetName]: {
-      executor: `@nx/expo:prebuild`,
+      command: `expo prebuild`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
+      command: `eas build`,
+      options: { cwd: projectRoot },
       continuous: false,
     },
     [options.submitTargetName]: {

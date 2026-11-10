@@ -75,6 +75,12 @@ const supportedTargets: Record<SupportedTargets, Target> = {
   },
 };
 
+const readySignalingServeBuilders = new Set([
+  '@angular/build:dev-server',
+  '@angular-devkit/build-angular:dev-server',
+  '@angular-devkit/build-angular:ssr-dev-server',
+]);
+
 // TODO(leo): this will replace `supportedTargets` once the full refactor is done.
 const supportedBuilderMigrators: BuilderMigratorClassType[] = [
   AngularBuildUnitTestMigrator,
@@ -227,6 +233,7 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     this.updateServerTargetConfiguration();
     this.updatePrerenderTargetConfiguration();
     this.updateServeSsrTargetConfiguration();
+    this.updateDevServerTargets();
 
     updateProjectConfiguration(this.tree, this.project.name, {
       ...this.projectConfig,
@@ -512,6 +519,24 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
           );
       }
     });
+  }
+
+  private updateDevServerTargets(): void {
+    for (const targetType of ['serve', 'serveSsr'] as const) {
+      const targetName = this.targetNames[targetType];
+      if (!targetName || this.shouldSkipTargetTypeMigration(targetType)) {
+        continue;
+      }
+
+      const target = this.projectConfig.targets[targetName];
+      if (!readySignalingServeBuilders.has(target.executor)) {
+        continue;
+      }
+      target.continuous ??= true;
+      if (target.readyWhen === undefined) {
+        target.readyWhen = { signal: true };
+      }
+    }
   }
 
   private updateTsConfigFileUsedByBuildTarget(

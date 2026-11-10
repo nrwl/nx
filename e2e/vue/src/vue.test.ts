@@ -4,9 +4,9 @@ import {
   newProject,
   reservePort,
   runCLI,
-  runE2ETests,
   uniq,
   updateFile,
+  shouldRunPlaywrightTests,
 } from '@nx/e2e-utils';
 
 describe('Vue Plugin', () => {
@@ -40,16 +40,23 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /const webServerAddress = [^;]*;/,
+            `const webServerAddress = getReadyUrl('http://localhost:${availablePort}');`
+          )
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
       updateFile(`${app}/vite.config.mts`, (content) => {
@@ -82,16 +89,19 @@ describe('Vue Plugin', () => {
       `Successfully ran target build for project ${app}`
     );
 
-    if (await runE2ETests('playwright')) {
+    if (await shouldRunPlaywrightTests()) {
       const availablePort = await reservePort();
 
       updateFile(`${app}-e2e/playwright.config.mts`, (content) => {
         return content
           .replace(
-            /const baseURL = process\.env\['BASE_URL'\] \|\| '[^']*';/,
-            `const baseURL = process.env['BASE_URL'] || 'http://localhost:${availablePort}';`
+            /(const baseURL = .*)'[^']*'(\)?;)/,
+            `$1'http://localhost:${availablePort}'$2`
           )
-          .replace(/url: '[^']*'/, `url: 'http://localhost:${availablePort}'`);
+          .replace(
+            /(url: (?:getReadyUrl\()?)'[^']*'/,
+            `$1'http://localhost:${availablePort}'`
+          );
       });
 
       updateFile(`${app}/rsbuild.config.ts`, (content) => {

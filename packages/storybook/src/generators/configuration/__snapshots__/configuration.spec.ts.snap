@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/storybook:configuration v9 basic functionalities should generate TS config for project by default 1`] = `
+exports[`@nx/storybook:configuration > v9 > basic functionalities > should generate TS config for project by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -20,7 +20,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 basic functionalities should generate TypeScript Configuration files by default 1`] = `
+exports[`@nx/storybook:configuration > v9 > basic functionalities > should generate TypeScript Configuration files by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -40,7 +40,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 basic functionalities should have the proper typings 1`] = `
+exports[`@nx/storybook:configuration > v9 > basic functionalities > should have the proper typings 1`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -75,7 +75,7 @@ exports[`@nx/storybook:configuration v9 basic functionalities should have the pr
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [],
@@ -97,9 +97,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -123,9 +123,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -145,9 +145,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/nextjs';
 
 const config: StorybookConfig = {
@@ -167,9 +167,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -189,9 +189,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.@(mdx|stories.@(js|jsx|ts|tsx))'],
   addons: [],
@@ -213,9 +213,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -235,9 +235,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/web-components-vite';
 
 const config: StorybookConfig = {
@@ -261,9 +261,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
@@ -283,9 +283,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
@@ -309,9 +309,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v9 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v9 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 basic functionalities should generate TS config for project by default 1`] = `
+exports[`@nx/storybook:configuration > v10 > basic functionalities > should generate TS config for project by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -331,7 +331,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 basic functionalities should generate TypeScript Configuration files by default 1`] = `
+exports[`@nx/storybook:configuration > v10 > basic functionalities > should generate TypeScript Configuration files by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
@@ -351,7 +351,7 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 basic functionalities should have the proper typings 1`] = `
+exports[`@nx/storybook:configuration > v10 > basic functionalities > should have the proper typings 1`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -386,7 +386,7 @@ exports[`@nx/storybook:configuration v10 basic functionalities should have the p
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -415,9 +415,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite-ts/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -448,9 +448,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -477,9 +477,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -506,9 +506,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -535,9 +535,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/react-swc/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -566,9 +566,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -595,9 +595,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -628,9 +628,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -657,9 +657,9 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
 "import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
@@ -690,4 +690,4 @@ export default config;
 "
 `;
 
-exports[`@nx/storybook:configuration v10 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;
+exports[`@nx/storybook:configuration > v10 > generate Storybook configuration for all types of projects > should contain the correct configuration in "libs/react-vite/.storybook/" 2`] = `null`;

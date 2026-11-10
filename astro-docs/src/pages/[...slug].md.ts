@@ -67,6 +67,15 @@ export const getStaticPaths: GetStaticPaths = async () => {
     });
   }
 
+  // The Public API reference comes from the deployed OpenAPI specification.
+  const publicApi = await getCollection('nx-cloud-public-api');
+  for (const doc of publicApi) {
+    paths.push({
+      params: { slug: doc.data.slug },
+      props: { rawContent: doc.body || '' },
+    });
+  }
+
   // Get all plugin docs from the generated collection
   try {
     const pluginDocs = await getCollection('plugin-docs');

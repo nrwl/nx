@@ -343,9 +343,13 @@ export const config = {
     // Exact paths only, so the proxies keep serving everything else.
     '/blog/2024-05-08-nx-19-release',
     '/blog/evolving-nx',
+    // DOC-660: excludedPath matching is case-sensitive, so the '/docs/*' entry
+    // above does not cover this indexed mixed-case URL.
+    '/Docs/Knowledge',
     '/cypress/overview',
     '/jest/overview',
     '/more-concepts/monorepo-nx-enterprise',
+    '/more-concepts/global-nx',
     '/storybook/overview-react',
     '/ai',
     '/advent-of-code',

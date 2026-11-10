@@ -42,23 +42,19 @@ function removeIdsFromGraph<T>(
   ids: string[],
   mapWithIds: Record<string, T>
 ): {
-  mapWithIds: Record<string, T>;
   roots: string[];
   dependencies: Record<string, string[]>;
 } {
-  const filteredMapWithIds = {};
   const dependencies = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {
-      filteredMapWithIds[id] = mapWithIds[id];
       dependencies[id] = graph.dependencies[id].filter(
         (depId) => !removedSet.has(depId)
       );
     }
   }
   return {
-    mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
       (k) => dependencies[k].length === 0

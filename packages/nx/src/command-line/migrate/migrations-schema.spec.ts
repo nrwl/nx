@@ -25,6 +25,12 @@ describe('migrations-schema.json', () => {
           description: 'Agent-driven change',
           prompt: './src/migrations/prompt-migration/prompt.md',
         },
+        'update-some-dep': {
+          version: '1.4.0',
+          implementation: './src/migrations/update-some-dep/update-some-dep',
+          requires: { 'some-dep': '>=2.0.0 <3.0.0' },
+          optionalUpdate: true,
+        },
       },
       packageJsonUpdates: {
         '1.2.0': {
@@ -48,6 +54,20 @@ describe('migrations-schema.json', () => {
 
   it('rejects a migration without an implementation, factory, or prompt', () => {
     expect(validate({ generators: { bad: { version: '1.0.0' } } })).toBe(false);
+  });
+
+  it('rejects an optional update migration without requires', () => {
+    expect(
+      validate({
+        generators: {
+          bad: {
+            version: '1.0.0',
+            implementation: './x',
+            optionalUpdate: true,
+          },
+        },
+      })
+    ).toBe(false);
   });
 
   it('rejects a packageJsonUpdate missing its packages', () => {

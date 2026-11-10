@@ -9,9 +9,8 @@ public static partial class TargetBuilder
 {
     private static void AddPackTarget(
         Dictionary<string, Target> targets,
-        string projectName,
         string fileName,
-        Dictionary<string, string> properties,
+        EvaluatedProperties properties,
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
@@ -19,8 +18,8 @@ public static partial class TargetBuilder
         List<string> directoryBuildInputs)
     {
         // The configuration MSBuild evaluated the paths at; the target runs at Release.
-        var defaultConfiguration = properties.GetValueOrDefault("Configuration");
-        var releaseProperties = WithConfiguration(properties, "Release");
+        var defaultConfiguration = properties.Configuration;
+        var releaseProperties = properties.WithConfiguration("Release");
 
         var packageOutputPath = GetPackageOutputPath(releaseProperties, defaultConfiguration, projectDirectory, workspaceRoot);
         // `dotnet pack` writes intermediate state into the intermediate (obj)
@@ -54,17 +53,17 @@ public static partial class TargetBuilder
             [
                 "default",
                 $"^{productionInput}",
-                "{workspaceRoot}/.editorconfig",
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
+                new { env = "NUGET_PACKAGES" },
                 .. directoryBuildInputs
             ],
             Outputs = new[]
                 {
                     packageOutputPath is null ? null : $"{packageOutputPath.TrimEnd('/')}/*.nupkg",
-                    intermediatePath
                 }
                 .Where(p => p is not null)
+                .Concat(GetIntermediateOutputs(intermediatePath))
                 .ToArray()!,
             Metadata = new TargetMetadata
             {

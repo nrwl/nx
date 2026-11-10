@@ -1,11 +1,11 @@
-import { Tree, readNxJson } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { isTypedLintingEnabled } from '@nx/eslint/internal';
 import { isUsingTsSolutionSetup, normalizeLinterOption } from '@nx/js/internal';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/internal';
+import { getDefaultUnitTestRunner } from '../../../utils/unit-test-runner';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
 export async function normalizeOptions(
@@ -13,30 +13,29 @@ export async function normalizeOptions(
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
   await ensureRootProjectName(options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  const {
+    projectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
-
-  const nxJson = readNxJson(tree);
-  const addPlugin =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
 
   return {
-    addPlugin,
     ...options,
     strict: options.strict ?? false,
-    appProjectName,
+    appProjectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     appProjectRoot,
     linter: await normalizeLinterOption(tree, options.linter),
-    unitTestRunner: options.unitTestRunner ?? 'jest',
+    unitTestRunner: options.unitTestRunner ?? getDefaultUnitTestRunner(tree),
     e2eTestRunner: options.e2eTestRunner ?? 'jest',
-    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionSetup(tree),
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 
@@ -54,11 +53,10 @@ export function toNodeApplicationGeneratorOptions(
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    enableTypedLinting: isTypedLintingEnabled(options),
+    enableTypedLinting: options.enableTypedLinting,
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
     isNest: true,
-    addPlugin: options.addPlugin,
     useProjectJson: options.useProjectJson,
   };
 }

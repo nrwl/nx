@@ -40,22 +40,10 @@ export function isUsingTypeScriptPlugin(tree: Tree): boolean {
 
 export function shouldConfigureTsSolutionSetup(
   tree: Tree,
-  addPlugins: boolean,
   addTsPlugin?: boolean
 ): boolean {
   if (addTsPlugin !== undefined) {
     return addTsPlugin;
-  }
-
-  if (addPlugins === undefined) {
-    const nxJson = readNxJson(tree);
-    addPlugins =
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      nxJson.useInferencePlugins !== false;
-  }
-
-  if (!addPlugins) {
-    return false;
   }
 
   if (!isUsingPackageManagerWorkspaces(tree)) {

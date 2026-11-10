@@ -9,6 +9,20 @@ app.use(async ctx =>{
     ctx.body = { 'message': 'Hello API'};
 });
 
-app.listen(port, host, () => {
+const server = app.listen(port, host, async () => {
     console.log(`[ ready ] http://${host}:${port}`);
+    // Set when Nx waits for this server to be ready
+    if (process.env.NX_READY_SIGNAL_SOCKET) {
+      try {
+        // Function keeps TypeScript and bundlers from rewriting or bundling the import
+        const load = new Function('s', 'return import(s)') as (s: string) => Promise<{ emitReadySignal(server: unknown): boolean }>;
+        (await load('@nx/js/ready-signal')).emitReadySignal(server);
+      } catch {
+        // @nx/js isn't installed
+      }
+    }
+});
+
+process.on('SIGTERM', () => {
+    server.close(() => process.exit(0));
 });

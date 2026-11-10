@@ -99,6 +99,7 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+!/.env
 !e2e/dotnet/.env
 # Editor directories and files
 .idea
@@ -154,6 +155,7 @@ packages/cypress/README.md
 packages/playwright/README.md
 packages/vite/README.md
 packages/webpack/README.md
+packages/rolldown/README.md
 packages/rollup/README.md
 packages/docker/README.md
 packages/gradle/README.md

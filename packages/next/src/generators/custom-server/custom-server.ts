@@ -17,6 +17,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 
+/** @deprecated Next.js discourages custom servers. Write your own server following the Next.js custom server guide instead. It will be removed in Nx v25. */
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
@@ -32,9 +33,9 @@ export async function customServerGenerator(
       : p.plugin === '@nx/next/plugin'
   );
 
-  if (project.targets?.build?.executor !== '@nx/next:build' && !hasPlugin) {
+  if (!hasPlugin) {
     logger.error(
-      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`
+      `The "@nx/next/plugin" plugin is not registered in nx.json. Did you generate ${options.project} with "nx g @nx/next:app"?`
     );
     return;
   }
@@ -42,19 +43,6 @@ export async function customServerGenerator(
   // In Nx 18 next artifacts are inside the project root .next/ & dist/ (for custom server)
   const outputPath = `dist/${project.root}-server`;
   const root = project.root;
-
-  if (
-    (!root ||
-      !outputPath ||
-      !project.targets?.build?.configurations?.development ||
-      !project.targets?.build?.configurations?.production) &&
-    !hasPlugin
-  ) {
-    logger.error(
-      `Project ${options.project} has invalid config. Did you generate it with "nx g @nx/next:app"?`
-    );
-    return;
-  }
 
   if (
     project.targets?.['build-custom-server'] ||
@@ -68,16 +56,13 @@ export async function customServerGenerator(
 
   // In Nx 18 next artifacts are inside the project root .next/ & dist/ (for custom server)
   // So we need ensure the mapping is correct from dist to the project root
-  const projectPathFromDist = hasPlugin
-    ? `../../${offsetFromRoot(project.root)}${project.root}`
-    : `${offsetFromRoot(`dist/${project.root}`)}${project.root}`;
+  const projectPathFromDist = `../../${offsetFromRoot(project.root)}${project.root}`;
 
   const offset = offsetFromRoot(project.root);
   const isTsSolution = isUsingTsSolutionSetup(host);
 
   generateFiles(host, join(__dirname, 'files'), project.root, {
     ...options,
-    hasPlugin,
     projectPathFromDist,
     offsetFromRoot: offset,
     projectRoot: project.root,
@@ -87,16 +72,9 @@ export async function customServerGenerator(
     tmpl: '',
   });
 
-  if (!hasPlugin) {
-    project.targets.build.dependsOn = ['build-custom-server'];
-    project.targets.serve.options.customServerTarget = `${options.project}:serve-custom-server`;
-    project.targets.serve.configurations.development.customServerTarget = `${options.project}:serve-custom-server:development`;
-    project.targets.serve.configurations.production.customServerTarget = `${options.project}:serve-custom-server:production`;
-  } else {
-    project.targets['build'] = {
-      dependsOn: ['^build', 'build-custom-server'],
-    };
-  }
+  project.targets['build'] = {
+    dependsOn: ['^build', 'build-custom-server'],
+  };
 
   project.targets['build-custom-server'] = {
     executor: options.compiler === 'tsc' ? '@nx/js:tsc' : '@nx/js:swc',
@@ -118,7 +96,10 @@ export async function customServerGenerator(
   };
 
   project.targets['serve-custom-server'] = {
+    continuous: true,
     executor: '@nx/js:node',
+    // The server template calls emitReadySignal once it listens
+    readyWhen: { signal: true },
     defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.project}:build-custom-server`,

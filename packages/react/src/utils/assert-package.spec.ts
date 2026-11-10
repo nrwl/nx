@@ -3,7 +3,7 @@ import { assertPackageIsInstalled } from './assert-package';
 describe('assertPackageIsInstalled', () => {
   it('should not throw when the package is resolvable', () => {
     expect(() =>
-      assertPackageIsInstalled('path', '@nx/react:module-federation-dev-server')
+      assertPackageIsInstalled('path', '@nx/next/plugins/component-testing')
     ).not.toThrow();
   });
 
@@ -11,10 +11,10 @@ describe('assertPackageIsInstalled', () => {
     expect(() =>
       assertPackageIsInstalled(
         '@nx/not-a-real-package',
-        '@nx/react:module-federation-dev-server'
+        '@nx/next/plugins/component-testing'
       )
     ).toThrow(
-      'The "@nx/not-a-real-package" package is required by "@nx/react:module-federation-dev-server" but is not installed. Please install it and try again.'
+      'The "@nx/not-a-real-package" package is required by "@nx/next/plugins/component-testing" but is not installed. Please install it and try again.'
     );
   });
 });

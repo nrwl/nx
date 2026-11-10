@@ -6,6 +6,10 @@ import path = require('path');
 
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
+import {
+  getLiveClientBerryEnv,
+  withTrustedBerryBinFolders,
+} from '../../../daemon/client/daemon-environment';
 import { serverLogger } from '../../../daemon/logger';
 import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { SOCKET_REFUSED_EXIT_CODE } from '../../../utils/socket-refused-exit-code';
@@ -20,10 +24,12 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { isSandbox } from '../../../utils/is-sandbox';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
+import { stubTerminalOutputs } from '../task-results-stub';
 import { waitForSocketConnection } from '../../../utils/wait-for-socket-connection';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { RawProjectGraphDependency } from '../../project-graph-builder';
 import { LoadedNxPlugin } from '../loaded-nx-plugin';
+import type { NxPluginCapabilities } from '../nx-plugin-capabilities';
 import type {
   CreateDependenciesContext,
   CreateMetadataContext,
@@ -104,6 +110,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   private worker: ChildProcess | null = null;
   private socket: Socket | null = null;
   private _alive = false;
+  private _released = false;
   private _connectPromise: Promise<LoadResultPayload> | null = null;
   private txId = 0;
   private pendingCount = 0;
@@ -149,9 +156,15 @@ export class IsolatedPlugin implements LoadedNxPlugin {
       index
     );
 
-    const loadResult = await instance.spawnAndConnect();
-    instance.setupHooks(loadResult);
-    return instance;
+    try {
+      const loadResult = await instance.spawnAndConnect();
+      instance.setupHooks(loadResult);
+      return instance;
+    } catch (e) {
+      // A timed-out worker is still running, and the caller is about to drop this instance.
+      instance.shutdown();
+      throw e;
+    }
   }
 
   private constructor(
@@ -167,6 +180,16 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     this.name = name;
     this.pluginPath = pluginPath;
     this.shouldRegisterTSTranspiler = shouldRegisterTSTranspiler;
+  }
+
+  capabilities(): NxPluginCapabilities {
+    return {
+      createNodesPattern: this.createNodes?.[0],
+      hasCreateDependencies: !!this.createDependencies,
+      hasCreateMetadata: !!this.createMetadata,
+      hasPreTasksExecution: !!this.preTasksExecution,
+      hasPostTasksExecution: !!this.postTasksExecution,
+    };
   }
 
   private async spawnAndConnect(): Promise<LoadResultPayload> {
@@ -370,7 +393,14 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         hook,
         async (...args: TArgs) => {
           await this.ensureAlive();
-          return hookFn(...args);
+          try {
+            return await hookFn(...args);
+          } finally {
+            // A released plugin still answers, then shuts its worker straight back down.
+            if (this._released) {
+              shutdown(hook);
+            }
+          }
         },
         () => shutdown(hook)
       );
@@ -439,7 +469,7 @@ export class IsolatedPlugin implements LoadedNxPlugin {
         this as { postTasksExecution: IsolatedPlugin['postTasksExecution'] }
       ).postTasksExecution = wrap('postTasksExecution', async (context) => {
         const result = await this.sendRequest('postTasksExecution', {
-          context,
+          context: stubTerminalOutputs(context),
         });
         if (result.success === false) {
           throw result.error;
@@ -520,6 +550,13 @@ export class IsolatedPlugin implements LoadedNxPlugin {
   }
 
   async setWorkerEnv(env: Record<string, string>): Promise<void> {
+    // A restart may have spawned under the previous client env but not yet
+    // finished loading. Wait for that worker so it receives the update too.
+    // Do not start a stopped worker solely to forward env: its next spawn
+    // will inherit the daemon's already-updated environment.
+    if (!this._alive && this._connectPromise) {
+      await this._connectPromise;
+    }
     if (!this._alive) {
       return;
     }
@@ -535,8 +572,19 @@ export class IsolatedPlugin implements LoadedNxPlugin {
     }
   }
 
+  /**
+   * Like `shutdown`, but for good: a later hook call still answers, then shuts
+   * the worker back down instead of leaving a respawned one running.
+   */
+  dispose(): void {
+    this._released = true;
+    this.shutdown();
+  }
+
   shutdown(): void {
-    if (!this._alive) return;
+    // Not `_alive`: that is only set once the worker answers a load, so gating
+    // on it would leave a worker that never got that far running.
+    if (!this.worker && !this.socket) return;
     this._alive = false;
     this._connectPromise = null;
 
@@ -604,8 +652,9 @@ async function startPluginWorker(name: string) {
     isWorkerTypescript ? 'plugin-worker.ts' : 'plugin-worker.js'
   );
 
-  const env: Record<string, string> = {
+  const env = withTrustedBerryBinFolders({
     ...process.env,
+    ...getLiveClientBerryEnv(),
     ...(isWorkerTypescript
       ? {
           SWC_NODE_PROJECT: path.join(
@@ -614,7 +663,7 @@ async function startPluginWorker(name: string) {
           ),
         }
       : {}),
-  };
+  });
 
   // Keep the host pid readable for diagnostics, the counter collision-free
   // within this process, and entropy for a reused pid across process runs. The

@@ -28,7 +28,6 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -36,7 +35,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
@@ -94,7 +93,6 @@ If we now come in and add a rule which does require type information, for exampl
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -102,7 +100,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
@@ -178,7 +176,6 @@ The solution is to update our config once more, this time to configure typed lin
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
-import reactPlugin from '@nx/react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -186,7 +183,7 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...reactPlugin,
+  ...nxPlugin.configs['flat/react'],
   ...compat.config({ extends: ['../../eslint.config.mjs'] }),
   { ignores: ['!**/*'] },
   {
@@ -285,8 +282,3 @@ parserOptions: {
 ```
 
 ESLint merges `parserOptions` across every config entry that matches a file, and typescript-eslint rejects a merged `parserOptions.project` next to `projectService`. Your config can pick one up from anywhere it extends, spreads in, or composes, so the block neutralizes it rather than guessing. Once you've checked that nothing your config pulls in sets `parserOptions.project`, you can delete the line.
-
-{% aside type="note" title="Deprecated flag" %}
-`--setParserOptionsProject` is the former name of this flag and still works, but it's deprecated and will be removed in Nx v24.
-Use `--enableTypedLinting` instead.
-{% /aside %}

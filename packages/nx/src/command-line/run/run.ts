@@ -24,6 +24,7 @@ import {
   createPseudoTerminal,
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
+import { signalReadyAtBaseUrl } from '../../tasks-runner/readiness/executor-ready-signal';
 import { exec } from 'child_process';
 
 export interface Target {
@@ -305,16 +306,18 @@ export function run(
     const projectsConfigurations =
       readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
-      await runExecutorInternal(
-        targetDescription,
-        overrides,
-        root,
-        cwd,
-        projectsConfigurations,
-        readNxJson(),
-        projectGraph,
-        taskGraph,
-        isVerbose
+      signalReadyAtBaseUrl(
+        await runExecutorInternal(
+          targetDescription,
+          overrides,
+          root,
+          cwd,
+          projectsConfigurations,
+          readNxJson(),
+          projectGraph,
+          taskGraph,
+          isVerbose
+        )
       )
     );
   });

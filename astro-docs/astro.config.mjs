@@ -6,7 +6,9 @@ import react from '@astrojs/react';
 import markdoc from '@astrojs/markdoc';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { sidebar } from './sidebar.mts';
+import { redirects } from './redirects.mjs';
 import rehypeTableOptionLinks from './src/plugins/utils/rehype-table-option-links.ts';
 import { resolveNxDevUrl } from './src/utils/resolve-nx-dev-url.ts';
 
@@ -42,54 +44,15 @@ export default defineConfig({
     },
   },
   markdown: {
-    rehypePlugins: [rehypeTableOptionLinks],
+    // Astro 7 defaults to Satteri. This plugin only runs on loader-generated
+    // markdown (the renderMarkdown path), so we stay on unified for it.
+    processor: unified({ rehypePlugins: [rehypeTableOptionLinks] }),
   },
+  // Astro 7 defaults this to 'jsx', which strips whitespace between inline
+  // elements and joins words together in prose.
+  compressHTML: true,
   trailingSlash: 'never',
-  redirects: {
-    '/concepts/inferred-tasks': '/docs/concepts/mental-model',
-    '/concepts/executors-and-configurations':
-      '/docs/kb/executors-and-configurations',
-    '/concepts/nx-daemon': '/docs/reference/nx-daemon',
-    '/guides/tips-n-tricks/define-environment-variables':
-      '/docs/reference/environment-variables#loading-environment-variables',
-    '/technologies/angular/guides/use-environment-variables-in-angular':
-      '/docs/reference/environment-variables#loading-environment-variables',
-    '/technologies/react/guides/use-environment-variables-in-react':
-      '/docs/reference/environment-variables#loading-environment-variables',
-    '/knowledge-base/installation': '/docs/kb/installation-and-updates',
-    '/kb/overview-react': '/docs/kb/storybook-for-react',
-    '/kb/project-graph-plugins': '/docs/kb/add-language-support',
-    '/kb/intro': '/docs/kb/add-language-support',
-    '/kb/tooling-plugin': '/docs/kb/add-language-support',
-    '/guides/nx-cloud/source-control-integration/github':
-      '/docs/features/ci-features/github-integration',
-    '/concepts/decisions/overview': '/docs/kb/monorepo-vs-polyrepo',
-    '/concepts/decisions/why-monorepos': '/docs/kb/what-is-a-monorepo',
-    '/features/maintain-typescript-monorepos':
-      '/docs/technologies/typescript/introduction',
-    '/guides/nx-cloud/ci-resource-usage':
-      '/docs/features/ci-features/resource-usage',
-    '/reference/remote-cache-plugins':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/s3-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/s3-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/gcs-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/gcs-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/azure-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/azure-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache/overview':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-    '/reference/remote-cache-plugins/shared-fs-cache/generators':
-      '/docs/reference/deprecated/self-hosted-cache-packages',
-  },
+  redirects,
   // This adapter doesn't support local previews, so only load it on Netlify.
   adapter: process.env['NETLIFY'] ? netlify() : undefined,
   integrations: [
@@ -97,13 +60,11 @@ export default defineConfig({
     // https://starlight.astro.build/reference/configuration/
     starlight({
       title: 'Nx',
-      tagline:
-        'Get to green PRs in half the time. Nx optimizes your builds, scales your CI, and fixes failed PRs. Built for developers and AI agents.',
       customCss: ['./src/styles/global.css'],
       favicon: '/favicon.svg',
       logo: {
-        light: './src/assets/nx/Nx-dark.png',
-        dark: './src/assets/nx/Nx-light.png',
+        light: './src/assets/nx/nx-lockup-light.svg',
+        dark: './src/assets/nx/nx-lockup-dark.svg',
         replacesTitle: true,
       },
       disable404Route: true,
@@ -180,6 +141,24 @@ if (h === "nx.dev") {
           attrs: {
             src: `${BASE}/global-scripts.js`,
             defer: true,
+          },
+        },
+        // Link unfurlers (Slack) skip SVG favicons and fall back to /favicon.ico.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            type: 'image/png',
+            sizes: '32x32',
+            href: `${BASE}/favicon-32x32.png`,
+          },
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'apple-touch-icon',
+            sizes: '180x180',
+            href: `${BASE}/apple-touch-icon.png`,
           },
         },
       ],

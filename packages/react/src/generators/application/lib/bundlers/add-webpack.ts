@@ -14,7 +14,6 @@ export async function initWebpack(
   const webpackInitTask = await webpackInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addPlugin: options.addPlugin,
   });
   tasks.push(webpackInitTask);
   if (!options.skipPackageJson) {

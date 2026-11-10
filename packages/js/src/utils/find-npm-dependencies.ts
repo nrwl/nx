@@ -1,4 +1,5 @@
 import { isAbsolute, join, relative } from 'path';
+import { prerelease, rcompare, valid } from 'semver';
 import {
   joinPathFragments,
   normalizePath,
@@ -15,6 +16,11 @@ import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '@nx/devkit/internal';
+
+const highestHelperVersions = new WeakMap<
+  NonNullable<ProjectGraph['externalNodes']>,
+  Map<string, string | undefined>
+>();
 
 /**
  * Finds all npm dependencies and their expected versions for a given project.
@@ -201,12 +207,10 @@ function collectHelperDependencies(
 ): void {
   if (runtimeHelpers?.length > 0) {
     for (const helper of runtimeHelpers) {
-      if (
-        !npmDeps[helper] &&
-        projectGraph.externalNodes[`npm:${helper}`]?.type === 'npm'
-      ) {
-        npmDeps[helper] =
-          projectGraph.externalNodes[`npm:${helper}`].data.version;
+      if (npmDeps[helper]) continue;
+      const version = findHelperVersion(projectGraph, sourceProject, helper);
+      if (version) {
+        npmDeps[helper] = version;
       }
     }
 
@@ -218,11 +222,11 @@ function collectHelperDependencies(
 
   if (target.executor === '@nx/js:tsc' && target.options?.tsConfig) {
     const tsConfig = readTsConfig(join(workspaceRoot, target.options.tsConfig));
-    if (
+    const version =
       tsConfig?.options['importHelpers'] &&
-      projectGraph.externalNodes['npm:tslib']?.type === 'npm'
-    ) {
-      npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+      findHelperVersion(projectGraph, sourceProject, 'tslib');
+    if (version) {
+      npmDeps['tslib'] = version;
     }
   }
   if (target.executor === '@nx/js:swc') {
@@ -232,12 +236,11 @@ function collectHelperDependencies(
     const swcConfig = fileExists(swcConfigPath)
       ? readJsonFile(swcConfigPath)
       : {};
-    if (
+    const version =
       swcConfig?.jsc?.externalHelpers &&
-      projectGraph.externalNodes['npm:@swc/helpers']?.type === 'npm'
-    ) {
-      npmDeps['@swc/helpers'] =
-        projectGraph.externalNodes['npm:@swc/helpers'].data.version;
+      findHelperVersion(projectGraph, sourceProject, '@swc/helpers');
+    if (version) {
+      npmDeps['@swc/helpers'] = version;
     }
   }
 
@@ -253,14 +256,60 @@ function collectHelperDependencies(
     );
     if (tsConfigPath) {
       const tsConfig = readTsConfig(tsConfigPath);
-      if (
+      const version =
         tsConfig?.options['importHelpers'] &&
-        projectGraph.externalNodes['npm:tslib']?.type === 'npm'
-      ) {
-        npmDeps['tslib'] = projectGraph.externalNodes['npm:tslib'].data.version;
+        findHelperVersion(projectGraph, sourceProject, 'tslib');
+      if (version) {
+        npmDeps['tslib'] = version;
       }
     }
   }
+}
+
+function findHelperVersion(
+  projectGraph: ProjectGraph,
+  sourceProject: ProjectGraphProjectNode,
+  helper: string
+): string | undefined {
+  const bareNode = projectGraph.externalNodes[`npm:${helper}`];
+  const bareLinkVersion = bareNode?.data.version.startsWith('link:')
+    ? bareNode.data.version
+    : undefined;
+  if (bareNode && !bareLinkVersion) {
+    return bareNode.type === 'npm' ? bareNode.data.version : undefined;
+  }
+  // A helper with several versions can have only versioned nodes, for
+  // example when the pnpm root importer does not declare it, and an outside
+  // `link:` can then hold the bare name. Prefer the version that the project
+  // depends on, else the highest registry version, else the link.
+  const isHelperNode = (name: string) =>
+    projectGraph.externalNodes[name]?.type === 'npm' &&
+    projectGraph.externalNodes[name].data.packageName === helper;
+  const projectDependency = projectGraph.dependencies[sourceProject.name]?.find(
+    (dependency) => isHelperNode(dependency.target)
+  );
+  if (projectDependency) {
+    return projectGraph.externalNodes[projectDependency.target].data.version;
+  }
+  let versions = highestHelperVersions.get(projectGraph.externalNodes);
+  if (!versions) {
+    versions = new Map();
+    highestHelperVersions.set(projectGraph.externalNodes, versions);
+  }
+  if (!versions.has(helper)) {
+    const candidates = Object.keys(projectGraph.externalNodes)
+      .filter(isHelperNode)
+      .map((name) => projectGraph.externalNodes[name].data.version)
+      .filter((version) => valid(version) !== null)
+      .sort(rcompare);
+    // A stable version wins over a prerelease.
+    versions.set(
+      helper,
+      candidates.find((version) => prerelease(version) === null) ??
+        candidates[0]
+    );
+  }
+  return versions.get(helper) ?? bareLinkVersion;
 }
 
 function resolveTsConfigForRunCommandsTarget(

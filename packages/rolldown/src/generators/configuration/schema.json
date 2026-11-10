@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRolldownConfiguration",
+  "cli": "nx",
+  "title": "Add Rolldown Configuration to a project",
+  "description": "Add Rolldown Configuration to a project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-dropdown": "project",
+      "x-prompt": "What is the name of the project to set up Rolldown for?",
+      "x-priority": "important"
+    },
+    "main": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the entry file. Defaults to `<projectRoot>/src/main.ts` if it exists, otherwise `<projectRoot>/src/index.ts`.",
+      "alias": "entryFile",
+      "x-priority": "important"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the output directory. Defaults to `<projectRoot>/dist` in TypeScript solution workspaces, otherwise `dist/<projectRoot>`."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the tsconfig file used to resolve TypeScript options. Defaults to `<projectRoot>/tsconfig.app.json` or `<projectRoot>/tsconfig.lib.json`, whichever exists."
+    },
+    "format": {
+      "type": "string",
+      "enum": ["esm", "cjs"],
+      "description": "The output module format.",
+      "default": "esm"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["node", "browser", "neutral"],
+      "description": "The platform to bundle for.",
+      "default": "node"
+    },
+    "externalDependencies": {
+      "type": "boolean",
+      "description": "Leave `dependencies` from package.json out of the bundle so they load from `node_modules` at runtime. Defaults to `true` for the `node` platform."
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    }
+  },
+  "required": ["project"]
+}

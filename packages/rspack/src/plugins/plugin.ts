@@ -1,12 +1,13 @@
 import {
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashFile,
   hashObject,
   workspaceDataDirectory,
 } from '@nx/devkit/internal';
+import { sendsReadySignal } from '../utils/dev-server-ready-signal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -17,6 +18,9 @@ import {
   workspaceRoot,
   hashArray,
   getPackageManagerCommand,
+  TargetConfiguration,
+  normalizePath,
+  joinPathFragments,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import {
@@ -25,8 +29,16 @@ import {
   shouldIncludePnpmMajorRuntimeInput,
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
-import { existsSync, readdirSync } from 'fs';
-import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
+import { readdirSync } from 'fs';
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
 export interface RspackPluginOptions {
@@ -39,10 +51,6 @@ export interface RspackPluginOptions {
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
-
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const rspackConfigGlob = '**/rspack.config.{js,ts,mjs,mts,cjs,cts}';
 
@@ -204,6 +212,15 @@ async function createRspackTargets(
     });
   }
 
+  const buildInputs: TargetConfiguration['inputs'] = [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['@rspack/cli'],
+    },
+  ];
+
   targets[options.buildTargetName] = {
     command: `rspack build`,
     options: {
@@ -219,12 +236,7 @@ async function createRspackTargets(
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['@rspack/cli'],
-      },
+      ...buildInputs,
       // The build can emit a pruned pnpm deploy output (NxAppRspackPlugin
       // with generatePackageJson), whose install settings come from these
       // otherwise-unhashed root sources.
@@ -237,34 +249,45 @@ async function createRspackTargets(
     outputs,
   };
 
+  const devServerReadyWhen = getDevServerReadyWhen(
+    configFilePath,
+    rspackOptions
+  );
+
   targets[options.serveTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
       args: ['--node-env=development'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.previewTargetName] = {
     continuous: true,
+    inputs: [...buildInputs],
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
       args: ['--node-env=production'],
       env,
     },
+    readyWhen: devServerReadyWhen,
   };
 
   targets[options.serveStaticTargetName] = {
     dependsOn: [`${options.buildTargetName}`],
     continuous: true,
+    inputs: [...buildInputs],
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
       spa: true,
     },
+    readyWhen: { signal: true },
   };
 
   // for `convert-to-inferred` we need to leave the port undefined or the options will not match
@@ -325,16 +348,35 @@ function normalizeOutputPath(
        * If outputPath is absolute, we need to resolve it relative to the workspaceRoot first.
        * After that, we can use the relative path to the workspaceRoot token {workspaceRoot} to generate the output path.
        */
-      return `{workspaceRoot}/${relative(
-        workspaceRoot,
-        resolve(workspaceRoot, outputPath)
+      return `{workspaceRoot}/${normalizePath(
+        relative(workspaceRoot, resolve(workspaceRoot, outputPath))
       )}`;
     } else {
       if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
+        return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);
       } else {
-        return join('{projectRoot}', outputPath);
+        return joinPathFragments('{projectRoot}', outputPath);
       }
     }
   }
+}
+
+// A dev server whose config loads NxAppRspackPlugin, NxReadySignalPlugin or
+// @nx/angular-rspack's NgRspackPlugin reports when it listens. Otherwise the
+// check reads the config when the task runs, with the task's env and options,
+// and waits for the dev server's port.
+function getDevServerReadyWhen(
+  configFilePath: string,
+  configs: { devServer?: unknown; plugins?: unknown[] }[]
+): TargetConfiguration['readyWhen'] {
+  // `rspack serve` starts one dev server, for the first config with devServer
+  const signals = sendsReadySignal(
+    configs.find((config) => config.devServer) ?? configs[0] ?? {}
+  );
+  return signals
+    ? { signal: true }
+    : getReadyCheckReadyWhen(
+        '@nx/rspack/ready-check',
+        basename(configFilePath)
+      );
 }

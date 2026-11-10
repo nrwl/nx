@@ -22,10 +22,10 @@ You answer two questions about a PR's relationship to the documentation. **Cover
 The code under review is reached ONLY through the `sandbox` CLI, run from the repo root:
 
 ```bash
-.claude/tools/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
-.claude/tools/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
-.claude/tools/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
-.claude/tools/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
+tools/review-sandbox/sandbox read <SANDBOX> <path> [--range a,b] [--ref base]
+tools/review-sandbox/sandbox grep <SANDBOX> <pattern> [subdir] [--ref base]
+tools/review-sandbox/sandbox find <SANDBOX> <glob> [subdir] [--ref base]
+tools/review-sandbox/sandbox diff <SANDBOX> [--name-only] [-- <path>...]   # base..HEAD tree difference,
                                                                      # read-only; NOT the PR's diff
 ```
 
@@ -73,9 +73,9 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
 1. **Read the rules from the PR checkout, not from memory.** The rules are versioned files and this PR may even change them; what you enforce is what the repo will contain after merge:
 
    ```bash
-   .claude/tools/sandbox read <SANDBOX> astro-docs/STYLE_GUIDE.md
-   .claude/tools/sandbox grep <SANDBOX> '## Documentation Contributions' CLAUDE.md
-   .claude/tools/sandbox read <SANDBOX> astro-docs/README.md
+   tools/review-sandbox/sandbox read <SANDBOX> astro-docs/STYLE_GUIDE.md
+   tools/review-sandbox/sandbox grep <SANDBOX> '## Documentation Contributions' CLAUDE.md
+   tools/review-sandbox/sandbox read <SANDBOX> astro-docs/README.md
    ```
 
    Read `STYLE_GUIDE.md` in full — voice rules, terminology table, link rules, and the "Structural anti-AI rules" section all produce findings Vale never will. On a diff that changes no docs file, skip this full read — the coverage check (step 5) doesn't need it.
@@ -90,17 +90,18 @@ So do not pad the count, and do not shrink it. **Never soften a finding into a s
    - **Internal links and anchors.** For changed/added internal links, confirm the target page exists in the checkout; after a restructure, confirm inbound anchors still match real headings (`sandbox grep <SANDBOX> "<old-anchor>" astro-docs/src/content`).
 
 4. **Check the committed content rules on every changed page:**
-   - **Information architecture (new or moved pages only)** — the style guide's five rules: journey stage matches the section, siblings share a content type, learning vs lookup placement, the pen-and-paper test for concept pages, universal vs technology-specific placement.
+   - **Information architecture (new or moved pages only)** — the style guide's six rules: journey stage matches the section, siblings share a content type, learning vs lookup placement, universal vs technology-specific placement, golden path, one page per feature.
    - **Golden path** — feature pages teach one default workflow; flags appear only at a real decision point; deprecated options are removed, not deprecation-noted, when a replacement exists.
    - **Claim calibration** — no unsupportable absolutes ("will not introduce issues"); claims match the evidence the page actually shows. Compat/support claims about third-party versions must be verifiable — flag any that the PR does not source.
    - **Terminology** — the style guide's table ("workspace" not "monorepo" where prescribed, product capitalization, no renamed-away terms outside migration context).
    - **Voice and anti-AI rules** — the guide's "Structural anti-AI rules" and "Anti-AI language" sections: one canonical home per point, no restatement closers, no drama-beat echoes, rationed colon-expansion and balanced-contrast constructions, varied bullet structure.
    - **Mechanics the guide fixes precisely** — sentence-case headings, frontmatter title not duplicated as an h1, bold reserved for UI labels/term definitions, link-text rules, no obvious asides that restate the surrounding prose.
+   - **Personas** — follow "Phase 3: Persona check" in `.claude/skills/check-docs-style/SKILL.md`, reading that skill and the persona files with `--ref base`. Persona flags are advisory, so they go under `**Persona check:**` with the persona, the rule broken and the correction, and they don't count toward `TIERS`.
 
 5. **Check docs coverage of the code change (every PR).** From the non-docs part of the diff, list the user-facing surface it alters: CLI flags and commands, generator/executor options (`schema.json`), `nx.json`/`project.json` config keys, `NX_*` environment variables, changed defaults, renamed or removed APIs, deprecations. For each, grep the prose docs for it:
 
    ```bash
-   .claude/tools/sandbox grep <SANDBOX> "<surface-token>" astro-docs/src/content/docs
+   tools/review-sandbox/sandbox grep <SANDBOX> "<surface-token>" astro-docs/src/content/docs
    ```
 
    - A prose page (guide, concept, feature, recipe) describes the **old** behavior and this PR does not update it → stale docs, report it, naming the page(s).
@@ -159,6 +160,8 @@ If both a coverage gap and a compliance problem exist, report the more severe ve
 **Pre-existing:** <one line per defect that reproduces unchanged at base; "none" if 0>
 
 - **<file:line>** — <defect>. Present at base <path>:<line>.
+
+**Persona check:** <`n/a` when no docs page changed; otherwise personas matched, then one line per flag: persona, file:line, rule broken, correction; or `Flags: none`>
 
 **Suggestions:** <the same count as TIERS suggestions=, then one line each; "none" if 0>
 ```

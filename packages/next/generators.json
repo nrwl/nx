@@ -36,7 +36,8 @@
     "custom-server": {
       "factory": "./dist/src/generators/custom-server/custom-server#customServerGenerator",
       "schema": "./dist/src/generators/custom-server/schema.json",
-      "description": "Set up a custom server."
+      "description": "Set up a custom server.",
+      "x-deprecated": "Next.js discourages custom servers. Write your own server following https://nextjs.org/docs/app/guides/custom-server instead. It will be removed in Nx v25."
     },
     "cypress-component-configuration": {
       "factory": "./dist/src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",

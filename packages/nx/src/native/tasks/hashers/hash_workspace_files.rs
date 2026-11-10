@@ -3,10 +3,11 @@ use std::sync::Arc;
 use rayon::prelude::*;
 
 use super::once_cache::OnceCache;
-use crate::native::glob::build_glob_set;
 use crate::native::glob::glob_files::glob_files;
+use crate::native::glob::{NxGlobSet, build_glob_set, fileset_patterns};
 use crate::native::hasher::hash;
 use crate::native::types::FileData;
+use crate::native::utils::Normalize;
 use anyhow::*;
 use tracing::{debug, debug_span, trace, warn};
 
@@ -59,12 +60,33 @@ pub fn globs_from_workspace_globs(workspace_file_sets: &[String]) -> Vec<String>
         .collect()
 }
 
+/// The files `glob` matches, with their index into `files`, in workspace-file
+/// order. A set with a literal prefix matches only paths under it, so a string
+/// comparison skips the matcher for every other file.
+fn matching_files<'a>(
+    glob: &'a NxGlobSet,
+    files: &'a [FileData],
+) -> impl Iterator<Item = (usize, &'a FileData)> + 'a {
+    let prefix = glob
+        .literal_prefix()
+        .map(|prefix| prefix.to_normalized_string());
+    files.iter().enumerate().filter(move |(_, file)| {
+        prefix.as_deref().is_none_or(|prefix| {
+            file.file == prefix
+                || file
+                    .file
+                    .strip_prefix(prefix)
+                    .is_some_and(|rest| rest.starts_with('/'))
+        }) && glob.is_match(&file.file)
+    })
+}
+
 pub fn get_workspace_files<'a, 'b>(
     workspace_file_sets: &'a [String],
     all_workspace_files: &'b [FileData],
 ) -> napi::Result<impl ParallelIterator<Item = &'b FileData>> {
     let globs = globs_from_workspace_globs(workspace_file_sets);
-    glob_files(all_workspace_files, globs, None)
+    glob_files(all_workspace_files, build_glob_set(&globs)?, None)
 }
 
 /// Hashes workspace files without materializing the matched file list.
@@ -78,15 +100,12 @@ pub fn hash_workspace_files(
         return Ok(hash(b""));
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
 
     debug_span!("Hashing workspace fileset").in_scope(|| {
-        for file in all_workspace_files
-            .iter()
-            .filter(|file| glob.is_match(&file.file))
-        {
+        for (_, file) in matching_files(&glob, all_workspace_files) {
             debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
             hasher.update(file.file.as_bytes());
             hasher.update(file.hash.as_bytes());
@@ -120,12 +139,10 @@ pub fn collect_workspace_file_paths(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
-    Ok(all_workspace_files
-        .iter()
-        .filter(|file| glob.is_match(&file.file))
-        .map(|file| file.file.clone())
+    Ok(matching_files(&glob, all_workspace_files)
+        .map(|(_, file)| file.file.clone())
         .collect())
 }
 
@@ -141,12 +158,9 @@ fn collect_workspace_file_indices(
         return Ok(vec![]);
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = build_glob_set(&fileset_patterns(&globs))?;
 
-    Ok(all_workspace_files
-        .iter()
-        .enumerate()
-        .filter(|(_, file)| glob.is_match(&file.file))
+    Ok(matching_files(&glob, all_workspace_files)
         .map(|(i, _)| i as u32)
         .collect())
 }
@@ -281,6 +295,41 @@ mod test {
             collect_workspace_file_paths(&["packages/{package}".to_string()], &all_workspace_files)
                 .unwrap();
         assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn should_collect_files_under_a_literal_directory_prefix() {
+        let all_workspace_files: Vec<FileData> = [
+            "libs/ui/.storybook/main.ts",
+            "libs/ui/src/button.stories.tsx",
+            "libs/ui/tsconfig.storybook.json",
+            "libs/ui-kit/src/card.stories.tsx",
+            "libs/uix/tsconfig.storybook.json",
+        ]
+        .into_iter()
+        .map(|file| FileData {
+            file: file.into(),
+            hash: "h".into(),
+        })
+        .collect();
+
+        let paths = collect_workspace_file_paths(
+            &[
+                "{workspaceRoot}/libs/ui/**/*.stories.tsx".to_string(),
+                "{workspaceRoot}/libs/ui/.storybook/**/*".to_string(),
+                "{workspaceRoot}/libs/ui/tsconfig.storybook.json".to_string(),
+            ],
+            &all_workspace_files,
+        )
+        .unwrap();
+        assert_eq!(
+            paths,
+            vec![
+                "libs/ui/.storybook/main.ts",
+                "libs/ui/src/button.stories.tsx",
+                "libs/ui/tsconfig.storybook.json",
+            ]
+        );
     }
 
     #[test]

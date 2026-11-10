@@ -1,5 +1,4 @@
-import { existsSync, statSync } from 'fs';
-import { basename, dirname, join, resolve } from 'path';
+import { basename } from 'path';
 import {
   baseEslintConfigFilenames,
   eslintFlatConfigFilenames,
@@ -26,68 +25,4 @@ export function isFlatConfig(configFilePath: string): boolean {
   const configFileName = basename(configFilePath);
 
   return ESLINT_FLAT_CONFIG_FILENAMES.includes(configFileName);
-}
-
-// https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-resolution
-export function findFlatConfigFile(
-  directory: string,
-  workspaceRoot: string
-): string | null {
-  let currentDir = resolve(workspaceRoot, directory);
-
-  while (true) {
-    const configFilePath = getConfigFileInDirectory(
-      currentDir,
-      ESLINT_FLAT_CONFIG_FILENAMES
-    );
-    if (configFilePath) {
-      return configFilePath;
-    }
-    if (currentDir === workspaceRoot) {
-      break;
-    }
-    currentDir = dirname(currentDir);
-  }
-
-  return null;
-}
-
-export function findOldConfigFile(
-  filePathOrDirectory: string,
-  workspaceRoot: string
-): string | null {
-  let currentDir = resolve(workspaceRoot, filePathOrDirectory);
-  if (!statSync(currentDir).isDirectory()) {
-    currentDir = dirname(currentDir);
-  }
-
-  while (true) {
-    const configFilePath = getConfigFileInDirectory(
-      currentDir,
-      ESLINT_OLD_CONFIG_FILENAMES
-    );
-    if (configFilePath) {
-      return configFilePath;
-    }
-    if (currentDir === workspaceRoot) {
-      break;
-    }
-    currentDir = dirname(currentDir);
-  }
-
-  return null;
-}
-
-function getConfigFileInDirectory(
-  directory: string,
-  candidateFileNames: string[]
-): string | null {
-  for (const filename of candidateFileNames) {
-    const filePath = join(directory, filename);
-    if (existsSync(filePath)) {
-      return filePath;
-    }
-  }
-
-  return null;
 }

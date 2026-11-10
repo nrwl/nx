@@ -1,3 +1,13 @@
+/**
+ * Directory guards for Nx's runtime state: create a directory only when it is
+ * ours and unreachable by other users on this machine.
+ *
+ * `native/utils/owned_dir.rs` implements the same rules and must change with
+ * this file. This copy exists because the native binding loader has to place
+ * and lock down the `.node` before Rust can be called, and `cache-directory.ts`,
+ * `git-utils.ts` and `nx-tmp-dir.ts` share it. Node builtins only, for the
+ * loader's sake.
+ */
 import {
   closeSync,
   constants,
@@ -6,12 +16,12 @@ import {
   lstatSync,
   mkdirSync,
   openSync,
-  statSync,
+  readlinkSync,
   type Stats,
   realpathSync,
 } from 'node:fs';
 import { userInfo } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 
 // Phantom brands: each guard's success arm carries its own, so one guard's
 // verdict cannot be passed where another's is expected.
@@ -47,18 +57,21 @@ export type OwnedPrivateDir = string & {
   readonly [ownedPrivateDirBrand]: true;
 };
 
-/** Why a guard refused a directory. Data, not a sentence: `remedyFor` decides on it. */
+/** Why a guard refused a directory. Data, not a sentence. */
 export type DirRefusal =
   | { kind: 'not-created'; dir: string; code?: string }
   | { kind: 'not-inspectable'; dir: string; code?: string }
   | { kind: 'not-a-directory'; dir: string; symlink?: true }
   // Separate kinds, not one with a flag: which advice is correct turns on which
-  // directory was refused, so it has to be the discriminant `remedyFor` branches
-  // on. Root can take over the shared container; it cannot help with a per-user
-  // directory.
+  // directory was refused, so it has to be the discriminant `remedy_for` (now in
+  // native/utils/owned_dir.rs) branches on. Root can take over the shared
+  // container; it cannot help with a per-user directory, and should not be asked
+  // to open up an arbitrary level above a configured one.
   | { kind: 'foreign-owner'; dir: string; uid: number }
   | { kind: 'foreign-shared-container'; dir: string; uid: number }
+  | { kind: 'foreign-ancestor'; dir: string; uid: number }
   | { kind: 'not-tightenable'; dir: string; mode: number }
+  | { kind: 'not-private'; dir: string; mode: number }
   | { kind: 'peer-writable-not-sticky'; dir: string; mode: number };
 
 /** A guard's verdict. */
@@ -100,10 +113,14 @@ export function describeRefusal(r: DirRefusal): string {
       return `${r.dir} is owned by uid ${r.uid}, not by you`;
     case 'foreign-shared-container':
       return `${r.dir} belongs to another user (uid ${r.uid}) rather than to you or to root`;
+    case 'foreign-ancestor':
+      return `${r.dir} sits above the configured directory and belongs to another user (uid ${r.uid}) rather than to you or to root`;
     case 'not-tightenable':
       return `${r.dir} is reachable by other users (mode ${asMode(
         r.mode
       )}) and could not be tightened to 0700`;
+    case 'not-private':
+      return `${r.dir} is reachable by other users (mode ${asMode(r.mode)})`;
     case 'peer-writable-not-sticky':
       return `${r.dir} is writable by other users but not sticky (mode ${asMode(
         r.mode
@@ -117,48 +134,6 @@ export function describeRefusal(r: DirRefusal): string {
       throw new Error(
         `Unhandled directory refusal: ${(unhandled as any).kind}`
       );
-    }
-  }
-}
-
-/** Single-quoted for a shell, so a path with a space or quote survives a paste. */
-const shellQuote = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
-
-/** What the user can do about a refusal, or `undefined` when there is nothing. */
-export function remedyFor(r: DirRefusal): string | undefined {
-  switch (r.kind) {
-    case 'not-a-directory':
-      return r.symlink
-        ? `${r.dir} is a symlink where Nx expects a directory. If you did not create it, treat it as hostile: remove the link itself (not what it points at) and run the command again.`
-        : undefined;
-    case 'foreign-owner':
-      return `${r.dir} belongs to another user on this machine, so Nx cannot keep its own directory there. Set NX_SOCKET_DIR to a short directory your user owns, or move it aside — which you can do yourself if you own the directory it sits in, and otherwise needs an administrator.`;
-    case 'not-tightenable':
-      // Both producers reach here having already established that the directory
-      // is ours, so `chmod` is the user's to run. Names no cause: one producer
-      // is a mount that discards the mode, the other is any `chmod` failure.
-      return `${r.dir} is reachable by other users (mode ${asMode(
-        r.mode
-      )}) and Nx could not restrict it. Run \`chmod 0700 ${shellQuote(
-        r.dir
-      )}\` and try again; if the mode does not stick, set NX_SOCKET_DIR to a short directory on a filesystem that keeps POSIX permissions.`;
-    case 'foreign-shared-container':
-      // Unreachable today: `isSafeSharedRoot` denies with this kind only when
-      // `stats.uid !== 0`, so a root-owned container never reaches here.
-      if (r.uid === 0) {
-        return undefined;
-      }
-      const q = shellQuote(r.dir);
-      return `${r.dir} belongs to another user on this machine, so Nx cannot keep a private directory beneath it. Ask an administrator to hand it to root with \`sudo chown root ${q} && sudo chmod 1777 ${q}\`; every user can then keep their own directory under it.`;
-    case 'not-created':
-    case 'not-inspectable':
-    case 'peer-writable-not-sticky':
-      return undefined;
-    default: {
-      // Matches `describeRefusal`'s arm, so a new kind cannot ship with a
-      // sentence and no advice — which is how `not-tightenable` went unadvised.
-      const unhandled: never = r;
-      return undefined;
     }
   }
 }
@@ -283,30 +258,6 @@ export function isSafeSharedRoot(dir: string): GuardResult<SafeSharedRoot> {
 }
 
 /**
- * Whether other users on this machine can write into `dir`. Gates whether a
- * refusal message may cite other users, so it must not over-report: `false` on
- * Windows, where libuv synthesizes `st_mode` from the READONLY attribute and
- * reports an ordinary per-account directory as `0666`, and `false` on a path
- * that cannot be inspected.
- *
- * `statSync`, not `lstatSync`: the question is about the directory that will be
- * used, not the link pointing at it. Link modes mislead in both directions —
- * Linux creates symlinks `0777`, macOS applies the umask. Nothing here decides
- * whether a path is accepted, so following the link costs nothing the guards
- * do not already re-check.
- */
-export function isPeerWritable(dir: string): boolean {
-  if (process.platform === 'win32') {
-    return false;
-  }
-  try {
-    return !!(statSync(dir).mode & 0o022);
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Create a shared container as sticky + world-writable if it does not exist,
  * and report whether the resulting path is safe for the current user.
  *
@@ -366,6 +317,154 @@ export function isOwnedRealDirectory(dir: string): OwnedRealDir | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The verdict of `ensureOwnedPrivateDir` with nothing created and nothing
+ * re-locked, for callers about to trust what is already inside. Tightening a
+ * directory that was open a moment ago says nothing about who filled it.
+ */
+export function isOwnedPrivateDir(dir: string): GuardResult<OwnedPrivateDir> {
+  try {
+    const stats = lstatSync(dir);
+    if (!stats.isDirectory()) {
+      return deny(notADirectory(dir, stats));
+    }
+    if (typeof process.getuid !== 'function') {
+      return allow(dir as OwnedPrivateDir);
+    }
+    if (stats.uid !== process.getuid()) {
+      return deny({ kind: 'foreign-owner', dir, uid: stats.uid });
+    }
+    return stats.mode & 0o077
+      ? deny({ kind: 'not-private', dir, mode: stats.mode })
+      : allow(dir as OwnedPrivateDir);
+  } catch (e: any) {
+    return deny({ kind: 'not-inspectable', dir, code: e?.code });
+  }
+}
+
+/** The kernel's own limit on links followed in one lookup. */
+const MAX_LINKS = 40;
+
+/**
+ * Whether a level above a configured directory is safe to look the next name up
+ * in. Owned by us or root, and not writable by other users unless sticky. Group
+ * write on a level of ours is the user's own grant and is accepted.
+ */
+function isSafeAncestor(dir: string, stats: Stats): DirRefusal | null {
+  const ours = stats.uid === process.getuid!();
+  if (!ours && stats.uid !== 0) {
+    return { kind: 'foreign-ancestor', dir, uid: stats.uid };
+  }
+  const peerWrite = ours ? 0o002 : 0o022;
+  return !(stats.mode & peerWrite) || stats.mode & S_ISVTX
+    ? null
+    : { kind: 'peer-writable-not-sticky', dir, mode: stats.mode };
+}
+
+/**
+ * Walked one name at a time from the filesystem root rather than canonicalized:
+ * each name is looked up only in a level already judged, and a link is followed
+ * only when it is ours or root's.
+ */
+function walkAncestry(dir: string, create: boolean): DirRefusal | null {
+  if (typeof process.getuid !== 'function') {
+    if (create) {
+      try {
+        mkdirSync(dir, { recursive: true });
+      } catch (e: any) {
+        return { kind: 'not-created', dir, code: e?.code };
+      }
+    }
+    return null;
+  }
+
+  let judged: string = sep;
+  try {
+    const refusal = isSafeAncestor(judged, lstatSync(judged));
+    if (refusal) {
+      return refusal;
+    }
+  } catch (e: any) {
+    return { kind: 'not-inspectable', dir: judged, code: e?.code };
+  }
+
+  const pending = resolve(dir).split(sep).filter(Boolean);
+  let links = 0;
+  while (pending.length) {
+    const name = pending.shift()!;
+    if (name === '.') {
+      continue;
+    }
+    if (name === '..') {
+      judged = dirname(judged);
+      continue;
+    }
+
+    const next = join(judged, name);
+    if (create) {
+      try {
+        // An explicit mode, so a level made under umask `000` is not
+        // world-writable and refused by the check below.
+        mkdirSync(next, { mode: 0o755 });
+      } catch (e: any) {
+        if (e?.code !== 'EEXIST') {
+          return { kind: 'not-created', dir: next, code: e?.code };
+        }
+      }
+    }
+
+    let stats: Stats;
+    try {
+      stats = lstatSync(next);
+    } catch (e: any) {
+      return { kind: 'not-inspectable', dir: next, code: e?.code };
+    }
+    if (stats.isDirectory()) {
+      const refusal = isSafeAncestor(next, stats);
+      if (refusal) {
+        return refusal;
+      }
+      judged = next;
+      continue;
+    }
+    if (
+      !stats.isSymbolicLink() ||
+      (stats.uid !== process.getuid() && stats.uid !== 0) ||
+      ++links > MAX_LINKS
+    ) {
+      return notADirectory(next, stats);
+    }
+
+    let target: string;
+    try {
+      target = readlinkSync(next);
+    } catch (e: any) {
+      return { kind: 'not-inspectable', dir: next, code: e?.code };
+    }
+    if (isAbsolute(target)) {
+      judged = sep;
+    }
+    pending.unshift(...target.split(sep).filter(Boolean));
+  }
+  return null;
+}
+
+/**
+ * Create `dir` and any missing level above it, judging every level from the
+ * filesystem root down. For a location the user configured, where any level
+ * may have been created first by someone else.
+ */
+export function ensureSafeAncestry(dir: string): GuardResult<string> {
+  const refusal = walkAncestry(dir, true);
+  return refusal ? deny(refusal) : allow(dir);
+}
+
+/** `ensureSafeAncestry` without creating anything, for the delete path. */
+export function isSafeAncestry(dir: string): GuardResult<string> {
+  const refusal = walkAncestry(dir, false);
+  return refusal ? deny(refusal) : allow(dir);
 }
 
 /** The path segment separating one user's Nx runtime state from another's. */

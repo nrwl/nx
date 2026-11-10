@@ -1,10 +1,10 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgeBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
-  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
@@ -21,10 +21,7 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
 export function reactNativeInitGenerator(host: Tree, schema: Schema) {
-  return reactNativeInitGeneratorInternal(host, {
-    addPlugin: false,
-    ...schema,
-  });
+  return reactNativeInitGeneratorInternal(host, schema);
 }
 
 export async function reactNativeInitGeneratorInternal(
@@ -35,65 +32,57 @@ export async function reactNativeInitGeneratorInternal(
 
   addGitIgnoreEntry(host);
 
-  const nxJson = readNxJson(host);
-  const addPluginDefault =
-    process.env.NX_ADD_PLUGINS !== 'false' &&
-    nxJson.useInferencePlugins !== false;
-  schema.addPlugin ??= addPluginDefault;
+  await addPlugin(
+    host,
+    await createProjectGraphAsync(),
+    '@nx/react-native/plugin',
+    createNodesV2,
+    {
+      startTargetName: ['start', 'react-native:start', 'react-native-start'],
+      upgradeTargetName: [
+        'update',
+        'react-native:update',
+        'react-native-update',
+      ],
+      bundleTargetName: [
+        'bundle',
+        'react-native:bundle',
+        'react-native-bundle',
+      ],
 
-  if (schema.addPlugin) {
-    await addPlugin(
-      host,
-      await createProjectGraphAsync(),
-      '@nx/react-native/plugin',
-      createNodesV2,
-      {
-        startTargetName: ['start', 'react-native:start', 'react-native-start'],
-        upgradeTargetName: [
-          'update',
-          'react-native:update',
-          'react-native-update',
-        ],
-        bundleTargetName: [
-          'bundle',
-          'react-native:bundle',
-          'react-native-bundle',
-        ],
-
-        podInstallTargetName: [
-          'pod-install',
-          'react-native:pod-install',
-          'react-native-pod-install',
-        ],
-        runIosTargetName: [
-          'run-ios',
-          'react-native:run-ios',
-          'react-native-run-ios',
-        ],
-        runAndroidTargetName: [
-          'run-android',
-          'react-native:run-android',
-          'react-native-run-android',
-        ],
-        buildIosTargetName: [
-          'build-ios',
-          'react-native:build-ios',
-          'react-native-build-ios',
-        ],
-        buildAndroidTargetName: [
-          'build-android',
-          'react-native:build-android',
-          'react-native-build-android',
-        ],
-        syncDepsTargetName: [
-          'sync-deps',
-          'react-native:sync-deps',
-          'react-native-sync-deps',
-        ],
-      },
-      schema.updatePackageScripts
-    );
-  }
+      podInstallTargetName: [
+        'pod-install',
+        'react-native:pod-install',
+        'react-native-pod-install',
+      ],
+      runIosTargetName: [
+        'run-ios',
+        'react-native:run-ios',
+        'react-native-run-ios',
+      ],
+      runAndroidTargetName: [
+        'run-android',
+        'react-native:run-android',
+        'react-native-run-android',
+      ],
+      buildIosTargetName: [
+        'build-ios',
+        'react-native:build-ios',
+        'react-native-build-ios',
+      ],
+      buildAndroidTargetName: [
+        'build-android',
+        'react-native:build-android',
+        'react-native-build-android',
+      ],
+      syncDepsTargetName: [
+        'sync-deps',
+        'react-native:sync-deps',
+        'react-native-sync-deps',
+      ],
+    },
+    schema.updatePackageScripts
+  );
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
@@ -110,6 +99,15 @@ export async function reactNativeInitGeneratorInternal(
 
 export function updateDependencies(host: Tree, schema: Schema) {
   const rnVersions = versions(host);
+  // @nx/react-native optionally depends on @nx/detox, which depends on
+  // @nx/jest, so jest-resolve is installed even without a jest setup. It
+  // depends on unrs-resolver and, from jest 30.5.0, on a jest-haste-map that
+  // depends on @parcel/watcher. Neither needs its build to run.
+  acknowledgeBuildScripts(host, detectPackageManager(host.root), {
+    '@parcel/watcher': false,
+    'unrs-resolver': false,
+  });
+
   return addDependenciesToPackageJson(
     host,
     {

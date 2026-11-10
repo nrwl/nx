@@ -487,4 +487,229 @@ module.exports = defaultResolver;`
     expect(testSetupContent).toContain('ImportMetaRegistry');
     expect(testSetupContent).toContain('structuredClone');
   });
+
+  it('should update expo libraries without a project-level package.json', async () => {
+    // formatter none: assert exactly what the migration wrote
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    addProjectConfiguration(tree, 'my-forms', {
+      root: 'libs/my-forms',
+      projectType: 'library',
+      targets: {
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: 'libs/my-forms/jest.config.cts',
+          },
+        },
+      },
+    });
+
+    // no libs/my-forms/package.json: integrated-style @nx/expo:library
+    tree.write(
+      'libs/my-forms/jest.config.cts',
+      `module.exports = {
+  displayName: 'my-forms',
+  resolver: require.resolve('./jest.resolver.js'),
+  preset: 'jest-expo',
+  moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  coverageDirectory: '../../coverage/libs/my-forms',
+};`
+    );
+
+    tree.write(
+      'libs/my-forms/jest.resolver.js',
+      `const defaultResolver = require('@nx/jest/plugins/resolver');
+module.exports = defaultResolver;`
+    );
+
+    tree.write('libs/my-forms/src/test-setup.ts', '');
+
+    tree.write(
+      'libs/my-forms/tsconfig.lib.json',
+      JSON.stringify({
+        compilerOptions: {},
+        exclude: ['jest.config.ts', 'jest.resolver.js', 'src/**/*.spec.ts'],
+      })
+    );
+
+    tree.write(
+      'libs/my-forms/tsconfig.spec.json',
+      JSON.stringify({
+        compilerOptions: {},
+        include: ['jest.config.ts', 'jest.resolver.js', 'src/**/*.spec.ts'],
+      })
+    );
+
+    await updateJestForExpo54(tree);
+
+    expect(tree.exists('libs/my-forms/jest.resolver.js')).toBe(false);
+
+    const updatedConfig = tree.read('libs/my-forms/jest.config.cts', 'utf-8');
+    // '  ' is the indent left behind where the resolver property was removed
+    expect(updatedConfig).toBe(
+      [
+        'module.exports = {',
+        "  displayName: 'my-forms',",
+        '  ',
+        "  preset: 'jest-expo',",
+        "  moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],",
+        "  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],",
+        "  coverageDirectory: '../../coverage/libs/my-forms',",
+        '};',
+      ].join('\n')
+    );
+
+    const testSetupContent = tree.read(
+      'libs/my-forms/src/test-setup.ts',
+      'utf-8'
+    );
+    expect(testSetupContent).toMatchInlineSnapshot(`
+"jest.mock('expo/src/winter/ImportMetaRegistry', () => ({
+  ImportMetaRegistry: {
+    get url() {
+      return null;
+    },
+  },
+}));
+
+
+if (typeof global.structuredClone === 'undefined') {
+  global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
+}
+"
+`);
+
+    const libTsConfig = JSON.parse(
+      tree.read('libs/my-forms/tsconfig.lib.json', 'utf-8')
+    );
+    expect(libTsConfig.exclude).toEqual(['jest.config.ts', 'src/**/*.spec.ts']);
+
+    const specTsConfig = JSON.parse(
+      tree.read('libs/my-forms/tsconfig.spec.json', 'utf-8')
+    );
+    expect(specTsConfig.include).toEqual([
+      'jest.config.ts',
+      'src/**/*.spec.ts',
+    ]);
+  });
+
+  it('should update expo libraries whose package.json has no expo dependency', async () => {
+    addProjectConfiguration(tree, 'my-forms', {
+      root: 'libs/my-forms',
+      projectType: 'library',
+      targets: {
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: 'libs/my-forms/jest.config.cts',
+          },
+        },
+      },
+    });
+
+    // buildable/publishable library: package.json with react peer deps only
+    tree.write(
+      'libs/my-forms/package.json',
+      JSON.stringify({
+        name: '@proj/my-forms',
+        version: '0.0.1',
+        peerDependencies: {
+          react: '19.0.0',
+          'react-native': '0.81.0',
+        },
+      })
+    );
+
+    tree.write(
+      'libs/my-forms/jest.config.cts',
+      `module.exports = {
+  displayName: 'my-forms',
+  resolver: require.resolve('./jest.resolver.js'),
+  preset: 'jest-expo',
+};`
+    );
+
+    tree.write(
+      'libs/my-forms/jest.resolver.js',
+      `const defaultResolver = require('@nx/jest/plugins/resolver');
+module.exports = defaultResolver;`
+    );
+
+    tree.write('libs/my-forms/src/test-setup.ts', '');
+
+    await updateJestForExpo54(tree);
+
+    expect(tree.exists('libs/my-forms/jest.resolver.js')).toBe(false);
+    const updatedConfig = tree.read('libs/my-forms/jest.config.cts', 'utf-8');
+    expect(updatedConfig).not.toContain('jest.resolver.js');
+    expect(updatedConfig).toContain('jest-expo');
+    expect(tree.read('libs/my-forms/src/test-setup.ts', 'utf-8')).toContain(
+      'ImportMetaRegistry'
+    );
+  });
+
+  it('should not modify projects without a package.json when the jest config does not use jest-expo', async () => {
+    // formatter none: assert the file is byte-for-byte untouched
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    addProjectConfiguration(tree, 'my-node-lib', {
+      root: 'libs/my-node-lib',
+      projectType: 'library',
+      targets: {
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: 'libs/my-node-lib/jest.config.ts',
+          },
+        },
+      },
+    });
+
+    const jestConfig = `module.exports = {
+  displayName: 'my-node-lib',
+  resolver: require.resolve('./jest.resolver.js'),
+  preset: '../../jest.preset.js',
+};`;
+    tree.write('libs/my-node-lib/jest.config.ts', jestConfig);
+    tree.write('libs/my-node-lib/jest.resolver.js', 'module.exports = {};');
+
+    await updateJestForExpo54(tree);
+
+    expect(tree.read('libs/my-node-lib/jest.config.ts', 'utf-8')).toBe(
+      jestConfig
+    );
+    expect(tree.exists('libs/my-node-lib/jest.resolver.js')).toBe(true);
+    expect(tree.exists('libs/my-node-lib/src/test-setup.ts')).toBe(false);
+  });
+
+  it('should not modify projects whose preset only looks like jest-expo', async () => {
+    tree = createTreeWithEmptyWorkspace({ formatter: 'none' });
+    addProjectConfiguration(tree, 'my-lib', {
+      root: 'libs/my-lib',
+      projectType: 'library',
+      targets: {
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: 'libs/my-lib/jest.config.cts',
+          },
+        },
+      },
+    });
+
+    // local preset file named after jest-expo, plus an unrelated resolver
+    const jestConfig = `module.exports = {
+  displayName: 'my-lib',
+  preset: './jest-expo.preset.js',
+  resolver: require.resolve('./jest.resolver.js'),
+};`;
+    tree.write('libs/my-lib/jest.config.cts', jestConfig);
+    tree.write('libs/my-lib/jest.resolver.js', 'module.exports = {};');
+
+    await updateJestForExpo54(tree);
+
+    expect(tree.read('libs/my-lib/jest.config.cts', 'utf-8')).toBe(jestConfig);
+    expect(tree.exists('libs/my-lib/jest.resolver.js')).toBe(true);
+    expect(tree.exists('libs/my-lib/src/test-setup.ts')).toBe(false);
+  });
 });

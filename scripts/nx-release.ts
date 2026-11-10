@@ -105,6 +105,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     'packages/react',
     'packages/react-native',
     'packages/remix',
+    'packages/rolldown',
     'packages/rollup',
     'packages/rsbuild',
     'packages/rspack',

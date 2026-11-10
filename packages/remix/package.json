@@ -1,7 +1,7 @@
 {
   "name": "@nx/remix",
   "version": "0.0.1",
-  "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Playwright, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "description": "Deprecated Remix v2 task inference for Nx. Generators and executors were removed in Nx 24, except convert-to-inferred. The remaining plugin will be removed in Nx 25. Migrate to React Router with @nx/react.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -28,7 +28,6 @@
     "dist",
     "!dist/tsconfig.tsbuildinfo",
     "migrations.json",
-    "executors.json",
     "generators.json"
   ],
   "typesVersions": {
@@ -48,7 +47,6 @@
     }
   },
   "generators": "./generators.json",
-  "executors": "./executors.json",
   "nx-migrations": {
     "migrations": "./migrations.json",
     "supportsOptionalMigrations": true
@@ -56,26 +54,18 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
-    "@nx/react": "workspace:*",
-    "@nx/web": "workspace:*",
-    "tslib": "catalog:typescript",
-    "@phenomnomnominal/tsquery": "catalog:typescript"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "@nx/eslint": "workspace:*",
-    "nx": "workspace:*",
-    "@nx/vitest": "workspace:*"
+    "nx": "workspace:*"
   },
   "peerDependencies": {
     "@nx/cypress": "workspace:*",
-    "@nx/playwright": "workspace:*",
     "@remix-run/dev": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@nx/cypress": {
-      "optional": true
-    },
-    "@nx/playwright": {
       "optional": true
     },
     "@remix-run/dev": {
@@ -93,7 +83,6 @@
     },
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
     "./generators": {
       "@nx/nx-source": "./generators.ts",

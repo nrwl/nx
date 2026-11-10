@@ -11,10 +11,10 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { syncGenerator } from './typescript-sync';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nx/devkit', () => ({
-  ...jest.requireActual('@nx/devkit'),
-  createProjectGraphAsync: jest.fn(() => Promise.resolve(projectGraph)),
-  formatFiles: jest.fn(() => Promise.resolve()),
+vi.mock('@nx/devkit', async () => ({
+  ...(await vi.importActual<any>('@nx/devkit')),
+  createProjectGraphAsync: vi.fn(() => Promise.resolve(projectGraph)),
+  formatFiles: vi.fn(() => Promise.resolve()),
 }));
 
 describe('syncGenerator()', () => {
@@ -257,6 +257,41 @@ describe('syncGenerator()', () => {
           },
           {
             "path": "./packages/c",
+          },
+        ]
+      `);
+    });
+
+    it('should keep existing references to tsconfig files that are not project directories', async () => {
+      writeJson(tree, 'tsconfig.json', {
+        compilerOptions: {
+          composite: true,
+        },
+        // a missing reference to packages/b forces the references to be rewritten
+        references: [
+          { path: './packages/a' },
+          { path: './tsconfig.workspace.json' },
+        ],
+      });
+      writeJson(tree, 'tsconfig.workspace.json', {
+        compilerOptions: {
+          composite: true,
+        },
+      });
+
+      await syncGenerator(tree);
+
+      const rootTsconfig = readJson(tree, 'tsconfig.json');
+      expect(rootTsconfig.references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./packages/a",
+          },
+          {
+            "path": "./tsconfig.workspace.json",
+          },
+          {
+            "path": "./packages/b",
           },
         ]
       `);
@@ -911,13 +946,7 @@ describe('syncGenerator()', () => {
 
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                    [
-                      {
-                        "path": "../a/${runtimeTsConfigFileName}",
-                      },
-                    ]
-                `);
+          ).toEqual([{ path: `../a/${runtimeTsConfigFileName}` }]);
         }
       );
 
@@ -1101,61 +1130,35 @@ describe('syncGenerator()', () => {
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/b/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([{ path: `../a/${runtimeTsConfigFileName}` }]);
           expect(
             readJson(tree, 'packages/c/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/c/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+          ]);
           expect(
             readJson(tree, 'packages/d/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/d/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+          ]);
           expect(
             readJson(tree, 'packages/e/tsconfig.json').references
           ).toBeUndefined();
           expect(
             readJson(tree, `packages/e/${runtimeTsConfigFileName}`).references
-          ).toMatchInlineSnapshot(`
-                      [
-                        {
-                          "path": "../a/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../b/${runtimeTsConfigFileName}",
-                        },
-                        {
-                          "path": "../d/${runtimeTsConfigFileName}",
-                        },
-                      ]
-                  `);
+          ).toEqual([
+            { path: `../a/${runtimeTsConfigFileName}` },
+            { path: `../b/${runtimeTsConfigFileName}` },
+            { path: `../d/${runtimeTsConfigFileName}` },
+          ]);
           delete process.env.NX_ENABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES;
         }
       );

@@ -1,7 +1,9 @@
 import type { Mock } from 'vitest';
 vi.mock('../../utils/git-utils', () => ({
+  getPathHeadStatus: vi.fn(),
   hasUncommittedChanges: vi.fn(),
   tryCommitChanges: vi.fn(),
+  tryCommitChangesAsync: vi.fn(),
   getGitCurrentBranch: vi.fn(),
   getGitRemoteNames: vi.fn(),
 }));
@@ -22,8 +24,10 @@ import { readNxJson } from '../../config/configuration';
 import {
   getGitCurrentBranch,
   getGitRemoteNames,
+  getPathHeadStatus,
   hasUncommittedChanges,
   tryCommitChanges,
+  tryCommitChangesAsync,
 } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
@@ -32,11 +36,14 @@ import {
   commitMigrationIfRequested,
   confirmMigrationCommitsOnDefaultBranch,
   currentBranchIfDefault,
+  migrateCommitExcludes,
 } from './migrate-commits';
 import { migrateConfirm } from './safe-prompt';
 
+const mockHeadStatus = getPathHeadStatus as Mock;
 const mockHas = hasUncommittedChanges as Mock;
 const mockTry = tryCommitChanges as Mock;
+const mockTryAsync = tryCommitChangesAsync as Mock;
 const mockInfo = logger.info as Mock;
 const mockWarn = output.warn as Mock;
 const mockLog = output.log as Mock;
@@ -56,8 +63,10 @@ const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]/g;
 const stripAnsi = (s: string): string => s.replace(ANSI_RE, '');
 
 beforeEach(() => {
+  mockHeadStatus.mockReset().mockReturnValue('committed');
   mockHas.mockReset();
   mockTry.mockReset();
+  mockTryAsync.mockReset();
   mockInfo.mockReset();
   mockWarn.mockReset();
   mockLog.mockReset();
@@ -81,7 +90,7 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'disabled' });
     expect(installDeps).not.toHaveBeenCalled();
     expect(mockHas).not.toHaveBeenCalled();
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
   });
 
   it('runs installDeps before checking for uncommitted changes', async () => {
@@ -118,28 +127,15 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(result).toEqual({ status: 'no-changes' });
-    expect(mockTry).not.toHaveBeenCalled();
+    expect(mockTryAsync).not.toHaveBeenCalled();
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"- No changes to commit for m1."`
     );
   });
 
-  it('probes the tree with the same exclusions the commit applies, so scratch-only dirt reads as no-changes', async () => {
-    mockHas.mockReturnValue(false);
-
-    await commitMigrationIfRequested(
-      ROOT,
-      { name: 'm1' },
-      true,
-      PREFIX,
-      installDeps
-    );
-    expect(mockHas).toHaveBeenCalledWith(ROOT, ['.nx/migrate-runs']);
-  });
-
   it('returns the new sha and uses `<prefix><name>` as the commit subject on success', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -151,14 +147,17 @@ describe('commitMigrationIfRequested', () => {
     expect(result).toEqual({ status: 'committed', sha: 'abc123' });
     // The scratch exclusion rides on every migration commit so `git add -A`
     // cannot capture run state even when its ignore rule went missing mid-run.
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
-      '.nx/migrate-runs',
-    ]);
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: false }
+    );
   });
 
   it('annotates the commit body with the package: name of prior migrations whose commits failed', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -172,7 +171,7 @@ describe('commitMigrationIfRequested', () => {
       ]
     );
     expect(result).toEqual({ status: 'committed', sha: 'def456' });
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -183,7 +182,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('strips embedded newlines from migration names so hostile entries cannot inject body lines', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('def456');
+    mockTryAsync.mockReturnValue('def456');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -198,7 +197,7 @@ describe('commitMigrationIfRequested', () => {
         },
       ]
     );
-    expect(mockTry.mock.calls[0][0]).toMatchInlineSnapshot(`
+    expect(mockTryAsync.mock.calls[0][0]).toMatchInlineSnapshot(`
       "chore: [nx migration] m4
 
       Includes changes from prior migrations whose own commits failed:
@@ -208,7 +207,7 @@ describe('commitMigrationIfRequested', () => {
 
   it('does not modify the commit message when pendingMigrationNames is empty', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue('abc123');
+    mockTryAsync.mockReturnValue('abc123');
 
     await commitMigrationIfRequested(
       ROOT,
@@ -218,14 +217,17 @@ describe('commitMigrationIfRequested', () => {
       installDeps,
       []
     );
-    expect(mockTry).toHaveBeenCalledWith(`${PREFIX}m1`, ROOT, [
-      '.nx/migrate-runs',
-    ]);
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: false }
+    );
   });
 
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
     mockHas.mockReturnValue(true);
-    mockTry.mockImplementation(() => {
+    mockTryAsync.mockImplementation(() => {
       // GPG signing failures aren't bypassed by --no-verify (unlike
       // client-side hooks).
       throw new Error('error: gpg failed to sign the data');
@@ -243,9 +245,9 @@ describe('commitMigrationIfRequested', () => {
       reason: expect.stringContaining('gpg failed to sign'),
     });
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(`
-      "Could not create a commit for m1:
+      "The commit for m1 failed:
       error: gpg failed to sign the data
-      The migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` to review. The next successful commit will absorb it and reference this migration in its body; if no later commit lands, the end-of-run output will list this migration so you can commit or revert manually."
+      Check \`git status\` and \`git log\`; the commit may have landed despite this error. Any uncommitted changes will be included in the next successful commit, which will reference this migration; if they remain uncommitted, the end-of-run output will list this migration so you can commit or revert them manually."
     `);
   });
 
@@ -255,7 +257,7 @@ describe('commitMigrationIfRequested', () => {
     // result is still `committed` (with a null sha) so the executor knows the
     // diff cleared, not `failed` which would push it into pending.
     mockHas.mockReturnValue(true);
-    mockTry.mockReturnValue(null);
+    mockTryAsync.mockReturnValue(null);
 
     const result = await commitMigrationIfRequested(
       ROOT,
@@ -268,6 +270,108 @@ describe('commitMigrationIfRequested', () => {
     expect(stripAnsi(mockInfo.mock.calls[0][0])).toMatchInlineSnapshot(
       `"The commit for m1 was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step."`
     );
+  });
+});
+
+describe('commitMigrationIfRequested with an output sink', () => {
+  const sink = () => {
+    const lines: unknown[][] = [];
+    return {
+      lines,
+      notice: vi.fn(),
+      line: (...args: unknown[]) => lines.push(args),
+      raw: vi.fn(),
+    };
+  };
+
+  it.each([
+    [
+      'no-changes',
+      () => mockHas.mockReturnValue(false),
+      [['dim', '- No changes to commit for m1.']],
+    ],
+    [
+      'degraded-sha',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTryAsync.mockReturnValue(null);
+      },
+      [['yellow', expect.stringContaining('its sha could not be resolved')]],
+    ],
+    [
+      'failure',
+      () => {
+        mockHas.mockReturnValue(true);
+        mockTryAsync.mockImplementation(() => {
+          throw new Error('error: gpg failed to sign the data');
+        });
+      },
+      [
+        [
+          'red',
+          expect.stringContaining(
+            'gpg failed to sign the data\nCheck `git status` and `git log`; the commit may have landed despite this error. Commit or revert any remaining uncommitted changes manually.'
+          ),
+        ],
+      ],
+    ],
+  ])(
+    'sends the %s message to the sink instead of the logger',
+    async (_, arrange, expected) => {
+      arrange();
+      const out = sink();
+
+      await commitMigrationIfRequested(
+        ROOT,
+        { name: 'm1' },
+        true,
+        PREFIX,
+        installDeps,
+        [],
+        'manual',
+        out
+      );
+
+      expect(out.lines).toEqual(expected);
+      expect(mockInfo).not.toHaveBeenCalled();
+    }
+  );
+
+  it('commits without the terminal and, on a failure, has the agent ask the user before the next step', async () => {
+    mockHas.mockReturnValue(true);
+    mockTryAsync.mockImplementation(() => {
+      throw new Error('error: gpg failed to sign the data');
+    });
+    const out = sink();
+
+    await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps,
+      [],
+      undefined,
+      out
+    );
+
+    expect(mockTryAsync).toHaveBeenCalledWith(
+      `${PREFIX}m1`,
+      ROOT,
+      ['.nx/migrate-runs'],
+      { withoutTerminal: true }
+    );
+    expect(out.lines[0][1]).toContain(
+      'Before the next step, tell the user what failed and ask whether to fix the cause first'
+    );
+  });
+});
+
+describe('migrateCommitExcludes', () => {
+  it('does not exclude the plan and prompt files when the HEAD probe fails', () => {
+    mockHeadStatus.mockReturnValue('unknown');
+
+    expect(migrateCommitExcludes(ROOT)).toEqual(['.nx/migrate-runs']);
   });
 });
 

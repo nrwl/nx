@@ -26,19 +26,30 @@ describe('file-lock', () => {
       execArgv: ['--require', 'ts-node/register'],
     });
 
-    a.stdout.on('data', (data) => {
-      combinedOutputs.push('A: ' + data.toString().trim());
-    });
-    b.stdout.on('data', (data) => {
-      combinedOutputs.push('B: ' + data.toString().trim());
-    });
+    // Native trace logging shares stdout, and chunks can coalesce under load.
+    const collect = (label: string) => (data: Buffer) => {
+      for (const line of data.toString().split('\n')) {
+        if (line.trim()) {
+          combinedOutputs.push(`${label}: ${line.trim()}`);
+        }
+      }
+    };
+    a.stdout.on('data', collect('A'));
+    b.stdout.on('data', collect('B'));
 
     a.stderr.pipe(process.stderr);
     b.stderr.pipe(process.stderr);
 
     await Promise.all([a, b].map((p) => new Promise((r) => p.once('exit', r))));
 
-    expect(combinedOutputs).toContain('A: ran with lock');
-    expect(combinedOutputs).toContain('B: waited for lock');
+    // Startup time decides which process takes the lock first, so assert
+    // that one holder ran and the other waited rather than which was which.
+    const ran = combinedOutputs.filter((o) => o.endsWith(': ran with lock'));
+    const waited = combinedOutputs.filter((o) =>
+      o.endsWith(': waited for lock')
+    );
+    expect(ran).toHaveLength(1);
+    expect(waited).toHaveLength(1);
+    expect(ran[0][0]).not.toBe(waited[0][0]);
   });
 });

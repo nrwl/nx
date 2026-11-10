@@ -197,6 +197,55 @@ export default [
 ```
 
 {% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  // @nx/oxlint/boundaries-plugin should already be registered under "jsPlugins"
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        // update depConstraints based on your tags
+        "depConstraints": [
+          {
+            "sourceTag": "scope:shared",
+            "onlyDependOnLibsWithTags": ["scope:shared"]
+          },
+          {
+            "sourceTag": "scope:admin",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          },
+          {
+            "sourceTag": "scope:client",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+          },
+          {
+            "sourceTag": "type:app",
+            "onlyDependOnLibsWithTags": ["type:feature", "type:ui", "type:util"]
+          },
+          {
+            "sourceTag": "type:feature",
+            "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          },
+          {
+            "sourceTag": "type:ui",
+            "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          },
+          {
+            "sourceTag": "type:util",
+            "onlyDependOnLibsWithTags": ["type:util"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+{% /tabitem %}
 {% /tabs %}
 
 There are no limits to the number of tags, but as you add more tags the complexity of your dependency constraints rises exponentially. It's always good to draw a diagram and carefully plan the boundaries.
@@ -285,6 +334,43 @@ export default [
   ],
 
   // ... more ESLint config here
+}
+```
+
+{% /tabitem %}
+{% tabitem label="Oxlint" %}
+
+```json
+// .oxlintrc.json
+{
+  // @nx/oxlint/boundaries-plugin should already be registered under "jsPlugins"
+  "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        // update depConstraints based on your tags
+        "depConstraints": [
+          {
+            // this constraint applies to all "admin" projects
+            "sourceTag": "scope:admin",
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+          },
+          {
+            "sourceTag": "type:ui",
+            "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
+          },
+          {
+            // we don't want our admin ui components to depend on anything except utilities,
+            // and we also want to ban router imports
+            "allSourceTags": ["scope:admin", "type:ui"],
+            "onlyDependOnLibsWithTags": ["type:util"],
+            "bannedExternalImports": ["*router*"]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 

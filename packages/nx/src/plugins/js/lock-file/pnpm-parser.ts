@@ -5,15 +5,14 @@ import type {
   ProjectSnapshot,
 } from '@pnpm/lockfile-types';
 import {
+  assertPnpmModulesManifest,
+  extractEnvLockfileDocument,
   isV5Syntax,
-  loadPnpmHoistedDepsDefinition,
+  joinPnpmLockfileDocuments,
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
 } from './utils/pnpm-normalizer';
-import {
-  getHoistedPackageVersion,
-  NormalizedPackageJson,
-} from './utils/package-json';
+import { NormalizedPackageJson } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
   RawProjectGraphDependency,
@@ -30,7 +29,7 @@ import { getCatalogManager } from '../../../utils/catalog';
 import {
   containShippedLocalFilePaths,
   containShippedLocalLinkRefs,
-  warnOnWorkspaceModulePathCollision,
+  assertNoWorkspaceModulePathCollision,
   normalizePrunedPatchPath,
   PNPM_LOCKFILE_RESOLUTION_CONFIG_FIELDS,
   type PnpmLockfileConfigField,
@@ -500,25 +499,7 @@ function getNodes(
     }
   }
 
-  const hoistedDeps = loadPnpmHoistedDepsDefinition();
-
-  // Pre-build packageName -> key index for O(1) lookup instead of O(n) find() per package
-  const hoistedKeysByPackage = new Map<string, string>();
-  for (const key of Object.keys(hoistedDeps)) {
-    if (key.startsWith('/')) {
-      // Extract package name from key format: /{packageName}/{version}... or /@scope/name/{version}...
-      const withoutSlash = key.slice(1);
-      const slashIndex = withoutSlash.startsWith('@')
-        ? withoutSlash.indexOf('/', withoutSlash.indexOf('/') + 1)
-        : withoutSlash.indexOf('/');
-      if (slashIndex > 0) {
-        const pkgName = withoutSlash.slice(0, slashIndex);
-        if (!hoistedKeysByPackage.has(pkgName)) {
-          hoistedKeysByPackage.set(pkgName, key);
-        }
-      }
-    }
-  }
+  assertPnpmModulesManifest();
 
   const results: Record<string, ProjectGraphExternalNode> = {};
 
@@ -529,10 +510,11 @@ function getNodes(
     } else {
       const hoistedVersion = getHoistedVersion(
         packageName,
-        isV5,
-        hoistedKeysByPackage
+        versionMap,
+        data.importers['.'],
+        isV5
       );
-      hoistedNode = versionMap.get(hoistedVersion);
+      hoistedNode = hoistedVersion ? versionMap.get(hoistedVersion) : undefined;
     }
     if (hoistedNode) {
       hoistedNode.name = `npm:${packageName}`;
@@ -597,26 +579,33 @@ function getNodes(
   return { nodes: results, keyMap };
 }
 
+// The version that gets the bare `npm:<name>` node when a package has several
+// versions: the one the root importer declares, read from the lockfile. Other
+// packages get no bare node, so an `externalDependencies` input hashes every
+// version. The versions that node_modules and `.modules.yaml` hoist depend on
+// the install history and the platform, and the node names decide task hashes
+// and pruned lockfiles.
 function getHoistedVersion(
   packageName: string,
-  isV5: boolean,
-  hoistedKeysByPackage: Map<string, string>
-): string {
-  let version = getHoistedPackageVersion(packageName);
-
-  if (!version) {
-    // Use pre-built index for O(1) lookup
-    const key = hoistedKeysByPackage.get(packageName);
-    if (key) {
-      version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
-    } else {
-      // pnpm might not hoist every package
-      // similarly those packages will not be available to be used via import
-      return;
+  versionMap: Map<string, ProjectGraphExternalNode>,
+  rootImporter: ProjectSnapshot | undefined,
+  isV5: boolean
+): string | undefined {
+  for (const depType of [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+  ] as const) {
+    const rawVersion = rootImporter?.[depType]?.[packageName];
+    const version =
+      typeof rawVersion === 'string'
+        ? parseBaseVersion(rawVersion, isV5)
+        : undefined;
+    if (version && versionMap.has(version)) {
+      return version;
     }
   }
-
-  return version;
+  return undefined;
 }
 
 function getDependencies(
@@ -641,6 +630,7 @@ function getDependencies(
                 isV5
               );
               const target =
+                keyMap.get(versionRange)?.values().next().value ||
                 ctx.externalNodes[`npm:${name}@${version}`] ||
                 ctx.externalNodes[`npm:${name}`];
               if (target) {
@@ -858,9 +848,7 @@ export function stringifyPnpmLockfile(
   // relocated at its synthesis site, which is why it is added afterwards: a
   // second pass over an already-relocated path cannot tell it apart from a
   // workspace path that genuinely starts with the shipped directory's name.
-  // TODO(v24): throw on this collision like the colliding-patches case; today
-  // the copied workspace module silently supersedes the file: dependency.
-  warnOnWorkspaceModulePathCollision(snapshots, synthesizedModulePaths);
+  assertNoWorkspaceModulePathCollision(snapshots, synthesizedModulePaths);
   containShippedLocalFilePaths(output, synthesizedModulePaths);
 
   // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
@@ -927,7 +915,10 @@ export function stringifyPnpmLockfile(
 
   stripStandaloneLockfileConfig(output);
 
-  return stringifyToPnpmYaml(output);
+  return joinPnpmLockfileDocuments(
+    extractEnvLockfileDocument(rootLockFileContent),
+    stringifyToPnpmYaml(output)
+  );
 }
 
 /**

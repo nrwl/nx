@@ -16,39 +16,17 @@ describe('getJestProjectsAsync', () => {
       .mockReturnValue(Promise.resolve(projectGraph));
   });
 
-  test('single project', async () => {
-    addProject('test-1', {
-      root: 'blah',
-      targets: {
-        test: {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'test/jest/config/location/jest.config.js',
-          },
-        },
-      },
-    });
-    const expectedResults = [
-      '<rootDir>/test/jest/config/location/jest.config.js',
-    ];
-    expect(await getJestProjectsAsync()).toEqual(expectedResults);
-  });
-
   test('custom target name', async () => {
     addProject('test-1', {
       root: 'blah',
       targets: {
         'test-with-jest': {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'test/jest/config/location/jest.config.js',
-          },
+          executor: 'nx:run-commands',
+          options: { command: 'jest' },
         },
       },
     });
-    const expectedResults = [
-      '<rootDir>/test/jest/config/location/jest.config.js',
-    ];
+    const expectedResults = ['<rootDir>/blah'];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 
@@ -57,10 +35,8 @@ describe('getJestProjectsAsync', () => {
       root: '.',
       targets: {
         test: {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'jest.config.app.js',
-          },
+          executor: 'nx:run-commands',
+          options: { command: 'jest --config jest.config.app.js', cwd: '.' },
         },
       },
     });
@@ -68,50 +44,42 @@ describe('getJestProjectsAsync', () => {
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 
-  test('configuration set with unique jestConfig', async () => {
+  test('configuration set with unique jest config', async () => {
     addProject('test-1', {
       root: 'blah',
       targets: {
         'test-with-jest': {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'test/jest/config/location/jest.config.js',
-          },
+          executor: 'nx:run-commands',
+          options: { command: 'jest --config jest.config.js' },
           configurations: {
             prod: {
-              jestConfig: 'configuration-specific/jest.config.js',
+              command: 'jest --config configuration-specific/jest.config.js',
             },
           },
         },
       },
     });
     const expectedResults = [
-      '<rootDir>/test/jest/config/location/jest.config.js',
-      '<rootDir>/configuration-specific/jest.config.js',
+      '<rootDir>/blah/jest.config.js',
+      '<rootDir>/blah/configuration-specific/jest.config.js',
     ];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 
-  test('configuration, set with same jestConfig on configuration', async () => {
+  test('configuration set with the same jest config', async () => {
     addProject('test', {
       root: 'blah',
       targets: {
         'test-with-jest': {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'test/jest/config/location/jest.config.js',
-          },
+          executor: 'nx:run-commands',
+          options: { command: 'jest --config jest.config.js' },
           configurations: {
-            prod: {
-              jestConfig: 'test/jest/config/location/jest.config.js',
-            },
+            prod: { command: 'jest --config jest.config.js' },
           },
         },
       },
     });
-    const expectedResults = [
-      '<rootDir>/test/jest/config/location/jest.config.js',
-    ];
+    const expectedResults = ['<rootDir>/blah/jest.config.js'];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 
@@ -279,34 +247,6 @@ describe('getJestProjectsAsync', () => {
       },
     });
     const expectedResults = ['<rootDir>/projects/test-1/jest1.config.ts'];
-    expect(await getJestProjectsAsync()).toEqual(expectedResults);
-  });
-
-  test('projects with targets using both executors', async () => {
-    addProject('test-1', {
-      root: 'projects/test-1',
-      targets: {
-        test: {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'projects/test-1/jest.config.js',
-          },
-        },
-      },
-    });
-    addProject('test-2', {
-      root: 'projects/test-2',
-      targets: {
-        test: {
-          executor: 'nx:run-commands',
-          options: { command: 'jest' },
-        },
-      },
-    });
-    const expectedResults = [
-      '<rootDir>/projects/test-1/jest.config.js',
-      '<rootDir>/projects/test-2',
-    ];
     expect(await getJestProjectsAsync()).toEqual(expectedResults);
   });
 });

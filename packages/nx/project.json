@@ -10,6 +10,13 @@
     }
   },
   "targets": {
+    "check-native-wasm": {
+      "cache": true,
+      "inputs": ["native", "{workspaceRoot}/scripts/check-wasm-target.sh"],
+      "outputs": [],
+      "parallelism": false,
+      "command": "./scripts/check-wasm-target.sh"
+    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],

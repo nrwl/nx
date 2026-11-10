@@ -3,7 +3,6 @@ import {
   killProcessAndPorts,
   runCLI,
   runCommandUntil,
-  runE2ETests,
   uniq,
 } from '@nx/e2e-utils';
 import {
@@ -35,14 +34,12 @@ describe('@nx/module-federation v2 - Rsbuild', () => {
       `apps/${provider}/package.json`
     );
 
-    if (await runE2ETests()) {
-      const serve = await runCommandUntil(
-        `serve ${provider}`,
-        (output) => output.includes('Local:'),
-        { timeout: 180000 }
-      );
-      await killProcessAndPorts(serve.pid, providerPort);
-    }
+    const serve = await runCommandUntil(
+      `serve ${provider}`,
+      (output) => output.includes('Local:'),
+      { timeout: 180000 }
+    );
+    await killProcessAndPorts(serve.pid, providerPort);
   }, 600_000);
 
   it('generates an rsbuild consumer + provider in one shot via --providerNames and wires the manifest', async () => {
@@ -63,23 +60,21 @@ describe('@nx/module-federation v2 - Rsbuild', () => {
       `apps/${provider}/src/App.tsx`
     );
 
-    if (await runE2ETests()) {
-      let consumerReady = false;
-      let providerReady = false;
-      const serve = await runCommandUntil(
-        `serve ${provider}`,
-        (output) => {
-          if (output.includes(`http://localhost:${consumerPort}/`)) {
-            consumerReady = true;
-          }
-          if (output.includes(`http://localhost:${providerPort}/`)) {
-            providerReady = true;
-          }
-          return consumerReady && providerReady;
-        },
-        { timeout: 180000 }
-      );
-      await killProcessAndPorts(serve.pid, consumerPort, providerPort);
-    }
+    let consumerReady = false;
+    let providerReady = false;
+    const serve = await runCommandUntil(
+      `serve ${provider}`,
+      (output) => {
+        if (output.includes(`http://localhost:${consumerPort}/`)) {
+          consumerReady = true;
+        }
+        if (output.includes(`http://localhost:${providerPort}/`)) {
+          providerReady = true;
+        }
+        return consumerReady && providerReady;
+      },
+      { timeout: 180000 }
+    );
+    await killProcessAndPorts(serve.pid, consumerPort, providerPort);
   }, 900_000);
 });

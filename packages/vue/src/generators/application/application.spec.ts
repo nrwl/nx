@@ -16,6 +16,7 @@ import * as devkitExports from '@nx/devkit';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 import { PackageManagerCommands } from '@nx/devkit/internal';
+import { withPnpm } from '@nx/devkit/internal-testing-utils';
 
 describe('application generator', () => {
   let tree: Tree;
@@ -26,9 +27,9 @@ describe('application generator', () => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
-    jest
-      .spyOn(devkitExports, 'getPackageManagerCommand')
-      .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+    vi.spyOn(devkitExports, 'getPackageManagerCommand').mockReturnValue({
+      exec: 'npx',
+    } as PackageManagerCommands);
   });
 
   afterEach(() => {
@@ -37,6 +38,26 @@ describe('application generator', () => {
     } else {
       process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     }
+  });
+
+  it('should deny the @parcel/watcher build script pulled in by sass', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'scss' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatch(
+      /['"]@parcel\/watcher['"]: false/
+    );
+  });
+
+  it('should not record a @parcel/watcher decision without scss', async () => {
+    await withPnpm(tree, '11.2.2', () =>
+      applicationGenerator(tree, { ...options, style: 'css' })
+    );
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8') ?? '').not.toContain(
+      '@parcel/watcher'
+    );
   });
 
   it('should run successfully', async () => {
@@ -61,7 +82,6 @@ describe('application generator', () => {
       ...options,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
-      addPlugin: true,
     });
     expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
@@ -84,20 +104,18 @@ describe('application generator', () => {
       bundler: 'rsbuild',
       unitTestRunner: 'vitest',
       e2eTestRunner: 'playwright',
-      addPlugin: true,
     });
 
     expect(tree.read('test/vitest.config.mts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { pluginVue } from '@rsbuild/plugin-vue';
       import { defineConfig } from '@rsbuild/core';
+      import { pluginNxReadySignal } from '@nx/rsbuild/ready-signal';
 
       export default defineConfig({
         html: {
           template: './index.html',
         },
-        plugins: [pluginVue()],
-
         source: {
           entry: {
             index: './src/main.ts',
@@ -113,6 +131,7 @@ describe('application generator', () => {
             root: 'dist',
           },
         },
+        plugins: [pluginNxReadySignal(), pluginVue()],
       });
       "
     `);
@@ -129,7 +148,6 @@ describe('application generator', () => {
           "devTargetName": "dev",
           "inspectTargetName": "inspect",
           "previewTargetName": "preview",
-          "typecheckTargetName": "typecheck",
           "watchDepsTargetName": "watch-deps",
         },
         "plugin": "@nx/rsbuild",
@@ -151,7 +169,6 @@ describe('application generator', () => {
     await applicationGenerator(tree, {
       linter: 'eslint',
       ...options,
-      addPlugin: true,
       unitTestRunner: 'vitest',
       e2eTestRunner: 'cypress',
     });
@@ -194,7 +211,6 @@ describe('application generator', () => {
         ...options,
         style: 'none',
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: false,
       });
 
@@ -329,7 +345,6 @@ describe('application generator', () => {
       await applicationGenerator(tree, {
         ...options,
         name: 'myapp',
-        addPlugin: true,
         useProjectJson: false,
         skipFormat: true,
       });
@@ -355,7 +370,6 @@ describe('application generator', () => {
         e2eTestRunner: 'cypress',
         style: 'none',
         linter: 'eslint',
-        addPlugin: true,
         useProjectJson: true,
         skipFormat: true,
       });

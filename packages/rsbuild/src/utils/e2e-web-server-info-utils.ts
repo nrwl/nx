@@ -8,7 +8,6 @@ export async function getRsbuildE2EWebServerInfo(
   tree: Tree,
   projectName: string,
   configFilePath: string,
-  isPluginBeingAdded: boolean,
   e2ePortOverride?: number
 ) {
   const nxJson = readNxJson(tree);
@@ -35,7 +34,6 @@ export async function getRsbuildE2EWebServerInfo(
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: `http://localhost:${e2ePort}`,
       defaultE2EPort: e2ePort,
-    },
-    isPluginBeingAdded
+    }
   );
 }

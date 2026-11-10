@@ -1,12 +1,13 @@
 import {
   calculateHashesForCreateNodes,
   getNamedInputs,
+  getReadyCheckReadyWhen,
   PluginCache,
   hashObject,
   workspaceDataDirectory,
+  retryOnRequireEsmRace,
 } from '@nx/devkit/internal';
 import {
-  CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodes,
@@ -15,16 +16,19 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  normalizePath,
 } from '@nx/devkit';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
   addBuildAndWatchDepsTargets,
+  createTypecheckTarget,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
+  selectTypecheckTsConfig,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import picomatch = require('picomatch');
 import type { ResolvedConfig } from 'vite';
@@ -38,12 +42,16 @@ export interface VitePluginOptions {
   devTargetName?: string;
   previewTargetName?: string;
   serveStaticTargetName?: string;
-  typecheckTargetName?: string;
   /**
-   * The compiler to use for type-checking. When unset, defaults to `vue-tsc`
-   * for Vue projects (detected via the `vite:vue` plugin) and `tsc` otherwise.
-   * Set to `tsgo` to use the TypeScript Go compiler (`@typescript/native-preview`),
-   * or `vue-tsc` to force Vue-aware type-checking when auto-detection misses your setup.
+   * Name of the `vue-tsc` typecheck target inferred for Vue projects. Other
+   * projects get their typecheck target from `@nx/js/typescript`.
+   */
+  typecheckTargetName?: string | false;
+  /**
+   * The compiler used to typecheck Vue projects. Defaults to `vue-tsc` when the
+   * `vite:vue` plugin is detected. Set `vue-tsc` to force the target when
+   * detection misses your setup, or `tsc`/`tsgo` to skip it and rely on
+   * `@nx/js/typescript`.
    */
   compiler?: 'tsc' | 'tsgo' | 'vue-tsc';
   watchDepsTargetName?: string;
@@ -54,13 +62,6 @@ type ViteTargets = Pick<
   ProjectConfiguration,
   'targets' | 'metadata' | 'projectType'
 >;
-
-/**
- * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
- */
-export const createDependencies: CreateDependencies = () => {
-  return [];
-};
 
 const viteConfigGlob = '**/vite.config.{js,ts,mjs,mts,cjs,cts}';
 
@@ -144,8 +145,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
                 hasReactRouterConfig,
                 isUsingTsSolutionSetup,
                 context,
-                pmc,
-                tsconfigChainsByProjectRoot.get(projectRoot) ?? []
+                pmc
               )
             );
           }
@@ -189,8 +189,7 @@ async function buildViteTargets(
   hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext,
-  pmc: ReturnType<typeof getPackageManagerCommand>,
-  tsconfigInputs: string[]
+  pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
@@ -204,31 +203,43 @@ async function buildViteTargets(
   } catch {
     // do nothing
   }
-  // Workaround for race condition with ESM-only Vite plugins (e.g. @vitejs/plugin-vue@6+)
-  // If vite.config.ts is compiled as CJS, then when both require('@vitejs/plugin-vue') and import('@vitejs/plugin-vue')
-  // are pending in the same process, Node will throw an error:
-  // Error [ERR_INTERNAL_ASSERTION]: Cannot require() ES Module @vitejs/plugin-vue/dist/index.js because it is not yet fully loaded.
-  // This may be caused by a race condition if the module is simultaneously dynamically import()-ed via Promise.all().
-  try {
-    const importVuePlugin = () =>
-      new Function('return import("@vitejs/plugin-vue")')();
-    await importVuePlugin();
-  } catch {
-    // Plugin not installed or not needed, ignore
-  }
   const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = await resolveConfig(
-    {
-      configFile: absoluteConfigFilePath,
-      mode: 'development',
-      root: projectRoot,
-    },
-    'build'
-  );
+  const resolveConfigForInference = async (command: 'build' | 'serve') => {
+    // Vite always resolves default server settings, so capture whether the
+    // config or one of its plugins set them before that happens.
+    let hasExplicitServer = false;
+    const config = await retryOnRequireEsmRace(() =>
+      resolveConfig(
+        {
+          configFile: absoluteConfigFilePath,
+          mode: 'development',
+          root: projectRoot,
+          // The serve resolution is optional and allowed to fail.
+          logLevel: command === 'serve' ? 'silent' : undefined,
+          plugins: [
+            {
+              name: 'nx-capture-explicit-vite-server',
+              enforce: 'post' as const,
+              config: {
+                order: 'post' as const,
+                handler(userConfig: { server?: unknown }) {
+                  hasExplicitServer = Boolean(userConfig.server);
+                },
+              },
+            },
+          ],
+        },
+        command
+      )
+    );
+    return { config, hasExplicitServer };
+  };
+  const { config: viteBuildConfig, hasExplicitServer: hasBuildServerConfig } =
+    await resolveConfigForInference('build');
 
   const metadata: ProjectConfiguration['metadata'] = {};
 
-  const { buildOutputs, isBuildable, hasServeConfig } = getOutputs(
+  const { buildOutputs, isBuildable } = getOutputs(
     viteBuildConfig,
     projectRoot,
     context.workspaceRoot
@@ -255,9 +266,30 @@ async function buildViteTargets(
       pmc
     );
 
+    let hasServeConfig = hasBuildServerConfig;
+
+    if (viteBuildConfig.build?.lib && !hasServeConfig) {
+      try {
+        hasServeConfig = (await resolveConfigForInference('serve'))
+          .hasExplicitServer;
+      } catch {
+        // Build-only configs may reject serve mode.
+      }
+    }
+
     // If running in library mode, then there is nothing to serve.
     if (!viteBuildConfig.build?.lib || hasServeConfig) {
-      const devTarget = serveTarget(projectRoot, isUsingTsSolutionSetup, pmc);
+      const signals = !!viteBuildConfig.plugins?.some(
+        (p) => p.name === 'nx-ready-signal'
+      );
+      const devTarget = serveTarget(
+        projectRoot,
+        configFilePath,
+        signals,
+        isUsingTsSolutionSetup,
+        pmc,
+        namedInputs
+      );
 
       targets[options.serveTargetName] = {
         ...devTarget,
@@ -270,71 +302,59 @@ async function buildViteTargets(
       targets[options.devTargetName] = devTarget;
       targets[options.previewTargetName] = previewTarget(
         projectRoot,
+        configFilePath,
+        signals,
         options.buildTargetName,
-        pmc
+        pmc,
+        namedInputs
       );
       targets[options.serveStaticTargetName] = serveStaticTarget(
         options,
-        isUsingTsSolutionSetup
+        isUsingTsSolutionSetup,
+        namedInputs
       );
     }
   }
 
-  if (tsConfigFiles.length) {
-    const tsConfigToUse =
-      ['tsconfig.app.json', 'tsconfig.lib.json', 'tsconfig.json'].find((t) =>
-        tsConfigFiles.includes(t)
-      ) ?? tsConfigFiles[0];
+  const hasVuePlugin = viteBuildConfig.plugins?.some(
+    (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
+  );
+  // @nx/js/typescript provides tsc typecheck targets but can't run vue-tsc.
+  const usesVueTsc =
+    (options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc')) === 'vue-tsc';
+  if (
+    usesVueTsc &&
+    options.typecheckTargetName !== false &&
+    tsConfigFiles.length
+  ) {
+    const technologies = hasVuePlugin ? ['typescript', 'vue'] : ['typescript'];
 
-    // Check if the project uses Vue plugin
-    const hasVuePlugin = viteBuildConfig.plugins?.some(
-      (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
-    );
-    // Explicit `compiler` option wins over inference so users can override
-    // when their setup isn't detected (e.g. custom/non-standard Vue plugin).
-    const resolvedCompiler =
-      options.compiler ?? (hasVuePlugin ? 'vue-tsc' : 'tsc');
-    const typeCheckCommand = resolvedCompiler;
-    const typeCheckExternalDeps =
-      resolvedCompiler === 'tsgo'
-        ? ['@typescript/native-preview']
-        : resolvedCompiler === 'vue-tsc'
-          ? ['vue-tsc', 'typescript']
-          : ['typescript'];
-
-    targets[options.typecheckTargetName] = {
-      cache: true,
-      inputs: [
-        ...('production' in namedInputs
-          ? ['production', '^production']
-          : ['default', '^default']),
-        { externalDependencies: typeCheckExternalDeps },
-      ],
-      command: isUsingTsSolutionSetup
-        ? `${typeCheckCommand} --build --emitDeclarationOnly`
-        : `${typeCheckCommand} --noEmit -p ${tsConfigToUse}`,
-      options: { cwd: joinPathFragments(projectRoot) },
-      metadata: {
-        description: `Runs type-checking for the project.`,
-        technologies: hasVuePlugin ? ['typescript', 'vue'] : ['typescript'],
-        help: {
-          command: isUsingTsSolutionSetup
-            ? `${pmc.exec} ${typeCheckCommand} --build --help`
-            : `${pmc.exec} ${typeCheckCommand} -p ${tsConfigToUse} --help`,
-          example: isUsingTsSolutionSetup
-            ? { args: ['--force'] }
-            : { options: { noEmit: true } },
-        },
-      },
-    };
-
-    if (isUsingTsSolutionSetup) {
-      targets[options.typecheckTargetName].dependsOn = [
-        `^${options.typecheckTargetName}`,
-      ];
-      targets[options.typecheckTargetName].syncGenerators = [
-        '@nx/js:typescript-sync',
-      ];
+    const tsConfig = selectTypecheckTsConfig(tsConfigFiles);
+    if (!isUsingTsSolutionSetup) {
+      if (tsConfig) {
+        targets[options.typecheckTargetName] = createTypecheckTarget({
+          mode: 'noEmit',
+          projectRoot: joinPathFragments(projectRoot),
+          pmc,
+          tsConfig,
+          compiler: 'vue-tsc',
+          namedInputs,
+          technologies,
+        });
+      }
+    } else if (tsConfigFiles.includes('tsconfig.json')) {
+      targets[options.typecheckTargetName] = createTypecheckTarget({
+        mode: 'build',
+        projectRoot: joinPathFragments(projectRoot),
+        pmc,
+        compiler: 'vue-tsc',
+        targetName: options.typecheckTargetName,
+        buildTargetName: targets[options.buildTargetName]
+          ? options.buildTargetName
+          : undefined,
+        namedInputs,
+        technologies,
+      });
     }
   }
 
@@ -368,14 +388,7 @@ async function buildTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
-    inputs: [
-      ...('production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default']),
-      {
-        externalDependencies: ['vite'],
-      },
-    ],
+    inputs: buildInputs(namedInputs),
     outputs,
     metadata: {
       technologies: ['vite'],
@@ -399,17 +412,35 @@ async function buildTarget(
   return buildTarget;
 }
 
+function buildInputs(namedInputs: {
+  [inputName: string]: any[];
+}): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['production', '^production']
+      : ['default', '^default']),
+    {
+      externalDependencies: ['vite'],
+    },
+  ];
+}
+
 function serveTarget(
   projectRoot: string,
+  configFilePath: string,
+  signals: boolean,
   isUsingTsSolutionSetup: boolean,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'serve', signals),
     metadata: {
       technologies: ['vite'],
       description: `Starts Vite dev server`,
@@ -433,16 +464,21 @@ function serveTarget(
 
 function previewTarget(
   projectRoot: string,
+  configFilePath: string,
+  signals: boolean,
   buildTargetName: string,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    inputs: buildInputs(namedInputs),
     command: `vite preview`,
     dependsOn: [buildTargetName],
     options: {
       cwd: joinPathFragments(projectRoot),
     },
+    readyWhen: getServerReadyWhen(configFilePath, 'preview', signals),
     metadata: {
       technologies: ['vite'],
       description: `Locally preview Vite production build`,
@@ -462,15 +498,19 @@ function previewTarget(
 
 function serveStaticTarget(
   options: VitePluginOptions,
-  isUsingTsSolutionSetup: boolean
+  isUsingTsSolutionSetup: boolean,
+  namedInputs: { [inputName: string]: any[] }
 ) {
   const targetConfig: TargetConfiguration = {
     continuous: true,
+    dependsOn: [options.buildTargetName],
+    inputs: buildInputs(namedInputs),
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
       spa: true,
     },
+    readyWhen: { signal: true },
   };
 
   if (isUsingTsSolutionSetup) {
@@ -480,6 +520,23 @@ function serveStaticTarget(
   return targetConfig;
 }
 
+// A config that loads nxReadySignal() reports when the server listens.
+// Otherwise the check resolves the config when the task runs, with the task's
+// env and options, and waits for the server's port.
+function getServerReadyWhen(
+  configFilePath: string,
+  command: 'serve' | 'preview',
+  signals: boolean
+): TargetConfiguration['readyWhen'] {
+  return signals
+    ? { signal: true }
+    : getReadyCheckReadyWhen(
+        '@nx/vite/ready-check',
+        basename(configFilePath),
+        command
+      );
+}
+
 function getOutputs(
   viteBuildConfig: ResolvedConfig | undefined,
   projectRoot: string,
@@ -487,13 +544,12 @@ function getOutputs(
 ): {
   buildOutputs: string[];
   isBuildable: boolean;
-  hasServeConfig: boolean;
 } {
   // TODO(jack): Remove this cast when @nx/vite switches to moduleResolution:
   // "nodenext". Vite 8's rolldown types are ESM-only (.d.mts) and not
   // resolvable under moduleResolution: "node", which breaks rolldownOptions
   // on ResolvedConfig.
-  const { build, server } = viteBuildConfig as any;
+  const { build } = viteBuildConfig as any;
 
   const buildOutputPath = normalizeOutputPath(
     build?.outDir,
@@ -510,12 +566,9 @@ function getOutputs(
     existsSync(join(workspaceRoot, projectRoot, 'index.html'))
   );
 
-  const hasServeConfig = Boolean(server?.host || server?.port);
-
   return {
     buildOutputs: [buildOutputPath],
     isBuildable,
-    hasServeConfig,
   };
 }
 
@@ -533,7 +586,7 @@ function normalizeOutputPath(
     }
   } else {
     if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+      return `{workspaceRoot}/${normalizePath(relative(workspaceRoot, outputPath))}`;
     } else {
       if (outputPath.startsWith('..')) {
         return joinPathFragments('{workspaceRoot}', projectRoot, outputPath);

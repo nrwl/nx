@@ -233,6 +233,10 @@ impl PtyInstance {
     /// roughly 40 screenfuls at a typical 24-row terminal.
     const SCROLLBACK_SIZE: usize = 1000;
 
+    /// The smallest PTY size. A parser with no rows panics on its first write.
+    const MIN_ROWS: u16 = 3;
+    const MIN_COLS: u16 = 20;
+
     /// Get buffered scrollback content that should be displayed above the current screen.
     ///
     /// All expensive work (all_contents_formatted + wrapping) runs on a background
@@ -442,6 +446,8 @@ impl PtyInstance {
     }
 
     pub fn non_interactive_with_dimensions(rows: u16, cols: u16) -> Self {
+        let rows = rows.max(Self::MIN_ROWS);
+        let cols = cols.max(Self::MIN_COLS);
         let parser = Arc::new(RwLock::new(Parser::new(rows, cols, Self::SCROLLBACK_SIZE)));
         Self {
             parser,
@@ -496,8 +502,8 @@ impl PtyInstance {
 
     pub fn resize(&mut self, rows: u16, cols: u16) -> io::Result<()> {
         // Ensure minimum sizes
-        let rows = rows.max(3);
-        let cols = cols.max(20);
+        let rows = rows.max(Self::MIN_ROWS);
+        let cols = cols.max(Self::MIN_COLS);
 
         // Check dimensions and get old values in a single lock scope
         let (should_resize, old_rows, old_scrollback) = {
@@ -569,8 +575,8 @@ impl PtyInstance {
     /// The swap itself is fast: take a brief write lock, replay any output that arrived
     /// during the background reparse, and replace the parser.
     pub fn resize_async(&self, rows: u16, cols: u16) {
-        let rows = rows.max(3);
-        let cols = cols.max(20);
+        let rows = rows.max(Self::MIN_ROWS);
+        let cols = cols.max(Self::MIN_COLS);
 
         // Quick check: skip if dimensions haven't changed
         {

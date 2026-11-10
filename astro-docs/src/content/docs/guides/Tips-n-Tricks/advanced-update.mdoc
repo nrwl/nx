@@ -31,7 +31,9 @@ The next step in the process involves using the `migrate` command to apply the m
 nx migrate --run-migrations
 ```
 
-All changes to your source code will be unstaged and ready for you to review and commit yourself.
+Without the agentic flow, Nx leaves all changes to your source code unstaged by default, so you can review and commit them yourself.
+With it, Nx commits each migration separately by default.
+For more information, see [using an AI agent to apply migrations](#using-an-ai-agent-to-apply-migrations).
 
 ### Step 3: Cleaning up
 
@@ -89,11 +91,11 @@ To skip the optional package updates, generate the migration with `--include=req
 nx migrate --include=required
 ```
 
-Only the target package and the packages it ships with are updated. The `package.json` and the `migrations.json` are generated without the optional dependency updates, and you can catch up on those later.
+Only the target package and the packages it ships with are updated. The `package.json` and the `migrations.json` are generated without the optional dependency updates or the migrations that apply them, and you can catch up on those later.
 
 ### Updating dependencies that are behind the versions Nx manages
 
-Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. Run `nx migrate --include=optional` to collect the optional dependency updates recommended for your installed version. It anchors to your installed version, so the target package must be installed and you can't migrate to a version higher than what's installed.
+Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. Run `nx migrate --include=optional` to collect the optional dependency updates recommended for your installed version. It also collects the plugin migrations that apply an optional update or need one, which `--include=required` skips. It anchors to your installed version, so the target package must be installed and you can't migrate to a version higher than what's installed.
 
 The catch-up can be scoped to a single plugin by naming it as the target. For example, `nx migrate @nx/vite --include=optional` collects only the optional updates `@nx/vite` recommends, such as `vite` itself.
 
@@ -176,20 +178,69 @@ You can even provide a custom location for the migrations file if you wish, you 
 nx migrate --run-migrations=migrations.json
 ```
 
+### Running a single migration
+
+To run one migration from `migrations.json` on its own, pass its id to `--run-migration`:
+
+```shell
+nx migrate --run-migration=<package>:<migration-name>
+```
+
+A bare `<migration-name>` also works when it matches exactly one migration.
+Running the command again runs the migration again, which is also how you restart it after an
+interruption.
+
+With the agentic flow enabled, Nx runs the migration's generator itself, if it has one, and starts
+an agent session only when the migration leaves a prompt to apply or changes to review.
+The session ends once that migration is done, without the final check of the projects a run
+touched.
+
+If a `--run-migrations` run is active, Nx warns that the run doesn't record this migration, so
+continuing it later may apply the migration again.
+Nx refuses to start while another `nx migrate` process is working on a run.
+
+Inside an AI agent's terminal, Nx prints the migration's prompt, or instructions to review its
+generator's changes, for that agent to follow.
+Pass `--no-validate` or `--no-agentic` to skip the review instructions.
+
 ## Using an AI agent to apply migrations
 
 Some migrations ship an AI prompt that an installed agent applies for you. The [agentic flow](/docs/features/automate-updating-dependencies#step-2-run-migrations) is interactive by default, but you can control it with flags:
 
 - `--agentic` enables it and resolves the installed agent. Use `--agentic=claude-code` (or `codex`, `opencode`) to pin one, or `--no-agentic` to disable it.
-- `--validate` / `--no-validate` toggles agent validation of generator-only migrations - on by default when the agentic flow is enabled.
+- `--validate` / `--no-validate` toggles the agent's review of generator-only migrations. It's on by default.
+- `--final-validation` / `--no-final-validation` toggles the agent's final check of the projects the run touched. It's on by default.
 
-A non-interactive `--agentic` run warns and continues without the agent, since the flow requires an interactive terminal. When the flow is enabled, Nx commits each migration separately by default so the agent can review an isolated diff.
+A non-interactive `--agentic` run warns and continues without the agent, since the agent session needs an interactive terminal. When the flow is enabled, Nx commits each migration separately by default so the agent can review an isolated diff.
 
-To always use the agentic flow (or a specific agent) without passing the flag, set the `agentic` and `validate` options in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate).
+To always use the agentic flow (or a specific agent) without passing the flag, set the `agentic`, `validate`, and `finalValidation` options in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate).
+
+### Continue or replace an agent-driven run
+
+The command Nx prints to continue a stopped run looks like this:
+
+```shell
+nx migrate --run-migrations --agentic=claude-code --run-id=<run-id> --create-commits
+```
+
+It repeats the run's commit and install flags, since Nx doesn't continue a run with different ones.
+The run also keeps the validation settings it started with.
+
+When you run `nx migrate --run-migrations` without `--run-id` while a run is active, Nx asks what to do with it in a terminal.
+With the agentic flow you can continue the run, and either way you can start fresh or leave it as it is.
+Without a terminal, Nx prints the run's state and the commands to continue it or start fresh, then exits with an error.
+
+Starting fresh deletes the run's record and runs the whole plan again.
+Migrations the deleted run already applied stay applied, so running the plan applies them a second time.
+To start fresh without the prompt, pass the run's id:
+
+```shell
+nx migrate --run-migrations --start-fresh --run-id=<run-id>
+```
 
 ## Workspace-wide migrate defaults
 
-To avoid passing the same flags on every run, set defaults in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate) - `createCommits`, `commitPrefix`, `include`, `multiMajorMode`, `agentic`, and `validate`. A command-line flag always overrides the `nx.json` value, which in turn overrides the built-in Nx defaults.
+To avoid passing the same flags on every run, set defaults in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate) - `createCommits`, `commitPrefix`, `include`, `multiMajorMode`, `agentic`, `validate`, and `finalValidation`. A command-line flag always overrides the `nx.json` value, which in turn overrides the built-in Nx defaults.
 
 ## Other advanced capabilities
 

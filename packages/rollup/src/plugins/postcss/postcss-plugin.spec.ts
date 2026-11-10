@@ -1,5 +1,5 @@
 import { postcss } from './postcss-plugin';
-import type { Plugin, PluginContext } from 'rollup';
+import type { PluginContext } from 'rollup';
 
 describe('postcss plugin', () => {
   describe('plugin initialization', () => {
@@ -59,8 +59,8 @@ describe('postcss plugin', () => {
 
     beforeEach(() => {
       mockContext = {
-        warn: jest.fn(),
-        addWatchFile: jest.fn(),
+        warn: vi.fn(),
+        addWatchFile: vi.fn(),
       };
     });
 
@@ -178,8 +178,8 @@ describe('postcss plugin', () => {
 
     beforeEach(() => {
       mockContext = {
-        warn: jest.fn(),
-        addWatchFile: jest.fn(),
+        warn: vi.fn(),
+        addWatchFile: vi.fn(),
       };
     });
 
@@ -223,8 +223,8 @@ describe('postcss plugin', () => {
 
     beforeEach(() => {
       mockContext = {
-        warn: jest.fn(),
-        addWatchFile: jest.fn(),
+        warn: vi.fn(),
+        addWatchFile: vi.fn(),
       };
     });
 

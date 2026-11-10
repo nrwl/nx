@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import type { ChildProcess, Serializable } from 'child_process';
 import { readFileSync } from 'fs';
 import { Transform } from 'stream';
-import { killProcessTree, killProcessTreeGraceful } from '../../native';
+import { killProcessTreeGraceful } from '../../native';
 import { signalToCode } from '../../utils/exit-codes';
 import { addPrefixTransformer, getColor } from './output-prefix';
 import type { RunningTask } from './running-task';
@@ -20,6 +20,9 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     private childProcess: ChildProcess,
     { streamOutput, prefix }: { streamOutput: boolean; prefix: string }
   ) {
+    // Decode as a stream so a code point split across chunks stays intact
+    this.childProcess.stdout.setEncoding('utf8');
+    this.childProcess.stderr.setEncoding('utf8');
     if (streamOutput) {
       if (process.env.NX_PREFIX_OUTPUT === 'true') {
         const color = getColor(prefix);
@@ -63,16 +66,14 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
         process.send(message);
       }
     });
-    this.childProcess.stdout.on('data', (chunk) => {
-      const output = chunk.toString();
+    this.childProcess.stdout.on('data', (output: string) => {
       this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {
         cb(output);
       }
     });
-    this.childProcess.stderr.on('data', (chunk) => {
-      const output = chunk.toString();
+    this.childProcess.stderr.on('data', (output: string) => {
       this.terminalOutputChunks.push(output);
       // Stream output to TUI via callbacks
       for (const cb of this.outputCallbacks) {

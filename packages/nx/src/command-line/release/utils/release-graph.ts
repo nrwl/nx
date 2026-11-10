@@ -152,13 +152,21 @@ export class ReleaseGraph {
    */
   filterLog: { title: string; bodyLines: string[] } | null = null;
 
+  /**
+   * Every configured release group, regardless of filters. Version plans must be resolved
+   * against these, as pending plans may target projects outside the current filter.
+   */
+  readonly allReleaseGroups: ReleaseGroupWithName[];
+
   constructor(
     public releaseGroups: ReleaseGroupWithName[],
     public readonly filters: {
       projects?: string[];
       groups?: string[];
     }
-  ) {}
+  ) {
+    this.allReleaseGroups = [...releaseGroups];
+  }
 
   /**
    * Initialize the graph by building all relationships and caches
@@ -746,8 +754,11 @@ export class ReleaseGraph {
       !this.projectsToVersionActions.has(projectName) ||
       !this.finalConfigsByProject.has(projectName)
     ) {
-      throw new Error(
-        `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+      throw Object.assign(
+        new Error(
+          `Cannot resolve a concrete current version for dependency project "${projectName}" because it is not configured for Nx Release. Include the project in an Nx Release group so that its current version resolver can be configured.`
+        ),
+        { code: 'NX_RELEASE_PROJECT_NOT_CONFIGURED' }
       );
     }
 

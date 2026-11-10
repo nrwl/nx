@@ -127,9 +127,23 @@ function getNodes(
     ...packageJson.optionalDependencies,
   };
 
+  // @patch: descriptors are not their own nodes. Their checksum and resolution
+  // are folded into the matching package node so a patch changes its hash.
+  const patchesByPackage = new Map<string, YarnDependency[]>();
+
   Object.entries(dependencies).forEach(([keys, snapshot]) => {
-    // ignore workspace projects & patches
-    if (snapshot.linkType === 'soft' || keys.includes('@patch:')) {
+    if (snapshot.linkType === 'soft') {
+      return;
+    }
+    if (keys.includes('@patch:')) {
+      for (const packageName of getPackageNameKeyPairs(keys).keys()) {
+        const patches = patchesByPackage.get(packageName);
+        if (patches) {
+          patches.push(snapshot);
+        } else {
+          patchesByPackage.set(packageName, [snapshot]);
+        }
+      }
       return;
     }
     const nameKeyPairs = getPackageNameKeyPairs(keys);
@@ -183,6 +197,8 @@ function getNodes(
     });
   });
 
+  foldPatchIntoExternalNodeHashes(nodes, patchesByPackage);
+
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   for (const [packageName, versionMap] of nodes.entries()) {
     // If there's only one version of a package, treat it as hoisted
@@ -202,6 +218,48 @@ function getNodes(
     });
   }
   return { nodes: externalNodes, keyMap };
+}
+
+function foldPatchIntoExternalNodeHashes(
+  nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
+  patchesByPackage: Map<string, YarnDependency[]>
+) {
+  for (const [packageName, patches] of patchesByPackage) {
+    const versionMap = nodes.get(packageName);
+    if (!versionMap) {
+      continue;
+    }
+    for (const [versionKey, node] of versionMap) {
+      const seen = new Set<string>();
+      const parts: string[] = [];
+      const matching = patches
+        .filter(
+          (patch) =>
+            !!patch.version &&
+            (patch.version === versionKey ||
+              patch.version === node.data.version)
+        )
+        .sort((a, b) => patchSortKey(a).localeCompare(patchSortKey(b)));
+      for (const patch of matching) {
+        const patchParts = [patch.checksum, patch.resolution].filter(
+          (part): part is string => !!part
+        );
+        const id = patchParts.join('\0');
+        if (!id || seen.has(id)) {
+          continue;
+        }
+        seen.add(id);
+        parts.push(...patchParts);
+      }
+      if (parts.length > 0) {
+        node.data.hash = hashArray([node.data.hash, ...parts]);
+      }
+    }
+  }
+}
+
+function patchSortKey(snapshot: YarnDependency): string {
+  return `${snapshot.resolution ?? ''}\0${snapshot.checksum ?? ''}`;
 }
 
 function findHoistedNode(

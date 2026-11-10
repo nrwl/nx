@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should create nodes 1`] = `
 [
   [
     "my-app/remix.config.cjs",
@@ -41,6 +41,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -50,6 +59,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -61,36 +79,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
               "dependsOn": [
                 "build",
               ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
                 {
                   "externalDependencies": [
-                    "typescript",
+                    "@remix-run/dev",
                   ],
                 },
               ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": "my-app",
               },
@@ -110,7 +107,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer watch-deps target 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > non-root project > should infer watch-deps target 1`] = `
 [
   [
     "my-app/remix.config.cjs",
@@ -151,6 +148,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -160,6 +166,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -171,36 +186,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               "dependsOn": [
                 "build",
               ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
                 {
                   "externalDependencies": [
-                    "typescript",
+                    "@remix-run/dev",
                   ],
                 },
               ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": "my-app",
               },
@@ -220,7 +214,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Classic Compiler root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Classic Compiler > root project > should create nodes 1`] = `
 [
   [
     "remix.config.cjs",
@@ -256,6 +250,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             "dev": {
               "command": "remix dev --manual",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -265,6 +268,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": ".",
@@ -276,36 +288,15 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
               "dependsOn": [
                 "build",
               ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "typecheck": {
-              "cache": true,
-              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
                 {
                   "externalDependencies": [
-                    "typescript",
+                    "@remix-run/dev",
                   ],
                 },
               ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": ".",
               },
@@ -318,7 +309,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Vite Compiler > non-root project > should create nodes 1`] = `
 [
   [
     "my-app/vite.config.js",
@@ -358,6 +349,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
             "dev": {
               "command": "remix vite:dev",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": "my-app",
               },
@@ -367,6 +367,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": "my-app",
@@ -378,36 +387,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               "dependsOn": [
                 "build",
               ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "tsc": {
-              "cache": true,
-              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
                 {
                   "externalDependencies": [
-                    "typescript",
+                    "@remix-run/dev",
                   ],
                 },
               ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": "my-app",
               },
@@ -427,7 +415,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
 ]
 `;
 
-exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1`] = `
+exports[`@nx/remix/plugin > Remix Vite Compiler > root project > should create nodes 1`] = `
 [
   [
     "vite.config.js",
@@ -462,6 +450,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             "dev": {
               "command": "remix vite:dev",
               "continuous": true,
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
+              ],
               "options": {
                 "cwd": ".",
               },
@@ -471,6 +468,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               "continuous": true,
               "dependsOn": [
                 "build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "@remix-run/dev",
+                  ],
+                },
               ],
               "options": {
                 "cwd": ".",
@@ -482,36 +488,15 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               "dependsOn": [
                 "build",
               ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "typecheck": {
-              "cache": true,
-              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
                 {
                   "externalDependencies": [
-                    "typescript",
+                    "@remix-run/dev",
                   ],
                 },
               ],
-              "metadata": {
-                "description": "Runs type-checking for the project.",
-                "help": {
-                  "command": "npx tsc --help",
-                  "example": {
-                    "options": {
-                      "noEmit": true,
-                    },
-                  },
-                },
-                "technologies": [
-                  "typescript",
-                ],
-              },
               "options": {
                 "cwd": ".",
               },

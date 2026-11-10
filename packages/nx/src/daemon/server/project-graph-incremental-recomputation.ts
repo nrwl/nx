@@ -1,15 +1,11 @@
 import { Socket } from 'net';
 import { performance } from 'perf_hooks';
 import { readNxJson } from '../../config/nx-json';
-import {
-  FileData,
-  FileMap,
-  ProjectGraph,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
+import { FileData, FileMap, ProjectGraph } from '../../config/project-graph';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { hashArray, hashObject } from '../../hasher/file-hasher';
 import { NxWorkspaceFilesExternals } from '../../native';
+import type { ChangeBatch } from '../../native';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import {
   DaemonProjectGraphError,
@@ -38,7 +34,11 @@ import {
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
 import {
+  isEmptyBatch,
+  isWatchingWorkspaceContext,
   resetWorkspaceContext,
+  settleWorkspaceContext,
+  takeAppliedWorkspaceChanges,
   updateFilesInContext,
 } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -56,7 +56,11 @@ import {
 import { notifyFileChangeListeners } from './file-watching/file-change-events';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { notifyProjectGraphListenerSockets } from './project-graph-listener-sockets';
-import { flushPendingWorkspaceChanges } from './watcher';
+import {
+  changedPaths,
+  fileNames,
+  restartDaemonIfIgnoreFilesChanged,
+} from './restart-checks';
 import { serverLogger } from '../logger';
 
 interface SerializedProjectGraph {
@@ -96,7 +100,6 @@ const projectGraphRecomputationListeners = new Set<
   ) => void
 >();
 let storedWorkspaceConfigHash: string | undefined;
-let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 let fileChangeCounter = 0;
 let recomputationGeneration = 0;
 
@@ -158,6 +161,9 @@ function kickOffRecompute() {
         cachedSerializedProjectGraphPromise === myPromise &&
         result.projectGraph
       ) {
+        if (result.projectFileMapCache) {
+          currentProjectFileMapCache = result.projectFileMapCache;
+        }
         // The graph identity ties the candidate's generation to exactly this
         // result; a chained result never matches (its computation's kickoff
         // replaced the cached pointer, failing the identity check above).
@@ -232,8 +238,8 @@ export async function getCachedSerializedProjectGraphPromise(
     await new Promise(setImmediate);
 
     // The queue can hold evidence against the settled cached graph itself: a
-    // tracked dotenv edit only the outputs watcher has delivered yet queues
-    // without invalidating, and the workspace watcher's recomputation may lag
+    // tracked dotenv edit only the raw-event stream has delivered yet queues
+    // without invalidating, and the file-change stream's recomputation may lag
     // this request. Classified against the exact graph the cache serves; an
     // in-flight computation needs no check here because its own pre-serve
     // replay consumes the queue. Content hashes are dropped before the
@@ -332,55 +338,117 @@ export async function getCachedSerializedProjectGraphPromise(
   }
 }
 
+const SUMMARY_CAP = 10;
+
+function summarize(files: string[]): string {
+  if (files.length === 0) return '(none)';
+  const listed = files.slice(0, SUMMARY_CAP).map((f) => `  - ${f}`);
+  if (files.length > SUMMARY_CAP) {
+    listed.push(`  ... and ${files.length - SUMMARY_CAP} more`);
+  }
+  return listed.join('\n');
+}
+
+/**
+ * Takes in changes the workspace context handed out: restarts the daemon if
+ * an ignore file changed, otherwise schedules the recomputation.
+ */
+export function routeAppliedChanges(batch: ChangeBatch): void {
+  if (!isEmptyBatch(batch)) {
+    if (restartDaemonIfIgnoreFilesChanged(changedPaths(batch))) {
+      return;
+    }
+    serverLogger.watcherLog(
+      `File changes detected (seq ${batch.seq}):\n` +
+        `Created:\n${summarize(fileNames(batch.createdFiles))}\n` +
+        `Updated:\n${summarize(fileNames(batch.updatedFiles))}\n` +
+        `Deleted:\n${summarize(batch.deletedFiles)}`
+    );
+  }
+  scheduleAppliedChanges(batch);
+}
+
+/**
+ * Applies everything the file-change stream has seen and routes what changed.
+ * Call before serving a cached project graph, so a change the watcher already
+ * saw is never missed.
+ */
+export async function flushPendingWorkspaceChanges() {
+  if (!isWatchingWorkspaceContext()) return;
+  const batch = settleWorkspaceContext(workspaceRoot);
+  // An empty settle must not reach the routing: it would schedule the first
+  // graph computation here rather than where the request handler reports it.
+  if (isEmptyBatch(batch)) {
+    return;
+  }
+  routeAppliedChanges(batch);
+}
+
+/**
+ * Applies changes a caller learned of on its own to the workspace context,
+ * then schedules the recomputation as for a batch the context applied.
+ *
+ * The caller is a sync generator, whose writes the watch would report anyway;
+ * this makes them visible before the generator returns rather than by the next
+ * settle. Whether that guarantee is still needed is NXC-4996.
+ */
 export function scheduleProjectGraphRecomputation(
   createdFiles: string[],
   updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  ++fileChangeCounter;
-
-  // Hash the changed files up front and drop no-op rewrites before they can
-  // trigger an expensive recompute. Restoring a cached task output, a
-  // `git checkout` back to the same content, or a formatter that changes
-  // nothing all rewrite a file (new inode) the watcher reports as changed
-  // even though the bytes are identical. updateFilesInContext updates the
-  // workspace context and returns only the files whose content actually
-  // changed. Hashing here — once per watcher batch — rather than inside the
-  // recompute keeps it off the stale-retry path, which would otherwise see
-  // "no change" after the first pass already updated the context hashes.
-  performance.mark('hash-watched-changes-start');
-  const changedFileHashes =
-    createdFiles.length > 0 ||
-    updatedFiles.length > 0 ||
-    deletedFiles.length > 0
-      ? (updateFilesInContext(
-          workspaceRoot,
-          [...createdFiles, ...updatedFiles],
-          deletedFiles
-        ) ?? {})
-      : {};
-  performance.mark('hash-watched-changes-end');
-  performance.measure(
-    'hash changed files from watcher',
-    'hash-watched-changes-start',
-    'hash-watched-changes-end'
+  if (!createdFiles.length && !updatedFiles.length && !deletedFiles.length) {
+    return;
+  }
+  // Hashed once here, not inside the recompute, so a stale retry does not see
+  // "no change" after the first pass already updated the context.
+  performance.mark('hash-reported-changes-start');
+  const batch = updateFilesInContext(
+    workspaceRoot,
+    [...createdFiles, ...updatedFiles],
+    deletedFiles
   );
+  performance.mark('hash-reported-changes-end');
+  performance.measure(
+    'hash reported file changes',
+    'hash-reported-changes-start',
+    'hash-reported-changes-end'
+  );
+  // A watching context hands every applied change out once, from one place.
+  routeAppliedChanges(
+    isWatchingWorkspaceContext()
+      ? takeAppliedWorkspaceChanges(workspaceRoot)
+      : batch
+  );
+}
 
-  for (const [f, hash] of Object.entries(changedFileHashes)) {
-    collectedDeletedFiles.delete(f);
-    collectedUpdatedFiles.set(f, { version: fileChangeCounter, hash });
+/**
+ * Schedules a recomputation for changes the workspace context has applied:
+ * no-op rewrites are already dropped, deleted directories expanded, and every
+ * created or updated file carries its hash.
+ */
+function scheduleAppliedChanges(batch: ChangeBatch) {
+  ++fileChangeCounter;
+  const { createdFiles, updatedFiles, deletedFiles } = batch;
+
+  for (const { file, hash } of [...createdFiles, ...updatedFiles]) {
+    collectedDeletedFiles.delete(file);
+    collectedUpdatedFiles.set(file, { version: fileChangeCounter, hash });
+  }
+  for (const file of deletedFiles) {
+    collectedUpdatedFiles.delete(file);
+    collectedDeletedFiles.set(file, fileChangeCounter);
   }
 
-  for (let f of deletedFiles) {
-    collectedUpdatedFiles.delete(f);
-    collectedDeletedFiles.set(f, fileChangeCounter);
-  }
-
-  // The native watcher already coalesces a burst of events into one batch,
-  // so socket + listener notifications dispatch immediately.
-  if (Object.keys(changedFileHashes).length > 0 || deletedFiles.length > 0) {
-    notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
-    notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
+  if (!isEmptyBatch(batch)) {
+    const createdFileNames = fileNames(createdFiles);
+    const updatedFileNames = fileNames(updatedFiles);
+    notifyFileChangeListeners({
+      createdFiles: createdFileNames,
+      updatedFiles: updatedFileNames,
+      deletedFiles,
+    });
+    notifyFileWatcherSockets(createdFileNames, updatedFileNames, deletedFiles);
     // Bump generation synchronously so any in-flight compute fails its
     // next isStale() check and chains to the newer one. kickOffRecompute
     // would also bump on first resume, but only after its first await —
@@ -388,10 +456,15 @@ export function scheduleProjectGraphRecomputation(
     ++recomputationGeneration;
     kickOffRecompute();
   } else {
-    // First call (initial startup) — no events but we still need a graph.
-    if (!cachedSerializedProjectGraphPromise) {
-      kickOffRecompute();
-    }
+    // Nothing changed, but a daemon with no graph yet still needs one.
+    scheduleInitialProjectGraphComputation();
+  }
+}
+
+/** Computes the first project graph, unless one is already on its way. */
+export function scheduleInitialProjectGraphComputation() {
+  if (!cachedSerializedProjectGraphPromise) {
+    kickOffRecompute();
   }
 }
 
@@ -422,11 +495,10 @@ function computeWorkspaceConfigHash(
 type FileMapUpdate = {
   fileMap: NonNullable<typeof fileMapWithFiles>;
   configHash: string;
-  knownExternalNodes?: Record<string, ProjectGraphExternalNode>;
 };
 
 async function processCollectedUpdatedAndDeletedFiles(
-  { projects, externalNodes, projectRootMap }: ConfigurationResult,
+  { projects, projectRootMap }: ConfigurationResult,
   updatedFileHashes: Record<string, string>,
   deletedFiles: string[]
 ): Promise<FileMapUpdate> {
@@ -439,7 +511,7 @@ async function processCollectedUpdatedAndDeletedFiles(
     // can't clobber a faster newer one's already-committed state.
     if (configHash !== storedWorkspaceConfigHash) {
       const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-      return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
+      return { fileMap: fresh, configHash };
     }
 
     // Config unchanged → patch the existing file map in place.
@@ -499,38 +571,6 @@ export function invalidateGraphCache() {
  */
 export function getRecomputationGeneration(): number {
   return recomputationGeneration;
-}
-
-// isKnownWorkspaceFile's membership set, derived lazily from the map object it
-// was built from; every `fileMapWithFiles` write clears it, so a replaced map
-// generation is not retained through the memo.
-let knownWorkspaceFiles: Set<string> | undefined;
-let knownWorkspaceFilesSource: typeof fileMapWithFiles;
-
-/**
- * Whether the ignore-filtered workspace file map knows `path`. The workspace
- * watcher applies the same ignore rules, so a change to a known file also
- * reaches scheduleProjectGraphRecomputation; an unknown file is either
- * ignored, or created since the last recompute committed.
- */
-export function isKnownWorkspaceFile(path: string): boolean {
-  if (!fileMapWithFiles) {
-    return false;
-  }
-  if (knownWorkspaceFilesSource !== fileMapWithFiles) {
-    const { projectFileMap, nonProjectFiles } = fileMapWithFiles.fileMap;
-    knownWorkspaceFiles = new Set<string>();
-    for (const { file } of nonProjectFiles) {
-      knownWorkspaceFiles.add(file);
-    }
-    for (const files of Object.values(projectFileMap)) {
-      for (const { file } of files) {
-        knownWorkspaceFiles.add(file);
-      }
-    }
-    knownWorkspaceFilesSource = fileMapWithFiles;
-  }
-  return knownWorkspaceFiles.has(path);
 }
 
 async function processFilesAndCreateAndSerializeProjectGraph(
@@ -622,12 +662,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // chainToLatest above without touching `fileMapWithFiles`, so they
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
-    knownWorkspaceFiles = undefined;
-    knownWorkspaceFilesSource = undefined;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
-    if (fileMapUpdate.knownExternalNodes) {
-      knownExternalNodes = fileMapUpdate.knownExternalNodes;
-    }
 
     // Drain only after committing — a stale compute that returns at the
     // staleness check above must leave its snapshot in `collected*` so the
@@ -702,8 +737,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // against the graph about to be served. Runs after the last staleness
     // gate so a stale compute leaves the queue for its successor, and only
     // on the success path: an error result is never notified or persisted.
-    // Queue evidence is decisive here even for files the workspace watcher
-    // tracks: the two watchers deliver independently, so tracking alone does
+    // Queue evidence is decisive here even for files the file-change stream
+    // covers: the two streams deliver independently, so tracking alone does
     // not prove that watcher's recomputation was already scheduled.
     let staleDotEnv: boolean;
     try {
@@ -762,7 +797,8 @@ function persistProjectGraphToDisk(result: SerializedProjectGraph) {
     result.projectFileMapCache,
     result.projectGraph,
     result.sourceMaps,
-    extractErrors(result.error)
+    extractErrors(result.error),
+    Date.now()
   );
   cacheHasBeenPersisted = true;
 }
@@ -784,6 +820,7 @@ function copyFileMap(m: FileMap) {
 
 async function createAndSerializeProjectGraph({
   projects,
+  externalNodes,
   sourceMaps,
 }: ConfigurationResult): Promise<SerializedProjectGraph> {
   try {
@@ -793,7 +830,7 @@ async function createAndSerializeProjectGraph({
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingFileMap(
         projects,
-        knownExternalNodes,
+        externalNodes,
         fileMap,
         rustReferences,
         currentProjectFileMapCache || readFileMapCache(),
@@ -801,7 +838,6 @@ async function createAndSerializeProjectGraph({
         sourceMaps
       );
 
-    currentProjectFileMapCache = projectFileMapCache;
     currentProjectGraph = projectGraph;
     currentSourceMaps = sourceMaps;
 
@@ -852,8 +888,6 @@ async function resetInternalState() {
   servedGraphState = null;
   servedGraphCandidate = null;
   fileMapWithFiles = undefined;
-  knownWorkspaceFiles = undefined;
-  knownWorkspaceFilesSource = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   currentSourceMaps = undefined;

@@ -19,7 +19,6 @@ export async function initRsbuild(
   }: typeof import('@nx/rsbuild/generators') = require('@nx/rsbuild/generators');
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    addPlugin: true,
     skipFormat: true,
   });
   tasks.push(initTask);

@@ -10,8 +10,10 @@ exceptions:
   - Nx Cloud
   - Nx Console
   - Nx Agents
+  - Workers
   - Enterprise
   - Nx Replay
+  - Ultracache
   - AI
   - CI
   - CD
@@ -53,6 +55,9 @@ exceptions:
   - Kubernetes
   - Gradle
   - Maven
+  - Rust
+  - Cargo
+  - Clippy
   - Node.js
   - Deno
   - Bun

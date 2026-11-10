@@ -1,5 +1,5 @@
 import { NormalizedSwcExecutorOptions } from '../schema';
-import { getSwcCmd } from './compile-swc';
+import { getSwcCmd, getTypeCheckOptions } from './compile-swc';
 
 describe('getSwcCmd', () => {
   const baseOptions = {
@@ -40,5 +40,19 @@ describe('getSwcCmd', () => {
     });
 
     expect(cmd).toContain(' . -d ');
+  });
+});
+
+describe('getTypeCheckOptions', () => {
+  it('should resolve rootDir against the workspace root, not the cwd', () => {
+    const options = getTypeCheckOptions({
+      swcCliOptions: { stripLeadingPaths: false },
+      root: '/root',
+      projectRoot: 'libs/demo',
+      tsConfig: '/root/libs/demo/tsconfig.lib.json',
+      outputPath: '/root/dist/libs/demo',
+    } as NormalizedSwcExecutorOptions);
+
+    expect(options.rootDir).toEqual('/root/libs/demo');
   });
 });

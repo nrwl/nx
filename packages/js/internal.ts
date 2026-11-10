@@ -36,6 +36,7 @@ export {
   shouldIncludePnpmMajorRuntimeInput,
 } from './src/utils/pnpm-install-settings-inputs';
 export { addPnpmDeployOutputCacheInputs } from './src/utils/pnpm-deploy-output-cache-inputs';
+export { readRuntimeDependencies } from './src/utils/package-json/runtime-dependencies';
 export type { MatchedTargetRef } from './src/utils/target-defaults-matching';
 
 // TS solution setup detection
@@ -51,6 +52,10 @@ export {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from './src/utils/typescript/ts-solution-setup';
+export {
+  ensureTypescriptPlugin,
+  registerTypescriptPluginForTypecheck,
+} from './src/utils/typescript/add-typescript-plugin';
 
 // TypeScript helpers. resolvePathsBaseUrl, extractTsConfigBase,
 // tsConfigBaseOptions, addTsLibDependencies, and resolveModuleByImport ship via
@@ -85,6 +90,7 @@ export {
 // SWC helpers
 export { addSwcConfig, addSwcTestConfig } from './src/utils/swc/add-swc-config';
 export {
+  acknowledgeSwcBuildScripts,
   addSwcDependencies,
   addSwcRegisterDependencies,
 } from './src/utils/swc/add-swc-dependencies';
@@ -108,6 +114,11 @@ export {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
 } from './src/plugins/typescript/util';
+export {
+  createTypecheckTarget,
+  selectTypecheckTsConfig,
+  type TypecheckTargetOptions,
+} from './src/plugins/typescript/typecheck-target';
 
 // Generator helpers
 export {
@@ -144,4 +155,5 @@ export {
   swcNodeVersion,
   tsLibVersion,
   typesNodeVersion,
+  typescriptVersion,
 } from './src/utils/versions';

@@ -1,4 +1,4 @@
-import { logger, type ExecutorContext } from '@nx/devkit';
+import { getReadyUrl, logger, type ExecutorContext } from '@nx/devkit';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as http from 'node:http';
 import * as https from 'node:https';
@@ -32,7 +32,7 @@ export async function waitForWebserverExecutor(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const servers = options.servers ?? [];
+  const servers = withReadyUrl(options.servers ?? []);
   if (servers.length === 0) {
     logger.error(
       '@nx/playwright:wait-for-webserver requires at least one server to wait for.'
@@ -77,6 +77,16 @@ export async function waitForWebserverExecutor(
 }
 
 export default waitForWebserverExecutor;
+
+// The address the server task reported when it signaled readiness. It names no
+// server, so it only moves the url of a gate waiting for exactly one.
+function withReadyUrl(servers: Server[]): Server[] {
+  const readyUrl = process.env.NX_READY_URL;
+  if (!readyUrl || servers.length !== 1 || servers[0].port != null) {
+    return servers;
+  }
+  return [{ ...servers[0], url: getReadyUrl(servers[0].url) }];
+}
 
 // A malformed URL, an out-of-range port and a proxy that cannot be used are all
 // inputs that can never become valid, so they are rejected up front instead of
@@ -540,7 +550,7 @@ function proxiedRequest(
         ...options,
         // Playwright before 1.59.0 never verifies the origin certificate on
         // this route, whatever the caller asked for.
-        // TODO(v25): drop once minSupportedPlaywrightVersion reaches 1.59.0.
+        // TODO(v25): drop once minSupportedPlaywrightVersion reaches 1.59.0 (NXC-5153).
         ...(skipProxiedTls ? { rejectUnauthorized: false } : {}),
         agent,
       },

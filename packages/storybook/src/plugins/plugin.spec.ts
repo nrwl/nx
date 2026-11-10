@@ -1,14 +1,18 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import {
+  mockCjsModule,
+  resetCjsMocks,
+  TempFs,
+} from '@nx/devkit/internal-testing-utils';
 import type { StorybookConfig } from 'storybook/internal/types';
-import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { mkdirSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createNodesV2 } from './plugin';
 
 // Outside the repo tree: an in-workspace path would be an undeclared task output.
-jest.mock('nx/src/utils/cache-directory', () => ({
-  ...jest.requireActual('nx/src/utils/cache-directory'),
+vi.mock('nx/src/utils/cache-directory', async () => ({
+  ...(await vi.importActual<any>('nx/src/utils/cache-directory')),
   workspaceDataDirectory: require('node:path').join(
     require('node:os').tmpdir(),
     'nx-storybook-plugin-cache'
@@ -37,6 +41,13 @@ describe('@nx/storybook/plugin', () => {
     };
     tempFs.createFileSync('package.json', JSON.stringify({ name: 'repo' }));
     tempFs.createFileSync('package-lock.json', '{}');
+    // The swc-node hook compiles real configs with `importHelpers`; a temp root
+    // can't resolve `@swc/helpers` on its own.
+    mkdirSync(join(tempFs.tempDir, 'node_modules/@swc'), { recursive: true });
+    symlinkSync(
+      dirname(require.resolve('@swc/helpers/package.json')),
+      join(tempFs.tempDir, 'node_modules/@swc/helpers')
+    );
     tempFs.createFileSync(
       'my-app/project.json',
       JSON.stringify({ name: 'my-app' })
@@ -126,7 +137,8 @@ describe('@nx/storybook/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
+    vi.resetModules();
+    resetCjsMocks();
     tempFs.cleanup();
   });
 
@@ -173,7 +185,11 @@ describe('@nx/storybook/plugin', () => {
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -185,16 +201,33 @@ describe('@nx/storybook/plugin', () => {
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "cwd": "my-app",
+                    },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/storybook/ready-check').waitForDevServer()"",
+                      "interval": 1000,
                     },
                   },
                   "static-storybook": {
@@ -203,9 +236,25 @@ describe('@nx/storybook/plugin', () => {
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-app/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -270,7 +319,11 @@ export default config;
                     "executor": "@storybook/angular:build-storybook",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -294,11 +347,29 @@ export default config;
                   "serve-storybook": {
                     "continuous": true,
                     "executor": "@storybook/angular:start-storybook",
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                          "@storybook/angular",
+                        ],
+                      },
+                    ],
                     "options": {
                       "browserTarget": "my-ng-app:build",
                       "compodoc": false,
                       "configDir": "my-ng-app/.storybook",
                       "port": 6006,
+                    },
+                    "readyWhen": {
+                      "host": "{env.SBCONFIG_HOSTNAME ?? options.host ?? localhost}",
+                      "port": "{env.SBCONFIG_PORT ?? options.port ?? 9009}",
                     },
                   },
                   "static-storybook": {
@@ -307,9 +378,26 @@ export default config;
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                          "@storybook/angular",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-ng-app/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -523,7 +611,11 @@ export default config;
                     "command": "storybook build",
                     "inputs": [
                       "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
                       "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
                       {
                         "externalDependencies": [
                           "storybook",
@@ -535,16 +627,33 @@ export default config;
                     },
                     "outputs": [
                       "{projectRoot}/storybook-static",
-                      "{options.output-dir}",
-                      "{options.outputDir}",
-                      "{options.o}",
+                      "{projectRoot}/{options.output-dir}",
+                      "{projectRoot}/{options.outputDir}",
+                      "{projectRoot}/{options.o}",
                     ],
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
                     "continuous": true,
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "cwd": "my-react-lib",
+                    },
+                    "readyWhen": {
+                      "command": "node -e "require('@nx/storybook/ready-check').waitForDevServer()"",
+                      "interval": 1000,
                     },
                   },
                   "static-storybook": {
@@ -553,9 +662,25 @@ export default config;
                       "build-storybook",
                     ],
                     "executor": "@nx/web:file-server",
+                    "inputs": [
+                      "production",
+                      "{workspaceRoot}/{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      "{workspaceRoot}/{projectRoot}/.storybook/**/*",
+                      "{workspaceRoot}/{projectRoot}/tsconfig.storybook.json",
+                      "^production",
+                      "^{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+                      {
+                        "externalDependencies": [
+                          "storybook",
+                        ],
+                      },
+                    ],
                     "options": {
                       "buildTarget": "build-storybook",
                       "staticFilePath": "my-react-lib/storybook-static",
+                    },
+                    "readyWhen": {
+                      "signal": true,
                     },
                   },
                   "watch-deps": {
@@ -572,6 +697,34 @@ export default config;
         ],
       ]
     `);
+  });
+
+  it('should stop using production once nx.json removes it', async () => {
+    tempFs.createFileSync('my-app/.storybook/main.ts', '');
+    mockStorybookMainConfig('my-app/.storybook/main.ts', {
+      stories: ['../src/**/*.stories.tsx'],
+      framework: { name: '@storybook/react-vite', options: {} },
+    });
+    await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      context
+    );
+
+    const nodes = await createNodesFunction(
+      ['my-app/.storybook/main.ts'],
+      targetNames,
+      {
+        ...context,
+        nxJsonConfiguration: {
+          namedInputs: { default: ['{projectRoot}/**/*'] },
+        },
+      }
+    );
+
+    expect(
+      nodes[0][1].projects['my-app'].targets['build-storybook'].inputs
+    ).toEqual(['default', '^default', { externalDependencies: ['storybook'] }]);
   });
 
   it('should infer test-storybook from a generated Vite config with addon-vitest', async () => {
@@ -895,10 +1048,9 @@ export default config;
     mainTsPath: string,
     mainTsConfig: StorybookConfig
   ) {
-    jest.mock(
-      join(tempFs.tempDir, mainTsPath),
-      () => ({ default: mainTsConfig }),
-      { virtual: true }
-    );
+    // loadConfigFile `require`s the config, which `vi.mock` cannot reach.
+    mockCjsModule(import.meta.url, join(tempFs.tempDir, mainTsPath), {
+      default: mainTsConfig,
+    });
   }
 });

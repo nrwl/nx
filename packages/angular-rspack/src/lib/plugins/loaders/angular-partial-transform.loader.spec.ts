@@ -5,13 +5,10 @@ import type {
 } from '@nx/angular-rspack-compiler';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../../models';
-import { default as angularPartialTransformLoader } from './angular-partial-transform.loader';
-
-const { readFileMock } = vi.hoisted(() => ({ readFileMock: vi.fn() }));
-vi.mock('node:fs/promises', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('node:fs/promises')>()),
-  readFile: readFileMock,
-}));
+import {
+  default as angularPartialTransformLoader,
+  type AngularPartialTransformLoaderOptions,
+} from './angular-partial-transform.loader';
 
 describe('angular-partial-transform.loader', () => {
   const callback = vi.fn();
@@ -19,19 +16,26 @@ describe('angular-partial-transform.loader', () => {
   const babelFileCache = new Map<string, BabelFileCacheEntry>();
   const transformFile = vi.fn();
   const transformData = vi.fn();
+  const transformFileUncached = vi.fn();
   const makeCompilation = (angularCompilationFailed = false) =>
     ({
       [NG_RSPACK_SYMBOL_NAME]: () => ({
-        javascriptTransformer: { transformFile, transformData },
+        javascriptTransformer: {
+          transformFile,
+          transformData,
+          transformFileUncached,
+        },
         typescriptFileCache,
         babelFileCache,
         angularCompilationFailed,
       }),
     }) as unknown as NgRspackCompilation;
+  const engineManifestPath = '/root/__ng-rspack-ssr-entry-manifest__.js';
   const thisValue = {
     async: vi.fn(() => callback),
     _compilation: {},
-  } as unknown as LoaderContext<unknown>;
+    getOptions: () => ({ engineManifestPath }),
+  } as unknown as LoaderContext<AngularPartialTransformLoaderOptions>;
   const chainMap = {
     version: 3,
     sources: ['/path/to/file-original.ts'],
@@ -65,6 +69,45 @@ describe('angular-partial-transform.loader', () => {
     expect(callback).toHaveBeenCalledWith(null, '@angular content', chainMap);
   });
 
+  it('should pass the engine manifest virtual module through untransformed', () => {
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: engineManifestPath,
+      },
+      `import '@angular/ssr';`,
+      chainMap
+    );
+
+    expect(callback).toHaveBeenCalledWith(
+      null,
+      `import '@angular/ssr';`,
+      chainMap
+    );
+    expect(transformFile).not.toHaveBeenCalled();
+    expect(transformData).not.toHaveBeenCalled();
+  });
+
+  it('should transform a file that only shares the engine manifest file name', () => {
+    transformFile.mockResolvedValue(Buffer.from('transformed'));
+
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: '/root/nested/__ng-rspack-ssr-entry-manifest__.js',
+      },
+      `import '@angular/ssr';`,
+      chainMap
+    );
+
+    expect(transformFile).toHaveBeenCalledWith(
+      '/root/nested/__ng-rspack-ssr-entry-manifest__.js',
+      false,
+      false
+    );
+  });
   it('should pass content through when the angular compilation failed', () => {
     angularPartialTransformLoader.call(
       {
@@ -267,7 +310,7 @@ describe('angular-partial-transform.loader', () => {
     // The transformer merges a file's external map file into its output and
     // its persistent cache is keyed on the file bytes alone, so a
     // watch-mode change to that map (its own loader dependency) must
-    // re-transform the current file data directly.
+    // re-transform without that cache.
     const staleChainMap = {
       ...chainMap,
       sourcesContent: ['stale original source'],
@@ -277,8 +320,7 @@ describe('angular-partial-transform.loader', () => {
       map: JSON.stringify(staleChainMap),
       chainedMap: JSON.stringify(staleChainMap),
     });
-    readFileMock.mockResolvedValue('raw file data');
-    transformData.mockResolvedValue(
+    transformFileUncached.mockResolvedValue(
       Buffer.from('untouched\n//# sourceMapping' + 'URL=file.js.map\n')
     );
 
@@ -299,10 +341,8 @@ describe('angular-partial-transform.loader', () => {
         JSON.stringify(chainMap)
       )
     );
-    expect(readFileMock).toHaveBeenCalledWith('/path/to/file.js', 'utf8');
-    expect(transformData).toHaveBeenCalledWith(
+    expect(transformFileUncached).toHaveBeenCalledWith(
       '/path/to/file.js',
-      'raw file data',
       false,
       false
     );
@@ -312,30 +352,6 @@ describe('angular-partial-transform.loader', () => {
       map: JSON.stringify(chainMap),
       chainedMap: JSON.stringify(chainMap),
     });
-  });
-
-  it('should fail the module when reading the file for a bypassed transform rejects', async () => {
-    const error = new Error('read failed');
-    babelFileCache.set('/path/to/file.js', {
-      code: 'untouched',
-      map: undefined,
-      chainedMap: undefined,
-    });
-    readFileMock.mockRejectedValue(error);
-
-    angularPartialTransformLoader.call(
-      {
-        ...thisValue,
-        _compilation: makeCompilation(),
-        resourcePath: '/path/to/file.js',
-      },
-      '@angular content',
-      chainMap
-    );
-
-    await vi.waitFor(() => expect(callback).toHaveBeenCalledWith(error));
-    expect(transformData).not.toHaveBeenCalled();
-    expect(transformFile).not.toHaveBeenCalled();
   });
 
   it('should serve a transformed emit entry without re-transforming', () => {

@@ -162,6 +162,7 @@ interface NodeArguments extends BaseArguments {
   workspaceType: 'standalone' | 'integrated';
   appName: string;
   framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
+  bundler: 'tsc' | 'rolldown' | 'esbuild' | 'webpack';
   docker: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
 }
@@ -376,21 +377,6 @@ ${chalk.cyan('Documentation:')}
   https://nx.dev/getting-started/intro`
   );
 }
-
-// Node 24's stricter readline throws ERR_USE_AFTER_CLOSE when a prompt library
-// operates on a closed interface. Added for enquirer, which this package no
-// longer uses; verify against Node 24 before removing.
-// TODO(v24): drop if @clack/prompts proves not to need it.
-process.on('uncaughtException', (error: unknown) => {
-  if (
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error['code'] === 'ERR_USE_AFTER_CLOSE'
-  )
-    return;
-  throw error;
-});
 
 // Handle Ctrl+C gracefully - show helpful message if workspace was already created
 process.on('SIGINT', async () => {
@@ -641,7 +627,7 @@ async function normalizeArgsMiddleware(
     argv.workspaces ??= true;
     argv.useProjectJson ??= !argv.workspaces;
 
-    useCloud = argv.nxCloud !== 'skip' && argv.nxCloud !== 'never';
+    useCloud = argv.nxCloud !== 'skip';
 
     await recordStat({
       nxVersion,
@@ -672,26 +658,13 @@ async function normalizeArgsMiddleware(
         let nxCloud: string;
         let completionMessageKey: string | undefined;
         let skipCloudConnect = false;
-        let neverConnectToCloud = false;
 
         if (argv.skipGit === true) {
           nxCloud = 'skip';
           completionMessageKey = undefined;
         } else {
-          const cloudChoice = await determineNxCloudV2(argv);
-          if (cloudChoice === 'yes') {
-            nxCloud = 'yes';
-            skipCloudConnect = false;
-          } else if (cloudChoice === 'skip') {
-            nxCloud = 'skip';
-          } else {
-            nxCloud = 'never';
-            neverConnectToCloud = true;
-          }
-          completionMessageKey =
-            cloudChoice === 'never'
-              ? undefined
-              : getCompletionMessageKeyForVariant();
+          nxCloud = await determineNxCloudV2(argv);
+          completionMessageKey = getCompletionMessageKeyForVariant();
         }
 
         analyticsPrompt = await determineAnalytics(argv);
@@ -699,9 +672,8 @@ async function normalizeArgsMiddleware(
         packageManager = argv.packageManager ?? detectInvokedPackageManager();
         Object.assign(argv, {
           nxCloud,
-          useGitHub: nxCloud !== 'skip' && nxCloud !== 'never',
+          useGitHub: nxCloud !== 'skip',
           skipCloudConnect,
-          neverConnectToCloud,
           completionMessageKey,
           packageManager,
           defaultBase: 'main',
@@ -754,7 +726,6 @@ async function normalizeArgsMiddleware(
         let useGitHub: boolean | undefined;
         let completionMessageKey: string | undefined;
         let skipCloudConnect = false;
-        let neverConnectToCloud = false;
 
         if (argv.skipGit === true) {
           nxCloud = 'skip';
@@ -763,31 +734,15 @@ async function normalizeArgsMiddleware(
           // CLI arg provided: use existing flow (CI provider selection if needed)
           nxCloud = await determineNxCloud(argv);
           useGitHub =
-            nxCloud === 'skip' || nxCloud === 'never'
+            nxCloud === 'skip'
               ? undefined
               : nxCloud === 'github' ||
                 (await determineIfGitHubWillBeUsed(argv));
-          if (nxCloud === 'never') {
-            neverConnectToCloud = true;
-          }
         } else {
           // No CLI arg: use simplified prompt (same as template flow)
-          const cloudChoice = await determineNxCloudV2(argv);
-          if (cloudChoice === 'yes') {
-            nxCloud = 'yes';
-            skipCloudConnect = false;
-          } else if (cloudChoice === 'skip') {
-            nxCloud = 'skip';
-          } else {
-            nxCloud = 'never';
-            neverConnectToCloud = true;
-          }
-          useGitHub =
-            nxCloud !== 'skip' && nxCloud !== 'never' ? true : undefined;
-          completionMessageKey =
-            cloudChoice === 'never'
-              ? undefined
-              : getCompletionMessageKeyForVariant();
+          nxCloud = await determineNxCloudV2(argv);
+          useGitHub = nxCloud !== 'skip' ? true : undefined;
+          completionMessageKey = getCompletionMessageKeyForVariant();
         }
 
         analyticsPrompt = await determineAnalytics(argv);
@@ -797,7 +752,6 @@ async function normalizeArgsMiddleware(
           nxCloud,
           useGitHub,
           skipCloudConnect,
-          neverConnectToCloud,
           completionMessageKey,
           packageManager,
           defaultBase,
@@ -1649,6 +1603,7 @@ async function determineNodeOptions(
   let preset: Preset;
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
+  let bundler = parsedArgs.bundler;
   let docker: boolean;
   let linter: undefined | Linter;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
@@ -1672,8 +1627,12 @@ async function determineNodeOptions(
     } else {
       framework = 'none';
     }
+    if (preset === Preset.NodeMonorepo) {
+      bundler = await determineNodeBundler(parsedArgs, framework);
+    }
   } else {
     framework = await determineNodeFramework(parsedArgs);
+    bundler = await determineNodeBundler(parsedArgs, framework);
 
     const workspaceType = workspaces
       ? 'monorepo'
@@ -1709,12 +1668,16 @@ async function determineNodeOptions(
   // without asking.
   const formatter = await determineFormatterOptions(parsedArgs);
   linter = await determineLinterOptions(parsedArgs);
-  unitTestRunner = await determineUnitTestRunner(parsedArgs);
+  // Node apps are ESM, which jest loads as CommonJS.
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    preferVitest: framework !== 'nest',
+  });
 
   return {
     preset,
     appName,
     framework,
+    bundler,
     docker,
     linter,
     formatter,
@@ -1931,6 +1894,31 @@ async function determineNodeFramework(
     }),
   };
   return reply.framework;
+}
+
+async function determineNodeBundler(
+  parsedArgs: yargs.Arguments<NodeArguments>,
+  framework: NodeArguments['framework']
+): Promise<NodeArguments['bundler'] | undefined> {
+  if (parsedArgs.bundler) return parsedArgs.bundler;
+  // tsc needs a TS solution workspace, fastify autoloads its plugins from disk
+  // and nest has its own build setup, so the generator default applies there.
+  if (
+    !parsedArgs.workspaces ||
+    framework === 'fastify' ||
+    framework === 'nest'
+  ) {
+    return undefined;
+  }
+  return selectPrompt<'tsc' | 'rolldown'>({
+    message: 'How would you like to build your app?',
+    choices: [
+      { value: 'tsc', label: 'tsc      (unbundled, dist mirrors src)' },
+      { value: 'rolldown', label: 'Rolldown (bundled)' },
+    ],
+    initial: 'tsc',
+    skip: !parsedArgs.interactive || isCI(),
+  });
 }
 
 async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(

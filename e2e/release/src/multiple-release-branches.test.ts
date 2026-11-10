@@ -61,6 +61,7 @@ describe('nx release multiple release branches', () => {
 
   beforeEach(() => {
     newProject({
+      keepBackup: true,
       packages: ['@nx/js'],
     });
 
