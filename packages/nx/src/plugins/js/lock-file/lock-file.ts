@@ -45,6 +45,7 @@ import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-f
 import {
   BUN_LOCK_FILE,
   BUN_TEXT_LOCK_FILE,
+  getBunInstalledLocalPathNodes,
   getBunLocalPathNodeSources,
   getBunLockfilePatchKeys,
   getBunTextLockfileDependencies,
@@ -106,6 +107,8 @@ const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
  * `bunPatchFileHashes` are the patch files of a bun.lock that `lockFileHash` covers.
  * `localPathSources` lists the workspace-relative sources of the nodes installed
  * from the local file tree, whose contents the node hashes do not cover.
+ * `installedLocalPathNodes` names the local-path node each importer installs
+ * per dependency name, keyed by the importer's path ('.' for the root).
  */
 export function getLockFileNodes(
   packageManager: PackageManager,
@@ -118,6 +121,7 @@ export function getLockFileNodes(
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
   localPathSources?: Record<string, string[]>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   try {
     const packageJson =
@@ -154,16 +158,21 @@ export function getLockFileNodesForName(
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
   localPathSources?: Record<string, string[]>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   if (lockFile === YARN_LOCK_FILE || lockFile === BUN_LOCK_FILE) {
     // yarn-parser only reads optional fields plus an unused `name` for the
     // synthetic root workspace node, which is identical across base/head and
     // therefore irrelevant for affected diffing.
-    return getYarnLockfileNodes(
-      contents,
-      lockFileHash,
-      packageJson ?? ({} as PackageJson)
-    );
+    return {
+      ...getYarnLockfileNodes(
+        contents,
+        lockFileHash,
+        packageJson ?? ({} as PackageJson)
+      ),
+      // No record for Yarn or bun.lockb; imports resolve by version and name
+      installedLocalPathNodes: {},
+    };
   }
   if (lockFile === PNPM_LOCK_FILE || lockFile === PNPM_LOCK_FILE_LEGACY) {
     return getPnpmLockfileNodes(contents, lockFileHash);
@@ -181,6 +190,11 @@ export function getLockFileNodesForName(
       nodes,
       keyMap: new Map(),
       localPathSources: getBunLocalPathNodeSources(
+        contents,
+        lockFileHash,
+        nodes
+      ),
+      installedLocalPathNodes: getBunInstalledLocalPathNodes(
         contents,
         lockFileHash,
         nodes

@@ -805,6 +805,46 @@ export function getBunLocalPathNodeSources(
   return nodeSources;
 }
 
+/**
+ * The local-path node each workspace installs per dependency name, keyed by
+ * its path ('.' for the root). Aliases are left out.
+ */
+export function getBunInstalledLocalPathNodes(
+  lockFileContent: string,
+  lockFileHash: string,
+  nodes: Record<string, ProjectGraphExternalNode>
+): Record<string, Record<string, string>> {
+  const { lockFile, index } = parseLockFile(lockFileContent, lockFileHash);
+  const installed: Record<string, Record<string, string>> = {};
+  if (!index.localPathSources.size) {
+    return installed;
+  }
+  const packages = lockFile.packages ?? {};
+  const hasKey = (key: string) =>
+    Object.prototype.hasOwnProperty.call(packages, key);
+  for (const [path, workspace] of Object.entries(lockFile.workspaces ?? {})) {
+    // Bun keys a workspace's nested packages by its name
+    if (path !== '' && !workspace.name) {
+      continue;
+    }
+    const scope = path === '' ? [] : [workspace.name];
+    for (const depType of DEPENDENCY_TYPES) {
+      for (const depName of Object.keys(workspace[depType] ?? {})) {
+        const key = findNearestBunPackageKey(scope, depName, hasKey);
+        if (key === undefined || !index.localPathSources.has(key)) {
+          continue;
+        }
+        const { name, version } = getCachedSpecInfo(packages[key][0] as string);
+        const node = nodes[`npm:${name}@${version}`];
+        if (name === depName && node) {
+          (installed[path || '.'] ??= {})[depName] = node.name;
+        }
+      }
+    }
+  }
+  return installed;
+}
+
 interface PackageProcessingResult {
   shouldContinue: boolean;
 }

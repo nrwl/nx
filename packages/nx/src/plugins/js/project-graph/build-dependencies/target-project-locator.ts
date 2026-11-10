@@ -12,11 +12,7 @@ import {
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
-import {
-  getDependencyVersionFromPackageJson,
-  isTarballPath,
-  type PackageJson,
-} from '../../../../utils/package-json';
+import type { PackageJson } from '../../../../utils/package-json';
 import { isContainedRelativePath, normalizePath } from '../../../../utils/path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
@@ -52,32 +48,12 @@ type ParsedPatterns = {
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
+// Locators on the default cache share the local-path resolutions of one record
+let defaultLocalPathNpmResolutionCache:
+  | { recordKey: string; cache: NpmResolutionCache }
+  | undefined;
 
 const experimentalNodeModules = new Set(['node:sqlite']);
-
-// Whether a version can be a `file:`/`link:` version or a Bun tarball's path,
-// which can parse as semver (`1.0.0-rc.tgz`). It runs for every node, so it is
-// a cheap check that also accepts some other versions.
-function isLocalPathVersion(version: string): boolean {
-  // 'f' or 'l'
-  const first = version.charCodeAt(0);
-  if (first === 102 || first === 108) {
-    return true;
-  }
-  // The part after the last '.' is letters and digits, led by a letter
-  for (let i = version.length - 1; i >= 0; i--) {
-    const code = version.charCodeAt(i);
-    if (code === 46) {
-      const next = version.charCodeAt(i + 1) | 32;
-      return next >= 97 && next <= 122;
-    }
-    const lower = code | 32;
-    if ((code < 48 || code > 57) && (lower < 97 || lower > 122)) {
-      return false;
-    }
-  }
-  return false;
-}
 
 // Node's isBuiltin is false for Bun's runtime modules (`bun`, `bun:*`).
 function isBunModuleImport(importExpr: string): boolean {
@@ -105,6 +81,9 @@ export class TargetProjectLocator {
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
   private packageNamesWithSeveralNodes: Set<string> | undefined;
   private packageNamesWithLocalPathNodes = new Set<string>();
+  // Resolutions of packageNamesWithLocalPathNodes depend on this locator's
+  // installedLocalPathNodes, so they stay out of the shared cache
+  private localPathNpmResolutionCache: NpmResolutionCache = new Map();
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private parsedPathPatterns: ParsedPatterns | undefined;
@@ -122,8 +101,31 @@ export class TargetProjectLocator {
       ProjectGraphExternalNode
     > = {},
     private readonly npmResolutionCache: NpmResolutionCache = defaultNpmResolutionCache,
-    private readonly packageJsonResolutionCache: PackageJsonResolutionCache = defaultPackageJsonResolutionCache
+    private readonly packageJsonResolutionCache: PackageJsonResolutionCache = defaultPackageJsonResolutionCache,
+    // The local-path node each importer installs per package name, keyed by
+    // the importer's workspace-relative root ('.' for the workspace root).
+    // Without it, a vendored package resolves by version and name.
+    private readonly installedLocalPathNodes: Record<
+      string,
+      Record<string, string>
+    > = {}
   ) {
+    for (const installed of Object.values(this.installedLocalPathNodes)) {
+      for (const packageName of Object.keys(installed)) {
+        this.packageNamesWithLocalPathNodes.add(packageName);
+      }
+    }
+    if (
+      this.packageNamesWithLocalPathNodes.size &&
+      this.npmResolutionCache === defaultNpmResolutionCache
+    ) {
+      const recordKey = JSON.stringify(this.installedLocalPathNodes);
+      if (defaultLocalPathNpmResolutionCache?.recordKey !== recordKey) {
+        defaultLocalPathNpmResolutionCache = { recordKey, cache: new Map() };
+      }
+      this.localPathNpmResolutionCache =
+        defaultLocalPathNpmResolutionCache.cache;
+    }
     /**
      * Only the npm external nodes should be included.
      *
@@ -133,9 +135,6 @@ export class TargetProjectLocator {
     this.npmProjects = Object.values(this.externalNodes).reduce(
       (acc, node) => {
         if (node.type === 'npm') {
-          if (isLocalPathVersion(node.data.version)) {
-            this.packageNamesWithLocalPathNodes.add(node.data.packageName);
-          }
           const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
           if (!acc[node.name]) {
             acc[node.name] = node;
@@ -236,7 +235,10 @@ export class TargetProjectLocator {
         ? filePath.replace(workspaceRoot, '')
         : filePath
     );
-    this.npmResolutionCache.set(`${packageName}__${dirPath}`, null);
+    this.getNpmResolutionCache(packageName).set(
+      `${packageName}__${dirPath}`,
+      null
+    );
     return null;
   }
 
@@ -265,8 +267,9 @@ export class TargetProjectLocator {
     const workspaceRelativeDirPath = dirname(workspaceRelativeFilePath);
 
     const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
-    if (this.npmResolutionCache.has(npmImportForProject)) {
-      return this.npmResolutionCache.get(npmImportForProject);
+    const npmResolutionCache = this.getNpmResolutionCache(packageName);
+    if (npmResolutionCache.has(npmImportForProject)) {
+      return npmResolutionCache.get(npmImportForProject);
     }
 
     try {
@@ -280,7 +283,7 @@ export class TargetProjectLocator {
         // Try and fall back to resolving an external node from the graph by name
         const externalNode = this.npmProjects[`npm:${packageName}`];
         const externalNodeName = externalNode?.name || null;
-        this.npmResolutionCache.set(npmImportForProject, externalNodeName);
+        npmResolutionCache.set(npmImportForProject, externalNodeName);
         return externalNodeName;
       }
 
@@ -301,12 +304,11 @@ export class TargetProjectLocator {
         const versionedNode =
           this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
         // A vendored copy can share its name and version with a registry
-        // package, so the manifest that installed the copy decides. The walk
-        // can only find a node with a local-path version.
+        // package, so the lockfile's record of what was installed decides
         const installedNodeName =
           this.packageNamesWithLocalPathNodes.has(packageName) &&
           (!versionedNode || this.hasSeveralNodes(externalPackageJson.name))
-            ? this.findNpmProjectFromInstallingManifest(
+            ? this.findInstalledLocalPathNpmProjectFromDir(
                 packageName,
                 fullDirPath
               )
@@ -327,10 +329,7 @@ export class TargetProjectLocator {
         return null;
       }
 
-      this.npmResolutionCache.set(
-        npmImportForProject,
-        matchingExternalNode.name
-      );
+      npmResolutionCache.set(npmImportForProject, matchingExternalNode.name);
       return matchingExternalNode.name;
     } catch (e) {
       if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -341,91 +340,56 @@ export class TargetProjectLocator {
   }
 
   /**
-   * The external node a `file:`/`link:` dependency of a package.json installs,
-   * when the lockfile names it by path: the target's root-relative `file:` or
-   * `link:./` path (Bun, pnpm), or the path as written for a Bun tarball,
-   * which Bun records relative to its dependent. Unlike
-   * `findNpmProjectFromImport`, it tells apart local packages that share a
-   * name with each other or with a registry package.
+   * The external node of the local package that the importer at
+   * `importerRoot` installs for `packageName`, as the lockfile records it. An
+   * override can replace the copy a `file:` or `link:` spec names, so the spec
+   * alone does not tell.
    *
-   * @param packageJsonPath the manifest's workspace-relative path
+   * @param importerRoot the importer's workspace-relative root, '.' for the
+   * workspace root
    */
-  findNpmProjectFromLocalPathSpec(
+  findInstalledLocalPathNpmProject(
     packageName: string,
-    spec: string,
-    packageJsonPath: string
+    importerRoot: string
   ): string | null {
-    const protocol = spec.startsWith('file:')
-      ? 'file:'
-      : spec.startsWith('link:')
-        ? 'link:'
-        : null;
-    if (!protocol) {
-      return null;
-    }
-    const specPath = posix.normalize(
-      spec.slice(protocol.length).replace(/\\/g, '/')
-    );
-    const target = posix.join(posix.dirname(packageJsonPath), specPath);
-    const candidates = [
-      `npm:${packageName}@file:${target}`,
-      `npm:${packageName}@link:./${target}`,
-      ...(isTarballPath(specPath) ? [`npm:${packageName}@${specPath}`] : []),
-    ];
-    for (const candidate of candidates) {
-      const node = this.npmProjects[candidate];
-      if (node) {
-        return node.name;
-      }
-    }
-    return null;
+    const nodeName = this.installedLocalPathNodes[importerRoot]?.[packageName];
+    return (nodeName && this.npmProjects[nodeName]?.name) ?? null;
   }
 
   /**
-   * The external node of the `file:`/`link:` dependency behind the copy an
-   * import resolves to, when a manifest below the workspace root installed it
-   * into its own node_modules. A copy in the root's node_modules resolves
-   * through its version or the bare name instead.
+   * The external node of the local package behind the copy an import resolves
+   * to: the record of the nearest importer up to the workspace root, unless a
+   * directory on the way has its own copy, which the import loads instead.
    */
-  private findNpmProjectFromInstallingManifest(
+  private findInstalledLocalPathNpmProjectFromDir(
     packageName: string,
     fromDirPath: string
   ): string | null {
-    // The copy whose package.json Node finds first, as `readPackageJson` does
     for (let dir = fromDirPath; ; dir = dirname(dir)) {
       const relativeDir = relative(workspaceRoot, dir);
-      if (!relativeDir || !isContainedRelativePath(relativeDir)) {
+      if (relativeDir && !isContainedRelativePath(relativeDir)) {
         return null;
       }
-      if (!existsSync(join(dir, 'node_modules', packageName, 'package.json'))) {
-        continue;
-      }
-      const manifestPath = join(dir, 'package.json');
-      let manifest: PackageJson;
-      try {
-        manifest = readJsonFile(manifestPath);
-      } catch {
-        return null;
-      }
-      const spec = getDependencyVersionFromPackageJson(
+      const installed = this.findInstalledLocalPathNpmProject(
         packageName,
-        workspaceRoot,
-        manifest,
-        [
-          'dependencies',
-          'optionalDependencies',
-          'devDependencies',
-          'peerDependencies',
-        ]
+        relativeDir ? normalizePath(relativeDir) : '.'
       );
-      return spec
-        ? this.findNpmProjectFromLocalPathSpec(
-            packageName,
-            spec,
-            normalizePath(relative(workspaceRoot, manifestPath))
-          )
-        : null;
+      if (installed) {
+        return installed;
+      }
+      if (
+        !relativeDir ||
+        existsSync(join(dir, 'node_modules', packageName, 'package.json'))
+      ) {
+        return null;
+      }
     }
+  }
+
+  private getNpmResolutionCache(packageName: string): NpmResolutionCache {
+    return this.packageNamesWithLocalPathNodes.has(packageName)
+      ? this.localPathNpmResolutionCache
+      : this.npmResolutionCache;
   }
 
   // Built on first use, since only names with a local-path node need it

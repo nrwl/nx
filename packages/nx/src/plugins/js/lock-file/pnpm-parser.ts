@@ -81,6 +81,8 @@ export function getPnpmLockfileNodes(
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
   /** Workspace-relative local path sources per node name. */
   localPathSources: Record<string, string[]>;
+  /** The `file:` node each importer installs, per importer path and name. */
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
@@ -275,6 +277,7 @@ function getNodes(
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
   localPathSources: Record<string, string[]>;
+  installedLocalPathNodes: Record<string, Record<string, string>>;
 } {
   cachedInvertedRecords.clear();
   const keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
@@ -611,7 +614,32 @@ function getNodes(
     }
   }
 
-  return { nodes: results, keyMap, localPathSources };
+  // An override can install a registry copy for a `file:` spec, so the
+  // version each importer records decides
+  const installedLocalPathNodes: Record<string, Record<string, string>> = {};
+  for (const importerPath of importerPaths) {
+    const importer = data.importers[importerPath];
+    for (const depType of [
+      'dependencies',
+      'devDependencies',
+      'optionalDependencies',
+    ] as const) {
+      const deps = importer[depType] as Record<string, string> | undefined;
+      for (const [depName, depVersion] of Object.entries(deps ?? {})) {
+        if (typeof depVersion !== 'string' || !depVersion.startsWith('file:')) {
+          continue;
+        }
+        for (const node of keyMap.get(`${depName}@${depVersion}`) ?? []) {
+          if (node.data.packageName === depName) {
+            (installedLocalPathNodes[importerPath] ??= {})[depName] = node.name;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return { nodes: results, keyMap, localPathSources, installedLocalPathNodes };
 }
 
 // The version that gets the bare `npm:<name>` node when a package has several
