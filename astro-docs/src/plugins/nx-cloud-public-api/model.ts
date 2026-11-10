@@ -223,6 +223,35 @@ function securityMarkdown(document: OpenApiDocument, value: unknown): string {
     .join('\n');
 }
 
+// The specification opens each overview paragraph with a label (`Pagination: ...`).
+function descriptionTopics(description: string): {
+  lead: string;
+  topics: { label: string; body: string }[];
+} {
+  const lead: string[] = [];
+  const topics: { label: string; body: string[] }[] = [];
+  for (const paragraph of description.split(/\n{2,}/)) {
+    // At most three words, so a sentence that happens to contain a colon stays prose.
+    const labeled = /^([A-Z][\w-]*(?: [\w-]+){0,2}):\s+(\S[\s\S]*)$/.exec(
+      paragraph
+    );
+    if (labeled) {
+      const [, label, body] = labeled;
+      topics.push({
+        label,
+        body: [body.charAt(0).toUpperCase() + body.slice(1)],
+      });
+    } else (topics.at(-1)?.body ?? lead).push(paragraph);
+  }
+  return {
+    lead: lead.join('\n\n'),
+    topics: topics.map(({ label, body }) => ({
+      label,
+      body: body.join('\n\n'),
+    })),
+  };
+}
+
 export function buildOpenApiReference(
   document: OpenApiDocument,
   sourceUrl: string
@@ -252,7 +281,6 @@ export function buildOpenApiReference(
   ]) {
     slugger.occurrences[id] = 0;
   }
-  const authenticationGuideId = slugger.slug('authentication');
   const heading = (
     depth: ReferenceHeading['depth'],
     text: string,
@@ -261,6 +289,16 @@ export function buildOpenApiReference(
     if (id) slugger.occurrences[id] = 0;
     return { depth, text, slug: id ?? slugger.slug(text) };
   };
+  const { lead, topics } = descriptionTopics(text(document.info.description));
+  const overview = topics.map(({ label, body }) => ({
+    heading: heading(2, label),
+    body: prose(body),
+  }));
+  // An overview heading that slugs to `authentication` owns that anchor instead of the guide card.
+  const authenticationGuideId =
+    'authentication' in slugger.occurrences
+      ? undefined
+      : slugger.slug('authentication');
   const sections: OpenApiReference['sections'] = {
     servers: heading(2, 'Servers'),
     endpoints: heading(2, 'Endpoint reference', 'operations'),
@@ -537,7 +575,8 @@ export function buildOpenApiReference(
     introduction: prose(
       `This is an API reference of the Nx Cloud Public API.\n[View OpenAPI specification](${NX_CLOUD_PUBLIC_API_SPEC_URL})`
     ),
-    description: prose(text(document.info.description)),
+    description: prose(lead),
+    overview,
     navigation,
     servers: array(document.servers).map((server) =>
       prose(`${code(object(server).url)} ${text(object(server).description)}`)
