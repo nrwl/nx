@@ -19,6 +19,12 @@ export const ESLINTRC_ONLY_CLI_OPTIONS = [
   'rulesdir',
 ] as const;
 
+// How to replace each option, for the reports that list the leftover ones.
+export const ESLINTRC_ONLY_OPTIONS_FIXES =
+  'For an "ignore-path", pass the file\'s patterns as "--ignore-pattern" flags in the "args" of each run that used it. A flat config\'s "ignores" would apply to every run of that config. ' +
+  'ESLint resolves both from the directory it runs in, but the file uses gitignore syntax. Write "dist" as "**/dist" and "/dist" as "dist", and quote each pattern, because Nx passes "args" to the shell unquoted. ' +
+  'Load the "rulesdir" rules through a local plugin, pass a "resolve-plugins-relative-to" directory to FlatCompat as "resolvePluginsRelativeTo", and delete "no-eslintrc".';
+
 export function isEslintTarget(target: {
   executor?: string;
   command?: string;
