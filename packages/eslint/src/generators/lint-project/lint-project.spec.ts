@@ -510,6 +510,26 @@ describe('@nx/eslint:lint-project', () => {
     `);
   });
 
+  it('should reject ESLINT_USE_FLAT_CONFIG=false on ESLint v10 before writing a config', async () => {
+    tree.write('.eslintrc.json', '{ "root": true }');
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, eslint: '^10.0.0' };
+      return json;
+    });
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
+    await expect(
+      lintProjectGenerator(tree, {
+        ...defaultOptions,
+        linter: 'eslint',
+        project: 'test-lib',
+      })
+    ).rejects.toThrow(
+      /does not support the legacy "eslintrc" configuration format/
+    );
+    expect(tree.exists('libs/test-lib/.eslintrc.json')).toBe(false);
+  });
+
   it('should still set parserOptions.project in legacy .eslintrc config when typed linting is enabled', async () => {
     process.env.ESLINT_USE_FLAT_CONFIG = 'false';
 

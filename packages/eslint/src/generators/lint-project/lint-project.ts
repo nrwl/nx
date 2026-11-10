@@ -38,7 +38,10 @@ import {
   BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
-import { jsoncEslintParserVersion } from '../../utils/versions';
+import {
+  assertEslintrcFormatSupported,
+  jsoncEslintParserVersion,
+} from '../../utils/versions';
 import { setupRootEsLint } from './setup-root-eslint';
 import { getProjectType } from '@nx/js/internal';
 
@@ -69,6 +72,8 @@ export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
+  // Init and the root setup skip their version checks when a root config exists.
+  assertEslintrcFormatSupported(tree);
   options.eslintConfigFormat ??= 'mjs';
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
