@@ -1,7 +1,7 @@
 import { sortMigrations } from './sort-migrations';
 
-const mig = (name: string, version: string) => ({
-  package: '@nx/js',
+const mig = (name: string, version: string, pkg = '@nx/js') => ({
+  package: pkg,
   name,
   version,
 });
@@ -37,6 +37,25 @@ describe('sortMigrations', () => {
       '15-7-0-split-configuration-into-project-json-files',
       'earlier',
       'later',
+    ]);
+  });
+
+  it('hoists the @nx/storybook @nx/cypress backfill right after the project.json split', () => {
+    const backfill = 'update-24-1-0-add-nx-cypress-dependency';
+    const migrations = [
+      mig('earlier', '15.0.0'),
+      mig(backfill, '24.1.0-beta.0', '@nx/storybook'),
+      mig(backfill, '14.0.0', '@nx/other'),
+      mig('15-7-0-split-configuration-into-project-json-files', '15.7.0'),
+    ];
+
+    sortMigrations(migrations);
+
+    expect(migrations.map((m) => `${m.package}:${m.name}`)).toEqual([
+      '@nx/js:15-7-0-split-configuration-into-project-json-files',
+      `@nx/storybook:${backfill}`,
+      `@nx/other:${backfill}`,
+      '@nx/js:earlier',
     ]);
   });
 });
