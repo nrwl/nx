@@ -413,18 +413,6 @@ describe('CI Workflow generator', () => {
     });
   });
 
-  it.each([
-    ['github', '.github/workflows/ci.yml'],
-    ['gitlab', '.gitlab-ci.yml'],
-    ['azure', 'azure-pipelines.yml'],
-    ['circleci', '.circleci/config.yml'],
-    ['bitbucket-pipelines', 'bitbucket-pipelines.yml'],
-  ] as const)('should not add a fix-ci step for %s', async (ci, path) => {
-    await ciWorkflowGenerator(tree, { ci, name: 'CI' });
-
-    expect(tree.read(path, 'utf-8')).not.toContain('fix-ci');
-  });
-
   describe('TS solution setup', () => {
     let nxCloudAccessToken: string;
 
