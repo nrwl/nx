@@ -664,10 +664,15 @@ function findRemovedPluginUsages(
       references.push({ path, matched: matchedPlugins });
     }
 
-    const code = blankOutLiterals(sourceFile, content);
+    const directiveComments = parseDirectiveComments(
+      blankOutLiterals(sourceFile, content)
+    );
     const matchedPrefixes = matchers
       .filter(({ directiveRuleId }) =>
-        hasEslintDirectiveFor(code, directiveRuleId)
+        directiveComments.some(
+          ({ label, value }) =>
+            RULE_DIRECTIVES.has(label) && directiveRuleId.test(value)
+        )
       )
       .filter(
         ({ registeredByEslintConfigNext }) =>
@@ -678,7 +683,7 @@ function findRemovedPluginUsages(
     if (matchedPrefixes.length > 0) {
       directives.push({ path, matched: matchedPrefixes });
     }
-    if (hasEslintEnvComment(code)) {
+    if (directiveComments.some(({ label }) => label === 'eslint-env')) {
       eslintEnv.push(path);
     }
   });
@@ -705,17 +710,27 @@ function isLintedWithNextConfig(
   }
 }
 
-const BLOCK_COMMENT = /\/\*([\s\S]*?)\*\//g;
-const LINE_COMMENT = /\/\/(.*)/g;
-// The rule-id-carrying directives ESLint reads from a block comment:
-// `eslint-disable`, `eslint-enable`, the two `-line` forms, and the inline
+// One alternation, so the first delimiter wins: `// see /* eslint-env */` is a
+// single line comment.
+const COMMENT = /\/\/(.*)|\/\*([\s\S]*?)\*\//g;
+// ESLint's directive grammar: the label is the first word of the text before
+// a ` -- ` description.
+const DIRECTIVE_DESCRIPTION = /\s-{2,}\s/;
+const DIRECTIVE_LABEL = /^([a-z]+(?:-[a-z]+)*)(?:\s|$)/;
+// The directives that name rules. The last one is the inline
 // `eslint <rule>: <severity>`.
-const BLOCK_DIRECTIVE =
-  /^\s*eslint(?:-disable(?:-next-line|-line)?|-enable)?\s/;
-// A line comment carries only the two `-line` forms; ESLint reads
-// `// eslint-disable react/no-danger` as ordinary prose.
-const LINE_DIRECTIVE = /^\s*eslint-disable-(?:next-)?line\s/;
-const ESLINT_ENV_DIRECTIVE = /^\s*eslint-env\s/;
+const RULE_DIRECTIVES = new Set([
+  'eslint-disable',
+  'eslint-disable-line',
+  'eslint-disable-next-line',
+  'eslint-enable',
+  'eslint',
+]);
+// ESLint reads any other line comment, `// eslint-env node` included, as prose.
+const LINE_COMMENT_DIRECTIVES = new Set([
+  'eslint-disable-line',
+  'eslint-disable-next-line',
+]);
 // Literal kinds whose own text can spell out a directive comment.
 const LITERAL_KINDS = new Set([
   ts.SyntaxKind.StringLiteral,
@@ -773,7 +788,7 @@ function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
   return specifiers;
 }
 
-// Blanks out every literal so the comment scans below cannot mistake a quoted
+// Blanks out every literal so the comment scan cannot mistake a quoted
 // directive for a real one.
 function blankOutLiterals(sourceFile: ts.SourceFile, content: string): string {
   const literals: [start: number, end: number][] = [];
@@ -799,26 +814,28 @@ function blankOutLiterals(sourceFile: ts.SourceFile, content: string): string {
   return code + content.slice(cursor);
 }
 
-// Unlike the rule directives, `eslint-env` is only read from a block comment:
-// ESLint treats `// eslint-env node` as ordinary prose.
-function hasEslintEnvComment(content: string): boolean {
-  return [...content.matchAll(BLOCK_COMMENT)].some(([, body]) =>
-    ESLINT_ENV_DIRECTIVE.test(body)
-  );
-}
+// The directive comments ESLint reads, each split into its label and the text
+// that follows it, without the description.
+function parseDirectiveComments(
+  code: string
+): { label: string; value: string }[] {
+  const directives: { label: string; value: string }[] = [];
+  for (const [, lineBody, blockBody] of code.matchAll(COMMENT)) {
+    const body = lineBody ?? blockBody;
+    const description = DIRECTIVE_DESCRIPTION.exec(body);
+    const directive = (
+      description ? body.slice(0, description.index) : body
+    ).trim();
+    const label = DIRECTIVE_LABEL.exec(directive)?.[1];
+    if (
+      label &&
+      (lineBody === undefined || LINE_COMMENT_DIRECTIVES.has(label))
+    ) {
+      directives.push({ label, value: directive.slice(label.length) });
+    }
+  }
 
-function hasEslintDirectiveFor(content: string, ruleId: RegExp): boolean {
-  const carriesRule = (body: string, directive: RegExp): boolean =>
-    directive.test(body) && ruleId.test(body);
-
-  return (
-    [...content.matchAll(BLOCK_COMMENT)].some(([, body]) =>
-      carriesRule(body, BLOCK_DIRECTIVE)
-    ) ||
-    [...content.matchAll(LINE_COMMENT)].some(([, body]) =>
-      carriesRule(body, LINE_DIRECTIVE)
-    )
-  );
+  return directives;
 }
 
 function escapeRegExp(value: string): string {

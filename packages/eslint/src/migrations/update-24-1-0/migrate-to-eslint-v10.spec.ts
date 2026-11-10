@@ -845,6 +845,31 @@ export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
     expect(result.agentContext).toEqual([]);
   });
 
+  it.each([
+    [
+      'a block comment inside a line comment',
+      '// Example: /* eslint-env node */\n',
+    ],
+    [
+      'a line directive inside a block comment',
+      '/* Example:\n// eslint-disable-next-line react/no-danger\n*/\n',
+    ],
+    [
+      'a rule named in the description of a directive',
+      "// eslint-disable-next-line no-console -- replaces react/no-danger\nconsole.log('hello');\n",
+    ],
+  ])('should not report %s', async (_, content) => {
+    tree.write('eslint.config.mjs', 'export default [];');
+    tree.write('apps/app1/src/notes.ts', content);
+    setDevDependencies({ 'eslint-plugin-react': '^7.35.0' });
+
+    const result = await update(tree);
+
+    expect(
+      [...result.agentContext, ...result.nextSteps].join('\n')
+    ).not.toContain('notes.ts');
+  });
+
   it('should not read a directive quoted inside a literal as a comment', async () => {
     tree.write('eslint.config.mjs', 'export default [];');
     tree.write(
@@ -865,7 +890,7 @@ export default [...compat.extends('next', 'plugin:jsx-a11y/recommended')];`
     tree.write(
       'apps/app1/src/fixtures.ts',
       `/* eslint-env node */
-       // eslint-disable-next-line react/no-danger
+       // eslint-disable-next-line react/no-danger -- legacy markup
        export const quoted = '/* eslint-disable jsx-a11y/alt-text */';`
     );
     setDevDependencies({
