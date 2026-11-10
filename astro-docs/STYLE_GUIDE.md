@@ -5,7 +5,9 @@ These rules apply to all content under `astro-docs/src/content/docs/`.
 
 ## Information architecture
 
-When creating or reorganizing documentation, follow these seven principles to determine where content belongs.
+When creating or reorganizing documentation, follow these six principles to determine where content belongs.
+
+These principles say where content goes. The personas say who it's for: [Bob](./personas/bob-beginner.md) (new to Nx), [Casey](./personas/casey-cloud-curious.md) (new to Nx Cloud), [Priya](./personas/priya-platform.md) (runs Nx at scale) and [Dana](./personas/dana-decision-maker.md) (decides whether the team uses Nx). Use them when writing and reviewing docs.
 
 ### 1. Progressive disclosure (the "journey" rule)
 
@@ -300,7 +302,7 @@ Get right to the point. The reader already knows they're on a page.
 Don't use filler words that undermine the reader's trust.
 
 - Don't use "easily", "simply", "just", or "straightforward". If something were truly simple, you wouldn't need to document it. These words also make readers feel bad when they struggle.
-- Don't use marketing language: "This feature will save you hours" or "Nx makes CI effortless."
+- Don't use marketing language: "This feature will save you hours" or "Nx makes CI effortless." The intro page and the CI overview page may cite benchmarks and measured results for [decision makers](./personas/dana-decision-maker.md), as long as each number has a source.
 - Be specific instead: "Remote caching can reduce CI times from 45 minutes to under 5 minutes for cache-hit builds."
 
 ### Customer perspective

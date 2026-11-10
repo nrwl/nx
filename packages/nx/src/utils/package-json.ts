@@ -5,7 +5,6 @@ import Module, { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
-import { dirSync } from 'tmp';
 import which from 'which';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -497,10 +496,7 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-    cleanup: () => {},
-  };
+  const { dir: tempDir, cleanup } = createTempNpmDirectory();
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
