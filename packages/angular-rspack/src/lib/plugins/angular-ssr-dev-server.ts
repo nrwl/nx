@@ -225,8 +225,8 @@ export class AngularSsrDevServer {
     };
   }
 
-  // The dev middleware would answer the browser index with the client-only
-  // document, which `ng serve` renders through SSR instead.
+  // Bypass the client-only index without changing `originalUrl`, which
+  // Angular's request adapter uses for SSR routing.
   readonly #routeIndexToSsr = (
     req: NodeRequest,
     _res: ServerResponse,
