@@ -99,21 +99,7 @@ jobs:
 ```
 
 Workers start with the job, so they install dependencies in parallel with it.
-To scale the number of workers with the work in each run, list three sizes: `small` starts with the job, and Nx Cloud adds workers up to `medium` or `large` when a command has more work left.
-A count without a template name reuses the setup of the job:
-
-```yaml
-# .nx/pipelines/ci.yaml
-jobs:
-  main:
-    runs-on: linux-large-js
-    workers:
-      small: 3
-      medium: 6
-      large: 8
-    steps:
-      - run: npx nx affected -t lint test build
-```
+To scale workers with the size of each run, see [scale workers with PR size](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
 
 For setups shared across jobs and for task rules such as `stop-after`, see [`worker-templates`](/docs/reference/nx-cloud/ci-config#worker-templates).
 

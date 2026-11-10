@@ -127,7 +127,8 @@ jobs:
 
 `linux-medium-js` is a pre-built [launch template](/docs/kb/launch-templates) that checks out your repository and installs its dependencies.
 Before your first step, Nx Cloud sets `NX_BASE` and `NX_HEAD`, so `nx affected` needs no extra setup.
-For the triggers and how to turn it on, see [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud).
+For the triggers, see the [complete example](#complete-example).
+To turn it on, see [Nx Cloud CI](/docs/features/ci-features#run-ci-on-nx-cloud).
 
 {% /tabitem %}
 {% /tabs %}
@@ -140,6 +141,9 @@ With workers, your tasks run across several machines instead of one.
 With [_dynamic task packing_](/docs/features/ci-features/distribute-task-execution#how-dynamic-task-packing-works), Nx Cloud uses what it knows about each task, such as its duration and its CPU and memory use, to keep workers close to capacity, so fewer machine-minutes sit idle.
 In most workspaces, that adds up to about 50% fewer machine-minutes than remote caching alone.
 
+{% tabs syncKey="ci-location" %}
+{% tabitem label="External CI" %}
+
 Set the number of workers in `.nx/pipelines/ci.yaml`:
 
 ```yaml
@@ -148,10 +152,7 @@ worker-templates:
   default: 3 linux-large-js
 ```
 
-Then start them with your pipeline:
-
-{% tabs syncKey="ci-location" %}
-{% tabitem label="External CI" %}
+Then start them early in your CI job:
 
 ```yaml {% meta="{7}" %}
 # .github/workflows/ci.yml
@@ -173,7 +174,7 @@ jobs:
 jobs:
   main:
     runs-on: linux-medium-js
-    workers: default
+    workers: 3 linux-large-js
     steps:
       - run: npx nx affected -t lint test build
 ```

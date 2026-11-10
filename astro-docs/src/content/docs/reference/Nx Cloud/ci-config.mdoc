@@ -201,6 +201,8 @@ Type: `integer`, minimum `0`. Default: `1`.
 
 Runs distributed tasks on a background worker on the machine of the main job, using the CPU and memory you allow it.
 External CI doesn't start this worker from `ci.yaml`.
+To send tasks to it, use `agent: main` in [`assignment-rules`](#assignment-rules).
+The name `main` is reserved, so a launch template can't use it.
 
 ```yaml
 # .nx/pipelines/ci.yaml
@@ -532,7 +534,7 @@ Configuration errors in `ci.yaml` show on the GitHub check.
 
 ## How `start-workers` picks a file and an entry
 
-On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers) reads `.nx/pipelines/ci.yaml`, or the file named by `--config`.
+On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers), or its deprecated alias `start-nx-agents`, reads `.nx/pipelines/ci.yaml`, or the file named by `--config`.
 While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
 With neither file, the command fails.
 

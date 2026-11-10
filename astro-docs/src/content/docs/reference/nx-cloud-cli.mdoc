@@ -382,6 +382,7 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 ### `nx-cloud start-workers`
 
 Invoke `npx nx-cloud start-workers` at the beginning of your main job to provision the [Workers](/docs/features/ci-features/distribute-task-execution) that run your distributed tasks.
+`start-nx-agents` is a deprecated alias of this command.
 
 Nx Cloud reads your CI configuration from a [`.nx/pipelines/ci.yaml`](/docs/reference/nx-cloud/ci-config) file, and this command starts one of its `worker-templates` entries. Nx Cloud reads the file from your repository at the commit of the run.
 

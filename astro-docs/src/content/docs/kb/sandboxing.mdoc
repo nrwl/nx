@@ -279,7 +279,7 @@ Global `ignore-reads` and `ignore-writes` apply to all tasks.
 Use `task-exclusions` to scope exclusions to a specific project, target, or combination of both.
 
 Patterns use glob syntax relative to the workspace root.
-Pipelines that don't run `nx-cloud start-workers`, including `start-ci-run` ones, read the same keys from `.nx/workflows/ultracache-config.yaml`.
+Pipelines that run `start-ci-run` read the same keys from `.nx/workflows/ultracache-config.yaml`.
 
 To exclude paths for a single target, or to stop tracking it altogether, use the
 [`ultracache` target property](/docs/reference/project-configuration#ultracache).
