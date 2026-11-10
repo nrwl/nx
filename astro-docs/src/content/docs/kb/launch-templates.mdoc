@@ -361,7 +361,8 @@ After creating your custom launch template, it's recommended to validate it. Thi
 within the launch template and all respective inputs within each step are appropriately defined.
 
 To do this, run the `nx-cloud validate` command, with the path to the launch template.
-The command checks a launch templates file, not a full `ci.yaml`, so keep templates you validate in their own file and import it:
+The command checks a launch templates file, not a full `ci.yaml`, so keep templates you validate in their own file and import it.
+Keep the top-level `launch-templates:` key in that file, because `validate` only reads templates under it:
 
 ```shell
 nx-cloud validate --workflow-file=./.nx/pipelines/launch-templates.yaml

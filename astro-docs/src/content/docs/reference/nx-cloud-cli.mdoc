@@ -392,7 +392,7 @@ With neither file, the command fails.
 **Usage:**
 
 ```shell
-npx nx-cloud start-workers [--workers <name>] [--config <path>]
+npx nx-cloud start-workers [--workers <name>] [--config <path>] [--forward-secrets <names>] [--forward-vars <names>]
 ```
 
 ```yaml
@@ -408,10 +408,20 @@ worker-templates:
 
 #### Options
 
-| Option      | Type   | Description                                                                       | Default                 |
-| ----------- | ------ | --------------------------------------------------------------------------------- | ----------------------- |
-| `--workers` | string | Entry in `worker-templates` to start. Required when the file has several entries. | The only entry          |
-| `--config`  | string | CI configuration file to read.                                                    | `.nx/pipelines/ci.yaml` |
+| Option              | Type   | Description                                                                                                                               | Default                                                               |
+| ------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `--workers`         | string | Entry in `worker-templates` to start. Required when the file has several entries.                                                         | The only entry                                                        |
+| `--config`          | string | CI configuration file to read.                                                                                                            | `.nx/pipelines/ci.yaml`, or `.nx/workflows/ci.yaml` if that's missing |
+| `--forward-secrets` | string | Comma-separated names of main-job environment variables to send to workers as `${{ secrets.NAME }}`, masked in logs. Only with `ci.yaml`. | None                                                                  |
+| `--forward-vars`    | string | Comma-separated names of main-job environment variables to send to workers as `${{ vars.NAME }}`. Only with `ci.yaml`.                    | None                                                                  |
+
+Workers read forwarded values in the `env` of their [launch template](/docs/kb/launch-templates), such as `NPM_TOKEN: ${{ secrets.NPM_TOKEN }}`.
+
+- A forwarded value replaces an Environment variables entry with the same name for that run.
+- A listed name that isn't set in the main job fails the command and names it.
+- Names match `[A-Za-z_][A-Za-z0-9_]*` and can't be in both flags. A run takes at most 100 names, 48 KiB per value, and 256 KiB in total.
+- Values aren't stored. They're sent again with each distributed command, so workers that start later get them too.
+- With `.nx/ci-config.yaml`, either flag fails the command. Use `workers.with-env-vars` in that file instead.
 
 {% aside type="caution" title="start-workers and start-ci-run are separate paths" %}
 `start-ci-run` takes its configuration from CLI flags and doesn't read `.nx/pipelines/ci.yaml`.

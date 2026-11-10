@@ -105,10 +105,10 @@ Favor correctness over cleverness. Keep coordinator-only responsibilities in the
 5. Identify env vars and secrets:
    - CI-provider-only vars.
    - Main orchestration job vars.
-   - Worker-required vars to set on the launch template `env`. Values stored in the Nx Cloud environment variables settings still need a mapping there, such as `NAME: ${{ secrets.NAME }}`.
+   - Worker-required vars to set on the launch template `env`. Values stored in the Nx Cloud environment variables settings still need a mapping there, such as `NAME: ${{ secrets.NAME }}` or `NAME: ${{ vars.NAME }}`.
    - Vars that must be configured in Nx Cloud UI.
    - Secrets that must not be forwarded.
-   - If a worker needs a value only the main job can produce at run time, flag it: `start-workers` forwards only `NX_`-prefixed vars, and `start-ci-run --with-env-vars` is the alternative.
+   - If a worker needs a value from the CI provider, list it with `start-workers --forward-secrets` or `--forward-vars` and map it in the launch template `env`.
    - Never print full env in worker setup.
 
 6. Map reusable CI steps:
@@ -263,13 +263,15 @@ If you don't have a CI workflow yet, generate one:
 npx nx g ci-workflow
 ```
 
-Add a `.nx/pipelines/ci.yaml` file that sets how many workers to use:
+Set how many workers to use in `.nx/pipelines/ci.yaml`:
 
 ```yaml
 # .nx/pipelines/ci.yaml
 worker-templates:
   default: 3 linux-large-js
 ```
+
+If the generator created `.nx/ci-config.yaml` instead, as older Nx versions do, [migrate it](/docs/kb/migrate-from-ci-config) first, because `start-workers` keeps reading that file while it exists.
 
 `linux-large-js` is a predefined [launch template](/docs/kb/launch-templates).
 To keep tasks apart or send them to specific workers, see [control where tasks run](#control-where-tasks-run).

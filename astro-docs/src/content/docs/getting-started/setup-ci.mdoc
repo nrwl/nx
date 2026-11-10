@@ -152,6 +152,8 @@ worker-templates:
   default: 3 linux-large-js
 ```
 
+If the generator created `.nx/ci-config.yaml` instead, as older Nx versions do, [migrate it](/docs/kb/migrate-from-ci-config) first, because `start-workers` keeps reading that file while it exists.
+
 Then start them early in your CI job:
 
 ```yaml {% meta="{7}" %}

@@ -133,14 +133,10 @@ launch-templates:
       VAR2: value2
 ```
 
-For secrets, add them on the **Environment variables** page of your [workspace settings](https://cloud.nx.app/go/workspace/settings), then map them in the template's `env`, such as `API_TOKEN: ${{ secrets.API_TOKEN }}`.
+To use a secret, read it in the template's `env` with `${{ secrets.NAME }}`, or `${{ vars.NAME }}` for a value that isn't secret:
 
-If the main job only has a value at run time, start the run with `nx-cloud start-ci-run` to forward it.
-This command takes its configuration from CLI flags instead of `ci.yaml`:
-
-```shell
-npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --with-env-vars="VAR1,VAR2"
-```
+- If it's on the **Environment variables** page of your [workspace settings](https://cloud.nx.app/go/workspace/settings), that's all you need.
+- If it's in your CI provider, put it in the env of the `start-workers` step and list it: `npx nx-cloud start-workers --forward-secrets API_TOKEN,OTHER_TOKEN`. Values from the main job's env are sent for that run only, and `--forward-secrets` values are masked in logs.
 
 ## Pass values between steps
 
@@ -407,10 +403,10 @@ Minimally the `AWS_REGION` (or `AWS_DEFAULT_REGION`), `AWS_ACCESS_KEY_ID`, and `
 {% aside type="tip" %}
 **OIDC Provider**
 
-If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured on the main job after authentication to AWS. These credentials are temporary and only exist at run time, so forward them from the main job with `nx-cloud start-ci-run`, which takes its configuration from CLI flags. That command only finds templates in `.nx/workflows`, so keep `my-linux-medium-js` in `.nx/workflows/agents.yaml` and import it into `ci.yaml`:
+If using an [OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html), e.g. the [AWS GitHub Action recommended setup](https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#using-this-action), then the environment variables are automatically configured on the main job after authentication to AWS. These credentials are temporary and only exist at run time, so forward them from the main job and map them in the template's `env` with `${{ secrets.NAME }}` and `${{ vars.NAME }}`:
 
 ```shell
-npx nx-cloud start-ci-run --distribute-on="8 my-linux-medium-js" --with-env-vars="AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN"
+npx nx-cloud start-workers --forward-secrets AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN --forward-vars AWS_REGION
 ```
 
 {% /aside %}

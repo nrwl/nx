@@ -43,7 +43,7 @@ This behavior can be disabled by setting [`fail-after`](/docs/reference/nx-cloud
 
 ### A CI configuration file was detected, but start-ci-run does not load it
 
-`start-ci-run` exits with this error while the deprecated `.nx/ci-config.yaml` file exists.
+`start-ci-run` exits with this error while the deprecated `.nx/ci-config.yaml` file exists, unless you pass `--no-distribution`.
 [Migrate the file to `.nx/pipelines/ci.yaml`](/docs/kb/migrate-from-ci-config), which also maps each `start-ci-run` flag to a key.
 
 ### No CI configuration file found

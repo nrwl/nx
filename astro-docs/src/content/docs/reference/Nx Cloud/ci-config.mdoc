@@ -62,19 +62,20 @@ jobs:
 
 ## Top-level structure
 
-| Section            | Purpose                                             |
-| ------------------ | --------------------------------------------------- |
-| `worker-templates` | Named worker setups: counts, sizes, and task rules. |
-| `launch-templates` | Machine setups that workers and jobs run on.        |
-| `ultracache`       | Paths that Ultracache ignores.                      |
-| `self-healing`     | Which tasks self-healing CI can fix.                |
-| `name`             | Display name of the pipeline.                       |
-| `on`               | Events that start the jobs.                         |
-| `env`              | Environment variables for every job and worker.     |
-| `defaults`         | Defaults for the steps in every job.                |
-| `jobs`             | The jobs and their steps.                           |
+| Section            | Purpose                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `worker-templates` | Named worker setups: counts, sizes, and task rules.                  |
+| `launch-templates` | Machine setups that workers and jobs run on.                         |
+| `ultracache`       | Paths that Ultracache ignores.                                       |
+| `self-healing`     | Which tasks self-healing CI can fix.                                 |
+| `name`             | Display name of the pipeline.                                        |
+| `on`               | Events that start the jobs.                                          |
+| `env`              | Environment variables for every job and its workers, on Nx Cloud CI. |
+| `defaults`         | Defaults for the steps in every job.                                 |
+| `jobs`             | The jobs and their steps.                                            |
 
 External CI doesn't run `name`, `on`, `env`, `defaults`, and `jobs`, but still validates them, so one file can serve both kinds of run in the same repository.
+On external CI, workers get values from the `env` of their launch template and from [`start-workers --forward-secrets` and `--forward-vars`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers).
 
 {% aside type="note" title="File name" %}
 Nx Cloud CI runs every `.yaml` or `.yml` file in `.nx/pipelines` that has an `on` section, so you can name the file something other than `ci.yaml`.
@@ -284,6 +285,7 @@ worker-templates: .nx/pipelines/workers.yaml
 
 Paths are relative to the repository root and read at the commit of the run.
 The imported file holds only the content of the section, with no top-level key naming it, and can't import again.
+A path must end in `.yaml` or `.yml`, can't contain `..`, and can only use letters, digits, `.`, `_`, `-`, and `/`.
 A `launch-templates` file can also keep a top-level `launch-templates:` key, so an existing `.nx/workflows/agents.yaml` can be imported as it is.
 
 ## `on`
@@ -534,7 +536,7 @@ Configuration errors in `ci.yaml` show on the GitHub check.
 
 ## How `start-workers` picks a file and an entry
 
-On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers), or its deprecated alias `start-nx-agents`, reads `.nx/pipelines/ci.yaml`, or the file named by `--config`.
+On external CI, [`nx-cloud start-workers`](/docs/reference/nx-cloud-cli#nx-cloud-start-workers), or its deprecated alias `start-nx-agents`, reads `.nx/pipelines/ci.yaml`, or `.nx/workflows/ci.yaml` if that doesn't exist, or the file named by `--config`.
 While `.nx/ci-config.yaml` exists, `start-workers` without `--workers` or `--config` keeps reading it, even if `ci.yaml` is there too.
 With neither file, the command fails.
 
