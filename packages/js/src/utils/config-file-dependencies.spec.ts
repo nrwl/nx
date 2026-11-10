@@ -207,7 +207,52 @@ describe('config file dependencies', () => {
     );
   });
 
-  it('reuses alias matchers and parsed imports across passes until their sources change', () => {
+  it('rebuilds alias matchers every pass when a tsconfig extends a package', () => {
+    fs.createFilesSync({
+      'apps/e2e/tsconfig.json': '{"extends":"@org/tsconfig/base.json"}',
+      'node_modules/@org/tsconfig/base.json':
+        '{"compilerOptions":{"paths":{"@selection":["../../../shared/selection.json"]}}}',
+    });
+    const builds = vi.mocked(devkitInternal.createTsConfigPathMatcher);
+    builds.mockClear();
+    collect();
+    collect();
+    expect(builds).toHaveBeenCalledTimes(2);
+  });
+
+  it('rebuilds alias matchers every pass when a parent tsconfig is only valid JSON5', () => {
+    fs.createFilesSync({
+      'apps/e2e/tsconfig.json': '{"extends":"../../tsconfig.base.json"}',
+      'tsconfig.base.json': `{compilerOptions: {paths: {'@selection': ['shared/selection.json']}}}`,
+    });
+    const builds = vi.mocked(devkitInternal.createTsConfigPathMatcher);
+    builds.mockClear();
+    collect();
+    collect();
+    expect(builds).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips package export targets that are not files', () => {
+    fs.createFilesSync({
+      'apps/e2e/config.cjs': `module.exports = require('@workspace/settings/dir');`,
+      'shared/settings/package.json': JSON.stringify({
+        name: '@workspace/settings',
+        exports: { './dir': './lib' },
+      }),
+      'shared/settings/lib/index.cjs': 'module.exports = {};',
+    });
+    fs.createSymlinkSync(
+      'shared/settings',
+      'node_modules/@workspace/settings',
+      'dir'
+    );
+    const result = collect();
+    expect(result.files).toContain('shared/settings/package.json');
+    expect(result.files).not.toContain('shared/settings/lib');
+    expect(result.hash).toBeDefined();
+  });
+
+  it('reuses alias matchers across passes and reparses edited imports', () => {
     fs.createFilesSync({
       'apps/e2e/tsconfig.json': '{"extends":"../../tsconfig.base.json"}',
       'tsconfig.base.json':

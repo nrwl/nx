@@ -35,6 +35,7 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
   let canonicalWorkspaceRoot: string;
   const imports = new Map<string, string[] | null>();
   const json = new Map<string, any>();
+  const chainSources = new Map<string, string | null>();
   const hashes = new Map<string, string>();
   const workspacePaths = new Map<string, string | undefined>();
   const existingPaths = new Map<string, boolean>();
@@ -121,6 +122,11 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
     return scope;
   }
 
+  function readChainSource(path: string): string | null {
+    if (!chainSources.has(path)) chainSources.set(path, readSource(path));
+    return chainSources.get(path);
+  }
+
   function readJson(path: string) {
     if (!json.has(path)) {
       try {
@@ -141,18 +147,39 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
     if (!path) return { files: [], complete: true };
     if (!tsconfigs.has(path)) {
       const files: string[] = [];
+      // tsconfig-paths resolves package `extends` differently from this walker
+      // and parses JSON5 the walker skips, so a matcher is reused only when
+      // the walker read every file in a chain of relative or absolute .json.
+      let reusable = true;
+      const parentFiles: string[] = [];
       walkTsconfigExtendsChain(
         path,
-        (file) => {
+        (file, raw) => {
           files.push(file);
+          for (const parent of [
+            (raw as { extends?: unknown }).extends ?? [],
+          ].flat()) {
+            if (
+              typeof parent === 'string' &&
+              parent.endsWith('.json') &&
+              (parent.startsWith('.') || isAbsolute(parent))
+            ) {
+              parentFiles.push(resolve(dirname(file), parent));
+            } else {
+              reusable = false;
+            }
+          }
           return 'continue';
         },
         { jsonCache: json }
       );
+      if (parentFiles.some((file) => !files.includes(file) && exists(file))) {
+        reusable = false;
+      }
       // Read before building, so an edit during the build invalidates it.
       const chain = [path, ...files.filter((file) => file !== path)];
-      const sources = chain.map(readSource);
-      let cached = pathMatchers.get(path);
+      const sources = chain.map(readChainSource);
+      let cached = reusable ? pathMatchers.get(path) : undefined;
       if (
         !cached ||
         !sameItems(cached.chain, chain) ||
@@ -165,7 +192,8 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
           // JavaScript configs may load without consulting a malformed tsconfig.
           cached.complete = false;
         }
-        pathMatchers.set(path, cached);
+        if (reusable) pathMatchers.set(path, cached);
+        else pathMatchers.delete(path);
       }
       tsconfigs.set(path, {
         files,
