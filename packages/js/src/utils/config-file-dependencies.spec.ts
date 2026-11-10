@@ -1,9 +1,11 @@
+import * as devkitInternal from '@nx/devkit/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as nodeFs from 'node:fs';
 import { join } from 'node:path';
 import { createConfigFileDependencyCollector } from './config-file-dependencies';
 
 vi.mock('node:fs', { spy: true });
+vi.mock('@nx/devkit/internal', { spy: true });
 
 describe('config file dependencies', () => {
   let fs: TempFs;
@@ -203,6 +205,37 @@ describe('config file dependencies', () => {
     expect(collectPass('apps/alone/config.cjs').files).not.toContain(
       'shared/selection.json'
     );
+  });
+
+  it('reuses alias matchers and parsed imports across passes until their sources change', () => {
+    fs.createFilesSync({
+      'apps/e2e/tsconfig.json': '{"extends":"../../tsconfig.base.json"}',
+      'tsconfig.base.json':
+        '{"compilerOptions":{"paths":{"@selection":["shared/selection.json"]}}}',
+      'shared/config.cjs': "module.exports = require('@selection');",
+      'shared/other.json': '{}',
+    });
+    const builds = vi.mocked(devkitInternal.createTsConfigPathMatcher);
+    builds.mockClear();
+    const first = collect();
+    expect(first.files).toContain('shared/selection.json');
+    expect(collect()).toEqual(first);
+    expect(builds).toHaveBeenCalledTimes(1);
+
+    fs.writeFile(
+      'tsconfig.base.json',
+      '{"compilerOptions":{"paths":{"@selection":["shared/other.json"]}}}'
+    );
+    const aliased = collect();
+    expect(builds).toHaveBeenCalledTimes(2);
+    expect(aliased.files).toContain('shared/other.json');
+    expect(aliased.files).not.toContain('shared/selection.json');
+
+    fs.writeFile('shared/config.cjs', "module.exports = require('./new.cjs');");
+    fs.createFileSync('shared/new.cjs', 'module.exports = {};');
+    const edited = collect();
+    expect(edited.files).toContain('shared/new.cjs');
+    expect(edited.files).not.toContain('shared/other.json');
   });
 
   it('keeps cached edges separate when configs have different aliases', () => {

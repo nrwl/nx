@@ -6,13 +6,30 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { walkTsconfigExtendsChain } from './typescript/raw-tsconfig';
 
+// Parsed imports and alias matchers depend only on file contents, so warm
+// passes reuse them while their sources are unchanged. Resolution is redone
+// every pass, since package exports and created files can change it.
+const parsedImports = new Map<
+  string,
+  { source: string; imports: string[] | null }
+>();
+const pathMatchers = new Map<
+  string,
+  {
+    chain: string[];
+    sources: (string | null)[];
+    matcher?: ReturnType<typeof createTsConfigPathMatcher>;
+    complete: boolean;
+  }
+>();
+
 /**
  * Creates a per-inference-pass collector for the workspace files imported by a
  * config. It does not evaluate the config or reuse resolution from an earlier
  * pass: imports, package exports and tsconfig paths may all have changed.
  *
- * ponytail: only literal module references are discoverable here; computed
- * imports and arbitrary fs reads need runtime dependency tracking.
+ * Only literal module references are discoverable here; computed imports and
+ * arbitrary fs reads need runtime dependency tracking.
  */
 export function createConfigFileDependencyCollector(workspaceRoot: string) {
   let canonicalWorkspaceRoot: string;
@@ -132,86 +149,42 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
         },
         { jsonCache: json }
       );
-      try {
-        tsconfigs.set(path, {
-          files,
-          matcher: createTsConfigPathMatcher(path),
-          complete: true,
-        });
-      } catch {
-        // JavaScript configs may load without consulting a malformed tsconfig.
-        tsconfigs.set(path, { files, complete: false });
+      // Read before building, so an edit during the build invalidates it.
+      const chain = [path, ...files.filter((file) => file !== path)];
+      const sources = chain.map(readSource);
+      let cached = pathMatchers.get(path);
+      if (
+        !cached ||
+        !sameItems(cached.chain, chain) ||
+        !sameItems(cached.sources, sources)
+      ) {
+        cached = { chain, sources, complete: true };
+        try {
+          cached.matcher = createTsConfigPathMatcher(path);
+        } catch {
+          // JavaScript configs may load without consulting a malformed tsconfig.
+          cached.complete = false;
+        }
+        pathMatchers.set(path, cached);
       }
+      tsconfigs.set(path, {
+        files,
+        matcher: cached.matcher,
+        complete: cached.complete,
+      });
     }
     return tsconfigs.get(path);
   }
 
   function getImports(file: string): string[] | null {
     if (!imports.has(file)) {
-      const {
-        parseSync,
-        traverse,
-      }: typeof import('@babel/core') = require('@babel/core');
-      const found = new Set<string>();
       const source = readFileSync(file, 'utf8');
-      let ast: ReturnType<typeof parseSync>;
-      try {
-        ast = parseSync(source, {
-          filename: file,
-          babelrc: false,
-          configFile: false,
-          sourceType: 'unambiguous',
-          parserOpts: {
-            allowReturnOutsideFunction: true,
-            allowAwaitOutsideFunction: true,
-            plugins: [
-              'typescript',
-              'decorators-legacy',
-              ...(file.endsWith('x') ? ['jsx' as const] : []),
-            ],
-          },
-        });
-      } catch (error) {
-        if ((error as any).code !== 'BABEL_PARSE_ERROR') throw error;
-        // The loader may support syntax this parser does not. Let it evaluate
-        // the config, but never reuse a cache key with an unknown closure.
-        imports.set(file, null);
-        return null;
+      let cached = parsedImports.get(file);
+      if (cached?.source !== source) {
+        cached = { source, imports: parseImports(file, source) };
+        parsedImports.set(file, cached);
       }
-      traverse(ast, {
-        noScope: true,
-        enter({ node }) {
-          if (
-            node.type === 'ImportDeclaration' ||
-            node.type === 'ExportAllDeclaration' ||
-            node.type === 'ExportNamedDeclaration'
-          ) {
-            if (node.source) found.add(node.source.value);
-          } else if (
-            node.type === 'CallExpression' &&
-            (node.callee.type === 'Import' ||
-              (node.callee.type === 'Identifier' &&
-                node.callee.name === 'require'))
-          ) {
-            const argument = node.arguments[0];
-            if (argument?.type === 'StringLiteral') {
-              found.add(argument.value);
-            } else if (
-              argument?.type === 'TemplateLiteral' &&
-              argument.expressions.length === 0 &&
-              argument.quasis[0].value.cooked != null
-            ) {
-              found.add(argument.quasis[0].value.cooked);
-            }
-          } else if (
-            node.type === 'TSImportEqualsDeclaration' &&
-            node.moduleReference.type === 'TSExternalModuleReference'
-          ) {
-            found.add(node.moduleReference.expression.value);
-          }
-        },
-      });
-      imports.set(file, [...found]);
+      imports.set(file, cached.imports);
     }
     return imports.get(file);
   }
@@ -321,8 +294,9 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
           readJson(scope)?.imports,
           specifier
         )) {
-          if (target.startsWith('.')) add(resolve(dirname(scope), target));
-          else resolveImport(target, seen);
+          if (!target.startsWith('.')) resolveImport(target, seen);
+          else if (isFile(resolve(dirname(scope), target)))
+            add(resolve(dirname(scope), target));
         }
         return;
       }
@@ -342,7 +316,8 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
       // Hash every applicable conditional target, so ESM-only exports are
       // covered even on a host that only exposes require.resolve().
       for (const target of packageTargets(pkg?.exports, subpath)) {
-        if (target.startsWith('./')) add(resolve(dirname(manifest), target));
+        const path = resolve(dirname(manifest), target);
+        if (target.startsWith('./') && isFile(path)) add(path);
       }
     }
 
@@ -400,6 +375,82 @@ export function createConfigFileDependencyCollector(workspaceRoot: string) {
         : undefined,
     };
   };
+}
+
+function parseImports(file: string, source: string): string[] | null {
+  const {
+    parseSync,
+    traverse,
+  }: typeof import('@babel/core') = require('@babel/core');
+  const found = new Set<string>();
+  let ast: ReturnType<typeof parseSync>;
+  try {
+    ast = parseSync(source, {
+      filename: file,
+      babelrc: false,
+      configFile: false,
+      sourceType: 'unambiguous',
+      parserOpts: {
+        allowReturnOutsideFunction: true,
+        allowAwaitOutsideFunction: true,
+        plugins: [
+          'typescript',
+          'decorators-legacy',
+          ...(file.endsWith('x') ? ['jsx' as const] : []),
+        ],
+      },
+    });
+  } catch (error) {
+    if ((error as any).code !== 'BABEL_PARSE_ERROR') throw error;
+    // The loader may support syntax this parser does not. Let it evaluate
+    // the config, but never reuse a cache key with an unknown closure.
+    return null;
+  }
+  traverse(ast, {
+    noScope: true,
+    enter({ node }) {
+      if (
+        node.type === 'ImportDeclaration' ||
+        node.type === 'ExportAllDeclaration' ||
+        node.type === 'ExportNamedDeclaration'
+      ) {
+        if (node.source) found.add(node.source.value);
+      } else if (
+        node.type === 'CallExpression' &&
+        (node.callee.type === 'Import' ||
+          (node.callee.type === 'Identifier' && node.callee.name === 'require'))
+      ) {
+        const argument = node.arguments[0];
+        if (argument?.type === 'StringLiteral') {
+          found.add(argument.value);
+        } else if (
+          argument?.type === 'TemplateLiteral' &&
+          argument.expressions.length === 0 &&
+          argument.quasis[0].value.cooked != null
+        ) {
+          found.add(argument.quasis[0].value.cooked);
+        }
+      } else if (
+        node.type === 'TSImportEqualsDeclaration' &&
+        node.moduleReference.type === 'TSExternalModuleReference'
+      ) {
+        found.add(node.moduleReference.expression.value);
+      }
+    },
+  });
+  return [...found];
+}
+
+function readSource(path: string): string | null {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function sameItems<T>(a: T[], b: T[]): boolean {
+  return a.length === b.length && a.every((item, index) => item === b[index]);
 }
 
 function packageTargets(exports: unknown, subpath: string): string[] {
