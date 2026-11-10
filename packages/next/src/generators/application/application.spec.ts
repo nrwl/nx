@@ -705,13 +705,12 @@ describe('app', () => {
           style: 'css',
         });
 
-        const packageJson = readJson(tree, '/package.json');
-        expect(packageJson).toMatchObject({
-          devDependencies: {
-            'eslint-config-next': expect.anything(),
-            '@next/eslint-plugin-next': expect.anything(),
-          },
-        });
+        // eslint-config-next 16 ships only a flat config, which eslintrc
+        // cannot extend.
+        const { devDependencies } = readJson(tree, '/package.json');
+        expect(devDependencies['eslint-config-next']).toBe('^15.5.18');
+        expect(devDependencies['@next/eslint-plugin-next']).toBe('^15.5.18');
+        expect(devDependencies['eslint-plugin-react']).toBeDefined();
 
         const eslintJson = readJson(tree, `myapp/.eslintrc.json`);
         expect(eslintJson).toMatchInlineSnapshot(`
@@ -758,6 +757,33 @@ describe('app', () => {
             ],
           }
         `);
+      });
+
+      it('should reject a declared eslint-config-next 16 in an eslintrc workspace before writing a config', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: { next: '~16.1.6' },
+            devDependencies: {
+              eslint: '^9.8.0',
+              'eslint-config-next': '^16.4.0',
+            },
+          })
+        );
+        tree.write('.eslintrc.json', '{}');
+        const name = uniq();
+
+        await expect(
+          applicationGenerator(tree, {
+            linter: 'eslint',
+            directory: name,
+            style: 'css',
+          })
+        ).rejects.toThrow(
+          'The workspace uses the eslintrc config format and declares eslint-config-next v16.'
+        );
+        expect(tree.exists(`${name}/.eslintrc.json`)).toBe(false);
       });
     });
 

@@ -41,6 +41,22 @@ export async function addLinting(
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const isNext16App = options.linter === 'eslint' && (await isNext16(host));
+  const declaredEslintConfigNextVersion = getResolvedPackageVersion(
+    host,
+    'eslint-config-next'
+  );
+  if (
+    isNext16App &&
+    declaredEslintConfigNextVersion &&
+    major(declaredEslintConfigNextVersion) >= 16 &&
+    !useFlatConfig(host)
+  ) {
+    throw new Error(
+      `The workspace uses the eslintrc config format and declares eslint-config-next v${major(declaredEslintConfigNextVersion)}. ` +
+        `eslint-config-next v16 and later ship only a flat config, which an eslintrc config cannot extend. ` +
+        `Declare eslint-config-next ${eslintConfigNext15Version} to keep the eslintrc format, or convert the workspace to flat config with "nx g @nx/eslint:convert-to-flat-config".`
+    );
+  }
 
   tasks.push(
     await addLintingToProject(host, {
@@ -138,6 +154,7 @@ export async function addLinting(
         tasks.push(addExtendsTask);
       }
     } else {
+      usesFlatNextConfigs = false;
       const addExtendsTask = addExtendsToLintConfig(
         host,
         options.appProjectRoot,
@@ -177,8 +194,8 @@ export async function addLinting(
   }
 
   if (options.linter === 'eslint' && !options.skipPackageJson) {
-    // A Next.js 16 app on the FlatCompat config needs the v15 packages that
-    // Next.js 15 apps get.
+    // A Next.js 16 app that extends `next` through FlatCompat or eslintrc needs
+    // the v15 packages that Next.js 15 apps get.
     const eslintConfigNextVersion =
       isNext16App && !usesFlatNextConfigs
         ? eslintConfigNext15Version
