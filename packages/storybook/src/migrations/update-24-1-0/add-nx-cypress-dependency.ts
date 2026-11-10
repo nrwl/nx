@@ -233,8 +233,12 @@ function isNxCypressModuleReference(ts: TypeScript, node: Node): boolean {
     specifier = node.moduleReference.expression;
   } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
     specifier = node.argument.literal;
-  } else if (ts.isCallExpression(node) && isModuleLoadCall(ts, node)) {
-    specifier = node.arguments[0];
+  } else if (
+    ts.isCallExpression(node) &&
+    isModuleLoadCall(ts, node) &&
+    node.arguments.length
+  ) {
+    specifier = skipTransparentWrappers(ts, node.arguments[0]);
   }
 
   return (
@@ -243,6 +247,22 @@ function isNxCypressModuleReference(ts: TypeScript, node: Node): boolean {
       ts.isNoSubstitutionTemplateLiteral(specifier)) &&
     isNxCypressModule(specifier.text)
   );
+}
+
+// Parentheses and TypeScript-only syntax (`as`, `<T>`, `!`, `satisfies`) leave
+// the module name unchanged at runtime.
+function skipTransparentWrappers(ts: TypeScript, node: Node): Node {
+  while (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    // Added in TypeScript 4.0 and 4.9.
+    ts.isTypeAssertionExpression?.(node) ||
+    ts.isSatisfiesExpression?.(node)
+  ) {
+    node = node.expression;
+  }
+  return node;
 }
 
 function isModuleLoadCall(ts: TypeScript, node: CallExpression): boolean {

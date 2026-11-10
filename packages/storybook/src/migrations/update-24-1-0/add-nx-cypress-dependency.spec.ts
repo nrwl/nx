@@ -131,6 +131,11 @@ describe('add-nx-cypress-dependency migration', () => {
     ['cypress.config.cjs', `require('@nx/\\143ypress');`],
     ['cypress.config.cjs', `require('@nx/\\cypress');`],
     ['cypress.config.cjs', `require('@nx/cy\\\npress');`],
+    ['cypress.config.js', `require(('@nx/storybook/presets/cypress'));`],
+    ['cypress.config.ts', `require('@nx/cypress' as string);`],
+    ['cypress.config.ts', `require(<string>'@nx/cypress');`],
+    ['cypress.config.ts', `require(('@nx/cypress')!);`],
+    ['cypress.config.ts', `require('@nx/cypress' satisfies string);`],
   ])(
     'should add @nx/cypress when %s references it with `%s`',
     async (fileName, content) => {
@@ -175,6 +180,11 @@ describe('add-nx-cypress-dependency migration', () => {
   it.each([
     ['a comment', 'apps/app1/src/index.ts', `// uses @nx/cypress`],
     ['a plain string', 'apps/app1/src/index.ts', `const name = '@nx/cypress';`],
+    [
+      'a computed module name',
+      'apps/app1/src/index.ts',
+      `require('@nx/cypress' + '/plugins/cypress-preset');`,
+    ],
     [
       'a package with the same prefix',
       'apps/app1/src/index.ts',
