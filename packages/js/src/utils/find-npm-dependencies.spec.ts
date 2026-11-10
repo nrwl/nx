@@ -1,6 +1,7 @@
 import '@nx/devkit/internal-testing-utils/mock-fs';
 import { createRequire } from 'node:module';
 import { fs as memfs, vol } from 'memfs';
+import type { ProjectGraph } from '@nx/devkit';
 import { mockCjsModule } from '@nx/devkit/internal-testing-utils';
 import { findNpmDependencies } from './find-npm-dependencies';
 
@@ -362,6 +363,221 @@ describe('findNpmDependencies', () => {
         'build2'
       )
     ).toEqual({});
+  });
+
+  describe('when the helpers have only versioned nodes', () => {
+    const libWithHelpers = {
+      name: 'my-lib',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/my-lib',
+        targets: {
+          build1: {
+            executor: '@nx/js:tsc',
+            options: {
+              tsConfig: 'libs/my-lib/tsconfig.json',
+            },
+          },
+          build2: {
+            executor: '@nx/js:swc',
+            options: {},
+          },
+        },
+      },
+    };
+    const helperNodes = {
+      'npm:tslib@1.14.1': {
+        name: 'npm:tslib@1.14.1' as const,
+        type: 'npm' as const,
+        data: { packageName: 'tslib', version: '1.14.1' },
+      },
+      'npm:tslib@2.6.0': {
+        name: 'npm:tslib@2.6.0' as const,
+        type: 'npm' as const,
+        data: { packageName: 'tslib', version: '2.6.0' },
+      },
+      'npm:@swc/helpers@0.5.0': {
+        name: 'npm:@swc/helpers@0.5.0' as const,
+        type: 'npm' as const,
+        data: { packageName: '@swc/helpers', version: '0.5.0' },
+      },
+      'npm:@swc/helpers@0.5.15': {
+        name: 'npm:@swc/helpers@0.5.15' as const,
+        type: 'npm' as const,
+        data: { packageName: '@swc/helpers', version: '0.5.15' },
+      },
+    };
+    const projectFileMap = { 'my-lib': [] };
+
+    beforeEach(() => {
+      vol.fromJSON(
+        {
+          './nx.json': JSON.stringify(nxJson),
+          './libs/my-lib/tsconfig.json': JSON.stringify({
+            compilerOptions: { importHelpers: true },
+          }),
+          './libs/my-lib/.swcrc': JSON.stringify({
+            jsc: { externalHelpers: true },
+          }),
+        },
+        '/root'
+      );
+    });
+
+    it('should pick up the versions that the project depends on', () => {
+      const projectGraph = {
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: helperNodes,
+        dependencies: {
+          'my-lib': [
+            {
+              type: 'static',
+              source: 'my-lib',
+              target: 'npm:tslib@1.14.1',
+            },
+            {
+              type: 'static',
+              source: 'my-lib',
+              target: 'npm:@swc/helpers@0.5.0',
+            },
+          ],
+        },
+      };
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '1.14.1' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build2'
+        )
+      ).toEqual({ '@swc/helpers': '0.5.0' });
+    });
+
+    it('should pick up the highest versions when the project does not depend on them', () => {
+      const projectGraph = {
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: helperNodes,
+        dependencies: {},
+      };
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '2.6.0' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build2'
+        )
+      ).toEqual({ '@swc/helpers': '0.5.15' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build1',
+          { runtimeHelpers: ['tslib'] }
+        )
+      ).toEqual({ tslib: '2.6.0' });
+    });
+
+    it('should prefer the highest stable version over a prerelease', () => {
+      const projectGraph = {
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: {
+          ...helperNodes,
+          'npm:tslib@3.0.0-beta.1': {
+            name: 'npm:tslib@3.0.0-beta.1' as const,
+            type: 'npm' as const,
+            data: { packageName: 'tslib', version: '3.0.0-beta.1' },
+          },
+        },
+        dependencies: {},
+      };
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          projectGraph,
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '2.6.0' });
+    });
+
+    it('should skip a bare outside link when registry versions exist', () => {
+      const linkNode = {
+        name: 'npm:tslib' as const,
+        type: 'npm' as const,
+        data: { packageName: 'tslib', version: 'link:../outside/tslib' },
+      };
+      const graphWith = (dependencies: ProjectGraph['dependencies']) => ({
+        nodes: { 'my-lib': libWithHelpers },
+        externalNodes: { ...helperNodes, 'npm:tslib': linkNode },
+        dependencies,
+      });
+
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          graphWith({
+            'my-lib': [
+              {
+                type: 'static',
+                source: 'my-lib',
+                target: 'npm:tslib@1.14.1',
+              },
+            ],
+          }),
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '1.14.1' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          graphWith({}),
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: '2.6.0' });
+      expect(
+        findNpmDependencies(
+          '/root',
+          libWithHelpers,
+          {
+            nodes: { 'my-lib': libWithHelpers },
+            externalNodes: { 'npm:tslib': linkNode },
+            dependencies: {},
+          },
+          projectFileMap,
+          'build1'
+        )
+      ).toEqual({ tslib: 'link:../outside/tslib' });
+    });
   });
 
   it('should not pick up helper npm dependencies if not required', () => {

@@ -882,6 +882,47 @@ describe('selection with Ultracache configurations', () => {
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
+  it.each([
+    ['cat.one.two.spec.ts', new WholeFileChange(), true],
+    ['cat.one.two.spec.ts', new DeletedFileChange(), true],
+    ['cat.ts', new WholeFileChange(), false],
+    ['cat.ts', new DeletedFileChange(), false],
+  ])(
+    'applies learned exclusion categories to %s (%j)',
+    async (name, change, selected) => {
+      const commit = 'head'.padEnd(40, '0');
+      const db = connectToNxDb(dir, 'ultracache');
+      const configurations = new UltracacheConfigurationStore(db).import({
+        requestedCommit: commit,
+        configurationsJson: JSON.stringify({
+          'lib:test': {
+            commit,
+            inputs: [
+              'packages/nx/src/**/*.ts',
+              '!packages/nx/src/**/*.{ts,js}',
+            ],
+          },
+        }),
+      });
+      const result = await computeAffectedTasks({
+        projectGraph: graph(),
+        nxJson: { namedInputs: { production: ['{projectRoot}/src/**/*'] } },
+        targets: ['test'],
+        touchedFiles: [
+          {
+            file: `packages/nx/src/excluded/${name}`,
+            getChanges: () => [change],
+          },
+        ],
+        ultracacheConfigurationOutcome: {
+          status: 'fetched',
+          configurations,
+        } as any,
+      });
+      expect(result.affectedTaskIds.has('lib:test')).toBe(selected);
+    }
+  );
+
   // The run hashes lib:test from what it read, so a change to a file it read
   // but never declared has to select it.
   it('selects a task through a file it read but did not declare', async () => {

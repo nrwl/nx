@@ -228,6 +228,8 @@ pub enum HashInstruction {
     IgnoredFileSet {
         globs: Vec<String>,
         project_roots: Vec<String>,
+        /// Learned exclusions use suffix categories; declared globs stay unchanged.
+        ultracache: bool,
     },
     ProjectConfiguration(String),
     TsConfiguration(String),
@@ -358,6 +360,7 @@ impl HashInstruction {
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots: Vec::new(),
+            ultracache: false,
         }
     }
 

@@ -20,8 +20,8 @@ use crate::native::{
         FilesExpansionCache, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache, Source,
         WorkspaceFileIndex, WorkspaceFileIndicesCache, WorkspaceFileSetCache,
         collect_project_file_paths_cached, collect_workspace_file_paths_cached, expand_cached,
-        expand_globs, hash_all_externals, hash_external, hash_files, hash_json_files,
-        hash_project_config, hash_project_files_cached, hash_task_output,
+        expand_globs_with_exclusions, hash_all_externals, hash_external, hash_files,
+        hash_json_files, hash_project_config, hash_project_files_cached, hash_task_output,
         hash_tsconfig_selectively, hash_workspace_files_cached, output_prefixes,
     },
     types::FileData,
@@ -815,6 +815,7 @@ impl TaskHasher {
             HashInstruction::IgnoredFileSet {
                 globs,
                 project_roots,
+                ultracache,
             } => {
                 let workspace_root = Path::new(&self.workspace_root);
                 // The index answers from a listing it keeps only while
@@ -831,7 +832,7 @@ impl TaskHasher {
                 };
                 let key = format!("files#{id}");
                 let expansion = expand_cached(&key, files_expansion_cache, || {
-                    expand_globs(
+                    expand_globs_with_exclusions(
                         workspace_root,
                         globs,
                         project_roots,
@@ -839,6 +840,7 @@ impl TaskHasher {
                             &|path| run_stage.nothing_ran() && self.workspace_tracks_file(path),
                             &list_directory,
                         ),
+                        *ultracache,
                     )
                 })?;
                 let hashed = hash_files(

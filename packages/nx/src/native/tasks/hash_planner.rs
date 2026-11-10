@@ -20,7 +20,8 @@ use crate::native::glob::{
     NxGlobSet, NxGlobSetBuilder, expand_literal_braces, normalize_glob, partition_glob,
 };
 use crate::native::tasks::hashers::{
-    OnceCache, Positive, ProjectScope, parse_group, scope_roots, validate_files_globs,
+    OnceCache, Positive, ProjectScope, parse_group_with_exclusions, scope_roots,
+    validate_files_globs,
 };
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency_group, get_named_inputs,
@@ -142,6 +143,7 @@ pub struct HashPlanner {
     project_graph: Arc<ProjectGraph>,
     /// Each external node mapped to its transitive project-node deps, memoized per instance.
     external_deps_mapped: OnceLock<HashMap<String, Vec<String>>>,
+    external_node_names: OnceLock<OnceCache<Vec<String>>>,
     /// Memoized instruction ids contributed by (dependency project, propagated
     /// input), including its whole transitive closure. Shared across all tasks
     /// in all get_plans calls: values derive only from the immutable project
@@ -286,6 +288,7 @@ impl HashPlanner {
             nx_json,
             project_graph: Arc::clone(project_graph),
             external_deps_mapped: OnceLock::new(),
+            external_node_names: OnceLock::new(),
             subtree_memo: OnceCache::new(),
             local_inputs_memo: OnceLock::new(),
             acyclic_dependency_projects: OnceLock::new(),
@@ -318,13 +321,24 @@ impl HashPlanner {
     /// A disk-backed group whose globs stay out of nested projects. A group
     /// that does not parse is left unscoped: expanding it reports the error.
     fn ignored_file_set(&self, globs: Vec<String>) -> HashInstruction {
-        let project_roots = match parse_group(&globs) {
-            Ok((positives, _)) => scope_roots(&positives, self.project_roots()),
-            Err(_) => Vec::new(),
+        self.disk_file_set(globs, false)
+    }
+
+    fn disk_file_set(&self, globs: Vec<String>, ultracache: bool) -> HashInstruction {
+        let (project_roots, ultracache) = match parse_group_with_exclusions(&globs, ultracache) {
+            Ok((positives, negatives)) => (
+                scope_roots(&positives, self.project_roots()),
+                // Keep equivalent declared and learned groups interned together.
+                negatives
+                    .iter()
+                    .any(|negative| negative.has_suffix_category()),
+            ),
+            Err(_) => (Vec::new(), ultracache),
         };
         HashInstruction::IgnoredFileSet {
             globs,
             project_roots,
+            ultracache,
         }
     }
 
@@ -709,7 +723,7 @@ impl HashPlanner {
             group_exclusions.sort();
             group_exclusions.dedup();
             group.extend(group_exclusions);
-            instructions.push(self.ignored_file_set(group));
+            instructions.push(self.disk_file_set(group, true));
         }
         instructions.push(HashInstruction::UltracacheConfiguration(
             entry.digest.clone(),
@@ -743,8 +757,11 @@ impl HashPlanner {
                 .split(':')
                 .next()
                 .expect("Executors should always have a ':'");
-            let existing_packages =
-                find_external_dependency_node_names(executor_package, &self.project_graph);
+            let existing_packages = find_external_dependency_node_names(
+                executor_package,
+                &self.project_graph,
+                &self.external_node_names,
+            );
             if existing_packages.is_empty() {
                 // this usually happens because the executor was a local plugin.
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
@@ -777,8 +794,11 @@ impl HashPlanner {
                     Input::ExternalDependency(deps) => {
                         has_external_deps = true;
                         for dep in deps.iter() {
-                            let external_node_names =
-                                find_external_dependency_node_names(dep, &self.project_graph);
+                            let external_node_names = find_external_dependency_node_names(
+                                dep,
+                                &self.project_graph,
+                                &self.external_node_names,
+                            );
                             if external_node_names.is_empty() {
                                 if self.project_graph.nodes.contains_key(dep) {
                                     let deps = self.project_graph.dependencies.get(project_name);
@@ -1595,6 +1615,7 @@ fn deferred_tasks(
                     HashInstruction::IgnoredFileSet {
                         globs,
                         project_roots,
+                        ..
                     } => {
                         let scope = ProjectScope::new(project_roots);
                         disk_roots.extend(globs.iter().filter(|glob| !glob.starts_with('!')).map(
@@ -1955,28 +1976,41 @@ fn resolve_files_glob(glob: &str, project_root: &str, project_name: &str) -> Str
     }
 }
 
-/// Without an exact `<pkg>`/`npm:<pkg>` node, every installed version of the
-/// package matches: picking one from the `HashMap` scan would change per process,
-/// and a bump to any of them can change what the task does.
+/// Without an exact `<pkg>` or non-link `npm:<pkg>` node, every installed version
+/// matches: picking one by `HashMap` order would vary per process, and a bump to
+/// any of them can change what the task does.
 fn find_external_dependency_node_names<'a>(
     package_name: &str,
     project_graph: &'a ProjectGraph,
+    cache: &OnceLock<OnceCache<Vec<String>>>,
 ) -> Vec<&'a String> {
     let npm_name = format!("npm:{}", &package_name);
     if let Some((key, _)) = project_graph.external_nodes.get_key_value(package_name) {
         return vec![key];
     }
-    if let Some((key, _)) = project_graph.external_nodes.get_key_value(&npm_name) {
-        return vec![key];
+    if let Some((key, node)) = project_graph.external_nodes.get_key_value(&npm_name) {
+        // A link node cannot represent registry versions installed by other projects.
+        if !node.version.starts_with("link:") {
+            return vec![key];
+        }
     }
-    let mut matches: Vec<&String> = project_graph
-        .external_nodes
-        .iter()
-        .filter(|(_, node)| node.package_name.as_deref() == Some(package_name))
-        .map(|(node_name, _)| node_name)
-        .collect();
-    matches.sort();
+    let matches = cache
+        .get_or_init(OnceCache::new)
+        .get_or_try_init(package_name.to_owned(), || {
+            let mut matches: Vec<String> = project_graph
+                .external_nodes
+                .iter()
+                .filter(|(_, node)| node.package_name.as_deref() == Some(package_name))
+                .map(|(node_name, _)| node_name.clone())
+                .collect();
+            matches.sort_unstable();
+            Ok::<_, std::convert::Infallible>(matches)
+        })
+        .unwrap();
     matches
+        .iter()
+        .map(|name| project_graph.external_nodes.get_key_value(name).unwrap().0)
+        .collect()
 }
 
 #[cfg(test)]
@@ -2640,6 +2674,7 @@ mod tests {
         let scoped = pool.intern(HashInstruction::IgnoredFileSet {
             globs: vec!["packages/gradle/**/*".into()],
             project_roots: vec!["packages/gradle".into(), "packages/gradle/runner".into()],
+            ultracache: false,
         });
         let plans: HashMap<String, Vec<u32>> = [
             ("gradle:nested-output".to_string(), vec![scoped]),
@@ -2755,11 +2790,11 @@ mod tests {
             ("npm:is-odd@1.0.0", "is-odd"),
         ]);
         assert_eq!(
-            find_external_dependency_node_names("is-number", &graph),
+            find_external_dependency_node_names("is-number", &graph, &OnceLock::new()),
             vec!["npm:is-number"]
         );
         assert_eq!(
-            find_external_dependency_node_names("is-odd", &graph),
+            find_external_dependency_node_names("is-odd", &graph, &OnceLock::new()),
             vec!["is-odd"]
         );
     }
@@ -2777,7 +2812,7 @@ mod tests {
             graph_with_external_nodes(&reversed),
         ] {
             assert_eq!(
-                find_external_dependency_node_names("is-number", &graph),
+                find_external_dependency_node_names("is-number", &graph, &OnceLock::new()),
                 vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
             );
         }
@@ -2786,60 +2821,74 @@ mod tests {
     #[test]
     fn external_dependency_without_a_match_is_empty() {
         let graph = graph_with_external_nodes(&[("npm:is-number@7.0.0", "is-number")]);
-        assert!(find_external_dependency_node_names("is-odd", &graph).is_empty());
+        assert!(find_external_dependency_node_names("is-odd", &graph, &OnceLock::new()).is_empty());
     }
 
     #[test]
-    fn external_dependencies_input_hashes_every_installed_version() {
+    fn external_dependencies_input_hashes_every_version_without_a_bare_registry_node() {
         use crate::native::test_utils::task_graph;
         use crate::native::types::ExternalDependenciesInput;
         use napi::bindgen_prelude::Either9;
 
-        let mut graph = graph_with_external_nodes(&[
-            ("npm:is-number@6.0.0", "is-number"),
-            ("npm:is-number@7.0.0", "is-number"),
-        ]);
-        graph.dependencies.insert("c".into(), vec![]);
-        graph.nodes.insert(
-            "c".into(),
-            Project {
-                root: "packages/c".into(),
-                targets: HashMap::from([(
-                    "check".into(),
-                    Target {
-                        executor: Some("nx:run-commands".into()),
-                        inputs: Some(vec![Either9::F(ExternalDependenciesInput {
-                            external_dependencies: vec!["is-number".into()],
-                        })]),
-                        ..Default::default()
-                    },
-                )]),
-                ..Default::default()
-            },
-        );
-        let planner = HashPlanner::new(
-            NxJson { named_inputs: None },
-            &External::new(Arc::new(graph)),
-        );
-        let plans = planner
-            .get_plans_materialized(
-                vec!["c:check"],
-                task_graph(&[("c:check", &[])], &[]),
-                None,
-                &[],
-            )
-            .unwrap();
-        let externals: Vec<_> = plans["c:check"]
-            .iter()
-            .filter_map(|instruction| match instruction {
-                HashInstruction::External(name) => Some(name.as_str()),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(
-            externals,
-            vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"]
-        );
+        for with_link in [false, true] {
+            let mut nodes = vec![
+                ("npm:is-number@6.0.0", "is-number"),
+                ("npm:is-number@7.0.0", "is-number"),
+            ];
+            if with_link {
+                nodes.push(("npm:is-number", "is-number"));
+            }
+            let mut graph = graph_with_external_nodes(&nodes);
+            if with_link {
+                graph
+                    .external_nodes
+                    .get_mut("npm:is-number")
+                    .unwrap()
+                    .version = "link:../is-number".into();
+            }
+            graph.dependencies.insert("c".into(), vec![]);
+            graph.nodes.insert(
+                "c".into(),
+                Project {
+                    root: "packages/c".into(),
+                    targets: HashMap::from([(
+                        "check".into(),
+                        Target {
+                            executor: Some("nx:run-commands".into()),
+                            inputs: Some(vec![Either9::F(ExternalDependenciesInput {
+                                external_dependencies: vec!["is-number".into()],
+                            })]),
+                            ..Default::default()
+                        },
+                    )]),
+                    ..Default::default()
+                },
+            );
+            let planner = HashPlanner::new(
+                NxJson { named_inputs: None },
+                &External::new(Arc::new(graph)),
+            );
+            let plans = planner
+                .get_plans_materialized(
+                    vec!["c:check"],
+                    task_graph(&[("c:check", &[])], &[]),
+                    None,
+                    &[],
+                )
+                .unwrap();
+            let externals: Vec<_> = plans["c:check"]
+                .iter()
+                .filter_map(|instruction| match instruction {
+                    HashInstruction::External(name) => Some(name.as_str()),
+                    _ => None,
+                })
+                .collect();
+            let mut expected = vec!["npm:is-number@6.0.0", "npm:is-number@7.0.0"];
+            if with_link {
+                expected.insert(0, "npm:is-number");
+            }
+            assert_eq!(externals, expected);
+        }
     }
 }
 
@@ -3419,6 +3468,7 @@ mod always_tests {
                     "!libs/app/fixtures/large/**".into()
                 ],
                 project_roots: vec!["libs/app".into()],
+                ultracache: false,
             }]
         );
         assert_eq!(retained(false, true), vec![]);
@@ -3841,7 +3891,7 @@ mod nested_project_tests {
 
     #[test]
     fn a_recording_hashes_a_nested_project_only_through_its_own_globs() {
-        use crate::native::tasks::hashers::{Source, expand_globs};
+        use crate::native::tasks::hashers::{Source, expand_globs_with_exclusions};
         use crate::native::test_utils::ultracache_configurations;
         use assert_fs::TempDir;
         use assert_fs::prelude::*;
@@ -3877,12 +3927,14 @@ mod nested_project_tests {
                 HashInstruction::IgnoredFileSet {
                     globs,
                     project_roots,
+                    ultracache,
                 } => Some(
-                    expand_globs(
+                    expand_globs_with_exclusions(
                         temp.path(),
                         globs,
                         project_roots,
                         &Source::fileset_from_disk(temp.path()),
+                        *ultracache,
                     )
                     .unwrap()
                     .files,

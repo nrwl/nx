@@ -17,8 +17,11 @@ pub use expansion::FilesExpansion;
 use expansion::NOTHING_TRACKED;
 pub(crate) use expansion::{
     FilesExpansionCache, Source, expand_cached, expand_entries, expand_globs,
+    expand_globs_with_exclusions,
 };
-pub(crate) use expansion::{parse_group, validate_files_glob, validate_files_globs};
+pub(crate) use expansion::{
+    parse_group, parse_group_with_exclusions, validate_files_glob, validate_files_globs,
+};
 pub(crate) use scope::{ProjectScope, ScopedMatcher, scope_roots};
 
 #[cfg(test)]
@@ -67,6 +70,80 @@ pub(crate) mod tests {
             .write_str("{}")
             .unwrap();
         temp
+    }
+
+    #[test]
+    fn ultracache_exclusions_match_suffix_categories_without_narrowing_positives() {
+        let temp = TempDir::new().unwrap();
+        let names = [
+            "cat.ts",
+            "cat.js",
+            ".hidden.ts",
+            "cat.spec.ts",
+            "cat.one.two.spec.ts",
+            "cat.d.ts",
+            "cat.impl.ts",
+            "cat.t!s",
+            "cat.spec.t!s",
+            ".env",
+            "exact.spec.ts",
+            "skip/cat.spec.ts",
+        ];
+        for name in names {
+            temp.child(format!("dist/{name}")).write_str(name).unwrap();
+        }
+        for (negative, excluded) in [
+            ("!dist/**/*.{ts,js}", vec!["cat.ts", "cat.js", ".hidden.ts"]),
+            (
+                "!dist/**/*.{spec.ts,d.ts}",
+                vec![
+                    "cat.spec.ts",
+                    "cat.one.two.spec.ts",
+                    "cat.d.ts",
+                    "exact.spec.ts",
+                    "skip/cat.spec.ts",
+                ],
+            ),
+            ("!dist/**/*.impl.ts", vec!["cat.impl.ts"]),
+            ("!dist/**/*.t!s", vec!["cat.t!s"]),
+            ("!dist/**/*.t\\!s", vec!["cat.t!s"]),
+            ("!dist/exact.spec.ts", vec!["exact.spec.ts"]),
+            ("!dist/skip/**", vec!["skip/cat.spec.ts"]),
+        ] {
+            let patterns = globs(&["dist/**/*", negative]);
+            let expanded = expand_globs_with_exclusions(
+                temp.path(),
+                &patterns,
+                &[],
+                &Source::fileset_from_disk(temp.path()),
+                true,
+            )
+            .unwrap();
+            for name in names {
+                assert_eq!(
+                    expanded.files.contains(&format!("dist/{name}")),
+                    !excluded.contains(&name),
+                    "{negative}: {name}"
+                );
+            }
+        }
+        // Ordinary declared negatives still exclude compound suffixes too.
+        for (positive, negative) in [
+            ("dist/**/*.{ts,js}", "!dist/**/*.{ts,js}"),
+            ("dist/**/*.t!s", "!dist/**/*.t!s"),
+        ] {
+            let ordinary = expand_files(temp.path(), &globs(&[positive, negative])).unwrap();
+            assert!(ordinary.files.is_empty());
+        }
+        let positive = expand_globs_with_exclusions(
+            temp.path(),
+            &globs(&["dist/**/*.ts"]),
+            &[],
+            &Source::fileset_from_disk(temp.path()),
+            true,
+        )
+        .unwrap();
+        assert!(positive.files.contains(&"dist/cat.one.two.spec.ts".into()));
     }
 
     pub(crate) fn globs(list: &[&str]) -> Vec<String> {
