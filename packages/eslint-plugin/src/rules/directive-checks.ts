@@ -11,7 +11,6 @@ import { findUnmatchedProjectPatterns } from '../utils/directive-checks/project-
 import {
   findSplitTargets,
   splitTargetsApply,
-  splitTargetsKeepDependsOnInputs,
 } from '../utils/directive-checks/split-targets';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
@@ -62,10 +61,9 @@ export default ESLintUtils.RuleCreator(
         'Nx reads only the first "@nx-target-name", so it ignores this one.',
       unsupportedDirective:
         'No split task that runs this file applies "@nx-{{name}}", so Nx ignores it.',
-      unmatchedProject:
-        '"{{pattern}}" matches no project. Any Nx command that runs this test fails.',
+      unmatchedProject: '"{{pattern}}" matches no project.',
       unmatchedProjectSuggestion:
-        '"{{pattern}}" matches no project. Any Nx command that runs this test fails. Did you mean "{{suggestion}}"?',
+        '"{{pattern}}" matches no project. Did you mean "{{suggestion}}"?',
     },
   },
   defaultOptions: [],
@@ -139,15 +137,7 @@ export default ESLintUtils.RuleCreator(
         if (!splitTargetsApply(targets, 'depends-on')) {
           reportUnsupported(dependsOn.lines, 'depends-on');
           ignoredByRunner.add('depends-on');
-        } else if (
-          splitTargetsKeepDependsOnInputs(
-            graph.projectGraph,
-            sourceProject,
-            targets
-          )
-        ) {
-          // The cached graph can predate the latest edit, so check the patterns
-          // in the file, not the ones the cached inputs list.
+        } else {
           const unmatched = findUnmatchedProjectPatterns(
             dependsOn.patterns
               .map(({ pattern }) => pattern)

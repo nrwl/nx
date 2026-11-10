@@ -315,7 +315,6 @@ export {
   readCachedProjectConfiguration,
   readFileIfExisting,
   readFileMapCache,
-  readSourceMapsCache,
   readModulePackageJson,
   readNxJsonFromDisk,
   readNxMigrateConfig,

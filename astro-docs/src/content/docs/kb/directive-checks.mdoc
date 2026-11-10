@@ -194,10 +194,10 @@ A pattern can be an exact project name, a name with a `name:`, `tag:`, or `direc
 or a glob such as `shop-*`.
 A pattern that matches no project makes every Nx command that includes the task fail, unless it's
 an exclusion such as `!shop-legacy`.
-The rule checks the patterns only while the split task keeps the `inputs` its plugin added for
-`@nx-depends-on`.
 A target default or `project.json` entry that replaces the task's `inputs` without `"..."` drops
-them, and Nx then doesn't check the patterns either.
+the `inputs` that the plugin added for `@nx-depends-on`.
+Nx then doesn't check the patterns, so an unmatched pattern fails no command.
+The rule still reports it, because the pattern fails commands once the entry keeps `"..."`.
 
 When a project name is close, the message suggests it, such as the full name `@acme/shop-ui`
 for `shop-ui`:
@@ -208,12 +208,15 @@ for `shop-ui`:
 ```
 
 The rule reports
-`"shop-ui" matches no project. Any Nx command that runs this test fails. Did you mean "@acme/shop-ui"?`
+`"shop-ui" matches no project. Did you mean "@acme/shop-ui"?`
 
 ## Limits
 
 - Without a cached project graph, the rule prints a warning and runs only the
   [checks in every file](#checks-in-every-file).
+- The rule reads the project graph that Nx cached last.
+  A pattern that names a project created after that reads as matching no project until Nx
+  updates the cache.
 - When the rule matches split tasks to the file and none of them records a directive as applied,
   it reports the directive as ignored, even when a plugin applies it.
 - For a split task that records no test file, the rule goes by the task name, which can end with

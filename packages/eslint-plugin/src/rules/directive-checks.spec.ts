@@ -4,15 +4,6 @@ import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
 import directiveChecks, { RULE_NAME } from './directive-checks';
 
-const { readSourceMapsCache } = vi.hoisted(() => ({
-  readSourceMapsCache: vi.fn(),
-}));
-
-vi.mock('@nx/devkit/internal', async () => ({
-  ...(await vi.importActual<any>('@nx/devkit/internal')),
-  readSourceMapsCache,
-}));
-
 const linter = new TSESLint.Linter();
 const projectPath = `${process.cwd()}/proj`;
 
@@ -29,19 +20,16 @@ function runRule(
   {
     file = 'apps/shop-e2e/src/checkout.spec.ts',
     nodes = [project('shop-e2e', 'apps/shop-e2e')],
-    sourceMaps = null,
   }: {
     file?: string;
     /** `null` leaves no project graph, as before Nx first computes one. */
     nodes?: ProjectGraphProjectNode[] | null;
-    sourceMaps?: Record<string, Record<string, [string, string]>> | null;
   } = {}
 ): TSESLint.Linter.LintMessage[] {
   const projectGraph: ProjectGraph | undefined = nodes && {
     nodes: Object.fromEntries(nodes.map((node) => [node.name, node])),
     dependencies: Object.fromEntries(nodes.map((node) => [node.name, []])),
   };
-  readSourceMapsCache.mockReturnValue(sourceMaps);
   (global as any).projectPath = projectPath;
   (global as any).projectGraph = projectGraph;
   (global as any).projectFileMap = projectGraph && {};
@@ -289,19 +277,12 @@ describe('directive-checks', () => {
     // linted file's path.
     it('does not report a file that no split task runs', () => {
       const otherSplitTarget = 'e2e-ci--checkout--unit.spec.ts';
-      const playwright: [string, string] = [
-        'apps/shop-e2e/playwright.config.ts',
-        '@nx/playwright/plugin',
-      ];
       expect(
         runRule('// @nx-depends-on: missing', {
           file: 'apps/shop-e2e/unit.spec.ts',
           nodes: [
             project('shop-e2e', 'apps/shop-e2e', {
               [otherSplitTarget]: {
-                inputs: [
-                  { input: 'default', projects: ['shop'], always: true },
-                ],
                 metadata: {
                   testFileDirectives: {
                     ...playwrightTarget.metadata.testFileDirectives,
@@ -312,69 +293,24 @@ describe('directive-checks', () => {
             }),
             project('shop', 'apps/shop'),
           ],
-          sourceMaps: {
-            'apps/shop-e2e': {
-              [`targets.${otherSplitTarget}`]: playwright,
-              [`targets.${otherSplitTarget}.inputs`]: playwright,
-            },
-          },
         })
       ).toEqual([]);
     });
   });
 
   describe('@nx-depends-on patterns', () => {
-    const splitTarget = 'e2e-ci--src/checkout.spec.ts';
-
-    const playwright: [string, string] = [
-      'apps/shop-e2e/playwright.config.ts',
-      '@nx/playwright/plugin',
-    ];
-
-    /** Runs the rule with `inputs` written by `inputSources`, item by item. */
-    function runWithInputs(
-      inputs: ProjectGraphProjectNode['data']['targets'][string]['inputs'],
-      inputsSource: [string, string],
-      inputSources: [string, string][]
-    ) {
-      return runRule(
+    // The cached graph predates the directive, so the task has no inputs for it.
+    it('reports each pattern that matches no project where it is written', () => {
+      const messages = runRule(
         '// @nx-depends-on: shop-e2e, shop-uii, !legacy, tag:none',
         {
           nodes: [
             project('shop-e2e', 'apps/shop-e2e', {
-              [splitTarget]: { ...playwrightTarget, inputs },
+              'e2e-ci--src/checkout.spec.ts': playwrightTarget,
             }),
             project('shop-ui', 'libs/shop-ui'),
           ],
-          sourceMaps: {
-            'apps/shop-e2e': {
-              [`targets.${splitTarget}`]: playwright,
-              [`targets.${splitTarget}.inputs`]: inputsSource,
-              ...Object.fromEntries(
-                inputSources.map((source, index) => [
-                  `targets.${splitTarget}.inputs.${index}`,
-                  source,
-                ])
-              ),
-            },
-          },
         }
-      );
-    }
-
-    // The cached graph predates the edit that added `shop-uii` and `tag:none`,
-    // and a target default spreads the inputs the plugin added.
-    it('reports each pattern that matches no project where it is written', () => {
-      const projects = ['shop-e2e', 'shop-ui'];
-      const messages = runWithInputs(
-        [
-          'default',
-          { input: 'production', projects, always: true },
-          { input: 'production', projects, dependencies: true, always: true },
-          { externalDependencies: ['@playwright/test'] },
-        ],
-        ['nx.json#targetDefaults.e2e-ci--**/**', 'nx/target-defaults'],
-        [playwright, playwright, playwright, playwright]
       );
 
       expect(
@@ -385,37 +321,16 @@ describe('directive-checks', () => {
         }))
       ).toEqual([
         {
-          message:
-            '"shop-uii" matches no project. Any Nx command that runs this test fails. Did you mean "shop-ui"?',
+          message: '"shop-uii" matches no project. Did you mean "shop-ui"?',
           column: 30,
           endColumn: 38,
         },
         {
-          message:
-            '"tag:none" matches no project. Any Nx command that runs this test fails.',
+          message: '"tag:none" matches no project.',
           column: 49,
           endColumn: 57,
         },
       ]);
-    });
-
-    // The hasher checks the replacement's patterns, not the directive's.
-    it('does not report patterns when a project.json entry replaces the inputs the plugin added', () => {
-      const projectJson: [string, string] = [
-        'apps/shop-e2e/project.json',
-        'nx/core/project-json',
-      ];
-      expect(
-        runWithInputs(
-          [
-            'default',
-            '^production',
-            { input: 'default', projects: ['shop-ui'], always: true },
-          ],
-          projectJson,
-          [projectJson, projectJson, projectJson]
-        )
-      ).toEqual([]);
     });
   });
 });

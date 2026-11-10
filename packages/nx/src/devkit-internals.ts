@@ -238,10 +238,7 @@ export {
   readPackageJson,
 } from './project-graph/file-utils';
 export type { FileMapCache } from './project-graph/nx-deps-cache';
-export {
-  readFileMapCache,
-  readSourceMapsCache,
-} from './project-graph/nx-deps-cache';
+export { readFileMapCache } from './project-graph/nx-deps-cache';
 export { findClosestMatches } from './utils/string-similarity';
 export { isNpmProject } from './project-graph/operators';
 export {
