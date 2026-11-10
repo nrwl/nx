@@ -1105,37 +1105,42 @@ describe('executeMigrations', () => {
         tree.write('package.json', JSON.stringify(json));
       };`
     );
+    const installedMarker = join(tmpRoot, 'installed');
     writeImplFile(
       pkgDir,
       'mig-a.js',
       `module.exports.default = async function () {
-        throw new Error('needs @nx/cypress installed');
+        if (!require('fs').existsSync(${JSON.stringify(installedMarker)})) {
+          throw new Error('needs @nx/cypress installed');
+        }
       };`
     );
     mockCommitMigrationIfRequested.mockResolvedValue({ status: 'disabled' });
     mockSpawn.mockImplementation(() => {
       const child = new FakeChildProcess();
-      process.nextTick(() => child.emit('close', 0));
+      // The install finishes only after spawn returns, as a real one does.
+      process.nextTick(() => {
+        writeFileSync(installedMarker, '');
+        child.emit('close', 0);
+      });
       return child;
     });
 
-    await expect(
-      executeMigrations(
-        tmpRoot,
-        [
-          migration('mig-a', '1.0.0'),
-          {
-            package: '@nx/storybook',
-            name: 'update-24-1-0-add-nx-cypress-dependency',
-            version: '24.1.0-beta.0',
-          },
-        ],
-        false,
-        false,
-        '',
-        false
-      )
-    ).rejects.toThrow('needs @nx/cypress installed');
+    await executeMigrations(
+      tmpRoot,
+      [
+        migration('mig-a', '1.0.0'),
+        {
+          package: '@nx/storybook',
+          name: 'update-24-1-0-add-nx-cypress-dependency',
+          version: '24.1.0-beta.0',
+        },
+      ],
+      false,
+      false,
+      '',
+      false
+    );
 
     expect(mockSpawn).toHaveBeenCalledTimes(1);
     expect(mockSpawn.mock.calls[0][0]).toContain('install');
