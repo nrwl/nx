@@ -118,19 +118,22 @@ Changing one of those doesn't re-infer the address.
 `CI` itself isn't filtered, so changing it re-infers the address.
 Running `nx reset` also discards the cached address.
 
+Workspace files the config imports with a literal `import` or `require()` are part of the cache
+too, including helpers outside the project, such as a shared helper in `tools/`, and the files
+those helpers import.
+Editing one re-infers the address.
+Nx doesn't track computed imports, arbitrary filesystem reads, or files outside the workspace, so
+run `nx reset` when those change.
+Also run `nx reset` after editing a helper that `.gitignore` or `.nxignore` excludes, because Nx
+doesn't rebuild the project graph for it.
+The same applies to an ES module helper the config loads with `import` while the Nx daemon is
+running, because the daemon keeps the version it loaded first.
+
 When the wait task waits for a single server configured with a `url`, and the serve task reported
 its address in `NX_READY_URL`, the wait task takes the protocol and port from the reported address
 and keeps the path and query of the configured `url`.
 A `localhost` host stays as it is when the server listens on a loopback address.
 Any other host moves to the one the server reported.
-
-Nx also fingerprints workspace files referenced by literal imports or `require()` calls,
-including transitive helpers outside the project, such as a shared helper in `tools/`.
-Editing one refreshes the cached address when inference runs again.
-Nx doesn't track computed imports, arbitrary filesystem reads, or files outside the workspace.
-Run `nx reset` when those inputs change.
-You may also need to reset Nx when ignored files don't trigger a graph update or a reused loader
-retains transitive ECMAScript modules.
 
 A task dependency can't carry a target configuration, so the address is always inferred without
 one and a configuration-scoped env file such as `.env.e2e.production` never affects it.
