@@ -19,6 +19,7 @@ use crate::native::cache::file_ops::{
     copy_and_list, copy_outputs_into_workspace, find_link_leaving_output,
 };
 use crate::native::db::connection::NxDbConnection;
+use crate::native::pseudo_terminal::strip_queries::strip_queries;
 use crate::native::utils::Normalize;
 use crate::native::workspace::outputs_tracking::OutputFile;
 use napi::bindgen_prelude::External;
@@ -486,21 +487,24 @@ impl NxCache {
         })
     }
 
-    /// Restores and records a result fetched from a remote cache. Returns
-    /// false, discarding the artifact, when it holds a link that leaves the
-    /// output it sits in.
+    /// Restores and records a result fetched from a remote cache, returning
+    /// its terminal output as stored for replay. Returns `None`, discarding
+    /// the artifact, when it holds a link that leaves the output it sits in.
     #[napi]
     pub fn apply_remote_cache_results(
         &self,
         hash: String,
         result: CachedResult,
         outputs: Option<Vec<String>>,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<Option<String>> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash, &result.outputs_path
         );
-        let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
+        let terminal_output = String::from_utf8_lossy(&strip_queries(
+            result.terminal_output.as_deref().unwrap_or("").as_bytes(),
+        ))
+        .into_owned();
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs.filter(|outputs| !outputs.is_empty()) {
             let outputs_path = Path::new(&result.outputs_path);
@@ -508,17 +512,17 @@ impl NxCache {
             if let Some(link) = find_link_leaving_output(outputs_path, &normalized)? {
                 debug!("Discarding remote cache artifact {}: {:?}", &hash, link);
                 remove_items(&[self.cache_path.join(&hash)])?;
-                return Ok(false);
+                return Ok(None);
             }
             if result.code == 0 {
                 size += try_and_retry(|| self.restore(result.clone(), outputs.clone()))?.0;
             }
         }
-        write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
+        write(self.get_task_outputs_path(hash.clone()), &terminal_output)?;
 
         let code: i16 = result.code;
         self.record_to_cache(hash, code, size)?;
-        Ok(true)
+        Ok(Some(terminal_output))
     }
 
     /// Register terminal outputs that were written without a cache entry —
@@ -1452,6 +1456,7 @@ mod test {
         cache
             .apply_remote_cache_results(hash.to_string(), result, Some(outputs))
             .unwrap()
+            .is_some()
     }
 
     /// Output sets whose roots are `dist/app` or one of its ancestors.
@@ -1674,5 +1679,34 @@ mod test {
         restore_next_build(&mut cache).unwrap();
         assert_eq!(std::fs::read(&id).unwrap(), b"1");
         assert!(artifact.join("web/.next/BUILD_ID").is_file());
+    }
+
+    #[test]
+    fn apply_remote_cache_results_strips_queries_and_clipboard_writes_from_terminal_output() {
+        let temp = TempDir::new().unwrap();
+        let mut cache = cache_in(&temp);
+        record_task(&cache, "1");
+        let outputs_path = temp.path().join("cache/1");
+        create_dir_all(&outputs_path).unwrap();
+        let artifact = CachedResult {
+            code: 0,
+            terminal_output: Some(
+                "\x1b[32mPASS\x1b[0m\x1b]52;c;Y3VybA==\x07\x1b[c\x1b]11;?\x07 done\n".to_string(),
+            ),
+            outputs_path: outputs_path.to_str().unwrap().to_string(),
+            size: None,
+        };
+
+        let replayed = cache
+            .apply_remote_cache_results("1".to_string(), artifact, None)
+            .unwrap()
+            .expect("should apply");
+
+        assert_eq!(replayed, "\x1b[32mPASS\x1b[0m done\n");
+        let local_hit = cache.get("1".to_string()).unwrap().unwrap();
+        assert_eq!(
+            local_hit.terminal_output.as_deref(),
+            Some(replayed.as_str())
+        );
     }
 }

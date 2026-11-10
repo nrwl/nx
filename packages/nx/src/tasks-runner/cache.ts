@@ -150,12 +150,11 @@ export class DbCache {
         this.cache.cacheDirectory
       );
 
-      if (res && this.applyRemoteCacheResults(task, res)) {
-        return {
-          ...res,
-          terminalOutput: res.terminalOutput ?? '',
-          remote: true,
-        };
+      const terminalOutput = res
+        ? this.applyRemoteCacheResults(task, res)
+        : null;
+      if (terminalOutput !== null) {
+        return { ...res, terminalOutput, remote: true };
       } else {
         return null;
       }
@@ -207,12 +206,11 @@ export class DbCache {
             task.hash,
             this.cache.cacheDirectory
           );
-          if (res && this.applyRemoteCacheResults(task, res)) {
-            results.set(task.hash, {
-              ...res,
-              terminalOutput: res.terminalOutput ?? '',
-              remote: true,
-            });
+          const terminalOutput = res
+            ? this.applyRemoteCacheResults(task, res)
+            : null;
+          if (terminalOutput !== null) {
+            results.set(task.hash, { ...res, terminalOutput, remote: true });
           }
         })
       );
@@ -225,13 +223,16 @@ export class DbCache {
     return this.cache.getCacheSize();
   }
 
-  private applyRemoteCacheResults(task: Task, res: NativeCacheResult) {
-    const applied = this.cache.applyRemoteCacheResults(
+  private applyRemoteCacheResults(
+    task: Task,
+    res: NativeCacheResult
+  ): string | null {
+    const terminalOutput = this.cache.applyRemoteCacheResults(
       task.hash,
       res,
       task.outputs
     );
-    if (!applied) {
+    if (terminalOutput === null) {
       output.warn({
         title: `Ignoring the remote cache result for ${task.id}`,
         bodyLines: [
@@ -239,7 +240,7 @@ export class DbCache {
         ],
       });
     }
-    return applied;
+    return terminalOutput;
   }
 
   async put(
