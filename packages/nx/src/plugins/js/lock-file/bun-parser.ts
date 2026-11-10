@@ -1880,19 +1880,24 @@ export function stringifyBunLockfile(
 
   const rootWorkspace: Workspace = {};
   // The project's own entry records what the root install resolved for the
-  // specs it declares.
+  // specs it declares. Bun keys the root entry ''.
+  const projectWorkspacePath =
+    projectRoot !== undefined ? normalizeBunLocalPath(projectRoot) : undefined;
   const projectWorkspace =
-    projectRoot !== undefined
-      ? rootLockFile.workspaces[normalizeBunLocalPath(projectRoot)]
+    projectWorkspacePath !== undefined
+      ? rootLockFile.workspaces[
+          projectWorkspacePath === '.' ? '' : projectWorkspacePath
+        ]
       : undefined;
   const appWorkspace =
     projectWorkspace?.name === packageJson.name ? projectWorkspace : undefined;
   // The manifest name can belong to another workspace or a nested package, so
   // it scopes the app's resolutions only when it names the app's own workspace
-  // entry, or any workspace when no `projectRoot` locates that entry.
+  // entry, or any workspace when no `projectRoot` locates that entry. The
+  // root's resolutions are unscoped.
   const isAppWorkspaceName =
-    projectRoot !== undefined
-      ? appWorkspace !== undefined
+    projectWorkspacePath !== undefined
+      ? appWorkspace !== undefined && projectWorkspacePath !== '.'
       : Object.entries(rootLockFile.workspaces).some(
           ([path, entry]) => path !== '' && entry.name === packageJson.name
         );

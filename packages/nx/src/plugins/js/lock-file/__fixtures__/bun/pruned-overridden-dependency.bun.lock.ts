@@ -180,3 +180,40 @@ export const namesakeInRangePrunedBunLock = `{
   }
 }
 `;
+
+export const rootProjectOverrideRootBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root-ovr",
+      "dependencies": {
+        "ms": "2.1.2",
+      },
+    },
+  },
+  "overrides": {
+    "ms": "2.1.3",
+  },
+  "packages": {
+    "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+  }
+}
+`;
+
+export const rootProjectOverridePrunedBunLock = `{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "root-ovr",
+      "dependencies": {
+        "ms": "2.1.3",
+      },
+    },
+  },
+  "packages": {
+    "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+  }
+}
+`;

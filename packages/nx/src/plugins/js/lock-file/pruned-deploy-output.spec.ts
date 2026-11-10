@@ -30,6 +30,8 @@ import {
   namesakeOverrideRootBunLock,
   overriddenDependencyPrunedBunLock,
   overriddenDependencyRootBunLock,
+  rootProjectOverridePrunedBunLock,
+  rootProjectOverrideRootBunLock,
 } from './__fixtures__/bun/pruned-overridden-dependency.bun.lock';
 import { patchedDependenciesRootBunLock } from './__fixtures__/bun/pruned-patched-dependencies.bun.lock';
 import {
@@ -275,11 +277,12 @@ describe('generatePrunedDeployOutput for bun', () => {
   function prune(
     rootLockFile: string,
     packageJson: PackageJson,
-    projectGraph = graph
+    projectGraph = graph,
+    projectRoot = 'apps/api'
   ) {
     writeFileSync(join(tempDir, 'bun.lock'), rootLockFile);
     const outputDirectory = join(tempDir, 'dist');
-    generatePrunedDeployOutput(packageJson, projectGraph, 'apps/api', {
+    generatePrunedDeployOutput(packageJson, projectGraph, projectRoot, {
       outputDirectory,
       packageManager: 'bun',
       workspaceRoot: tempDir,
@@ -429,6 +432,21 @@ describe('generatePrunedDeployOutput for bun', () => {
     );
     expect(manifest.dependencies.ms).toBe('2.1.2');
     expect(manifest.overrides).toBeUndefined();
+  });
+
+  // Bun keys the root project's own workspace entry ''.
+  it('declares the version an override installs for a root project', () => {
+    const manifest: PackageJson = {
+      name: 'root-ovr',
+      version: '0.0.0',
+      dependencies: { ms: '2.1.2' },
+      overrides: { ms: '2.1.3' },
+    };
+
+    expect(prune(rootProjectOverrideRootBunLock, manifest, graph, '.')).toBe(
+      rootProjectOverridePrunedBunLock
+    );
+    expect(manifest.dependencies.ms).toBe('2.1.3');
   });
 
   // apps/api is no workspace, so it installs the root's ms. The workspace that
