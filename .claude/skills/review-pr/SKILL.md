@@ -91,7 +91,7 @@ Parse out:
 
 - `title`, `author.login`, `headRefOid` (the head SHA), `headRefName`, `baseRefName`, `url`
 - **Local dedup:** if `$TRIAGE_DIR/<NUMBER>.md` exists, its frontmatter `head_sha` equals `headRefOid`, its `pipeline_version` equals the current `PIPELINE_VERSION` (see below), and its `verdict` is not `failed`, this PR was already reviewed at this commit — exit with no draft change; log "ALREADY_REVIEWED". A `failed` draft never blocks a retry. To deliberately re-review an unchanged PR, delete the draft file or just say so in the session.
-- **`PIPELINE_VERSION: 9`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
+- **`PIPELINE_VERSION: 10`** — the current review-criteria generation. A draft whose frontmatter has an older `pipeline_version` (or none) was produced by a weaker pipeline: re-review even at an unchanged `head_sha`, treating the old draft as a prior review (Step 4). Bump this constant whenever the review criteria change materially (new agents, new calibrations, new required sections) so stale drafts age out instead of being pinned forever by the SHA dedup.
 
 ### Fetch the tracking ticket
 
@@ -1082,6 +1082,8 @@ Aggregate the surviving agents' output into Critical / Important / Strengths you
 
 Agents that emit a `TIERS` line carry a `preexisting=<n>` count; reconcile the section against it exactly as you do `findings=<n>`, and record any shortfall in `## Failures`. The count is the only mechanical check that a pre-existing item survived the trim.
 
+**Persona flags get their own section whenever a docs page changed.** Copy `verification-reviewer`'s `**Persona check:**` block, and `docs-reviewer`'s if you dispatched it, into a `### Persona check` section, deduped by `file:line`, every flag intact and outside the Suggestions cap. Keep the section when there are no flags, so the reader can see the check ran. It never influences the verdict, because a page can have a good reason to break a persona rule. If `astro-docs/src/content/` is in the changed files and the block is missing, say so in the section and in `## Failures`. Omit the section when no docs page changed.
+
 "Keep in full" is the load-bearing half of that paragraph, and it is the half this step actually fails. Four rules make it enforceable:
 
 - **Enforce the admission test first.** Before anything else, check every Critical/Important finding for its `NET-NEW` and `TRIGGER` lines. Missing either, or a `NET-NEW` that asserts novelty without quoting base evidence ⇒ demote and record one line in `## Failures` naming the agent and the finding. **Demote by reason, not to one bucket:** a finding whose `NET-NEW` shows the defect reproduces at base goes to `### Pre-existing` (it is a real defect, just not this PR's — the maintainer still wants it); one whose `TRIGGER` names an unreachable path, or which is missing either line outright, goes to Suggestions. Dropping a demoted-as-pre-existing finding on the floor is the failure mode here, not mis-tiering it. Do not repair it for them by reading `--ref base` yourself — an agent that filed a finding without checking the base did not establish the defect is the PR's, and confirming it here converts your read into their evidence. The one exception: a `widens` or `claimed-fix` NET-NEW that names the base line but reads thin — verify that one in the sandbox and keep it if it holds. This gate is what stops pre-existing and unreachable findings from reaching the maintainer, and it is the only downgrade you perform without a numbered calibration. Separately, check every surviving Critical/Important finding for its `FIX:` line. A missing one never demotes — repair is not admission, and a real defect does not lose weight for lacking a prescription — but record it in `## Failures` naming the agent and finding. Do not write a prescription on the agent's behalf: the agent proved the trigger and knows the fix's shape; you would be guessing.
@@ -1427,7 +1429,7 @@ The adjusted text becomes the final `$REVIEW_BODY`.
 
 **Write to the author as a collaborator, not a gatekeeper.** The shared goal is merging this PR without letting bad code in, and the body should read that way: every Critical/Important finding keeps its `FIX:` line so the author sees the path to merge next to the defect, and the summary frames what stands between the PR and merge rather than delivering a verdict. Rigor is untouched — collaboration is the framing of the findings, never a reason to soften or drop one.
 
-**Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
+**Section order.** Grounding first, then what blocks, then what doesn't: `### Close-without-merge check`, `### Reproduction verification`, `### Approach analysis`, `### Security review`, `### Critical`, `### Important`, `### Maintainer calls`, `### Questions for the author`, `### Persona check`, `### Suggestions`, `### Pre-existing`, `### Strengths`. `### Pre-existing` sits below everything actionable on this PR and carries a one-line preamble saying it is follow-up material that does not affect the verdict — otherwise a reader skimming headers counts it against the author.
 
 ## Step 7: Determine verdict
 
@@ -1443,7 +1445,7 @@ Check in this order (first match wins):
 (For first reviews with no prior context, fall back to the Critical/Important categories.)
 
 **Only Critical blocks.** There is deliberately no count threshold: Important,
-Suggestions, and `### Pre-existing` never drive the verdict at any quantity. A long
+Suggestions, `### Persona check`, and `### Pre-existing` never drive the verdict at any quantity. A long
 `### Pre-existing` list is not evidence against the PR — it is evidence the file was
 already in poor shape, which is the author's problem only if their diff caused it. The old "3+ items" rule was a proxy
 for "lots of noise probably means something is wrong" — it was tuned against an Important
