@@ -4,7 +4,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   NxJsonConfiguration,
   ProjectConfiguration,
-  TargetDefaultArrayEntry,
   Tree,
   addProjectConfiguration,
   joinPathFragments,
@@ -125,10 +124,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.cjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.cjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -156,10 +155,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.cjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.cjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -187,10 +186,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.cjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.cjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -929,10 +928,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.mjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.mjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -960,10 +959,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.mjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.mjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -991,10 +990,10 @@ describe('convert-to-flat-config generator', () => {
       // check nx.json changes
       const nxJson = readJson(tree, 'nx.json');
       expect(getLintInputs(nxJson)).toContain(
-        '{workspaceRoot}/eslint.config.mjs'
+        '{workspaceRoot}/eslint.config.*'
       );
       expect(nxJson.namedInputs.production).toContain(
-        '!{projectRoot}/eslint.config.mjs'
+        '!{projectRoot}/eslint.config.*'
       );
     });
 
@@ -1442,7 +1441,70 @@ describe('convert-to-flat-config generator', () => {
       `);
     });
 
-    it('should rewrite eslintrc/eslintignore references in nx.json and project.json inputs, keeping those that match a retained file', async () => {
+    it.each([
+      [
+        'an includeIgnored input, which hashes gitignored files',
+        'tools/.eslintrc.json\n',
+        {
+          fileset: '{workspaceRoot}/tools/.eslintrc.json',
+          includeIgnored: true,
+          always: true,
+        },
+        [
+          {
+            fileset: '{workspaceRoot}/tools/.eslintrc.json',
+            includeIgnored: true,
+            always: true,
+          },
+          {
+            fileset: '{workspaceRoot}/tools/eslint.config.*',
+            includeIgnored: true,
+            always: true,
+          },
+        ],
+      ],
+      [
+        'an input whose file name is a glob',
+        '',
+        '{workspaceRoot}/**/*.eslintrc.json',
+        [
+          '{workspaceRoot}/**/*.eslintrc.json',
+          '{workspaceRoot}/**/*eslint.config.*',
+        ],
+      ],
+    ])(
+      'should keep the legacy name of %s, so it still covers a config loaded through FlatCompat',
+      async (_, gitignore, input, rewritten) => {
+        tree.write('.gitignore', gitignore);
+        writeJson(tree, '.eslintrc.json', {
+          root: true,
+          extends: ['./tools/.eslintrc.json'],
+        });
+        writeJson(tree, 'tools/.eslintrc.json', {
+          rules: { 'no-console': 'error' },
+        });
+        updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+          json.targetDefaults = { lint: { inputs: [input] } };
+          return json;
+        });
+
+        await convertToFlatConfigGenerator(tree, {
+          skipFormat: true,
+          eslintConfigFormat: 'mjs',
+        });
+
+        expect(tree.exists('tools/.eslintrc.json')).toBe(true);
+        expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+          'compat.extends("./tools/.eslintrc.json")'
+        );
+        expect(readJson(tree, 'nx.json').targetDefaults.lint.inputs).toEqual([
+          ...rewritten,
+          '{workspaceRoot}/eslint.config.*',
+        ]);
+      }
+    );
+
+    it('should rewrite eslintrc/eslintignore references in nx.json and project.json inputs, keeping a legacy name while a file of that name remains', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
         linter: 'eslint',
@@ -1532,91 +1594,52 @@ describe('convert-to-flat-config generator', () => {
 
       expect(tree.exists('libs/other-lib/.eslintrc.json')).toBe(true);
       const nxJson = readJson(tree, 'nx.json');
-      // legacy refs rewritten and dedup'd against the newly ensured entry
+      // other-lib keeps a .eslintrc.json, so that name stays next to the flat
+      // config glob. No .eslintignore remains, so that name is replaced.
       expect(nxJson.targetDefaults.lint.inputs).toEqual([
         'default',
-        '{workspaceRoot}/eslint.config.mjs',
+        '{workspaceRoot}/.eslintrc.json',
+        '{workspaceRoot}/eslint.config.*',
       ]);
-      // `{projectRoot}` refs keep the legacy name next to the flat one while
-      // other-lib still has the file; non-string inputs preserved
       expect(nxJson.targetDefaults.build.inputs).toEqual([
         'production',
         '^production',
         '{projectRoot}/.eslintrc.json',
-        '{projectRoot}/eslint.config.mjs',
+        '{projectRoot}/eslint.config.*',
         { runtime: 'node --version' },
       ]);
       expect(nxJson.namedInputs.production).toEqual([
         'default',
         '!{projectRoot}/.eslintrc.json',
-        '!{projectRoot}/eslint.config.mjs',
+        '!{projectRoot}/eslint.config.*',
       ]);
       expect(nxJson.namedInputs.customNamedInput).toEqual([
-        '{projectRoot}/eslint.base.config.mjs',
+        '{projectRoot}/eslint.base.config.*',
         '{projectRoot}/src/**/*',
         { fileset: '{projectRoot}/**/.eslintrc.json' },
-        { fileset: '{projectRoot}/**/eslint.config.mjs' },
+        { fileset: '{projectRoot}/**/eslint.config.*' },
       ]);
 
       const projectJson = readProjectConfiguration(tree, 'test-lib');
       expect(projectJson.targets.lint.inputs).toEqual([
         'default',
-        '{projectRoot}/eslint.config.mjs',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/eslint.config.*',
       ]);
       expect(projectJson.namedInputs.projectNamed).toEqual([
-        '{projectRoot}/eslint.config.mjs',
+        '{projectRoot}/.eslintrc.json',
+        '{projectRoot}/eslint.config.*',
         '{projectRoot}/src/**/*',
       ]);
-      // Dependency inputs resolve against every project, so other-lib's own
-      // retained config keeps the legacy name next to test-lib's flat one
       expect(
         readProjectConfiguration(tree, 'other-lib').targets.build.inputs
       ).toEqual([
         { fileset: '{projectRoot}/.eslintrc.json', dependencies: true },
-        { fileset: '{projectRoot}/eslint.config.mjs', dependencies: true },
+        { fileset: '{projectRoot}/eslint.config.*', dependencies: true },
         '^{projectRoot}/.eslintrc.json',
-        '^{projectRoot}/eslint.config.mjs',
-        '^{workspaceRoot}/eslint.config.mjs',
-      ]);
-    });
-
-    it('should keep the flat config name next to a retained eslintrc name when another project already uses a flat config', async () => {
-      await lintProjectGenerator(tree, {
-        skipFormat: false,
-        linter: 'eslint',
-        project: 'test-lib',
-        enableTypedLinting: false,
-        eslintConfigFormat: 'mjs',
-      });
-      tree.delete('libs/test-lib/.eslintrc.json');
-      tree.write('libs/test-lib/eslint.config.mjs', 'export default [];');
-      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
-        delete json.plugins;
-        json.targetDefaults = {
-          ...json.targetDefaults,
-          lint: { inputs: ['default', '{projectRoot}/.eslintrc.json'] },
-        };
-        return json;
-      });
-      // Without a lint target or the ESLint plugin, the conversion leaves this
-      // project's config in place.
-      addProjectConfiguration(tree, 'other-lib', {
-        root: 'libs/other-lib',
-        targets: {},
-      });
-      tree.write('libs/other-lib/.eslintrc.json', '{}');
-
-      await convertToFlatConfigGenerator(tree, {
-        skipFormat: false,
-        eslintConfigFormat: 'mjs',
-      });
-
-      expect(tree.exists('libs/other-lib/.eslintrc.json')).toBe(true);
-      expect(readJson(tree, 'nx.json').targetDefaults.lint.inputs).toEqual([
-        'default',
-        '{projectRoot}/.eslintrc.json',
-        '{projectRoot}/eslint.config.mjs',
-        '{workspaceRoot}/eslint.config.mjs',
+        '^{projectRoot}/eslint.config.*',
+        '^{workspaceRoot}/.eslintrc.json',
+        '^{workspaceRoot}/eslint.config.*',
       ]);
     });
   });
@@ -1870,16 +1893,19 @@ describe('convert-to-flat-config generator', () => {
           'tools/.eslintrc.cjs': `module.exports = { rules: { 'no-console': 'error' } };`,
         },
         '../../tools/.eslintrc.cjs',
+        '{workspaceRoot}/tools/eslint.config.*',
       ],
       [
         'a YAML config outside any project',
         { 'tools/.eslintrc.yaml': 'rules:\n  no-console: error\n' },
         '../../tools/.eslintrc.yaml',
+        '{workspaceRoot}/tools/eslint.config.*',
       ],
       [
         'a JSON config outside any project',
         { 'tools/.eslintrc.json': '{ "rules": { "no-console": "error" } }' },
         '../../tools/.eslintrc.json',
+        '{workspaceRoot}/tools/eslint.config.*',
       ],
       [
         "a project's config that loses to a higher-precedence one",
@@ -1889,10 +1915,11 @@ describe('convert-to-flat-config generator', () => {
             '{ "rules": { "no-debugger": "error" } }',
         },
         '../shared-config/.eslintrc.json',
+        '{workspaceRoot}/libs/shared-config/eslint.config.*',
       ],
     ])(
       'should keep FlatCompat and task inputs for an extends of %s, which the conversion leaves in place',
-      async (_, files: Record<string, string>, extendsPath) => {
+      async (_, files: Record<string, string>, extendsPath, flatInput) => {
         await lintProjectGenerator(tree, {
           skipFormat: false,
           linter: 'eslint',
@@ -1927,6 +1954,7 @@ describe('convert-to-flat-config generator', () => {
         );
         expect(readJson(tree, 'nx.json').namedInputs.sharedGlobals).toEqual([
           retainedInput,
+          flatInput,
         ]);
       }
     );
@@ -2100,12 +2128,12 @@ describe('convert-to-flat-config generator', () => {
       );
     }
 
-    it('should fold an ignore-path into the project config and remove the options flat config rejects', async () => {
-      tree.write('libs/test-lib/custom.eslintignore', 'generated/**');
+    it('should remove no-eslintrc and leave the other eslintrc-only options and the files they name', async () => {
+      tree.write('libs/test-lib/.eslintignore', 'generated/**');
       setTestLibTargets({
         lint: {
           options: {
-            'ignore-path': 'custom.eslintignore',
+            'ignore-path': '.eslintignore',
             'no-eslintrc': true,
             rulesdir: ['tools/eslint-rules'],
             'resolve-plugins-relative-to': 'tools',
@@ -2123,12 +2151,10 @@ describe('convert-to-flat-config generator', () => {
 
       await convertToFlatConfigGenerator(tree, options);
 
-      expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
-        'generated/**'
-      );
-      expect(tree.exists('libs/test-lib/custom.eslintignore')).toBe(false);
+      expect(tree.exists('libs/test-lib/.eslintignore')).toBe(true);
       expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual({
         options: {
+          'ignore-path': '.eslintignore',
           rulesdir: ['tools/eslint-rules'],
           'resolve-plugins-relative-to': 'tools',
           'report-unused-disable-directives': 'error',
@@ -2140,55 +2166,13 @@ describe('convert-to-flat-config generator', () => {
       ).toEqual({});
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          'project "test-lib" target "lint": resolve-plugins-relative-to, rulesdir'
+          'project "test-lib" target "lint": ignore-path, resolve-plugins-relative-to, rulesdir'
         )
       );
       warnSpy.mockRestore();
     });
 
-    it('should fold an ignore-path relative to the workspace root under a custom plugin target name', async () => {
-      updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
-        json.plugins = [
-          {
-            plugin: '@nx/eslint/plugin',
-            options: { targetName: 'eslint-lint' },
-          },
-        ];
-        return json;
-      });
-      // The executor ran from the workspace root, and the conversion copied
-      // its path as is.
-      tree.write('tools/lint.eslintignore', 'fixtures/**');
-      setTestLibTargets({
-        'eslint-lint': {
-          options: { 'ignore-path': 'tools/lint.eslintignore' },
-        },
-      });
-      addProjectConfiguration(tree, 'other-lib', {
-        root: 'libs/other-lib',
-        targets: {
-          'eslint-lint': {
-            configurations: {
-              ci: { 'ignore-path': 'tools/lint.eslintignore' },
-            },
-          },
-        },
-      });
-
-      await convertToFlatConfigGenerator(tree, options);
-
-      expect(tree.read('libs/test-lib/eslint.config.cjs', 'utf-8')).toContain(
-        'fixtures/**'
-      );
-      expect(
-        readProjectConfiguration(tree, 'test-lib').targets['eslint-lint']
-          .options
-      ).toEqual({});
-      // other-lib still names it.
-      expect(tree.exists('tools/lint.eslintignore')).toBe(true);
-    });
-
-    it('should fold an ignore-path hoisted to an @nx/eslint/plugin targetDefaults entry into the root config', async () => {
+    it('should remove no-eslintrc from @nx/eslint/plugin targetDefaults entries and leave their ignore-path', async () => {
       tree.write('.gitignore', 'generated/**');
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
         json.targetDefaults = {
@@ -2208,11 +2192,14 @@ describe('convert-to-flat-config generator', () => {
 
       await convertToFlatConfigGenerator(tree, options);
 
-      expect(tree.read('eslint.config.cjs', 'utf-8')).toContain('generated/**');
-      // Git still reads it.
-      expect(tree.exists('.gitignore')).toBe(true);
+      expect(tree.read('eslint.config.cjs', 'utf-8')).not.toContain(
+        'generated/**'
+      );
       expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual([
-        { filter: { plugin: '@nx/eslint/plugin' }, options: {} },
+        {
+          filter: { plugin: '@nx/eslint/plugin' },
+          options: { 'ignore-path': '.gitignore' },
+        },
         {
           filter: { plugin: '@nx/eslint/plugin', projects: ['test-lib'] },
           options: {},
@@ -2220,90 +2207,7 @@ describe('convert-to-flat-config generator', () => {
       ]);
     });
 
-    it('should leave an ignore-path that a configuration replaces for its runs', async () => {
-      tree.write('libs/test-lib/base.eslintignore', 'base/**');
-      const lint = {
-        options: { 'ignore-path': 'base.eslintignore' },
-        configurations: { ci: { 'ignore-path': 'ci.eslintignore' } },
-      };
-      setTestLibTargets({ lint });
-      const warnSpy = vi.spyOn(logger, 'warn');
-
-      await convertToFlatConfigGenerator(tree, options);
-
-      expect(readProjectConfiguration(tree, 'test-lib').targets.lint).toEqual(
-        lint
-      );
-      expect(tree.exists('libs/test-lib/base.eslintignore')).toBe(true);
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'project "test-lib" target "lint": ignore-path; project "test-lib" target "lint" (configuration "ci"): ignore-path'
-        )
-      );
-      warnSpy.mockRestore();
-    });
-
-    const sharedEntry: TargetDefaultArrayEntry = {
-      filter: { plugin: '@nx/eslint/plugin' },
-      options: { 'ignore-path': 'shared.eslintignore' },
-    };
-    const narrowerFilter = {
-      plugin: '@nx/eslint/plugin',
-      projects: ['test-lib'],
-    };
-    it.each<
-      [string, TargetDefaultArrayEntry[], ProjectConfiguration['targets']?]
-    >([
-      [
-        'a project sets its own',
-        [sharedEntry],
-        { lint: { options: { 'ignore-path': 'own.eslintignore' } } },
-      ],
-      [
-        'a narrower entry sets its own',
-        [
-          sharedEntry,
-          {
-            filter: narrowerFilter,
-            options: { 'ignore-path': 'own.eslintignore' },
-          },
-        ],
-      ],
-      [
-        'only a narrower entry sets it',
-        [{ filter: narrowerFilter, options: sharedEntry.options }],
-      ],
-      [
-        'a configuration sets its own',
-        [
-          {
-            ...sharedEntry,
-            configurations: { ci: { 'ignore-path': 'own.eslintignore' } },
-          },
-        ],
-      ],
-    ])(
-      'should leave a targetDefaults ignore-path when %s',
-      async (_, entries, targets) => {
-        tree.write('shared.eslintignore', 'shared/**');
-        updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
-          json.targetDefaults = { lint: entries };
-          return json;
-        });
-        if (targets) {
-          setTestLibTargets(targets);
-        }
-
-        await convertToFlatConfigGenerator(tree, options);
-
-        expect(tree.read('eslint.config.cjs', 'utf-8')).not.toContain(
-          'shared/**'
-        );
-        expect(tree.exists('shared.eslintignore')).toBe(true);
-      }
-    );
-
-    it('should leave the options of another tool target that shares the plugin target name', async () => {
+    it('should leave and not report another tool target that shares the plugin target name', async () => {
       tree.write('libs/test-lib/.stylelintignore', 'dist/**');
       setTestLibTargets({
         lint: {
@@ -2311,6 +2215,7 @@ describe('convert-to-flat-config generator', () => {
           options: { 'ignore-path': '.stylelintignore' },
         },
       });
+      const warnSpy = vi.spyOn(logger, 'warn');
 
       await convertToFlatConfigGenerator(tree, options);
 
@@ -2319,6 +2224,10 @@ describe('convert-to-flat-config generator', () => {
         command: 'stylelint "**/*.css"',
         options: { 'ignore-path': '.stylelintignore' },
       });
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('flat config does not support')
+      );
+      warnSpy.mockRestore();
     });
   });
 });

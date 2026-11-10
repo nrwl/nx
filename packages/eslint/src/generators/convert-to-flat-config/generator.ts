@@ -16,6 +16,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
@@ -47,6 +48,7 @@ import {
 import { type InputDefinition } from '@nx/devkit/internal';
 import {
   ESLINT_LINT_EXECUTOR,
+  ESLINTRC_ONLY_OPTIONS_FIXES,
   findEslintrcOnlyTargetOptions,
   getEslintPluginTargetNames,
   isEslintTarget,
@@ -114,22 +116,18 @@ export async function convertToFlatConfigGenerator(
   );
 
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
-  const targetDefaultIgnorePaths = findTargetDefaultIgnorePaths(tree);
 
   for (const conversion of rootConversions) {
     convertConfigToFlatConfig(
       tree,
       conversion,
       options.eslintConfigFormat,
-      [...targetDefaultIgnorePaths.values()],
+      [],
       convertedEslintrcFiles,
       options.keepExistingVersions
     );
   }
-  removeEslintrcOnlyTargetDefaultOptions(tree, targetDefaultIgnorePaths);
-  for (const ignorePath of targetDefaultIgnorePaths.values()) {
-    eslintIgnoreFiles.add(ignorePath);
-  }
+  removeNoEslintrcFromTargetDefaults(tree);
 
   for (const { project, projectConfig, plan } of projectPlans) {
     switch (plan.kind) {
@@ -148,13 +146,7 @@ export async function convertToFlatConfigGenerator(
         break;
       case 'flat':
         // The project lints with a flat config: its own, or the root one from here on.
-        removeEslintrcOnlyTargetOptions(
-          tree,
-          project,
-          projectConfig,
-          readNxJson(tree),
-          new Map()
-        );
+        removeNoEslintrc(tree, project, projectConfig, readNxJson(tree));
         break;
       case 'skip':
         logger.warn(plan.reason);
@@ -181,8 +173,9 @@ export async function convertToFlatConfigGenerator(
   }
 
   // replace references in nx.json and project.json files
-  updateNxJsonConfig(tree, options.eslintConfigFormat);
-  updateProjectConfigsInputs(tree, options.eslintConfigFormat);
+  const remainingLegacyNames = findRemainingLegacyFileNames(tree);
+  updateNxJsonConfig(tree, remainingLegacyNames);
+  updateProjectConfigsInputs(tree, remainingLegacyNames);
 
   // The converter carries angular-eslint's removed eslintrc configs over as
   // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
@@ -194,8 +187,7 @@ export async function convertToFlatConfigGenerator(
     logger.warn(
       `These lint targets still carry ESLint options that flat config does not support: ${leftover.join('; ')}. ` +
         'ESLint rejects "ignore-path", "no-eslintrc" and "resolve-plugins-relative-to" as invalid options. "rulesdir" never reaches ESLint, because the task does not pass a list option on, so the rules in that directory are not loaded. ' +
-        'Move the patterns of an "ignore-path" file into the flat config\'s "ignores" only when no configuration, project or narrower "targetDefaults" entry replaces that "ignore-path". Otherwise pass them as "--ignore-pattern" flags in the "args" of the runs that used the file, because flat config "ignores" apply to every run. ' +
-        'Load the "rulesdir" rules through a local plugin, pass a "resolve-plugins-relative-to" directory to FlatCompat as "resolvePluginsRelativeTo", and delete "no-eslintrc".'
+        ESLINTRC_ONLY_OPTIONS_FIXES
     );
   }
 
@@ -225,9 +217,8 @@ function planRootConversions(
   eslintFile: string,
   format: 'cjs' | 'mjs'
 ): EslintrcConversion[] {
-  // Every generated config extends the root one, so a root config that holds
-  // nothing cannot be skipped the way a project's can: the conversion would
-  // leave every project pointing at a file that was never written.
+  // A converted project config that extends the root one imports it, so a root
+  // config that holds nothing cannot be skipped the way a project's can.
   const planRoot = (source: string, target: string): EslintrcConversion => {
     const config = readEslintrcConfig(tree, '', source);
     if (!config) {
@@ -383,19 +374,11 @@ function convertProjectToFlatConfig(
     updateProjectConfiguration(tree, project, projectConfig);
   }
 
-  const inferredTargetIgnorePaths = findInferredTargetIgnorePaths(
-    tree,
-    projectConfig,
-    nxJson
-  );
   convertConfigToFlatConfig(
     tree,
     conversion,
     format,
-    [
-      ...(ignorePath ? [ignorePath] : []),
-      ...inferredTargetIgnorePaths.values(),
-    ],
+    ignorePath ? [ignorePath] : [],
     convertedEslintrcFiles,
     keepExistingVersions
   );
@@ -405,59 +388,14 @@ function convertProjectToFlatConfig(
   if (ignorePath) {
     eslintIgnoreFiles.add(ignorePath);
   }
-  for (const ignoreFile of inferredTargetIgnorePaths.values()) {
-    eslintIgnoreFiles.add(ignoreFile);
-  }
-  removeEslintrcOnlyTargetOptions(
-    tree,
-    project,
-    projectConfig,
-    nxJson,
-    inferredTargetIgnorePaths
-  );
+  removeNoEslintrc(tree, project, projectConfig, nxJson);
 }
 
-// The executor conversion copied `ignore-path` verbatim, so it may be relative
-// to the project root, where the inferred target runs, or to the workspace
-// root, where the executor ran. One a configuration replaces stays put.
-function findInferredTargetIgnorePaths(
-  tree: Tree,
-  projectConfig: ProjectConfiguration,
-  nxJson: NxJsonConfiguration
-): Map<string, string> {
-  const pluginTargetNames = getEslintPluginTargetNames(nxJson);
-  const ignorePaths = new Map<string, string>();
-  for (const [targetName, target] of Object.entries(
-    projectConfig.targets ?? {}
-  )) {
-    const value = target.options?.['ignore-path'];
-    if (
-      typeof value !== 'string' ||
-      target.options.cwd !== undefined ||
-      !isInferredEslintTargetOverride(targetName, target, pluginTargetNames) ||
-      setsConfigurationIgnorePath(target) ||
-      getPluginScopedTargetDefaults(nxJson, targetName).some(
-        setsConfigurationIgnorePath
-      )
-    ) {
-      continue;
-    }
-    const resolved = [joinPathFragments(projectConfig.root, value), value].find(
-      (candidate) => tree.exists(candidate)
-    );
-    if (resolved) {
-      ignorePaths.set(targetName, resolved);
-    }
-  }
-  return ignorePaths;
-}
-
-function removeEslintrcOnlyTargetOptions(
+function removeNoEslintrc(
   tree: Tree,
   project: string,
   projectConfig: ProjectConfiguration,
-  nxJson: NxJsonConfiguration,
-  foldedIgnorePaths: Map<string, string>
+  nxJson: NxJsonConfiguration
 ) {
   const pluginTargetNames = getEslintPluginTargetNames(nxJson);
   let changed = false;
@@ -478,63 +416,13 @@ function removeEslintrcOnlyTargetOptions(
         changed = true;
       }
     }
-    if (foldedIgnorePaths.has(targetName)) {
-      delete target.options['ignore-path'];
-      changed = true;
-    }
   }
   if (changed) {
     updateProjectConfiguration(tree, project, projectConfig);
   }
 }
 
-// A hoisted `ignore-path` holds the executor's workspace-relative path. Like the
-// root `.eslintignore`, it goes into the root config, so only when no narrower
-// entry, configuration or project sets another `ignore-path` for the target.
-function findTargetDefaultIgnorePaths(tree: Tree): Map<string, string> {
-  const ignorePaths = new Map<string, string>();
-  if (!tree.exists('nx.json')) {
-    return ignorePaths;
-  }
-  const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
-  const pluginTargetNames = getEslintPluginTargetNames(nxJson);
-  const projects = [...getProjects(tree).values()];
-  for (const targetName of Object.keys(nxJson.targetDefaults ?? {})) {
-    const entries = getPluginScopedTargetDefaults(nxJson, targetName);
-    const setting = entries.filter((entry) => setsIgnorePath(entry.options));
-    const ignorePath = setting[0]?.options['ignore-path'];
-    if (
-      !pluginTargetNames.has(targetName) ||
-      setting.length !== 1 ||
-      !isWorkspaceWidePluginTargetDefault(setting[0]) ||
-      typeof ignorePath !== 'string' ||
-      !tree.exists(ignorePath) ||
-      entries.some(setsConfigurationIgnorePath) ||
-      projects.some((project) => {
-        const target = project.targets?.[targetName];
-        return (
-          target !== undefined &&
-          isInferredEslintTargetOverride(
-            targetName,
-            target,
-            pluginTargetNames
-          ) &&
-          (setsIgnorePath(target.options) ||
-            setsConfigurationIgnorePath(target))
-        );
-      })
-    ) {
-      continue;
-    }
-    ignorePaths.set(targetName, ignorePath);
-  }
-  return ignorePaths;
-}
-
-function removeEslintrcOnlyTargetDefaultOptions(
-  tree: Tree,
-  foldedIgnorePaths: Map<string, string>
-) {
+function removeNoEslintrcFromTargetDefaults(tree: Tree) {
   if (!tree.exists('nx.json')) {
     return;
   }
@@ -546,12 +434,6 @@ function removeEslintrcOnlyTargetDefaultOptions(
           ...Object.values(entry.configurations ?? {}),
         ]) {
           delete options?.['no-eslintrc'];
-        }
-        if (
-          foldedIgnorePaths.has(targetName) &&
-          setsIgnorePath(entry.options)
-        ) {
-          delete entry.options['ignore-path'];
         }
       }
     }
@@ -596,31 +478,17 @@ function getPluginScopedTargetDefaults(
   return Array.isArray(value) ? value.filter(isPluginScopedTargetDefault) : [];
 }
 
-function setsIgnorePath(options: Record<string, unknown> | undefined): boolean {
-  return options?.['ignore-path'] !== undefined;
-}
-
-function setsConfigurationIgnorePath(
-  target: Partial<TargetConfiguration>
-): boolean {
-  return Object.values(target.configurations ?? {}).some(setsIgnorePath);
-}
-
-function isWorkspaceWidePluginTargetDefault(
-  entry: TargetDefaultArrayEntry
-): boolean {
-  return (
-    isPluginScopedTargetDefault(entry) && Object.keys(entry.filter).length === 1
-  );
-}
-
-interface InputRewriteContext {
-  tree: Tree;
-  format: 'cjs' | 'mjs';
-  // The roots `{projectRoot}` stands for: one project's, or every project's in nx.json.
-  projectRoots: readonly string[];
-  // Every project's root: without a project graph, a dependency input may reach any of them.
-  dependencyRoots: readonly string[];
+// The legacy eslintrc and ignore file names a file still uses after the conversion.
+// Only an `includeIgnored` fileset hashes ignored files, and it keeps its legacy name.
+function findRemainingLegacyFileNames(tree: Tree): Set<string> {
+  const names = new Set<string>();
+  visitNotIgnoredFiles(tree, '', (path) => {
+    const name = basename(path);
+    if (renameLegacyEslintrcFile(name, '*') !== name) {
+      names.add(name);
+    }
+  });
+  return names;
 }
 
 // Rewrites input entries that reference legacy eslintrc / `.eslintignore`
@@ -629,30 +497,25 @@ interface InputRewriteContext {
 // non-fileset inputs (runtime/env/dependentTasksOutputFiles/etc.) untouched.
 function rewriteLegacyInputs(
   inputs: Array<string | InputDefinition>,
-  context: InputRewriteContext
+  remainingLegacyNames: ReadonlySet<string>
 ): Array<string | InputDefinition> {
   const seenStrings = new Set<string>();
   const result: Array<string | InputDefinition> = [];
   for (const entry of inputs) {
     if (typeof entry === 'string') {
-      // Nx reads `^{projectRoot}/...` and `^{workspaceRoot}/...` as dependency filesets.
-      const roots = entry.startsWith('^')
-        ? context.dependencyRoots
-        : context.projectRoots;
-      for (const rewritten of rewriteLegacyPattern(entry, roots, context)) {
+      for (const rewritten of rewriteLegacyPattern(
+        entry,
+        remainingLegacyNames
+      )) {
         if (seenStrings.has(rewritten)) continue;
         seenStrings.add(rewritten);
         result.push(rewritten);
       }
     } else if ('fileset' in entry) {
-      const roots =
-        'dependencies' in entry && entry.dependencies
-          ? context.dependencyRoots
-          : context.projectRoots;
       for (const rewritten of rewriteLegacyPattern(
         entry.fileset,
-        roots,
-        context
+        remainingLegacyNames,
+        entry.includeIgnored === true
       )) {
         // Preserve the original reference when nothing changed so downstream identity
         // checks (e.g. `inputsEqual`) don't see a spurious mutation.
@@ -667,58 +530,34 @@ function rewriteLegacyInputs(
   return result;
 }
 
-// A pattern keeps its original form while a file it names is still in the tree, so
-// task hashes keep covering that file. It also takes the flat-config name when a root
-// without that file has a flat config, converted now or before, and takes only that
-// name when no file it names remains. A glob, which can match both kinds, gets both.
+// A pattern keeps its legacy name while a file of that name remains, so task hashes
+// keep covering it. A file name with glob syntax can match a remaining file of any
+// name, so it keeps its legacy name too. The flat-config glob matches a config of
+// any extension, including one an earlier conversion wrote in another format.
 function rewriteLegacyPattern(
   pattern: string,
-  roots: readonly string[],
-  context: InputRewriteContext
+  remainingLegacyNames: ReadonlySet<string>,
+  includeIgnored = false
 ): string[] {
-  const renamed = renameLegacyEslintrcFile(pattern, context.format);
+  const renamed = renameLegacyEslintrcFile(pattern, '*');
   if (renamed === pattern) {
     return [pattern];
   }
-  const files = resolveLiteralFileset(pattern.replace(/^[!^]/, ''), roots);
-  if (!files) {
-    return [pattern, renamed];
-  }
-  if (!files.some((file) => context.tree.exists(file))) {
-    return [renamed];
-  }
-  return files.some(
-    (file) =>
-      !context.tree.exists(file) &&
-      context.tree.exists(renameLegacyEslintrcFile(file, context.format))
-  )
+  const name = basename(pattern);
+  return includeIgnored ||
+    /[*?[\]{}()|]/.test(name) ||
+    remainingLegacyNames.has(name)
     ? [pattern, renamed]
-    : [pattern];
-}
-
-// Resolves a fileset that names one file under a root token to workspace paths.
-// Returns undefined for a glob or a fileset without a leading root token.
-function resolveLiteralFileset(
-  fileset: string,
-  projectRoots: readonly string[]
-): string[] | undefined {
-  const match = /^\{(projectRoot|workspaceRoot)\}\/(.+)$/.exec(fileset);
-  if (!match || /[*?[\]{}()|]/.test(match[2])) {
-    return undefined;
-  }
-  const [, token, path] = match;
-  return token === 'workspaceRoot'
-    ? [joinPathFragments(path)]
-    : projectRoots.map((root) => joinPathFragments(root, path));
+    : [renamed];
 }
 
 // Adds `value` to `inputs` (after rewriting) when the rewritten set doesn't already contain it.
 function ensureInputPresent(
   inputs: Array<string | InputDefinition>,
   value: string,
-  context: InputRewriteContext
+  remainingLegacyNames: ReadonlySet<string>
 ): Array<string | InputDefinition> {
-  const rewritten = rewriteLegacyInputs(inputs, context);
+  const rewritten = rewriteLegacyInputs(inputs, remainingLegacyNames);
   if (!rewritten.some((entry) => entry === value)) {
     rewritten.push(value);
   }
@@ -726,20 +565,16 @@ function ensureInputPresent(
 }
 
 // Updates nx.json: rewrites stale eslintrc/eslintignore references across all targetDefaults
-// inputs and namedInputs, and ensures lint targets include the new flat config file as an input
+// inputs and namedInputs, and ensures lint targets include the flat config as an input
 // (and `production` excludes it). Handles both the legacy record shape and the new array shape
 // of `targetDefaults`.
-function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
+function updateNxJsonConfig(
+  tree: Tree,
+  remainingLegacyNames: ReadonlySet<string>
+) {
   if (!tree.exists('nx.json')) {
     return;
   }
-  const allRoots = [...getProjects(tree).values()].map(({ root }) => root);
-  const context: InputRewriteContext = {
-    tree,
-    format,
-    projectRoots: allRoots,
-    dependencyRoots: allRoots,
-  };
   updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
     const rewriteTargetInputs = (
       target: Partial<TargetConfiguration>,
@@ -749,10 +584,10 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
       target.inputs = isLintTarget
         ? ensureInputPresent(
             target.inputs,
-            `{workspaceRoot}/eslint.config.${format}`,
-            context
+            '{workspaceRoot}/eslint.config.*',
+            remainingLegacyNames
           )
-        : rewriteLegacyInputs(target.inputs, context);
+        : rewriteLegacyInputs(target.inputs, remainingLegacyNames);
     };
     if (json.targetDefaults) {
       for (const [name, value] of Object.entries(json.targetDefaults)) {
@@ -774,10 +609,10 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
           name === 'production'
             ? ensureInputPresent(
                 inputs,
-                `!{projectRoot}/eslint.config.${format}`,
-                context
+                '!{projectRoot}/eslint.config.*',
+                remainingLegacyNames
               )
-            : rewriteLegacyInputs(inputs, context);
+            : rewriteLegacyInputs(inputs, remainingLegacyNames);
       }
     }
     return json;
@@ -785,21 +620,19 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
 }
 
 // Walks every project's `targets.*.inputs` and `namedInputs.*`, rewriting stale references.
-function updateProjectConfigsInputs(tree: Tree, format: 'cjs' | 'mjs') {
-  const projects = getProjects(tree);
-  const dependencyRoots = [...projects.values()].map(({ root }) => root);
-  for (const [project, projectConfig] of projects) {
-    const context: InputRewriteContext = {
-      tree,
-      format,
-      projectRoots: [projectConfig.root],
-      dependencyRoots,
-    };
+function updateProjectConfigsInputs(
+  tree: Tree,
+  remainingLegacyNames: ReadonlySet<string>
+) {
+  for (const [project, projectConfig] of getProjects(tree)) {
     let changed = false;
     if (projectConfig.targets) {
       for (const target of Object.values(projectConfig.targets)) {
         if (!target.inputs) continue;
-        const rewritten = rewriteLegacyInputs(target.inputs, context);
+        const rewritten = rewriteLegacyInputs(
+          target.inputs,
+          remainingLegacyNames
+        );
         if (!inputsEqual(target.inputs, rewritten)) {
           target.inputs = rewritten;
           changed = true;
@@ -808,7 +641,7 @@ function updateProjectConfigsInputs(tree: Tree, format: 'cjs' | 'mjs') {
     }
     if (projectConfig.namedInputs) {
       for (const [name, inputs] of Object.entries(projectConfig.namedInputs)) {
-        const rewritten = rewriteLegacyInputs(inputs, context);
+        const rewritten = rewriteLegacyInputs(inputs, remainingLegacyNames);
         if (!inputsEqual(inputs, rewritten)) {
           projectConfig.namedInputs[name] = rewritten;
           changed = true;
