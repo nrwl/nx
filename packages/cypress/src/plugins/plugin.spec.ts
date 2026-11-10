@@ -133,6 +133,31 @@ describe('@nx/cypress/plugin', () => {
     }
   });
 
+  it('re-infers instead of using the cache when an imported file cannot be parsed', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    await tempFs.createFiles({
+      'apps/e2e/package.json': '{}',
+      'apps/e2e/cypress.config.cjs': `globalThis.__cypressInferenceLoads = (globalThis.__cypressInferenceLoads ?? 0) + 1; try { require('../../shared/unparsed.cjs'); } catch {} module.exports = { e2e: { specPattern: 'specs/*.cy.ts' } };`,
+      'apps/e2e/specs/a.cy.ts': '',
+      'shared/unparsed.cjs': 'unsupported future syntax',
+    });
+    const infer = () => {
+      vi.resetModules();
+      return createNodesFunction(
+        ['apps/e2e/cypress.config.cjs'],
+        { targetName: 'e2e' },
+        context
+      );
+    };
+    try {
+      await infer();
+      await infer();
+      expect((globalThis as any).__cypressInferenceLoads).toBe(2);
+    } finally {
+      delete (globalThis as any).__cypressInferenceLoads;
+    }
+  });
+
   it('should add a target for e2e', async () => {
     mockCypressConfig(
       defineConfig({

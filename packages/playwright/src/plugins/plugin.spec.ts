@@ -160,6 +160,31 @@ describe('@nx/playwright/plugin', () => {
     }
   });
 
+  it('re-infers instead of using the cache when an imported file cannot be parsed', async () => {
+    process.env.NX_CACHE_PROJECT_GRAPH = 'true';
+    await tempFs.createFiles({
+      'apps/e2e/package.json': '{}',
+      'apps/e2e/playwright.config.cjs': `globalThis.__playwrightInferenceLoads = (globalThis.__playwrightInferenceLoads ?? 0) + 1; try { require('../../shared/unparsed.cjs'); } catch {} module.exports = { testDir: 'specs' };`,
+      'apps/e2e/specs/a.spec.ts': '',
+      'shared/unparsed.cjs': 'unsupported future syntax',
+    });
+    const infer = () => {
+      vi.resetModules();
+      return createNodesFunction(
+        ['apps/e2e/playwright.config.cjs'],
+        { targetName: 'e2e', waitForWebServer: false },
+        context
+      );
+    };
+    try {
+      await infer();
+      await infer();
+      expect((globalThis as any).__playwrightInferenceLoads).toBe(2);
+    } finally {
+      delete (globalThis as any).__playwrightInferenceLoads;
+    }
+  });
+
   it('should create nodes with default playwright configuration', async () => {
     await mockPlaywrightConfig(tempFs, {});
     const results = await createNodesFunction(
