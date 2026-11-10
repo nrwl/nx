@@ -55,6 +55,15 @@ Add the file and commit it. See the [CI configuration file reference](/docs/refe
 
 Nx Cloud was unable to start the agents workflow with the configuration in your [`.nx/ci-config.yaml`](/docs/reference/nx-cloud/ci-config) file. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
 
+### Timed out after 1 hour waiting for workers
+
+Your organization was at its [concurrent worker limit](/docs/kb/concurrent-workers) for an hour, so the run never got its workers.
+Raise the limit, or give small changes fewer workers with [`distribute-on` changesets](/docs/features/ci-features/distribute-task-execution#scale-workers-with-pr-size).
+
+### Run group ended while waiting for workers
+
+The CI Pipeline Execution ended while its run was still queued for [workers](/docs/kb/concurrent-workers), usually because a new push to the same branch replaced it or the main job finished first. Nothing needs fixing unless the pipeline ended for another reason.
+
 ### Unable to get workflow status from Workers
 
 Nx Cloud was unable to communicate with the Workers assigned to a workflow for the current CI Pipeline Execution. View the CI Pipeline Execution in the Nx Cloud UI for additional details.
