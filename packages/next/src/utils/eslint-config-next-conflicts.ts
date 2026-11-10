@@ -1,11 +1,11 @@
-import { joinPathFragments, readJson, type Tree } from '@nx/devkit';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import {
   getInstalledEslintVersion,
   isEslintConfigFile,
   versions as eslintVersions,
 } from '@nx/eslint/internal';
 import { ensureTypescript } from '@nx/js/internal';
-import { dirname, extname } from 'path';
+import { dirname } from 'path';
 import { coerce } from 'semver';
 import type * as ts from 'typescript';
 import { getPropertyName, parseFlatConfig } from './flat-config-source';
@@ -29,7 +29,6 @@ const CONFLICTING_CONFIG_REFERENCE_BELOW_ESLINT_10 =
   /^(?:flat\/react(?:-base|-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
 const CONFLICTING_CONFIG_REFERENCE =
   /^(?:flat\/react(?:-jsx)?|plugin:(?:react|react-hooks|import|jsx-a11y)\/.+)$/;
-const LOCAL_MODULE_EXTENSIONS = ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'];
 
 let tsModule: typeof import('typescript');
 
@@ -60,8 +59,9 @@ export function findRootConfigWithConflictingPlugin(
 
 /**
  * Returns `configPath`, or the first local module reachable through its imports,
- * that registers a plugin eslint-config-next also registers. Only relative specifiers are
- * followed, so plugins registered by an npm config package are not found.
+ * that registers a plugin eslint-config-next also registers. Only a relative
+ * specifier that names an existing file is followed, so a module loaded without
+ * its extension, through a directory or from an npm config package is not found.
  */
 export function findConfigWithConflictingPlugin(
   tree: Tree,
@@ -141,61 +141,13 @@ function isConflictingPluginModule(specifier: string): boolean {
   );
 }
 
-// Follows the order of `require`: the file, then the directory's package.json
-// `main`, then the directory's index.
 function resolveLocalModule(
   tree: Tree,
   importer: string,
   specifier: string
 ): string | undefined {
   const path = joinPathFragments(dirname(importer), specifier);
-  if (isOutsideWorkspace(path)) {
-    return undefined;
-  }
-  return resolveModuleFile(tree, path) ?? resolveModuleDirectory(tree, path);
-}
-
-// `require` loads a file without an extension as JavaScript.
-function resolveModuleFile(tree: Tree, path: string): string | undefined {
-  return [
-    path,
-    ...LOCAL_MODULE_EXTENSIONS.map((extension) => path + extension),
-  ].find(
-    (file) =>
-      (extname(file) === '' ||
-        LOCAL_MODULE_EXTENSIONS.includes(extname(file))) &&
-      tree.isFile(file)
-  );
-}
-
-function resolveModuleDirectory(tree: Tree, path: string): string | undefined {
-  const packageJsonPath = joinPathFragments(path, 'package.json');
-  let main: unknown;
-  if (tree.isFile(packageJsonPath)) {
-    try {
-      ({ main } = readJson(tree, packageJsonPath));
-    } catch {
-      // `require` fails on a package.json it cannot parse.
-      return undefined;
-    }
-  }
-  if (typeof main === 'string' && main !== '') {
-    const mainPath = joinPathFragments(path, main);
-    const mainModule = isOutsideWorkspace(mainPath)
-      ? undefined
-      : (resolveModuleFile(tree, mainPath) ??
-        resolveModuleIndex(tree, mainPath));
-    if (mainModule) {
-      return mainModule;
-    }
-  }
-  return resolveModuleIndex(tree, path);
-}
-
-function resolveModuleIndex(tree: Tree, path: string): string | undefined {
-  return LOCAL_MODULE_EXTENSIONS.map((extension) =>
-    joinPathFragments(path, `index${extension}`)
-  ).find((file) => tree.isFile(file));
+  return !isOutsideWorkspace(path) && tree.isFile(path) ? path : undefined;
 }
 
 function isOutsideWorkspace(path: string): boolean {

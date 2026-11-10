@@ -198,14 +198,15 @@ describe('updateEslint', () => {
     '...nextVitals',
     '@next/eslint-plugin-next',
   ] as const;
-  // The chain ends in `require('./hooks')`, which the given files resolve.
+  // The chain ends in `require(hooksSpecifier)`.
   const localModuleChain = (
-    hooks: Record<string, string>
+    hooks: Record<string, string>,
+    hooksSpecifier = './hooks.js'
   ): Record<string, string> => ({
     'eslint.config.mjs': `import nx from '@nx/eslint-plugin';\nimport shared from './tools/eslint/index.mjs';\n\nexport default [...nx.configs['flat/base'], ...shared];\n`,
     'tools/eslint/index.mjs': `import './cycle.mjs';\n\nexport { default } from './react.cjs';\n`,
     'tools/eslint/cycle.mjs': `import './index.mjs';\n`,
-    'tools/eslint/react.cjs': `const hooks = require('./hooks');\n\nmodule.exports = [hooks];\n`,
+    'tools/eslint/react.cjs': `const hooks = require('${hooksSpecifier}');\n\nmodule.exports = [hooks];\n`,
     ...hooks,
   });
   const registersReactHooks = `const reactHooks = require('eslint-plugin-react-hooks');\n\nmodule.exports = { plugins: { 'react-hooks': reactHooks } };\n`;
@@ -232,18 +233,12 @@ describe('updateEslint', () => {
       ...nextPluginConfig,
     ],
     [
-      'one of them is a file without an extension that registers such a plugin',
-      localModuleChain({ 'tools/eslint/hooks': registersReactHooks }),
-      ...nextPluginConfig,
-    ],
-    [
-      'one of them is a directory whose package.json main registers such a plugin',
-      localModuleChain({
-        'tools/eslint/hooks/package.json': `{ "main": "./react-hooks.js" }\n`,
-        'tools/eslint/hooks/react-hooks.js': registersReactHooks,
-        'tools/eslint/hooks/index.js': registersNothing,
-      }),
-      ...nextPluginConfig,
+      'the module that registers such a plugin is loaded by a path that names no file',
+      localModuleChain(
+        { 'tools/eslint/hooks.js': registersReactHooks },
+        './hooks'
+      ),
+      ...nextVitalsSpread,
     ],
     [
       'none of them registers such a plugin',
