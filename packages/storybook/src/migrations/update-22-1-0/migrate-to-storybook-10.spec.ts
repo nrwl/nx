@@ -47,4 +47,16 @@ describe('migrate-to-storybook-10 migration', () => {
     expect(migrate10GeneratorSpy).toHaveBeenCalledTimes(1);
     expect(migrate10GeneratorSpy.mock.calls[0][0]).toBe(tree);
   });
+
+  it('should request a dependency install when migrate-10 returns an install task', async () => {
+    migrate10GeneratorSpy.mockResolvedValue(() => {});
+
+    await expect(migrateToStorybook10(tree)).resolves.toEqual({
+      installDependencies: true,
+    });
+  });
+
+  it('should not request a dependency install when migrate-10 returns no task', async () => {
+    await expect(migrateToStorybook10(tree)).resolves.toBeUndefined();
+  });
 });

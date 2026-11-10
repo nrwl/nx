@@ -1,7 +1,9 @@
-import { Tree, output } from '@nx/devkit';
+import { Tree, output, type MigrationReturnObject } from '@nx/devkit';
 import migrate10Generator from '../../generators/migrate-10/migrate-10';
 
-export default async function migrateToStorybook10(tree: Tree) {
+export default async function migrateToStorybook10(
+  tree: Tree
+): Promise<MigrationReturnObject | void> {
   output.log({
     title: 'Migrating Storybook to v10',
     bodyLines: [
@@ -11,8 +13,12 @@ export default async function migrateToStorybook10(tree: Tree) {
       `https://nx.dev/nx-api/storybook/generators/migrate-10`,
     ],
   });
-  await migrate10Generator(tree, {
+  const installTask = await migrate10Generator(tree, {
     autoAcceptAllPrompts: true,
     skipAiInstructions: true,
   });
+  // Nx ignores a callback returned from a migration, so request the install instead.
+  if (installTask) {
+    return { installDependencies: true };
+  }
 }
