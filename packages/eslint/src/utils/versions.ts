@@ -38,17 +38,13 @@ const versionMap: Record<CompatVersions, EslintVersions> = {
 };
 
 export function versions(tree: Tree): EslintVersions {
+  assertEslintrcFormatSupported(tree);
   const installedEslintVersion = getInstalledEslintVersion(tree);
-  const legacyRequested = process.env.ESLINT_USE_FLAT_CONFIG === 'false';
   if (installedEslintVersion) {
-    const eslintMajorVersion = major(installedEslintVersion);
-    if (legacyRequested && eslintMajorVersion >= 10) {
-      throw new Error(
-        `ESLint v${eslintMajorVersion} does not support the legacy "eslintrc" configuration format, but ESLINT_USE_FLAT_CONFIG=false was set. ` +
-          `Unset the environment variable to scaffold a flat config, or downgrade ESLint to v9.`
-      );
-    }
-    return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
+    return (
+      versionMap[major(installedEslintVersion) as CompatVersions] ??
+      latestVersions
+    );
   }
   // Fresh install: latest stack (v10) by default. A workspace that stays on
   // eslintrc gets v9, the last major that reads it, so the scaffolded config
@@ -100,6 +96,22 @@ export function getConvertToFlatConfigVersions(tree: Tree): EslintVersions {
     ? major(installedEslintVersion)
     : 9;
   return eslintMajorVersion >= 10 ? latestVersions : versionMap[9];
+}
+
+export function assertEslintrcFormatSupported(tree: Tree): void {
+  if (process.env.ESLINT_USE_FLAT_CONFIG !== 'false') {
+    return;
+  }
+  const installedEslintVersion = getInstalledEslintVersion(tree);
+  const eslintMajorVersion = installedEslintVersion
+    ? major(installedEslintVersion)
+    : undefined;
+  if (eslintMajorVersion >= 10) {
+    throw new Error(
+      `ESLint v${eslintMajorVersion} does not support the legacy "eslintrc" configuration format, but ESLINT_USE_FLAT_CONFIG=false was set. ` +
+        `Unset the environment variable to scaffold a flat config, or downgrade ESLint to v9.`
+    );
+  }
 }
 
 export function getInstalledEslintVersion(tree?: Tree): string | null {
