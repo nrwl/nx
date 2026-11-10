@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
+import * as graph from '../utils/graph';
 import * as postcssConfiguration from '../utils/postcss-configuration';
+import { READY_SIGNAL_PLUGIN } from '../utils/dev-server-ready-signal';
 import { isRspackV2 } from '../utils/rspack-version';
 import { handleConfigurations } from './config-utils/user-defined-config-helpers';
 import { _createConfig, createConfig } from './create-config';
@@ -726,28 +728,101 @@ describe('createConfig', () => {
     }
   }, 10000);
 
-  it('should reject an output mode when @angular/ssr is not installed', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
-    try {
+  describe('option checks', () => {
+    let root: string;
+    let ssrOptions: AngularRspackPluginOptions;
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(async () => {
+      // No @angular/ssr package, so an output mode fails its install check.
+      root = await mkdtemp(join(tmpdir(), 'create-config-checks-'));
       await mkdir(join(root, 'src'), { recursive: true });
       await writeFile(join(root, 'src', 'main.server.ts'), '');
       await writeFile(join(root, 'src', 'server.ts'), '');
+      ssrOptions = {
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      };
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(async () => {
+      delete global.NX_GRAPH_CREATION;
+      vi.restoreAllMocks();
+      await rm(root, { recursive: true, force: true });
+    });
+
+    it.each<[string, Partial<AngularRspackPluginOptions>, string]>([
+      [
+        '"ssr" set to true',
+        { ssr: true },
+        'The "ssr" option should be an object or false.',
+      ],
+      [
+        'the "static" output mode',
+        { outputMode: 'static' },
+        'The "static" value for the "outputMode" option is not supported.',
+      ],
+      [
+        'an output mode with a missing server file',
+        { outputMode: 'server', server: './src/missing.server.ts' },
+        'The "outputMode" option is set to "server", but "./src/missing.server.ts" does not exist.',
+      ],
+      [
+        'an output mode without @angular/ssr installed',
+        { outputMode: 'server' },
+        'The "outputMode" option requires the "@angular/ssr" package to be installed.',
+      ],
+      [
+        'a missing proxy configuration file',
+        { devServer: { proxyConfig: './proxy.conf.json' } },
+        'proxy.conf.json does not exist.',
+      ],
+      [
+        '"security.autoCsp"',
+        { security: { autoCsp: true } },
+        'The "security.autoCsp" option is not supported by @nx/angular-rspack yet.',
+      ],
+    ])(
+      'should reject %s when a task loads the config, but not when the project graph does',
+      async (_, options, error) => {
+        await expect(
+          _createConfig({ ...ssrOptions, ...options })
+        ).rejects.toThrow(error);
+        warnSpy.mockClear();
+
+        global.NX_GRAPH_CREATION = true;
+        const configs = await _createConfig({ ...ssrOptions, ...options });
+
+        expect(configs[0].output?.path).toBe(join(root, 'dist', 'browser'));
+        expect(
+          configs[0].plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
+        ).toBe(true);
+        expect(warnSpy).not.toHaveBeenCalled();
+      },
+      10000
+    );
+
+    it('should keep checking the options when a project graph build started by the config load leaves its flag set', async () => {
+      // A project graph build that throws never clears the flag.
+      vi.spyOn(graph, 'retrieveOrCreateProjectGraph').mockImplementation(
+        async () => {
+          global.NX_GRAPH_CREATION = true;
+          return null;
+        }
+      );
 
       await expect(
         _createConfig({
-          ...configBase,
-          root,
-          server: './src/main.server.ts',
-          ssr: { entry: './src/server.ts' },
-          outputMode: 'server',
+          ...ssrOptions,
+          devServer: { proxyConfig: './proxy.conf.json' },
         })
-      ).rejects.toThrow(
-        'The "outputMode" option requires the "@angular/ssr" package to be installed.'
-      );
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  }, 10000);
+      ).rejects.toThrow('proxy.conf.json does not exist.');
+      expect(global.NX_GRAPH_CREATION).toBe(true);
+    }, 10000);
+  });
 
   it('should reject locale inlining when an output mode is set', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));

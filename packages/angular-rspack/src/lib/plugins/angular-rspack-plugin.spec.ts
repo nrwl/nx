@@ -515,10 +515,23 @@ describe('AngularRspackPlugin', () => {
 
   it('should release the worker pool and the stylesheet bundler on shutdown', async () => {
     const compiler = applyPlugin();
+    await runBuildStart(compiler);
 
     await fireAsyncTaps(compiler.hooks.shutdown);
 
     expect(transformerCloseMock).toHaveBeenCalled();
+    expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
+  });
+
+  it('should not start the JS transformer worker pool before a compilation uses it', async () => {
+    const compiler = applyPlugin();
+
+    expect(transformerCtorMock).not.toHaveBeenCalled();
+    expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();
+
+    await fireAsyncTaps(compiler.hooks.shutdown);
+
+    expect(transformerCloseMock).not.toHaveBeenCalled();
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
   });
 
@@ -641,22 +654,24 @@ describe('AngularRspackPlugin', () => {
     createJavascriptTransformerCacheMock.mockReturnValueOnce({ cache, close });
 
     const plugin = new AngularRspackPlugin({ ...options, projectName: 'app' });
+    const compiler = createFakeCompiler();
+    plugin.apply(compiler as never);
+    await runBuildStart(compiler);
 
     expect(createJavascriptTransformerCacheMock).toHaveBeenCalledWith(
       expect.stringContaining(join('app', 'angular-rspack'))
     );
     expect(transformerCtorMock).toHaveBeenCalledWith(expect.anything(), cache);
 
-    const compiler = createFakeCompiler();
-    plugin.apply(compiler as never);
     await fireAsyncTaps(compiler.hooks.shutdown);
     expect(close).toHaveBeenCalled();
   });
 
-  it('should not create a transformer cache when the persistent cache is disabled', () => {
+  it('should not create a transformer cache when the persistent cache is disabled', async () => {
     vi.stubEnv('CI', '1');
 
-    new AngularRspackPlugin(options);
+    const compiler = applyPlugin();
+    await runBuildStart(compiler);
 
     expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();
     expect(transformerCtorMock).toHaveBeenCalledWith(

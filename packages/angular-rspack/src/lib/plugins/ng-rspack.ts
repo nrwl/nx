@@ -4,9 +4,14 @@ import {
   CopyRspackPlugin,
   DefinePlugin,
   RspackPluginInstance,
+  ValidationError,
 } from '@rspack/core';
 import { posix, relative, resolve, sep } from 'node:path';
 import { getEntryPoints } from '../config/config-utils/entry-points';
+import {
+  assertOutputPathIsNotProjectRoot,
+  deleteOutputDir,
+} from '../config/config-utils/helpers';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
@@ -101,6 +106,29 @@ export class NgRspackPlugin implements RspackPluginInstance {
       )
     ) {
       applyDevServerReadySignal(compiler);
+    }
+
+    if (!this.isPlatformServer && this.pluginOptions.deleteOutputPath) {
+      const outputPath = this.pluginOptions.outputPath.base;
+      const devServer = compiler.options.devServer;
+      try {
+        assertOutputPathIsNotProjectRoot(root, outputPath);
+        // A dev server writes to the output path only when its middleware's
+        // writeToDisk is set; otherwise it serves from memory.
+        if (
+          !isDevServer ||
+          (typeof devServer === 'object' &&
+            devServer.devMiddleware?.writeToDisk)
+        ) {
+          deleteOutputDir(root, outputPath);
+        }
+      } catch (error) {
+        // rspack-cli's serve exits 0 on any other error thrown while it
+        // creates the compiler.
+        throw new ValidationError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
     }
 
     if (this.isPlatformServer && isDevServer) {

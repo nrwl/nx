@@ -89,7 +89,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
   #sourceFileCache: SourceFileCache;
-  #javascriptTransformer: JavaScriptTransformerAdapter;
+  #persistentCachePath: string | undefined;
+  #javascriptTransformer?: JavaScriptTransformerAdapter;
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
@@ -115,28 +116,37 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    const persistentCachePath = getPersistentCachePath(options);
-    this.#sourceFileCache = new SourceFileCache(persistentCachePath);
-    if (persistentCachePath) {
-      this.#javascriptTransformerCache =
-        createJavascriptTransformerCache(persistentCachePath);
+    this.#persistentCachePath = getPersistentCachePath(options);
+    this.#sourceFileCache = new SourceFileCache(this.#persistentCachePath);
+  }
+
+  // Created on first use: its worker pool would otherwise start whenever the
+  // config loads, including when the project graph reads it.
+  #getJavascriptTransformer(): JavaScriptTransformerAdapter {
+    if (!this.#javascriptTransformer) {
+      if (this.#persistentCachePath) {
+        this.#javascriptTransformerCache = createJavascriptTransformerCache(
+          this.#persistentCachePath
+        );
+      }
+      this.#javascriptTransformer = createJavaScriptTransformer(
+        {
+          /**
+           * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
+           * where pluginOptions.sourcemap is set https://github.com/angular/angular-cli/blob/61d98fde122468978de9b17bd79761befdbf2fac/packages/angular/build/src/tools/esbuild/compiler-plugin-options.ts#L34
+           */
+          sourcemap: !!(
+            this.#_options.sourceMap.scripts &&
+            (this.#_options.sourceMap.hidden ? 'external' : true)
+          ),
+          thirdPartySourcemaps: this.#_options.sourceMap.vendor,
+          advancedOptimizations: this.#_options.advancedOptimizations,
+          jit: !this.#_options.aot,
+        },
+        this.#javascriptTransformerCache?.cache
+      );
     }
-    this.#javascriptTransformer = createJavaScriptTransformer(
-      {
-        /**
-         * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
-         * where pluginOptions.sourcemap is set https://github.com/angular/angular-cli/blob/61d98fde122468978de9b17bd79761befdbf2fac/packages/angular/build/src/tools/esbuild/compiler-plugin-options.ts#L34
-         */
-        sourcemap: !!(
-          this.#_options.sourceMap.scripts &&
-          (this.#_options.sourceMap.hidden ? 'external' : true)
-        ),
-        thirdPartySourcemaps: this.#_options.sourceMap.vendor,
-        advancedOptimizations: this.#_options.advancedOptimizations,
-        jit: !this.#_options.aot,
-      },
-      this.#javascriptTransformerCache?.cache
-    );
+    return this.#javascriptTransformer;
   }
 
   apply(compiler: Compiler) {
@@ -469,7 +479,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
             // Best-effort cleanup that must never fail the compiler teardown.
           }
         };
-        await closeSafely(() => this.#javascriptTransformer.close());
+        await closeSafely(() => this.#javascriptTransformer?.close());
         await closeSafely(() => this.#javascriptTransformerCache?.close());
         // Terminates the worker of a worker-based compilation, which would
         // otherwise keep the process alive.
@@ -632,7 +642,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #exposeLoaderState(compiler: Compiler) {
     compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
       (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer: this.#javascriptTransformer,
+        javascriptTransformer: this.#getJavascriptTransformer(),
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
         babelFileCache: this.#sourceFileCache.babelFileCache,
         useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
@@ -745,7 +755,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       await buildAndAnalyze(
         this.#angularCompilation,
         this.#sourceFileCache.typeScriptFileCache,
-        this.#javascriptTransformer
+        this.#getJavascriptTransformer()
       );
     } catch (error) {
       this.#emitError = `Angular compilation emit failed.\n${formatError(
