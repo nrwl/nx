@@ -1,170 +1,38 @@
 import { execSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  statSync,
-  unlinkSync,
-  writeFileSync,
-  openSync,
-  closeSync,
-} from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { FileLock } from 'nx/src/native';
 import { tmpProjPath } from './create-project-utils';
 import { e2eConsoleLogger } from './log-utils';
 import { isVerbose } from './get-env-info';
 
-// Helper files to prevent multiple `npx playwright install` on the same machine.
-// Doing so will cause `apt` to fail on Linux machines.
+// Locks that keep `npx playwright install` runs on the same machine from
+// overlapping. With `--with-deps`, overlapping runs make `apt` fail on Linux.
 const LOCK_DIR = join(tmpdir(), 'nx-e2e-locks');
+// scripts/playwright-install-e2e.mjs takes the same lock.
 const PLAYWRIGHT_LOCK_FILE = join(LOCK_DIR, 'playwright-install.lock');
-const PLAYWRIGHT_STATUS_FILE = join(LOCK_DIR, 'playwright-install.status');
 // Cypress needs the same treatment: it unzips into one cache directory shared by
 // everything on the machine, and a second install clears that directory while the
 // first is still unzipping into it.
 const CYPRESS_LOCK_FILE = join(LOCK_DIR, 'cypress-install.lock');
-const CYPRESS_STATUS_FILE = join(LOCK_DIR, 'cypress-install.status');
-const POLL_INTERVAL_MS = 5000;
-const MAX_WAIT_MS = 5 * 60 * 1000;
-
-interface InstallStatus {
-  status: 'installing' | 'success' | 'failed';
-  pid: number;
-  timestamp: number;
-  error?: string;
-}
-
-function ensureLockDir() {
-  if (!existsSync(LOCK_DIR)) {
-    mkdirSync(LOCK_DIR, { recursive: true });
-  }
-}
 
 /**
- * A process that is killed mid-install leaves its lock behind, and every later
- * process would then wait out the full timeout for an install that is never
- * coming. Treat a lock as abandoned once its holder is gone.
+ * `fn` must stay synchronous: if it awaited, a second caller in the same process
+ * would block the thread in `lock()` and the holder could never release it.
  */
-function isStaleLock(statusFile: string): boolean {
-  const status = readInstallStatus(statusFile);
-  if (!status) {
-    return true;
-  }
-  if (status.status !== 'installing') {
-    return true;
+function withInstallLock(lockFile: string, toolName: string, fn: () => void) {
+  const lock = new FileLock(lockFile);
+  if (!lock.tryLock()) {
+    e2eConsoleLogger(
+      `Process ${process.pid} waiting for another ${toolName} installation...`
+    );
+    lock.lock();
   }
   try {
-    // Signal 0 checks that the process exists without touching it.
-    process.kill(status.pid, 0);
-    return false;
-  } catch {
-    return true;
-  }
-}
-
-function tryAcquireLock(lockFile: string, statusFile: string): boolean {
-  ensureLockDir();
-
-  if (existsSync(lockFile) && isStaleLock(statusFile)) {
-    e2eConsoleLogger('Reclaiming an abandoned browser installation lock.');
-    try {
-      unlinkSync(lockFile);
-    } catch {
-      // Another process got there first, which is just as good.
-    }
-  }
-
-  try {
-    // Atomic operation - fails if file exists
-    const fd = openSync(lockFile, 'wx');
-    closeSync(fd);
-
-    const status: InstallStatus = {
-      status: 'installing',
-      pid: process.pid,
-      timestamp: Date.now(),
-    };
-    writeFileSync(statusFile, JSON.stringify(status));
-
-    return true;
-  } catch (err) {
-    if (err.code === 'EEXIST') {
-      return false; // Lock already held
-    }
-    throw err; // Unexpected error
-  }
-}
-
-function releaseLock(
-  lockFile: string,
-  statusFile: string,
-  success: boolean,
-  error?: string
-) {
-  try {
-    const status: InstallStatus = {
-      status: success ? 'success' : 'failed',
-      pid: process.pid,
-      timestamp: Date.now(),
-      error: error,
-    };
-    writeFileSync(statusFile, JSON.stringify(status));
+    fn();
   } finally {
-    try {
-      unlinkSync(lockFile);
-    } catch {
-      // Best effort
-    }
+    lock.unlock();
   }
-}
-
-function readInstallStatus(statusFile: string): InstallStatus | null {
-  try {
-    if (!existsSync(statusFile)) {
-      return null;
-    }
-    const content = readFileSync(statusFile, 'utf-8');
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
-}
-
-async function waitForInstallation(
-  lockFile: string,
-  statusFile: string,
-  toolName: string
-): Promise<'installed' | 'abandoned'> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < MAX_WAIT_MS) {
-    // Check if lock is released
-    if (!existsSync(lockFile)) {
-      const status = readInstallStatus(statusFile);
-
-      if (status?.status === 'success') {
-        e2eConsoleLogger(`${toolName} installed by process ${status.pid}`);
-        return 'installed';
-      }
-
-      if (status?.status === 'failed') {
-        const errorMsg = `${toolName} installation failed in process ${
-          status.pid
-        }: ${status.error || 'Unknown error'}`;
-        e2eConsoleLogger(errorMsg);
-        throw new Error(errorMsg);
-      }
-    } else if (isStaleLock(statusFile)) {
-      // Whoever held the lock is gone, so waiting on them is pointless.
-      return 'abandoned';
-    }
-
-    // Wait before polling again
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-  }
-
-  throw new Error(`Timeout waiting for ${toolName} installation to complete`);
 }
 
 export async function ensureCypressInstallation() {
@@ -177,69 +45,51 @@ export async function ensureCypressInstallation() {
 
   // Only one process on the machine may unzip into the Cypress cache at a time,
   // for the same reason Playwright installs are serialized below.
-  if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
-    e2eConsoleLogger(
-      `Process ${process.pid} waiting for Cypress installation...`
-    );
-    const outcome = await waitForInstallation(
-      CYPRESS_LOCK_FILE,
-      CYPRESS_STATUS_FILE,
-      'Cypress'
-    );
-    if (outcome === 'installed') {
-      return;
-    }
-    // The lock was abandoned, so try once more to do the install here.
-    if (!tryAcquireLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE)) {
-      return;
-    }
-  }
-
-  try {
-    let cypressVerified = true;
+  withInstallLock(CYPRESS_LOCK_FILE, 'Cypress', () => {
     try {
-      const r = execSync('npx cypress verify', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        encoding: 'utf-8',
-        cwd: tmpProjPath(),
-      });
-      if (r.indexOf('Verified Cypress!') === -1) {
+      let cypressVerified = true;
+      try {
+        const r = execSync('npx cypress verify', {
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          encoding: 'utf-8',
+          cwd: tmpProjPath(),
+        });
+        if (r.indexOf('Verified Cypress!') === -1) {
+          cypressVerified = false;
+        }
+      } catch {
         cypressVerified = false;
       }
-    } catch {
-      cypressVerified = false;
-    }
 
-    if (!cypressVerified) {
-      e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
-      execSync('npx cypress install', {
-        stdio: isVerbose() ? 'inherit' : 'pipe',
-        encoding: 'utf-8',
-        cwd: tmpProjPath(),
-        // The binary is skipped while workspaces are installed, so this call
-        // has to be allowed to fetch it.
-        env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
-      });
+      if (!cypressVerified) {
+        e2eConsoleLogger('Cypress was not verified. Installing Cypress now.');
+        execSync('npx cypress install', {
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          encoding: 'utf-8',
+          cwd: tmpProjPath(),
+          // The binary is skipped while workspaces are installed, so this call
+          // has to be allowed to fetch it.
+          env: { ...process.env, CYPRESS_INSTALL_BINARY: undefined },
+        });
+      }
+    } catch (error) {
+      e2eConsoleLogger('Failed to install Cypress:', error);
+      throw error;
     }
-
-    releaseLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, true);
-  } catch (error) {
-    e2eConsoleLogger('Failed to install Cypress:', error);
-    releaseLock(CYPRESS_LOCK_FILE, CYPRESS_STATUS_FILE, false, error.message);
-    throw error;
-  }
+  });
 }
 
-export async function ensurePlaywrightBrowsersInstallation() {
-  // If lock is acquired, perform installation, otherwise it must in progress or already done
-  if (tryAcquireLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE)) {
-    // We got the lock - we're responsible for installation
+export function ensurePlaywrightBrowsersInstallation() {
+  withInstallLock(PLAYWRIGHT_LOCK_FILE, 'Playwright', () => {
     e2eConsoleLogger(
       `Process ${process.pid} acquired lock, installing Playwright browsers...`
     );
 
+    // scripts/playwright-install-e2e.mjs, a dependency of these specs, installs
+    // the system packages first, but only when NX_E2E_RUN_E2E is 'true'.
     const playwrightInstallArgs =
-      process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
+      process.env.PLAYWRIGHT_INSTALL_ARGS ||
+      (process.env.NX_E2E_RUN_E2E === 'true' ? '' : '--with-deps');
 
     try {
       execSync(`npx playwright install ${playwrightInstallArgs}`, {
@@ -248,31 +98,18 @@ export async function ensurePlaywrightBrowsersInstallation() {
         cwd: tmpProjPath(),
       });
 
-      const version = execSync('npx playwright --version').toString().trim();
+      const version = execSync('npx playwright --version', {
+        cwd: tmpProjPath(),
+      })
+        .toString()
+        .trim();
 
       e2eConsoleLogger(
         `Playwright browsers ${version} installed successfully.`
       );
-
-      releaseLock(PLAYWRIGHT_LOCK_FILE, PLAYWRIGHT_STATUS_FILE, true);
     } catch (error) {
       e2eConsoleLogger('Failed to install Playwright browsers:', error);
-      releaseLock(
-        PLAYWRIGHT_LOCK_FILE,
-        PLAYWRIGHT_STATUS_FILE,
-        false,
-        error.message
-      );
       throw error;
     }
-  } else {
-    e2eConsoleLogger(
-      `Process ${process.pid} waiting for Playwright browser installation...`
-    );
-    await waitForInstallation(
-      PLAYWRIGHT_LOCK_FILE,
-      PLAYWRIGHT_STATUS_FILE,
-      'Playwright'
-    );
-  }
+  });
 }

@@ -3,7 +3,6 @@ import {
   cleanupProject,
   configureTargetOptions,
   ensureCypressInstallation,
-  ensurePlaywrightBrowsersInstallation,
   killPorts,
   newProject,
   readFile,
@@ -29,7 +28,6 @@ describe('React Router Applications - TS paths', () => {
       ],
     });
     configureTargetOptions(['dev'], { strictPort: true });
-    ensurePlaywrightBrowsersInstallation();
     appPort = await reservePort();
     runCLI(
       `generate @nx/react:app ${appName} --use-react-router --routing --linter=eslint --unit-test-runner=vitest --e2e-test-runner=playwright --port=${appPort} --no-interactive`
