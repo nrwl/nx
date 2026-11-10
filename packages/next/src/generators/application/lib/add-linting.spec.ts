@@ -198,39 +198,56 @@ describe('updateEslint', () => {
     '...nextVitals',
     '@next/eslint-plugin-next',
   ] as const;
-  const localModuleChain = (lastModule: string): Record<string, string> => ({
+  // The chain ends in `require('./hooks')`, which the given files resolve.
+  const localModuleChain = (
+    hooks: Record<string, string>
+  ): Record<string, string> => ({
     'eslint.config.mjs': `import nx from '@nx/eslint-plugin';\nimport shared from './tools/eslint/index.mjs';\n\nexport default [...nx.configs['flat/base'], ...shared];\n`,
     'tools/eslint/index.mjs': `import './cycle.mjs';\n\nexport { default } from './react.cjs';\n`,
     'tools/eslint/cycle.mjs': `import './index.mjs';\n`,
     'tools/eslint/react.cjs': `const hooks = require('./hooks');\n\nmodule.exports = [hooks];\n`,
-    'tools/eslint/hooks.js': lastModule,
+    ...hooks,
   });
+  const registersReactHooks = `const reactHooks = require('eslint-plugin-react-hooks');\n\nmodule.exports = { plugins: { 'react-hooks': reactHooks } };\n`;
+  const registersNothing = `module.exports = { rules: {} };\n`;
 
   it.each([
     [
       'one of them registers a plugin eslint-config-next also registers',
-      localModuleChain(
-        `const reactHooks = require('eslint-plugin-react-hooks');\n\nmodule.exports = { plugins: { 'react-hooks': reactHooks } };\n`
-      ),
+      localModuleChain({ 'tools/eslint/hooks.js': registersReactHooks }),
       ...nextPluginConfig,
     ],
     [
       'one of them registers such a plugin under a computed key',
-      localModuleChain(
-        `const name = 'react-hooks';\n\nmodule.exports = { plugins: { [name]: require('eslint-plugin-react-hooks') } };\n`
-      ),
+      localModuleChain({
+        'tools/eslint/hooks.js': `const name = 'react-hooks';\n\nmodule.exports = { plugins: { [name]: require('eslint-plugin-react-hooks') } };\n`,
+      }),
       ...nextPluginConfig,
     ],
     [
       'one of them loads a config of such a plugin by subpath',
-      localModuleChain(
-        `module.exports = require('eslint-plugin-react/configs/recommended');\n`
-      ),
+      localModuleChain({
+        'tools/eslint/hooks.js': `module.exports = require('eslint-plugin-react/configs/recommended');\n`,
+      }),
+      ...nextPluginConfig,
+    ],
+    [
+      'one of them is a file without an extension that registers such a plugin',
+      localModuleChain({ 'tools/eslint/hooks': registersReactHooks }),
+      ...nextPluginConfig,
+    ],
+    [
+      'one of them is a directory whose package.json main registers such a plugin',
+      localModuleChain({
+        'tools/eslint/hooks/package.json': `{ "main": "./react-hooks.js" }\n`,
+        'tools/eslint/hooks/react-hooks.js': registersReactHooks,
+        'tools/eslint/hooks/index.js': registersNothing,
+      }),
       ...nextPluginConfig,
     ],
     [
       'none of them registers such a plugin',
-      localModuleChain(`module.exports = { rules: {} };\n`),
+      localModuleChain({ 'tools/eslint/hooks.js': registersNothing }),
       ...nextVitalsSpread,
     ],
   ])(

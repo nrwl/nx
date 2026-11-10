@@ -1,4 +1,4 @@
-import { joinPathFragments, type Tree } from '@nx/devkit';
+import { joinPathFragments, readJson, type Tree } from '@nx/devkit';
 import {
   getInstalledEslintVersion,
   isEslintConfigFile,
@@ -141,26 +141,65 @@ function isConflictingPluginModule(specifier: string): boolean {
   );
 }
 
-// `require` accepts specifiers without an extension and directory specifiers.
+// Follows the order of `require`: the file, then the directory's package.json
+// `main`, then the directory's index.
 function resolveLocalModule(
   tree: Tree,
   importer: string,
   specifier: string
 ): string | undefined {
   const path = joinPathFragments(dirname(importer), specifier);
-  if (path === '..' || path.startsWith('../')) {
+  if (isOutsideWorkspace(path)) {
     return undefined;
   }
+  return resolveModuleFile(tree, path) ?? resolveModuleDirectory(tree, path);
+}
+
+// `require` loads a file without an extension as JavaScript.
+function resolveModuleFile(tree: Tree, path: string): string | undefined {
   return [
     path,
     ...LOCAL_MODULE_EXTENSIONS.map((extension) => path + extension),
-    ...LOCAL_MODULE_EXTENSIONS.map((extension) =>
-      joinPathFragments(path, `index${extension}`)
-    ),
   ].find(
     (file) =>
-      LOCAL_MODULE_EXTENSIONS.includes(extname(file)) && tree.isFile(file)
+      (extname(file) === '' ||
+        LOCAL_MODULE_EXTENSIONS.includes(extname(file))) &&
+      tree.isFile(file)
   );
+}
+
+function resolveModuleDirectory(tree: Tree, path: string): string | undefined {
+  const packageJsonPath = joinPathFragments(path, 'package.json');
+  let main: unknown;
+  if (tree.isFile(packageJsonPath)) {
+    try {
+      ({ main } = readJson(tree, packageJsonPath));
+    } catch {
+      // `require` fails on a package.json it cannot parse.
+      return undefined;
+    }
+  }
+  if (typeof main === 'string' && main !== '') {
+    const mainPath = joinPathFragments(path, main);
+    const mainModule = isOutsideWorkspace(mainPath)
+      ? undefined
+      : (resolveModuleFile(tree, mainPath) ??
+        resolveModuleIndex(tree, mainPath));
+    if (mainModule) {
+      return mainModule;
+    }
+  }
+  return resolveModuleIndex(tree, path);
+}
+
+function resolveModuleIndex(tree: Tree, path: string): string | undefined {
+  return LOCAL_MODULE_EXTENSIONS.map((extension) =>
+    joinPathFragments(path, `index${extension}`)
+  ).find((file) => tree.isFile(file));
+}
+
+function isOutsideWorkspace(path: string): boolean {
+  return path === '..' || path.startsWith('../');
 }
 
 // Any load of one of the plugins counts, so a plugin registered under a
