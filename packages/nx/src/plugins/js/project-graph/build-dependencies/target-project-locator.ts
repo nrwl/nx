@@ -50,9 +50,18 @@ const defaultPackageJsonResolutionCache: PackageJsonResolutionCache = new Map();
 
 const experimentalNodeModules = new Set(['node:sqlite']);
 
+// Node's isBuiltin is false for Bun's runtime modules (`bun`, `bun:*`).
+function isBunModuleImport(importExpr: string): boolean {
+  return importExpr === 'bun' || importExpr.startsWith('bun:');
+}
+
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
-  return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
+  return (
+    isBuiltin(packageName) ||
+    experimentalNodeModules.has(packageName) ||
+    isBunModuleImport(importExpr)
+  );
 }
 
 // TypeScript matches the `${configDir}` template case-insensitively and only as a
