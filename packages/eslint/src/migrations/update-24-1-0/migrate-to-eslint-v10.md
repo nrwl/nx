@@ -6,10 +6,12 @@ This migration runs when the workspace lands on ESLint v10. It converts the esli
 
 ##### When the ESLint v10 update is held back
 
-Two framework integrations pin ESLint v9 through their own peer ranges, so the update to ESLint v10 is skipped for a workspace that has either of them. Those workspaces stay on v9, which is still supported, until they upgrade to Angular 21 or Next.js 16.
+Some packages have releases that do not work on ESLint v10. The update to ESLint v10 is skipped for a workspace that declares one of those releases. Those workspaces stay on v9, which is still supported, until they update that package.
 
-- `angular-eslint` below 21.3, the release that added ESLint v10 to its peer range. On Angular 21, the `@nx/angular` migrations move `angular-eslint` 21.0-21.2 to 21.3 in the same run, so the update goes ahead. Angular 20 workspaces stay on v9.
-- `eslint-config-next` v15 and lower, which Next.js 15 and lower use. Versions 16.0-16.3 do not hold the update back, and the `@nx/next` migrations move them to 16.4 (see Next.js configs below).
+- `angular-eslint` and `@angular-eslint/eslint-plugin` below 21.3, the release that added ESLint v10 to their peer range. On Angular 21, the `@nx/angular` migrations move `angular-eslint` 21.0-21.2 to 21.3 in the same run, so the update goes ahead. Angular 20 workspaces stay on v9.
+- `eslint-config-next` below 16.4, the first release whose bundled plugins work on ESLint v10. Versions 16.0-16.3 accept v10 in their peer range, but the React plugins they bundle fail on it. When `@nx/next` is installed, its migrations move 16.0-16.3 to 16.4 in the same run, so the update goes ahead. Next.js 15 and lower use `eslint-config-next` 15 or lower, so those workspaces stay on v9.
+- `@nuxt/eslint-config` below 1.0, which `@nx/nuxt` installs for a workspace on eslintrc. Its peer range ends at ESLint v9.
+- `eslint-plugin-vue` below 9 and `@vue/eslint-config-typescript` below 14. Their peer ranges end at ESLint v8.
 
 ##### Converting the remaining eslintrc configs
 

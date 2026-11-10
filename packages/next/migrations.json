@@ -137,8 +137,7 @@
     "24.1.0-eslint-config-next": {
       "version": "24.1.0-beta.0",
       "requires": {
-        "eslint-config-next": ">=16.0.0 <16.4.0",
-        "eslint": ">=10.0.0"
+        "eslint-config-next": ">=16.0.0 <16.4.0"
       },
       "packages": {
         "eslint-config-next": {
