@@ -100,8 +100,8 @@ describe('@nx/cypress/plugin', () => {
       'shared/unrelated.cjs': 'module.exports = 1;',
     });
     const infer = async () => {
-      // Clear Jest's module registry while retaining the plugin's disk cache.
-      jest.resetModules();
+      // Clear Vitest's module registry while retaining the plugin's disk cache.
+      vi.resetModules();
       const nodes = await createNodesFunction(
         ['apps/e2e/cypress.config.cjs'],
         {

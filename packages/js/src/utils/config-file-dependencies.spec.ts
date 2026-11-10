@@ -1,6 +1,9 @@
 import { TempFs } from '@nx/devkit/internal-testing-utils';
+import * as nodeFs from 'node:fs';
 import { join } from 'node:path';
 import { createConfigFileDependencyCollector } from './config-file-dependencies';
+
+vi.mock('node:fs', { spy: true });
 
 describe('config file dependencies', () => {
   let fs: TempFs;
@@ -19,7 +22,7 @@ describe('config file dependencies', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     fs.cleanup();
   });
 
@@ -167,10 +170,11 @@ describe('config file dependencies', () => {
       'apps/other/only.cjs': 'module.exports = {};',
       'apps/alone/config.cjs': 'module.exports = {};',
     });
-    const nodeFs = require('node:fs');
-    const probes = ['realpathSync', 'statSync', 'existsSync'].map((method) =>
-      jest.spyOn(nodeFs, method)
-    );
+    const probes = [
+      nodeFs.realpathSync,
+      nodeFs.statSync,
+      nodeFs.existsSync,
+    ].map((probe) => vi.mocked(probe).mockClear());
     const sharedProbes = () =>
       probes.map(
         (probe) =>
