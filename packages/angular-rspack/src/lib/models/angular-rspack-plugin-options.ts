@@ -409,7 +409,7 @@ export interface NormalizedAngularRspackPluginOptions extends Omit<
   polyfills: string[];
   // Set when the project graph loads the config to infer targets: option
   // checks and warnings are skipped, and the proxy file isn't read.
-  projectGraphCreation: boolean;
+  projectGraphCreation?: boolean;
   projectName: string | undefined;
   progress: boolean;
   root: string;

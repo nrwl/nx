@@ -754,40 +754,46 @@ describe('createConfig', () => {
       await rm(root, { recursive: true, force: true });
     });
 
-    it.each<[string, Partial<AngularRspackPluginOptions>, string]>([
+    it.each<[string, Partial<AngularRspackPluginOptions>, string, string[]]>([
       [
         '"ssr" set to true',
         { ssr: true },
         'The "ssr" option should be an object or false.',
+        ['browser'],
       ],
       [
         'the "static" output mode',
         { outputMode: 'static' },
         'The "static" value for the "outputMode" option is not supported.',
+        ['browser', 'server'],
       ],
       [
         'an output mode with a missing server file',
         { outputMode: 'server', server: './src/missing.server.ts' },
         'The "outputMode" option is set to "server", but "./src/missing.server.ts" does not exist.',
+        ['browser', 'server'],
       ],
       [
         'an output mode without @angular/ssr installed',
         { outputMode: 'server' },
         'The "outputMode" option requires the "@angular/ssr" package to be installed.',
+        ['browser', 'server'],
       ],
       [
         'a missing proxy configuration file',
         { devServer: { proxyConfig: './proxy.conf.json' } },
         'proxy.conf.json does not exist.',
+        ['browser', 'server'],
       ],
       [
         '"security.autoCsp"',
         { security: { autoCsp: true } },
         'The "security.autoCsp" option is not supported by @nx/angular-rspack yet.',
+        ['browser', 'server'],
       ],
     ])(
       'should reject %s when a task loads the config, but not when the project graph does',
-      async (_, options, error) => {
+      async (_, options, error, outputDirs) => {
         await expect(
           _createConfig({ ...ssrOptions, ...options })
         ).rejects.toThrow(error);
@@ -796,7 +802,9 @@ describe('createConfig', () => {
         global.NX_GRAPH_CREATION = true;
         const configs = await _createConfig({ ...ssrOptions, ...options });
 
-        expect(configs[0].output?.path).toBe(join(root, 'dist', 'browser'));
+        expect(configs.map((config) => config.output?.path)).toEqual(
+          outputDirs.map((dir) => join(root, 'dist', dir))
+        );
         expect(
           configs[0].plugins?.some((plugin) => plugin?.[READY_SIGNAL_PLUGIN])
         ).toBe(true);
@@ -806,7 +814,6 @@ describe('createConfig', () => {
     );
 
     it('should keep checking the options when a project graph build started by the config load leaves its flag set', async () => {
-      // A project graph build that throws never clears the flag.
       vi.spyOn(graph, 'retrieveOrCreateProjectGraph').mockImplementation(
         async () => {
           global.NX_GRAPH_CREATION = true;

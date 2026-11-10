@@ -51,8 +51,8 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
-  // Read once: a project graph build that throws while this config loads
-  // leaves the flag set.
+  // Read once: an unexpected failure in a project graph build that this
+  // config load starts can leave the flag set.
   const projectGraphCreation = !!global.NX_GRAPH_CREATION;
   if (!projectGraphCreation) {
     assertSupportedRspackCoreVersion();
