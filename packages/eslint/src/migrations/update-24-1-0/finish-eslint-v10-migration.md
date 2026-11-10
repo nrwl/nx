@@ -18,23 +18,29 @@ Out of scope: changing what rules the workspace enforces beyond what the removed
 The pre-pass changed, mechanically:
 
 - Converted the remaining eslintrc configs to flat config through the `@nx/eslint:convert-to-flat-config` generator. JavaScript-based configs (`.eslintrc.js`, `.eslintrc.cjs`) are read statically, so the ones built from literal values were converted too.
-- Moved the patterns of the file an `ignore-path` lint target option names into the flat config's `ignores` when the option applies to every run of the target, and removed `no-eslintrc`, in `project.json` lint targets and in the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. A moved file was deleted only when its name contains `eslintignore` and no remaining `ignore-path` names it, so a moved `.gitignore` is still there.
+- Removed `no-eslintrc` from `project.json` lint targets and from the nx.json `targetDefaults` entries for `@nx/eslint/plugin`. It left every `ignore-path` option, and every file one names, in place.
 - Removed `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react` from `package.json` and installed `eslint-plugin-import-x` in place of `eslint-plugin-import`. Updated `eslint-plugin-import-x` below 4.16.2 and `eslint-plugin-react-hooks` below 7.1.0, the first releases that support ESLint v10. An `eslint-plugin-react-hooks` that moved from v6 or older to v7 also enables the React Compiler rules in its `recommended` preset.
+- Removed the `react/` and `jsx-a11y/` rules from `eslint-disable`, `eslint-disable-line`, `eslint-disable-next-line` and `eslint-enable` comments when it removed that plugin and no `package.json` declares `eslint-config-next`, and deleted each comment left with no rule.
+- Deleted the `/* eslint-env */` comments when the workspace had no eslintrc config before the run, since flat config never applied their globals.
+- Left either kind of comment in place when another comment ends on the nearest non-blank line above it. Removing its line would put the code below under an `eslint-disable-next-line` or `@ts-ignore` there, and `@ts-ignore` also skips blank lines.
 
 The pre-pass also detected and reported, without changing anything:
 
 - eslintrc files still in the workspace, and whether they were being applied until this run or had already been shadowed by a flat config at the root.
-- Files that reference a removed plugin: configs, and modules a config builds on that import one by package name.
-- Source files whose ESLint directive comments name a rule from a removed plugin.
-- Source files carrying `/* eslint-env */` comments, which ESLint v10 reports as errors.
+- JavaScript and TypeScript files that import a removed plugin, and eslintrc files still in the workspace that name one.
+- Source files whose directive comments name an `import/` rule, or set a removed plugin's rule inline (`/* eslint react/no-danger: "error" */`). It checks no directive comment when a `package.json` declares `eslint-config-next`, which registers those plugins itself.
+- Source files carrying `/* eslint-env */` comments when the workspace had an eslintrc config before the run, which may have applied their globals. ESLint v10 reports each one as an error.
+- Source files carrying a comment it would have deleted but left under another comment. ESLint v10 reports each one as an error.
 - Installed dependencies whose `peerDependencies.eslint` rules out the ESLint the workspace now runs.
 - A newly added `@eslint/js`, whose recommended set is wider than the one the eslintrc config applied.
-- Lint targets that still carry an eslintrc-only ESLint option: `rulesdir`, `resolve-plugins-relative-to`, an `ignore-path` it did not move, or a `no-eslintrc` it did not remove.
+- Lint targets that still carry an eslintrc-only ESLint option: `ignore-path`, `rulesdir`, `resolve-plugins-relative-to`, or a `no-eslintrc` it did not remove.
 
 The pre-pass does NOT:
 
 - Convert an eslintrc config whose values are computed at runtime (a `require` call, a template with substitutions, `__dirname`, a conditional). It never executes the file, so it reports those instead of guessing.
-- Rewrite anything that references the removed plugins, in a config or in a source file's directive comments, or replace an `/* eslint-env */` comment. Deciding where a comment's globals belong is a judgment call, so it reports them instead.
+- Rewrite a config that references a removed plugin, or an `import/` rule in a directive comment. Whether a rule moves to `eslint-plugin-import-x` depends on the rule and on the key the config registers the fork under.
+- Replace an `/* eslint-env */` comment whose globals an eslintrc config may have applied. Deciding where those globals belong is a judgment call.
+- Read files other than JavaScript and TypeScript source, such as `.vue` files, or files git ignores.
 - Clear a plugin for ESLint v10. Its peer scan only catches the packages whose declared range rules v10 out; an open range such as `>=8` admits v10 whether or not the package works on it.
 - Verify that lint still passes.
 
@@ -79,7 +85,7 @@ In your handoff `summary` (1 to 3 sentences per the system prompt), name the sec
 
 The exception is a file a flat config loads through `FlatCompat`, with `compat.extends` or the `extends` of a file loaded that way. The pre-pass loads this way any local eslintrc that a converted config extends but the run did not convert, such as a shared config outside any project. Such a file still applies, so it can stay. To fold one in anyway, convert it to a module the loading configs import, and remove the `compat.extends` entry that loads it.
 
-Some leftovers were already dormant before this migration: a flat config at the workspace root wins over every eslintrc below it, so ESLint had stopped reading those files well before v10. `<advisory_context>` says which case each one is. Folding a dormant file in turns rules back on that the workspace has not been running, so expect new errors there and keep them separate in your summary from the enforcement this migration actually dropped.
+Some leftovers were already dormant before this migration: unless lint ran with `ESLINT_USE_FLAT_CONFIG=false`, ESLint v9 resolved an `eslint.config.*` file at the workspace root instead of every eslintrc below it. A root with only a base config, such as `eslint.base.config.mjs`, does not make them dormant. The inferred lint target of a project whose config is an eslintrc file runs ESLint with `ESLINT_USE_FLAT_CONFIG=false`, so ESLint v9 applied those files, and the pre-pass did not convert them. `<advisory_context>` says which case each one is. Folding a dormant file in turns rules back on that the workspace has not been running, so expect new errors there and keep them separate in your summary from the enforcement this migration actually dropped.
 
 Convert each of the other files to a flat config next to it, mirroring the shape of the configs the pre-pass produced.
 
@@ -129,7 +135,7 @@ export default [
 
 ## 2. Rewrite references to the removed plugins
 
-**Search pattern**: the config files forwarded in `<advisory_context>`, plus `eslint-plugin-import`, `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and the `import/`, `react/`, `jsx-a11y/` rule prefixes across all ESLint configs.
+**Search pattern**: the files forwarded in `<advisory_context>`, the errors `nx run-many -t lint` reports, plus `eslint-plugin-import`, `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and the `import/`, `react/`, `jsx-a11y/` rule prefixes across all ESLint configs.
 
 **What changed**: those three plugins have no ESLint v10 release, so the pre-pass removed them from `package.json`. A config that still imports one, registers it under `plugins`, extends one of its configs (`plugin:react/recommended`), or configures its rules now fails to load with `Could not find plugin` or a module resolution error.
 
@@ -166,17 +172,22 @@ export default [
 **Action items**:
 
 - [ ] Rewrite every `eslint-plugin-import` usage to `eslint-plugin-import-x`, including the plugin key and each `import/` rule prefix. A `plugin:import/<name>` config a flat config extends becomes `importX.flatConfigs.<name>`.
+- [ ] Rename the `import/` keys under `settings` (`import/resolver`, `import/extensions`, `import/parsers`, `import/core-modules`, `import/external-module-folders`, `import/ignore`) to `import-x/`. `eslint-plugin-import-x` reads only its own keys, so a leftover `import/resolver` silently falls back to the default resolver.
 - [ ] Delete `eslint-plugin-react` and `eslint-plugin-jsx-a11y` registrations, the `plugin:react/` and `plugin:jsx-a11y/` configs a config extends, and every `react/` and `jsx-a11y/` rule.
-- [ ] Fix the ESLint directive comments in source files that name a rule the workspace can no longer resolve: rewrite an `import/` prefix to `import-x/`, and delete the ones naming a `react/` or `jsx-a11y/` rule, including the inline `/* eslint react/no-danger: "error" */` form. A directive for an undefined rule is a lint error in itself (`Definition for rule '...' was not found`), so lint cannot pass while one is left. Sections 3 and 6 name the only other source-file edits this migration allows.
+- [ ] Fix the ESLint directive comments in source files that name a rule the workspace can no longer resolve: rewrite an `import/` prefix to `import-x/`, and delete the ones naming a `react/` or `jsx-a11y/` rule, including the inline `/* eslint react/no-danger: "error" */` form. A directive for an undefined rule is a lint error in itself (`Definition for rule '...' was not found`), so lint cannot pass while one is left. Fix the ones `<advisory_context>` lists and the ones lint reports. Sections 3 and 6 name the only other source-file edits this migration allows.
+- [ ] Delete a directive the pre-pass left under another comment, then decide whether that comment should apply to the code below. Removing the line puts that code under it.
+- [ ] Lint only reads the files a lint target covers. Search the other files for the three rule prefixes in directive comments, and run `npx eslint <file>` on each hit before editing it: change a file only when ESLint reports the error for it, and leave a file it reports as ignored.
 - [ ] Leave configs that get these rules from an Nx preset alone. `@nx/eslint-plugin`'s `flat/react`, `flat/react-base` and `flat/react-jsx` already resolve the right plugin set for the running ESLint major. Their directives are not exempt: on ESLint v10 the presets register the fork under the `import-x` key, so an `import/` directive in source still has to be rewritten.
 - [ ] Leave the `react/`, `jsx-a11y/` and `import/` rules alone in a config that spreads `eslint-config-next`, extends `next` or registers `@next/next`, and in the directives of the files that config lints. eslint-config-next registers those three plugins itself, its 16.4 release supports ESLint v10, and the `@nx/next` migration rewrites the older Next.js entries to spread it or lists the configs it could not rewrite. The exemption does not cover a config that uses the `core-web-vitals` config of `@next/eslint-plugin-next` (`nextEslintPluginNext.configs['core-web-vitals']`). That config registers only `@next/next`, and the `@nx/next` migration switches to it when another config registers one of those plugins. Apply the rules above to such a config and the files it lints.
 - [ ] Report the dropped `react/` and `jsx-a11y/` rules in your handoff summary so the loss of coverage is visible.
 
 ## 3. Replace the `/* eslint-env */` comments
 
-**Search pattern**: the source files forwarded in `<advisory_context>`, plus `/* eslint-env` across the workspace.
+**Search pattern**: the source files forwarded in `<advisory_context>`, plus `/* eslint-env` across the workspace. Run `npx eslint <file>` on a hit no lint target covers before editing it, as in section 2.
 
 **What changed**: flat config never read `/* eslint-env */` comments. ESLint v9 tolerated them, printing a process warning that they would become errors in v10; v10 makes good on it and reports each one as `/* eslint-env */ comments are no longer supported`. One leftover comment fails the lint run for its file, whether or not the workspace was converted here.
+
+When the workspace had no eslintrc config before the run, the pre-pass deleted these comments, because no config ever applied their globals. It left and forwards one that sits under another comment. Otherwise it forwards them only when an eslintrc config may have applied them.
 
 Only the block form is a directive. A `// eslint-env node` line comment was never read by ESLint and needs no change.
 
@@ -203,9 +214,10 @@ export default [
 
 **Action items**:
 
-- [ ] For each reported file, move the globals its comment declared into the `languageOptions.globals` of the flat config that covers it, then delete the comment. The `globals` package exports each environment by name, so `eslint-env node` becomes `...globals.node`.
+- [ ] For each file reported with an eslintrc config that may have applied its comment, move the globals the comment declared into the `languageOptions.globals` of the flat config that covers it, then delete the comment. The `globals` package exports each environment by name, so `eslint-env node` becomes `...globals.node`.
 - [ ] Use a `/* global ... */` comment instead when a single file needs globals the rest of the project does not.
-- [ ] Never delete the comment without replacing what it declared. The globals it provided turn into `no-undef` errors.
+- [ ] Never delete such a comment without replacing what it declared. The globals it provided turn into `no-undef` errors.
+- [ ] Delete a comment the pre-pass left under another comment without replacing it, because no config applied its globals. Then decide whether the comment above should apply to the code below, since removing the line puts that code under it.
 
 ## 4. Check the remaining plugins for ESLint v10 support
 
@@ -243,13 +255,14 @@ ESLint v10 requires Node.js `^20.19.0 || ^22.13.0 || >=24`.
 
 **What changed**: these options only exist for eslintrc. When Nx 24 converted `@nx/eslint:lint` targets to inferred tasks, they stayed on the target. The task passes `ignore-path`, `no-eslintrc` and `resolve-plugins-relative-to` to ESLint as CLI flags, and ESLint v10 rejects each one as an invalid option. `rulesdir` holds a list, which the task never passes on, so the rules in that directory are not loaded at all.
 
-The pre-pass already moved the `ignore-path` files that apply to every run of a target and removed `no-eslintrc` from the targets it converted. It left an `ignore-path` that another one replaces for some runs (one under a configuration, or one a project or a narrower `targetDefaults` entry sets), one on a target with its own `cwd` or on an `eslint` command target, and one that names a file it could not find. It left `no-eslintrc` on `eslint` command targets and on projects whose config it could not convert. A relative path in what is left may be relative to the workspace root, where the removed executor ran ESLint, or to the project root, where the inferred target runs it. Use whichever exists.
+The pre-pass removed `no-eslintrc` from the targets it converted and left every `ignore-path`. It left `no-eslintrc` on `eslint` command targets and on projects whose config it could not convert. A relative path in what is left may be relative to the workspace root, where the removed executor ran ESLint, or to the project root, where the inferred target runs it. Use whichever exists.
 
 **Action items**:
 
-- [ ] `ignore-path`: keep the files each run ignores the same, then delete every `ignore-path`. Each run uses one `ignore-path` and one `args`. A configuration's options replace the target's key by key, and a project or a narrower `targetDefaults` entry replaces the options of a shared entry the same way. Both are called overrides below.
-  - When no override replaces an `ignore-path`, move the file's patterns into the `ignores` of the flat config that lints the same files.
-  - Otherwise pass the patterns as `--ignore-pattern` flags in `args`, because flat config `ignores` apply to every run. Put the replaced file's patterns in the `args` next to its `ignore-path`. An override with its own `ignore-path` gets only its own patterns. An override that sets `args` but no `ignore-path` inherited the replaced file, so add that file's patterns to its `args`. Every `args` you write keeps the flags its runs already passed, since an override's `args` replaces the inherited one.
+- [ ] `ignore-path`: keep the files each run ignores the same, then delete every `ignore-path`. Do not move the patterns into a flat config's `ignores`: those apply to every run of that config, including the editor and other targets that never used the file. Each run uses one `ignore-path` and one `args`. A configuration's options replace the target's key by key, and a project or a narrower `targetDefaults` entry replaces the options of a shared entry the same way. Both are called overrides below.
+  - Pass the file's patterns as `--ignore-pattern` flags in the `args` next to its `ignore-path`. An override with its own `ignore-path` gets only its own patterns. An override that sets `args` but no `ignore-path` inherited the file, so add that file's patterns to its `args`. Every `args` you write keeps the flags its runs already passed, since an override's `args` replaces the inherited one.
+  - Rewrite each line of the file for the flag. ESLint resolves both from the directory it runs in, the target's `cwd`, but the file uses gitignore syntax: a pattern with no slash, or only a trailing one, matches at any depth, and any other slash anchors it. So `dist` becomes `**/dist`, and `/dist` becomes `dist`.
+  - Quote each pattern inside its `args` entry. Nx passes `args` to the shell unquoted, so an unquoted glob is expanded before ESLint sees it. An array set as an `ignore-pattern` option is dropped, so use `args`.
 - [ ] `rulesdir`: flat config has no rules directory. Register the directory's rules as a local plugin in the flat config, for example `plugins: { local: { rules } }`, rename each reference to those rules, in configs and in directive comments, to `local/<rule>`, then delete the option.
 - [ ] `resolve-plugins-relative-to`: flat config loads each plugin from the config module that imports it. If the config loads eslintrc-style configs through `FlatCompat`, pass the directory to it as `resolvePluginsRelativeTo`. Otherwise check that every plugin the config imports resolves from the config file. Then delete the option.
 - [ ] `no-eslintrc`: delete the option. Flat config never merges configs from parent directories, so it has no equivalent.
