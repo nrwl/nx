@@ -22,6 +22,8 @@ common-env-vars: &common-env-vars
   # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
   GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
   NX_CLOUD_USE_ULTRACACHE: 'true'
+  # V4 agents restore dependency artifacts in the background instead of holding the work loop.
+  NX_CLOUD_AGENT_BACKGROUND_ARTIFACT_RESTORE: 'true'
 
 common-init-steps: &common-init-steps
   - name: Checkout
