@@ -76,7 +76,7 @@ export async function addLinting(
   // Everything below configures ESLint — predefined configs, `extends`, ignore
   // entries — which have no equivalent in other linters.
 
-  let usesFlatNextConfigs = isNext16App;
+  let usesFlatNextConfigs = isNext16App && useFlatConfig(host);
   if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
       if (isNext16App) {
@@ -154,7 +154,6 @@ export async function addLinting(
         tasks.push(addExtendsTask);
       }
     } else {
-      usesFlatNextConfigs = false;
       const addExtendsTask = addExtendsToLintConfig(
         host,
         options.appProjectRoot,
