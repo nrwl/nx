@@ -216,6 +216,7 @@ describe('applyStepEvent', () => {
         agenticWaived: false,
         validationOwed: false,
         madeChanges: true,
+        installRequested: false,
       });
 
       expect(result.kind).toBe('ok');
@@ -241,6 +242,7 @@ describe('applyStepEvent', () => {
         agenticWaived: false,
         validationOwed: false,
         madeChanges: true,
+        installRequested: false,
       });
 
       expect(result.kind).toBe('ok');
@@ -258,6 +260,7 @@ describe('applyStepEvent', () => {
         agenticWaived: false,
         validationOwed: false,
         madeChanges: false,
+        installRequested: false,
       });
 
       expect(result.kind).toBe('ok');
@@ -275,6 +278,7 @@ describe('applyStepEvent', () => {
         agenticWaived: true,
         validationOwed: false,
         madeChanges: true,
+        installRequested: false,
       });
 
       expect(result.kind).toBe('ok');
@@ -293,6 +297,7 @@ describe('applyStepEvent', () => {
         agenticWaived: false,
         validationOwed: true,
         madeChanges: true,
+        installRequested: false,
       });
 
       expect(result.kind).toBe('ok');
@@ -314,6 +319,7 @@ describe('applyStepEvent', () => {
           agenticWaived: false,
           validationOwed: false,
           madeChanges: true,
+          installRequested: false,
         });
 
         expect(result.kind).toBe('error');
@@ -628,7 +634,7 @@ describe('applyStepEvent', () => {
       }
     });
 
-    it('drops the waiver, the owed validation, and the change record with the marker when a clean retry discards the generator changes', () => {
+    it('drops the waiver, the owed validation, and the change record with the marker when a clean retry discards the generator changes, keeping a pending install request', () => {
       const state = stateWithStep({
         status: 'failed',
         generatorCompleted: true,
@@ -636,6 +642,7 @@ describe('applyStepEvent', () => {
         agenticWaived: true,
         validationOwed: true,
         generatorMadeChanges: true,
+        installRequested: true,
       });
 
       const result = applyStepEvent(state, {
@@ -654,6 +661,8 @@ describe('applyStepEvent', () => {
         expect(result.state.steps[0].agenticWaived).toBeUndefined();
         expect(result.state.steps[0].validationOwed).toBeUndefined();
         expect(result.state.steps[0].generatorMadeChanges).toBeUndefined();
+        // The reset restores files, not what the package manager installed.
+        expect(result.state.steps[0].installRequested).toBe(true);
       }
     });
 
@@ -1214,6 +1223,7 @@ describe('applyStepEvent', () => {
         agenticWaived: false,
         validationOwed: false,
         madeChanges: true,
+        installRequested: false,
       });
       expect(marked.kind).toBe('ok');
       if (marked.kind !== 'ok') return;

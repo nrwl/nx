@@ -305,6 +305,7 @@ describe('migrate commit broker', () => {
       expect(mockRunInstall).not.toHaveBeenCalled();
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(
         root,
+        'dependencies-changed',
         expect.anything()
       );
       expect(logger.info).toHaveBeenCalledWith(
@@ -1187,6 +1188,7 @@ describe('migrate commit broker', () => {
       expect(mockRunInstall).not.toHaveBeenCalled();
       expect(mockLogSkippedInstall).toHaveBeenCalledWith(
         root,
+        'dependencies-changed',
         expect.anything()
       );
     });

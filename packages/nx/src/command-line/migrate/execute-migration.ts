@@ -276,21 +276,47 @@ export function logNpmPeerDepsError(
   }
 }
 
+export type PostMigrationInstallReason =
+  | 'dependencies-changed'
+  | 'install-requested';
+
 export function logSkippedPostMigrationInstall(
   root: string,
+  reason: PostMigrationInstallReason,
   out: MigrateOutputSink = terminalOutput
 ): void {
   const packageManager = detectPackageManager(root);
   const installCommand = getPackageManagerCommand(packageManager, root).install;
-  out.notice('warn', {
-    title: 'Migrations updated your dependencies, but the install was skipped',
-    bodyLines: [`Run "${installCommand}" to install the updated dependencies.`],
-  });
+  switch (reason) {
+    case 'dependencies-changed':
+      out.notice('warn', {
+        title:
+          'Migrations updated your dependencies, but the install was skipped',
+        bodyLines: [
+          `Run "${installCommand}" to install the updated dependencies.`,
+        ],
+      });
+      return;
+    case 'install-requested':
+      out.notice('warn', {
+        title:
+          'Migrations requested a dependency install, but the install was skipped',
+        bodyLines: [
+          `Run "${installCommand}" so the installed packages match package.json.`,
+        ],
+      });
+      return;
+    default: {
+      const unhandled: never = reason;
+      throw new Error(`Unhandled install reason: ${unhandled}`);
+    }
+  }
 }
 
 export class ChangedDepInstaller {
   private initialDeps: string;
-  private _skippedInstall = false;
+  private installRequested = false;
+  private _skippedInstall: PostMigrationInstallReason | undefined;
   private _installed = false;
 
   constructor(
@@ -301,7 +327,12 @@ export class ChangedDepInstaller {
     this.initialDeps = getStringifiedPackageJsonDeps(root);
   }
 
-  public get skippedInstall(): boolean {
+  /**
+   * Why the skip-install flag withheld an install, or undefined when it never
+   * did. A dependency change outranks a request: the install it asks for
+   * covers both.
+   */
+  public get skippedInstall(): PostMigrationInstallReason | undefined {
     return this._skippedInstall;
   }
 
@@ -314,14 +345,31 @@ export class ChangedDepInstaller {
     return this._installed;
   }
 
+  /**
+   * Makes the next `installDepsIfChanged` install even if the dependency
+   * declarations are unchanged. The request stands until an install lands.
+   */
+  public requestInstall(): void {
+    this.installRequested = true;
+  }
+
   public async installDepsIfChanged(): Promise<void> {
     const currentDeps = getStringifiedPackageJsonDeps(this.root);
-    if (this.initialDeps !== currentDeps) {
+    const reason: PostMigrationInstallReason | undefined =
+      this.initialDeps !== currentDeps
+        ? 'dependencies-changed'
+        : this.installRequested
+          ? 'install-requested'
+          : undefined;
+    if (reason) {
       if (this.shouldSkipInstall) {
-        this._skippedInstall = true;
+        if (this._skippedInstall !== 'dependencies-changed') {
+          this._skippedInstall = reason;
+        }
       } else {
         await runInstall(this.root, 'post-migration', this.rerunCommand);
         this._installed = true;
+        this.installRequested = false;
       }
     }
     this.initialDeps = currentDeps;
@@ -344,6 +392,7 @@ export async function runNxOrAngularMigration(
   nextSteps: string[];
   agentContext: string[];
   skipAgentic: boolean;
+  installDependencies: boolean;
   logs: string;
   madeChanges: boolean;
 }> {
@@ -352,8 +401,10 @@ export async function runNxOrAngularMigration(
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
-  // Angular schematics have no return channel, so they can never waive it.
+  // Angular schematics have no return channel, so they can never waive it or
+  // request an install.
   let skipAgentic = false;
+  let installDependencies = false;
   let logs = '';
   // Angular's `ngResult.changes` is synthesized from the schematic's
   // DryRunEvent stream so Nx and Angular paths can share commit/validation
@@ -361,15 +412,21 @@ export async function runNxOrAngularMigration(
   let madeChanges = false;
   logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes, agentContext, skipAgentic, logs } =
-      await runNxMigration(
-        root,
-        collectionPath,
-        collection,
-        migration.name,
-        migration.version,
-        captureGeneratorOutput
-      ));
+    ({
+      nextSteps,
+      changes,
+      agentContext,
+      skipAgentic,
+      installDependencies,
+      logs,
+    } = await runNxMigration(
+      root,
+      collectionPath,
+      collection,
+      migration.name,
+      migration.version,
+      captureGeneratorOutput
+    ));
     madeChanges = changes.length > 0;
 
     logger.info(singleLine(`Ran ${migration.name} from ${migration.package}`));
@@ -384,6 +441,7 @@ export async function runNxOrAngularMigration(
         nextSteps,
         agentContext,
         skipAgentic,
+        installDependencies,
         logs,
         madeChanges,
       };
@@ -419,6 +477,7 @@ export async function runNxOrAngularMigration(
         nextSteps,
         agentContext,
         skipAgentic,
+        installDependencies,
         logs,
         madeChanges,
       };
@@ -429,7 +488,15 @@ export async function runNxOrAngularMigration(
     logger.info('');
   }
 
-  return { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges };
+  return {
+    changes,
+    nextSteps,
+    agentContext,
+    skipAgentic,
+    installDependencies,
+    logs,
+    madeChanges,
+  };
 }
 
 /**
@@ -486,23 +553,33 @@ export async function runNxMigration(
   } else {
     result = await fn(host, {});
   }
-  const { nextSteps, agentContext, skipAgentic } = parseMigrationReturn(result);
+  const { nextSteps, agentContext, skipAgentic, installDependencies } =
+    parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps, agentContext, skipAgentic, logs };
+  return {
+    changes,
+    nextSteps,
+    agentContext,
+    skipAgentic,
+    installDependencies,
+    logs,
+  };
 }
 
 export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
   agentContext: string[];
   skipAgentic: boolean;
+  installDependencies: boolean;
 } {
   if (Array.isArray(value)) {
     return {
       nextSteps: filterStrings(value),
       agentContext: [],
       skipAgentic: false,
+      installDependencies: false,
     };
   }
   if (value && typeof value === 'object') {
@@ -512,10 +589,16 @@ export function parseMigrationReturn(value: unknown): {
       agentContext: filterStrings(obj.agentContext),
       // Strict, so a truthy non-boolean can't opt a migration out of its AI step.
       skipAgentic: obj.skipAgentic === true,
+      installDependencies: obj.installDependencies === true,
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
-  return { nextSteps: [], agentContext: [], skipAgentic: false };
+  return {
+    nextSteps: [],
+    agentContext: [],
+    skipAgentic: false,
+    installDependencies: false,
+  };
 }
 
 // Bucket-level tolerance: a single non-string entry shouldn't discard the

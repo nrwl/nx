@@ -44,7 +44,11 @@ async function runMigrationProcess() {
       changes: fileChanges,
       nextSteps,
       skipAgentic,
+      installDependencies,
     } = await runNxOrAngularMigration(workspacePath, migration, false);
+    if (installDependencies) {
+      installer.requestInstall();
+    }
 
     if (configuration.createCommits) {
       const commitResult = await commitMigrationIfRequested(

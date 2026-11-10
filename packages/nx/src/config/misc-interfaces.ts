@@ -97,11 +97,18 @@ export type PackageJsonUpdates = {
  *   generator-only one. Omitting it keeps the AI step, so this is opt-in.
  *   Where the waiver takes effect, `agentContext` is dropped along with the
  *   step it was meant for.
+ * - `installDependencies`: set to `true` to have `nx migrate` install the
+ *   workspace dependencies after this migration even when its dependency
+ *   declarations end up unchanged, for example after an external tool
+ *   installed packages and the migration restored package.json. Changed
+ *   declarations trigger the install without it. `--skip-install` still skips
+ *   it. Only a literal `true` counts.
  */
 export interface MigrationReturnObject {
   nextSteps?: string[];
   agentContext?: string[];
   skipAgentic?: boolean;
+  installDependencies?: boolean;
 }
 
 export type Migration = (

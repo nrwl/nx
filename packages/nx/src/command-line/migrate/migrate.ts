@@ -3027,10 +3027,19 @@ export async function executeMigrations(
   // absorbs it.
   async function commitOrRecordNoChanges(
     m: PlannedMigration,
-    madeChanges: boolean
+    madeChanges: boolean,
+    installDependencies: boolean
   ): Promise<CommitState> {
+    if (installDependencies) {
+      changedDepInstaller.requestInstall();
+    }
     if (!madeChanges) {
       migrationsWithNoChanges.push(m);
+      // No commit will run the requested install, so it runs here. Without
+      // commits, the end-of-run install covers it.
+      if (shouldCreateCommits && installDependencies) {
+        await installDepsIfChanged();
+      }
       return { kind: 'none' };
     }
     const commit = await attemptMigrationCommit(m);
@@ -3065,14 +3074,19 @@ export async function executeMigrations(
         notRunMigrationsCount++;
         outcome = 'deferred';
       } else if (isHybridMigration(m)) {
-        const { nextSteps, agentContext, skipAgentic, madeChanges } =
-          await runNxOrAngularMigration(
-            root,
-            m,
-            isVerbose,
-            /* captureGeneratorOutput: */ false,
-            resolvedCollection
-          );
+        const {
+          nextSteps,
+          agentContext,
+          skipAgentic,
+          installDependencies,
+          madeChanges,
+        } = await runNxOrAngularMigration(
+          root,
+          m,
+          isVerbose,
+          /* captureGeneratorOutput: */ false,
+          resolvedCollection
+        );
         migrationEmittedNextSteps.push(...nextSteps);
 
         if (skipAgentic) {
@@ -3080,7 +3094,11 @@ export async function executeMigrations(
           // owed: no next-steps entry telling anyone to run the prompt.
           logWaivedAgenticStep(m, agentContext);
           waivedAgenticStep = true;
-          commit = await commitOrRecordNoChanges(m, madeChanges);
+          commit = await commitOrRecordNoChanges(
+            m,
+            madeChanges,
+            installDependencies
+          );
           outcome = madeChanges ? 'applied' : 'no-changes';
         } else {
           // The prompt half is deferred. Under `inside-agent`, surface the
@@ -3096,11 +3114,15 @@ export async function executeMigrations(
             printDroppedAgentContext({ migration: m, agentContext });
           }
           skippedPrompts.push(m);
-          commit = await commitOrRecordNoChanges(m, madeChanges);
+          commit = await commitOrRecordNoChanges(
+            m,
+            madeChanges,
+            installDependencies
+          );
           outcome = 'deferred';
         }
       } else {
-        const { nextSteps, agentContext, madeChanges } =
+        const { nextSteps, agentContext, installDependencies, madeChanges } =
           await runNxOrAngularMigration(
             root,
             m,
@@ -3114,7 +3136,11 @@ export async function executeMigrations(
           // agent can ingest it.
           printDroppedAgentContext({ migration: m, agentContext });
         }
-        commit = await commitOrRecordNoChanges(m, madeChanges);
+        commit = await commitOrRecordNoChanges(
+          m,
+          madeChanges,
+          installDependencies
+        );
         outcome = madeChanges ? 'applied' : 'no-changes';
       }
       outcomes.push({
@@ -3188,7 +3214,7 @@ export async function executeMigrations(
   }
 
   if (changedDepInstaller.skippedInstall) {
-    logSkippedPostMigrationInstall(root);
+    logSkippedPostMigrationInstall(root, changedDepInstaller.skippedInstall);
   }
 
   // Combined-view next-steps array kept for back-compat with repair.ts, which

@@ -111,78 +111,178 @@ describe('parseMigrationReturn', () => {
     [
       string,
       unknown,
-      { nextSteps: string[]; agentContext: string[]; skipAgentic: boolean },
+      {
+        nextSteps: string[];
+        agentContext: string[];
+        skipAgentic: boolean;
+        installDependencies: boolean;
+      },
     ]
   >([
     [
       'returns an array of strings as nextSteps with an empty agentContext',
       ['a', 'b'],
-      { nextSteps: ['a', 'b'], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: ['a', 'b'],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'filters non-string entries out of an array return value',
       ['a', 1, null, 'b', undefined, {}],
-      { nextSteps: ['a', 'b'], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: ['a', 'b'],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'filters non-string entries out of both nextSteps and agentContext',
       { nextSteps: ['x', 2], agentContext: ['y', false] },
-      { nextSteps: ['x'], agentContext: ['y'], skipAgentic: false },
+      {
+        nextSteps: ['x'],
+        agentContext: ['y'],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for an object missing both keys',
       {},
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for an object with unrelated keys',
       { foo: 'bar' },
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for undefined',
       undefined,
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for null',
       null,
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for a number',
       42,
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'returns empty arrays for a function',
       () => {},
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'reads skipAgentic: true alongside the other buckets',
-      { nextSteps: ['a'], agentContext: ['b'], skipAgentic: true },
-      { nextSteps: ['a'], agentContext: ['b'], skipAgentic: true },
+      {
+        nextSteps: ['a'],
+        agentContext: ['b'],
+        skipAgentic: true,
+        installDependencies: false,
+      },
+      {
+        nextSteps: ['a'],
+        agentContext: ['b'],
+        skipAgentic: true,
+        installDependencies: false,
+      },
     ],
     [
       'reads skipAgentic: true on its own',
       { skipAgentic: true },
-      { nextSteps: [], agentContext: [], skipAgentic: true },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: true,
+        installDependencies: false,
+      },
     ],
     [
       'reads an explicit skipAgentic: false',
       { skipAgentic: false },
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'does not let a truthy string opt out of the AI step',
       { skipAgentic: 'yes' },
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
     [
       'does not let a truthy number opt out of the AI step',
       { skipAgentic: 1 },
-      { nextSteps: [], agentContext: [], skipAgentic: false },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
+    ],
+    [
+      'reads installDependencies: true',
+      { installDependencies: true },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: true,
+      },
+    ],
+    [
+      'does not let a truthy non-boolean request an install',
+      { installDependencies: 'yes' },
+      {
+        nextSteps: [],
+        agentContext: [],
+        skipAgentic: false,
+        installDependencies: false,
+      },
     ],
   ])('%s', (_title, input, expected) => {
     expect(parseMigrationReturn(input)).toEqual(expected);
@@ -535,7 +635,7 @@ describe('ChangedDepInstaller', () => {
 
     await installer.installDepsIfChanged();
 
-    expect(installer.skippedInstall).toBe(true);
+    expect(installer.skippedInstall).toBe('dependencies-changed');
     expect(mockSpawn).not.toHaveBeenCalled();
   });
 
@@ -592,6 +692,59 @@ describe('ChangedDepInstaller', () => {
     expect(mockSpawn).toHaveBeenCalledTimes(1);
   });
 
+  it('clears a request with the install that lands, even when a dependency change triggered it', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    installer.requestInstall();
+    mockSpawn.mockImplementation(() => {
+      const child = new FakeChildProcess();
+      setImmediate(() => child.emit('close', 0));
+      return child;
+    });
+
+    await installer.installDepsIfChanged();
+    await installer.installDepsIfChanged();
+
+    expect(mockSpawn).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a request through a failed install, so the next call installs again', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, false);
+    installer.requestInstall();
+    const failing = new FakeChildProcess();
+    const succeeding = new FakeChildProcess();
+    mockSpawn.mockReturnValueOnce(failing).mockReturnValueOnce(succeeding);
+
+    const failed = installer.installDepsIfChanged();
+    failing.emit('close', 1);
+    await expect(failed).rejects.toThrow();
+    const retried = installer.installDepsIfChanged();
+    succeeding.emit('close', 0);
+    await retried;
+
+    expect(mockSpawn).toHaveBeenCalledTimes(2);
+    expect(installer.installed).toBe(true);
+  });
+
+  it('reports a skipped request as install-requested until a dependency change outranks it', async () => {
+    writePackageJson();
+    const installer = new ChangedDepInstaller(tmpRoot, true);
+    installer.requestInstall();
+
+    await installer.installDepsIfChanged();
+    expect(installer.skippedInstall).toBe('install-requested');
+
+    writePackageJson({ dependencies: { foo: '2.0.0' } });
+    await installer.installDepsIfChanged();
+    installer.requestInstall();
+    await installer.installDepsIfChanged();
+
+    expect(installer.skippedInstall).toBe('dependencies-changed');
+    expect(mockSpawn).not.toHaveBeenCalled();
+  });
+
   it('reports installed only once an install actually lands', async () => {
     // `installed` re-points the recorded run's dependency baseline
     // (recordInstallLanded), so a value that flips early would let a later
@@ -632,7 +785,7 @@ describe('ChangedDepInstaller', () => {
 
     await installer.installDepsIfChanged();
 
-    expect(installer.skippedInstall).toBe(true);
+    expect(installer.skippedInstall).toBe('dependencies-changed');
     expect(installer.installed).toBe(false);
   });
 
@@ -643,7 +796,7 @@ describe('ChangedDepInstaller', () => {
 
     await installer.installDepsIfChanged();
 
-    expect(installer.skippedInstall).toBe(true);
+    expect(installer.skippedInstall).toBe('dependencies-changed');
   });
 
   describe('install error classification', () => {
@@ -1081,6 +1234,61 @@ describe('executeMigrations', () => {
     );
 
     expect(mockCommitMigrationIfRequested.mock.calls[2][5]).toEqual([]);
+  });
+
+  describe('install requests', () => {
+    beforeEach(() => {
+      writeImplFile(
+        pkgDir,
+        'mig-a.js',
+        `module.exports.default = async () => ({ installDependencies: true });`
+      );
+    });
+
+    it('installs right after a migration that requested it and changed no files, when commits are on', async () => {
+      const child = new FakeChildProcess();
+      mockSpawn.mockImplementation(() => {
+        setImmediate(() => child.emit('close', 0));
+        return child;
+      });
+
+      await executeMigrations(
+        tmpRoot,
+        [migration('mig-a', '1.0.0')],
+        false,
+        /* shouldCreateCommits: */ true,
+        'chore(repo): ',
+        /* shouldSkipInstall: */ false
+      );
+
+      expect(mockSpawn).toHaveBeenCalledTimes(1);
+      expect(mockSpawn.mock.calls[0][0]).toContain('install');
+    });
+
+    it('tells the user to install when the requested install was skipped', async () => {
+      const warnSpy = vi
+        .spyOn(output, 'warn')
+        .mockImplementation(() => undefined);
+
+      await executeMigrations(
+        tmpRoot,
+        [migration('mig-a', '1.0.0')],
+        false,
+        /* shouldCreateCommits: */ false,
+        'chore(repo): ',
+        /* shouldSkipInstall: */ true
+      );
+
+      expect(mockSpawn).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith({
+        title:
+          'Migrations requested a dependency install, but the install was skipped',
+        bodyLines: [
+          'Run "npm install" so the installed packages match package.json.',
+        ],
+      });
+      warnSpy.mockRestore();
+    });
   });
 
   describe('skipAgentic', () => {

@@ -164,7 +164,11 @@ describe('installDepsChangedSinceDispense', () => {
       'rerun',
       sink
     );
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', sink);
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+      '/ws',
+      'dependencies-changed',
+      sink
+    );
   });
 
   it('installs nothing when the dependencies match the baseline', async () => {
@@ -198,7 +202,11 @@ describe('installDepsChangedSinceDispense', () => {
     await installDepsChangedSinceDispense('/ws', dir, seed({}), true);
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+      '/ws',
+      'dependencies-changed',
+      undefined
+    );
   });
 
   it('installs when the probe fails rather than reading the failure as unchanged', async () => {
@@ -231,7 +239,30 @@ describe('installDepsChangedSinceDispense', () => {
     );
 
     expect(mockRunInstall).not.toHaveBeenCalled();
-    expect(mockLogSkippedInstall).toHaveBeenCalledWith('/ws', undefined);
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+      '/ws',
+      'dependencies-changed',
+      undefined
+    );
+  });
+
+  it('reports a skipped request as one when the dependencies match the baseline', async () => {
+    mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
+    const baseline = depsHash('/ws');
+
+    await installDepsChangedSinceDispense(
+      '/ws',
+      dir,
+      seed({ depsHashAtDispense: baseline, installRequested: true }),
+      true
+    );
+
+    expect(mockRunInstall).not.toHaveBeenCalled();
+    expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+      '/ws',
+      'install-requested',
+      undefined
+    );
   });
 
   it('re-points the baseline once the install lands so the next actor does not repeat it', async () => {
@@ -309,22 +340,29 @@ describe('recordInstallLanded', () => {
     expect(readRunState(dir)).toEqual(before);
   });
 
-  it('clears every install-failure mark, not just the installing one', () => {
+  it('clears every install-failure mark and install request, not just the installing step', () => {
     // The package manager installs the whole workspace package.json, so this
-    // install also covers the dependency edits of the step that failed.
+    // install also covers the dependency edits and request of the other step.
     mockReadPackageJsonDeps.mockReturnValue('{"a":1}');
     const state = runState({});
     writeRunState(dir, {
       ...state,
       steps: [
-        { ...state.steps[0], id: 'step-0', installFailed: true },
+        {
+          ...state.steps[0],
+          id: 'step-0',
+          installFailed: true,
+          installRequested: true,
+        },
         state.steps[0],
       ],
     });
 
     recordInstallLanded('/ws', dir, 'step-1');
 
-    expect(readRunState(dir).steps.map((s) => s.installFailed)).toEqual([
+    const steps = readRunState(dir).steps;
+    expect(steps.map((s) => s.installFailed)).toEqual([undefined, undefined]);
+    expect(steps.map((s) => s.installRequested)).toEqual([
       undefined,
       undefined,
     ]);

@@ -123,6 +123,26 @@ That matters when the agentic flow is off, since Nx would otherwise tell the use
 Don't return `agentContext` alongside it.
 The two contradict each other, and Nx drops the context feeding the step it waived.
 
+### Request a dependency install
+
+Nx runs the workspace install after migrations that change the `dependencies` or `devDependencies` in the root `package.json`, or a dependency catalog.
+A migration that changes the installed packages without changing those declarations doesn't trigger it.
+For example, a migration can run an upgrade tool that installs packages and then restore `package.json` to what it was.
+
+Return `installDependencies: true` to have Nx run the install anyway:
+
+```ts
+export default async function update(tree: Tree) {
+  // ...
+  // The upgrade tool installed packages, and package.json was restored afterward.
+  return { installDependencies: true };
+}
+```
+
+Nx discards a returned generator callback, such as `() => installPackagesTask(tree)`, so an install task never runs.
+Only a literal `true` counts.
+`--skip-install` still skips the install, and Nx prints the install command to run yourself.
+
 ## Update package.json dependencies
 
 If you just need to change dependency versions, you can add some configuration options to the `migrations.json` file without making a full generator.

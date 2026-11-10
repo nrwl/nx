@@ -60,6 +60,7 @@ export type StepEvent =
       agenticWaived: boolean;
       validationOwed: boolean;
       madeChanges: boolean;
+      installRequested: boolean;
     }
   | { type: 'markDied'; stepId: string; attempt: number }
   // `attempt` binds the action to the attempt the caller validated (its
@@ -167,6 +168,7 @@ export function applyStepEvent(
         generatorCompletedAtAttempt: step.attempt,
         ...(event.agenticWaived ? { agenticWaived: true } : {}),
         ...(event.validationOwed ? { validationOwed: true } : {}),
+        ...(event.installRequested ? { installRequested: true } : {}),
         // Written even when false, unlike the conditional spreads above: absent is
         // reserved for markers an older nx wrote.
         generatorMadeChanges: event.madeChanges,
@@ -346,7 +348,7 @@ function adoptedSummary(step: MigrateStep): string {
 // not an attempt's, and always survive. So does the dependency baseline: it
 // tracks the last dependencies that were installed, so dropping it here would
 // leave the retry with nothing to detect the previous attempt's package.json
-// edits.
+// edits. A pending install request survives for the same reason.
 function rearm(
   step: MigrateStep,
   keepGeneratorCompleted: boolean
@@ -364,6 +366,7 @@ function rearm(
     ...(step.depsHashAtDispense !== undefined
       ? { depsHashAtDispense: step.depsHashAtDispense }
       : {}),
+    ...(step.installRequested ? { installRequested: true } : {}),
     // A reset keeps a commit that landed before this attempt's ref as well.
     ...(step.commitStarted ? { commitStarted: true } : {}),
     ...(keepGeneratorCompleted ? generatorRunFields(step) : {}),

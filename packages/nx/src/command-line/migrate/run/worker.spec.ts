@@ -7,7 +7,7 @@ const mockChangedDepInstallerCtor = vi.fn();
 const mockStringifiedDeps = vi.fn();
 const mockRunInstall = vi.fn();
 const mockInstallDepsIfChanged = vi.fn();
-let mockSkippedInstall = false;
+let mockSkippedInstall: string | undefined;
 let mockInstalled = false;
 vi.mock('../execute-migration', async () => ({
   // Real implementation: pure formatting, and the ChangedDepInstaller ctor
@@ -22,6 +22,7 @@ vi.mock('../execute-migration', async () => ({
     return {
       installDepsIfChanged: (...called: unknown[]) =>
         mockInstallDepsIfChanged(...called),
+      requestInstall: () => {},
       get skippedInstall() {
         return mockSkippedInstall;
       },
@@ -280,7 +281,7 @@ describe('runSingleMigrationWorker', () => {
     mockStringifiedDeps.mockReset().mockReturnValue('{"deps":1}');
     mockRunInstall.mockReset().mockResolvedValue(undefined);
     mockInstallDepsIfChanged.mockReset().mockResolvedValue(undefined);
-    mockSkippedInstall = false;
+    mockSkippedInstall = undefined;
     mockInstalled = false;
   });
 
@@ -985,13 +986,16 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockSkippedInstall = true;
+      mockSkippedInstall = 'dependencies-changed';
 
       await runSingleMigrationWorker(
         standaloneInput({ runMigration: '@nx/js:gen' })
       );
 
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+        root,
+        'dependencies-changed'
+      );
     });
 
     it('does not warn about a skipped install when nothing was skipped', async () => {
@@ -1752,7 +1756,11 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(mockRunInstall).not.toHaveBeenCalled();
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root, undefined);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+        root,
+        'dependencies-changed',
+        undefined
+      );
     });
 
     it('passes the run install policy to the installer on a first attempt', async () => {
@@ -1838,7 +1846,7 @@ describe('runSingleMigrationWorker', () => {
       // The skip is what this case turns on: without it the installer reports
       // neither skipped nor installed and the assertion holds for the wrong
       // reason, the same one as the preceding case.
-      mockSkippedInstall = true;
+      mockSkippedInstall = 'dependencies-changed';
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
       const baseline = depsHash(root);
       const dir = setupRun('run-1', {
@@ -1859,7 +1867,10 @@ describe('runSingleMigrationWorker', () => {
       });
 
       expect(readRunState(dir).steps[0].depsHashAtDispense).toBe(baseline);
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+        root,
+        'dependencies-changed'
+      );
     });
 
     it('skips the generator half on a hybrid retry once its generator already completed', async () => {
@@ -2358,6 +2369,57 @@ describe('runSingleMigrationWorker', () => {
       expect(step.installFailed).toBe(true);
     });
 
+    it('records a requested install with the generator marker, so a failed install leaves it for the retry', async () => {
+      mockRunMigration.mockResolvedValue({
+        changes: [],
+        nextSteps: [],
+        agentContext: [],
+        logs: '',
+        madeChanges: false,
+        installDependencies: true,
+      });
+      mockInstallDepsIfChanged.mockRejectedValue(
+        new Error('registry unreachable')
+      );
+      const dir = setupRun('run-1', {
+        steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
+        migrations: [genMig('@nx/js', 'gen')],
+      });
+
+      await expect(
+        runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'))
+      ).rejects.toThrow('registry unreachable');
+      expect(readRunState(dir).steps[0].installRequested).toBe(true);
+    });
+
+    it('installs a pending request on a retry without rerunning the migration, then clears it', async () => {
+      // The dependencies match the baseline, so only the request asks for the
+      // install.
+      const baseline = depsHash(root);
+      const dir = setupRun('run-1', {
+        steps: [
+          {
+            ...migStep('step-1', '@nx/js:gen', 'dispensed'),
+            generatorCompleted: true,
+            generatorMadeChanges: false,
+            depsHashAtDispense: baseline,
+            installRequested: true,
+          },
+        ],
+        migrations: [genMig('@nx/js', 'gen')],
+        createCommits: false,
+      });
+
+      await runSingleMigrationWorker({
+        ...recordedInput('@nx/js:gen', 'run-1'),
+        skipInstall: false,
+      });
+
+      expect(mockRunMigration).not.toHaveBeenCalled();
+      expect(mockRunInstall).toHaveBeenCalledTimes(1);
+      expect(readRunState(dir).steps[0].installRequested).toBeUndefined();
+    });
+
     it('records the install failure when a retry that only had its commit left could not install', async () => {
       mockRunInstall.mockRejectedValue(new Error('registry unreachable'));
       mockStringifiedDeps.mockReturnValue('{"deps":1}');
@@ -2662,7 +2724,7 @@ describe('runSingleMigrationWorker', () => {
         logs: '',
         madeChanges: true,
       });
-      mockSkippedInstall = true;
+      mockSkippedInstall = 'dependencies-changed';
       setupRun('run-1', {
         steps: [migStep('step-1', '@nx/js:gen', 'dispensed')],
         migrations: [genMig('@nx/js', 'gen')],
@@ -2670,7 +2732,10 @@ describe('runSingleMigrationWorker', () => {
 
       await runSingleMigrationWorker(recordedInput('@nx/js:gen', 'run-1'));
 
-      expect(mockLogSkippedInstall).toHaveBeenCalledWith(root);
+      expect(mockLogSkippedInstall).toHaveBeenCalledWith(
+        root,
+        'dependencies-changed'
+      );
     });
   });
 

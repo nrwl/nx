@@ -38,8 +38,9 @@ export function depsHash(root: string): string | null {
 
 /**
  * Installs when the workspace dependencies differ from the step's recorded
- * baseline, so a prompt applied by another actor, or a retry that only has the
- * commit left to do, still installs what the changes need. Comparing against
+ * baseline, or the step holds an install request, so a prompt applied by
+ * another actor, or a retry that only has the commit left to do, still installs
+ * what the changes need. Comparing against
  * the persisted baseline is what makes that possible: by the time either runs,
  * the edits are already on disk, so a snapshot taken here would see them as
  * the starting point and never detect a change.
@@ -70,9 +71,14 @@ export async function installDepsChangedSinceDispense(
     return;
   }
   const current = depsHash(root);
-  if (current !== null && current === step.depsHashAtDispense) return;
+  const depsChanged = current === null || current !== step.depsHashAtDispense;
+  if (!depsChanged && step.installRequested !== true) return;
   if (skipInstall) {
-    logSkippedPostMigrationInstall(root, sink);
+    logSkippedPostMigrationInstall(
+      root,
+      depsChanged ? 'dependencies-changed' : 'install-requested',
+      sink
+    );
     return;
   }
   await runInstall(root, 'post-migration', rerunCommand, sink);
@@ -82,14 +88,14 @@ export async function installDepsChangedSinceDispense(
 /**
  * Records what an install that just landed means for the run: the installing
  * step's dependency baseline moves to what is now on disk, and every step's
- * install-failure mark clears.
+ * install-failure mark and install request clear.
  *
  * The baseline has to move, or the next actor to compare (the prompt fold, a
  * retry, the step's own commit) reads the step's own edits as an unapplied
- * change and pays a second full install. The marks clear because the package
- * manager installs the whole workspace package.json, so this install also
- * covers the dependency edits of every earlier step that failed to install its
- * own.
+ * change and pays a second full install. The marks and requests clear because
+ * the package manager installs the whole workspace package.json, so this
+ * install also covers the dependency edits and requests of every earlier step
+ * that failed to install its own.
  *
  * A failed probe leaves the baseline alone: an install that runs twice costs
  * time, one that never runs leaves the workspace inconsistent with its
@@ -112,12 +118,15 @@ export function recordInstallLanded(
       const baselineMoves = fresh.steps.some(
         (s) => s.id === stepId && hash !== null && s.depsHashAtDispense !== hash
       );
-      if (!baselineMoves && !fresh.steps.some((s) => s.installFailed)) {
+      if (
+        !baselineMoves &&
+        !fresh.steps.some((s) => s.installFailed || s.installRequested)
+      ) {
         return null;
       }
       return {
         ...fresh,
-        steps: fresh.steps.map(({ installFailed, ...s }) =>
+        steps: fresh.steps.map(({ installFailed, installRequested, ...s }) =>
           s.id === stepId && baselineMoves
             ? { ...s, depsHashAtDispense: hash }
             : s

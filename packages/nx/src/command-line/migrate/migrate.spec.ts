@@ -7189,11 +7189,13 @@ module.exports = {
           nextSteps: ['a'],
           agentContext: ['b', 'c'],
           skipAgentic: false,
+          installDependencies: false,
         });
         expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
           nextSteps: [],
           agentContext: ['x'],
           skipAgentic: false,
+          installDependencies: false,
         });
       });
 
@@ -7202,6 +7204,7 @@ module.exports = {
           nextSteps: ['a', 'b'],
           agentContext: [],
           skipAgentic: false,
+          installDependencies: false,
         });
       });
 
@@ -7215,11 +7218,13 @@ module.exports = {
           nextSteps: ['ok'],
           agentContext: ['ok'],
           skipAgentic: false,
+          installDependencies: false,
         });
         expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
           nextSteps: ['ok'],
           agentContext: [],
           skipAgentic: false,
+          installDependencies: false,
         });
       });
 
@@ -7228,11 +7233,13 @@ module.exports = {
           nextSteps: [],
           agentContext: [],
           skipAgentic: true,
+          installDependencies: false,
         });
         expect(parseMigrationReturn({ skipAgentic: 'true' } as any)).toEqual({
           nextSteps: [],
           agentContext: [],
           skipAgentic: false,
+          installDependencies: false,
         });
       });
     });

@@ -381,14 +381,24 @@ async function runStandalone(
   const shouldValidate =
     agenticKind === 'inside-agent' && opts.validate !== false;
   const resolvedCollection = readMigrationCollection(migration.package, root);
-  const { changes, nextSteps, agentContext, skipAgentic, logs, madeChanges } =
-    await runNxOrAngularMigration(
-      root,
-      migration,
-      isVerbose,
-      isHybridMigration(migration) || shouldValidate,
-      resolvedCollection
-    );
+  const {
+    changes,
+    nextSteps,
+    agentContext,
+    skipAgentic,
+    installDependencies,
+    logs,
+    madeChanges,
+  } = await runNxOrAngularMigration(
+    root,
+    migration,
+    isVerbose,
+    isHybridMigration(migration) || shouldValidate,
+    resolvedCollection
+  );
+  if (installDependencies) {
+    installer.requestInstall();
+  }
 
   const work = owedAgentWork(migration, shouldValidate, changes, skipAgentic);
   logWaiverOrForwardAgentContext(migration, work, agentContext, agenticKind);
@@ -411,7 +421,7 @@ async function runStandalone(
   }
 
   if (installer.skippedInstall) {
-    logSkippedPostMigrationInstall(root);
+    logSkippedPostMigrationInstall(root, installer.skippedInstall);
   }
 
   printNextSteps(migration, nextSteps);
@@ -803,6 +813,7 @@ async function runRecorded(
           nextSteps,
           agentContext,
           skipAgentic,
+          installDependencies,
           logs,
           madeChanges,
         } = await runNxOrAngularMigration(
@@ -832,7 +843,11 @@ async function runRecorded(
           agenticWaived: work.waived,
           validationOwed,
           madeChanges,
+          installRequested: installDependencies,
         });
+        if (installDependencies) {
+          installer.requestInstall();
+        }
 
         logWaiverOrForwardAgentContext(
           migration,
@@ -882,7 +897,7 @@ async function runRecorded(
         }
 
         if (installer.skippedInstall) {
-          logSkippedPostMigrationInstall(root);
+          logSkippedPostMigrationInstall(root, installer.skippedInstall);
         } else if (installer.installed) {
           recordInstallLanded(root, dir, step.id);
         }

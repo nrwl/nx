@@ -252,6 +252,10 @@ function setupMigrationPackage(): void {
         'waiver-mig': { version: '1.1.5', implementation: './waiver-mig' },
         'slow-mig': { version: '1.0.0', implementation: './slow-mig' },
         'deps-mig': { version: '1.0.0', implementation: './deps-mig' },
+        'install-request-mig': {
+          version: '1.0.0',
+          implementation: './install-request-mig',
+        },
       },
     })
   );
@@ -264,6 +268,30 @@ function setupMigrationPackage(): void {
         const pkg = JSON.parse(host.read('package.json', 'utf8'));
         pkg.devDependencies = { ...pkg.devDependencies, 'migrate-orch-dep': 'file:./migrate-orch-dep' };
         host.write('package.json', JSON.stringify(pkg, null, 2));
+      };
+      `
+  );
+  // Stands in for an external CLI that installs another version of a package
+  // and leaves the migration to restore package.json, so the declarations end
+  // up unchanged while node_modules does not match them.
+  updateFile(
+    `./node_modules/${PKG}/install-request-mig.js`,
+    `
+      const { execSync } = require('child_process');
+      const { readFileSync, writeFileSync } = require('fs');
+      const { join } = require('path');
+      exports.default = function (host) {
+        const packageJsonPath = join(host.root, 'package.json');
+        const declared = readFileSync(packageJsonPath, 'utf8');
+        const pkg = JSON.parse(declared);
+        pkg.devDependencies['migrate-install-dep'] = 'file:./migrate-install-dep-2';
+        writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
+        execSync(${JSON.stringify(getPackageManagerCommand().install)}, {
+          cwd: host.root,
+          stdio: 'inherit',
+        });
+        writeFileSync(packageJsonPath, declared);
+        return { installDependencies: true };
       };
       `
   );
@@ -371,6 +399,11 @@ const waiverMig = {
 };
 const slowMig = { package: PKG, name: 'slow-mig', version: '1.0.0' };
 const depsMig = { package: PKG, name: 'deps-mig', version: '1.0.0' };
+const installRequestMig = {
+  package: PKG,
+  name: 'install-request-mig',
+  version: '1.0.0',
+};
 
 // The final validation pass is opted out of by default: it has its own
 // scenario, and every other one reads the run's completion shape without it.
@@ -1651,6 +1684,50 @@ describe('migrate orchestrator', () => {
     const redo = parseLastDispense(runDispensed(freshInit.payload.next));
     expect(redo.action).toBe('next-step');
     expect(redo.payload.command).toContain(`--run-migration=${PKG}:gen-mig`);
+  }, 600000);
+
+  it('should install after a migration that requested it, though its dependency declarations end up unchanged', () => {
+    writePlan([installRequestMig]);
+    // A real install prunes undeclared deps, so the migration package is
+    // declared from a local copy, and both versions of the dependency are local
+    // too: no registry.
+    cpSync(join(tmpProjPath(), 'node_modules', PKG), join(tmpProjPath(), PKG), {
+      recursive: true,
+    });
+    for (const major of ['1', '2']) {
+      const dir = join(tmpProjPath(), `migrate-install-dep-${major}`);
+      mkdirSync(dir);
+      writeFileSync(
+        join(dir, 'package.json'),
+        JSON.stringify({ name: 'migrate-install-dep', version: `${major}.0.0` })
+      );
+    }
+    updateJson('package.json', (pkg) => {
+      pkg.devDependencies[PKG] = `file:./${PKG}`;
+      pkg.devDependencies['migrate-install-dep'] =
+        'file:./migrate-install-dep-1';
+      return pkg;
+    });
+    // Every install here changes the lockfile, which yarn berry refuses under
+    // CI, and runCLI sets CI.
+    const env = { YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' };
+    runCommand(getPackageManagerCommand().install, { env, failOnError: true });
+    const installedVersion = () =>
+      readJson('node_modules/migrate-install-dep/package.json').version;
+    expect(installedVersion()).toBe('1.0.0');
+
+    runCLI('migrate --run-migrations=migrations.json', {
+      env: {
+        ...env,
+        NX_MIGRATE_USE_LOCAL: 'true',
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+      },
+    });
+
+    expect(
+      readJson('package.json').devDependencies['migrate-install-dep']
+    ).toBe('file:./migrate-install-dep-1');
+    expect(installedVersion()).toBe('1.0.0');
   }, 600000);
 
   it('should stop the classic loop over an active run and replace the run on --start-fresh', () => {

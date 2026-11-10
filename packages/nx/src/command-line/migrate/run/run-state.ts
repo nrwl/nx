@@ -222,6 +222,12 @@ export interface MigrateStepBase {
   // not tell an installed step from one whose dependencies never made it into
   // node_modules.
   installFailed?: boolean;
+  // Set with the generator marker when the migration returned
+  // `installDependencies: true`, cleared by the next install that lands. It
+  // makes every later install decision for the step install even with the
+  // dependency baseline unchanged. Kept across re-arms, a clean retry's reset
+  // included: a reset restores files, not what is installed.
+  installRequested?: boolean;
 }
 
 const MIGRATE_COMMIT_KINDS = ['checkpoint', 'landed', 'failed'] as const;
@@ -568,6 +574,7 @@ function isStepShape(value: unknown): boolean {
     isOptionalBoolean(value.validationOwed) &&
     isOptionalBoolean(value.generatorMadeChanges) &&
     isOptionalBoolean(value.installFailed) &&
+    isOptionalBoolean(value.installRequested) &&
     isOptionalBoolean(value.adopted) &&
     isOptionalMatching(ISSUE_ID, value.unresolvedIssueId) &&
     // Minted by the same write that gives the step up, so it never names a
