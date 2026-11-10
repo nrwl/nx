@@ -142,8 +142,8 @@ export async function _createConfig(
   return configs;
 }
 
-// rspack's node lazy-compilation client crashes the server bundle at load, so
-// an override turns lazy compilation on for the browser compiler only.
+// rspack's node lazy-compilation client throws in the server bundle, so an
+// override turns lazy compilation on for the browser compiler only.
 function withoutLazyCompilation(
   overrides: Partial<Configuration>
 ): Partial<Configuration> {
