@@ -31,15 +31,8 @@ pipelines:
             - <%= packageManagerPrefix %> playwright install --with-deps<% } %>
 
 <% for (const command of commands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
-            # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
+            # <%- comment %><% } %><% } %><% if (command.command) { %>
             - <%= command.command %><% } %><% } %>
-<% const alwaysRunCommands = commands.filter(c => c.alwaysRun && c.command) %>
-<% if (alwaysRunCommands.length > 0) { %>
-          after-script:
-<% for (const command of alwaysRunCommands) { %>
-            - <%= command.command %>
-<% } %>
-<% } %>
 
   branches:
     main:
@@ -64,12 +57,5 @@ pipelines:
             - <%= packageManagerInstall %>
 
 <% for (const command of branchCommands) { %><% if (command.comments) { %><% for (const comment of command.comments) { %>
-            # <%- comment %><% } %><% } %><% if (command.command && !command.alwaysRun) { %>
+            # <%- comment %><% } %><% } %><% if (command.command) { %>
             - <%= command.command %><% } %><% } %>
-<% const alwaysRunBranchCommands = branchCommands.filter(c => c.alwaysRun && c.command) %>
-<% if (alwaysRunBranchCommands.length > 0) { %>
-          after-script:
-<% for (const command of alwaysRunBranchCommands) { %>
-            - <%= command.command %>
-<% } %>
-<% } %>

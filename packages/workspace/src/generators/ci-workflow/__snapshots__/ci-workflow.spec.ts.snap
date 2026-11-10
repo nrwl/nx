@@ -61,9 +61,6 @@ jobs:
       # - script: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -95,10 +92,6 @@ pipelines:
             # npx nx record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -150,10 +143,6 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -207,9 +196,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -256,9 +242,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -324,9 +307,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: bun nx fix-ci
-        condition: always()
 "
 `;
 
@@ -392,9 +372,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: bun nx fix-ci
-        condition: always()
 "
 `;
 
@@ -426,10 +403,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - bun nx fix-ci
 
   branches:
     main:
@@ -481,10 +454,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - bun nx fix-ci
 
   branches:
     main:
@@ -540,10 +509,6 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: bun nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -586,10 +551,6 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: bun nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -639,9 +600,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -684,9 +642,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -729,9 +684,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -764,10 +716,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
     - bun nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - bun nx fix-ci
 "
 `;
 
@@ -830,9 +778,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -895,9 +840,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -927,10 +869,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -978,10 +916,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -1031,10 +965,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -1073,10 +1003,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -1128,9 +1054,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -1175,9 +1098,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -1222,9 +1142,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -1255,10 +1172,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
     - npx nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - npx nx fix-ci
 "
 `;
 
@@ -1324,9 +1237,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: pnpm exec nx fix-ci
-        condition: always()
 "
 `;
 
@@ -1392,9 +1302,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: pnpm exec nx fix-ci
-        condition: always()
 "
 `;
 
@@ -1426,10 +1333,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -1481,10 +1384,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -1540,10 +1439,6 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: pnpm exec nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -1586,10 +1481,6 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: pnpm exec nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -1647,9 +1538,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -1699,9 +1587,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -1752,9 +1637,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -1787,10 +1669,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
     - pnpm exec nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - pnpm exec nx fix-ci
 "
 `;
 
@@ -1853,9 +1731,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: yarn nx fix-ci
-        condition: always()
 "
 `;
 
@@ -1918,9 +1793,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: yarn nx fix-ci
-        condition: always()
 "
 `;
 
@@ -1950,10 +1822,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - yarn nx fix-ci
 
   branches:
     main:
@@ -2001,10 +1869,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - yarn nx fix-ci
 
   branches:
     main:
@@ -2054,10 +1918,6 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: yarn nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -2096,10 +1956,6 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: yarn nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -2151,9 +2007,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -2200,9 +2053,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -2247,9 +2097,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -2280,10 +2127,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World
     - yarn nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - yarn nx fix-ci
 "
 `;
 
@@ -2348,9 +2191,6 @@ jobs:
       # - script: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -2382,10 +2222,6 @@ pipelines:
             # npx nx record -- echo Hello World
             # When you enable task distribution, run the e2e-ci task instead of e2e
             - npx nx affected --base=origin/main -t lint test build e2e
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -2438,10 +2274,6 @@ jobs:
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run:
           command: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -2495,9 +2327,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -2544,9 +2373,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       # When you enable task distribution, run the e2e-ci task instead of e2e
       - run: npx nx affected -t lint test build e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -2612,9 +2438,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: bun nx fix-ci
-        condition: always()
 "
 `;
 
@@ -2680,9 +2503,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: bun nx record -- echo Hello World
       - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: bun nx fix-ci
-        condition: always()
 "
 `;
 
@@ -2714,10 +2534,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - bun nx fix-ci
 
   branches:
     main:
@@ -2770,10 +2586,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # bun nx record -- echo Hello World
             - bun nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - bun nx fix-ci
 
   branches:
     main:
@@ -2830,10 +2642,6 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: bun nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -2876,10 +2684,6 @@ jobs:
       # - run: bun nx record -- echo Hello World
       - run:
           command: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: bun nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -2929,9 +2733,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -2974,9 +2775,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -3019,9 +2817,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: bun nx record -- echo Hello World
       - run: bun nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: bun nx fix-ci
-        if: always()
 "
 `;
 
@@ -3054,10 +2849,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
     - bun nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - bun nx fix-ci
 "
 `;
 
@@ -3120,9 +2911,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -3185,9 +2973,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: npx nx record -- echo Hello World
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: npx nx fix-ci
-        condition: always()
 "
 `;
 
@@ -3217,10 +3002,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -3269,10 +3050,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # npx nx record -- echo Hello World
             - npx nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - npx nx fix-ci
 
   branches:
     main:
@@ -3323,10 +3100,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -3365,10 +3138,6 @@ jobs:
       # - run: npx nx record -- echo Hello World
       - run:
           command: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: npx nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -3420,9 +3189,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -3467,9 +3233,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -3514,9 +3277,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: npx nx record -- echo Hello World
       - run: npx nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
 "
 `;
 
@@ -3547,10 +3307,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
     - npx nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - npx nx fix-ci
 "
 `;
 
@@ -3616,9 +3372,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: pnpm exec nx fix-ci
-        condition: always()
 "
 `;
 
@@ -3684,9 +3437,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx record -- echo Hello World
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: pnpm exec nx fix-ci
-        condition: always()
 "
 `;
 
@@ -3718,10 +3468,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -3774,10 +3520,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # pnpm exec nx record -- echo Hello World
             - pnpm exec nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - pnpm exec nx fix-ci
 
   branches:
     main:
@@ -3834,10 +3576,6 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: pnpm exec nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -3880,10 +3618,6 @@ jobs:
       # - run: pnpm exec nx record -- echo Hello World
       - run:
           command: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: pnpm exec nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -3941,9 +3675,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -3993,9 +3724,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -4046,9 +3774,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx record -- echo Hello World
       - run: pnpm exec nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: pnpm exec nx fix-ci
-        if: always()
 "
 `;
 
@@ -4081,10 +3806,6 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
     - pnpm exec nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - pnpm exec nx fix-ci
 "
 `;
 
@@ -4147,9 +3868,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: yarn nx fix-ci
-        condition: always()
 "
 `;
 
@@ -4212,9 +3930,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - script: yarn nx record -- echo Hello World
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - script: yarn nx fix-ci
-        condition: always()
 "
 `;
 
@@ -4244,10 +3959,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - yarn nx fix-ci
 
   branches:
     main:
@@ -4296,10 +4007,6 @@ pipelines:
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # yarn nx record -- echo Hello World
             - yarn nx affected --base=origin/main -t lint test build
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after-script:
-            - yarn nx fix-ci
 
   branches:
     main:
@@ -4350,10 +4057,6 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: yarn nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -4392,10 +4095,6 @@ jobs:
       # - run: yarn nx record -- echo Hello World
       - run:
           command: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run:
-          command: yarn nx fix-ci
-          when: always
 
 workflows:
   version: 2
@@ -4447,9 +4146,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -4496,9 +4192,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -4543,9 +4236,6 @@ jobs:
       # Prepend any command with "nx record --" to record its logs to Nx Cloud
       # - run: yarn nx record -- echo Hello World
       - run: yarn nx affected -t lint test build
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: yarn nx fix-ci
-        if: always()
 "
 `;
 
@@ -4576,9 +4266,5 @@ CI:
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World
     - yarn nx affected -t lint test build
-    # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-  after_script:
-    - yarn nx fix-ci
 "
 `;

@@ -413,6 +413,18 @@ describe('CI Workflow generator', () => {
     });
   });
 
+  it.each([
+    ['github', '.github/workflows/ci.yml'],
+    ['gitlab', '.gitlab-ci.yml'],
+    ['azure', 'azure-pipelines.yml'],
+    ['circleci', '.circleci/config.yml'],
+    ['bitbucket-pipelines', 'bitbucket-pipelines.yml'],
+  ] as const)('should not add a fix-ci step for %s', async (ci, path) => {
+    await ciWorkflowGenerator(tree, { ci, name: 'CI' });
+
+    expect(tree.read(path, 'utf-8')).not.toContain('fix-ci');
+  });
+
   describe('TS solution setup', () => {
     let nxCloudAccessToken: string;
 
@@ -494,9 +506,6 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx record --" to record its logs to Nx Cloud
               # - run: npx nx record -- echo Hello World
               - run: npx nx affected -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-              - run: npx nx fix-ci
-                if: always()
         "
       `);
     });
@@ -532,10 +541,6 @@ describe('CI Workflow generator', () => {
               # - run: npx nx record -- echo Hello World
               - run:
                   command: npx nx affected -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-              - run:
-                  command: npx nx fix-ci
-                  when: always
 
         workflows:
           version: 2
@@ -609,9 +614,6 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx record --" to record its logs to Nx Cloud
               # - script: npx nx record -- echo Hello World
               - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
-              # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-              - script: npx nx fix-ci
-                condition: always()
         "
       `);
     });
@@ -649,10 +651,6 @@ describe('CI Workflow generator', () => {
                       # Prepend any command with "nx record --" to record its logs to Nx Cloud
                       # npx nx record -- echo Hello World
                       - npx nx affected --base=origin/main -t lint test build typecheck
-                      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-                    after-script:
-                      - npx nx fix-ci
 
             branches:
               main:
@@ -706,10 +704,6 @@ describe('CI Workflow generator', () => {
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # - npx nx record -- echo Hello World
             - npx nx affected -t lint test build typecheck
-            # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-
-          after_script:
-            - npx nx fix-ci
         "
       `);
     });
