@@ -110,7 +110,7 @@ export default async function update(tree: Tree): Promise<{
   if (rootState === 'js') {
     agentContext.push(
       'The root ESLint config is JavaScript-based (.eslintrc.js or .eslintrc.cjs) and was not converted automatically. ' +
-        'The conversion takes a JavaScript root config only when it exports an object built from literal values and no other root eslintrc file sits beside it. ' +
+        'The conversion takes a JavaScript root config only when it exports an object built from literal values and it is the root eslintrc file the generator picks (`.eslintrc.base.json` and `.eslintrc` take precedence over it). ' +
         'Convert the whole workspace to flat config by hand: produce an eslint.config.mjs at the root and one per project, ' +
         'preserving the existing rules, plugins, parser options and overrides.'
     );

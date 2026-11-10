@@ -17,8 +17,7 @@ import { mapFilePath } from '../../utils/flat-config/path-utils';
 // Rewrites legacy `.eslintrc[.base][.json]`, `.eslintrc.{yaml,yml,js,cjs}` / `.eslintignore`
 // filenames to their flat-config counterparts. Used for `extends` local paths, rule option
 // values that embed these filenames, and, with `*` as the format, nx.json / project.json
-// inputs that referenced them. Accepts extensionless `.eslintrc` since ESLint treats that as
-// JSON by convention.
+// inputs that referenced them. Also accepts extensionless `.eslintrc`.
 export function renameLegacyEslintrcFile(
   path: string,
   format: 'mjs' | 'cjs' | '*'

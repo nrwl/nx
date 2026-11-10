@@ -2050,6 +2050,41 @@ describe('convert-to-flat-config generator', () => {
       warnSpy.mockRestore();
     });
 
+    it('should skip a project eslintrc that does not parse and convert the others', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'cjs',
+      });
+      addProjectConfiguration(tree, 'other-lib', {
+        root: 'libs/other-lib',
+        targets: {},
+      });
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'other-lib',
+        enableTypedLinting: false,
+        eslintConfigFormat: 'cjs',
+      });
+      tree.write('libs/test-lib/.eslintrc.json', '{ "rules": {} x }\n');
+
+      const warnSpy = vi.spyOn(logger, 'warn');
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Skipping "libs/test-lib/.eslintrc.json": it could not be parsed'
+        )
+      );
+      expect(tree.exists('libs/test-lib/.eslintrc.json')).toBe(true);
+      expect(tree.exists('libs/other-lib/eslint.config.cjs')).toBe(true);
+      expect(tree.exists('eslint.config.cjs')).toBe(true);
+      warnSpy.mockRestore();
+    });
+
     it.each([
       ['.eslintrc.json', undefined],
       ['.eslintrc.js', 'module.exports = {};\n'],

@@ -8,7 +8,7 @@ ESLint v9 makes flat config (`eslint.config.{mjs,cjs,js}`) the default config fo
 
 The migration runs in two halves:
 
-1. A deterministic pre-pass (the `@nx/eslint:convert-to-flat-config` generator) that already converted the JSON and YAML eslintrc configs.
+1. A deterministic pre-pass (the `@nx/eslint:convert-to-flat-config` generator) that already converted the JSON and YAML eslintrc configs, and the JavaScript ones built from literal values.
 2. This prompt: finish the parts that need judgment and leave the workspace lint-passing.
 
 Work systematically through each section below.
