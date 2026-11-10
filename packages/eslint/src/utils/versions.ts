@@ -56,21 +56,26 @@ export function versions(tree: Tree): EslintVersions {
     : versionMap[9];
 }
 
-// The first release of each package whose eslint peer range admits v10.
-// Generators keep a declared version, so a workspace below one stays on v9.
-const ESLINT_V10_FLOORS = {
+// The packages a flat-config generator adds while keeping a declared version,
+// each with its first release whose eslint peer range admits v10. A workspace
+// that declares one below its floor stays on v9.
+export const ESLINT_V10_FLOORS = {
   'angular-eslint': '21.3.0',
   '@angular-eslint/eslint-plugin': '21.3.0',
+  '@eslint/compat': '2.0.2',
   // 16.0-16.3 admit v10 in their peer range, but the React plugins they
   // bundle fail on it.
   'eslint-config-next': '16.4.0',
   '@nuxt/eslint-config': '1.15.0',
   '@typescript-eslint/parser': '8.56.0',
+  '@typescript-eslint/rule-tester': '8.56.0',
+  '@typescript-eslint/utils': '8.56.0',
   '@vue/eslint-config-typescript': '14.7.0',
   'eslint-plugin-import-x': '4.16.2',
   'eslint-plugin-react-hooks': '7.1.0',
   'eslint-plugin-vue': '10.8.0',
   'typescript-eslint': '8.56.0',
+  'vue-eslint-parser': '10.3.0',
 };
 
 function declaresPackageWithoutEslintV10Support(tree: Tree): boolean {
