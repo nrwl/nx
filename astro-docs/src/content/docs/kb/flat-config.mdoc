@@ -259,7 +259,7 @@ export default [...baseConfig, nextEslintPluginNext.configs['core-web-vitals']];
 The project then gets React, jsx-a11y, and import rules only from the config that registers those
 plugins.
 The `@nx/next:application` generator picks that config when it finds one of these in the root
-config, the app's config, or a local module one of them loads by a relative path:
+config, the app's config, or a local module one of them loads by a relative path that names the file:
 
 - an `import` or `require` of the package of one of those plugins, or of a file inside it
 - the name of a config that registers one of them, such as `flat/react`
@@ -273,12 +273,16 @@ That includes a config that extends `next` through `FlatCompat`.
 Its rules can use the `react`, `import`, and `jsx-a11y` plugins that the `next` configs also
 register.
 
-Nx checks each local module as a whole, except for type-only imports.
-A module that registers one of those plugins only in a config the app doesn't use still counts.
-To get the React, jsx-a11y, and import rules of `eslint-config-next` in that case, replace the
-`core-web-vitals` config with the `eslint-config-next` spread by hand.
-Nx misses any other registration, such as a plugin that an npm config package registers or a
-module loaded by a computed path, so make the change by hand when ESLint reports the error.
+Nx checks each local module as a whole, except for type-only imports, and counts every
+registration it finds.
+The other config may still register the same copy of the plugin, which ESLint accepts, or register
+it only in a config the app doesn't use.
+To check, spread `eslint-config-next/core-web-vitals` in place of the `core-web-vitals` config and
+run lint.
+Keep the spread if lint reports no `Cannot redefine plugin` error.
+Nx misses any other registration, such as a plugin that an npm config package registers, or a
+module loaded by a computed path, without its file extension, or through a directory.
+Make the change by hand when ESLint reports the error.
 
 ## Compare eslintrc and flat config formats
 
