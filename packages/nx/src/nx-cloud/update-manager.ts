@@ -11,8 +11,7 @@ import {
 } from 'fs';
 import { createGunzip } from 'zlib';
 import { pipeline } from 'stream';
-import { join } from 'path';
-import { tmpdir } from 'os';
+import { dirname, join } from 'path';
 import { createApiHttpClient } from './utilities/nx-cloud-http-client';
 import { HttpClient, HttpError, HttpResponse } from '../utils/http-client';
 import { debugLog } from './debug-logger';
@@ -27,6 +26,14 @@ import {
   cacheDirectoryForWorkspace,
   workspaceDataDirectory,
 } from '../utils/cache-directory';
+import {
+  homeDirIsDistinctFromSharedTmp,
+  NX_HOME_TMP_DIR,
+} from '../utils/nx-tmp-dir';
+import {
+  DirectoryRefusedError,
+  ensureOwnedPrivateDir,
+} from '../utils/owned-private-dir';
 import { isCI } from '../utils/is-ci';
 import { createHash, randomUUID } from 'crypto';
 import { FileLock, IS_WASM } from '../native';
@@ -181,17 +188,24 @@ export async function verifyOrUpdateNxCloudClient(options?: {
   };
 }
 
-export function getBundleInstallDefaultLocation() {
-  // When not in an Nx workspace (no nx.json), avoid creating a .nx folder
-  // in the current directory. Instead, use a temp directory unique to the
-  // NX_CLOUD_API URL so different cloud instances don't conflict.
+/**
+ * Null outside a workspace when there is no home directory apart from the
+ * shared temp dir, since the bundle would then be `require`d from, and resolve
+ * its own imports through, directories other users can write.
+ */
+export function getBundleInstallDefaultLocation(): string | null {
+  // Outside a workspace, keep the bundle out of the current directory and key
+  // it by NX_CLOUD_API so different cloud instances don't conflict.
   if (!existsSync(join(workspaceRoot, 'nx.json'))) {
+    if (!NX_HOME_TMP_DIR || !homeDirIsDistinctFromSharedTmp()) {
+      return null;
+    }
     const apiUrl = process.env.NX_CLOUD_API || 'https://cloud.nx.app';
     const apiHash = createHash('sha256')
       .update(apiUrl)
       .digest('hex')
       .slice(0, 16);
-    return join(tmpdir(), 'nx-cloud-client', apiHash);
+    return join(NX_HOME_TMP_DIR, 'cloud-client', apiHash);
   }
 
   const legacyPath = join(
@@ -218,34 +232,59 @@ export function getBundleInstallDefaultLocation() {
 
 const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
+const inWorkspace = existsSync(join(workspaceRoot, 'nx.json'));
+
 // Control files live outside the install directory. Released nx versions load
 // any directory there as a bundle, so they would `require` a state directory
 // placed inside it.
-const stateDirectory = existsSync(join(workspaceRoot, 'nx.json'))
+const stateDirectory = inWorkspace
   ? join(workspaceDataDirectory, 'nx-cloud')
-  : `${runnerBundleInstallDirectory}-state`;
+  : runnerBundleInstallDirectory && `${runnerBundleInstallDirectory}-state`;
 
 function ensureStateDirectory(): void {
   mkdirSync(stateDirectory, { recursive: true });
 }
 
-const downloadLockFilePath = join(stateDirectory, 'download.lock');
+function ensureInstallDirectories(): void {
+  if (inWorkspace) {
+    mkdirSync(runnerBundleInstallDirectory, { recursive: true });
+    return;
+  }
+  if (!runnerBundleInstallDirectory) {
+    throw new Error(
+      'The Nx Cloud client cannot be installed outside a workspace without a home directory separate from the shared temp directory.'
+    );
+  }
+  for (const dir of [
+    NX_HOME_TMP_DIR,
+    dirname(runnerBundleInstallDirectory),
+    runnerBundleInstallDirectory,
+    stateDirectory,
+  ]) {
+    const result = ensureOwnedPrivateDir(dir);
+    if (result.status === 'refused') {
+      throw new DirectoryRefusedError(result.refusal);
+    }
+  }
+}
+
+const downloadLockFilePath =
+  stateDirectory && join(stateDirectory, 'download.lock');
 
 // The record lives beside the lockfile rather than inside it. Windows
 // byte-range locks are mandatory and handle-scoped, so writing to a file this
 // process holds an exclusive lock on fails with ERROR_LOCK_VIOLATION. It also
 // matches the convention elsewhere in nx: project-graph.lock and run.json.lock
 // are never written to.
-const downloadRecordFilePath = join(stateDirectory, 'download.record');
+const downloadRecordFilePath =
+  stateDirectory && join(stateDirectory, 'download.record');
 
 // A version names a directory that is created and later deleted, so a value
 // from the server must not be able to escape the install directory.
 const VALID_BUNDLE_VERSION = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
-  if (!existsSync(runnerBundleInstallDirectory)) {
-    mkdirSync(runnerBundleInstallDirectory, { recursive: true });
-  }
+  ensureInstallDirectories();
 
   try {
     const installedBundles: CloudBundleInstall[] = readdirSync(

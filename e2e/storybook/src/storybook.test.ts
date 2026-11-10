@@ -117,12 +117,19 @@ describe('Storybook generators and executors for monorepos', () => {
       console.log(process.env);
       `
       );
-      runCLI(`run ${reactStorybookApp}:build-storybook --verbose`, {
-        env: {
-          NX_SOME_SECRET: 'MY SECRET',
-          NX_SOME_TOKEN: 'MY SECRET',
-        },
-      });
+      const output = runCLI(
+        `run ${reactStorybookApp}:build-storybook --verbose`,
+        {
+          env: {
+            NX_SOME_SECRET: 'MY SECRET',
+            NX_SOME_TOKEN: 'MY SECRET',
+          },
+        }
+      );
+      // A cache replay would leave the checks below reading the previous build.
+      expect(output).not.toMatch(
+        /\[(local cache|remote cache|existing outputs match)/
+      );
 
       // Check all output chunks for bundled environment variables
       const outDir = `${reactStorybookApp}/storybook-static`;

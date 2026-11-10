@@ -5,7 +5,6 @@ import Module, { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
-import { dirSync } from 'tmp';
 import which from 'which';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
@@ -377,38 +376,76 @@ export function readModulePackageJson(
   packageJson: PackageJson;
   path: string;
 } {
-  let packageJsonPath: string;
-  let packageJson: PackageJson;
-
+  let exported: { packageJson: PackageJson; path: string } | undefined;
   try {
-    ({ path: packageJsonPath, packageJson } =
-      readModulePackageJsonWithoutFallbacks(moduleSpecifier, requirePaths));
-  } catch {
-    const entryPoint = resolveWithoutCachePollution(
+    exported = readModulePackageJsonWithoutFallbacks(
       moduleSpecifier,
       requirePaths
     );
+  } catch {}
+  // A wildcard export can map package.json to a nested `{"type": ...}` stub,
+  // so a nameless manifest is kept only when the lookup step finds no other.
+  if (exported?.packageJson.name) {
+    return exported;
+  }
 
-    let moduleRootPath = dirname(entryPoint);
+  const lookupPathMatch = findPackageJsonInLookupPaths(
+    moduleSpecifier,
+    requirePaths
+  );
+  if (lookupPathMatch) {
+    return {
+      packageJson: readJsonFile(lookupPathMatch),
+      path: lookupPathMatch,
+    };
+  }
+  if (exported) {
+    return exported;
+  }
+
+  const entryPoint = resolveWithoutCachePollution(
+    moduleSpecifier,
+    requirePaths
+  );
+
+  let moduleRootPath = dirname(entryPoint);
+  let packageJsonPath = join(moduleRootPath, 'package.json');
+
+  while (!existsSync(packageJsonPath)) {
+    moduleRootPath = dirname(moduleRootPath);
     packageJsonPath = join(moduleRootPath, 'package.json');
+  }
 
-    while (!existsSync(packageJsonPath)) {
-      moduleRootPath = dirname(moduleRootPath);
-      packageJsonPath = join(moduleRootPath, 'package.json');
-    }
-
-    packageJson = readJsonFile(packageJsonPath);
-    if (packageJson.name && packageJson.name !== moduleSpecifier) {
-      throw new Error(
-        `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
-      );
-    }
+  const packageJson: PackageJson = readJsonFile(packageJsonPath);
+  if (packageJson.name && packageJson.name !== moduleSpecifier) {
+    throw new Error(
+      `Found module ${packageJson.name} while trying to locate ${moduleSpecifier}/package.json`
+    );
   }
 
   return {
     packageJson,
     path: packageJsonPath,
   };
+}
+
+function findPackageJsonInLookupPaths(
+  moduleSpecifier: string,
+  requirePaths: string[]
+): string | undefined {
+  for (const requirePath of requirePaths) {
+    const lookupPaths =
+      createRequire(join(resolve(requirePath), 'noop.js')).resolve.paths(
+        moduleSpecifier
+      ) ?? [];
+    for (const lookupPath of lookupPaths) {
+      const candidate = join(lookupPath, moduleSpecifier, 'package.json');
+      if (existsSync(candidate)) {
+        // Resolving gives a symlinked package the same real path Node returns.
+        return resolveWithoutCachePollution(candidate, requirePaths);
+      }
+    }
+  }
 }
 
 /**
@@ -459,10 +496,7 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-    cleanup: () => {},
-  };
+  const { dir: tempDir, cleanup } = createTempNpmDirectory();
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
