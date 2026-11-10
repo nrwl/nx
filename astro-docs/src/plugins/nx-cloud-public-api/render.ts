@@ -20,6 +20,7 @@ export function referenceHeadings(
     reference;
   return [
     ...reference.navigation.map((group) => group.heading),
+    ...reference.overview.map((topic) => topic.heading),
     ...(servers.length ? [sections.servers] : []),
     sections.endpoints,
     ...endpoints.map((item) => item.heading),
@@ -118,6 +119,10 @@ export function renderOpenApiReference(reference: OpenApiReference): string {
             `- ${id ? anchor(id) : ''}[${label}](${href})`
         )
         .join('\n'),
+    ]),
+    ...reference.overview.flatMap((topic) => [
+      headingMarkdown(topic.heading),
+      topic.body.markdown,
     ]),
     ...(reference.servers.length
       ? [
