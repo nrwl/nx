@@ -31,6 +31,12 @@ Astro.locals.rawContent = entry.body;
       </CardGrid>
     </>
   ))}
+  {reference.overview.map((topic) => (
+    <>
+      <AnchorHeading level={2} id={topic.heading.slug}>{topic.heading.text}</AnchorHeading>
+      <Fragment set:html={topic.body.html} />
+    </>
+  ))}
   {reference.servers.length > 0 && <><AnchorHeading level={2} id={sections.servers.slug}>{sections.servers.text}</AnchorHeading><ul>{reference.servers.map((server) => <li set:html={server.html} />)}</ul></>}
 
   <AnchorHeading level={2} id={sections.endpoints.slug}>{sections.endpoints.text}</AnchorHeading>
