@@ -281,7 +281,7 @@ The pre-pass already moved the `ignore-path` files that apply to every run of a 
    npx eslint --print-config <a-file-in-the-project>
    ```
 
-5. Confirm no `.eslintrc.*` files remain.
+5. Confirm no `.eslintrc.*` files remain, except ones a flat config loads through `FlatCompat`.
 
 <fail_if note="if you cannot reach a passing state within the scope above, stop and report">
 Lint cannot pass without editing source files beyond stale or renamed rule directives and `/* eslint-env */` comments, or without disabling a rule the user configured. Write status: failed and name the rule and project in your summary. Do not guess.
