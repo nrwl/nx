@@ -314,7 +314,10 @@
       "incompatibleWith": {
         "angular-eslint": "<21.3.0",
         "@angular-eslint/eslint-plugin": "<21.3.0",
-        "eslint-config-next": "<16.0.0"
+        "eslint-config-next": "<16.4.0",
+        "@nuxt/eslint-config": "<1.0.0",
+        "eslint-plugin-vue": "<9.0.0",
+        "@vue/eslint-config-typescript": "<14.0.0"
       },
       "packages": {
         "eslint": {
