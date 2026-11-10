@@ -4,9 +4,10 @@ import {
   getPackageManagerVersion,
   isWorkspacesEnabled,
   output,
+  readJsonFile,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { daemonClient, getLockFileName } from '@nx/devkit/internal';
 import { gte } from 'semver';
@@ -153,10 +154,8 @@ function isNpmLockFileRootVersionStale(cwd: string): boolean {
     if (!existsSync(lockFilePath)) {
       return false;
     }
-    const { version } = JSON.parse(
-      readFileSync(join(cwd, 'package.json'), 'utf-8')
-    );
-    const lockFile = JSON.parse(readFileSync(lockFilePath, 'utf-8'));
+    const { version } = readJsonFile(join(cwd, 'package.json'));
+    const lockFile = readJsonFile(lockFilePath);
     const lockFileRootVersion =
       lockFile.lockfileVersion === 1
         ? lockFile.version
