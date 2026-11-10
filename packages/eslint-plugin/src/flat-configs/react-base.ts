@@ -4,8 +4,7 @@ import tseslint, { type ConfigArray } from 'typescript-eslint';
 
 // ESLint v10 has no eslint-plugin-import release; v10 workspaces install the
 // maintained eslint-plugin-import-x fork, whose rules are namespaced `import-x/*`.
-// Resolve lazily so we never require a plugin that isn't installed for the
-// running ESLint major.
+// Require only the plugin installed for the running ESLint major.
 const isEslint10OrLater = major(require('eslint/package.json').version) >= 10;
 const importPluginName = isEslint10OrLater ? 'import-x' : 'import';
 const importPluginModule = isEslint10OrLater

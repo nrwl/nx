@@ -44,8 +44,9 @@ export const eslintPluginJsxA11yVersion = '6.10.1';
 export const eslintPluginReactVersion = '^7.35.0';
 export const eslintPluginReactHooksVersion = '5.0.0';
 
-// ESLint v10 stack. The plugins above have no v10 release, so v10 workspaces swap
-// to eslint-plugin-import-x and react-hooks v7 (no react/jsx-a11y substitute exists).
+// ESLint v10 stack. The pinned plugins above have no release that supports v10
+// (react-hooks gains it in 7.1), so v10 workspaces swap to eslint-plugin-import-x
+// and react-hooks v7. Nx does not pick a replacement for react/jsx-a11y.
 export const eslintPluginImportXVersion = '^4.17.1';
 export const eslintPluginReactHooksV7Version = '7.1.1';
 
