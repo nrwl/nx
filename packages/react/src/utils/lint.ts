@@ -22,7 +22,7 @@ type EslintDependencies = {
   devDependencies: Record<string, string>;
 };
 
-const eslintLegacyDependencies: EslintDependencies = {
+const eslintLegacyDependencies = {
   dependencies: {},
   devDependencies: {
     'eslint-plugin-import': eslintPluginImportVersion,
@@ -30,7 +30,7 @@ const eslintLegacyDependencies: EslintDependencies = {
     'eslint-plugin-react': eslintPluginReactVersion,
     'eslint-plugin-react-hooks': eslintPluginReactHooksVersion,
   },
-};
+} satisfies EslintDependencies;
 
 const eslint10Dependencies: EslintDependencies = {
   dependencies: {},
@@ -46,8 +46,7 @@ const eslint10Dependencies: EslintDependencies = {
  * earlier; on ESLint v10 it installs plugins that have no v10 release. This
  * will be removed in Nx v25.
  */
-export const extraEslintDependencies: EslintDependencies =
-  eslintLegacyDependencies;
+export const extraEslintDependencies = eslintLegacyDependencies;
 
 /**
  * Resolves the React ESLint plugin set for the workspace's ESLint version.
